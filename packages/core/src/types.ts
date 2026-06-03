@@ -13,6 +13,7 @@ export type SolanaCluster = 'mainnet-beta' | 'testnet' | 'devnet' | 'localnet'
 export interface SolanaConfig {
   cluster?: SolanaCluster
   endpoint?: string
+  wsEndpoint?: string
   commitment?: Commitment
   autoConnect?: boolean
 }
@@ -20,6 +21,7 @@ export interface SolanaConfig {
 export interface SolanaContext {
   cluster: SolanaCluster
   endpoint: string
+  wsEndpoint: string
   connection: Connection
 }
 

@@ -17,5 +17,8 @@
     "unbuild": "^3.5.0",
     "vue": "^3.5.16"
   },
-  "packageManager": "pnpm@10.11.1"
+  "packageManager": "pnpm@10.11.1",
+  "dependencies": {
+    "pnpm": "^11.5.1"
+  }
 }

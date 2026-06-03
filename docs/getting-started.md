@@ -6,6 +6,18 @@ Install the package for your framework:
 pnpm add @vue-solana/vue @vue-solana/core @solana/web3-compat
 ```
 
+For local development, use workspace linking instead:                                                                                                                                                     
+
+```sh                                                                                                                                                                                                               
+ pnpm add '@vue-solana/vue@workspace:*' '@vue-solana/core@workspace:*' @solana/web3-compat                                                                                                                     
+```                                                                                                                                                                                                      
+
+That only works inside this monorepo or another pnpm workspace that includes these packages.                                                                                                              
+                                                                                                                                                                                                            For an external example app before publishing, use one of these:                                                                                                                                          
+```sh                                                                                                                                                                                                           
+ pnpm add ../path-to/vue-solana/packages/vue ../path-to/vue-solana/packages/core @solana/web3-compat
+```
+
 For Nuxt:
 
 ```sh

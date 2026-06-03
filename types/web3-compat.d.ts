@@ -5,7 +5,6 @@ declare module '@solana/web3-compat' {
     TransactionSignature
   } from '@solana/web3.js'
   export {
-    clusterApiUrl,
     Connection,
     Keypair,
     PublicKey,

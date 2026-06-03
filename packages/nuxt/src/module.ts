@@ -1,6 +1,5 @@
 import { addImports, addPlugin, createResolver, defineNuxtModule } from '@nuxt/kit'
 import type { SolanaConfig } from '@vue-solana/core'
-import './runtime/types'
 
 export interface ModuleOptions extends SolanaConfig {}
 
@@ -15,9 +14,10 @@ export default defineNuxtModule<ModuleOptions>({
   },
   setup(options, nuxt) {
     const resolver = createResolver(import.meta.url)
+    const publicConfig = nuxt.options.runtimeConfig.public
 
-    nuxt.options.runtimeConfig.public.solana = {
-      ...nuxt.options.runtimeConfig.public.solana,
+    publicConfig.solana = {
+      ...(typeof publicConfig.solana === 'object' && publicConfig.solana !== null ? publicConfig.solana : {}),
       ...options
     }
 
