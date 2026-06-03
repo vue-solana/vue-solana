@@ -1,0 +1,37 @@
+{
+  "name": "@vue-solana/vue",
+  "version": "0.0.0",
+  "description": "Vue plugin and composables for Solana applications.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "unbuild",
+    "dev": "unbuild --stub",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@vue-solana/core": "workspace:*"
+  },
+  "peerDependencies": {
+    "@solana/web3-compat": "^0.0.21",
+    "vue": "^3.5.0"
+  },
+  "devDependencies": {
+    "@solana/web3-compat": "^0.0.21",
+    "typescript": "^5.8.3",
+    "unbuild": "^3.5.0",
+    "vue": "^3.5.16"
+  }
+}

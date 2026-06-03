@@ -1,0 +1,31 @@
+{
+  "name": "@vue-solana/core",
+  "version": "0.0.0",
+  "description": "Framework-agnostic primitives for Vue Solana libraries.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "unbuild",
+    "dev": "unbuild --stub",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@solana/web3-compat": "^0.0.21"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3",
+    "unbuild": "^3.5.0"
+  }
+}
