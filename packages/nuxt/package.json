@@ -1,0 +1,40 @@
+{
+  "name": "@vue-solana/nuxt",
+  "version": "0.0.0",
+  "description": "Nuxt module for Solana applications.",
+  "license": "MIT",
+  "type": "module",
+  "main": "./dist/module.cjs",
+  "module": "./dist/module.mjs",
+  "types": "./dist/module.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/module.d.ts",
+      "import": "./dist/module.mjs",
+      "require": "./dist/module.cjs"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "unbuild",
+    "dev": "unbuild --stub",
+    "typecheck": "tsc --noEmit",
+    "clean": "rm -rf dist"
+  },
+  "dependencies": {
+    "@vue-solana/core": "workspace:*",
+    "@vue-solana/vue": "workspace:*"
+  },
+  "peerDependencies": {
+    "@solana/web3-compat": "^0.0.21",
+    "nuxt": "^3.0.0 || ^4.0.0"
+  },
+  "devDependencies": {
+    "@nuxt/kit": "^3.17.5",
+    "@solana/web3-compat": "^0.0.21",
+    "nuxt": "^3.17.5",
+    "typescript": "^5.8.3",
+    "unbuild": "^3.5.0",
+    "vue": "^3.5.16"
+  }
+}
