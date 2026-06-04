@@ -1,8 +1,13 @@
-# Vue Vite Example
+---
+title: Vue Vite Example
+description: Runnable Vue 3 and Vite example app for @vue-solana/vue.
+---
 
-Runnable Vue 3 + Vite example app for `@vue-solana/vue`.
+The Vue Vite example is a runnable Vue 3 app for `@vue-solana/vue`.
 
-This example demonstrates:
+Source: [`examples/vue-vite`](https://github.com/vue-solana/vue-solana/tree/main/examples/vue-vite)
+
+## What It Demonstrates
 
 - Installing the Vue Solana plugin with `createSolanaPlugin()`.
 - Reading RPC status with `useRpc()`.
@@ -24,13 +29,6 @@ pnpm dev:vue
 
 Open the Vite URL printed in the terminal, usually `http://localhost:5173`.
 
-## Run Directly
-
-```sh
-pnpm install
-pnpm --filter @vue-solana/example-vue-vite dev
-```
-
 ## What To Try
 
 - Check the initial RPC status and latest blockhash.
@@ -48,14 +46,6 @@ Request free devnet SOL from the official faucet:
 https://faucet.solana.com
 ```
 
-You can also use the Solana CLI:
-
-```sh
-solana airdrop 1 YOUR_WALLET_ADDRESS --url devnet
-```
-
 ## Wallet Note
 
 The current packages do not discover installed browser wallets yet. This example uses a local mock wallet so wallet-related composables can be tested without Phantom, Solflare, or Backpack.
-
-See [Wallets](../../apps/docs/content/concepts/wallets.md) for the current wallet support status and [Vue Vite example docs](../../apps/docs/content/examples/vue-vite.md) for the docs-site page.

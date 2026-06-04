@@ -1,0 +1,4 @@
+@import "tailwindcss";
+@import "@nuxt/ui";
+
+@custom-variant dark (&:where(.dark, .dark-mode, .dark *, .dark-mode *));

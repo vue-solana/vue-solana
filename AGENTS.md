@@ -133,9 +133,9 @@ Recommended next step:
 
 - Add Solana Wallet Standard discovery and map selected wallets into the existing `SolanaWallet` interface.
 
-### Example Apps Are Placeholders
+### Example Apps
 
-The `examples/vue-vite` and `examples/nuxt` directories currently only contain README placeholders. They should be replaced with real runnable example apps.
+The `examples/vue-vite` and `examples/nuxt` directories contain runnable example apps wired to the workspace packages. They demonstrate plugin/module setup, RPC state, direct connection calls, balance reads, wallet state, and mock transaction flows.
 
 ## Suggested Next Tasks
 
@@ -143,8 +143,6 @@ The `examples/vue-vite` and `examples/nuxt` directories currently only contain R
 - Add `useWallets()` or extend `useWallet()` to expose discovered wallets.
 - Implement real connect/disconnect support for selected wallets.
 - Map wallet signing methods to the existing `SolanaWallet` interface.
-- Add a real Vue Vite example app that tests `useRpc()` and `useBalance()`.
-- Add a real Nuxt example app that tests module installation and auto-imported composables.
 - Add unit tests for core helpers and Vue composables.
 - Re-check `@solana/web3-compat` package metadata on every new release.
 

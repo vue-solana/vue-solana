@@ -1,8 +1,25 @@
 {
   "name": "@vue-solana/vue",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "Vue plugin and composables for Solana applications.",
   "license": "MIT",
+  "keywords": [
+    "solana",
+    "vue",
+    "vue3",
+    "composables",
+    "web3",
+    "wallet"
+  ],
+  "homepage": "https://github.com/vue-solana/vue-solana#readme",
+  "bugs": {
+    "url": "https://github.com/vue-solana/vue-solana/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vue-solana/vue-solana.git",
+    "directory": "packages/vue"
+  },
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
@@ -15,6 +32,9 @@
     }
   },
   "files": ["dist"],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "unbuild",
     "dev": "unbuild --stub",

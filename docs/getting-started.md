@@ -1,21 +1,51 @@
 # Getting Started
 
+This guide covers installing the Vue Solana packages, configuring Vue or Nuxt, and manually testing RPC reads against Solana devnet.
+
+More references:
+
+- [Solana Concepts For Vue Developers](./solana-concepts.md)
+- [API Reference](./api.md)
+- [Wallet Support](./wallets.md)
+- [Troubleshooting](./troubleshooting.md)
+
+Official Solana references:
+
+- [Solana Documentation](https://solana.com/docs)
+- [Solana RPC Methods](https://solana.com/docs/rpc)
+- [Solana Clusters](https://solana.com/docs/references/clusters)
+
+## Before You Start
+
+Use `@solana/web3-compat` directly if you only need raw Solana APIs. Use `@vue-solana/vue` or `@vue-solana/nuxt` when you want Vue/Nuxt integration.
+
+Supported clusters:
+
+- `mainnet-beta`: Solana mainnet. This is Solana's official mainnet cluster name.
+- `devnet`: best default for app development.
+- `testnet`: validator and protocol testing network.
+- `localnet`: local validator.
+
+Use `devnet` while learning and testing. Use `mainnet-beta` only when you are ready to interact with real SOL.
+
 Install the package for your framework:
 
 ```sh
 pnpm add @vue-solana/vue @vue-solana/core @solana/web3-compat
 ```
 
-For local development, use workspace linking instead:                                                                                                                                                     
+For local development, use workspace linking instead:
 
-```sh                                                                                                                                                                                                               
- pnpm add '@vue-solana/vue@workspace:*' '@vue-solana/core@workspace:*' @solana/web3-compat                                                                                                                     
-```                                                                                                                                                                                                      
+```sh
+pnpm add '@vue-solana/vue@workspace:*' '@vue-solana/core@workspace:*' @solana/web3-compat
+```
 
-That only works inside this monorepo or another pnpm workspace that includes these packages.                                                                                                              
-                                                                                                                                                                                                            For an external example app before publishing, use one of these:                                                                                                                                          
-```sh                                                                                                                                                                                                           
- pnpm add ../path-to/vue-solana/packages/vue ../path-to/vue-solana/packages/core @solana/web3-compat
+That only works inside this monorepo or another pnpm workspace that includes these packages.
+
+For an external example app before publishing, use one of these:
+
+```sh
+pnpm add ../path-to/vue-solana/packages/vue ../path-to/vue-solana/packages/core @solana/web3-compat
 ```
 
 For Nuxt:
@@ -23,6 +53,47 @@ For Nuxt:
 ```sh
 pnpm add @vue-solana/nuxt @vue-solana/vue @vue-solana/core @solana/web3-compat
 ```
+
+Again, for local development, use workspace linking instead:
+
+```sh
+pnpm add '@vue-solana/nuxt@workspace:*' '@vue-solana/vue@workspace:*' '@vue-solana/core@workspace:*' @solana/web3-compat
+```
+
+That only works inside this monorepo or another pnpm workspace that includes these packages.
+
+For an external example app before publishing, use one of these:
+
+```sh
+pnpm add ../path-to/vue-solana/packages/nuxt ../path-to/vue-solana/packages/vue ../path-to/vue-solana/packages/core @solana/web3-compat
+```
+
+## Known TypeScript Issue
+
+`@solana/web3-compat@0.0.21` currently has broken TypeScript metadata. Its package metadata points to `dist/types/index.d.ts`, but that file is not included in the published package.
+
+Runtime imports still use the real `@solana/web3-compat` package. If TypeScript reports that it cannot find declarations for `@solana/web3-compat`, add this local declaration file to your app as `types/web3-compat.d.ts`:
+
+```ts
+declare module '@solana/web3-compat' {
+  export type {
+    Commitment,
+    SendOptions,
+    TransactionSignature
+  } from '@solana/web3.js'
+  export {
+    Connection,
+    Keypair,
+    PublicKey,
+    SystemProgram,
+    Transaction,
+    TransactionInstruction,
+    VersionedTransaction
+  } from '@solana/web3.js'
+}
+```
+
+Make sure your `tsconfig.json` includes the file. Most Vue and Nuxt apps include `**/*.d.ts` by default. If yours does not, add an include pattern such as `types/**/*.d.ts`.
 
 ## Vue
 
@@ -61,7 +132,7 @@ pnpm install
 ### 2. Build The Local Packages
 
 ```sh
-pnpm build
+pnpm build:packages
 ```
 
 This builds:
@@ -94,15 +165,15 @@ Open the wallet extension settings and switch the network to `Devnet`.
 
 The exact setting name depends on the wallet. It is usually under developer settings, network settings, or advanced settings.
 
-### 6. Get Devnet SOL
+### 6. Get Devnet Or Testnet SOL
 
-Copy your wallet address and request devnet SOL from the Solana faucet:
+Copy your wallet address and request devnet or testnet SOL from the Solana faucet:
 
 ```txt
 https://faucet.solana.com
 ```
 
-Request `1 SOL` on `Devnet`.
+Choose `Devnet` while following this guide. Choose `Testnet` only if you are testing against the testnet cluster.
 
 If you have the Solana CLI installed, you can also run:
 
@@ -110,19 +181,25 @@ If you have the Solana CLI installed, you can also run:
 solana airdrop 1 YOUR_WALLET_ADDRESS --url devnet
 ```
 
+```sh
+solana airdrop 1 YOUR_WALLET_ADDRESS --url testnet
+```
+
+Devnet and testnet SOL have no real value. Never use a wallet with real funds while testing.
+
 ### 7. Test RPC Without A Wallet
 
 The current packages can already test RPC access without connecting a browser wallet.
 
-If you do not already have a test app, create a Vue playground inside this monorepo:
+This guide keeps copy-paste snippets inline so you can see the moving parts. For a complete runnable Vue app, use the Vite example:
 
 ```sh
-pnpm create vite examples/vue-vite --template vue-ts
+pnpm dev:vue
 ```
 
-If `examples/vue-vite` already exists, use another temporary folder name or replace the placeholder example with a real Vite app.
+The app lives at [`examples/vue-vite`](../examples/vue-vite) and demonstrates plugin setup, RPC state, direct connection calls, balance reads, wallet state, and mock transaction flows.
 
-In the playground `package.json`, use the local workspace packages:
+If you are wiring your own playground, use these dependencies:
 
 ```json
 {
@@ -222,25 +299,29 @@ Expected result:
 - `1 SOL` equals `1_000_000_000` lamports.
 - After an airdrop, clicking `Refresh` should show the updated balance.
 
-To run the Vue playground:
+To run the Vue example app:
 
 ```sh
-pnpm --filter vue-vite dev
+pnpm dev:vue
 ```
 
-If the generated app has a different package name, use that package name in the filter.
+You can also run it by package name:
+
+```sh
+pnpm --filter @vue-solana/example-vue-vite dev
+```
 
 ### 9. Test The Nuxt Module
 
-If you do not already have a Nuxt test app, create one inside this monorepo:
+For a complete runnable Nuxt app, use the Nuxt example:
 
 ```sh
-pnpm dlx nuxi@latest init examples/nuxt
+pnpm dev:nuxt
 ```
 
-If `examples/nuxt` already exists, use another temporary folder name or replace the placeholder example with a real Nuxt app.
+The app lives at [`examples/nuxt`](../examples/nuxt) and demonstrates module setup, Nuxt auto-imports, RPC state, direct connection calls, balance reads, wallet state, and mock transaction flows.
 
-In the Nuxt app `package.json`, use the local workspace packages:
+If you are wiring your own Nuxt app, use these dependencies:
 
 ```json
 {
@@ -300,13 +381,17 @@ Expected result:
 - The composables are auto-imported.
 - The page can read a latest devnet blockhash.
 
-To run the Nuxt playground:
+To run the Nuxt example app:
 
 ```sh
-pnpm --filter nuxt dev
+pnpm dev:nuxt
 ```
 
-If the generated app has a different package name, use that package name in the filter.
+You can also run it by package name:
+
+```sh
+pnpm --filter @vue-solana/example-nuxt dev
+```
 
 ### 10. Current Wallet Testing Limitation
 
@@ -349,5 +434,5 @@ After manual testing, run:
 
 ```sh
 pnpm typecheck
-pnpm build
+pnpm build:packages
 ```
