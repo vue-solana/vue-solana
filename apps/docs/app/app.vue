@@ -5,6 +5,8 @@ const navLinks = [
   { label: 'Packages', to: '/packages/vue' },
   { label: 'Examples', to: '/examples/vue-vite' },
 ]
+
+const colorMode = useColorMode()
 </script>
 
 <template>
@@ -44,6 +46,31 @@ const navLinks = [
               </UButton>
             </nav>
 
+            <ClientOnly>
+              <label class="sr-only" for="color-mode-select">Color mode</label>
+              <select
+                id="color-mode-select"
+                v-model="colorMode.preference"
+                class="h-8 self-start rounded-md border border-slate-200 bg-slate-100 px-3 text-sm font-semibold text-slate-900 outline-none transition-colors dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 sm:self-auto"
+              >
+                <option value="system">System</option>
+                <option value="light">Light</option>
+                <option value="dark">Dark</option>
+              </select>
+
+              <template #fallback>
+                <UButton
+                  aria-label="Toggle color mode"
+                  icon="i-lucide-moon"
+                  color="neutral"
+                  variant="soft"
+                  size="sm"
+                  class="self-start font-semibold sm:self-auto"
+                >
+                  Theme
+                </UButton>
+              </template>
+            </ClientOnly>
           </div>
         </header>
 

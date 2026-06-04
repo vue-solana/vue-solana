@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "build": "nuxt build",
-    "clean": "rm -rf .nuxt .output --host node_modules/.cache/nuxt node_modules/.cache/vite $TMPDIR/nuxt-vite-node-* /tmp/nuxt-vite-node-*",
+    "clean": "rm -rf .nuxt .output node_modules/.cache/nuxt node_modules/.cache/vite $TMPDIR/nuxt-vite-node-* /tmp/nuxt-vite-node-*",
     "dev": "TMPDIR=/tmp nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview"
@@ -12,6 +12,7 @@
   "dependencies": {
     "@nuxt/content": "^3.14.0",
     "@nuxt/ui": "^4.8.1",
+    "@nuxtjs/color-mode": "^4.0.0",
     "nuxt": "^4.4.6",
     "tailwindcss": "^4.3.0",
     "typescript": "^6.0.3",
