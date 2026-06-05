@@ -1,6 +1,6 @@
 {
   "name": "@vue-solana/vue",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Vue plugin and composables for Solana applications.",
   "license": "MIT",
   "keywords": [
@@ -11,7 +11,7 @@
     "web3",
     "wallet"
   ],
-  "homepage": "https://github.com/vue-solana/vue-solana#readme",
+  "homepage": "https://vue-solana-docs.vercel.app/packages/vue",
   "bugs": {
     "url": "https://github.com/vue-solana/vue-solana/issues"
   },

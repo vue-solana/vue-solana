@@ -1,6 +1,6 @@
 {
   "name": "@vue-solana/core",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Framework-agnostic primitives for Vue Solana libraries.",
   "license": "MIT",
   "keywords": [
@@ -11,7 +11,7 @@
     "wallet",
     "rpc"
   ],
-  "homepage": "https://github.com/vue-solana/vue-solana#readme",
+  "homepage": "https://vue-solana-docs.vercel.app/packages/core",
   "bugs": {
     "url": "https://github.com/vue-solana/vue-solana/issues"
   },
