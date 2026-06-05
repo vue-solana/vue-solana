@@ -25,7 +25,7 @@ The current packages expose wallet primitives, but they do not yet discover inst
 Apps can provide a wallet object that implements `SolanaWallet`.
 
 ```ts
-import type { SolanaWallet } from '@vue-solana/core'
+import type { SolanaWallet } from "@vue-solana/core";
 
 const wallet: SolanaWallet = {
   publicKey: null,
@@ -33,25 +33,27 @@ const wallet: SolanaWallet = {
   connecting: false,
   connect: async () => {},
   disconnect: async () => {},
-  signTransaction: async transaction => transaction
-}
+  signTransaction: async (transaction) => transaction,
+};
 ```
 
 Pass it to the Vue plugin:
 
 ```ts
-createApp(App).use(createSolanaPlugin({
-  cluster: 'devnet',
-  wallet
-}))
+createApp(App).use(
+  createSolanaPlugin({
+    cluster: "devnet",
+    wallet,
+  }),
+);
 ```
 
 Or set it later:
 
 ```ts
-const { setWallet } = useWallet()
+const { setWallet } = useWallet();
 
-setWallet(wallet)
+setWallet(wallet);
 ```
 
 ## Example Mock Wallets

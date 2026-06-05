@@ -1,5 +1,5 @@
-import { useRpc } from './useRpc'
+import { useRpc } from "./useRpc";
 
 export function useConnection() {
-  return useRpc().connection
+  return useRpc().connection;
 }

@@ -1,41 +1,65 @@
 <script setup lang="ts">
 const navLinks = [
-  { label: 'Get Started', to: '/getting-started' },
-  { label: 'Concepts', to: '/concepts/solana-for-vue-developers' },
-  { label: 'Packages', to: '/packages/vue' },
-  { label: 'Examples', to: '/examples/vue-vite' },
-]
+  { label: "Get Started", to: "/getting-started" },
+  { label: "Concepts", to: "/concepts/solana-for-vue-developers" },
+  { label: "Packages", to: "/packages/vue" },
+  { label: "Examples", to: "/examples/vue-vite" },
+];
 </script>
 
 <template>
   <UApp>
     <NuxtRouteAnnouncer />
-    <div class="min-h-screen overflow-x-hidden bg-white text-slate-950 lg:h-screen lg:overflow-hidden dark:bg-slate-950 dark:text-white">
+    <div
+      class="min-h-screen overflow-x-hidden bg-white text-slate-950 lg:h-screen lg:overflow-hidden dark:bg-slate-950 dark:text-white"
+    >
       <div class="pointer-events-none fixed inset-0 -z-10">
-        <div class="absolute -left-48 -top-56 size-136 rounded-full bg-emerald-300/35 blur-3xl dark:bg-emerald-400/15" />
-        <div class="absolute -right-40 top-20 size-120 rounded-full bg-violet-400/25 blur-3xl dark:bg-violet-500/20" />
-        <div class="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-violet-400/70 to-transparent" />
+        <div
+          class="absolute -left-48 -top-56 size-136 rounded-full bg-emerald-300/35 blur-3xl dark:bg-emerald-400/15"
+        />
+        <div
+          class="absolute -right-40 top-20 size-120 rounded-full bg-violet-400/25 blur-3xl dark:bg-violet-500/20"
+        />
+        <div
+          class="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-violet-400/70 to-transparent"
+        />
       </div>
 
-      <div class="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 sm:px-6 lg:h-screen lg:px-8">
-        <header class="sticky top-0 z-20 flex flex-col gap-5 border-b border-slate-200/70 bg-white/85 py-5 backdrop-blur sm:py-6 lg:flex-row lg:items-center lg:justify-between dark:border-slate-800/80 dark:bg-slate-950/85">
+      <div
+        class="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 sm:px-6 lg:h-screen lg:px-8"
+      >
+        <header
+          class="sticky top-0 z-20 flex flex-col gap-5 border-b border-slate-200/70 bg-white/85 py-5 backdrop-blur sm:py-6 lg:flex-row lg:items-center lg:justify-between dark:border-slate-800/80 dark:bg-slate-950/85"
+        >
           <NuxtLink class="group inline-flex items-center gap-3 text-inherit no-underline" to="/">
-            <span class="grid size-11 place-items-center rounded-2xl bg-linear-to-br from-emerald-300 via-cyan-300 to-violet-500 text-sm font-black text-slate-950 shadow-lg shadow-violet-500/20 transition-transform group-hover:scale-105">
+            <span
+              class="grid size-11 place-items-center rounded-2xl bg-linear-to-br from-emerald-300 via-cyan-300 to-violet-500 text-sm font-black text-slate-950 shadow-lg shadow-violet-500/20 transition-transform group-hover:scale-105"
+            >
               VS
             </span>
             <span class="leading-tight">
-              <span class="block text-base font-bold tracking-tight text-slate-950 dark:text-white">Vue Solana</span>
-              <span class="block text-sm font-medium text-slate-600 dark:text-slate-400">Documentation</span>
+              <span class="block text-base font-bold tracking-tight text-slate-950 dark:text-white"
+                >Vue Solana</span
+              >
+              <span class="block text-sm font-medium text-slate-600 dark:text-slate-400"
+                >Documentation</span
+              >
             </span>
           </NuxtLink>
 
-          <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between lg:justify-end">
+          <div
+            class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between lg:justify-end"
+          >
             <nav class="flex flex-wrap gap-2" aria-label="Primary navigation">
               <UButton
                 v-for="link in navLinks"
                 :key="link.to"
                 :to="link.to"
-                :variant="$route.path.startsWith(link.to.split('/').slice(0, 2).join('/')) ? 'soft' : 'ghost'"
+                :variant="
+                  $route.path.startsWith(link.to.split('/').slice(0, 2).join('/'))
+                    ? 'soft'
+                    : 'ghost'
+                "
                 color="neutral"
                 size="sm"
                 class="font-semibold"
@@ -44,7 +68,7 @@ const navLinks = [
               </UButton>
             </nav>
 
-<!--            <UColorModeButton class="self-start" />-->
+            <!--            <UColorModeButton class="self-start" />-->
           </div>
         </header>
 

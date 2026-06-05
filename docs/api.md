@@ -11,14 +11,14 @@ For Solana terminology, see [Solana Concepts For Vue Developers](./solana-concep
 ### Configuration
 
 ```ts
-type SolanaCluster = 'mainnet-beta' | 'testnet' | 'devnet' | 'localnet'
+type SolanaCluster = "mainnet-beta" | "testnet" | "devnet" | "localnet";
 
 interface SolanaConfig {
-  cluster?: SolanaCluster
-  endpoint?: string
-  wsEndpoint?: string
-  commitment?: Commitment
-  autoConnect?: boolean
+  cluster?: SolanaCluster;
+  endpoint?: string;
+  wsEndpoint?: string;
+  commitment?: Commitment;
+  autoConnect?: boolean;
 }
 ```
 
@@ -37,10 +37,10 @@ Use `mainnet-beta` rather than `mainnet`.
 
 ```ts
 interface SolanaContext {
-  cluster: SolanaCluster
-  endpoint: string
-  wsEndpoint: string
-  connection: Connection
+  cluster: SolanaCluster;
+  endpoint: string;
+  wsEndpoint: string;
+  connection: Connection;
 }
 ```
 
@@ -48,17 +48,17 @@ interface SolanaContext {
 
 ```ts
 interface SolanaWallet {
-  publicKey: PublicKey | null
-  connected: boolean
-  connecting?: boolean
-  connect: () => Promise<void>
-  disconnect: () => Promise<void>
-  signTransaction?: <T extends SolanaTransaction>(transaction: T) => Promise<T>
-  signAllTransactions?: <T extends SolanaTransaction>(transactions: T[]) => Promise<T[]>
+  publicKey: PublicKey | null;
+  connected: boolean;
+  connecting?: boolean;
+  connect: () => Promise<void>;
+  disconnect: () => Promise<void>;
+  signTransaction?: <T extends SolanaTransaction>(transaction: T) => Promise<T>;
+  signAllTransactions?: <T extends SolanaTransaction>(transactions: T[]) => Promise<T[]>;
   signAndSendTransaction?: (
     transaction: SolanaTransaction,
-    options?: SendOptions
-  ) => Promise<{ signature: TransactionSignature }>
+    options?: SendOptions,
+  ) => Promise<{ signature: TransactionSignature }>;
 }
 ```
 
@@ -84,10 +84,12 @@ Browser wallet discovery is not implemented yet. Apps that need wallet actions m
 Installs the Solana context into a Vue app.
 
 ```ts
-createApp(App).use(createSolanaPlugin({
-  cluster: 'devnet',
-  commitment: 'confirmed'
-}))
+createApp(App).use(
+  createSolanaPlugin({
+    cluster: "devnet",
+    commitment: "confirmed",
+  }),
+);
 ```
 
 `VueSolana` is an alias for `createSolanaPlugin`.
@@ -159,14 +161,14 @@ Returns the same state shape as `useTransaction()`.
 
 ```ts
 export default defineNuxtConfig({
-  modules: ['@vue-solana/nuxt'],
+  modules: ["@vue-solana/nuxt"],
   solana: {
-    cluster: 'devnet',
-    endpoint: 'https://api.devnet.solana.com',
-    wsEndpoint: 'wss://api.devnet.solana.com',
-    commitment: 'confirmed'
-  }
-})
+    cluster: "devnet",
+    endpoint: "https://api.devnet.solana.com",
+    wsEndpoint: "wss://api.devnet.solana.com",
+    commitment: "confirmed",
+  },
+});
 ```
 
 ### Auto-Imports

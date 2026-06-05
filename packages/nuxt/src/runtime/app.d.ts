@@ -1,12 +1,12 @@
-declare module '#app' {
-  import type { App } from 'vue'
+declare module "#app" {
+  import type { App } from "vue";
 
   export interface NuxtApp {
-    vueApp: App
+    vueApp: App;
   }
 
-  export function defineNuxtPlugin(plugin: (nuxtApp: NuxtApp) => void): unknown
+  export function defineNuxtPlugin(plugin: (nuxtApp: NuxtApp) => void): unknown;
   export function useRuntimeConfig(): {
-    public: Record<string, unknown>
-  }
+    public: Record<string, unknown>;
+  };
 }

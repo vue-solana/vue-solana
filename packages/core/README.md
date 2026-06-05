@@ -31,29 +31,29 @@ npm install @vue-solana/core @solana/web3-compat
 ## Quick Start
 
 ```ts
-import { createSolanaContext } from '@vue-solana/core'
+import { createSolanaContext } from "@vue-solana/core";
 
 const solana = createSolanaContext({
-  cluster: 'devnet'
-})
+  cluster: "devnet",
+});
 
-const { blockhash } = await solana.connection.getLatestBlockhash()
+const { blockhash } = await solana.connection.getLatestBlockhash();
 
-console.log(solana.endpoint, blockhash)
+console.log(solana.endpoint, blockhash);
 ```
 
 ## Configuration
 
 ```ts
-import type { SolanaConfig } from '@vue-solana/core'
+import type { SolanaConfig } from "@vue-solana/core";
 
 const config: SolanaConfig = {
-  cluster: 'devnet',
-  endpoint: 'https://api.devnet.solana.com',
-  wsEndpoint: 'wss://api.devnet.solana.com',
-  commitment: 'confirmed',
-  autoConnect: false
-}
+  cluster: "devnet",
+  endpoint: "https://api.devnet.solana.com",
+  wsEndpoint: "wss://api.devnet.solana.com",
+  commitment: "confirmed",
+  autoConnect: false,
+};
 ```
 
 Supported clusters are `mainnet-beta`, `testnet`, `devnet`, and `localnet`. If `endpoint` is omitted, the package uses the public Solana RPC endpoint for the selected cluster. If `wsEndpoint` is omitted, it is derived from the RPC endpoint.
@@ -82,15 +82,15 @@ https://faucet.solana.com
 ## Wallet Interface
 
 ```ts
-import type { SolanaWallet } from '@vue-solana/core'
+import type { SolanaWallet } from "@vue-solana/core";
 
 const wallet: SolanaWallet = {
   publicKey: null,
   connected: false,
   connect: async () => {},
   disconnect: async () => {},
-  signTransaction: async transaction => transaction
-}
+  signTransaction: async (transaction) => transaction,
+};
 ```
 
 Browser wallet discovery is not included yet. If you need wallet connection or transaction signing today, provide an object that implements `SolanaWallet`.
@@ -109,12 +109,8 @@ For complete runnable Vue and Nuxt examples that use this package through the fr
 If TypeScript cannot resolve `@solana/web3-compat`, add `types/web3-compat.d.ts` to your app:
 
 ```ts
-declare module '@solana/web3-compat' {
-  export type {
-    Commitment,
-    SendOptions,
-    TransactionSignature
-  } from '@solana/web3.js'
+declare module "@solana/web3-compat" {
+  export type { Commitment, SendOptions, TransactionSignature } from "@solana/web3.js";
   export {
     Connection,
     Keypair,
@@ -122,8 +118,8 @@ declare module '@solana/web3-compat' {
     SystemProgram,
     Transaction,
     TransactionInstruction,
-    VersionedTransaction
-  } from '@solana/web3.js'
+    VersionedTransaction,
+  } from "@solana/web3.js";
 }
 ```
 

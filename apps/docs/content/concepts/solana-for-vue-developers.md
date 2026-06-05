@@ -20,9 +20,9 @@ Vue Solana packages create and provide that connection for Vue and Nuxt code so 
 
 ```ts
 createSolanaPlugin({
-  cluster: 'devnet',
-  commitment: 'confirmed'
-})
+  cluster: "devnet",
+  commitment: "confirmed",
+});
 ```
 
 ## Public Keys And Addresses
@@ -30,9 +30,9 @@ createSolanaPlugin({
 A public key is a Solana account address. You can safely show public keys in a frontend app.
 
 ```ts
-import { PublicKey } from '@solana/web3-compat'
+import { PublicKey } from "@solana/web3-compat";
 
-const publicKey = new PublicKey('PASTE_A_SOLANA_ADDRESS')
+const publicKey = new PublicKey("PASTE_A_SOLANA_ADDRESS");
 ```
 
 Never expose private keys, seed phrases, or secret key arrays in frontend code.
@@ -48,8 +48,8 @@ SOL is the native token on Solana. Lamports are the smallest unit of SOL.
 RPC balance methods return lamports. Convert lamports to SOL only for display.
 
 ```ts
-const lamports = await connection.getBalance(publicKey)
-const sol = lamports / 1_000_000_000
+const lamports = await connection.getBalance(publicKey);
+const sol = lamports / 1_000_000_000;
 ```
 
 ## Wallets
@@ -78,9 +78,9 @@ Example:
 
 ```ts
 createSolanaPlugin({
-  cluster: 'devnet',
-  commitment: 'confirmed'
-})
+  cluster: "devnet",
+  commitment: "confirmed",
+});
 ```
 
 Official reference: [Commitment Status](https://solana.com/docs/rpc#configuring-state-commitment)

@@ -6,19 +6,19 @@ This project is early-stage. RPC and balance reads are usable; first-class brows
 
 ## Packages
 
-- `@vue-solana/core`: framework-agnostic Solana configuration, RPC, and wallet primitives.
-- `@vue-solana/vue`: Vue plugin and composables.
-- `@vue-solana/nuxt`: Nuxt module wrapping the Vue package with auto-imported composables.
+- [`@vue-solana/core`](https://www.npmjs.com/package/@vue-solana/core): framework-agnostic Solana configuration, RPC, and wallet primitives.
+- [`@vue-solana/vue`](https://www.npmjs.com/package/@vue-solana/vue): Vue plugin and composables.
+- [`@vue-solana/nuxt`](https://www.npmjs.com/package/@vue-solana/nuxt): Nuxt module wrapping the Vue package with auto-imported composables.
 
 ## Which Package Should I Use?
 
 Use `@solana/web3-compat` directly if you only need raw Solana APIs such as `Connection`, `PublicKey`, and transactions.
 
-Use `@vue-solana/core` if you want shared Solana config, cluster endpoint defaults, wallet types, and transaction helpers without Vue.
+Use [`@vue-solana/core`](https://www.npmjs.com/package/@vue-solana/core) if you want shared Solana config, cluster endpoint defaults, wallet types, and transaction helpers without Vue.
 
-Use `@vue-solana/vue` in Vue apps.
+Use [`@vue-solana/vue`](https://www.npmjs.com/package/@vue-solana/vue) in Vue apps.
 
-Use `@vue-solana/nuxt` in Nuxt apps.
+Use [`@vue-solana/nuxt`](https://www.npmjs.com/package/@vue-solana/nuxt) in Nuxt apps.
 
 `@vue-solana/core` does not replace `@solana/web3-compat`. It builds on top of it and keeps shared Vue Solana behavior in one place.
 
@@ -86,10 +86,16 @@ Root `docs/` is kept for now as reference material:
 
 ```sh
 pnpm install
+pnpm lint
+pnpm format
 pnpm typecheck
 pnpm build:packages
 pnpm dev:docs
 ```
+
+`pnpm install` runs the root `prepare` script and installs the Husky Git hooks. If hooks are missing after changing package managers or reinstalling dependencies, run `pnpm prepare` from the repository root.
+
+Pre-commit checks run through lint-staged and only lint/format staged files. Run `pnpm lint`, `pnpm format`, `pnpm typecheck`, and `pnpm build:packages` before opening larger pull requests.
 
 ## Example Apps
 
@@ -120,12 +126,8 @@ Consumer workaround:
 If your app reports that TypeScript cannot find declarations for `@solana/web3-compat`, add a local declaration file such as `types/web3-compat.d.ts`:
 
 ```ts
-declare module '@solana/web3-compat' {
-  export type {
-    Commitment,
-    SendOptions,
-    TransactionSignature
-  } from '@solana/web3.js'
+declare module "@solana/web3-compat" {
+  export type { Commitment, SendOptions, TransactionSignature } from "@solana/web3.js";
   export {
     Connection,
     Keypair,
@@ -133,8 +135,8 @@ declare module '@solana/web3-compat' {
     SystemProgram,
     Transaction,
     TransactionInstruction,
-    VersionedTransaction
-  } from '@solana/web3.js'
+    VersionedTransaction,
+  } from "@solana/web3.js";
 }
 ```
 

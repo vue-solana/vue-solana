@@ -1,6 +1,6 @@
 {
   "name": "@vue-solana/vue",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Vue plugin and composables for Solana applications.",
   "license": "MIT",
   "keywords": [
@@ -31,7 +31,9 @@
       "require": "./dist/index.cjs"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "publishConfig": {
     "access": "public"
   },

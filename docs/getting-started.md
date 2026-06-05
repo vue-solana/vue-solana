@@ -75,12 +75,8 @@ pnpm add ../path-to/vue-solana/packages/nuxt ../path-to/vue-solana/packages/vue 
 Runtime imports still use the real `@solana/web3-compat` package. If TypeScript reports that it cannot find declarations for `@solana/web3-compat`, add this local declaration file to your app as `types/web3-compat.d.ts`:
 
 ```ts
-declare module '@solana/web3-compat' {
-  export type {
-    Commitment,
-    SendOptions,
-    TransactionSignature
-  } from '@solana/web3.js'
+declare module "@solana/web3-compat" {
+  export type { Commitment, SendOptions, TransactionSignature } from "@solana/web3.js";
   export {
     Connection,
     Keypair,
@@ -88,8 +84,8 @@ declare module '@solana/web3-compat' {
     SystemProgram,
     Transaction,
     TransactionInstruction,
-    VersionedTransaction
-  } from '@solana/web3.js'
+    VersionedTransaction,
+  } from "@solana/web3.js";
 }
 ```
 
@@ -98,23 +94,25 @@ Make sure your `tsconfig.json` includes the file. Most Vue and Nuxt apps include
 ## Vue
 
 ```ts
-import { createApp } from 'vue'
-import { createSolanaPlugin } from '@vue-solana/vue'
+import { createApp } from "vue";
+import { createSolanaPlugin } from "@vue-solana/vue";
 
-createApp(App).use(createSolanaPlugin({
-  cluster: 'devnet'
-}))
+createApp(App).use(
+  createSolanaPlugin({
+    cluster: "devnet",
+  }),
+);
 ```
 
 ## Nuxt
 
 ```ts
 export default defineNuxtConfig({
-  modules: ['@vue-solana/nuxt'],
+  modules: ["@vue-solana/nuxt"],
   solana: {
-    cluster: 'devnet'
-  }
-})
+    cluster: "devnet",
+  },
+});
 ```
 
 ## Manual Dev Testing
@@ -221,36 +219,38 @@ pnpm install
 In a Vue app, register the plugin:
 
 ```ts
-import { createApp } from 'vue'
-import { createSolanaPlugin } from '@vue-solana/vue'
-import App from './App.vue'
+import { createApp } from "vue";
+import { createSolanaPlugin } from "@vue-solana/vue";
+import App from "./App.vue";
 
 createApp(App)
-  .use(createSolanaPlugin({
-    cluster: 'devnet'
-  }))
-  .mount('#app')
+  .use(
+    createSolanaPlugin({
+      cluster: "devnet",
+    }),
+  )
+  .mount("#app");
 ```
 
 Then test `useRpc()` inside a component:
 
 ```vue
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
-import { useRpc } from '@vue-solana/vue'
+import { onMounted, ref } from "vue";
+import { useRpc } from "@vue-solana/vue";
 
-const { cluster, endpoint, connection } = useRpc()
-const latestBlockhash = ref<string | null>(null)
-const error = ref<unknown>(null)
+const { cluster, endpoint, connection } = useRpc();
+const latestBlockhash = ref<string | null>(null);
+const error = ref<unknown>(null);
 
 onMounted(async () => {
   try {
-    const result = await connection.getLatestBlockhash()
-    latestBlockhash.value = result.blockhash
+    const result = await connection.getLatestBlockhash();
+    latestBlockhash.value = result.blockhash;
   } catch (cause) {
-    error.value = cause
+    error.value = cause;
   }
-})
+});
 </script>
 
 <template>
@@ -275,11 +275,11 @@ Use the wallet address from your devnet wallet.
 
 ```vue
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useBalance } from '@vue-solana/vue'
+import { ref } from "vue";
+import { useBalance } from "@vue-solana/vue";
 
-const address = ref('PASTE_YOUR_DEVNET_WALLET_ADDRESS')
-const { balance, loading, error, refresh } = useBalance(address)
+const address = ref("PASTE_YOUR_DEVNET_WALLET_ADDRESS");
+const { balance, loading, error, refresh } = useBalance(address);
 </script>
 
 <template>
@@ -346,24 +346,24 @@ In a Nuxt app, configure the module:
 
 ```ts
 export default defineNuxtConfig({
-  modules: ['@vue-solana/nuxt'],
+  modules: ["@vue-solana/nuxt"],
   solana: {
-    cluster: 'devnet'
-  }
-})
+    cluster: "devnet",
+  },
+});
 ```
 
 Then use the auto-imported composables in a page:
 
 ```vue
 <script setup lang="ts">
-const { cluster, endpoint, connection } = useSolanaRpc()
-const blockhash = ref<string | null>(null)
+const { cluster, endpoint, connection } = useSolanaRpc();
+const blockhash = ref<string | null>(null);
 
 onMounted(async () => {
-  const result = await connection.getLatestBlockhash()
-  blockhash.value = result.blockhash
-})
+  const result = await connection.getLatestBlockhash();
+  blockhash.value = result.blockhash;
+});
 </script>
 
 <template>
@@ -402,14 +402,14 @@ That means the libraries do not yet automatically discover installed wallets or 
 For now, full wallet testing requires manually passing an object that implements the `SolanaWallet` interface:
 
 ```ts
-import type { SolanaWallet } from '@vue-solana/core'
+import type { SolanaWallet } from "@vue-solana/core";
 
 const wallet: SolanaWallet = {
   publicKey: null,
   connected: false,
   connect: async () => {},
-  disconnect: async () => {}
-}
+  disconnect: async () => {},
+};
 ```
 
 This is enough to test app state and composable behavior, but it is not enough for realistic connect, sign, and send flows.

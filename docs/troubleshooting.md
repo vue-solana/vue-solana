@@ -7,12 +7,8 @@
 Add `types/web3-compat.d.ts` to your app:
 
 ```ts
-declare module '@solana/web3-compat' {
-  export type {
-    Commitment,
-    SendOptions,
-    TransactionSignature
-  } from '@solana/web3.js'
+declare module "@solana/web3-compat" {
+  export type { Commitment, SendOptions, TransactionSignature } from "@solana/web3.js";
   export {
     Connection,
     Keypair,
@@ -20,8 +16,8 @@ declare module '@solana/web3-compat' {
     SystemProgram,
     Transaction,
     TransactionInstruction,
-    VersionedTransaction
-  } from '@solana/web3.js'
+    VersionedTransaction,
+  } from "@solana/web3.js";
 }
 ```
 
@@ -40,17 +36,19 @@ This means a Vue composable was called without installing the plugin.
 For Vue:
 
 ```ts
-createApp(App).use(createSolanaPlugin({
-  cluster: 'devnet'
-}))
+createApp(App).use(
+  createSolanaPlugin({
+    cluster: "devnet",
+  }),
+);
 ```
 
 For Nuxt, register the module:
 
 ```ts
 export default defineNuxtConfig({
-  modules: ['@vue-solana/nuxt']
-})
+  modules: ["@vue-solana/nuxt"],
+});
 ```
 
 ## `No Solana wallet is configured`

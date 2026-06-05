@@ -1,5 +1,5 @@
 ---
-title: '@vue-solana/nuxt'
+title: "@vue-solana/nuxt"
 description: Nuxt module for Solana applications.
 ---
 
@@ -15,24 +15,24 @@ pnpm add @vue-solana/nuxt @vue-solana/vue @vue-solana/core @solana/web3-compat
 
 ```ts
 export default defineNuxtConfig({
-  modules: ['@vue-solana/nuxt'],
+  modules: ["@vue-solana/nuxt"],
   solana: {
-    cluster: 'devnet'
-  }
-})
+    cluster: "devnet",
+  },
+});
 ```
 
 You can also configure a custom RPC endpoint:
 
 ```ts
 export default defineNuxtConfig({
-  modules: ['@vue-solana/nuxt'],
+  modules: ["@vue-solana/nuxt"],
   solana: {
-    cluster: 'mainnet-beta',
-    endpoint: 'https://your-rpc.example.com',
-    commitment: 'confirmed'
-  }
-})
+    cluster: "mainnet-beta",
+    endpoint: "https://your-rpc.example.com",
+    commitment: "confirmed",
+  },
+});
 ```
 
 Supported clusters are `mainnet-beta`, `devnet`, `testnet`, and `localnet`. Use `mainnet-beta` for Solana mainnet; this is Solana's official cluster name.
@@ -52,13 +52,7 @@ The module auto-imports these composables from `@vue-solana/vue`:
 
 ```vue
 <script setup lang="ts">
-const {
-  cluster,
-  endpoint,
-  status,
-  latestBlockhash,
-  checkConnection
-} = useSolanaRpc()
+const { cluster, endpoint, status, latestBlockhash, checkConnection } = useSolanaRpc();
 </script>
 
 <template>
@@ -76,8 +70,8 @@ const {
 
 ```vue
 <script setup lang="ts">
-const address = ref('PASTE_A_SOLANA_ADDRESS')
-const { balance, loading, error, refresh } = useSolanaBalance(address)
+const address = ref("PASTE_A_SOLANA_ADDRESS");
+const { balance, loading, error, refresh } = useSolanaBalance(address);
 </script>
 
 <template>
@@ -94,7 +88,7 @@ const { balance, loading, error, refresh } = useSolanaBalance(address)
 
 ```vue
 <script setup lang="ts">
-const { publicKey, connected, connect, disconnect } = useSolanaWallet()
+const { publicKey, connected, connect, disconnect } = useSolanaWallet();
 </script>
 
 <template>

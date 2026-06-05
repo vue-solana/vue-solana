@@ -1,5 +1,5 @@
 ---
-title: '@vue-solana/core'
+title: "@vue-solana/core"
 description: Framework-agnostic Solana configuration, RPC, wallet types, and transaction helpers.
 ---
 
@@ -18,28 +18,28 @@ pnpm add @vue-solana/core @solana/web3-compat
 ## Quick Start
 
 ```ts
-import { createSolanaContext } from '@vue-solana/core'
+import { createSolanaContext } from "@vue-solana/core";
 
 const solana = createSolanaContext({
-  cluster: 'devnet'
-})
+  cluster: "devnet",
+});
 
-const { blockhash } = await solana.connection.getLatestBlockhash()
+const { blockhash } = await solana.connection.getLatestBlockhash();
 
-console.log(solana.endpoint, blockhash)
+console.log(solana.endpoint, blockhash);
 ```
 
 ## Configuration
 
 ```ts
-type SolanaCluster = 'mainnet-beta' | 'testnet' | 'devnet' | 'localnet'
+type SolanaCluster = "mainnet-beta" | "testnet" | "devnet" | "localnet";
 
 interface SolanaConfig {
-  cluster?: SolanaCluster
-  endpoint?: string
-  wsEndpoint?: string
-  commitment?: Commitment
-  autoConnect?: boolean
+  cluster?: SolanaCluster;
+  endpoint?: string;
+  wsEndpoint?: string;
+  commitment?: Commitment;
+  autoConnect?: boolean;
 }
 ```
 
@@ -51,10 +51,10 @@ Use `mainnet-beta` for Solana mainnet. This is Solana's official cluster name; t
 
 ```ts
 interface SolanaContext {
-  cluster: SolanaCluster
-  endpoint: string
-  wsEndpoint: string
-  connection: Connection
+  cluster: SolanaCluster;
+  endpoint: string;
+  wsEndpoint: string;
+  connection: Connection;
 }
 ```
 
@@ -62,17 +62,17 @@ interface SolanaContext {
 
 ```ts
 interface SolanaWallet {
-  publicKey: PublicKey | null
-  connected: boolean
-  connecting?: boolean
-  connect: () => Promise<void>
-  disconnect: () => Promise<void>
-  signTransaction?: <T extends SolanaTransaction>(transaction: T) => Promise<T>
-  signAllTransactions?: <T extends SolanaTransaction>(transactions: T[]) => Promise<T[]>
+  publicKey: PublicKey | null;
+  connected: boolean;
+  connecting?: boolean;
+  connect: () => Promise<void>;
+  disconnect: () => Promise<void>;
+  signTransaction?: <T extends SolanaTransaction>(transaction: T) => Promise<T>;
+  signAllTransactions?: <T extends SolanaTransaction>(transactions: T[]) => Promise<T[]>;
   signAndSendTransaction?: (
     transaction: SolanaTransaction,
-    options?: SendOptions
-  ) => Promise<{ signature: TransactionSignature }>
+    options?: SendOptions,
+  ) => Promise<{ signature: TransactionSignature }>;
 }
 ```
 
