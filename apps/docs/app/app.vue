@@ -5,8 +5,6 @@ const navLinks = [
   { label: 'Packages', to: '/packages/vue' },
   { label: 'Examples', to: '/examples/vue-vite' },
 ]
-
-const colorMode = useColorMode()
 </script>
 
 <template>
@@ -14,15 +12,15 @@ const colorMode = useColorMode()
     <NuxtRouteAnnouncer />
     <div class="min-h-screen overflow-hidden bg-white text-slate-950 dark:bg-slate-950 dark:text-white">
       <div class="pointer-events-none fixed inset-0 -z-10">
-        <div class="absolute left-[-12rem] top-[-14rem] h-[34rem] w-[34rem] rounded-full bg-emerald-300/35 blur-3xl dark:bg-emerald-400/15" />
-        <div class="absolute right-[-10rem] top-20 h-[30rem] w-[30rem] rounded-full bg-violet-400/25 blur-3xl dark:bg-violet-500/20" />
-        <div class="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-violet-400/70 to-transparent" />
+        <div class="absolute -left-48 -top-56 size-136 rounded-full bg-emerald-300/35 blur-3xl dark:bg-emerald-400/15" />
+        <div class="absolute -right-40 top-20 size-120 rounded-full bg-violet-400/25 blur-3xl dark:bg-violet-500/20" />
+        <div class="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-violet-400/70 to-transparent" />
       </div>
 
       <div class="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 sm:px-6 lg:px-8">
         <header class="flex flex-col gap-5 py-5 sm:py-6 lg:flex-row lg:items-center lg:justify-between">
           <NuxtLink class="group inline-flex items-center gap-3 text-inherit no-underline" to="/">
-            <span class="grid size-11 place-items-center rounded-2xl bg-gradient-to-br from-emerald-300 via-cyan-300 to-violet-500 text-sm font-black text-slate-950 shadow-lg shadow-violet-500/20 transition-transform group-hover:scale-105">
+            <span class="grid size-11 place-items-center rounded-2xl bg-linear-to-br from-emerald-300 via-cyan-300 to-violet-500 text-sm font-black text-slate-950 shadow-lg shadow-violet-500/20 transition-transform group-hover:scale-105">
               VS
             </span>
             <span class="leading-tight">
@@ -46,31 +44,7 @@ const colorMode = useColorMode()
               </UButton>
             </nav>
 
-            <ClientOnly>
-              <label class="sr-only" for="color-mode-select">Color mode</label>
-              <select
-                id="color-mode-select"
-                v-model="colorMode.preference"
-                class="h-8 self-start rounded-md border border-slate-200 bg-slate-100 px-3 text-sm font-semibold text-slate-900 outline-none transition-colors dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 sm:self-auto"
-              >
-                <option value="system">System</option>
-                <option value="light">Light</option>
-                <option value="dark">Dark</option>
-              </select>
-
-              <template #fallback>
-                <UButton
-                  aria-label="Toggle color mode"
-                  icon="i-lucide-moon"
-                  color="neutral"
-                  variant="soft"
-                  size="sm"
-                  class="self-start font-semibold sm:self-auto"
-                >
-                  Theme
-                </UButton>
-              </template>
-            </ClientOnly>
+<!--            <UColorModeButton class="self-start" />-->
           </div>
         </header>
 

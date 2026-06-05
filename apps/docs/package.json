@@ -12,7 +12,6 @@
   "dependencies": {
     "@nuxt/content": "^3.14.0",
     "@nuxt/ui": "^4.8.1",
-    "@nuxtjs/color-mode": "^4.0.0",
     "nuxt": "^4.4.6",
     "tailwindcss": "^4.3.0",
     "typescript": "^6.0.3",
