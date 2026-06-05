@@ -116,7 +116,27 @@ Package releases are managed with Changesets. For package-facing changes, add a 
 pnpm changeset
 ```
 
+Add a changeset for changes that affect published packages, including runtime behavior fixes, public API changes, package dependency changes that affect consumers, and package README/docs updates that should appear in published package metadata.
+
+Do not add a changeset for repository-only changes such as CI updates, tests-only changes, formatting, linting, or root documentation that does not affect a published package.
+
 When changes with pending changesets land on `main`, the release workflow opens or updates a version PR. Merging that version PR publishes changed packages to npm using npm Trusted Publishing with GitHub Actions OIDC.
+
+Release flow:
+
+1. Open a pull request with package changes and a changeset.
+2. Merge the pull request into `main` after CI passes.
+3. Wait for the `Release` workflow to open or update the `chore: version packages` PR.
+4. Review and merge the version PR.
+5. Confirm the next `Release` workflow run publishes the changed packages.
+
+To verify a release, check GitHub Actions for the latest `Release` workflow run. The version PR run should create or update the release PR, and the version PR merge run should publish packages. You can also verify published versions on npm:
+
+```sh
+pnpm view @vue-solana/core version
+pnpm view @vue-solana/vue version
+pnpm view @vue-solana/nuxt version
+```
 
 Before publishing, configure a trusted publisher on npm for each published package:
 
