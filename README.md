@@ -88,6 +88,7 @@ Root `docs/` is kept for now as reference material:
 pnpm install
 pnpm lint
 pnpm format
+pnpm test
 pnpm typecheck
 pnpm build:packages
 pnpm dev:docs
@@ -95,7 +96,43 @@ pnpm dev:docs
 
 `pnpm install` runs the root `prepare` script and installs the Husky Git hooks. If hooks are missing after changing package managers or reinstalling dependencies, run `pnpm prepare` from the repository root.
 
-Pre-commit checks run through lint-staged and only lint/format staged files. Run `pnpm lint`, `pnpm format`, `pnpm typecheck`, and `pnpm build:packages` before opening larger pull requests.
+Pre-commit checks run through lint-staged and only lint/format staged files. Run `pnpm lint`, `pnpm format`, `pnpm test`, `pnpm typecheck`, and `pnpm build:packages` before opening larger pull requests.
+
+## CI And Releases
+
+GitHub Actions runs CI on pull requests and pushes to `main`:
+
+```sh
+pnpm lint
+pnpm format
+pnpm test
+pnpm typecheck
+pnpm build:packages
+```
+
+Package releases are managed with Changesets. For package-facing changes, add a changeset before opening a pull request:
+
+```sh
+pnpm changeset
+```
+
+When changes with pending changesets land on `main`, the release workflow opens or updates a version PR. Merging that version PR publishes changed packages to npm using npm Trusted Publishing with GitHub Actions OIDC.
+
+Before publishing, configure a trusted publisher on npm for each published package:
+
+- `@vue-solana/core`
+- `@vue-solana/vue`
+- `@vue-solana/nuxt`
+
+Use these npm trusted publisher settings:
+
+- Publisher: GitHub Actions
+- Organization or user: `vue-solana`
+- Repository: `vue-solana`
+- Workflow filename: `release.yml`
+- Allowed action: `npm publish`
+
+The release workflow does not use a long-lived `NPM_TOKEN` secret.
 
 ## Example Apps
 

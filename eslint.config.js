@@ -55,5 +55,11 @@ export default tseslint.config(
       "vue/no-v-html": "off",
     },
   },
+  {
+    files: ["**/*.test.ts"],
+    rules: {
+      "vue/one-component-per-file": "off",
+    },
+  },
   prettier,
 );

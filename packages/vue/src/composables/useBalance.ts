@@ -37,7 +37,7 @@ export function useBalance(
   watch(
     () => toValue(address),
     () => {
-      void refresh();
+      void refresh().catch(() => undefined);
     },
     { immediate: true },
   );
