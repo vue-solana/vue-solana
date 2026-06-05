@@ -1,11 +1,11 @@
-import { defineBuildConfig } from 'unbuild'
+import { defineBuildConfig } from "unbuild";
 
 export default defineBuildConfig({
-  entries: ['src/module', 'src/runtime/plugin'],
+  entries: ["src/module", "src/runtime/plugin"],
   declaration: true,
   clean: true,
   rollup: {
-    emitCJS: true
+    emitCJS: true,
   },
-  externals: ['#app', '@nuxt/kit', '@vue-solana/core', '@vue-solana/vue', 'nuxt', 'vue']
-})
+  externals: ["#app", "@nuxt/kit", "@vue-solana/core", "@vue-solana/vue", "nuxt", "vue"],
+});

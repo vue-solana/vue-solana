@@ -26,24 +26,24 @@ npm install @vue-solana/nuxt @vue-solana/vue @vue-solana/core @solana/web3-compa
 
 ```ts
 export default defineNuxtConfig({
-  modules: ['@vue-solana/nuxt'],
+  modules: ["@vue-solana/nuxt"],
   solana: {
-    cluster: 'devnet'
-  }
-})
+    cluster: "devnet",
+  },
+});
 ```
 
 You can also configure a custom RPC endpoint:
 
 ```ts
 export default defineNuxtConfig({
-  modules: ['@vue-solana/nuxt'],
+  modules: ["@vue-solana/nuxt"],
   solana: {
-    cluster: 'mainnet-beta',
-    endpoint: 'https://your-rpc.example.com',
-    commitment: 'confirmed'
-  }
-})
+    cluster: "mainnet-beta",
+    endpoint: "https://your-rpc.example.com",
+    commitment: "confirmed",
+  },
+});
 ```
 
 Supported clusters are `mainnet-beta`, `devnet`, `testnet`, and `localnet`. Use `mainnet-beta` for Solana mainnet; this is Solana's official cluster name.
@@ -69,13 +69,7 @@ The module auto-imports these composables from `@vue-solana/vue`:
 
 ```vue
 <script setup lang="ts">
-const {
-  cluster,
-  endpoint,
-  status,
-  latestBlockhash,
-  checkConnection
-} = useSolanaRpc()
+const { cluster, endpoint, status, latestBlockhash, checkConnection } = useSolanaRpc();
 </script>
 
 <template>
@@ -93,8 +87,8 @@ const {
 
 ```vue
 <script setup lang="ts">
-const address = ref('PASTE_A_SOLANA_ADDRESS')
-const { balance, loading, error, refresh } = useSolanaBalance(address)
+const address = ref("PASTE_A_SOLANA_ADDRESS");
+const { balance, loading, error, refresh } = useSolanaBalance(address);
 </script>
 
 <template>
@@ -111,7 +105,7 @@ const { balance, loading, error, refresh } = useSolanaBalance(address)
 
 ```vue
 <script setup lang="ts">
-const { publicKey, connected, connect, disconnect } = useSolanaWallet()
+const { publicKey, connected, connect, disconnect } = useSolanaWallet();
 </script>
 
 <template>
@@ -143,12 +137,8 @@ Source: [`examples/nuxt`](https://github.com/vue-solana/vue-solana/tree/main/exa
 If TypeScript cannot resolve `@solana/web3-compat`, add `types/web3-compat.d.ts` to your app:
 
 ```ts
-declare module '@solana/web3-compat' {
-  export type {
-    Commitment,
-    SendOptions,
-    TransactionSignature
-  } from '@solana/web3.js'
+declare module "@solana/web3-compat" {
+  export type { Commitment, SendOptions, TransactionSignature } from "@solana/web3.js";
   export {
     Connection,
     Keypair,
@@ -156,8 +146,8 @@ declare module '@solana/web3-compat' {
     SystemProgram,
     Transaction,
     TransactionInstruction,
-    VersionedTransaction
-  } from '@solana/web3.js'
+    VersionedTransaction,
+  } from "@solana/web3.js";
 }
 ```
 

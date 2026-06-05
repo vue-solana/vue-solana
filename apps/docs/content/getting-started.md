@@ -47,12 +47,8 @@ npm install @vue-solana/nuxt @vue-solana/vue @vue-solana/core @solana/web3-compa
 Runtime imports still use the real `@solana/web3-compat` package. If TypeScript reports that it cannot find declarations for `@solana/web3-compat`, add this local declaration file to your app as `types/web3-compat.d.ts`:
 
 ```ts
-declare module '@solana/web3-compat' {
-  export type {
-    Commitment,
-    SendOptions,
-    TransactionSignature
-  } from '@solana/web3.js'
+declare module "@solana/web3-compat" {
+  export type { Commitment, SendOptions, TransactionSignature } from "@solana/web3.js";
   export {
     Connection,
     Keypair,
@@ -60,8 +56,8 @@ declare module '@solana/web3-compat' {
     SystemProgram,
     Transaction,
     TransactionInstruction,
-    VersionedTransaction
-  } from '@solana/web3.js'
+    VersionedTransaction,
+  } from "@solana/web3.js";
 }
 ```
 
@@ -70,26 +66,28 @@ Make sure your `tsconfig.json` includes the file. Most Vue and Nuxt apps include
 ## Vue Setup
 
 ```ts
-import { createApp } from 'vue'
-import { createSolanaPlugin } from '@vue-solana/vue'
-import App from './App.vue'
+import { createApp } from "vue";
+import { createSolanaPlugin } from "@vue-solana/vue";
+import App from "./App.vue";
 
 createApp(App)
-  .use(createSolanaPlugin({
-    cluster: 'devnet'
-  }))
-  .mount('#app')
+  .use(
+    createSolanaPlugin({
+      cluster: "devnet",
+    }),
+  )
+  .mount("#app");
 ```
 
 ## Nuxt Setup
 
 ```ts
 export default defineNuxtConfig({
-  modules: ['@vue-solana/nuxt'],
+  modules: ["@vue-solana/nuxt"],
   solana: {
-    cluster: 'devnet'
-  }
-})
+    cluster: "devnet",
+  },
+});
 ```
 
 ## Test RPC Without A Wallet
@@ -100,16 +98,16 @@ In Vue, use `useRpc()`:
 
 ```vue
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
-import { useRpc } from '@vue-solana/vue'
+import { onMounted, ref } from "vue";
+import { useRpc } from "@vue-solana/vue";
 
-const { cluster, endpoint, connection } = useRpc()
-const latestBlockhash = ref<string | null>(null)
+const { cluster, endpoint, connection } = useRpc();
+const latestBlockhash = ref<string | null>(null);
 
 onMounted(async () => {
-  const result = await connection.getLatestBlockhash()
-  latestBlockhash.value = result.blockhash
-})
+  const result = await connection.getLatestBlockhash();
+  latestBlockhash.value = result.blockhash;
+});
 </script>
 
 <template>
@@ -125,7 +123,7 @@ In Nuxt, use the auto-imported `useSolanaRpc()`:
 
 ```vue
 <script setup lang="ts">
-const { cluster, endpoint, checkConnection, latestBlockhash } = useSolanaRpc()
+const { cluster, endpoint, checkConnection, latestBlockhash } = useSolanaRpc();
 </script>
 
 <template>

@@ -1,9 +1,5 @@
-declare module '@solana/web3-compat' {
-  export type {
-    Commitment,
-    SendOptions,
-    TransactionSignature
-  } from '@solana/web3.js'
+declare module "@solana/web3-compat" {
+  export type { Commitment, SendOptions, TransactionSignature } from "@solana/web3.js";
   export {
     Connection,
     Keypair,
@@ -11,6 +7,6 @@ declare module '@solana/web3-compat' {
     SystemProgram,
     Transaction,
     TransactionInstruction,
-    VersionedTransaction
-  } from '@solana/web3.js'
+    VersionedTransaction,
+  } from "@solana/web3.js";
 }

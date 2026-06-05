@@ -25,25 +25,29 @@ npm install @vue-solana/vue @vue-solana/core @solana/web3-compat
 ## Plugin Setup
 
 ```ts
-import { createApp } from 'vue'
-import { createSolanaPlugin } from '@vue-solana/vue'
-import App from './App.vue'
+import { createApp } from "vue";
+import { createSolanaPlugin } from "@vue-solana/vue";
+import App from "./App.vue";
 
 createApp(App)
-  .use(createSolanaPlugin({
-    cluster: 'devnet'
-  }))
-  .mount('#app')
+  .use(
+    createSolanaPlugin({
+      cluster: "devnet",
+    }),
+  )
+  .mount("#app");
 ```
 
 You can also pass a custom RPC endpoint:
 
 ```ts
-createApp(App).use(createSolanaPlugin({
-  cluster: 'mainnet-beta',
-  endpoint: 'https://your-rpc.example.com',
-  commitment: 'confirmed'
-}))
+createApp(App).use(
+  createSolanaPlugin({
+    cluster: "mainnet-beta",
+    endpoint: "https://your-rpc.example.com",
+    commitment: "confirmed",
+  }),
+);
 ```
 
 Supported clusters are `mainnet-beta`, `devnet`, `testnet`, and `localnet`. Use `mainnet-beta` for Solana mainnet; this is Solana's official cluster name.
@@ -58,16 +62,9 @@ https://faucet.solana.com
 
 ```vue
 <script setup lang="ts">
-import { useRpc } from '@vue-solana/vue'
+import { useRpc } from "@vue-solana/vue";
 
-const {
-  cluster,
-  endpoint,
-  status,
-  error,
-  latestBlockhash,
-  checkConnection
-} = useRpc()
+const { cluster, endpoint, status, error, latestBlockhash, checkConnection } = useRpc();
 </script>
 
 <template>
@@ -86,11 +83,11 @@ const {
 
 ```vue
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useBalance } from '@vue-solana/vue'
+import { ref } from "vue";
+import { useBalance } from "@vue-solana/vue";
 
-const address = ref('PASTE_A_SOLANA_ADDRESS')
-const { balance, loading, error, refresh } = useBalance(address)
+const address = ref("PASTE_A_SOLANA_ADDRESS");
+const { balance, loading, error, refresh } = useBalance(address);
 </script>
 
 <template>
@@ -107,9 +104,9 @@ const { balance, loading, error, refresh } = useBalance(address)
 
 ```vue
 <script setup lang="ts">
-import { useWallet } from '@vue-solana/vue'
+import { useWallet } from "@vue-solana/vue";
 
-const { publicKey, connected, connecting, connect, disconnect } = useWallet()
+const { publicKey, connected, connecting, connect, disconnect } = useWallet();
 </script>
 
 <template>
@@ -128,13 +125,13 @@ Browser wallet discovery is not included yet. `connect()` works only after you c
 ## Transaction State
 
 ```ts
-import { useSignAndSendTransaction } from '@vue-solana/vue'
+import { useSignAndSendTransaction } from "@vue-solana/vue";
 
-const { signature, loading, error, execute } = useSignAndSendTransaction()
+const { signature, loading, error, execute } = useSignAndSendTransaction();
 
 await execute(transaction, {
-  skipPreflight: false
-})
+  skipPreflight: false,
+});
 ```
 
 The current wallet must be connected and support either `signAndSendTransaction` or `signTransaction`.
@@ -168,12 +165,8 @@ Source: [`examples/vue-vite`](https://github.com/vue-solana/vue-solana/tree/main
 If TypeScript cannot resolve `@solana/web3-compat`, add `types/web3-compat.d.ts` to your app:
 
 ```ts
-declare module '@solana/web3-compat' {
-  export type {
-    Commitment,
-    SendOptions,
-    TransactionSignature
-  } from '@solana/web3.js'
+declare module "@solana/web3-compat" {
+  export type { Commitment, SendOptions, TransactionSignature } from "@solana/web3.js";
   export {
     Connection,
     Keypair,
@@ -181,8 +174,8 @@ declare module '@solana/web3-compat' {
     SystemProgram,
     Transaction,
     TransactionInstruction,
-    VersionedTransaction
-  } from '@solana/web3.js'
+    VersionedTransaction,
+  } from "@solana/web3.js";
 }
 ```
 

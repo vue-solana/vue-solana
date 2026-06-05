@@ -1,8 +1,8 @@
-import { computed } from 'vue'
-import { useSolana } from './useSolana'
+import { computed } from "vue";
+import { useSolana } from "./useSolana";
 
 export function useRpc() {
-  const solana = useSolana()
+  const solana = useSolana();
 
   return {
     cluster: computed(() => solana.cluster),
@@ -12,6 +12,6 @@ export function useRpc() {
     error: solana.error,
     latestBlockhash: solana.latestBlockhash,
     checkConnection: solana.checkConnection,
-    connection: solana.connection
-  }
+    connection: solana.connection,
+  };
 }

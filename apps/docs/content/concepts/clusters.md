@@ -48,29 +48,29 @@ For Vue:
 
 ```ts
 createSolanaPlugin({
-  cluster: 'devnet'
-})
+  cluster: "devnet",
+});
 ```
 
 For Nuxt:
 
 ```ts
 export default defineNuxtConfig({
-  modules: ['@vue-solana/nuxt'],
+  modules: ["@vue-solana/nuxt"],
   solana: {
-    cluster: 'devnet'
-  }
-})
+    cluster: "devnet",
+  },
+});
 ```
 
 You can also pass a custom endpoint:
 
 ```ts
 createSolanaPlugin({
-  cluster: 'mainnet-beta',
-  endpoint: 'https://your-rpc.example.com',
-  commitment: 'confirmed'
-})
+  cluster: "mainnet-beta",
+  endpoint: "https://your-rpc.example.com",
+  commitment: "confirmed",
+});
 ```
 
 ## Get Devnet Or Testnet SOL
