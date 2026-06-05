@@ -3,7 +3,9 @@ import type { SolanaConfig } from '@vue-solana/core'
 
 export interface ModuleOptions extends SolanaConfig {}
 
-export default defineNuxtModule<ModuleOptions>({
+type DefinedNuxtModule = ReturnType<ReturnType<typeof defineNuxtModule<ModuleOptions>>['with']>
+
+const module: DefinedNuxtModule = defineNuxtModule<ModuleOptions>({
   meta: {
     name: '@vue-solana/nuxt',
     configKey: 'solana'
@@ -33,3 +35,5 @@ export default defineNuxtModule<ModuleOptions>({
     ])
   }
 })
+
+export default module
