@@ -53,8 +53,8 @@ useHead({
 </script>
 
 <template>
-  <main class="grid flex-1 gap-6 pb-12 pt-3 lg:grid-cols-[18rem_minmax(0,1fr)] lg:gap-8 lg:pb-16 lg:pt-6">
-    <aside class="lg:sticky lg:top-6 lg:self-start" aria-label="Documentation navigation">
+  <main class="grid flex-1 gap-6 pb-12 pt-3 lg:min-h-0 lg:grid-cols-[18rem_minmax(0,1fr)] lg:overflow-hidden lg:gap-8 lg:pb-8 lg:pt-6">
+    <aside class="lg:sticky lg:top-0 lg:max-h-full lg:self-start lg:overflow-y-auto" aria-label="Documentation navigation">
       <UCard
         variant="subtle"
         class="border-slate-200/80 bg-white/85 shadow-sm backdrop-blur dark:border-slate-800 dark:bg-slate-900/80"
@@ -99,7 +99,7 @@ useHead({
 
     <UCard
       variant="subtle"
-      class="min-w-0 border-slate-200/80 bg-white/90 shadow-xl shadow-slate-900/5 backdrop-blur dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-black/20"
+      class="min-w-0 border-slate-200/80 bg-white/90 shadow-xl shadow-slate-900/5 backdrop-blur lg:min-h-0 lg:overflow-y-auto dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-black/20"
       :ui="{ body: 'p-6 sm:p-8 lg:p-10' }"
     >
       <article class="docs-content">

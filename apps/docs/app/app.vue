@@ -10,15 +10,15 @@ const navLinks = [
 <template>
   <UApp>
     <NuxtRouteAnnouncer />
-    <div class="min-h-screen overflow-hidden bg-white text-slate-950 dark:bg-slate-950 dark:text-white">
+    <div class="min-h-screen overflow-x-hidden bg-white text-slate-950 lg:h-screen lg:overflow-hidden dark:bg-slate-950 dark:text-white">
       <div class="pointer-events-none fixed inset-0 -z-10">
         <div class="absolute -left-48 -top-56 size-136 rounded-full bg-emerald-300/35 blur-3xl dark:bg-emerald-400/15" />
         <div class="absolute -right-40 top-20 size-120 rounded-full bg-violet-400/25 blur-3xl dark:bg-violet-500/20" />
         <div class="absolute inset-x-0 top-0 h-px bg-linear-to-r from-transparent via-violet-400/70 to-transparent" />
       </div>
 
-      <div class="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 sm:px-6 lg:px-8">
-        <header class="flex flex-col gap-5 py-5 sm:py-6 lg:flex-row lg:items-center lg:justify-between">
+      <div class="mx-auto flex min-h-screen w-full max-w-7xl flex-col px-4 sm:px-6 lg:h-screen lg:px-8">
+        <header class="sticky top-0 z-20 flex flex-col gap-5 border-b border-slate-200/70 bg-white/85 py-5 backdrop-blur sm:py-6 lg:flex-row lg:items-center lg:justify-between dark:border-slate-800/80 dark:bg-slate-950/85">
           <NuxtLink class="group inline-flex items-center gap-3 text-inherit no-underline" to="/">
             <span class="grid size-11 place-items-center rounded-2xl bg-linear-to-br from-emerald-300 via-cyan-300 to-violet-500 text-sm font-black text-slate-950 shadow-lg shadow-violet-500/20 transition-transform group-hover:scale-105">
               VS
