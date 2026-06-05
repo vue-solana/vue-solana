@@ -1,8 +1,13 @@
-# Nuxt Example
+---
+title: Nuxt Example
+description: Runnable Nuxt example app for @vue-solana/nuxt.
+---
 
-Runnable Nuxt example app for `@vue-solana/nuxt`.
+The Nuxt example is a runnable Nuxt app for `@vue-solana/nuxt`.
 
-This example demonstrates:
+Source: [`examples/nuxt`](https://github.com/vue-solana/vue-solana/tree/main/examples/nuxt)
+
+## What It Demonstrates
 
 - Installing the Nuxt module with `modules: ['@vue-solana/nuxt']`.
 - Configuring the module with `solana: { cluster: 'devnet' }`.
@@ -25,13 +30,6 @@ pnpm dev:nuxt
 
 Open the Nuxt URL printed in the terminal, usually `http://localhost:3000`.
 
-## Run Directly
-
-```sh
-pnpm install
-pnpm --filter @vue-solana/example-nuxt dev
-```
-
 ## What To Try
 
 - Check the initial module/RPC status and latest blockhash.
@@ -49,14 +47,6 @@ Request free devnet SOL from the official faucet:
 https://faucet.solana.com
 ```
 
-You can also use the Solana CLI:
-
-```sh
-solana airdrop 1 YOUR_WALLET_ADDRESS --url devnet
-```
-
 ## Wallet Note
 
 The current packages do not discover installed browser wallets yet. This example uses a local mock wallet so wallet-related composables can be tested without Phantom, Solflare, or Backpack.
-
-See [Wallets](../../apps/docs/content/concepts/wallets.md) for the current wallet support status and [Nuxt example docs](../../apps/docs/content/examples/nuxt.md) for the docs-site page.

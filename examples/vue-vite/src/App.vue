@@ -21,6 +21,11 @@ const balanceAddress = ref('11111111111111111111111111111111')
 const directBlockhash = ref<string | null>(null)
 const directConnectionLoading = ref(false)
 const directConnectionError = ref<string | null>(null)
+const mockWalletState = ref({
+  installed: false,
+  connected: false,
+  connecting: false
+})
 
 const balance = useBalance(balanceAddress)
 
@@ -31,6 +36,35 @@ const mockTransaction = useTransaction(async (label: string) => {
 
 const pluginInstalled = computed(() => Boolean(solana.connection && solana.endpoint))
 const walletPublicKey = computed(() => wallet.publicKey.value?.toBase58() ?? 'Not connected')
+const walletConfigured = computed(() => Boolean(wallet.wallet.value))
+const walletStatusText = computed(() => {
+  if (wallet.connecting.value) {
+    return 'connecting'
+  }
+
+  return wallet.connected.value ? 'connected' : 'not connected'
+})
+const walletStatusClass = computed(() => {
+  if (wallet.connecting.value) {
+    return 'status-pill--checking'
+  }
+
+  return wallet.connected.value ? 'status-pill--connected' : 'status-pill--idle'
+})
+const canConnectWallet = computed(() => walletConfigured.value && !wallet.connected.value && !wallet.connecting.value)
+const canDisconnectWallet = computed(() => walletConfigured.value && wallet.connected.value && !wallet.connecting.value)
+const signAndSendReady = computed(() => wallet.connected.value && !sendTransaction.loading.value)
+const signAndSendDisabledReason = computed(() => {
+  if (!walletConfigured.value) {
+    return 'Install the mock wallet first.'
+  }
+
+  if (!wallet.connected.value) {
+    return 'Connect the mock wallet to enable signing.'
+  }
+
+  return null
+})
 const balanceInSol = computed(() => {
   if (balance.balance.value === null) {
     return 'No balance loaded'
@@ -42,25 +76,38 @@ const balanceError = computed(() => formatError(balance.error.value))
 const mockTransactionError = computed(() => formatError(mockTransaction.error.value))
 const sendTransactionError = computed(() => formatError(sendTransaction.error.value))
 
-const mockWallet: SolanaWallet = {
-  publicKey: {
-    toBase58: () => '11111111111111111111111111111111'
-  } as SolanaWallet['publicKey'],
-  connected: false,
-  connecting: false,
-  async connect() {
-    this.connecting = true
-    await new Promise((resolve) => window.setTimeout(resolve, 300))
-    this.connected = true
-    this.connecting = false
-  },
-  async disconnect() {
-    this.connected = false
-    this.connecting = false
-  },
-  async signAndSendTransaction() {
-    return {
-      signature: `mock-wallet-signature-${Date.now()}`
+function createMockWallet(): SolanaWallet {
+  const walletSnapshot = mockWalletState.value
+
+  return {
+    publicKey: walletSnapshot.connected
+      ? ({
+          toBase58: () => '11111111111111111111111111111111'
+        } as SolanaWallet['publicKey'])
+      : null,
+    connected: walletSnapshot.connected,
+    connecting: walletSnapshot.connecting,
+    async connect() {
+      mockWalletState.value = { installed: true, connected: false, connecting: true }
+      wallet.setWallet(createMockWallet())
+      await new Promise((resolve) => window.setTimeout(resolve, 300))
+      mockWalletState.value = { installed: true, connected: true, connecting: false }
+      wallet.setWallet(createMockWallet())
+    },
+    async disconnect() {
+      mockWalletState.value = { installed: true, connected: false, connecting: false }
+      wallet.setWallet(createMockWallet())
+    },
+    async signAndSendTransaction() {
+      if (!mockWalletState.value.connected) {
+        throw new Error('Connect the mock wallet before signing')
+      }
+
+      await new Promise((resolve) => window.setTimeout(resolve, 250))
+
+      return {
+        signature: `mock-wallet-signature-${Date.now()}`
+      }
     }
   }
 }
@@ -88,7 +135,8 @@ async function loadDirectBlockhash() {
 }
 
 async function installMockWallet() {
-  wallet.setWallet(mockWallet)
+  mockWalletState.value = { installed: true, connected: false, connecting: false }
+  wallet.setWallet(createMockWallet())
 }
 
 async function connectWallet() {
@@ -100,6 +148,7 @@ async function disconnectWallet() {
 }
 
 function clearWallet() {
+  mockWalletState.value = { installed: false, connected: false, connecting: false }
   wallet.setWallet(null)
 }
 
@@ -115,10 +164,10 @@ async function runMockSignAndSend() {
 <template>
   <main class="dashboard">
     <section class="hero panel">
-      <p class="eyebrow">Vue Solana Test App</p>
-      <h1>Composable Test Dashboard</h1>
+      <p class="eyebrow">Vue Solana Example App</p>
+      <h1>Composable Example Dashboard</h1>
       <p>
-        This screen exercises the current Vue Solana library features from one place:
+        This screen demonstrates the current Vue Solana library features from one place:
         plugin injection, RPC status, direct connection calls, balance lookup, wallet state,
         generic transactions, and sign/send transaction state.
       </p>
@@ -209,15 +258,20 @@ async function runMockSignAndSend() {
           <p class="eyebrow">useWallet</p>
           <h2>Wallet State</h2>
         </div>
-        <span class="status-pill" :class="wallet.connected.value ? 'status-pill--connected' : 'status-pill--idle'">
-          {{ wallet.connected.value ? 'connected' : 'not connected' }}
+        <span class="status-pill" :class="walletStatusClass">
+          {{ walletStatusText }}
         </span>
       </div>
+
+      <p>
+        Installs a local mock wallet adapter so the composable can exercise configured, connecting,
+        connected, and disconnected states without requiring a browser extension.
+      </p>
 
       <dl class="data-grid">
         <div>
           <dt>Wallet configured</dt>
-          <dd>{{ wallet.wallet.value ? 'Yes' : 'No' }}</dd>
+          <dd>{{ walletConfigured ? 'Yes' : 'No' }}</dd>
         </div>
         <div>
           <dt>Public key</dt>
@@ -230,10 +284,14 @@ async function runMockSignAndSend() {
       </dl>
 
       <div class="actions">
-        <button type="button" @click="installMockWallet">Install Mock Wallet</button>
-        <button type="button" :disabled="!wallet.wallet.value" @click="connectWallet">Connect</button>
-        <button type="button" :disabled="!wallet.wallet.value" @click="disconnectWallet">Disconnect</button>
-        <button type="button" @click="clearWallet">Clear Wallet</button>
+        <button type="button" @click="installMockWallet">
+          {{ walletConfigured ? 'Reset Mock Wallet' : 'Install Mock Wallet' }}
+        </button>
+        <button type="button" :disabled="!canConnectWallet" @click="connectWallet">
+          {{ wallet.connecting.value ? 'Connecting...' : 'Connect' }}
+        </button>
+        <button type="button" :disabled="!canDisconnectWallet" @click="disconnectWallet">Disconnect</button>
+        <button type="button" :disabled="!walletConfigured" @click="clearWallet">Clear Wallet</button>
       </div>
     </section>
 
@@ -265,9 +323,10 @@ async function runMockSignAndSend() {
         Uses the mock wallet's <code>signAndSendTransaction</code> implementation. Install and connect
         the mock wallet first, then run this test.
       </p>
-      <button type="button" :disabled="sendTransaction.loading.value || !wallet.connected.value" @click="runMockSignAndSend">
+      <button type="button" :disabled="!signAndSendReady" @click="runMockSignAndSend">
         {{ sendTransaction.loading.value ? 'Sending...' : 'Mock Sign And Send' }}
       </button>
+      <p v-if="signAndSendDisabledReason" class="help-text">{{ signAndSendDisabledReason }}</p>
       <p class="result">Signature: {{ sendTransaction.signature.value ?? 'No signature yet' }}</p>
       <p v-if="sendTransactionError" class="error">{{ sendTransactionError }}</p>
     </section>
@@ -449,6 +508,12 @@ code {
   margin: 0.85rem 0 0;
   color: hsl(0, 80%, 55%);
   overflow-wrap: anywhere;
+}
+
+.help-text {
+  margin: 0.7rem 0 0;
+  color: var(--color-text);
+  opacity: 0.75;
 }
 
 @media (max-width: 520px) {

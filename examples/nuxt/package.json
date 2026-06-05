@@ -1,5 +1,6 @@
 {
-  "name": "nuxt-project",
+  "name": "@vue-solana/example-nuxt",
+  "version": "0.0.0",
   "type": "module",
   "private": true,
   "scripts": {
@@ -7,8 +8,7 @@
     "clean": "rm -rf .nuxt .output --host node_modules/.cache/nuxt node_modules/.cache/vite $TMPDIR/nuxt-vite-node-* /tmp/nuxt-vite-node-*",
     "dev": "TMPDIR=/tmp nuxt dev",
     "generate": "nuxt generate",
-    "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "preview": "nuxt preview"
   },
   "dependencies": {
     "@solana/web3-compat": "^0.0.21",
