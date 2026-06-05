@@ -6,19 +6,19 @@ This project is early-stage. RPC and balance reads are usable; first-class brows
 
 ## Packages
 
-- `@vue-solana/core`: framework-agnostic Solana configuration, RPC, and wallet primitives.
-- `@vue-solana/vue`: Vue plugin and composables.
-- `@vue-solana/nuxt`: Nuxt module wrapping the Vue package with auto-imported composables.
+- [`@vue-solana/core`](https://www.npmjs.com/package/@vue-solana/core): framework-agnostic Solana configuration, RPC, and wallet primitives.
+- [`@vue-solana/vue`](https://www.npmjs.com/package/@vue-solana/vue): Vue plugin and composables.
+- [`@vue-solana/nuxt`](https://www.npmjs.com/package/@vue-solana/nuxt): Nuxt module wrapping the Vue package with auto-imported composables.
 
 ## Which Package Should I Use?
 
 Use `@solana/web3-compat` directly if you only need raw Solana APIs such as `Connection`, `PublicKey`, and transactions.
 
-Use `@vue-solana/core` if you want shared Solana config, cluster endpoint defaults, wallet types, and transaction helpers without Vue.
+Use [`@vue-solana/core`](https://www.npmjs.com/package/@vue-solana/core) if you want shared Solana config, cluster endpoint defaults, wallet types, and transaction helpers without Vue.
 
-Use `@vue-solana/vue` in Vue apps.
+Use [`@vue-solana/vue`](https://www.npmjs.com/package/@vue-solana/vue) in Vue apps.
 
-Use `@vue-solana/nuxt` in Nuxt apps.
+Use [`@vue-solana/nuxt`](https://www.npmjs.com/package/@vue-solana/nuxt) in Nuxt apps.
 
 `@vue-solana/core` does not replace `@solana/web3-compat`. It builds on top of it and keeps shared Vue Solana behavior in one place.
 
