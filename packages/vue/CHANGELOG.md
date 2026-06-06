@@ -1,5 +1,11 @@
 # @vue-solana/vue
 
+## 0.2.2
+
+### Patch Changes
+
+- 421b8bc: Avoid loading Solana RPC and wallet dependencies during Nuxt server rendering by registering the Nuxt runtime plugin as client-only and skipping the Vue plugin's automatic RPC check on the server.
+
 ## 0.2.1
 
 ### Patch Changes
