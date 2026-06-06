@@ -8,11 +8,14 @@ This example demonstrates:
 - Reading RPC status with `useRpc()`.
 - Using the injected `Connection` with `useConnection()`.
 - Reading lamport balances with `useBalance()`.
-- Managing wallet state with `useWallet()`.
+- Discovering browser wallets with `useWallets()`.
+- Managing active wallet state with `useWallet()`.
 - Tracking async transaction state with `useTransaction()`.
-- Calling `useSignAndSendTransaction()` with a local mock wallet.
+- Sending a real devnet transfer with `useSignAndSendTransaction()`.
 
 The app uses `devnet` by default. Devnet SOL has no real value.
+
+The real transfer example uses the `buffer` browser polyfill because some `@solana/web3-compat` transaction paths expect a Node-compatible `Buffer` global. If Vite reports that `buffer` was externalized, make sure imports use `buffer/` and restart the dev server.
 
 ## Run From The Repository Root
 
@@ -36,9 +39,11 @@ pnpm --filter @vue-solana/example-vue-vite dev
 - Check the initial RPC status and latest blockhash.
 - Click `Load Blockhash` to call `connection.getLatestBlockhash()` directly.
 - Paste a devnet wallet address and refresh the balance.
-- Install and connect the mock wallet.
+- Install a Solana browser wallet such as Phantom, Solflare, or Backpack.
+- Switch the wallet to devnet.
+- Select and connect a discovered wallet.
 - Run the generic mock transaction.
-- Run the mock sign-and-send flow.
+- Enter a recipient address and amount, then send a real devnet transfer.
 
 ## Devnet SOL
 
@@ -56,6 +61,6 @@ solana airdrop 1 YOUR_WALLET_ADDRESS --url devnet
 
 ## Wallet Note
 
-The current packages do not discover installed browser wallets yet. This example uses a local mock wallet so wallet-related composables can be tested without Phantom, Solflare, or Backpack.
+The example uses Solana Wallet Standard discovery. Wallet flows require a browser wallet extension and enough devnet SOL for transaction fees.
 
 See [Wallets](../../apps/docs/content/concepts/wallets.md) for the current wallet support status and [Vue Vite example docs](../../apps/docs/content/examples/vue-vite.md) for the docs-site page.

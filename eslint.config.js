@@ -42,6 +42,7 @@ export default tseslint.config(
         useSolanaRpc: "readonly",
         useSolanaSignAndSendTransaction: "readonly",
         useSolanaWallet: "readonly",
+        useSolanaWallets: "readonly",
       },
       parserOptions: {
         parser: tseslint.parser,

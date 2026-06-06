@@ -93,7 +93,7 @@ const wallet: SolanaWallet = {
 };
 ```
 
-Browser wallet discovery is not included yet. If you need wallet connection or transaction signing today, provide an object that implements `SolanaWallet`.
+Browser wallets discovered through the Solana Wallet Standard are adapted into `SolanaWallet`. You can also provide a custom object that implements `SolanaWallet` for tests or custom adapters.
 
 ## Examples
 

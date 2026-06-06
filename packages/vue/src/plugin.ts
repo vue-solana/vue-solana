@@ -1,4 +1,13 @@
-import { createSolanaContext, type SolanaConfig, type SolanaWallet } from "@vue-solana/core";
+import {
+  adaptSolanaStandardWallet,
+  createSolanaContext,
+  getRegisteredSolanaWallets,
+  getSolanaChain,
+  subscribeSolanaWallets,
+  type SolanaConfig,
+  type SolanaWallet,
+  type SolanaWalletInfo,
+} from "@vue-solana/core";
 import { ref, shallowRef, type App } from "vue";
 import { solanaInjectionKey, type VueSolanaContext } from "./injection";
 
@@ -11,6 +20,8 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}) {
     install(app: App) {
       const context = createSolanaContext(options);
       const wallet = shallowRef<SolanaWallet | null>(options.wallet ?? null);
+      const wallets = shallowRef<SolanaWalletInfo[]>([]);
+      const selectedWallet = shallowRef<SolanaWalletInfo | null>(null);
       const status = ref<VueSolanaContext["status"]["value"]>("idle");
       const error = ref<string | null>(null);
       const latestBlockhash = ref<string | null>(null);
@@ -45,20 +56,48 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}) {
         }
       }
 
+      function refreshWallets() {
+        wallets.value = getRegisteredSolanaWallets();
+
+        if (selectedWallet.value) {
+          selectedWallet.value =
+            wallets.value.find((nextWallet) => nextWallet.name === selectedWallet.value?.name) ??
+            null;
+
+          if (!selectedWallet.value) {
+            wallet.value = options.wallet ?? null;
+          }
+        }
+      }
+
+      function selectWallet(nextWallet: SolanaWalletInfo | null) {
+        selectedWallet.value = nextWallet;
+        wallet.value = nextWallet
+          ? adaptSolanaStandardWallet(nextWallet, { chain: getSolanaChain(context.cluster) })
+          : (options.wallet ?? null);
+      }
+
       const vueContext: VueSolanaContext = {
         ...context,
         wallet,
         status,
         error,
         latestBlockhash,
+        wallets,
+        selectedWallet,
         checkConnection,
+        refreshWallets,
+        selectWallet,
         setWallet(nextWallet) {
+          selectedWallet.value = null;
           wallet.value = nextWallet;
         },
       };
 
       app.provide(solanaInjectionKey, vueContext);
 
+      refreshWallets();
+      subscribeSolanaWallets(refreshWallets);
       void checkConnection();
     },
   };

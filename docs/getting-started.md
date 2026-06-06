@@ -1,6 +1,6 @@
 # Getting Started
 
-This guide covers installing the Vue Solana packages, configuring Vue or Nuxt, and manually testing RPC reads against Solana devnet.
+This guide covers installing the Vue Solana packages, configuring Vue or Nuxt, testing RPC reads, connecting browser wallets, and sending a small devnet transfer.
 
 More references:
 
@@ -31,13 +31,13 @@ Use `devnet` while learning and testing. Use `mainnet-beta` only when you are re
 Install the package for your framework:
 
 ```sh
-pnpm add @vue-solana/vue @vue-solana/core @solana/web3-compat
+pnpm add @vue-solana/vue @vue-solana/core @solana/web3-compat buffer
 ```
 
 For local development, use workspace linking instead:
 
 ```sh
-pnpm add '@vue-solana/vue@workspace:*' '@vue-solana/core@workspace:*' @solana/web3-compat
+pnpm add '@vue-solana/vue@workspace:*' '@vue-solana/core@workspace:*' @solana/web3-compat buffer
 ```
 
 That only works inside this monorepo or another pnpm workspace that includes these packages.
@@ -45,19 +45,19 @@ That only works inside this monorepo or another pnpm workspace that includes the
 For an external example app before publishing, use one of these:
 
 ```sh
-pnpm add ../path-to/vue-solana/packages/vue ../path-to/vue-solana/packages/core @solana/web3-compat
+pnpm add ../path-to/vue-solana/packages/vue ../path-to/vue-solana/packages/core @solana/web3-compat buffer
 ```
 
 For Nuxt:
 
 ```sh
-pnpm add @vue-solana/nuxt @vue-solana/vue @vue-solana/core @solana/web3-compat
+pnpm add @vue-solana/nuxt @vue-solana/vue @vue-solana/core @solana/web3-compat buffer
 ```
 
 Again, for local development, use workspace linking instead:
 
 ```sh
-pnpm add '@vue-solana/nuxt@workspace:*' '@vue-solana/vue@workspace:*' '@vue-solana/core@workspace:*' @solana/web3-compat
+pnpm add '@vue-solana/nuxt@workspace:*' '@vue-solana/vue@workspace:*' '@vue-solana/core@workspace:*' @solana/web3-compat buffer
 ```
 
 That only works inside this monorepo or another pnpm workspace that includes these packages.
@@ -65,7 +65,7 @@ That only works inside this monorepo or another pnpm workspace that includes the
 For an external example app before publishing, use one of these:
 
 ```sh
-pnpm add ../path-to/vue-solana/packages/nuxt ../path-to/vue-solana/packages/vue ../path-to/vue-solana/packages/core @solana/web3-compat
+pnpm add ../path-to/vue-solana/packages/nuxt ../path-to/vue-solana/packages/vue ../path-to/vue-solana/packages/core @solana/web3-compat buffer
 ```
 
 ## Known TypeScript Issue
@@ -195,7 +195,7 @@ This guide keeps copy-paste snippets inline so you can see the moving parts. For
 pnpm dev:vue
 ```
 
-The app lives at [`examples/vue-vite`](../examples/vue-vite) and demonstrates plugin setup, RPC state, direct connection calls, balance reads, wallet state, and mock transaction flows.
+The app lives at [`examples/vue-vite`](../examples/vue-vite) and demonstrates plugin setup, RPC state, direct connection calls, balance reads, browser wallet discovery, wallet state, generic transaction state, and real devnet transfers.
 
 If you are wiring your own playground, use these dependencies:
 
@@ -205,6 +205,7 @@ If you are wiring your own playground, use these dependencies:
     "@solana/web3-compat": "^0.0.21",
     "@vue-solana/core": "workspace:*",
     "@vue-solana/vue": "workspace:*",
+    "buffer": "^6.0.3",
     "vue": "^3.5.0"
   }
 }
@@ -319,7 +320,7 @@ For a complete runnable Nuxt app, use the Nuxt example:
 pnpm dev:nuxt
 ```
 
-The app lives at [`examples/nuxt`](../examples/nuxt) and demonstrates module setup, Nuxt auto-imports, RPC state, direct connection calls, balance reads, wallet state, and mock transaction flows.
+The app lives at [`examples/nuxt`](../examples/nuxt) and demonstrates module setup, Nuxt auto-imports, RPC state, direct connection calls, balance reads, browser wallet discovery, wallet state, generic transaction state, and real devnet transfers.
 
 If you are wiring your own Nuxt app, use these dependencies:
 
@@ -330,6 +331,7 @@ If you are wiring your own Nuxt app, use these dependencies:
     "@vue-solana/core": "workspace:*",
     "@vue-solana/vue": "workspace:*",
     "@vue-solana/nuxt": "workspace:*",
+    "buffer": "^6.0.3",
     "nuxt": "^3.0.0",
     "vue": "^3.5.0"
   }
@@ -393,40 +395,104 @@ You can also run it by package name:
 pnpm --filter @vue-solana/example-nuxt dev
 ```
 
-### 10. Current Wallet Testing Limitation
+### 10. Test Browser Wallet Discovery
 
-The current implementation includes `useWallet()`, `setWallet()`, and transaction primitives, but it does not yet include browser wallet adapter support.
+Install a Solana browser wallet such as Phantom, Solflare, or Backpack, switch it to devnet, and open one of the example apps.
 
-That means the libraries do not yet automatically discover installed wallets or connect to Phantom, Solflare, Backpack, or other Solana Wallet Standard wallets.
+In Vue, discover and select wallets with `useWallets()`:
 
-For now, full wallet testing requires manually passing an object that implements the `SolanaWallet` interface:
+```vue
+<script setup lang="ts">
+import { useWallet, useWallets } from "@vue-solana/vue";
 
-```ts
-import type { SolanaWallet } from "@vue-solana/core";
+const { wallets, selectedWallet, refreshWallets, selectWallet } = useWallets();
+const { publicKey, connected, connecting, connect, disconnect } = useWallet();
+</script>
 
-const wallet: SolanaWallet = {
-  publicKey: null,
-  connected: false,
-  connect: async () => {},
-  disconnect: async () => {},
-};
+<template>
+  <main>
+    <button type="button" @click="refreshWallets">Refresh Wallets</button>
+    <button
+      v-for="wallet in wallets"
+      :key="wallet.name"
+      type="button"
+      @click="selectWallet(wallet)"
+    >
+      {{ wallet.name }}
+    </button>
+
+    <p>Selected: {{ selectedWallet?.name ?? "None" }}</p>
+    <p>Connected: {{ connected }}</p>
+    <p>Public key: {{ publicKey?.toBase58() }}</p>
+
+    <button type="button" :disabled="!selectedWallet || connecting || connected" @click="connect">
+      Connect
+    </button>
+    <button type="button" :disabled="!connected" @click="disconnect">Disconnect</button>
+  </main>
+</template>
 ```
 
-This is enough to test app state and composable behavior, but it is not enough for realistic connect, sign, and send flows.
+In Nuxt, use the auto-imported composables:
 
-### 11. Wallet Adapter TODO
+```ts
+const { wallets, selectedWallet, refreshWallets, selectWallet } = useSolanaWallets();
+const { publicKey, connected, connect, disconnect } = useSolanaWallet();
+```
 
-Add browser wallet adapter support before considering wallet flows production-ready.
+Expected result:
 
-This is needed because real Solana users connect through browser wallet extensions that expose wallet APIs at runtime. A Vue/Nuxt library should discover those wallets, expose available wallet choices, manage connection state, and provide signing methods through the existing `SolanaWallet` interface.
+- Installed standard wallets appear in the wallet list.
+- Selecting a wallet configures the active wallet.
+- `connect()` opens the wallet extension approval flow.
+- After approval, `publicKey` shows the connected wallet address.
 
-TODO:
+### 11. Send A Real Devnet Transfer
 
-- [ ] Add Solana Wallet Standard discovery.
-- [ ] Expose available wallets from `useWallet()` or a dedicated `useWallets()` composable.
-- [ ] Implement connect and disconnect against selected browser wallets.
-- [ ] Map wallet signing methods into the existing `SolanaWallet` interface.
-- [ ] Add manual tests for connect, disconnect, sign transaction, and send transaction on devnet.
+Use a devnet wallet with enough devnet SOL for fees. The examples include recipient address and amount fields. Start with a tiny amount such as `0.000001` SOL.
+
+The transfer flow creates a normal legacy transaction. In browser apps, add the `buffer` package and initialize it from `buffer/` before transaction code that may touch `@solana/web3-compat` internals:
+
+```ts
+import { Buffer } from "buffer/";
+import { PublicKey, Transaction, TransactionInstruction } from "@solana/web3-compat";
+
+(globalThis as typeof globalThis & { Buffer: typeof Buffer }).Buffer = Buffer;
+
+const systemProgramId = new PublicKey("11111111111111111111111111111111");
+
+const transaction = new Transaction();
+const latestBlockhash = await connection.getLatestBlockhash();
+const recipientPublicKey = new PublicKey(recipientAddress.value);
+const data = new Uint8Array(12);
+const view = new DataView(data.buffer);
+
+view.setUint32(0, 2, true);
+view.setBigUint64(4, BigInt(lamports), true);
+
+transaction.feePayer = publicKey.value;
+transaction.recentBlockhash = latestBlockhash.blockhash;
+transaction.add(
+  new TransactionInstruction({
+    keys: [
+      { pubkey: publicKey.value, isSigner: true, isWritable: true },
+      { pubkey: recipientPublicKey, isSigner: false, isWritable: true },
+    ],
+    programId: systemProgramId,
+    data,
+  }),
+);
+
+await sendTransaction.execute(transaction, {
+  skipPreflight: false,
+});
+```
+
+Expected result:
+
+- The wallet prompts you to approve the transfer.
+- The example displays a transaction signature.
+- The sender balance decreases by the transfer amount plus fees.
 
 ### 12. Final Verification
 

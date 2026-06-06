@@ -88,6 +88,7 @@ describe("Nuxt module", () => {
         },
         { name: "useSolana", as: "useSolana", from: "@vue-solana/vue" },
         { name: "useWallet", as: "useSolanaWallet", from: "@vue-solana/vue" },
+        { name: "useWallets", as: "useSolanaWallets", from: "@vue-solana/vue" },
       ]),
     );
   });

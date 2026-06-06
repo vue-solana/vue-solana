@@ -1,28 +1,77 @@
 ---
 title: Wallets
-description: Current wallet support, limitations, and mock wallet usage.
+description: Browser wallet discovery, selection, connection, and transaction signing.
 ---
 
-The current packages expose wallet primitives, but they do not yet discover installed browser wallets such as Phantom, Solflare, or Backpack.
+Vue Solana discovers browser wallets through the Solana Wallet Standard and adapts selected wallets into the shared `SolanaWallet` interface.
 
 ## What Works Today
 
-- RPC connection setup.
-- RPC health checks.
-- Balance reads for any public key.
-- Wallet state when you provide a wallet object.
-- Transaction signing and sending when the configured wallet supports signing.
+- Browser wallet discovery with `useWallets()`.
+- Wallet selection, connect, and disconnect.
+- Wallet state through `useWallet()` and `useSolanaWallet()`.
+- Transaction signing and sending when the selected wallet supports compatible Solana signing features.
+- Manual wallet injection with `setWallet()` for tests and custom adapters.
 
-## What Is Not Included Yet
+## Discover And Connect
 
-- Browser wallet discovery.
-- Wallet selection UI.
-- Solana Wallet Standard adapter mapping.
-- Auto-connect to previously selected wallets.
+```vue
+<script setup lang="ts">
+import { useWallet, useWallets } from "@vue-solana/vue";
+
+const { wallets, selectedWallet, refreshWallets, selectWallet } = useWallets();
+const { publicKey, connected, connecting, connect, disconnect } = useWallet();
+</script>
+
+<template>
+  <section>
+    <button type="button" @click="refreshWallets">Refresh Wallets</button>
+
+    <button
+      v-for="wallet in wallets"
+      :key="wallet.name"
+      type="button"
+      @click="selectWallet(wallet)"
+    >
+      {{ wallet.name }}
+    </button>
+
+    <p>Selected: {{ selectedWallet?.name ?? "None" }}</p>
+    <p>Connected: {{ connected }}</p>
+    <p>Public key: {{ publicKey?.toBase58() }}</p>
+
+    <button type="button" :disabled="!selectedWallet || connected || connecting" @click="connect">
+      {{ connecting ? "Connecting..." : "Connect" }}
+    </button>
+    <button type="button" :disabled="!connected" @click="disconnect">Disconnect</button>
+  </section>
+</template>
+```
+
+Nuxt apps use the same flow with auto-imported composables:
+
+```ts
+const { wallets, selectedWallet, refreshWallets, selectWallet } = useSolanaWallets();
+const { publicKey, connected, connect, disconnect } = useSolanaWallet();
+```
+
+## Send A Transfer
+
+The examples include a real transfer form with recipient address and amount fields. It creates a Solana transaction, asks the connected wallet to sign/send, and displays the returned signature.
+
+Browser apps that use `@solana/web3-compat` transaction code should install `buffer` and initialize it from `buffer/` before creating or serializing transactions:
+
+```ts
+import { Buffer } from "buffer/";
+
+(globalThis as typeof globalThis & { Buffer: typeof Buffer }).Buffer = Buffer;
+```
+
+Use devnet for testing. Devnet SOL has no real value, but fees still apply.
 
 ## Manual Wallet Interface
 
-Apps can provide a wallet object that implements `SolanaWallet`.
+Apps can still provide a wallet object that implements `SolanaWallet`.
 
 ```ts
 import type { SolanaWallet } from "@vue-solana/core";
@@ -56,24 +105,14 @@ const { setWallet } = useWallet();
 setWallet(wallet);
 ```
 
-## Example Mock Wallets
+## Current Limits
 
-The runnable examples use local mock wallets so wallet-related composables can be tested before browser wallet discovery exists.
-
-Run them from the repository root:
-
-```sh
-pnpm dev:vue
-pnpm dev:nuxt
-```
-
-The mock wallet is only for development and examples. It is not a replacement for Phantom, Solflare, Backpack, or other real wallets.
-
-## Planned Direction
-
-The recommended next step is to add Solana Wallet Standard discovery and map selected browser wallets into the existing `SolanaWallet` interface. That keeps the current composables stable while enabling real browser wallet connect, disconnect, sign, and send flows.
+- Vue Solana does not render a wallet modal. Build your own selection UI with `useWallets()`.
+- Auto-connect to a persisted wallet selection is not implemented yet.
+- Signing support depends on each wallet exposing compatible Solana Wallet Standard features.
 
 Official references:
 
-- [Solana Wallet Adapter](https://github.com/anza-xyz/wallet-adapter)
+- [Wallet Standard](https://github.com/wallet-standard/wallet-standard)
+- [Solana Wallet Standard](https://github.com/anza-xyz/wallet-adapter/tree/master/packages/wallets/wallet-standard)
 - [Solana Documentation](https://solana.com/docs)

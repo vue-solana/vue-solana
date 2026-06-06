@@ -10,6 +10,8 @@ import type {
 
 export type SolanaCluster = "mainnet-beta" | "testnet" | "devnet" | "localnet";
 
+export type SolanaChain = "solana:mainnet" | "solana:testnet" | "solana:devnet" | "solana:localnet";
+
 export interface SolanaConfig {
   cluster?: SolanaCluster;
   endpoint?: string;
@@ -39,6 +41,20 @@ export interface SolanaWallet {
     transaction: SolanaTransaction,
     options?: SendOptions,
   ) => Promise<{ signature: TransactionSignature }>;
+}
+
+export interface SolanaWalletInfo {
+  name: string;
+  icon: string;
+  chains: readonly string[];
+  accounts: readonly {
+    address: string;
+    publicKey: Uint8Array;
+    chains: readonly string[];
+    label?: string;
+    icon?: string;
+  }[];
+  wallet: unknown;
 }
 
 export interface SendTransactionOptions extends SendOptions {

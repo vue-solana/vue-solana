@@ -53,9 +53,26 @@ export default defineNuxtConfig({
 
 ## `No Solana wallet is configured`
 
-The current packages do not discover browser wallets yet. `useWallet().connect()` and `useSignAndSendTransaction()` require a configured wallet object that implements `SolanaWallet`.
+No wallet has been selected or manually configured. Browser wallets are discovered with `useWallets()`, but your app must select one before calling `connect()`.
+
+```ts
+const { wallets, selectWallet } = useWallets();
+
+selectWallet(wallets.value[0]);
+```
 
 RPC reads and balance reads work without a wallet.
+
+## No Browser Wallets Are Detected
+
+Common causes:
+
+- No Solana wallet extension is installed.
+- The wallet extension is disabled for the current browser profile.
+- The app is running in SSR or a non-browser environment.
+- The wallet does not implement the Wallet Standard.
+
+Install a Solana wallet such as Phantom, Solflare, or Backpack, then call `refreshWallets()` after the page loads.
 
 ## `Solana wallet is not connected`
 
@@ -65,7 +82,27 @@ Call `connect()` first, or check `connected.value` before sending.
 
 ## `Solana wallet does not support signTransaction`
 
-The configured wallet does not expose either `signAndSendTransaction` or `signTransaction`. Use a wallet implementation that supports one of those methods.
+The selected wallet does not expose either `solana:signAndSendTransaction` or `solana:signTransaction`. Use a wallet that supports transaction signing for the selected Solana chain.
+
+## `Buffer is not defined`
+
+Some `@solana/web3-compat` transaction paths still expect a Node-compatible `Buffer` global. In browser apps, install `buffer` and initialize the polyfill before creating or serializing transactions:
+
+```sh
+pnpm add buffer
+```
+
+```ts
+import { Buffer } from "buffer/";
+
+(globalThis as typeof globalThis & { Buffer: typeof Buffer }).Buffer = Buffer;
+```
+
+Use the trailing slash in `buffer/`. Importing from `buffer` can make Vite or Nuxt externalize the Node builtin and fail in the browser.
+
+## Module `buffer` Has Been Externalized
+
+If the console says `Module "buffer" has been externalized for browser compatibility`, change imports from `buffer` to `buffer/`, then restart the dev server. Vite may cache the previously optimized dependency.
 
 ## Balance Reads Fail
 

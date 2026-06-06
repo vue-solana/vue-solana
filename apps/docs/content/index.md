@@ -5,7 +5,7 @@ description: Documentation for Vue and Nuxt libraries that help developers use S
 
 Vue Solana is a small ecosystem of Vue and Nuxt packages for building Solana applications.
 
-The project is early-stage. RPC setup and balance reads are usable today. Browser wallet discovery is not implemented yet, so wallet connect, sign, and send flows currently require a provided wallet object or the mock wallets in the example apps.
+The project is early-stage. RPC setup, balance reads, browser wallet discovery, wallet connect/disconnect, and devnet transfer flows are usable today through Vue and Nuxt composables.
 
 ## Packages
 

@@ -15,6 +15,7 @@
     "@vue-solana/core": "workspace:*",
     "@vue-solana/nuxt": "workspace:*",
     "@vue-solana/vue": "workspace:*",
+    "buffer": "^6.0.3",
     "nuxt": "^4.4.6",
     "vue": "^3.5.34",
     "vue-router": "^5.0.7"

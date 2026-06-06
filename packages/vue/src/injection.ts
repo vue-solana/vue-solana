@@ -1,4 +1,4 @@
-import type { SolanaContext, SolanaWallet } from "@vue-solana/core";
+import type { SolanaContext, SolanaWallet, SolanaWalletInfo } from "@vue-solana/core";
 import type { InjectionKey, Ref } from "vue";
 
 export type SolanaConnectionStatus = "idle" | "checking" | "connected" | "error";
@@ -8,8 +8,12 @@ export interface VueSolanaContext extends SolanaContext {
   status: Ref<SolanaConnectionStatus>;
   error: Ref<string | null>;
   latestBlockhash: Ref<string | null>;
+  wallets: Ref<SolanaWalletInfo[]>;
+  selectedWallet: Ref<SolanaWalletInfo | null>;
   checkConnection: () => Promise<void>;
   setWallet: (wallet: SolanaWallet | null) => void;
+  refreshWallets: () => void;
+  selectWallet: (wallet: SolanaWalletInfo | null) => void;
 }
 
 export const solanaInjectionKey: InjectionKey<VueSolanaContext> = Symbol("VueSolana");

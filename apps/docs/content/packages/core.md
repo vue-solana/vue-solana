@@ -76,7 +76,15 @@ interface SolanaWallet {
 }
 ```
 
-Browser wallet discovery is not included yet. If you need wallet connection or transaction signing today, provide an object that implements `SolanaWallet`.
+Browser wallets discovered through the Solana Wallet Standard are adapted into this interface. You can also provide a custom object that implements `SolanaWallet`.
+
+## Wallet Standard Helpers
+
+- `getSolanaChain(cluster)`: maps `mainnet-beta`, `devnet`, `testnet`, or `localnet` to a Solana Wallet Standard chain ID.
+- `isSolanaStandardWallet(wallet)`: checks whether a Wallet Standard wallet supports Solana.
+- `getRegisteredSolanaWallets()`: returns discovered Solana browser wallets in browser environments.
+- `subscribeSolanaWallets(listener)`: subscribes to Wallet Standard register/unregister events.
+- `adaptSolanaStandardWallet(walletInfo, options?)`: adapts a discovered browser wallet into `SolanaWallet`.
 
 ## Helpers
 

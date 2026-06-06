@@ -14,6 +14,7 @@
     "@solana/web3-compat": "^0.0.21",
     "@vue-solana/core": "workspace:*",
     "@vue-solana/vue": "workspace:*",
+    "buffer": "^6.0.3",
     "vue": "^3.5.32"
   },
   "devDependencies": {
