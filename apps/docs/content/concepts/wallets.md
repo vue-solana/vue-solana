@@ -115,6 +115,6 @@ setWallet(wallet);
 
 Official references:
 
-- [Wallet Standard](https://github.com/wallet-standard/wallet-standard)
-- [Solana Wallet Standard](https://github.com/anza-xyz/wallet-adapter/tree/master/packages/wallets/wallet-standard)
+- <a href="https://github.com/wallet-standard/wallet-standard" target="_blank" rel="noopener noreferrer">Wallet Standard</a>
+- <a href="https://github.com/anza-xyz/wallet-adapter/tree/master/packages/wallets/wallet-standard" target="_blank" rel="noopener noreferrer">Solana Wallet Standard</a>
 - [Solana Documentation](https://solana.com/docs)

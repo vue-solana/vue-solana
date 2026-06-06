@@ -36,6 +36,17 @@ function createStandardWallet(accounts: readonly WalletAccount[] = []): Wallet {
   } as Wallet;
 }
 
+function createDeferred<T>() {
+  let resolve!: (value: T) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((nextResolve, nextReject) => {
+    resolve = nextResolve;
+    reject = nextReject;
+  });
+
+  return { promise, resolve, reject };
+}
+
 const { createSolanaContext, getRegisteredSolanaWallets, subscribeSolanaWallets } = vi.hoisted(
   () => ({
     createSolanaContext: vi.fn(),
@@ -57,6 +68,7 @@ vi.mock("@vue-solana/core", async (importOriginal) => {
 
 describe("createSolanaPlugin", () => {
   afterEach(() => {
+    vi.useRealTimers();
     vi.restoreAllMocks();
     createSolanaContext.mockReset();
     getRegisteredSolanaWallets.mockReset();
@@ -134,6 +146,95 @@ describe("createSolanaPlugin", () => {
     });
 
     expect(solana?.error.value).toBe("offline");
+  });
+
+  it("sets an error when the RPC connection check times out", async () => {
+    vi.useFakeTimers();
+    vi.spyOn(console, "info").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    createSolanaContext.mockReturnValue({
+      cluster: "devnet",
+      endpoint: "https://api.devnet.solana.com",
+      wsEndpoint: "wss://api.devnet.solana.com",
+      connection: {
+        getLatestBlockhash: vi.fn().mockReturnValue(new Promise(() => {})),
+      },
+    });
+    let solana: ReturnType<typeof useSolana> | undefined;
+
+    mount(
+      defineComponent({
+        setup() {
+          solana = useSolana();
+
+          return () => h("div");
+        },
+      }),
+      {
+        global: {
+          plugins: [[createSolanaPlugin()]],
+        },
+      },
+    );
+
+    expect(solana?.status.value).toBe("checking");
+
+    await vi.advanceTimersByTimeAsync(10_000);
+
+    await vi.waitFor(() => {
+      expect(solana?.status.value).toBe("error");
+    });
+
+    expect(solana?.error.value).toBe("RPC connection check timed out after 10 seconds.");
+  });
+
+  it("ignores stale RPC connection check results", async () => {
+    vi.spyOn(console, "info").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const firstCheck = createDeferred<{ blockhash: string }>();
+    const secondCheck = createDeferred<{ blockhash: string }>();
+    createSolanaContext.mockReturnValue({
+      cluster: "devnet",
+      endpoint: "https://api.devnet.solana.com",
+      wsEndpoint: "wss://api.devnet.solana.com",
+      connection: {
+        getLatestBlockhash: vi
+          .fn()
+          .mockReturnValueOnce(firstCheck.promise)
+          .mockReturnValueOnce(secondCheck.promise),
+      },
+    });
+    let solana: ReturnType<typeof useSolana> | undefined;
+
+    mount(
+      defineComponent({
+        setup() {
+          solana = useSolana();
+
+          return () => h("div");
+        },
+      }),
+      {
+        global: {
+          plugins: [[createSolanaPlugin()]],
+        },
+      },
+    );
+
+    void solana?.checkConnection();
+    secondCheck.resolve({ blockhash: "second-blockhash" });
+
+    await vi.waitFor(() => {
+      expect(solana?.status.value).toBe("connected");
+    });
+
+    expect(solana?.latestBlockhash.value).toBe("second-blockhash");
+
+    firstCheck.resolve({ blockhash: "first-blockhash" });
+
+    await Promise.resolve();
+
+    expect(solana?.latestBlockhash.value).toBe("second-blockhash");
   });
 
   it("discovers wallets only after refresh is requested", async () => {

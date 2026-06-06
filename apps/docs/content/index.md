@@ -25,6 +25,7 @@ The project is early-stage. RPC setup, balance reads, browser wallet discovery, 
 
 ## Examples
 
+- [Live Demo](/demo)
 - [Vue Vite example](/examples/vue-vite)
 - [Nuxt example](/examples/nuxt)
 

@@ -4,6 +4,7 @@ const navLinks = [
   { label: "Concepts", to: "/concepts/solana-for-vue-developers" },
   { label: "Packages", to: "/packages/vue" },
   { label: "Examples", to: "/examples/vue-vite" },
+  { label: "Demo", to: "/demo" },
 ];
 
 const externalLinks = [

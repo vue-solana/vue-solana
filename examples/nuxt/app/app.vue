@@ -670,6 +670,12 @@ function createTransferInstruction(fromPubkey: PublicKey, toPubkey: PublicKey, l
   margin: 0 0 1rem;
 }
 
+.panel > p + .data-grid,
+.panel > p + .wallet-list,
+.panel > p + button {
+  margin-top: 1rem;
+}
+
 .data-grid div {
   min-width: 0;
   padding: 0.75rem;
