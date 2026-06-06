@@ -15,6 +15,8 @@ Vue Solana supports browser wallet discovery through the Solana Wallet Standard.
 
 Use `useWallets()` to list discovered wallets and select one. Use `useWallet()` for the active wallet state and actions.
 
+Discovery, selection, and connection are separate steps. `refreshWallets()` only updates the list of installed wallets, and `selectWallet()` only configures which wallet the app should use. `connected` stays `false` until `connect()` resolves successfully, even when a browser extension exposes previously authorized accounts after a page refresh.
+
 ```vue
 <script setup lang="ts">
 import { useWallet, useWallets } from "@vue-solana/vue";
@@ -138,5 +140,5 @@ setWallet(wallet);
 ## Current Limits
 
 - The library discovers standard wallets and exposes wallet metadata, but it does not render a wallet modal. Build your own selection UI with `useWallets()`.
-- Auto-connect is reserved for future persisted wallet selection. The library does not auto-connect to an arbitrary installed wallet.
+- Auto-connect is reserved for future persisted wallet selection. The library does not auto-connect to an arbitrary installed wallet or treat extension-exposed accounts as connected before `connect()` succeeds.
 - Signing support depends on each wallet exposing the relevant Solana Wallet Standard signing feature.

@@ -45,6 +45,8 @@ interface SolanaConfig {
 
 Supported clusters are `mainnet-beta`, `testnet`, `devnet`, and `localnet`. If `endpoint` is omitted, the package uses the public Solana RPC endpoint for the selected cluster. If `wsEndpoint` is omitted, it is derived from the RPC endpoint.
 
+`autoConnect` is reserved for future persisted wallet selection and is not currently used to connect discovered browser wallets automatically.
+
 Use `mainnet-beta` for Solana mainnet. This is Solana's official cluster name; the package intentionally does not use `mainnet` as an alias.
 
 ## Context
@@ -76,7 +78,7 @@ interface SolanaWallet {
 }
 ```
 
-Browser wallets discovered through the Solana Wallet Standard are adapted into this interface. You can also provide a custom object that implements `SolanaWallet`.
+Browser wallets discovered through the Solana Wallet Standard are adapted into this interface. You can also provide a custom object that implements `SolanaWallet`. A discovered wallet remains disconnected until `connect()` resolves successfully, even if the browser extension exposes previously authorized accounts.
 
 ## Wallet Standard Helpers
 

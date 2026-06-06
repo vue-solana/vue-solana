@@ -443,9 +443,11 @@ const { publicKey, connected, connect, disconnect } = useSolanaWallet();
 Expected result:
 
 - Installed standard wallets appear in the wallet list.
-- Selecting a wallet configures the active wallet.
+- Selecting a wallet configures the active wallet, but does not connect it.
 - `connect()` opens the wallet extension approval flow.
 - After approval, `publicKey` shows the connected wallet address.
+
+Some extensions expose previously authorized accounts after a page refresh. Vue Solana still keeps `connected` false until the app explicitly calls `connect()` and that call succeeds.
 
 ### 11. Send A Real Devnet Transfer
 

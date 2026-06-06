@@ -25,6 +25,8 @@ interface SolanaConfig {
 
 If `endpoint` is omitted, the default public endpoint for the selected cluster is used. If `wsEndpoint` is omitted, it is derived from the selected cluster or custom endpoint.
 
+`autoConnect` is reserved for future persisted wallet selection and is not currently used to connect discovered browser wallets automatically.
+
 Supported clusters:
 
 - `mainnet-beta`: Solana mainnet. This is the official Solana cluster name.
@@ -63,7 +65,7 @@ interface SolanaWallet {
 }
 ```
 
-Browser wallets discovered through the Solana Wallet Standard are adapted into this interface. Apps can also provide a custom object that implements `SolanaWallet`.
+Browser wallets discovered through the Solana Wallet Standard are adapted into this interface. Apps can also provide a custom object that implements `SolanaWallet`. A discovered wallet remains disconnected until `connect()` resolves successfully, even if the browser extension exposes previously authorized accounts.
 
 ### Wallet Discovery
 
@@ -159,6 +161,8 @@ Returns discovered browser wallets and selection actions:
 - `selectedWallet`
 - `refreshWallets()`
 - `selectWallet(wallet)`
+
+`refreshWallets()` only updates discovered wallet metadata, and `selectWallet(wallet)` only chooses the active wallet. Call `connect()` from `useWallet()` to enter the connected state.
 
 ### `useBalance(address, commitment?)`
 

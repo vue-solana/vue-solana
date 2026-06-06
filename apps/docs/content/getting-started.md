@@ -196,7 +196,7 @@ const { wallets, selectedWallet, refreshWallets, selectWallet } = useSolanaWalle
 const { publicKey, connected, connect, disconnect } = useSolanaWallet();
 ```
 
-Select a wallet from `wallets`, then call `connect()`.
+Select a wallet from `wallets`, then call `connect()`. Selecting a wallet only configures the active wallet; it does not connect it. Some extensions expose previously authorized accounts after a page refresh, but Vue Solana still keeps `connected` false until `connect()` succeeds.
 
 ## Send A Devnet Transfer
 

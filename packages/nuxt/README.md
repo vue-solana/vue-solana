@@ -9,8 +9,8 @@ New to Solana? Start with the official docs and the project concepts guide:
 - [Solana Documentation](https://solana.com/docs)
 - [Solana RPC Methods](https://solana.com/docs/rpc)
 - [Solana Clusters](https://solana.com/docs/references/clusters)
-- [Vue Solana Concepts Guide](https://github.com/vue-solana/vue-solana/tree/main/apps/docs/content/concepts/solana-for-vue-developers.md)
-- [`@vue-solana/nuxt` docs](https://github.com/vue-solana/vue-solana/tree/main/apps/docs/content/packages/nuxt.md)
+- [Vue Solana Concepts Guide](https://vue-solana-docs.vercel.app/concepts/solana-for-vue-developers)
+- [`@vue-solana/nuxt` docs](https://vue-solana-docs.vercel.app/packages/nuxt)
 
 ## Install
 
@@ -139,7 +139,7 @@ This README includes small snippets for quick reference. For a complete runnable
 pnpm dev:nuxt
 ```
 
-Source: [`examples/nuxt`](https://github.com/vue-solana/vue-solana/tree/main/examples/nuxt)
+Docs: [`examples/nuxt`](https://vue-solana-docs.vercel.app/examples/nuxt)
 
 ## Known TypeScript Issue
 
@@ -166,4 +166,4 @@ Make sure your `tsconfig.json` includes `types/**/*.d.ts` or another pattern tha
 
 ## Status
 
-This package is early-stage. RPC and balance reads are usable; first-class browser wallet adapter support is planned.
+This package is early-stage. RPC, balance, wallet, and transaction composables are usable in Nuxt apps.

@@ -2,7 +2,7 @@
 
 Vue and Nuxt libraries for building Solana applications.
 
-This project is early-stage. RPC and balance reads are usable; first-class browser wallet adapter support is planned.
+This project is early-stage. RPC, balance, wallet, and transaction helpers are usable.
 
 ## Packages
 
@@ -204,9 +204,3 @@ TODO:
 - [ ] Re-check this after each new `@solana/web3-compat` release.
 - [ ] Remove `types/web3-compat.d.ts` once the package ships valid root declarations.
 - [ ] Re-run `pnpm typecheck` and `pnpm build` after removing the shim.
-
-## Project TODOs
-
-- [ ] Add browser wallet adapter support.
-
-Browser wallet adapter support is needed because the current packages define wallet primitives and composables, but they do not yet discover or connect to installed wallets like Phantom, Solflare, or Backpack. Without an adapter, apps can test RPC and balance reads, but wallet connect, sign, and send flows require manually passing an object that implements the `SolanaWallet` interface.

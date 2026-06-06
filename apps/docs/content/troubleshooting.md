@@ -85,6 +85,19 @@ The transaction helper was called before the wallet reported `connected: true` a
 
 Call `connect()` first, or check `connected.value` before sending.
 
+## Wallet Appears Connected After Refresh During Local Development
+
+Selecting a discovered wallet should not mark it connected. `connected` should become true only after `connect()` succeeds, even if the browser extension exposes previously authorized accounts.
+
+If local Vue or Nuxt examples still appear connected immediately after refresh, rebuild the workspace packages and fully restart the dev server so Vite/Nuxt drop stale package output:
+
+```sh
+pnpm build:packages
+pnpm dev:vue
+```
+
+For Nuxt, use `pnpm dev:nuxt` after rebuilding packages.
+
 ## `Solana wallet does not support signTransaction`
 
 The configured wallet does not expose either `signAndSendTransaction` or `signTransaction`. Use a wallet that supports transaction signing for the selected Solana chain.
