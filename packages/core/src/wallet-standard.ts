@@ -26,6 +26,7 @@ const SOLANA_CHAINS: readonly SolanaChain[] = [
 export interface AdaptSolanaWalletOptions {
   chain?: SolanaChain;
   account?: WalletAccount;
+  onChange?: () => void;
 }
 
 type StandardConnectFeature = {
@@ -122,6 +123,8 @@ export function adaptSolanaStandardWallet(
   let accounts = wallet.accounts;
   let account = options.account ?? getSolanaAccount(accounts, options.chain);
   let connecting = false;
+  let disconnecting = false;
+  let manuallyDisconnected = false;
 
   const eventsFeature = wallet.features[StandardEvents] as
     | StandardEventsFeature[typeof StandardEvents]
@@ -129,7 +132,8 @@ export function adaptSolanaStandardWallet(
   eventsFeature?.on("change", (properties) => {
     if (properties.accounts) {
       accounts = properties.accounts;
-      account = getSolanaAccount(accounts, options.chain);
+      account = manuallyDisconnected ? undefined : getSolanaAccount(accounts, options.chain);
+      options.onChange?.();
     }
   });
 
@@ -143,8 +147,13 @@ export function adaptSolanaStandardWallet(
     get connecting() {
       return connecting;
     },
+    get disconnecting() {
+      return disconnecting;
+    },
     async connect() {
       connecting = true;
+      manuallyDisconnected = false;
+      options.onChange?.();
 
       try {
         const feature = wallet.features[
@@ -160,6 +169,7 @@ export function adaptSolanaStandardWallet(
         }
       } finally {
         connecting = false;
+        options.onChange?.();
       }
     },
     async disconnect() {
@@ -167,9 +177,23 @@ export function adaptSolanaStandardWallet(
         StandardDisconnect
       ] as StandardDisconnectFeature[typeof StandardDisconnect];
 
-      await feature.disconnect();
-      accounts = [];
+      disconnecting = true;
+      manuallyDisconnected = true;
       account = undefined;
+      options.onChange?.();
+
+      try {
+        await feature.disconnect();
+        accounts = [];
+        account = undefined;
+      } catch (error) {
+        manuallyDisconnected = false;
+        account = getSolanaAccount(accounts, options.chain);
+        throw error;
+      } finally {
+        disconnecting = false;
+        options.onChange?.();
+      }
     },
     signTransaction: hasSignTransaction(wallet)
       ? async <T extends SolanaTransaction>(transaction: T): Promise<T> => {

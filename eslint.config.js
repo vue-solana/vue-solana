@@ -36,6 +36,7 @@ export default tseslint.config(
         useAsyncData: "readonly",
         useHead: "readonly",
         useRoute: "readonly",
+        useToast: "readonly",
         useSolana: "readonly",
         useSolanaBalance: "readonly",
         useSolanaConnection: "readonly",

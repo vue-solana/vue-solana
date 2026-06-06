@@ -29,6 +29,8 @@ const directBlockhash = ref<string | null>(null);
 const directConnectionLoading = ref(false);
 const directConnectionError = ref<string | null>(null);
 const devnetTransferError = ref<unknown>(null);
+const walletsLoaded = ref(false);
+const walletNotice = ref<{ type: "success" | "error"; message: string } | null>(null);
 
 const systemProgramId = new PublicKey("11111111111111111111111111111111");
 
@@ -42,26 +44,32 @@ const mockTransaction = useTransaction(async (label: string) => {
 const pluginInstalled = computed(() => Boolean(solana.connection && solana.endpoint));
 const walletPublicKey = computed(() => wallet.publicKey.value?.toBase58() ?? "Not connected");
 const walletConfigured = computed(() => Boolean(wallet.wallet.value));
-const discoveredWalletCount = computed(() => walletDiscovery.wallets.value.length);
+const discoveredWalletCount = computed(() =>
+  walletsLoaded.value ? walletDiscovery.wallets.value.length : 0,
+);
 const walletStatusText = computed(() => {
   if (wallet.connecting.value) {
     return "connecting";
   }
 
+  if (wallet.disconnecting.value) {
+    return "disconnecting";
+  }
+
   return wallet.connected.value ? "connected" : "not connected";
 });
 const walletStatusClass = computed(() => {
-  if (wallet.connecting.value) {
+  if (wallet.loading.value) {
     return "status-pill--checking";
   }
 
   return wallet.connected.value ? "status-pill--connected" : "status-pill--idle";
 });
 const canConnectWallet = computed(
-  () => walletConfigured.value && !wallet.connected.value && !wallet.connecting.value,
+  () => walletConfigured.value && !wallet.connected.value && !wallet.loading.value,
 );
 const canDisconnectWallet = computed(
-  () => walletConfigured.value && wallet.connected.value && !wallet.connecting.value,
+  () => walletConfigured.value && wallet.connected.value && !wallet.loading.value,
 );
 const transferLamports = computed(() => {
   const amount = Number(transferAmount.value);
@@ -142,15 +150,46 @@ async function loadDirectBlockhash() {
 }
 
 async function connectWallet() {
-  await wallet.connect();
+  try {
+    await wallet.connect();
+
+    walletNotice.value = {
+      type: "success",
+      message: `Wallet connected: ${wallet.publicKey.value?.toBase58() ?? "selected wallet"}`,
+    };
+  } catch (error) {
+    walletNotice.value = {
+      type: "error",
+      message: formatError(error) ?? "Unable to connect to the selected wallet.",
+    };
+  }
 }
 
 async function disconnectWallet() {
-  await wallet.disconnect();
+  const publicKey = wallet.publicKey.value?.toBase58();
+
+  try {
+    await wallet.disconnect();
+
+    walletNotice.value = {
+      type: "success",
+      message: `Wallet disconnected: ${publicKey ?? "selected wallet"}`,
+    };
+  } catch (error) {
+    walletNotice.value = {
+      type: "error",
+      message: formatError(error) ?? "Unable to disconnect from the selected wallet.",
+    };
+  }
 }
 
 function clearWallet() {
   walletDiscovery.selectWallet(null);
+}
+
+function loadWallets() {
+  walletsLoaded.value = true;
+  walletDiscovery.refreshWallets();
 }
 
 async function runMockTransaction() {
@@ -307,8 +346,9 @@ function createTransferInstruction(fromPubkey: PublicKey, toPubkey: PublicKey, l
       </div>
 
       <p>
-        Discovers Solana Wallet Standard browser wallets. Install Phantom, Solflare, Backpack, or
-        another standard wallet and switch it to devnet before testing transfers.
+        Click <strong>Load Wallets</strong> to discover Solana Wallet Standard browser wallets.
+        Install Phantom, Solflare, Backpack, or another standard wallet and switch it to devnet
+        before testing transfers.
       </p>
 
       <dl class="data-grid">
@@ -332,9 +372,13 @@ function createTransferInstruction(fromPubkey: PublicKey, toPubkey: PublicKey, l
           <dt>Connecting</dt>
           <dd>{{ wallet.connecting.value ? "Yes" : "No" }}</dd>
         </div>
+        <div>
+          <dt>Disconnecting</dt>
+          <dd>{{ wallet.disconnecting.value ? "Yes" : "No" }}</dd>
+        </div>
       </dl>
 
-      <div v-if="walletDiscovery.wallets.value.length" class="wallet-list">
+      <div v-if="walletsLoaded && walletDiscovery.wallets.value.length" class="wallet-list">
         <button
           v-for="discoveredWallet in walletDiscovery.wallets.value"
           :key="discoveredWallet.name"
@@ -350,22 +394,28 @@ function createTransferInstruction(fromPubkey: PublicKey, toPubkey: PublicKey, l
           <span>{{ discoveredWallet.name }}</span>
         </button>
       </div>
-      <p v-else class="help-text">
+      <p v-if="!walletsLoaded" class="help-text">Wallet discovery has not been loaded yet.</p>
+      <p v-else-if="!walletDiscovery.wallets.value.length" class="help-text">
         No browser wallets detected. Install a Solana wallet extension, then refresh wallets.
       </p>
 
       <div class="actions">
-        <button type="button" @click="walletDiscovery.refreshWallets">Refresh Wallets</button>
+        <button type="button" @click="loadWallets">
+          {{ walletsLoaded ? "Refresh Wallets" : "Load Wallets" }}
+        </button>
         <button type="button" :disabled="!canConnectWallet" @click="connectWallet">
           {{ wallet.connecting.value ? "Connecting..." : "Connect" }}
         </button>
         <button type="button" :disabled="!canDisconnectWallet" @click="disconnectWallet">
-          Disconnect
+          {{ wallet.disconnecting.value ? "Disconnecting..." : "Disconnect" }}
         </button>
         <button type="button" :disabled="!walletConfigured" @click="clearWallet">
           Clear Selection
         </button>
       </div>
+      <p v-if="walletNotice" :class="walletNotice.type === 'error' ? 'error' : 'result'">
+        {{ walletNotice.message }}
+      </p>
     </section>
 
     <section class="panel">

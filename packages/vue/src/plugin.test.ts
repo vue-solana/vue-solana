@@ -4,9 +4,13 @@ import { defineComponent, h } from "vue";
 import { createSolanaPlugin } from "./plugin";
 import { useSolana } from "./composables/useSolana";
 
-const { createSolanaContext } = vi.hoisted(() => ({
-  createSolanaContext: vi.fn(),
-}));
+const { createSolanaContext, getRegisteredSolanaWallets, subscribeSolanaWallets } = vi.hoisted(
+  () => ({
+    createSolanaContext: vi.fn(),
+    getRegisteredSolanaWallets: vi.fn(),
+    subscribeSolanaWallets: vi.fn(),
+  }),
+);
 
 vi.mock("@vue-solana/core", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@vue-solana/core")>();
@@ -14,6 +18,8 @@ vi.mock("@vue-solana/core", async (importOriginal) => {
   return {
     ...actual,
     createSolanaContext,
+    getRegisteredSolanaWallets,
+    subscribeSolanaWallets,
   };
 });
 
@@ -21,6 +27,8 @@ describe("createSolanaPlugin", () => {
   afterEach(() => {
     vi.restoreAllMocks();
     createSolanaContext.mockReset();
+    getRegisteredSolanaWallets.mockReset();
+    subscribeSolanaWallets.mockReset();
   });
 
   it("provides Solana context and checks the RPC connection", async () => {
@@ -94,5 +102,53 @@ describe("createSolanaPlugin", () => {
     });
 
     expect(solana?.error.value).toBe("offline");
+  });
+
+  it("discovers wallets only after refresh is requested", async () => {
+    vi.spyOn(console, "info").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const walletInfo = {
+      name: "Test Wallet",
+      icon: "data:image/png;base64,AA==",
+      chains: ["solana:devnet"],
+      accounts: [],
+      wallet: {},
+    };
+    createSolanaContext.mockReturnValue({
+      cluster: "devnet",
+      endpoint: "https://api.devnet.solana.com",
+      wsEndpoint: "wss://api.devnet.solana.com",
+      connection: {
+        getLatestBlockhash: vi.fn().mockResolvedValue({ blockhash: "latest-blockhash" }),
+      },
+    });
+    getRegisteredSolanaWallets.mockReturnValue([walletInfo]);
+    subscribeSolanaWallets.mockReturnValue(vi.fn());
+    let solana: ReturnType<typeof useSolana> | undefined;
+
+    mount(
+      defineComponent({
+        setup() {
+          solana = useSolana();
+
+          return () => h("div");
+        },
+      }),
+      {
+        global: {
+          plugins: [[createSolanaPlugin()]],
+        },
+      },
+    );
+
+    expect(getRegisteredSolanaWallets).not.toHaveBeenCalled();
+    expect(subscribeSolanaWallets).not.toHaveBeenCalled();
+    expect(solana?.wallets.value).toEqual([]);
+
+    solana?.refreshWallets();
+
+    expect(getRegisteredSolanaWallets).toHaveBeenCalledOnce();
+    expect(subscribeSolanaWallets).toHaveBeenCalledOnce();
+    expect(solana?.wallets.value).toEqual([walletInfo]);
   });
 });

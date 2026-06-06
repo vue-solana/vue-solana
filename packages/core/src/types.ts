@@ -33,6 +33,7 @@ export interface SolanaWallet {
   publicKey: PublicKey | null;
   connected: boolean;
   connecting?: boolean;
+  disconnecting?: boolean;
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
   signTransaction?: <T extends SolanaTransaction>(transaction: T) => Promise<T>;

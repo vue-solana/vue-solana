@@ -8,7 +8,7 @@ import {
   type SolanaWallet,
   type SolanaWalletInfo,
 } from "@vue-solana/core";
-import { ref, shallowRef, type App } from "vue";
+import { ref, shallowRef, triggerRef, type App } from "vue";
 import { solanaInjectionKey, type VueSolanaContext } from "./injection";
 
 export interface VueSolanaPluginOptions extends SolanaConfig {
@@ -25,6 +25,7 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}) {
       const status = ref<VueSolanaContext["status"]["value"]>("idle");
       const error = ref<string | null>(null);
       const latestBlockhash = ref<string | null>(null);
+      let unsubscribeWallets: (() => void) | null = null;
 
       async function checkConnection() {
         status.value = "checking";
@@ -57,6 +58,7 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}) {
       }
 
       function refreshWallets() {
+        unsubscribeWallets ??= subscribeSolanaWallets(refreshWallets);
         wallets.value = getRegisteredSolanaWallets();
 
         if (selectedWallet.value) {
@@ -73,7 +75,10 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}) {
       function selectWallet(nextWallet: SolanaWalletInfo | null) {
         selectedWallet.value = nextWallet;
         wallet.value = nextWallet
-          ? adaptSolanaStandardWallet(nextWallet, { chain: getSolanaChain(context.cluster) })
+          ? adaptSolanaStandardWallet(nextWallet, {
+              chain: getSolanaChain(context.cluster),
+              onChange: () => triggerRef(wallet),
+            })
           : (options.wallet ?? null);
       }
 
@@ -96,8 +101,6 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}) {
 
       app.provide(solanaInjectionKey, vueContext);
 
-      refreshWallets();
-      subscribeSolanaWallets(refreshWallets);
       void checkConnection();
     },
   };
