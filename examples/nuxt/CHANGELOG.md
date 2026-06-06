@@ -1,5 +1,14 @@
 # @vue-solana/example-nuxt
 
+## 0.0.3
+
+### Patch Changes
+
+- Updated dependencies [f3d4e80]
+  - @vue-solana/core@0.2.0
+  - @vue-solana/nuxt@0.2.0
+  - @vue-solana/vue@0.2.0
+
 ## 0.0.2
 
 ### Patch Changes
