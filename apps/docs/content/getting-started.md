@@ -3,7 +3,7 @@ title: Getting Started
 description: Install Vue Solana packages, configure Vue or Nuxt, and test RPC reads on devnet.
 ---
 
-This guide covers installing the Vue Solana packages, configuring Vue or Nuxt, and manually testing Solana RPC reads against devnet.
+This guide covers installing the Vue Solana packages, configuring Vue or Nuxt, testing Solana RPC reads, connecting browser wallets, and sending a small devnet transfer.
 
 ## Before You Start
 
@@ -21,11 +21,11 @@ Use `devnet` while learning and testing. Use `mainnet-beta` only when you are re
 ## Install For Vue
 
 ```sh
-pnpm add @vue-solana/vue @vue-solana/core @solana/web3-compat
+pnpm add @vue-solana/vue @vue-solana/core @solana/web3-compat buffer
 ```
 
 ```sh
-npm install @vue-solana/vue @vue-solana/core @solana/web3-compat
+npm install @vue-solana/vue @vue-solana/core @solana/web3-compat buffer
 ```
 
 For local workspace development inside this monorepo, the examples use workspace links instead of published versions.
@@ -33,11 +33,11 @@ For local workspace development inside this monorepo, the examples use workspace
 ## Install For Nuxt
 
 ```sh
-pnpm add @vue-solana/nuxt @vue-solana/vue @vue-solana/core @solana/web3-compat
+pnpm add @vue-solana/nuxt @vue-solana/vue @vue-solana/core @solana/web3-compat buffer
 ```
 
 ```sh
-npm install @vue-solana/nuxt @vue-solana/vue @vue-solana/core @solana/web3-compat
+npm install @vue-solana/nuxt @vue-solana/vue @vue-solana/core @solana/web3-compat buffer
 ```
 
 ## Known TypeScript Issue
@@ -176,7 +176,41 @@ For Nuxt:
 pnpm dev:nuxt
 ```
 
-The examples demonstrate plugin/module setup, RPC state, direct connection calls, balance reads, wallet state, and mock transaction flows.
+The examples demonstrate plugin/module setup, RPC state, direct connection calls, balance reads, browser wallet discovery, wallet state, generic transaction state, and real devnet transfers.
+
+## Connect A Browser Wallet
+
+Install Phantom, Solflare, Backpack, or another Solana Wallet Standard browser wallet. Switch the wallet to devnet before testing.
+
+In Vue:
+
+```ts
+const { wallets, selectedWallet, refreshWallets, selectWallet } = useWallets();
+const { publicKey, connected, connect, disconnect } = useWallet();
+```
+
+In Nuxt:
+
+```ts
+const { wallets, selectedWallet, refreshWallets, selectWallet } = useSolanaWallets();
+const { publicKey, connected, connect, disconnect } = useSolanaWallet();
+```
+
+Select a wallet from `wallets`, then call `connect()`. Selecting a wallet only configures the active wallet; it does not connect it. Some extensions expose previously authorized accounts after a page refresh, but Vue Solana still keeps `connected` false until `connect()` succeeds.
+
+## Send A Devnet Transfer
+
+The Vue and Nuxt examples include recipient address and amount fields for a real transfer. Use a tiny amount such as `0.000001` SOL and a devnet wallet with enough devnet SOL for fees.
+
+Browser apps that create or serialize `@solana/web3-compat` transactions should initialize the `buffer` polyfill before transaction code:
+
+```ts
+import { Buffer } from "buffer/";
+
+(globalThis as typeof globalThis & { Buffer: typeof Buffer }).Buffer = Buffer;
+```
+
+The wallet will prompt you to approve the transaction. After approval, the example shows the transaction signature.
 
 ## More Reading
 

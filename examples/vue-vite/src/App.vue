@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import { Buffer } from "buffer/";
 import { computed, ref } from "vue";
-import type { SolanaTransaction, SolanaWallet } from "@vue-solana/core";
+import { PublicKey, Transaction, TransactionInstruction } from "@solana/web3-compat";
 import {
   useBalance,
   useConnection,
@@ -9,23 +10,29 @@ import {
   useSolana,
   useTransaction,
   useWallet,
+  useWallets,
 } from "@vue-solana/vue";
+
+(globalThis as typeof globalThis & { Buffer: typeof Buffer }).Buffer = Buffer;
 
 const solana = useSolana();
 const rpc = useRpc();
 const connection = useConnection();
 const wallet = useWallet();
+const walletDiscovery = useWallets();
 const sendTransaction = useSignAndSendTransaction();
 
 const balanceAddress = ref("11111111111111111111111111111111");
+const transferRecipient = ref("11111111111111111111111111111111");
+const transferAmount = ref("0.000001");
 const directBlockhash = ref<string | null>(null);
 const directConnectionLoading = ref(false);
 const directConnectionError = ref<string | null>(null);
-const mockWalletState = ref({
-  installed: false,
-  connected: false,
-  connecting: false,
-});
+const devnetTransferError = ref<unknown>(null);
+const walletsLoaded = ref(false);
+const walletNotice = ref<{ type: "success" | "error"; message: string } | null>(null);
+
+const systemProgramId = new PublicKey("11111111111111111111111111111111");
 
 const balance = useBalance(balanceAddress);
 
@@ -37,34 +44,72 @@ const mockTransaction = useTransaction(async (label: string) => {
 const pluginInstalled = computed(() => Boolean(solana.connection && solana.endpoint));
 const walletPublicKey = computed(() => wallet.publicKey.value?.toBase58() ?? "Not connected");
 const walletConfigured = computed(() => Boolean(wallet.wallet.value));
+const discoveredWalletCount = computed(() =>
+  walletsLoaded.value ? walletDiscovery.wallets.value.length : 0,
+);
 const walletStatusText = computed(() => {
   if (wallet.connecting.value) {
     return "connecting";
   }
 
+  if (wallet.disconnecting.value) {
+    return "disconnecting";
+  }
+
   return wallet.connected.value ? "connected" : "not connected";
 });
 const walletStatusClass = computed(() => {
-  if (wallet.connecting.value) {
+  if (wallet.loading.value) {
     return "status-pill--checking";
   }
 
   return wallet.connected.value ? "status-pill--connected" : "status-pill--idle";
 });
 const canConnectWallet = computed(
-  () => walletConfigured.value && !wallet.connected.value && !wallet.connecting.value,
+  () => walletConfigured.value && !wallet.connected.value && !wallet.loading.value,
 );
 const canDisconnectWallet = computed(
-  () => walletConfigured.value && wallet.connected.value && !wallet.connecting.value,
+  () => walletConfigured.value && wallet.connected.value && !wallet.loading.value,
 );
-const signAndSendReady = computed(() => wallet.connected.value && !sendTransaction.loading.value);
+const transferLamports = computed(() => {
+  const amount = Number(transferAmount.value);
+
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return null;
+  }
+
+  return Math.round(amount * 1_000_000_000);
+});
+const recipientAddressValid = computed(() => {
+  try {
+    new PublicKey(transferRecipient.value.trim());
+    return true;
+  } catch {
+    return false;
+  }
+});
+const signAndSendReady = computed(
+  () =>
+    wallet.connected.value &&
+    recipientAddressValid.value &&
+    Boolean(transferLamports.value) &&
+    !sendTransaction.loading.value,
+);
 const signAndSendDisabledReason = computed(() => {
   if (!walletConfigured.value) {
-    return "Install the mock wallet first.";
+    return "Select a discovered wallet first.";
   }
 
   if (!wallet.connected.value) {
-    return "Connect the mock wallet to enable signing.";
+    return "Connect the selected wallet to enable transfers.";
+  }
+
+  if (!recipientAddressValid.value) {
+    return "Enter a valid Solana recipient address.";
+  }
+
+  if (!transferLamports.value) {
+    return "Enter an amount greater than 0 SOL.";
   }
 
   return null;
@@ -78,43 +123,9 @@ const balanceInSol = computed(() => {
 });
 const balanceError = computed(() => formatError(balance.error.value));
 const mockTransactionError = computed(() => formatError(mockTransaction.error.value));
-const sendTransactionError = computed(() => formatError(sendTransaction.error.value));
-
-function createMockWallet(): SolanaWallet {
-  const walletSnapshot = mockWalletState.value;
-
-  return {
-    publicKey: walletSnapshot.connected
-      ? ({
-          toBase58: () => "11111111111111111111111111111111",
-        } as SolanaWallet["publicKey"])
-      : null,
-    connected: walletSnapshot.connected,
-    connecting: walletSnapshot.connecting,
-    async connect() {
-      mockWalletState.value = { installed: true, connected: false, connecting: true };
-      wallet.setWallet(createMockWallet());
-      await new Promise((resolve) => window.setTimeout(resolve, 300));
-      mockWalletState.value = { installed: true, connected: true, connecting: false };
-      wallet.setWallet(createMockWallet());
-    },
-    async disconnect() {
-      mockWalletState.value = { installed: true, connected: false, connecting: false };
-      wallet.setWallet(createMockWallet());
-    },
-    async signAndSendTransaction() {
-      if (!mockWalletState.value.connected) {
-        throw new Error("Connect the mock wallet before signing");
-      }
-
-      await new Promise((resolve) => window.setTimeout(resolve, 250));
-
-      return {
-        signature: `mock-wallet-signature-${Date.now()}`,
-      };
-    },
-  };
-}
+const sendTransactionError = computed(() =>
+  formatError(devnetTransferError.value ?? sendTransaction.error.value),
+);
 
 function formatError(error: unknown) {
   if (!error) {
@@ -138,30 +149,117 @@ async function loadDirectBlockhash() {
   }
 }
 
-async function installMockWallet() {
-  mockWalletState.value = { installed: true, connected: false, connecting: false };
-  wallet.setWallet(createMockWallet());
-}
-
 async function connectWallet() {
-  await wallet.connect();
+  try {
+    await wallet.connect();
+
+    walletNotice.value = {
+      type: "success",
+      message: `Wallet connected: ${wallet.publicKey.value?.toBase58() ?? "selected wallet"}`,
+    };
+  } catch (error) {
+    walletNotice.value = {
+      type: "error",
+      message: formatError(error) ?? "Unable to connect to the selected wallet.",
+    };
+  }
 }
 
 async function disconnectWallet() {
-  await wallet.disconnect();
+  const publicKey = wallet.publicKey.value?.toBase58();
+
+  try {
+    await wallet.disconnect();
+
+    walletNotice.value = {
+      type: "success",
+      message: `Wallet disconnected: ${publicKey ?? "selected wallet"}`,
+    };
+  } catch (error) {
+    walletNotice.value = {
+      type: "error",
+      message: formatError(error) ?? "Unable to disconnect from the selected wallet.",
+    };
+  }
 }
 
 function clearWallet() {
-  mockWalletState.value = { installed: false, connected: false, connecting: false };
-  wallet.setWallet(null);
+  walletDiscovery.selectWallet(null);
+}
+
+function loadWallets() {
+  walletsLoaded.value = true;
+  walletDiscovery.refreshWallets();
+}
+
+async function copyWalletAddress() {
+  const publicKey = wallet.publicKey.value?.toBase58();
+
+  if (!publicKey) {
+    return;
+  }
+
+  try {
+    await navigator.clipboard.writeText(publicKey);
+
+    walletNotice.value = {
+      type: "success",
+      message: `Wallet address copied: ${publicKey}`,
+    };
+  } catch (error) {
+    walletNotice.value = {
+      type: "error",
+      message: formatError(error) ?? "Unable to copy wallet address.",
+    };
+  }
 }
 
 async function runMockTransaction() {
   await mockTransaction.execute("transaction");
 }
 
-async function runMockSignAndSend() {
-  await sendTransaction.execute({} as SolanaTransaction);
+async function sendDevnetTransfer() {
+  const fromPubkey = wallet.publicKey.value;
+  const lamports = transferLamports.value;
+
+  if (!fromPubkey || !lamports) {
+    return;
+  }
+
+  devnetTransferError.value = null;
+
+  try {
+    const toPubkey = new PublicKey(transferRecipient.value.trim());
+    const latestBlockhash = await connection.getLatestBlockhash();
+    const transaction = new Transaction();
+
+    transaction.feePayer = fromPubkey;
+    transaction.recentBlockhash = latestBlockhash.blockhash;
+    transaction.add(createTransferInstruction(fromPubkey, toPubkey, lamports));
+
+    await sendTransaction.execute(transaction, {
+      skipPreflight: false,
+    });
+  } catch (error) {
+    devnetTransferError.value = error;
+  }
+}
+
+function createTransferInstruction(fromPubkey: PublicKey, toPubkey: PublicKey, lamports: number) {
+  const data = new Uint8Array(12);
+  const view = new DataView(data.buffer);
+
+  view.setUint32(0, 2, true);
+  view.setBigUint64(4, BigInt(lamports), true);
+
+  return new TransactionInstruction({
+    keys: [
+      { pubkey: fromPubkey, isSigner: true, isWritable: true },
+      { pubkey: toPubkey, isSigner: false, isWritable: true },
+    ],
+    programId: systemProgramId,
+    data,
+  });
 }
 </script>
 
@@ -172,8 +270,8 @@ async function runMockSignAndSend() {
       <h1>Composable Example Dashboard</h1>
       <p>
         This screen demonstrates the current Vue Solana library features from one place: plugin
-        injection, RPC status, direct connection calls, balance lookup, wallet state, generic
-        transactions, and sign/send transaction state.
+        injection, RPC status, direct connection calls, balance lookup, browser wallet discovery,
+        generic transaction state, and real devnet transfers.
       </p>
     </section>
 
@@ -261,8 +359,8 @@ async function runMockSignAndSend() {
     <section class="panel">
       <div class="panel-heading">
         <div>
-          <p class="eyebrow">useWallet</p>
-          <h2>Wallet State</h2>
+          <p class="eyebrow">useWallets + useWallet</p>
+          <h2>Browser Wallets</h2>
         </div>
         <span class="status-pill" :class="walletStatusClass">
           {{ walletStatusText }}
@@ -270,39 +368,90 @@ async function runMockSignAndSend() {
       </div>
 
       <p>
-        Installs a local mock wallet adapter so the composable can exercise configured, connecting,
-        connected, and disconnected states without requiring a browser extension.
+        Click <strong>Load Wallets</strong> to discover Solana Wallet Standard browser wallets.
+        Install Phantom, Solflare, Backpack, or another standard wallet and switch it to devnet
+        before testing transfers.
       </p>
 
       <dl class="data-grid">
+        <div>
+          <dt>Discovered wallets</dt>
+          <dd>{{ discoveredWalletCount }}</dd>
+        </div>
+        <div>
+          <dt>Selected wallet</dt>
+          <dd>{{ walletDiscovery.selectedWallet.value?.name ?? "None" }}</dd>
+        </div>
         <div>
           <dt>Wallet configured</dt>
           <dd>{{ walletConfigured ? "Yes" : "No" }}</dd>
         </div>
         <div>
           <dt>Public key</dt>
-          <dd>{{ walletPublicKey }}</dd>
+          <dd>
+            <span class="copyable-address">
+              <code>{{ walletPublicKey }}</code>
+              <button
+                v-if="wallet.publicKey.value"
+                type="button"
+                class="copy-address-button"
+                aria-label="Copy wallet address"
+                title="Copy wallet address"
+                @click="copyWalletAddress"
+              >
+                Copy
+              </button>
+            </span>
+          </dd>
         </div>
         <div>
           <dt>Connecting</dt>
           <dd>{{ wallet.connecting.value ? "Yes" : "No" }}</dd>
         </div>
+        <div>
+          <dt>Disconnecting</dt>
+          <dd>{{ wallet.disconnecting.value ? "Yes" : "No" }}</dd>
+        </div>
       </dl>
 
+      <div v-if="walletsLoaded && walletDiscovery.wallets.value.length" class="wallet-list">
+        <button
+          v-for="discoveredWallet in walletDiscovery.wallets.value"
+          :key="discoveredWallet.name"
+          type="button"
+          class="wallet-option"
+          :class="{
+            'wallet-option--selected':
+              walletDiscovery.selectedWallet.value?.name === discoveredWallet.name,
+          }"
+          @click="walletDiscovery.selectWallet(discoveredWallet)"
+        >
+          <img :src="discoveredWallet.icon" :alt="`${discoveredWallet.name} icon`" />
+          <span>{{ discoveredWallet.name }}</span>
+        </button>
+      </div>
+      <p v-if="!walletsLoaded" class="help-text">Wallet discovery has not been loaded yet.</p>
+      <p v-else-if="!walletDiscovery.wallets.value.length" class="help-text">
+        No browser wallets detected. Install a Solana wallet extension, then refresh wallets.
+      </p>
+
       <div class="actions">
-        <button type="button" @click="installMockWallet">
-          {{ walletConfigured ? "Reset Mock Wallet" : "Install Mock Wallet" }}
+        <button type="button" @click="loadWallets">
+          {{ walletsLoaded ? "Refresh Wallets" : "Load Wallets" }}
         </button>
         <button type="button" :disabled="!canConnectWallet" @click="connectWallet">
           {{ wallet.connecting.value ? "Connecting..." : "Connect" }}
         </button>
         <button type="button" :disabled="!canDisconnectWallet" @click="disconnectWallet">
-          Disconnect
+          {{ wallet.disconnecting.value ? "Disconnecting..." : "Disconnect" }}
         </button>
         <button type="button" :disabled="!walletConfigured" @click="clearWallet">
-          Clear Wallet
+          Clear Selection
         </button>
       </div>
+      <p v-if="walletNotice" :class="walletNotice.type === 'error' ? 'error' : 'result'">
+        {{ walletNotice.message }}
+      </p>
     </section>
 
     <section class="panel">
@@ -325,17 +474,27 @@ async function runMockSignAndSend() {
       <div class="panel-heading">
         <div>
           <p class="eyebrow">useSignAndSendTransaction</p>
-          <h2>Sign And Send State</h2>
+          <h2>Real Devnet Transfer</h2>
         </div>
       </div>
 
       <p>
-        Uses the mock wallet's <code>signAndSendTransaction</code> implementation. Install and
-        connect the mock wallet first, then run this test.
+        Sends a real transfer from the connected wallet. Use devnet, enter a recipient public key,
+        and start with a tiny amount such as <code>0.000001</code> SOL.
       </p>
-      <button type="button" :disabled="!signAndSendReady" @click="runMockSignAndSend">
-        {{ sendTransaction.loading.value ? "Sending..." : "Mock Sign And Send" }}
-      </button>
+      <label>
+        Recipient address
+        <input v-model="transferRecipient" placeholder="Enter recipient public key" />
+      </label>
+      <label>
+        Amount in SOL
+        <input v-model="transferAmount" inputmode="decimal" placeholder="0.000001" />
+      </label>
+      <div class="actions">
+        <button type="button" :disabled="!signAndSendReady" @click="sendDevnetTransfer">
+          {{ sendTransaction.loading.value ? "Sending..." : "Send Devnet Transfer" }}
+        </button>
+      </div>
       <p v-if="signAndSendDisabledReason" class="help-text">{{ signAndSendDisabledReason }}</p>
       <p class="result">Signature: {{ sendTransaction.signature.value ?? "No signature yet" }}</p>
       <p v-if="sendTransactionError" class="error">{{ sendTransactionError }}</p>
@@ -476,11 +635,59 @@ code {
   background: var(--color-background-mute);
 }
 
+.copyable-address {
+  display: inline-flex;
+  max-width: 100%;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.copyable-address code {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.copy-address-button {
+  flex: 0 0 auto;
+  padding: 0.24rem 0.45rem;
+  border-color: var(--color-border);
+  background: var(--color-background);
+  color: var(--color-text);
+  font-size: 0.72rem;
+}
+
 .actions {
   display: flex;
   flex-wrap: wrap;
   gap: 0.6rem;
   margin-top: 1rem;
+}
+
+.wallet-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+  gap: 0.6rem;
+}
+
+.wallet-option {
+  width: 100%;
+  justify-content: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  border-color: var(--color-border);
+  background: var(--color-background);
+}
+
+.wallet-option--selected {
+  border-color: hsla(160, 100%, 37%, 0.75);
+  background: hsla(160, 100%, 37%, 0.16);
+}
+
+.wallet-option img {
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 0.4rem;
 }
 
 .status-pill {

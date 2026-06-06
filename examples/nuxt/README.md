@@ -9,11 +9,14 @@ This example demonstrates:
 - Reading RPC status with auto-imported `useSolanaRpc()`.
 - Using the injected connection with `useSolanaConnection()`.
 - Reading lamport balances with `useSolanaBalance()`.
-- Managing wallet state with `useSolanaWallet()`.
-- Calling `useSolanaSignAndSendTransaction()` with a local mock wallet.
+- Discovering browser wallets with `useSolanaWallets()`.
+- Managing active wallet state with `useSolanaWallet()`.
+- Sending a real devnet transfer with `useSolanaSignAndSendTransaction()`.
 - Using `useTransaction()` from `@vue-solana/vue` for generic async transaction state.
 
 The app uses `devnet` by default. Devnet SOL has no real value.
+
+The real transfer example uses the `buffer` browser polyfill because some `@solana/web3-compat` transaction paths expect a Node-compatible `Buffer` global. If Vite reports that `buffer` was externalized, make sure imports use `buffer/` and restart the dev server.
 
 ## Run From The Repository Root
 
@@ -37,9 +40,11 @@ pnpm --filter @vue-solana/example-nuxt dev
 - Check the initial module/RPC status and latest blockhash.
 - Click `Load Blockhash` to call `connection.getLatestBlockhash()` directly.
 - Paste a devnet wallet address and refresh the balance.
-- Install and connect the mock wallet.
+- Install a Solana browser wallet such as Phantom, Solflare, or Backpack.
+- Switch the wallet to devnet.
+- Select and connect a discovered wallet.
 - Run the generic mock transaction.
-- Run the mock sign-and-send flow.
+- Enter a recipient address and amount, then send a real devnet transfer.
 
 ## Devnet SOL
 
@@ -57,6 +62,6 @@ solana airdrop 1 YOUR_WALLET_ADDRESS --url devnet
 
 ## Wallet Note
 
-The current packages do not discover installed browser wallets yet. This example uses a local mock wallet so wallet-related composables can be tested without Phantom, Solflare, or Backpack.
+The example uses Solana Wallet Standard discovery. Wallet flows require a browser wallet extension and enough devnet SOL for transaction fees.
 
 See [Wallets](../../apps/docs/content/concepts/wallets.md) for the current wallet support status and [Nuxt example docs](../../apps/docs/content/examples/nuxt.md) for the docs-site page.

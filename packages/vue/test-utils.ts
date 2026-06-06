@@ -14,12 +14,18 @@ export function createMockSolanaContext(
       getBalance: async () => 0,
     } as VueSolanaContext["connection"],
     wallet: shallowRef<SolanaWallet | null>(null),
+    wallets: shallowRef([]),
+    selectedWallet: shallowRef(null),
     status: ref("idle"),
     error: ref(null),
     latestBlockhash: ref(null),
     checkConnection: async () => {},
     setWallet(wallet) {
       context.wallet.value = wallet;
+    },
+    refreshWallets() {},
+    selectWallet(wallet) {
+      context.selectedWallet.value = wallet;
     },
     ...overrides,
   };

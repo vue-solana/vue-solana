@@ -5,6 +5,19 @@ const navLinks = [
   { label: "Packages", to: "/packages/vue" },
   { label: "Examples", to: "/examples/vue-vite" },
 ];
+
+const externalLinks = [
+  {
+    label: "GitHub",
+    to: "https://github.com/vue-solana/vue-solana",
+    icon: "i-simple-icons-github",
+  },
+  {
+    label: "npm",
+    to: "https://www.npmjs.com/org/vue-solana",
+    icon: "i-simple-icons-npm",
+  },
+];
 </script>
 
 <template>
@@ -66,6 +79,21 @@ const navLinks = [
               >
                 {{ link.label }}
               </UButton>
+            </nav>
+
+            <nav class="flex flex-wrap gap-2" aria-label="External links">
+              <UButton
+                v-for="link in externalLinks"
+                :key="link.to"
+                :to="link.to"
+                :icon="link.icon"
+                :aria-label="link.label"
+                target="_blank"
+                rel="noopener noreferrer"
+                variant="ghost"
+                color="neutral"
+                size="sm"
+              />
             </nav>
 
             <!--            <UColorModeButton class="self-start" />-->

@@ -75,7 +75,6 @@ useHead({
               Build Solana apps with Vue.
             </p>
           </div>
-          <UBadge color="primary" variant="soft"> Devnet </UBadge>
         </div>
 
         <nav class="grid gap-5">

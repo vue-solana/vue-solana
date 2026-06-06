@@ -13,9 +13,10 @@ Source: [`examples/vue-vite`](https://github.com/vue-solana/vue-solana/tree/main
 - Reading RPC status with `useRpc()`.
 - Using the injected `Connection` with `useConnection()`.
 - Reading lamport balances with `useBalance()`.
-- Managing wallet state with `useWallet()`.
+- Discovering browser wallets with `useWallets()`.
+- Managing active wallet state with `useWallet()`.
 - Tracking async transaction state with `useTransaction()`.
-- Calling `useSignAndSendTransaction()` with a local mock wallet.
+- Sending a real devnet transfer with `useSignAndSendTransaction()`.
 
 The app uses `devnet` by default. Devnet SOL has no real value.
 
@@ -34,9 +35,12 @@ Open the Vite URL printed in the terminal, usually `http://localhost:5173`.
 - Check the initial RPC status and latest blockhash.
 - Click `Load Blockhash` to call `connection.getLatestBlockhash()` directly.
 - Paste a devnet wallet address and refresh the balance.
-- Install and connect the mock wallet.
+- Install a Solana browser wallet and switch it to devnet.
+- Select and connect a discovered wallet.
 - Run the generic mock transaction.
-- Run the mock sign-and-send flow.
+- Enter a recipient address and amount, then send a real devnet transfer.
+
+The transfer example initializes the `buffer` browser polyfill with `import { Buffer } from "buffer/"`. Restart the Vite dev server if Vite previously cached an externalized `buffer` import.
 
 ## Devnet SOL
 
@@ -48,4 +52,4 @@ https://faucet.solana.com
 
 ## Wallet Note
 
-The current packages do not discover installed browser wallets yet. This example uses a local mock wallet so wallet-related composables can be tested without Phantom, Solflare, or Backpack.
+The example uses Solana Wallet Standard discovery. Install Phantom, Solflare, Backpack, or another standard wallet before testing wallet flows.

@@ -14,8 +14,9 @@ Source: [`examples/nuxt`](https://github.com/vue-solana/vue-solana/tree/main/exa
 - Reading RPC status with auto-imported `useSolanaRpc()`.
 - Using the injected connection with `useSolanaConnection()`.
 - Reading lamport balances with `useSolanaBalance()`.
-- Managing wallet state with `useSolanaWallet()`.
-- Calling `useSolanaSignAndSendTransaction()` with a local mock wallet.
+- Discovering browser wallets with `useSolanaWallets()`.
+- Managing active wallet state with `useSolanaWallet()`.
+- Sending a real devnet transfer with `useSolanaSignAndSendTransaction()`.
 - Using `useTransaction()` from `@vue-solana/vue` for generic async transaction state.
 
 The app uses `devnet` by default. Devnet SOL has no real value.
@@ -35,9 +36,12 @@ Open the Nuxt URL printed in the terminal, usually `http://localhost:3000`.
 - Check the initial module/RPC status and latest blockhash.
 - Click `Load Blockhash` to call `connection.getLatestBlockhash()` directly.
 - Paste a devnet wallet address and refresh the balance.
-- Install and connect the mock wallet.
+- Install a Solana browser wallet and switch it to devnet.
+- Select and connect a discovered wallet.
 - Run the generic mock transaction.
-- Run the mock sign-and-send flow.
+- Enter a recipient address and amount, then send a real devnet transfer.
+
+The transfer example initializes the `buffer` browser polyfill with `import { Buffer } from "buffer/"`. Restart the Nuxt dev server if Vite previously cached an externalized `buffer` import.
 
 ## Devnet SOL
 
@@ -49,4 +53,4 @@ https://faucet.solana.com
 
 ## Wallet Note
 
-The current packages do not discover installed browser wallets yet. This example uses a local mock wallet so wallet-related composables can be tested without Phantom, Solflare, or Backpack.
+The example uses Solana Wallet Standard discovery. Install Phantom, Solflare, Backpack, or another standard wallet before testing wallet flows.

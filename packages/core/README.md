@@ -14,9 +14,9 @@ Official Solana docs:
 
 Full Vue Solana docs:
 
-- [`@vue-solana/core`](https://github.com/vue-solana/vue-solana/tree/main/apps/docs/content/packages/core.md)
-- [Getting Started](https://github.com/vue-solana/vue-solana/tree/main/apps/docs/content/getting-started.md)
-- [Troubleshooting](https://github.com/vue-solana/vue-solana/tree/main/apps/docs/content/troubleshooting.md)
+- [`@vue-solana/core`](https://vue-solana-docs.vercel.app/packages/core)
+- [Getting Started](https://vue-solana-docs.vercel.app/getting-started)
+- [Troubleshooting](https://vue-solana-docs.vercel.app/troubleshooting)
 
 ## Install
 
@@ -93,14 +93,14 @@ const wallet: SolanaWallet = {
 };
 ```
 
-Browser wallet discovery is not included yet. If you need wallet connection or transaction signing today, provide an object that implements `SolanaWallet`.
+Browser wallets discovered through the Solana Wallet Standard are adapted into `SolanaWallet`. You can also provide a custom object that implements `SolanaWallet` for tests or custom adapters.
 
 ## Examples
 
 For complete runnable Vue and Nuxt examples that use this package through the framework integrations, see:
 
-- [`examples/vue-vite`](https://github.com/vue-solana/vue-solana/tree/main/examples/vue-vite)
-- [`examples/nuxt`](https://github.com/vue-solana/vue-solana/tree/main/examples/nuxt)
+- [`examples/vue-vite`](https://vue-solana-docs.vercel.app/examples/vue-vite)
+- [`examples/nuxt`](https://vue-solana-docs.vercel.app/examples/nuxt)
 
 ## Known TypeScript Issue
 
@@ -127,4 +127,4 @@ Make sure your `tsconfig.json` includes `types/**/*.d.ts` or another pattern tha
 
 ## Status
 
-This package is early-stage. RPC helpers and transaction primitives are usable; first-class browser wallet adapter support is planned.
+This package is early-stage. RPC helpers, wallet primitives, and transaction helpers are usable.

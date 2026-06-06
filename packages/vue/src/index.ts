@@ -5,5 +5,6 @@ export * from "./composables/useSignAndSendTransaction";
 export * from "./composables/useSolana";
 export * from "./composables/useTransaction";
 export * from "./composables/useWallet";
+export * from "./composables/useWallets";
 export * from "./injection";
 export * from "./plugin";

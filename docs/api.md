@@ -12,6 +12,7 @@ For Solana terminology, see [Solana Concepts For Vue Developers](./solana-concep
 
 ```ts
 type SolanaCluster = "mainnet-beta" | "testnet" | "devnet" | "localnet";
+type SolanaChain = "solana:mainnet" | "solana:testnet" | "solana:devnet" | "solana:localnet";
 
 interface SolanaConfig {
   cluster?: SolanaCluster;
@@ -23,6 +24,8 @@ interface SolanaConfig {
 ```
 
 If `endpoint` is omitted, the default public endpoint for the selected cluster is used. If `wsEndpoint` is omitted, it is derived from the selected cluster or custom endpoint.
+
+`autoConnect` is reserved for future persisted wallet selection and is not currently used to connect discovered browser wallets automatically.
 
 Supported clusters:
 
@@ -62,7 +65,25 @@ interface SolanaWallet {
 }
 ```
 
-Browser wallet discovery is not implemented yet. Apps that need wallet actions must provide an object that implements this interface.
+Browser wallets discovered through the Solana Wallet Standard are adapted into this interface. Apps can also provide a custom object that implements `SolanaWallet`. A discovered wallet remains disconnected until `connect()` resolves successfully, even if the browser extension exposes previously authorized accounts.
+
+### Wallet Discovery
+
+```ts
+interface SolanaWalletInfo {
+  name: string;
+  icon: string;
+  chains: readonly string[];
+  accounts: readonly {
+    address: string;
+    publicKey: Uint8Array;
+    chains: readonly string[];
+    label?: string;
+    icon?: string;
+  }[];
+  wallet: unknown;
+}
+```
 
 ### Helpers
 
@@ -76,6 +97,11 @@ Browser wallet discovery is not implemented yet. Apps that need wallet actions m
 - `assertWalletConnected(wallet)`: throws if the wallet is not connected.
 - `assertWalletCanSign(wallet)`: throws if the wallet cannot sign transactions.
 - `signAndSendTransaction(connection, wallet, transaction, options?)`: signs and sends a transaction using wallet capabilities.
+- `getSolanaChain(cluster)`: maps a package cluster to a Wallet Standard chain ID.
+- `isSolanaStandardWallet(wallet)`: checks whether a Wallet Standard wallet supports Solana.
+- `getRegisteredSolanaWallets()`: returns discovered Solana browser wallets in browser environments.
+- `subscribeSolanaWallets(listener)`: subscribes to Wallet Standard register/unregister events.
+- `adaptSolanaStandardWallet(walletInfo, options?)`: adapts a discovered wallet into `SolanaWallet`.
 
 ## `@vue-solana/vue`
 
@@ -127,6 +153,17 @@ Returns wallet state and actions:
 - `connect()`
 - `disconnect()`
 
+### `useWallets()`
+
+Returns discovered browser wallets and selection actions:
+
+- `wallets`
+- `selectedWallet`
+- `refreshWallets()`
+- `selectWallet(wallet)`
+
+`refreshWallets()` only updates discovered wallet metadata, and `selectWallet(wallet)` only chooses the active wallet. Call `connect()` from `useWallet()` to enter the connected state.
+
 ### `useBalance(address, commitment?)`
 
 Loads the lamport balance for a `PublicKey` or address string.
@@ -177,5 +214,6 @@ export default defineNuxtConfig({
 - `useSolanaRpc()`
 - `useSolanaConnection()`
 - `useSolanaWallet()`
+- `useSolanaWallets()`
 - `useSolanaBalance()`
 - `useSolanaSignAndSendTransaction()`

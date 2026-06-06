@@ -8,8 +8,10 @@ description: Vue plugin and composables for Solana applications.
 ## Install
 
 ```sh
-pnpm add @vue-solana/vue @vue-solana/core @solana/web3-compat
+pnpm add @vue-solana/vue @vue-solana/core @solana/web3-compat buffer
 ```
+
+The `buffer` package is needed for browser apps that create or serialize `@solana/web3-compat` transactions.
 
 ## Plugin Setup
 
@@ -44,7 +46,8 @@ createApp(App).use(
 - `useSolana()`: returns the full injected Solana context.
 - `useRpc()`: returns cluster, endpoint, connection status, latest blockhash, and `checkConnection()`.
 - `useConnection()`: returns the Solana `Connection`.
-- `useWallet()`: returns wallet refs, computed connection state, and wallet actions.
+- `useWallet()`: returns active wallet refs, computed connection state, and wallet actions.
+- `useWallets()`: returns discovered browser wallets and wallet selection actions.
 - `useBalance(address, commitment?)`: loads lamport balance for a `PublicKey` or address string.
 - `useTransaction(handler)`: generic async transaction state helper.
 - `useSignAndSendTransaction()`: signs and sends a transaction through the configured wallet.
@@ -95,23 +98,38 @@ const { balance, loading, error, refresh } = useBalance(address);
 
 ```vue
 <script setup lang="ts">
-import { useWallet } from "@vue-solana/vue";
+import { useWallet, useWallets } from "@vue-solana/vue";
 
+const { wallets, selectedWallet, refreshWallets, selectWallet } = useWallets();
 const { publicKey, connected, connecting, connect, disconnect } = useWallet();
 </script>
 
 <template>
   <section>
+    <button type="button" @click="refreshWallets">Refresh Wallets</button>
+
+    <button
+      v-for="wallet in wallets"
+      :key="wallet.name"
+      type="button"
+      @click="selectWallet(wallet)"
+    >
+      {{ wallet.name }}
+    </button>
+
+    <p>Selected: {{ selectedWallet?.name ?? "None" }}</p>
     <p>Connected: {{ connected }}</p>
     <p>Public key: {{ publicKey?.toBase58() }}</p>
     <p v-if="connecting">Connecting...</p>
-    <button type="button" @click="connect">Connect</button>
-    <button type="button" @click="disconnect">Disconnect</button>
+    <button type="button" :disabled="!selectedWallet || connected || connecting" @click="connect">
+      Connect
+    </button>
+    <button type="button" :disabled="!connected" @click="disconnect">Disconnect</button>
   </section>
 </template>
 ```
 
-Browser wallet discovery is not included yet. `connect()` works only after you configure a wallet object that implements `SolanaWallet`.
+Browser wallets are discovered through the Solana Wallet Standard. `refreshWallets()` only updates the discovered wallet list, and `selectWallet()` only configures the active wallet. `connected` remains false until `connect()` succeeds, even if the extension exposes previously authorized accounts after a page refresh.
 
 ## Transaction State
 

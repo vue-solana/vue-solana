@@ -9,8 +9,8 @@ New to Solana? Start with the official docs and the project concepts guide:
 - [Solana Documentation](https://solana.com/docs)
 - [Solana RPC Methods](https://solana.com/docs/rpc)
 - [Solana Clusters](https://solana.com/docs/references/clusters)
-- [Vue Solana Concepts Guide](https://github.com/vue-solana/vue-solana/tree/main/apps/docs/content/concepts/solana-for-vue-developers.md)
-- [`@vue-solana/vue` docs](https://github.com/vue-solana/vue-solana/tree/main/apps/docs/content/packages/vue.md)
+- [Vue Solana Concepts Guide](https://vue-solana-docs.vercel.app/concepts/solana-for-vue-developers)
+- [`@vue-solana/vue` docs](https://vue-solana-docs.vercel.app/packages/vue)
 
 ## Install
 
@@ -104,23 +104,36 @@ const { balance, loading, error, refresh } = useBalance(address);
 
 ```vue
 <script setup lang="ts">
-import { useWallet } from "@vue-solana/vue";
+import { useWallet, useWallets } from "@vue-solana/vue";
 
+const { wallets, selectedWallet, selectWallet, refreshWallets } = useWallets();
 const { publicKey, connected, connecting, connect, disconnect } = useWallet();
 </script>
 
 <template>
   <section>
+    <button type="button" @click="refreshWallets">Refresh Wallets</button>
+    <button
+      v-for="wallet in wallets"
+      :key="wallet.name"
+      type="button"
+      @click="selectWallet(wallet)"
+    >
+      {{ wallet.name }}
+    </button>
+    <p>Selected: {{ selectedWallet?.name ?? "None" }}</p>
     <p>Connected: {{ connected }}</p>
     <p>Public key: {{ publicKey?.toBase58() }}</p>
     <p v-if="connecting">Connecting...</p>
-    <button type="button" @click="connect">Connect</button>
-    <button type="button" @click="disconnect">Disconnect</button>
+    <button type="button" :disabled="!selectedWallet || connected || connecting" @click="connect">
+      Connect
+    </button>
+    <button type="button" :disabled="!connected" @click="disconnect">Disconnect</button>
   </section>
 </template>
 ```
 
-Browser wallet discovery is not included yet. `connect()` works only after you configure a wallet object that implements `SolanaWallet`.
+Browser wallets are discovered through the Solana Wallet Standard. `connect()` works after selecting a discovered wallet or configuring a custom `SolanaWallet`.
 
 ## Transaction State
 
@@ -144,7 +157,7 @@ This README includes small snippets for quick reference. For a complete runnable
 pnpm dev:vue
 ```
 
-Source: [`examples/vue-vite`](https://github.com/vue-solana/vue-solana/tree/main/examples/vue-vite)
+Docs: [`examples/vue-vite`](https://vue-solana-docs.vercel.app/examples/vue-vite)
 
 ## API
 
@@ -183,4 +196,4 @@ Make sure your `tsconfig.json` includes `types/**/*.d.ts` or another pattern tha
 
 ## Status
 
-This package is early-stage. RPC and balance reads are usable; first-class browser wallet adapter support is planned.
+This package is early-stage. RPC, balance, wallet, and transaction composables are usable.

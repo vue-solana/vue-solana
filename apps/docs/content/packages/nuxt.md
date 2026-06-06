@@ -8,8 +8,10 @@ description: Nuxt module for Solana applications.
 ## Install
 
 ```sh
-pnpm add @vue-solana/nuxt @vue-solana/vue @vue-solana/core @solana/web3-compat
+pnpm add @vue-solana/nuxt @vue-solana/vue @vue-solana/core @solana/web3-compat buffer
 ```
+
+The `buffer` package is needed for browser apps that create or serialize `@solana/web3-compat` transactions.
 
 ## Module Setup
 
@@ -45,6 +47,7 @@ The module auto-imports these composables from `@vue-solana/vue`:
 - `useSolanaRpc()`
 - `useSolanaConnection()`
 - `useSolanaWallet()`
+- `useSolanaWallets()`
 - `useSolanaBalance()`
 - `useSolanaSignAndSendTransaction()`
 
@@ -88,20 +91,33 @@ const { balance, loading, error, refresh } = useSolanaBalance(address);
 
 ```vue
 <script setup lang="ts">
+const { wallets, selectedWallet, refreshWallets, selectWallet } = useSolanaWallets();
 const { publicKey, connected, connect, disconnect } = useSolanaWallet();
 </script>
 
 <template>
   <section>
+    <button type="button" @click="refreshWallets">Refresh Wallets</button>
+
+    <button
+      v-for="wallet in wallets"
+      :key="wallet.name"
+      type="button"
+      @click="selectWallet(wallet)"
+    >
+      {{ wallet.name }}
+    </button>
+
+    <p>Selected: {{ selectedWallet?.name ?? "None" }}</p>
     <p>Connected: {{ connected }}</p>
     <p>Public key: {{ publicKey?.toBase58() }}</p>
-    <button type="button" @click="connect">Connect</button>
-    <button type="button" @click="disconnect">Disconnect</button>
+    <button type="button" :disabled="!selectedWallet || connected" @click="connect">Connect</button>
+    <button type="button" :disabled="!connected" @click="disconnect">Disconnect</button>
   </section>
 </template>
 ```
 
-Browser wallet discovery is not included yet. Wallet actions work only after you configure a wallet object that implements `SolanaWallet`.
+Browser wallets are discovered through the Solana Wallet Standard. `refreshWallets()` only updates the discovered wallet list, and `selectWallet()` only configures the active wallet. `connected` remains false until `connect()` succeeds, even if the extension exposes previously authorized accounts after a page refresh.
 
 ## Example App
 

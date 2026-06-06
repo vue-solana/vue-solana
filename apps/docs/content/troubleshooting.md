@@ -58,9 +58,26 @@ export default defineNuxtConfig({
 
 ## `No Solana wallet is configured`
 
-The current packages do not discover browser wallets yet. `useWallet().connect()` and `useSignAndSendTransaction()` require a configured wallet object that implements `SolanaWallet`.
+No wallet has been selected or manually configured. Use `useWallets()` or `useSolanaWallets()` to select a discovered wallet before calling `connect()` or sending a transaction.
+
+```ts
+const { wallets, selectWallet } = useSolanaWallets();
+
+selectWallet(wallets.value[0]);
+```
 
 RPC reads and balance reads work without a wallet.
+
+## No Browser Wallets Are Detected
+
+Common causes:
+
+- No Solana wallet extension is installed.
+- The wallet extension is disabled for the current browser profile.
+- The app is running in SSR or a non-browser environment.
+- The wallet does not implement the Wallet Standard.
+
+Install a wallet such as Phantom, Solflare, or Backpack, then call `refreshWallets()` after the page loads.
 
 ## `Solana wallet is not connected`
 
@@ -68,9 +85,42 @@ The transaction helper was called before the wallet reported `connected: true` a
 
 Call `connect()` first, or check `connected.value` before sending.
 
+## Wallet Appears Connected After Refresh During Local Development
+
+Selecting a discovered wallet should not mark it connected. `connected` should become true only after `connect()` succeeds, even if the browser extension exposes previously authorized accounts.
+
+If local Vue or Nuxt examples still appear connected immediately after refresh, rebuild the workspace packages and fully restart the dev server so Vite/Nuxt drop stale package output:
+
+```sh
+pnpm build:packages
+pnpm dev:vue
+```
+
+For Nuxt, use `pnpm dev:nuxt` after rebuilding packages.
+
 ## `Solana wallet does not support signTransaction`
 
-The configured wallet does not expose either `signAndSendTransaction` or `signTransaction`. Use a wallet implementation that supports one of those methods.
+The configured wallet does not expose either `signAndSendTransaction` or `signTransaction`. Use a wallet that supports transaction signing for the selected Solana chain.
+
+## `Buffer is not defined`
+
+Some `@solana/web3-compat` transaction paths still expect a Node-compatible `Buffer` global. In browser apps, install `buffer` and initialize the polyfill before creating or serializing transactions:
+
+```sh
+pnpm add buffer
+```
+
+```ts
+import { Buffer } from "buffer/";
+
+(globalThis as typeof globalThis & { Buffer: typeof Buffer }).Buffer = Buffer;
+```
+
+Use the trailing slash in `buffer/`. Importing from `buffer` can make Vite or Nuxt externalize the Node builtin and fail in the browser.
+
+## Module `buffer` Has Been Externalized
+
+If the console says `Module "buffer" has been externalized for browser compatibility`, change imports from `buffer` to `buffer/`, then restart the dev server. Vite may cache the previously optimized dependency.
 
 ## Balance Reads Fail
 
