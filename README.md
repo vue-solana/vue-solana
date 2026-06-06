@@ -51,6 +51,8 @@ pnpm add @vue-solana/nuxt @vue-solana/vue @vue-solana/core @solana/web3-compat
 
 The dedicated Nuxt Content docs app lives at [`apps/docs`](./apps/docs). It adapts the current root `docs/` material into a navigable documentation site for the full Vue Solana ecosystem.
 
+Live demo: [vue-solana-docs.vercel.app/demo](https://vue-solana-docs.vercel.app/demo)
+
 Run it locally:
 
 ```sh
@@ -67,6 +69,7 @@ Docs app pages:
 - [`@vue-solana/core`](./apps/docs/content/packages/core.md)
 - [`@vue-solana/vue`](./apps/docs/content/packages/vue.md)
 - [`@vue-solana/nuxt`](./apps/docs/content/packages/nuxt.md)
+- [Live demo](https://vue-solana-docs.vercel.app/demo)
 - [Vue Vite example docs](./apps/docs/content/examples/vue-vite.md)
 - [Nuxt example docs](./apps/docs/content/examples/nuxt.md)
 - [Troubleshooting](./apps/docs/content/troubleshooting.md)
@@ -158,6 +161,7 @@ The release workflow does not use a long-lived `NPM_TOKEN` secret.
 
 Small usage snippets are included in the package docs for quick reference. For a complete runnable flow, use the example apps:
 
+- Live demo: [vue-solana-docs.vercel.app/demo](https://vue-solana-docs.vercel.app/demo)
 - Vue Vite example: [`examples/vue-vite`](./examples/vue-vite)
 - Nuxt example: [`examples/nuxt`](./examples/nuxt)
 - Documentation app: [`apps/docs`](./apps/docs)

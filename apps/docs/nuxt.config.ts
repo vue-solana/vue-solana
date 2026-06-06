@@ -1,8 +1,11 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  modules: ["@nuxt/ui", "@nuxt/content"],
+  modules: ["@nuxt/ui", "@nuxt/content", "@vue-solana/nuxt"],
   css: ["~/assets/css/main.css"],
   compatibilityDate: "2024-04-03",
+  solana: {
+    cluster: "devnet",
+  },
   content: {
     experimental: {
       sqliteConnector: "native",

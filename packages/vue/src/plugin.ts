@@ -15,6 +15,8 @@ export interface VueSolanaPluginOptions extends SolanaConfig {
   wallet?: SolanaWallet | null;
 }
 
+const RPC_CHECK_TIMEOUT_MS = 10_000;
+
 export function createSolanaPlugin(options: VueSolanaPluginOptions = {}) {
   return {
     install(app: App) {
@@ -26,8 +28,11 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}) {
       const error = ref<string | null>(null);
       const latestBlockhash = ref<string | null>(null);
       let unsubscribeWallets: (() => void) | null = null;
+      let rpcCheckId = 0;
 
       async function checkConnection() {
+        const checkId = ++rpcCheckId;
+
         status.value = "checking";
         error.value = null;
 
@@ -38,7 +43,15 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}) {
         });
 
         try {
-          const blockhash = await context.connection.getLatestBlockhash();
+          const blockhash = await withTimeout(
+            context.connection.getLatestBlockhash() as Promise<{ blockhash: string }>,
+            RPC_CHECK_TIMEOUT_MS,
+            `RPC connection check timed out after ${RPC_CHECK_TIMEOUT_MS / 1_000} seconds.`,
+          );
+
+          if (checkId !== rpcCheckId) {
+            return;
+          }
 
           latestBlockhash.value = blockhash.blockhash;
           status.value = "connected";
@@ -50,6 +63,10 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}) {
             blockhash,
           });
         } catch (cause) {
+          if (checkId !== rpcCheckId) {
+            return;
+          }
+
           status.value = "error";
           error.value = cause instanceof Error ? cause.message : String(cause);
 
@@ -107,3 +124,19 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}) {
 }
 
 export const VueSolana = createSolanaPlugin;
+
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string): Promise<T> {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+
+  const timeout = new Promise<never>((_, reject) => {
+    timeoutId = setTimeout(() => {
+      reject(new Error(message));
+    }, timeoutMs);
+  });
+
+  return Promise.race([promise, timeout]).finally(() => {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+  });
+}

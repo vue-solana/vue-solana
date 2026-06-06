@@ -29,6 +29,7 @@ const sections = [
   {
     title: "Examples",
     links: [
+      { label: "Live Demo", to: "/demo" },
       { label: "Vue Vite", to: "/examples/vue-vite" },
       { label: "Nuxt", to: "/examples/nuxt" },
     ],

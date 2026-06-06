@@ -15,6 +15,7 @@ Official Solana docs:
 Full Vue Solana docs:
 
 - [`@vue-solana/core`](https://vue-solana-docs.vercel.app/packages/core)
+- [Live demo](https://vue-solana-docs.vercel.app/demo)
 - [Getting Started](https://vue-solana-docs.vercel.app/getting-started)
 - [Troubleshooting](https://vue-solana-docs.vercel.app/troubleshooting)
 
@@ -99,8 +100,9 @@ Browser wallets discovered through the Solana Wallet Standard are adapted into `
 
 For complete runnable Vue and Nuxt examples that use this package through the framework integrations, see:
 
-- [`examples/vue-vite`](https://vue-solana-docs.vercel.app/examples/vue-vite)
-- [`examples/nuxt`](https://vue-solana-docs.vercel.app/examples/nuxt)
+- [Live demo](https://vue-solana-docs.vercel.app/demo)
+- <a href="https://vue-solana-docs.vercel.app/examples/vue-vite" target="_blank" rel="noopener noreferrer"><code>examples/vue-vite</code></a>
+- <a href="https://vue-solana-docs.vercel.app/examples/nuxt" target="_blank" rel="noopener noreferrer"><code>examples/nuxt</code></a>
 
 ## Known TypeScript Issue
 

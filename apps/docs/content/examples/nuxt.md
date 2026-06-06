@@ -5,7 +5,9 @@ description: Runnable Nuxt example app for @vue-solana/nuxt.
 
 The Nuxt example is a runnable Nuxt app for `@vue-solana/nuxt`.
 
-Source: [`examples/nuxt`](https://github.com/vue-solana/vue-solana/tree/main/examples/nuxt)
+Source: <a href="https://github.com/vue-solana/vue-solana/tree/main/examples/nuxt" target="_blank" rel="noopener noreferrer"><code>examples/nuxt</code></a>
+
+Live demo: [vue-solana-docs.vercel.app/demo](https://vue-solana-docs.vercel.app/demo)
 
 ## What It Demonstrates
 

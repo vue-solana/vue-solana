@@ -5,7 +5,9 @@ description: Runnable Vue 3 and Vite example app for @vue-solana/vue.
 
 The Vue Vite example is a runnable Vue 3 app for `@vue-solana/vue`.
 
-Source: [`examples/vue-vite`](https://github.com/vue-solana/vue-solana/tree/main/examples/vue-vite)
+Source: <a href="https://github.com/vue-solana/vue-solana/tree/main/examples/vue-vite" target="_blank" rel="noopener noreferrer"><code>examples/vue-vite</code></a>
+
+Live demo: [vue-solana-docs.vercel.app/demo](https://vue-solana-docs.vercel.app/demo)
 
 ## What It Demonstrates
 

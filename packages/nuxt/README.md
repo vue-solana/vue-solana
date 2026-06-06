@@ -11,6 +11,7 @@ New to Solana? Start with the official docs and the project concepts guide:
 - [Solana Clusters](https://solana.com/docs/references/clusters)
 - [Vue Solana Concepts Guide](https://vue-solana-docs.vercel.app/concepts/solana-for-vue-developers)
 - [`@vue-solana/nuxt` docs](https://vue-solana-docs.vercel.app/packages/nuxt)
+- [Live demo](https://vue-solana-docs.vercel.app/demo)
 
 ## Install
 
@@ -139,7 +140,9 @@ This README includes small snippets for quick reference. For a complete runnable
 pnpm dev:nuxt
 ```
 
-Docs: [`examples/nuxt`](https://vue-solana-docs.vercel.app/examples/nuxt)
+Docs: <a href="https://vue-solana-docs.vercel.app/examples/nuxt" target="_blank" rel="noopener noreferrer"><code>examples/nuxt</code></a>
+
+Live demo: [vue-solana-docs.vercel.app/demo](https://vue-solana-docs.vercel.app/demo)
 
 ## Known TypeScript Issue
 
