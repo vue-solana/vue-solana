@@ -1,5 +1,12 @@
 # @vue-solana/example-vue-vite
 
+## 0.0.5
+
+### Patch Changes
+
+- Updated dependencies [421b8bc]
+  - @vue-solana/vue@0.2.2
+
 ## 0.0.4
 
 ### Patch Changes
