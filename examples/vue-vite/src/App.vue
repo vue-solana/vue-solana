@@ -192,6 +192,28 @@ function loadWallets() {
   walletDiscovery.refreshWallets();
 }
 
+async function copyWalletAddress() {
+  const publicKey = wallet.publicKey.value?.toBase58();
+
+  if (!publicKey) {
+    return;
+  }
+
+  try {
+    await navigator.clipboard.writeText(publicKey);
+
+    walletNotice.value = {
+      type: "success",
+      message: `Wallet address copied: ${publicKey}`,
+    };
+  } catch (error) {
+    walletNotice.value = {
+      type: "error",
+      message: formatError(error) ?? "Unable to copy wallet address.",
+    };
+  }
+}
+
 async function runMockTransaction() {
   await mockTransaction.execute("transaction");
 }
@@ -366,7 +388,21 @@ function createTransferInstruction(fromPubkey: PublicKey, toPubkey: PublicKey, l
         </div>
         <div>
           <dt>Public key</dt>
-          <dd>{{ walletPublicKey }}</dd>
+          <dd>
+            <span class="copyable-address">
+              <code>{{ walletPublicKey }}</code>
+              <button
+                v-if="wallet.publicKey.value"
+                type="button"
+                class="copy-address-button"
+                aria-label="Copy wallet address"
+                title="Copy wallet address"
+                @click="copyWalletAddress"
+              >
+                Copy
+              </button>
+            </span>
+          </dd>
         </div>
         <div>
           <dt>Connecting</dt>
@@ -597,6 +633,27 @@ code {
   padding: 0.1rem 0.3rem;
   border-radius: 0.35rem;
   background: var(--color-background-mute);
+}
+
+.copyable-address {
+  display: inline-flex;
+  max-width: 100%;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.copyable-address code {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.copy-address-button {
+  flex: 0 0 auto;
+  padding: 0.24rem 0.45rem;
+  border-color: var(--color-border);
+  background: var(--color-background);
+  color: var(--color-text);
+  font-size: 0.72rem;
 }
 
 .actions {
