@@ -25,7 +25,10 @@ const module: DefinedNuxtModule = defineNuxtModule<ModuleOptions>({
       ...options,
     };
 
-    addPlugin(resolver.resolve("./runtime/plugin"));
+    addPlugin({
+      src: resolver.resolve("./runtime/plugin"),
+      mode: "client",
+    });
 
     addImports([
       { name: "useBalance", as: "useSolanaBalance", from: "@vue-solana/vue" },
