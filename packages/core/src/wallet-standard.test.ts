@@ -89,6 +89,33 @@ describe("Wallet Standard adapter", () => {
     expect(standardWallet.features[StandardDisconnect].disconnect).toHaveBeenCalledOnce();
   });
 
+  it("starts disconnected when a standard wallet already exposes accounts", async () => {
+    const standardWallet = createStandardWallet([account]) as Wallet & {
+      emitAccountsChange(accounts: readonly WalletAccount[]): void;
+    };
+    const walletInfo = {
+      name: standardWallet.name,
+      icon: standardWallet.icon,
+      chains: standardWallet.chains,
+      accounts: [],
+      wallet: standardWallet,
+    } satisfies SolanaWalletInfo;
+    const wallet = adaptSolanaStandardWallet(walletInfo, { chain: "solana:devnet" });
+
+    expect(wallet.connected).toBe(false);
+    expect(wallet.publicKey).toBeNull();
+
+    standardWallet.emitAccountsChange([account]);
+
+    expect(wallet.connected).toBe(false);
+    expect(wallet.publicKey).toBeNull();
+
+    await wallet.connect();
+
+    expect(wallet.connected).toBe(true);
+    expect(wallet.publicKey?.toBase58()).toBe(account.address);
+  });
+
   it("notifies when wallet state changes", async () => {
     const onChange = vi.fn();
     const standardWallet = createStandardWallet() as Wallet & {

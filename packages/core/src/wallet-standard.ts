@@ -121,7 +121,8 @@ export function adaptSolanaStandardWallet(
 ): SolanaWallet {
   const wallet = walletInfo.wallet as Wallet;
   let accounts = wallet.accounts;
-  let account = options.account ?? getSolanaAccount(accounts, options.chain);
+  let account = options.account;
+  let allowAccountUpdates = Boolean(options.account);
   let connecting = false;
   let disconnecting = false;
   let manuallyDisconnected = false;
@@ -132,7 +133,10 @@ export function adaptSolanaStandardWallet(
   eventsFeature?.on("change", (properties) => {
     if (properties.accounts) {
       accounts = properties.accounts;
-      account = manuallyDisconnected ? undefined : getSolanaAccount(accounts, options.chain);
+      account =
+        allowAccountUpdates && !manuallyDisconnected
+          ? getSolanaAccount(accounts, options.chain)
+          : undefined;
       options.onChange?.();
     }
   });
@@ -162,6 +166,7 @@ export function adaptSolanaStandardWallet(
         const result = await feature.connect();
 
         accounts = result.accounts;
+        allowAccountUpdates = true;
         account = getSolanaAccount(accounts, options.chain);
 
         if (!account) {
@@ -179,6 +184,7 @@ export function adaptSolanaStandardWallet(
 
       disconnecting = true;
       manuallyDisconnected = true;
+      allowAccountUpdates = false;
       account = undefined;
       options.onChange?.();
 
@@ -188,6 +194,7 @@ export function adaptSolanaStandardWallet(
         account = undefined;
       } catch (error) {
         manuallyDisconnected = false;
+        allowAccountUpdates = true;
         account = getSolanaAccount(accounts, options.chain);
         throw error;
       } finally {
