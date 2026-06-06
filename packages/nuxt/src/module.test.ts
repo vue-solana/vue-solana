@@ -75,7 +75,10 @@ describe("Nuxt module", () => {
       endpoint: "https://rpc.example.com",
     });
     expect(kit.createResolver).toHaveBeenCalledWith(expect.stringContaining("module.ts"));
-    expect(kit.addPlugin).toHaveBeenCalledWith("resolved:./runtime/plugin");
+    expect(kit.addPlugin).toHaveBeenCalledWith({
+      src: "resolved:./runtime/plugin",
+      mode: "client",
+    });
     expect(kit.addImports).toHaveBeenCalledWith(
       expect.arrayContaining([
         { name: "useBalance", as: "useSolanaBalance", from: "@vue-solana/vue" },
