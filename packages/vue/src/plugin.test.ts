@@ -223,6 +223,8 @@ describe("createSolanaPlugin", () => {
       },
     );
 
+    await vi.advanceTimersByTimeAsync(0);
+
     expect(solana?.status.value).toBe("checking");
 
     await vi.advanceTimersByTimeAsync(10_000);
@@ -358,6 +360,48 @@ describe("createSolanaPlugin", () => {
 
     expect(registerSolanaMobileWallet).toHaveBeenCalledWith({ chains: ["solana:devnet"] });
     expect(getRegisteredSolanaWallets).toHaveBeenCalledOnce();
+  });
+
+  it("passes mobile wallet options through registration", async () => {
+    vi.spyOn(console, "info").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    mockSolanaContext();
+    getRegisteredSolanaWallets.mockReturnValue([]);
+    subscribeSolanaWallets.mockReturnValue(vi.fn());
+    let solana: ReturnType<typeof useSolana> | undefined;
+
+    mount(
+      defineComponent({
+        setup() {
+          solana = useSolana();
+
+          return () => h("div");
+        },
+      }),
+      {
+        global: {
+          plugins: [
+            [
+              createSolanaPlugin({
+                mobileWallet: {
+                  appIdentity: { name: "Test App", uri: "https://example.com" },
+                  chains: ["solana:mainnet"],
+                  remoteHostAuthority: "example.com",
+                },
+              }),
+            ],
+          ],
+        },
+      },
+    );
+
+    solana?.refreshWallets();
+
+    expect(registerSolanaMobileWallet).toHaveBeenCalledWith({
+      chains: ["solana:mainnet"],
+      appIdentity: { name: "Test App", uri: "https://example.com" },
+      remoteHostAuthority: "example.com",
+    });
   });
 
   it("skips mobile wallet registration when disabled", async () => {

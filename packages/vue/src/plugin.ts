@@ -189,7 +189,9 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}) {
       app.provide(solanaInjectionKey, vueContext);
 
       if (typeof window !== "undefined") {
-        void checkConnection();
+        window.setTimeout(() => {
+          void checkConnection();
+        }, 0);
       }
     },
   };

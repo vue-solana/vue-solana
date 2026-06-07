@@ -50,6 +50,15 @@ describe("mobile wallet registration", () => {
     expect(isSolanaMobileWalletSupported()).toBe(false);
   });
 
+  it("does not register MWA on unsupported browsers", () => {
+    mockUserAgent(
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_0) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Safari/605.1.15",
+    );
+
+    expect(registerSolanaMobileWallet()).toBe(false);
+    expect(registerMwa).not.toHaveBeenCalled();
+  });
+
   it("registers MWA with default handlers on supported browsers", () => {
     mockUserAgent(
       "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36",
@@ -69,6 +78,21 @@ describe("mobile wallet registration", () => {
       remoteHostAuthority: undefined,
       onWalletNotFound: expect.any(Function),
     });
+  });
+
+  it("does not duplicate MWA registrations for matching options", () => {
+    mockUserAgent(
+      "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36",
+    );
+    const options = {
+      appIdentity: { name: "Duplicate Test App", uri: "https://duplicate.example.com" },
+      chains: ["solana:devnet"] as const,
+    };
+
+    expect(registerSolanaMobileWallet(options)).toBe(true);
+    expect(registerSolanaMobileWallet(options)).toBe(true);
+
+    expect(registerMwa).toHaveBeenCalledOnce();
   });
 
   it("uses document metadata for the default app identity", () => {
