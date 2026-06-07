@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Buffer } from "buffer/";
-import { computed, ref } from "vue";
-import { PublicKey, Transaction, TransactionInstruction } from "@solana/web3-compat";
+import { computed, onMounted, ref, shallowRef } from "vue";
+import type { PublicKey, TransactionInstruction } from "@solana/web3-compat";
 import { useTransaction } from "@vue-solana/vue";
 
 (globalThis as typeof globalThis & { Buffer: typeof Buffer }).Buffer = Buffer;
@@ -26,8 +26,7 @@ const directConnectionLoading = ref(false);
 const directConnectionError = ref<string | null>(null);
 const devnetTransferError = ref<unknown>(null);
 const walletsLoaded = ref(false);
-
-const systemProgramId = new PublicKey("11111111111111111111111111111111");
+const web3 = shallowRef<Web3Compat | null>(null);
 
 const balance = useSolanaBalance(balanceAddress);
 const mockTransaction = useTransaction(async (label: string) => {
@@ -75,8 +74,12 @@ const transferLamports = computed(() => {
   return Math.round(amount * 1_000_000_000);
 });
 const recipientAddressValid = computed(() => {
+  if (!web3.value) {
+    return false;
+  }
+
   try {
-    new PublicKey(transferRecipient.value.trim());
+    new web3.value.PublicKey(transferRecipient.value.trim());
     return true;
   } catch {
     return false;
@@ -139,6 +142,30 @@ function formatError(error: unknown) {
 
   return error instanceof Error ? error.message : String(error);
 }
+
+type Web3Compat = Pick<
+  typeof import("@solana/web3-compat"),
+  "PublicKey" | "Transaction" | "TransactionInstruction"
+>;
+
+let web3Promise: Promise<Web3Compat> | null = null;
+
+async function loadWeb3Compat() {
+  web3Promise ??= import("@solana/web3-compat").then((module) => ({
+    PublicKey: module.PublicKey,
+    Transaction: module.Transaction,
+    TransactionInstruction: module.TransactionInstruction,
+  }));
+
+  web3.value = await web3Promise;
+  return web3.value;
+}
+
+onMounted(() => {
+  void loadWeb3Compat().catch((error) => {
+    devnetTransferError.value = error;
+  });
+});
 
 async function loadDirectBlockhash() {
   directConnectionLoading.value = true;
@@ -240,13 +267,14 @@ async function sendDevnetTransfer() {
   devnetTransferError.value = null;
 
   try {
-    const toPubkey = new PublicKey(transferRecipient.value.trim());
+    const web3Compat = await loadWeb3Compat();
+    const toPubkey = new web3Compat.PublicKey(transferRecipient.value.trim());
     const latestBlockhash = await connection.getLatestBlockhash();
-    const transaction = new Transaction();
+    const transaction = new web3Compat.Transaction();
 
     transaction.feePayer = fromPubkey;
     transaction.recentBlockhash = latestBlockhash.blockhash;
-    transaction.add(createTransferInstruction(fromPubkey, toPubkey, lamports));
+    transaction.add(createTransferInstruction(web3Compat, fromPubkey, toPubkey, lamports));
 
     await sendTransaction.execute(transaction, {
       skipPreflight: false,
@@ -256,19 +284,24 @@ async function sendDevnetTransfer() {
   }
 }
 
-function createTransferInstruction(fromPubkey: PublicKey, toPubkey: PublicKey, lamports: number) {
+function createTransferInstruction(
+  web3Compat: Web3Compat,
+  fromPubkey: PublicKey,
+  toPubkey: PublicKey,
+  lamports: number,
+): TransactionInstruction {
   const data = new Uint8Array(12);
   const view = new DataView(data.buffer);
 
   view.setUint32(0, 2, true);
   view.setBigUint64(4, BigInt(lamports), true);
 
-  return new TransactionInstruction({
+  return new web3Compat.TransactionInstruction({
     keys: [
       { pubkey: fromPubkey, isSigner: true, isWritable: true },
       { pubkey: toPubkey, isSigner: false, isWritable: true },
     ],
-    programId: systemProgramId,
+    programId: new web3Compat.PublicKey("11111111111111111111111111111111"),
     data,
   });
 }
