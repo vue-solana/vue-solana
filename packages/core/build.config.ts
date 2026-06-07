@@ -4,6 +4,7 @@ export default defineBuildConfig({
   entries: [
     "src/index",
     "src/clusters",
+    "src/mobile-wallet",
     "src/rpc",
     "src/transaction",
     "src/types",

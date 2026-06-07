@@ -8,6 +8,9 @@ export default defineConfig({
       "@vue-solana/core/clusters": fileURLToPath(
         new URL("./packages/core/src/clusters.ts", import.meta.url),
       ),
+      "@vue-solana/core/mobile-wallet": fileURLToPath(
+        new URL("./packages/core/src/mobile-wallet.ts", import.meta.url),
+      ),
       "@vue-solana/core/rpc": fileURLToPath(new URL("./packages/core/src/rpc.ts", import.meta.url)),
       "@vue-solana/core/transaction": fileURLToPath(
         new URL("./packages/core/src/transaction.ts", import.meta.url),

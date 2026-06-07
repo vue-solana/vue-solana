@@ -1,4 +1,5 @@
 import { getWallets } from "@wallet-standard/app";
+import { SolanaMobileWalletAdapterWalletName } from "@solana-mobile/wallet-standard-mobile";
 import type { Wallet, WalletAccount } from "@wallet-standard/base";
 import { StandardConnect, StandardDisconnect, StandardEvents } from "@wallet-standard/features";
 import {
@@ -257,10 +258,15 @@ export function adaptSolanaStandardWallet(
 }
 
 function createSolanaWalletInfo(wallet: Wallet): SolanaWalletInfo {
+  const isMobileWallet = wallet.name === SolanaMobileWalletAdapterWalletName;
+
   return {
     name: wallet.name,
     icon: wallet.icon,
     chains: wallet.chains,
+    platform: isMobileWallet ? "mobile" : "browser",
+    source: isMobileWallet ? "mobile-wallet-adapter" : "wallet-standard",
+    appUrl: getWalletUrl(wallet),
     accounts: wallet.accounts.map((account) => ({
       address: account.address,
       publicKey: Uint8Array.from(account.publicKey),
@@ -270,6 +276,10 @@ function createSolanaWalletInfo(wallet: Wallet): SolanaWalletInfo {
     })),
     wallet,
   };
+}
+
+function getWalletUrl(wallet: Wallet): string | undefined {
+  return "url" in wallet && typeof wallet.url === "string" ? wallet.url : undefined;
 }
 
 function getSolanaAccount(

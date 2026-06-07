@@ -453,11 +453,60 @@ const { publicKey, connected, connect, disconnect } = useSolanaWallet();
 Expected result:
 
 - Installed standard wallets appear in the wallet list.
+- On Android Chrome, `Mobile Wallet Adapter` appears when a compatible native wallet is available through Solana Mobile Wallet Standard.
 - Selecting a wallet configures the active wallet, but does not connect it.
 - `connect()` opens the wallet extension approval flow.
 - After approval, `publicKey` shows the connected wallet address.
 
 Some extensions expose previously authorized accounts after a page refresh. Vue Solana still keeps `connected` false until the app explicitly calls `connect()` and that call succeeds.
+
+### Android Mobile Wallets
+
+Vue Solana registers Solana Mobile Wallet Adapter on supported Android Chrome mobile web and PWA runtimes. Mobile wallets are exposed in the same `useWallets()` list as browser extension wallets, so apps do not need separate mobile composables.
+
+The Vue plugin enables Android mobile wallet registration by default on supported clients:
+
+```ts
+createApp(App).use(
+  createSolanaPlugin({
+    cluster: "devnet",
+    mobileWallet: {
+      appIdentity: {
+        name: "My Vue Solana App",
+        uri: "https://example.com",
+        icon: "favicon.ico",
+      },
+    },
+  }),
+);
+```
+
+To disable Android mobile wallet registration:
+
+```ts
+createApp(App).use(
+  createSolanaPlugin({
+    cluster: "devnet",
+    mobileWallet: false,
+  }),
+);
+```
+
+Support notes:
+
+- Android Chrome and Chrome PWAs are the supported browser targets for local Mobile Wallet Adapter.
+- iOS browsers do not support Mobile Wallet Adapter. iOS wallet support requires wallet-specific universal link or deep link adapters and is planned separately.
+- Registration is SSR-safe. Nuxt installs the runtime plugin on the client, and core mobile wallet registration returns `false` when `window` is unavailable.
+- `@solana-mobile/wallet-standard-mobile` handles installed-wallet fallback UI through its default wallet-not-found handler.
+- New browser Local Network Access prompts may appear on first connection. Keep `@solana-mobile/wallet-standard-mobile` at `0.5.0` or newer.
+
+Manual Android testing flow:
+
+- Open the Vue or Nuxt example on Android Chrome or an Android Chrome PWA.
+- Install a compatible Solana mobile wallet such as Phantom, Solflare, or Seed Vault Wallet.
+- Tap `Refresh Wallets` and select `Mobile Wallet Adapter` from the same wallet list.
+- Call `connect()` from a direct user action, then approve the wallet prompt.
+- Test a devnet balance read or small devnet transfer.
 
 ### 11. Send A Real Devnet Transfer
 
