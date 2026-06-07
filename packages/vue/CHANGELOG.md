@@ -1,5 +1,11 @@
 # @vue-solana/vue
 
+## 0.2.3
+
+### Patch Changes
+
+- d8e0732: Preserve connected wallet state when switching or clearing wallet selection.
+
 ## 0.2.2
 
 ### Patch Changes
