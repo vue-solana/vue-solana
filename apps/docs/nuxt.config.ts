@@ -12,6 +12,7 @@ export default defineNuxtConfig({
     },
   },
   routeRules: {
+    "/demo": { ssr: false },
     "/**": { prerender: true },
   },
 });
