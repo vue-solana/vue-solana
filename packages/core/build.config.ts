@@ -1,7 +1,15 @@
 import { defineBuildConfig } from "unbuild";
 
 export default defineBuildConfig({
-  entries: ["src/index"],
+  entries: [
+    "src/index",
+    "src/clusters",
+    "src/rpc",
+    "src/transaction",
+    "src/types",
+    "src/wallet",
+    "src/wallet-standard",
+  ],
   declaration: true,
   clean: true,
   rollup: {

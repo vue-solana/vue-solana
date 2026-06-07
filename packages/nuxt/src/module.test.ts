@@ -81,17 +81,17 @@ describe("Nuxt module", () => {
     });
     expect(kit.addImports).toHaveBeenCalledWith(
       expect.arrayContaining([
-        { name: "useBalance", as: "useSolanaBalance", from: "@vue-solana/vue" },
-        { name: "useConnection", as: "useSolanaConnection", from: "@vue-solana/vue" },
-        { name: "useRpc", as: "useSolanaRpc", from: "@vue-solana/vue" },
+        { name: "useBalance", as: "useSolanaBalance", from: "@vue-solana/vue/useBalance" },
+        { name: "useConnection", as: "useSolanaConnection", from: "@vue-solana/vue/useConnection" },
+        { name: "useRpc", as: "useSolanaRpc", from: "@vue-solana/vue/useRpc" },
         {
           name: "useSignAndSendTransaction",
           as: "useSolanaSignAndSendTransaction",
-          from: "@vue-solana/vue",
+          from: "@vue-solana/vue/useSignAndSendTransaction",
         },
-        { name: "useSolana", as: "useSolana", from: "@vue-solana/vue" },
-        { name: "useWallet", as: "useSolanaWallet", from: "@vue-solana/vue" },
-        { name: "useWallets", as: "useSolanaWallets", from: "@vue-solana/vue" },
+        { name: "useSolana", as: "useSolana", from: "@vue-solana/vue/useSolana" },
+        { name: "useWallet", as: "useSolanaWallet", from: "@vue-solana/vue/useWallet" },
+        { name: "useWallets", as: "useSolanaWallets", from: "@vue-solana/vue/useWallets" },
       ]),
     );
   });

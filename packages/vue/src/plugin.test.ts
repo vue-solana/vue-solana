@@ -55,12 +55,20 @@ const { createSolanaContext, getRegisteredSolanaWallets, subscribeSolanaWallets 
   }),
 );
 
-vi.mock("@vue-solana/core", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@vue-solana/core")>();
+vi.mock("@vue-solana/core/rpc", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@vue-solana/core/rpc")>();
 
   return {
     ...actual,
     createSolanaContext,
+  };
+});
+
+vi.mock("@vue-solana/core/wallet-standard", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@vue-solana/core/wallet-standard")>();
+
+  return {
+    ...actual,
     getRegisteredSolanaWallets,
     subscribeSolanaWallets,
   };

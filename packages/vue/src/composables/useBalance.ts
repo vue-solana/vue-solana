@@ -1,12 +1,14 @@
-import { PublicKey, type Commitment } from "@solana/web3-compat";
+import type { Commitment, PublicKey } from "@solana/web3-compat";
 import { ref, toValue, watch, type MaybeRefOrGetter } from "vue";
 import { useConnection } from "./useConnection";
+import { tryUseSolana } from "./useSolana";
 
 export function useBalance(
   address: MaybeRefOrGetter<PublicKey | string | null | undefined>,
   commitment?: Commitment,
 ) {
-  const connection = useConnection();
+  const solana = tryUseSolana();
+  const connection = solana?.connection ?? useConnection();
   const balance = ref<number | null>(null);
   const loading = ref(false);
   const error = ref<unknown>(null);
@@ -14,7 +16,7 @@ export function useBalance(
   async function refresh() {
     const value = toValue(address);
 
-    if (!value) {
+    if (!value || !solana) {
       balance.value = null;
       return null;
     }
@@ -23,7 +25,10 @@ export function useBalance(
     error.value = null;
 
     try {
-      const publicKey = typeof value === "string" ? new PublicKey(value) : value;
+      const publicKey =
+        typeof value === "string"
+          ? new (await import("@solana/web3-compat")).PublicKey(value)
+          : value;
       balance.value = await connection.getBalance(publicKey, commitment);
       return balance.value;
     } catch (cause) {

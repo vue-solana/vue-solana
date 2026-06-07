@@ -1,4 +1,4 @@
-import type { SolanaContext, SolanaWallet, SolanaWalletInfo } from "@vue-solana/core";
+import type { SolanaContext, SolanaWallet, SolanaWalletInfo } from "@vue-solana/core/types";
 import type { InjectionKey, Ref } from "vue";
 
 export type SolanaConnectionStatus = "idle" | "checking" | "connected" | "error";

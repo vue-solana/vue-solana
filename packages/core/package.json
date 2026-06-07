@@ -29,6 +29,36 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
       "require": "./dist/index.cjs"
+    },
+    "./types": {
+      "types": "./dist/types.d.ts",
+      "import": "./dist/types.mjs",
+      "require": "./dist/types.cjs"
+    },
+    "./clusters": {
+      "types": "./dist/clusters.d.ts",
+      "import": "./dist/clusters.mjs",
+      "require": "./dist/clusters.cjs"
+    },
+    "./rpc": {
+      "types": "./dist/rpc.d.ts",
+      "import": "./dist/rpc.mjs",
+      "require": "./dist/rpc.cjs"
+    },
+    "./transaction": {
+      "types": "./dist/transaction.d.ts",
+      "import": "./dist/transaction.mjs",
+      "require": "./dist/transaction.cjs"
+    },
+    "./wallet": {
+      "types": "./dist/wallet.d.ts",
+      "import": "./dist/wallet.mjs",
+      "require": "./dist/wallet.cjs"
+    },
+    "./wallet-standard": {
+      "types": "./dist/wallet-standard.d.ts",
+      "import": "./dist/wallet-standard.mjs",
+      "require": "./dist/wallet-standard.cjs"
     }
   },
   "files": [

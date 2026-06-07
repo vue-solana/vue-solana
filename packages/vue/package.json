@@ -29,6 +29,46 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
       "require": "./dist/index.cjs"
+    },
+    "./useSolana": {
+      "types": "./dist/useSolana.d.ts",
+      "import": "./dist/useSolana.mjs",
+      "require": "./dist/useSolana.cjs"
+    },
+    "./useRpc": {
+      "types": "./dist/useRpc.d.ts",
+      "import": "./dist/useRpc.mjs",
+      "require": "./dist/useRpc.cjs"
+    },
+    "./useConnection": {
+      "types": "./dist/useConnection.d.ts",
+      "import": "./dist/useConnection.mjs",
+      "require": "./dist/useConnection.cjs"
+    },
+    "./useBalance": {
+      "types": "./dist/useBalance.d.ts",
+      "import": "./dist/useBalance.mjs",
+      "require": "./dist/useBalance.cjs"
+    },
+    "./useWallet": {
+      "types": "./dist/useWallet.d.ts",
+      "import": "./dist/useWallet.mjs",
+      "require": "./dist/useWallet.cjs"
+    },
+    "./useWallets": {
+      "types": "./dist/useWallets.d.ts",
+      "import": "./dist/useWallets.mjs",
+      "require": "./dist/useWallets.cjs"
+    },
+    "./useTransaction": {
+      "types": "./dist/useTransaction.d.ts",
+      "import": "./dist/useTransaction.mjs",
+      "require": "./dist/useTransaction.cjs"
+    },
+    "./useSignAndSendTransaction": {
+      "types": "./dist/useSignAndSendTransaction.d.ts",
+      "import": "./dist/useSignAndSendTransaction.mjs",
+      "require": "./dist/useSignAndSendTransaction.cjs"
     }
   },
   "files": [

@@ -23,15 +23,20 @@ describe("useSolana", () => {
     expect(result).toBe(context);
   });
 
-  it("throws when the plugin has not provided context", () => {
+  it("returns SSR-safe state when the plugin has not provided context", () => {
     const Component = defineComponent({
       setup() {
-        useSolana();
+        result = useSolana();
 
         return () => h("div");
       },
     });
+    let result: ReturnType<typeof useSolana> | undefined;
 
-    expect(() => mount(Component)).toThrow("Vue Solana plugin is not installed");
+    mount(Component);
+
+    expect(result?.cluster).toBe("devnet");
+    expect(result?.wallet.value).toBeNull();
+    expect(result?.status.value).toBe("idle");
   });
 });

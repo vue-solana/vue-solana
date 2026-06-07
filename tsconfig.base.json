@@ -6,7 +6,9 @@
     "baseUrl": ".",
     "paths": {
       "@vue-solana/core": ["packages/core/src/index.ts"],
-      "@vue-solana/vue": ["packages/vue/src/index.ts"]
+      "@vue-solana/core/*": ["packages/core/src/*.ts"],
+      "@vue-solana/vue": ["packages/vue/src/index.ts"],
+      "@vue-solana/vue/*": ["packages/vue/src/*.ts"]
     },
     "lib": ["ES2022", "DOM"],
     "strict": true,

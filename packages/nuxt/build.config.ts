@@ -7,5 +7,12 @@ export default defineBuildConfig({
   rollup: {
     emitCJS: true,
   },
-  externals: ["#app", "@nuxt/kit", "@vue-solana/core", "@vue-solana/vue", "nuxt", "vue"],
+  externals: [
+    "#app",
+    "@nuxt/kit",
+    /^@vue-solana\/core(?:\/.*)?$/,
+    /^@vue-solana\/vue(?:\/.*)?$/,
+    "nuxt",
+    "vue",
+  ],
 });

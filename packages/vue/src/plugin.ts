@@ -1,13 +1,11 @@
 import {
   adaptSolanaStandardWallet,
-  createSolanaContext,
   getRegisteredSolanaWallets,
   getSolanaChain,
   subscribeSolanaWallets,
-  type SolanaConfig,
-  type SolanaWallet,
-  type SolanaWalletInfo,
-} from "@vue-solana/core";
+} from "@vue-solana/core/wallet-standard";
+import { createSolanaContext } from "@vue-solana/core/rpc";
+import type { SolanaConfig, SolanaWallet, SolanaWalletInfo } from "@vue-solana/core/types";
 import { ref, shallowRef, triggerRef, type App } from "vue";
 import { solanaInjectionKey, type VueSolanaContext } from "./injection";
 

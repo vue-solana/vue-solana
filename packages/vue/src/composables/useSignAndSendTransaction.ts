@@ -1,8 +1,5 @@
-import {
-  signAndSendTransaction,
-  type SendTransactionOptions,
-  type SolanaTransaction,
-} from "@vue-solana/core";
+import { signAndSendTransaction } from "@vue-solana/core/transaction";
+import type { SendTransactionOptions, SolanaTransaction } from "@vue-solana/core/types";
 import { useConnection } from "./useConnection";
 import { useWallet } from "./useWallet";
 import { useTransaction } from "./useTransaction";
