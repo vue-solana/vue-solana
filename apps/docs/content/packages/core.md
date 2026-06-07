@@ -29,6 +29,13 @@ const { blockhash } = await solana.connection.getLatestBlockhash();
 console.log(solana.endpoint, blockhash);
 ```
 
+The root export remains supported. Direct subpath exports are also available for narrower imports:
+
+```ts
+import { createSolanaContext } from "@vue-solana/core/rpc";
+import type { SolanaConfig } from "@vue-solana/core/types";
+```
+
 ## Configuration
 
 ```ts
@@ -89,6 +96,15 @@ Browser wallets discovered through the Solana Wallet Standard are adapted into t
 - `adaptSolanaStandardWallet(walletInfo, options?)`: adapts a discovered browser wallet into `SolanaWallet`.
 
 ## Helpers
+
+Direct subpaths:
+
+- `@vue-solana/core/types`
+- `@vue-solana/core/clusters`
+- `@vue-solana/core/rpc`
+- `@vue-solana/core/transaction`
+- `@vue-solana/core/wallet`
+- `@vue-solana/core/wallet-standard`
 
 - `DEFAULT_CLUSTER`: default cluster, currently `devnet`.
 - `createSolanaConnection(config?)`: creates a `Connection`.

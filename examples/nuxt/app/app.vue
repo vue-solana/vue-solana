@@ -189,7 +189,7 @@ async function disconnectWallet() {
   }
 }
 
-function clearWallet() {
+function deselectWallet() {
   walletDiscovery.selectWallet(null);
 }
 
@@ -458,9 +458,9 @@ function createTransferInstruction(fromPubkey: PublicKey, toPubkey: PublicKey, l
             type="button"
             class="button-muted"
             :disabled="!walletConfigured"
-            @click="clearWallet"
+            @click="deselectWallet"
           >
-            Clear Selection
+            Deselect Wallet
           </button>
         </div>
       </section>

@@ -31,7 +31,7 @@ Make sure your `tsconfig.json` includes the file:
 
 ## `Vue Solana plugin is not installed`
 
-This means a Vue composable was called without installing the plugin.
+This means client-side code tried to use the Solana connection or wallet actions without installing the plugin. Current composables return inert SSR-safe state when Nuxt renders on the server, but real RPC and wallet operations still require the client plugin context.
 
 For Vue:
 
@@ -50,6 +50,8 @@ export default defineNuxtConfig({
   modules: ["@vue-solana/nuxt"],
 });
 ```
+
+The Nuxt module keeps the Vue Solana plugin client-only. Auto-imported composables can be called during SSR, but avoid doing direct RPC or wallet work on the server. Trigger RPC reads from client lifecycle hooks or user actions when you need the real Solana connection.
 
 ## `No Solana wallet is configured`
 

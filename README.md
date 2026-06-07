@@ -47,6 +47,19 @@ For Nuxt:
 pnpm add @vue-solana/nuxt @vue-solana/vue @vue-solana/core @solana/web3-compat
 ```
 
+## Import Paths
+
+Root package exports remain supported for compatibility. New code can use direct subpath exports for narrower imports:
+
+```ts
+import { createSolanaContext } from "@vue-solana/core/rpc";
+import type { SolanaConfig } from "@vue-solana/core/types";
+import { useRpc } from "@vue-solana/vue/useRpc";
+import { useWallet } from "@vue-solana/vue/useWallet";
+```
+
+The Nuxt module auto-imports composables from these direct Vue subpaths and keeps its runtime plugin client-only. Auto-imported composables are SSR-safe, but real RPC and wallet work should run after hydration.
+
 ## Documentation
 
 The dedicated Nuxt Content docs app lives at [`apps/docs`](./apps/docs). It adapts the current root `docs/` material into a navigable documentation site for the full Vue Solana ecosystem.

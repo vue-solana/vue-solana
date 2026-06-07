@@ -79,6 +79,13 @@ createApp(App)
   .mount("#app");
 ```
 
+For Vue composables, prefer direct subpath imports in new code:
+
+```ts
+import { useRpc } from "@vue-solana/vue/useRpc";
+import { useBalance } from "@vue-solana/vue/useBalance";
+```
+
 ## Nuxt Setup
 
 ```ts
@@ -90,6 +97,8 @@ export default defineNuxtConfig({
 });
 ```
 
+The Nuxt module installs the runtime plugin on the client only and auto-imports composables from direct `@vue-solana/vue/*` subpaths. Composables are safe to call during SSR, but real RPC and wallet operations should run after hydration, such as from `onMounted()` or user actions.
+
 ## Test RPC Without A Wallet
 
 RPC reads work without a browser wallet.
@@ -99,7 +108,7 @@ In Vue, use `useRpc()`:
 ```vue
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
-import { useRpc } from "@vue-solana/vue";
+import { useRpc } from "@vue-solana/vue/useRpc";
 
 const { cluster, endpoint, connection } = useRpc();
 const latestBlockhash = ref<string | null>(null);

@@ -1,13 +1,11 @@
 import {
   adaptSolanaStandardWallet,
-  createSolanaContext,
   getRegisteredSolanaWallets,
   getSolanaChain,
   subscribeSolanaWallets,
-  type SolanaConfig,
-  type SolanaWallet,
-  type SolanaWalletInfo,
-} from "@vue-solana/core";
+} from "@vue-solana/core/wallet-standard";
+import { createSolanaContext } from "@vue-solana/core/rpc";
+import type { SolanaConfig, SolanaWallet, SolanaWalletInfo } from "@vue-solana/core/types";
 import { ref, shallowRef, triggerRef, type App } from "vue";
 import { solanaInjectionKey, type VueSolanaContext } from "./injection";
 
@@ -27,6 +25,7 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}) {
       const status = ref<VueSolanaContext["status"]["value"]>("idle");
       const error = ref<string | null>(null);
       const latestBlockhash = ref<string | null>(null);
+      const adaptedWallets = new WeakMap<object, SolanaWallet>();
       let unsubscribeWallets: (() => void) | null = null;
       let rpcCheckId = 0;
 
@@ -91,12 +90,71 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}) {
 
       function selectWallet(nextWallet: SolanaWalletInfo | null) {
         selectedWallet.value = nextWallet;
-        wallet.value = nextWallet
-          ? adaptSolanaStandardWallet(nextWallet, {
-              chain: getSolanaChain(context.cluster),
-              onChange: () => triggerRef(wallet),
-            })
-          : (options.wallet ?? null);
+        wallet.value = nextWallet ? getAdaptedWallet(nextWallet) : (options.wallet ?? null);
+      }
+
+      function getAdaptedWallet(walletInfo: SolanaWalletInfo) {
+        if (!isObject(walletInfo.wallet)) {
+          return adaptSolanaStandardWallet(walletInfo, {
+            chain: getSolanaChain(context.cluster),
+            onChange: () => triggerRef(wallet),
+          });
+        }
+
+        const cachedWallet = adaptedWallets.get(walletInfo.wallet);
+
+        if (cachedWallet) {
+          return cachedWallet;
+        }
+
+        const adaptedWallet = adaptSolanaStandardWallet(walletInfo, {
+          chain: getSolanaChain(context.cluster),
+          onChange: () => triggerRef(wallet),
+        });
+        const cachedAdapter: SolanaWallet = {
+          get publicKey() {
+            return adaptedWallet.publicKey;
+          },
+          get connected() {
+            return adaptedWallet.connected;
+          },
+          get connecting() {
+            return adaptedWallet.connecting;
+          },
+          get disconnecting() {
+            return adaptedWallet.disconnecting;
+          },
+          async connect() {
+            await adaptedWallet.connect();
+
+            await Promise.all(
+              Array.from(getCachedWallets()).map((otherWallet) =>
+                otherWallet !== cachedAdapter && otherWallet.connected
+                  ? otherWallet.disconnect()
+                  : undefined,
+              ),
+            );
+          },
+          disconnect: () => adaptedWallet.disconnect(),
+          signTransaction: adaptedWallet.signTransaction?.bind(adaptedWallet),
+          signAllTransactions: adaptedWallet.signAllTransactions?.bind(adaptedWallet),
+          signAndSendTransaction: adaptedWallet.signAndSendTransaction?.bind(adaptedWallet),
+        };
+
+        adaptedWallets.set(walletInfo.wallet, cachedAdapter);
+        return cachedAdapter;
+      }
+
+      function* getCachedWallets() {
+        for (const walletInfo of wallets.value) {
+          if (isObject(walletInfo.wallet)) {
+            const cachedWallet = adaptedWallets.get(walletInfo.wallet);
+
+            if (cachedWallet) {
+              yield cachedWallet;
+            }
+          }
+        }
       }
 
       const vueContext: VueSolanaContext = {
@@ -123,6 +181,10 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}) {
       }
     },
   };
+}
+
+function isObject(value: unknown): value is object {
+  return (typeof value === "object" && value !== null) || typeof value === "function";
 }
 
 export const VueSolana = createSolanaPlugin;

@@ -57,7 +57,7 @@ https://faucet.solana.com
 
 ## Auto-Imported Composables
 
-The module auto-imports these composables from `@vue-solana/vue`:
+The module auto-imports these composables from direct `@vue-solana/vue/*` subpaths rather than the root Vue package barrel. This keeps Nuxt SSR bundles from pulling in unrelated Solana runtime code just because a page uses one composable.
 
 - `useSolana()`
 - `useSolanaRpc()`
@@ -65,6 +65,8 @@ The module auto-imports these composables from `@vue-solana/vue`:
 - `useSolanaWallet()`
 - `useSolanaBalance()`
 - `useSolanaSignAndSendTransaction()`
+
+The runtime plugin is client-only. Auto-imported composables can be called during SSR and return inert state until hydration provides the real client context. Trigger RPC and wallet work from client lifecycle hooks or user actions.
 
 ## Read RPC State
 

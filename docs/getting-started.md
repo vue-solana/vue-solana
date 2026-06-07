@@ -104,6 +104,13 @@ createApp(App).use(
 );
 ```
 
+For Vue composables, prefer direct subpath imports in new code:
+
+```ts
+import { useRpc } from "@vue-solana/vue/useRpc";
+import { useBalance } from "@vue-solana/vue/useBalance";
+```
+
 ## Nuxt
 
 ```ts
@@ -114,6 +121,8 @@ export default defineNuxtConfig({
   },
 });
 ```
+
+The Nuxt module installs the runtime plugin on the client only and auto-imports composables from direct `@vue-solana/vue/*` subpaths. Composables are safe to call during SSR, but real RPC and wallet operations should run after hydration, such as from `onMounted()` or user actions.
 
 ## Manual Dev Testing
 
@@ -238,7 +247,7 @@ Then test `useRpc()` inside a component:
 ```vue
 <script setup lang="ts">
 import { onMounted, ref } from "vue";
-import { useRpc } from "@vue-solana/vue";
+import { useRpc } from "@vue-solana/vue/useRpc";
 
 const { cluster, endpoint, connection } = useRpc();
 const latestBlockhash = ref<string | null>(null);
@@ -277,7 +286,7 @@ Use the wallet address from your devnet wallet.
 ```vue
 <script setup lang="ts">
 import { ref } from "vue";
-import { useBalance } from "@vue-solana/vue";
+import { useBalance } from "@vue-solana/vue/useBalance";
 
 const address = ref("PASTE_YOUR_DEVNET_WALLET_ADDRESS");
 const { balance, loading, error, refresh } = useBalance(address);
@@ -403,7 +412,8 @@ In Vue, discover and select wallets with `useWallets()`:
 
 ```vue
 <script setup lang="ts">
-import { useWallet, useWallets } from "@vue-solana/vue";
+import { useWallet } from "@vue-solana/vue/useWallet";
+import { useWallets } from "@vue-solana/vue/useWallets";
 
 const { wallets, selectedWallet, refreshWallets, selectWallet } = useWallets();
 const { publicKey, connected, connecting, connect, disconnect } = useWallet();

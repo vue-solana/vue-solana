@@ -12,7 +12,7 @@ This example demonstrates:
 - Discovering browser wallets with `useSolanaWallets()`.
 - Managing active wallet state with `useSolanaWallet()`.
 - Sending a real devnet transfer with `useSolanaSignAndSendTransaction()`.
-- Using `useTransaction()` from `@vue-solana/vue` for generic async transaction state.
+- Using `useTransaction()` from `@vue-solana/vue/useTransaction` for generic async transaction state.
 
 The app uses `devnet` by default. Devnet SOL has no real value.
 

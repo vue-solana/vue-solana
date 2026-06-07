@@ -19,7 +19,8 @@ Discovery, selection, and connection are separate steps. `refreshWallets()` only
 
 ```vue
 <script setup lang="ts">
-import { useWallet, useWallets } from "@vue-solana/vue";
+import { useWallet } from "@vue-solana/vue/useWallet";
+import { useWallets } from "@vue-solana/vue/useWallets";
 
 const { wallets, selectedWallet, selectWallet, refreshWallets } = useWallets();
 const { publicKey, connected, connecting, connect, disconnect } = useWallet();
@@ -57,7 +58,9 @@ After a wallet is selected and connected, create a normal Solana transaction and
 ```ts
 import { Buffer } from "buffer/";
 import { PublicKey, Transaction, TransactionInstruction } from "@solana/web3-compat";
-import { useConnection, useSignAndSendTransaction, useWallet } from "@vue-solana/vue";
+import { useConnection } from "@vue-solana/vue/useConnection";
+import { useSignAndSendTransaction } from "@vue-solana/vue/useSignAndSendTransaction";
+import { useWallet } from "@vue-solana/vue/useWallet";
 
 (globalThis as typeof globalThis & { Buffer: typeof Buffer }).Buffer = Buffer;
 
@@ -106,7 +109,7 @@ Use devnet while testing. Devnet SOL has no real value, but transactions still c
 Apps can still provide a wallet object that implements `SolanaWallet`. This is useful for tests, mocks, or custom wallet integrations.
 
 ```ts
-import type { SolanaWallet } from "@vue-solana/core";
+import type { SolanaWallet } from "@vue-solana/core/types";
 
 const wallet: SolanaWallet = {
   publicKey: null,

@@ -5,7 +5,47 @@ export default defineConfig({
   resolve: {
     alias: {
       "#app": fileURLToPath(new URL("./test/stubs/nuxt-app.ts", import.meta.url)),
+      "@vue-solana/core/clusters": fileURLToPath(
+        new URL("./packages/core/src/clusters.ts", import.meta.url),
+      ),
+      "@vue-solana/core/rpc": fileURLToPath(new URL("./packages/core/src/rpc.ts", import.meta.url)),
+      "@vue-solana/core/transaction": fileURLToPath(
+        new URL("./packages/core/src/transaction.ts", import.meta.url),
+      ),
+      "@vue-solana/core/types": fileURLToPath(
+        new URL("./packages/core/src/types.ts", import.meta.url),
+      ),
+      "@vue-solana/core/wallet": fileURLToPath(
+        new URL("./packages/core/src/wallet.ts", import.meta.url),
+      ),
+      "@vue-solana/core/wallet-standard": fileURLToPath(
+        new URL("./packages/core/src/wallet-standard.ts", import.meta.url),
+      ),
       "@vue-solana/core": fileURLToPath(new URL("./packages/core/src/index.ts", import.meta.url)),
+      "@vue-solana/vue/useBalance": fileURLToPath(
+        new URL("./packages/vue/src/useBalance.ts", import.meta.url),
+      ),
+      "@vue-solana/vue/useConnection": fileURLToPath(
+        new URL("./packages/vue/src/useConnection.ts", import.meta.url),
+      ),
+      "@vue-solana/vue/useRpc": fileURLToPath(
+        new URL("./packages/vue/src/useRpc.ts", import.meta.url),
+      ),
+      "@vue-solana/vue/useSignAndSendTransaction": fileURLToPath(
+        new URL("./packages/vue/src/useSignAndSendTransaction.ts", import.meta.url),
+      ),
+      "@vue-solana/vue/useSolana": fileURLToPath(
+        new URL("./packages/vue/src/useSolana.ts", import.meta.url),
+      ),
+      "@vue-solana/vue/useTransaction": fileURLToPath(
+        new URL("./packages/vue/src/useTransaction.ts", import.meta.url),
+      ),
+      "@vue-solana/vue/useWallet": fileURLToPath(
+        new URL("./packages/vue/src/useWallet.ts", import.meta.url),
+      ),
+      "@vue-solana/vue/useWallets": fileURLToPath(
+        new URL("./packages/vue/src/useWallets.ts", import.meta.url),
+      ),
       "@vue-solana/vue": fileURLToPath(new URL("./packages/vue/src/index.ts", import.meta.url)),
     },
   },

@@ -43,6 +43,24 @@ createApp(App).use(
 
 ## Composables
 
+The root export remains supported. For composables, prefer direct subpath imports in new code so bundlers can avoid evaluating unrelated package entry code:
+
+```ts
+import { useRpc } from "@vue-solana/vue/useRpc";
+import { useWallet } from "@vue-solana/vue/useWallet";
+```
+
+Direct composable subpaths:
+
+- `@vue-solana/vue/useSolana`
+- `@vue-solana/vue/useRpc`
+- `@vue-solana/vue/useConnection`
+- `@vue-solana/vue/useBalance`
+- `@vue-solana/vue/useWallet`
+- `@vue-solana/vue/useWallets`
+- `@vue-solana/vue/useTransaction`
+- `@vue-solana/vue/useSignAndSendTransaction`
+
 - `useSolana()`: returns the full injected Solana context.
 - `useRpc()`: returns cluster, endpoint, connection status, latest blockhash, and `checkConnection()`.
 - `useConnection()`: returns the Solana `Connection`.
@@ -56,7 +74,7 @@ createApp(App).use(
 
 ```vue
 <script setup lang="ts">
-import { useRpc } from "@vue-solana/vue";
+import { useRpc } from "@vue-solana/vue/useRpc";
 
 const { cluster, endpoint, status, error, latestBlockhash, checkConnection } = useRpc();
 </script>
@@ -78,7 +96,7 @@ const { cluster, endpoint, status, error, latestBlockhash, checkConnection } = u
 ```vue
 <script setup lang="ts">
 import { ref } from "vue";
-import { useBalance } from "@vue-solana/vue";
+import { useBalance } from "@vue-solana/vue/useBalance";
 
 const address = ref("PASTE_A_SOLANA_ADDRESS");
 const { balance, loading, error, refresh } = useBalance(address);
@@ -98,7 +116,8 @@ const { balance, loading, error, refresh } = useBalance(address);
 
 ```vue
 <script setup lang="ts">
-import { useWallet, useWallets } from "@vue-solana/vue";
+import { useWallet } from "@vue-solana/vue/useWallet";
+import { useWallets } from "@vue-solana/vue/useWallets";
 
 const { wallets, selectedWallet, refreshWallets, selectWallet } = useWallets();
 const { publicKey, connected, connecting, connect, disconnect } = useWallet();
@@ -131,10 +150,12 @@ const { publicKey, connected, connecting, connect, disconnect } = useWallet();
 
 Browser wallets are discovered through the Solana Wallet Standard. `refreshWallets()` only updates the discovered wallet list, and `selectWallet()` only configures the active wallet. `connected` remains false until `connect()` succeeds, even if the extension exposes previously authorized accounts after a page refresh.
 
+Composables return inert SSR-safe state when no plugin context is available. Real RPC and wallet operations still require the plugin-provided client context.
+
 ## Transaction State
 
 ```ts
-import { useSignAndSendTransaction } from "@vue-solana/vue";
+import { useSignAndSendTransaction } from "@vue-solana/vue/useSignAndSendTransaction";
 
 const { signature, loading, error, execute } = useSignAndSendTransaction();
 
