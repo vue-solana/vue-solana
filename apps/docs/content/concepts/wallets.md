@@ -1,13 +1,31 @@
 ---
 title: Wallets
-description: Browser wallet discovery, selection, connection, and transaction signing.
+description: Browser and Android mobile wallet discovery, selection, connection, and transaction signing.
 ---
 
-Vue Solana discovers browser wallets through the Solana Wallet Standard and adapts selected wallets into the shared `SolanaWallet` interface.
+Vue Solana exposes supported wallet sources through one flow: `useWallets()` for discovery and selection, then `useWallet()` for active wallet state and actions.
+
+Current wallet support is built on these libraries:
+
+- Browser extension wallets: `@wallet-standard/app`, `@wallet-standard/base`, `@wallet-standard/features`, and `@solana/wallet-standard-features`.
+- Android mobile native wallets: `@solana-mobile/wallet-standard-mobile`, which registers Solana Mobile Wallet Adapter as a Wallet Standard wallet on supported Android Chrome mobile web and PWA runtimes.
+- Solana primitives and transaction types: `@solana/web3-compat`.
+
+## Support Matrix
+
+| Wallet source                 | Current status | Library path                                                          | Notes                                                                                                    |
+| ----------------------------- | -------------- | --------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Browser extension wallets     | Supported      | Wallet Standard packages plus `@solana/wallet-standard-features`      | Works for wallets that register as Solana Wallet Standard wallets and expose compatible features.        |
+| Android native mobile wallets | Supported      | `@solana-mobile/wallet-standard-mobile`                               | Android Chrome and Chrome PWAs only. Appears as `Mobile Wallet Adapter` in the same `useWallets()` list. |
+| Manual/custom wallet object   | Supported      | `SolanaWallet` interface                                              | Useful for tests, mocks, and custom adapters via plugin `wallet` or `setWallet()`.                       |
+| iOS browser wallets           | Planned        | Wallet-specific universal link or deep link adapters                  | Not supported yet. iOS browsers do not support Mobile Wallet Adapter web flows.                          |
+| Desktop native app wallets    | Planned        | Wallet-specific protocol links or future Wallet Standard registration | Not supported yet.                                                                                       |
+| Wallet modal UI               | Not included   | App-owned UI                                                          | Build your own wallet list/modal with `useWallets()`.                                                    |
 
 ## What Works Today
 
-- Browser wallet discovery with `useWallets()`.
+- Browser extension wallet discovery with `useWallets()`.
+- Android Mobile Wallet Adapter discovery through the same `useWallets()` list on supported Android Chrome runtimes.
 - Wallet selection, connect, and disconnect.
 - Wallet state through `useWallet()` and `useSolanaWallet()`.
 - Transaction signing and sending when the selected wallet supports compatible Solana signing features.
@@ -57,6 +75,48 @@ Nuxt apps use the same flow with auto-imported composables:
 const { wallets, selectedWallet, refreshWallets, selectWallet } = useSolanaWallets();
 const { publicKey, connected, connect, disconnect } = useSolanaWallet();
 ```
+
+## Android Mobile Wallets
+
+Android mobile wallet support uses `@solana-mobile/wallet-standard-mobile`. The Vue plugin registers Mobile Wallet Adapter during wallet refresh on supported Android Chrome clients. The registered adapter then appears as a standard wallet and is adapted through the same Wallet Standard adapter as browser extension wallets.
+
+Configure app identity when installing the Vue plugin:
+
+```ts
+createApp(App).use(
+  createSolanaPlugin({
+    cluster: "devnet",
+    mobileWallet: {
+      appIdentity: {
+        name: "My Vue Solana App",
+        uri: "https://example.com",
+        icon: "favicon.ico",
+      },
+    },
+  }),
+);
+```
+
+Disable Android mobile wallet registration if your app does not want it:
+
+```ts
+createApp(App).use(
+  createSolanaPlugin({
+    cluster: "devnet",
+    mobileWallet: false,
+  }),
+);
+```
+
+Platform notes:
+
+- Supported: Android Chrome and Android Chrome PWAs.
+- Not supported by MWA web: iOS Safari, iOS Chrome, Firefox Android, Brave Android, Opera Android, and desktop browsers.
+- The registration helper is SSR-safe and returns without registering when `window` is unavailable.
+- The mobile wallet package handles installed-wallet fallback UI through its default wallet-not-found handler.
+- Browsers may show a one-time Local Network Access prompt before MWA can connect to an installed wallet app.
+
+`SolanaWalletInfo.platform` is `"mobile"` and `SolanaWalletInfo.source` is `"mobile-wallet-adapter"` for the Android MWA wallet. Browser extension wallets use `platform: "browser"` and `source: "wallet-standard"`.
 
 ## Send A Transfer
 
@@ -113,6 +173,8 @@ setWallet(wallet);
 - Vue Solana does not render a wallet modal. Build your own selection UI with `useWallets()`.
 - Auto-connect to a persisted wallet selection is not implemented yet. Vue Solana does not treat extension-exposed accounts as connected before `connect()` succeeds.
 - Signing support depends on each wallet exposing compatible Solana Wallet Standard features.
+- iOS browser wallet support is not implemented yet. It requires wallet-specific universal link or deep link adapters and callback handling.
+- Desktop native app wallet support is not implemented yet. It requires wallet-specific protocol links or future native Wallet Standard registration.
 
 Official references:
 

@@ -3,7 +3,7 @@ title: Getting Started
 description: Install Vue Solana packages, configure Vue or Nuxt, and test RPC reads on devnet.
 ---
 
-This guide covers installing the Vue Solana packages, configuring Vue or Nuxt, testing Solana RPC reads, connecting browser wallets, and sending a small devnet transfer.
+This guide covers installing the Vue Solana packages, configuring Vue or Nuxt, testing Solana RPC reads, connecting supported wallets, and sending a transaction. The examples use devnet by default for safe testing.
 
 ## Before You Start
 
@@ -17,6 +17,17 @@ Supported clusters:
 - `localnet`: local validator.
 
 Use `devnet` while learning and testing. Use `mainnet-beta` only when you are ready to interact with real SOL.
+
+Current wallet support:
+
+- Browser extension wallets through Solana Wallet Standard packages.
+- Android native mobile wallets through `@solana-mobile/wallet-standard-mobile` on Android Chrome and Chrome PWAs.
+- Manual/custom wallet objects that implement `SolanaWallet`.
+
+Planned but not supported yet:
+
+- iOS browser wallets through wallet-specific universal link or deep link adapters.
+- Desktop native app wallets through wallet-specific protocol links or future native Wallet Standard registration.
 
 ## Install For Vue
 
@@ -185,11 +196,13 @@ For Nuxt:
 pnpm dev:nuxt
 ```
 
-The examples demonstrate plugin/module setup, RPC state, direct connection calls, balance reads, browser wallet discovery, wallet state, generic transaction state, and real devnet transfers.
+The examples demonstrate plugin/module setup, RPC state, direct connection calls, balance reads, unified wallet discovery, wallet state, generic transaction state, and transaction transfer flows. They use devnet by default for safe testing.
 
-## Connect A Browser Wallet
+## Connect A Wallet
 
 Install Phantom, Solflare, Backpack, or another Solana Wallet Standard browser wallet. Switch the wallet to devnet before testing.
+
+On Android Chrome or an Android Chrome PWA, install a compatible Solana mobile wallet such as Phantom, Solflare, or Seed Vault Wallet. `Mobile Wallet Adapter` can appear in the same wallet list after `refreshWallets()`.
 
 In Vue:
 
@@ -207,9 +220,13 @@ const { publicKey, connected, connect, disconnect } = useSolanaWallet();
 
 Select a wallet from `wallets`, then call `connect()`. Selecting a wallet only configures the active wallet; it does not connect it. Some extensions expose previously authorized accounts after a page refresh, but Vue Solana still keeps `connected` false until `connect()` succeeds.
 
-## Send A Devnet Transfer
+iOS browser wallet support is not implemented yet because Mobile Wallet Adapter web support is Android Chrome-only. iOS support is planned as wallet-specific universal link or deep link adapters.
 
-The Vue and Nuxt examples include recipient address and amount fields for a real transfer. Use a tiny amount such as `0.000001` SOL and a devnet wallet with enough devnet SOL for fees.
+## Send A Transfer
+
+The Vue and Nuxt examples include recipient address and amount fields for a real transfer. They use devnet by default so you can test with SOL that has no real value. For mainnet, configure `mainnet-beta` or a mainnet RPC endpoint and use a wallet with real SOL for fees.
+
+Start with a tiny amount such as `0.000001` SOL while testing.
 
 Browser apps that create or serialize `@solana/web3-compat` transactions should initialize the `buffer` polyfill before transaction code:
 

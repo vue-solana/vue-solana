@@ -2,7 +2,7 @@
 
 Framework-agnostic Solana primitives used by the Vue Solana packages.
 
-Use this package directly when you want connection helpers, shared wallet types, and transaction helpers without installing the Vue plugin.
+Use this package directly when you want connection helpers, shared wallet types, Android Mobile Wallet Adapter registration helpers, and transaction helpers without installing the Vue plugin.
 
 `@vue-solana/core` does not replace `@solana/web3-compat`. Use `@solana/web3-compat` for raw Solana primitives like `Connection`, `PublicKey`, and transactions. Use `@vue-solana/core` for Vue Solana shared configuration, cluster endpoint defaults, wallet interfaces, and transaction helpers.
 
@@ -81,6 +81,7 @@ Direct subpaths:
 - `@vue-solana/core/types`
 - `@vue-solana/core/clusters`
 - `@vue-solana/core/rpc`
+- `@vue-solana/core/mobile-wallet`
 - `@vue-solana/core/transaction`
 - `@vue-solana/core/wallet`
 - `@vue-solana/core/wallet-standard`
@@ -110,7 +111,18 @@ const wallet: SolanaWallet = {
 };
 ```
 
-Browser wallets discovered through the Solana Wallet Standard are adapted into `SolanaWallet`. You can also provide a custom object that implements `SolanaWallet` for tests or custom adapters.
+Browser extension wallets discovered through the Solana Wallet Standard are adapted into `SolanaWallet`. Android Mobile Wallet Adapter is registered through `@solana-mobile/wallet-standard-mobile` and then adapted through the same Wallet Standard adapter on supported Android Chrome clients. You can also provide a custom object that implements `SolanaWallet` for tests or custom adapters.
+
+Current wallet support:
+
+- Browser extension wallets through Wallet Standard packages.
+- Android native mobile wallets through `@solana-mobile/wallet-standard-mobile` on Android Chrome and Chrome PWAs.
+- Manual/custom wallet objects that implement `SolanaWallet`.
+
+Planned but not supported yet:
+
+- iOS browser wallets through wallet-specific universal link or deep link adapters.
+- Desktop native app wallets through wallet-specific protocol links or future native Wallet Standard registration.
 
 ## Examples
 
@@ -145,4 +157,4 @@ Make sure your `tsconfig.json` includes `types/**/*.d.ts` or another pattern tha
 
 ## Status
 
-This package is early-stage. RPC helpers, wallet primitives, and transaction helpers are usable.
+This package is early-stage. RPC helpers, browser extension wallet primitives, Android mobile wallet registration, and transaction helpers are usable.

@@ -77,11 +77,11 @@ const sol = lamports / 1_000_000_000;
 
 ## Wallets
 
-A wallet stores keys and signs transactions. Browser wallets include Phantom, Solflare, and Backpack.
+A wallet stores keys and signs transactions. Browser extension wallets include Phantom, Solflare, and Backpack. Android native mobile wallets can connect through Solana Mobile Wallet Adapter on supported Android Chrome runtimes.
 
-Vue Solana currently exposes wallet primitives, but it does not yet discover installed browser wallets. RPC reads and balance reads work without a wallet. Connecting, signing, and sending transactions require an object that implements the `SolanaWallet` interface.
+Vue Solana discovers Solana Wallet Standard browser extension wallets and Android Mobile Wallet Adapter wallets through the unified `useWallets()` flow. RPC reads and balance reads work without a wallet. Connecting, signing, and sending transactions require a discovered wallet or custom object that implements the `SolanaWallet` interface.
 
-See [Wallet Support](./wallets.md) for current status and planned wallet adapter support.
+See [Wallet Support](./wallets.md) for current support and planned iOS browser and desktop native wallet adapters.
 
 ## Transactions And Signing
 

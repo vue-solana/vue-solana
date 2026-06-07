@@ -1,6 +1,6 @@
 # Getting Started
 
-This guide covers installing the Vue Solana packages, configuring Vue or Nuxt, testing RPC reads, connecting browser wallets, and sending a small devnet transfer.
+This guide covers installing the Vue Solana packages, configuring Vue or Nuxt, testing RPC reads, connecting supported wallets, and sending a transaction. The examples use devnet by default for safe testing.
 
 More references:
 
@@ -27,6 +27,18 @@ Supported clusters:
 - `localnet`: local validator.
 
 Use `devnet` while learning and testing. Use `mainnet-beta` only when you are ready to interact with real SOL.
+
+Current wallet support:
+
+- Browser extension wallets through Solana Wallet Standard packages.
+- Android native mobile wallets through `@solana-mobile/wallet-standard-mobile` on Android Chrome and Chrome PWAs.
+- Manual/custom wallet objects that implement `SolanaWallet`.
+
+Planned but not supported yet:
+
+- iOS browser wallets through wallet-specific universal link or deep link adapters.
+- Desktop native app wallets through wallet-specific protocol links or future native Wallet Standard registration.
+- A built-in wallet modal. Build your own wallet selection UI with `useWallets()`.
 
 Install the package for your framework:
 
@@ -204,7 +216,7 @@ This guide keeps copy-paste snippets inline so you can see the moving parts. For
 pnpm dev:vue
 ```
 
-The app lives at [`examples/vue-vite`](../examples/vue-vite) and demonstrates plugin setup, RPC state, direct connection calls, balance reads, browser wallet discovery, wallet state, generic transaction state, and real devnet transfers.
+The app lives at [`examples/vue-vite`](../examples/vue-vite) and demonstrates plugin setup, RPC state, direct connection calls, balance reads, unified wallet discovery, wallet state, generic transaction state, and transaction transfer flows. It uses devnet by default for safe testing.
 
 If you are wiring your own playground, use these dependencies:
 
@@ -329,7 +341,7 @@ For a complete runnable Nuxt app, use the Nuxt example:
 pnpm dev:nuxt
 ```
 
-The app lives at [`examples/nuxt`](../examples/nuxt) and demonstrates module setup, Nuxt auto-imports, RPC state, direct connection calls, balance reads, browser wallet discovery, wallet state, generic transaction state, and real devnet transfers.
+The app lives at [`examples/nuxt`](../examples/nuxt) and demonstrates module setup, Nuxt auto-imports, RPC state, direct connection calls, balance reads, unified wallet discovery, wallet state, generic transaction state, and transaction transfer flows. It uses devnet by default for safe testing.
 
 If you are wiring your own Nuxt app, use these dependencies:
 
@@ -404,9 +416,11 @@ You can also run it by package name:
 pnpm --filter @vue-solana/example-nuxt dev
 ```
 
-### 10. Test Browser Wallet Discovery
+### 10. Test Wallet Discovery
 
 Install a Solana browser wallet such as Phantom, Solflare, or Backpack, switch it to devnet, and open one of the example apps.
+
+On Android Chrome or an Android Chrome PWA, install a compatible Solana mobile wallet such as Phantom, Solflare, or Seed Vault Wallet. `Mobile Wallet Adapter` can appear in the same wallet list after `refreshWallets()`.
 
 In Vue, discover and select wallets with `useWallets()`:
 
@@ -506,7 +520,7 @@ Manual Android testing flow:
 - Install a compatible Solana mobile wallet such as Phantom, Solflare, or Seed Vault Wallet.
 - Tap `Refresh Wallets` and select `Mobile Wallet Adapter` from the same wallet list.
 - Call `connect()` from a direct user action, then approve the wallet prompt.
-- Test a devnet balance read or small devnet transfer.
+- Test a devnet balance read or small transfer. Keep manual testing on devnet unless you intentionally configure mainnet and use real SOL.
 
 ### 11. Send A Real Devnet Transfer
 
