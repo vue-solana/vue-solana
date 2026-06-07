@@ -40,6 +40,11 @@
       "import": "./dist/clusters.mjs",
       "require": "./dist/clusters.cjs"
     },
+    "./mobile-wallet": {
+      "types": "./dist/mobile-wallet.d.ts",
+      "import": "./dist/mobile-wallet.mjs",
+      "require": "./dist/mobile-wallet.cjs"
+    },
     "./rpc": {
       "types": "./dist/rpc.d.ts",
       "import": "./dist/rpc.mjs",
@@ -74,6 +79,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
+    "@solana-mobile/wallet-standard-mobile": "^0.5.3",
     "@solana/wallet-standard-features": "^1.3.0",
     "@solana/web3-compat": "^0.0.21",
     "@wallet-standard/app": "^1.1.1",

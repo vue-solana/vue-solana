@@ -5,7 +5,7 @@ description: Framework-agnostic Solana configuration, RPC, wallet types, and tra
 
 `@vue-solana/core` contains framework-agnostic Solana primitives used by the Vue Solana packages.
 
-Use this package directly when you want connection helpers, shared wallet types, and transaction helpers without installing the Vue plugin.
+Use this package directly when you want connection helpers, shared wallet types, Android Mobile Wallet Adapter registration helpers, and transaction helpers without installing the Vue plugin.
 
 `@vue-solana/core` does not replace `@solana/web3-compat`. Use `@solana/web3-compat` for raw Solana primitives like `Connection`, `PublicKey`, and transactions. Use `@vue-solana/core` for Vue Solana shared configuration, cluster endpoint defaults, wallet interfaces, and transaction helpers.
 
@@ -52,7 +52,7 @@ interface SolanaConfig {
 
 Supported clusters are `mainnet-beta`, `testnet`, `devnet`, and `localnet`. If `endpoint` is omitted, the package uses the public Solana RPC endpoint for the selected cluster. If `wsEndpoint` is omitted, it is derived from the RPC endpoint.
 
-`autoConnect` is reserved for future persisted wallet selection and is not currently used to connect discovered browser wallets automatically.
+`autoConnect` is reserved for future persisted wallet selection and is not currently used to connect discovered wallets automatically.
 
 Use `mainnet-beta` for Solana mainnet. This is Solana's official cluster name; the package intentionally does not use `mainnet` as an alias.
 
@@ -87,13 +87,45 @@ interface SolanaWallet {
 
 Browser wallets discovered through the Solana Wallet Standard are adapted into this interface. You can also provide a custom object that implements `SolanaWallet`. A discovered wallet remains disconnected until `connect()` resolves successfully, even if the browser extension exposes previously authorized accounts.
 
+Android Mobile Wallet Adapter is registered through `@solana-mobile/wallet-standard-mobile` and then adapted through the same Wallet Standard adapter.
+
+## Wallet Metadata
+
+```ts
+interface SolanaWalletInfo {
+  name: string;
+  icon: string;
+  chains: readonly string[];
+  platform?: "browser" | "mobile" | "desktop";
+  source?: "wallet-standard" | "mobile-wallet-adapter" | "deep-link" | "protocol-link";
+  appUrl?: string;
+  installUrl?: string;
+  accounts: readonly SolanaWalletAccountInfo[];
+  wallet: unknown;
+}
+```
+
+Current metadata values:
+
+- Browser extension wallets use `platform: "browser"` and `source: "wallet-standard"`.
+- Android Mobile Wallet Adapter uses `platform: "mobile"` and `source: "mobile-wallet-adapter"`.
+- `deep-link` and `protocol-link` are reserved for planned iOS browser and desktop native wallet adapters.
+
 ## Wallet Standard Helpers
 
 - `getSolanaChain(cluster)`: maps `mainnet-beta`, `devnet`, `testnet`, or `localnet` to a Solana Wallet Standard chain ID.
 - `isSolanaStandardWallet(wallet)`: checks whether a Wallet Standard wallet supports Solana.
-- `getRegisteredSolanaWallets()`: returns discovered Solana browser wallets in browser environments.
+- `getRegisteredSolanaWallets()`: returns discovered Solana Wallet Standard wallets in browser environments, including Android Mobile Wallet Adapter after it is registered on supported clients.
 - `subscribeSolanaWallets(listener)`: subscribes to Wallet Standard register/unregister events.
-- `adaptSolanaStandardWallet(walletInfo, options?)`: adapts a discovered browser wallet into `SolanaWallet`.
+- `adaptSolanaStandardWallet(walletInfo, options?)`: adapts a discovered Wallet Standard wallet into `SolanaWallet`.
+
+## Mobile Wallet Helpers
+
+- `registerSolanaMobileWallet(options?)`: registers Android Mobile Wallet Adapter through Wallet Standard on supported Android Chrome clients.
+- `isSolanaMobileWalletSupported()`: returns whether the current runtime supports Android MWA web registration.
+- `getDefaultMobileWalletAppIdentity()`: derives a default Mobile Wallet Adapter app identity from the current document.
+
+These helpers are SSR-safe. They return without registering when `window` is unavailable or when the browser is not an Android Chrome mobile web/PWA runtime.
 
 ## Helpers
 
@@ -102,6 +134,7 @@ Direct subpaths:
 - `@vue-solana/core/types`
 - `@vue-solana/core/clusters`
 - `@vue-solana/core/rpc`
+- `@vue-solana/core/mobile-wallet`
 - `@vue-solana/core/transaction`
 - `@vue-solana/core/wallet`
 - `@vue-solana/core/wallet-standard`

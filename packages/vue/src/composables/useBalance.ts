@@ -1,5 +1,5 @@
 import type { Commitment, PublicKey } from "@solana/web3-compat";
-import { ref, toValue, watch, type MaybeRefOrGetter } from "vue";
+import { onMounted, ref, toValue, watch, type MaybeRefOrGetter } from "vue";
 import { useConnection } from "./useConnection";
 import { tryUseSolana } from "./useSolana";
 
@@ -39,12 +39,15 @@ export function useBalance(
     }
   }
 
+  onMounted(() => {
+    void refresh().catch(() => undefined);
+  });
+
   watch(
     () => toValue(address),
     () => {
       void refresh().catch(() => undefined);
     },
-    { immediate: true },
   );
 
   return {

@@ -265,7 +265,7 @@ function createTransferInstruction(fromPubkey: PublicKey, toPubkey: PublicKey, l
 
 <template>
   <main class="dashboard">
-    <section class="hero panel">
+    <section class="hero panel" data-testid="hero">
       <p class="eyebrow">Vue Solana Example App</p>
       <h1>Composable Example Dashboard</h1>
       <p>
@@ -275,13 +275,17 @@ function createTransferInstruction(fromPubkey: PublicKey, toPubkey: PublicKey, l
       </p>
     </section>
 
-    <section class="panel">
+    <section class="panel" data-testid="rpc-panel">
       <div class="panel-heading">
         <div>
           <p class="eyebrow">useSolana + useRpc</p>
           <h2>Plugin And RPC Status</h2>
         </div>
-        <span class="status-pill" :class="`status-pill--${rpc.status.value}`">
+        <span
+          class="status-pill"
+          :class="`status-pill--${rpc.status.value}`"
+          data-testid="rpc-status"
+        >
           {{ rpc.status }}
         </span>
       </div>
@@ -289,15 +293,15 @@ function createTransferInstruction(fromPubkey: PublicKey, toPubkey: PublicKey, l
       <dl class="data-grid">
         <div>
           <dt>Plugin installed</dt>
-          <dd>{{ pluginInstalled ? "Yes" : "No" }}</dd>
+          <dd data-testid="plugin-installed">{{ pluginInstalled ? "Yes" : "No" }}</dd>
         </div>
         <div>
           <dt>Cluster</dt>
-          <dd>{{ rpc.cluster }}</dd>
+          <dd data-testid="rpc-cluster">{{ rpc.cluster }}</dd>
         </div>
         <div>
           <dt>RPC endpoint</dt>
-          <dd>{{ rpc.endpoint }}</dd>
+          <dd data-testid="rpc-endpoint">{{ rpc.endpoint }}</dd>
         </div>
         <div>
           <dt>WebSocket endpoint</dt>
@@ -305,7 +309,9 @@ function createTransferInstruction(fromPubkey: PublicKey, toPubkey: PublicKey, l
         </div>
         <div>
           <dt>Latest blockhash</dt>
-          <dd>{{ rpc.latestBlockhash.value ?? "Not loaded yet" }}</dd>
+          <dd data-testid="rpc-latest-blockhash">
+            {{ rpc.latestBlockhash.value ?? "Not loaded yet" }}
+          </dd>
         </div>
         <div v-if="rpc.error.value">
           <dt>RPC error</dt>
@@ -313,10 +319,12 @@ function createTransferInstruction(fromPubkey: PublicKey, toPubkey: PublicKey, l
         </div>
       </dl>
 
-      <button type="button" @click="rpc.checkConnection">Check RPC Again</button>
+      <button type="button" data-testid="check-rpc" @click="rpc.checkConnection">
+        Check RPC Again
+      </button>
     </section>
 
-    <section class="panel">
+    <section class="panel" data-testid="direct-connection-panel">
       <div class="panel-heading">
         <div>
           <p class="eyebrow">useConnection</p>
@@ -327,14 +335,21 @@ function createTransferInstruction(fromPubkey: PublicKey, toPubkey: PublicKey, l
       <p>
         Calls <code>connection.getLatestBlockhash()</code> directly from the injected connection.
       </p>
-      <button type="button" :disabled="directConnectionLoading" @click="loadDirectBlockhash">
+      <button
+        type="button"
+        data-testid="load-blockhash"
+        :disabled="directConnectionLoading"
+        @click="loadDirectBlockhash"
+      >
         {{ directConnectionLoading ? "Loading..." : "Load Blockhash" }}
       </button>
-      <p v-if="directBlockhash" class="result">Blockhash: {{ directBlockhash }}</p>
+      <p v-if="directBlockhash" class="result" data-testid="blockhash-result">
+        Blockhash: {{ directBlockhash }}
+      </p>
       <p v-if="directConnectionError" class="error">{{ directConnectionError }}</p>
     </section>
 
-    <section class="panel">
+    <section class="panel" data-testid="balance-panel">
       <div class="panel-heading">
         <div>
           <p class="eyebrow">useBalance</p>
@@ -344,19 +359,30 @@ function createTransferInstruction(fromPubkey: PublicKey, toPubkey: PublicKey, l
 
       <label>
         Public key
-        <input v-model="balanceAddress" placeholder="Enter a Solana public key" />
+        <input
+          v-model="balanceAddress"
+          data-testid="balance-address"
+          placeholder="Enter a Solana public key"
+        />
       </label>
       <div class="actions">
-        <button type="button" :disabled="balance.loading.value" @click="balance.refresh">
+        <button
+          type="button"
+          data-testid="refresh-balance"
+          :disabled="balance.loading.value"
+          @click="balance.refresh"
+        >
           {{ balance.loading.value ? "Loading..." : "Refresh Balance" }}
         </button>
       </div>
-      <p class="result">Lamports: {{ balance.balance.value ?? "No balance loaded" }}</p>
-      <p class="result">SOL: {{ balanceInSol }}</p>
+      <p class="result" data-testid="balance-lamports">
+        Lamports: {{ balance.balance.value ?? "No balance loaded" }}
+      </p>
+      <p class="result" data-testid="balance-sol">SOL: {{ balanceInSol }}</p>
       <p v-if="balanceError" class="error">{{ balanceError }}</p>
     </section>
 
-    <section class="panel">
+    <section class="panel" data-testid="wallet-panel">
       <div class="panel-heading">
         <div>
           <p class="eyebrow">useWallets + useWallet</p>
@@ -376,21 +402,23 @@ function createTransferInstruction(fromPubkey: PublicKey, toPubkey: PublicKey, l
       <dl class="data-grid">
         <div>
           <dt>Discovered wallets</dt>
-          <dd>{{ discoveredWalletCount }}</dd>
+          <dd data-testid="wallet-count">{{ discoveredWalletCount }}</dd>
         </div>
         <div>
           <dt>Selected wallet</dt>
-          <dd>{{ walletDiscovery.selectedWallet.value?.name ?? "None" }}</dd>
+          <dd data-testid="selected-wallet">
+            {{ walletDiscovery.selectedWallet.value?.name ?? "None" }}
+          </dd>
         </div>
         <div>
           <dt>Wallet configured</dt>
-          <dd>{{ walletConfigured ? "Yes" : "No" }}</dd>
+          <dd data-testid="wallet-configured">{{ walletConfigured ? "Yes" : "No" }}</dd>
         </div>
         <div>
           <dt>Public key</dt>
           <dd>
             <span class="copyable-address">
-              <code>{{ walletPublicKey }}</code>
+              <code data-testid="wallet-public-key">{{ walletPublicKey }}</code>
               <button
                 v-if="wallet.publicKey.value"
                 type="button"
@@ -430,19 +458,35 @@ function createTransferInstruction(fromPubkey: PublicKey, toPubkey: PublicKey, l
           <span>{{ discoveredWallet.name }}</span>
         </button>
       </div>
-      <p v-if="!walletsLoaded" class="help-text">Wallet discovery has not been loaded yet.</p>
-      <p v-else-if="!walletDiscovery.wallets.value.length" class="help-text">
+      <p v-if="!walletsLoaded" class="help-text" data-testid="wallet-message">
+        Wallet discovery has not been loaded yet.
+      </p>
+      <p
+        v-else-if="!walletDiscovery.wallets.value.length"
+        class="help-text"
+        data-testid="wallet-message"
+      >
         No browser wallets detected. Install a Solana wallet extension, then refresh wallets.
       </p>
 
       <div class="actions">
-        <button type="button" @click="loadWallets">
+        <button type="button" data-testid="load-wallets" @click="loadWallets">
           {{ walletsLoaded ? "Refresh Wallets" : "Load Wallets" }}
         </button>
-        <button type="button" :disabled="!canConnectWallet" @click="connectWallet">
+        <button
+          type="button"
+          data-testid="connect-wallet"
+          :disabled="!canConnectWallet"
+          @click="connectWallet"
+        >
           {{ wallet.connecting.value ? "Connecting..." : "Connect" }}
         </button>
-        <button type="button" :disabled="!canDisconnectWallet" @click="disconnectWallet">
+        <button
+          type="button"
+          data-testid="disconnect-wallet"
+          :disabled="!canDisconnectWallet"
+          @click="disconnectWallet"
+        >
           {{ wallet.disconnecting.value ? "Disconnecting..." : "Disconnect" }}
         </button>
         <button type="button" :disabled="!walletConfigured" @click="clearWallet">
@@ -454,7 +498,7 @@ function createTransferInstruction(fromPubkey: PublicKey, toPubkey: PublicKey, l
       </p>
     </section>
 
-    <section class="panel">
+    <section class="panel" data-testid="transaction-panel">
       <div class="panel-heading">
         <div>
           <p class="eyebrow">useTransaction</p>
@@ -463,14 +507,21 @@ function createTransferInstruction(fromPubkey: PublicKey, toPubkey: PublicKey, l
       </div>
 
       <p>Runs a mock async handler to test loading, error, and signature state.</p>
-      <button type="button" :disabled="mockTransaction.loading.value" @click="runMockTransaction">
+      <button
+        type="button"
+        data-testid="run-mock-transaction"
+        :disabled="mockTransaction.loading.value"
+        @click="runMockTransaction"
+      >
         {{ mockTransaction.loading.value ? "Running..." : "Run Mock Transaction" }}
       </button>
-      <p class="result">Signature: {{ mockTransaction.signature.value ?? "No signature yet" }}</p>
+      <p class="result" data-testid="mock-transaction-signature">
+        Signature: {{ mockTransaction.signature.value ?? "No signature yet" }}
+      </p>
       <p v-if="mockTransactionError" class="error">{{ mockTransactionError }}</p>
     </section>
 
-    <section class="panel">
+    <section class="panel" data-testid="transfer-panel">
       <div class="panel-heading">
         <div>
           <p class="eyebrow">useSignAndSendTransaction</p>
@@ -491,12 +542,21 @@ function createTransferInstruction(fromPubkey: PublicKey, toPubkey: PublicKey, l
         <input v-model="transferAmount" inputmode="decimal" placeholder="0.000001" />
       </label>
       <div class="actions">
-        <button type="button" :disabled="!signAndSendReady" @click="sendDevnetTransfer">
+        <button
+          type="button"
+          data-testid="send-transfer"
+          :disabled="!signAndSendReady"
+          @click="sendDevnetTransfer"
+        >
           {{ sendTransaction.loading.value ? "Sending..." : "Send Devnet Transfer" }}
         </button>
       </div>
-      <p v-if="signAndSendDisabledReason" class="help-text">{{ signAndSendDisabledReason }}</p>
-      <p class="result">Signature: {{ sendTransaction.signature.value ?? "No signature yet" }}</p>
+      <p v-if="signAndSendDisabledReason" class="help-text" data-testid="transfer-disabled-reason">
+        {{ signAndSendDisabledReason }}
+      </p>
+      <p class="result" data-testid="transfer-signature">
+        Signature: {{ sendTransaction.signature.value ?? "No signature yet" }}
+      </p>
       <p v-if="sendTransactionError" class="error">{{ sendTransactionError }}</p>
     </section>
   </main>

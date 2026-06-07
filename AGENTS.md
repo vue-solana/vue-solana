@@ -90,6 +90,7 @@ Updated docs:
 
 - `README.md`: package overview, development commands, known `web3-compat` metadata issue, and project TODOs.
 - `docs/getting-started.md`: install snippets, Vue setup, Nuxt setup, and detailed manual devnet testing guide.
+- `docs/native-wallet-plan.md`: implementation tracker for mobile native wallet and desktop native wallet support on top of browser extension wallets.
 - `examples/vue-vite/README.md`: placeholder for a future Vue Vite example.
 - `examples/nuxt/README.md`: placeholder for a future Nuxt example.
 
@@ -119,30 +120,40 @@ Install completed with upstream peer/deprecation warnings from Nuxt/Solana depen
 
 ## Known Limitations
 
-### Browser Wallet Adapter Missing
+### Native Wallet Adapters Missing
 
-The current packages define wallet primitives and expose `useWallet()`, but they do not yet discover or connect to installed browser wallets like Phantom, Solflare, or Backpack.
+The current packages discover browser extension wallets through the Solana Wallet Standard and expose them through `useWallets()` and `useWallet()`, but they do not yet support mobile native wallets or desktop native wallets.
 
 Why this matters:
 
-- Real users connect through browser wallet extensions.
-- The library needs wallet discovery before realistic connect/sign/send flows can work.
-- Current wallet flows can only be tested by manually passing an object that implements the `SolanaWallet` interface.
+- Mobile users often connect through native wallet apps instead of browser extensions.
+- Desktop users may connect through native wallet apps or protocol links instead of injected extension APIs.
+- Native wallet support must be added without splitting the public wallet flow into separate composables.
 
 Recommended next step:
 
-- Add Solana Wallet Standard discovery and map selected wallets into the existing `SolanaWallet` interface.
+- Follow `docs/native-wallet-plan.md` and expose native wallet sources through the existing unified `useWallets()` and `useWallet()` APIs.
 
 ### Example Apps
 
 The `examples/vue-vite` and `examples/nuxt` directories contain runnable example apps wired to the workspace packages. They demonstrate plugin/module setup, RPC state, direct connection calls, balance reads, wallet state, and mock transaction flows.
 
+## Native Wallet Planning
+
+Use `docs/native-wallet-plan.md` as the source of truth for mobile native wallet and desktop native wallet implementation work.
+
+Important workflow rules:
+
+- Keep mobile native wallets, desktop native wallets, and browser extension wallets exposed through the unified `useWallets()` and `useWallet()` API.
+- Do not introduce separate public composables like `useMobileWallets()` or `useDesktopWallets()` unless the plan is deliberately revised first.
+- Before implementing native wallet work, read `docs/native-wallet-plan.md` and choose the relevant feature section.
+- When a plan item is implemented, strike through that item in `docs/native-wallet-plan.md`.
+- When every item under a feature is implemented, remove that feature's plan items and leave only the checked title, for example `## [x] Mobile Native Wallets`.
+- Keep the plan file current in the same change set as implementation work so future agents can continue from the latest state.
+
 ## Suggested Next Tasks
 
-- Add browser wallet adapter support using Solana Wallet Standard discovery.
-- Add `useWallets()` or extend `useWallet()` to expose discovered wallets.
-- Implement real connect/disconnect support for selected wallets.
-- Map wallet signing methods to the existing `SolanaWallet` interface.
+- Follow `docs/native-wallet-plan.md` to add mobile native wallet and desktop native wallet support through the unified `useWallets()` flow.
 - Add unit tests for core helpers and Vue composables.
 - Re-check `@solana/web3-compat` package metadata on every new release.
 

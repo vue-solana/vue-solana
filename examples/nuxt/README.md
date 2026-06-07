@@ -9,9 +9,9 @@ This example demonstrates:
 - Reading RPC status with auto-imported `useSolanaRpc()`.
 - Using the injected connection with `useSolanaConnection()`.
 - Reading lamport balances with `useSolanaBalance()`.
-- Discovering browser wallets with `useSolanaWallets()`.
+- Discovering browser extension wallets and Android Mobile Wallet Adapter wallets with `useSolanaWallets()`.
 - Managing active wallet state with `useSolanaWallet()`.
-- Sending a real devnet transfer with `useSolanaSignAndSendTransaction()`.
+- Sending a real transfer with `useSolanaSignAndSendTransaction()`. The example uses devnet by default for safe testing.
 - Using `useTransaction()` from `@vue-solana/vue/useTransaction` for generic async transaction state.
 
 The app uses `devnet` by default. Devnet SOL has no real value.
@@ -41,10 +41,11 @@ pnpm --filter @vue-solana/example-nuxt dev
 - Click `Load Blockhash` to call `connection.getLatestBlockhash()` directly.
 - Paste a devnet wallet address and refresh the balance.
 - Install a Solana browser wallet such as Phantom, Solflare, or Backpack.
+- On Android Chrome, install a compatible Solana mobile wallet and look for `Mobile Wallet Adapter`.
 - Switch the wallet to devnet.
 - Select and connect a discovered wallet.
 - Run the generic mock transaction.
-- Enter a recipient address and amount, then send a real devnet transfer.
+- Enter a recipient address and amount, then send a real transfer. Keep the example on devnet while testing.
 
 ## Devnet SOL
 
@@ -62,6 +63,6 @@ solana airdrop 1 YOUR_WALLET_ADDRESS --url devnet
 
 ## Wallet Note
 
-The example uses Solana Wallet Standard discovery. Wallet flows require a browser wallet extension and enough devnet SOL for transaction fees.
+The example uses Solana Wallet Standard discovery. Wallet flows require a browser extension wallet or, on supported Android Chrome runtimes, a compatible native mobile wallet exposed through `Mobile Wallet Adapter`. Use enough devnet SOL for transaction fees.
 
 See [Wallets](../../apps/docs/content/concepts/wallets.md) for the current wallet support status and [Nuxt example docs](../../apps/docs/content/examples/nuxt.md) for the docs-site page.

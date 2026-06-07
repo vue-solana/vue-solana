@@ -16,11 +16,11 @@ New to Solana? Start with the official docs and the project concepts guide:
 ## Install
 
 ```sh
-pnpm add @vue-solana/vue @vue-solana/core @solana/web3-compat
+pnpm add @vue-solana/vue @vue-solana/core @solana/web3-compat buffer
 ```
 
 ```sh
-npm install @vue-solana/vue @vue-solana/core @solana/web3-compat
+npm install @vue-solana/vue @vue-solana/core @solana/web3-compat buffer
 ```
 
 ## Plugin Setup
@@ -34,10 +34,19 @@ createApp(App)
   .use(
     createSolanaPlugin({
       cluster: "devnet",
+      mobileWallet: {
+        appIdentity: {
+          name: "My Vue Solana App",
+          uri: "https://example.com",
+          icon: "favicon.ico",
+        },
+      },
     }),
   )
   .mount("#app");
 ```
+
+Android Mobile Wallet Adapter registration is enabled by default on supported Android Chrome clients. Pass `mobileWallet` options to customize the MWA app identity, or pass `mobileWallet: false` to disable Android mobile wallet registration.
 
 You can also pass a custom RPC endpoint:
 
@@ -142,7 +151,9 @@ const { publicKey, connected, connecting, connect, disconnect } = useWallet();
 </template>
 ```
 
-Browser wallets are discovered through the Solana Wallet Standard. `connect()` works after selecting a discovered wallet or configuring a custom `SolanaWallet`.
+Browser extension wallets are discovered through the Solana Wallet Standard. Android Mobile Wallet Adapter wallets are registered through `@solana-mobile/wallet-standard-mobile` and exposed through the same `useWallets()` list on supported Android Chrome clients. `connect()` works after selecting a discovered wallet or configuring a custom `SolanaWallet`.
+
+iOS browser wallet adapters and desktop native app wallet adapters are planned but not implemented yet.
 
 Composables return inert SSR-safe state when no plugin context is available. Real RPC and wallet operations still require the plugin-provided client context.
 
@@ -180,6 +191,7 @@ Live demo: [vue-solana-docs.vercel.app/demo](https://vue-solana-docs.vercel.app/
 - `useRpc()`: returns cluster, endpoint, connection status, latest blockhash, and `checkConnection()`.
 - `useConnection()`: returns the Solana `Connection`.
 - `useWallet()`: returns wallet refs, computed connection state, and wallet actions.
+- `useWallets()`: returns discovered browser extension wallets, Android Mobile Wallet Adapter wallets, and wallet selection actions.
 - `useBalance(address, commitment?)`: loads lamport balance for a `PublicKey` or address string.
 - `useTransaction(handler)`: generic async transaction state helper.
 - `useSignAndSendTransaction()`: signs and sends a transaction through the configured wallet.
@@ -220,4 +232,4 @@ Make sure your `tsconfig.json` includes `types/**/*.d.ts` or another pattern tha
 
 ## Status
 
-This package is early-stage. RPC, balance, wallet, and transaction composables are usable.
+This package is early-stage. RPC, balance, browser extension wallet, Android mobile wallet, and transaction composables are usable.

@@ -12,6 +12,7 @@ The root export remains supported. Direct subpath exports are also available whe
 
 - `@vue-solana/core/types`
 - `@vue-solana/core/clusters`
+- `@vue-solana/core/mobile-wallet`
 - `@vue-solana/core/rpc`
 - `@vue-solana/core/transaction`
 - `@vue-solana/core/wallet`
@@ -34,7 +35,7 @@ interface SolanaConfig {
 
 If `endpoint` is omitted, the default public endpoint for the selected cluster is used. If `wsEndpoint` is omitted, it is derived from the selected cluster or custom endpoint.
 
-`autoConnect` is reserved for future persisted wallet selection and is not currently used to connect discovered browser wallets automatically.
+`autoConnect` is reserved for future persisted wallet selection and is not currently used to connect discovered wallets automatically.
 
 Supported clusters:
 
@@ -74,7 +75,7 @@ interface SolanaWallet {
 }
 ```
 
-Browser wallets discovered through the Solana Wallet Standard are adapted into this interface. Apps can also provide a custom object that implements `SolanaWallet`. A discovered wallet remains disconnected until `connect()` resolves successfully, even if the browser extension exposes previously authorized accounts.
+Browser wallets discovered through the Solana Wallet Standard are adapted into this interface. Android Mobile Wallet Adapter is registered through `@solana-mobile/wallet-standard-mobile` and then adapted through the same Wallet Standard adapter. Apps can also provide a custom object that implements `SolanaWallet`. A discovered wallet remains disconnected until `connect()` resolves successfully, even if the browser extension exposes previously authorized accounts.
 
 ### Wallet Discovery
 
@@ -83,6 +84,10 @@ interface SolanaWalletInfo {
   name: string;
   icon: string;
   chains: readonly string[];
+  platform?: "browser" | "mobile" | "desktop";
+  source?: "wallet-standard" | "mobile-wallet-adapter" | "deep-link" | "protocol-link";
+  appUrl?: string;
+  installUrl?: string;
   accounts: readonly {
     address: string;
     publicKey: Uint8Array;
@@ -93,6 +98,12 @@ interface SolanaWalletInfo {
   wallet: unknown;
 }
 ```
+
+Current metadata values:
+
+- Browser extension wallets use `platform: "browser"` and `source: "wallet-standard"`.
+- Android Mobile Wallet Adapter uses `platform: "mobile"` and `source: "mobile-wallet-adapter"`.
+- `deep-link` and `protocol-link` are reserved for planned iOS browser and desktop native wallet adapters.
 
 ### Helpers
 
@@ -108,9 +119,12 @@ interface SolanaWalletInfo {
 - `signAndSendTransaction(connection, wallet, transaction, options?)`: signs and sends a transaction using wallet capabilities.
 - `getSolanaChain(cluster)`: maps a package cluster to a Wallet Standard chain ID.
 - `isSolanaStandardWallet(wallet)`: checks whether a Wallet Standard wallet supports Solana.
-- `getRegisteredSolanaWallets()`: returns discovered Solana browser wallets in browser environments.
+- `getRegisteredSolanaWallets()`: returns discovered Solana Wallet Standard wallets in browser environments, including Android Mobile Wallet Adapter after it is registered on supported clients.
 - `subscribeSolanaWallets(listener)`: subscribes to Wallet Standard register/unregister events.
 - `adaptSolanaStandardWallet(walletInfo, options?)`: adapts a discovered wallet into `SolanaWallet`.
+- `registerSolanaMobileWallet(options?)`: registers Android Mobile Wallet Adapter through Wallet Standard on supported Android Chrome clients.
+- `isSolanaMobileWalletSupported()`: returns whether the current runtime supports Android MWA web registration.
+- `getDefaultMobileWalletAppIdentity()`: derives a default Mobile Wallet Adapter app identity from the current document.
 
 ## `@vue-solana/vue`
 
@@ -141,11 +155,20 @@ createApp(App).use(
   createSolanaPlugin({
     cluster: "devnet",
     commitment: "confirmed",
+    mobileWallet: {
+      appIdentity: {
+        name: "My Vue Solana App",
+        uri: "https://example.com",
+        icon: "favicon.ico",
+      },
+    },
   }),
 );
 ```
 
 `VueSolana` is an alias for `createSolanaPlugin`.
+
+`mobileWallet` controls Android Mobile Wallet Adapter registration. It defaults to enabled on supported Android Chrome clients, accepts `RegisterSolanaMobileWalletOptions`, and can be disabled with `mobileWallet: false`.
 
 ### `useSolana()`
 
@@ -182,7 +205,7 @@ Returns wallet state and actions:
 
 ### `useWallets()`
 
-Returns discovered browser wallets and selection actions:
+Returns discovered wallet metadata and selection actions. Browser extension wallets and Android Mobile Wallet Adapter wallets share this list:
 
 - `wallets`
 - `selectedWallet`

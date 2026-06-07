@@ -15,10 +15,10 @@ Live demo: [vue-solana-docs.vercel.app/demo](https://vue-solana-docs.vercel.app/
 - Reading RPC status with `useRpc()`.
 - Using the injected `Connection` with `useConnection()`.
 - Reading lamport balances with `useBalance()`.
-- Discovering browser wallets with `useWallets()`.
+- Discovering browser extension wallets and Android Mobile Wallet Adapter wallets with `useWallets()`.
 - Managing active wallet state with `useWallet()`.
 - Tracking async transaction state with `useTransaction()`.
-- Sending a real devnet transfer with `useSignAndSendTransaction()`.
+- Sending a real transfer with `useSignAndSendTransaction()`. The example uses devnet by default for safe testing.
 
 The app uses `devnet` by default. Devnet SOL has no real value.
 
@@ -38,9 +38,10 @@ Open the Vite URL printed in the terminal, usually `http://localhost:5173`.
 - Click `Load Blockhash` to call `connection.getLatestBlockhash()` directly.
 - Paste a devnet wallet address and refresh the balance.
 - Install a Solana browser wallet and switch it to devnet.
+- On Android Chrome, install a compatible Solana mobile wallet and look for `Mobile Wallet Adapter`.
 - Select and connect a discovered wallet.
 - Run the generic mock transaction.
-- Enter a recipient address and amount, then send a real devnet transfer.
+- Enter a recipient address and amount, then send a real transfer. Keep the example on devnet while testing.
 
 The transfer example initializes the `buffer` browser polyfill with `import { Buffer } from "buffer/"`. Restart the Vite dev server if Vite previously cached an externalized `buffer` import.
 
@@ -54,4 +55,4 @@ https://faucet.solana.com
 
 ## Wallet Note
 
-The example uses Solana Wallet Standard discovery. Install Phantom, Solflare, Backpack, or another standard wallet before testing wallet flows.
+The example uses Solana Wallet Standard discovery. Install Phantom, Solflare, Backpack, or another standard wallet before testing browser extension wallet flows. On supported Android Chrome runtimes, `@solana-mobile/wallet-standard-mobile` can expose installed native mobile wallets through `Mobile Wallet Adapter` in the same wallet list.

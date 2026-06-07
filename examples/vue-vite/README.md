@@ -8,10 +8,10 @@ This example demonstrates:
 - Reading RPC status with `useRpc()`.
 - Using the injected `Connection` with `useConnection()`.
 - Reading lamport balances with `useBalance()`.
-- Discovering browser wallets with `useWallets()`.
+- Discovering browser extension wallets and Android Mobile Wallet Adapter wallets with `useWallets()`.
 - Managing active wallet state with `useWallet()`.
 - Tracking async transaction state with `useTransaction()`.
-- Sending a real devnet transfer with `useSignAndSendTransaction()`.
+- Sending a real transfer with `useSignAndSendTransaction()`. The example uses devnet by default for safe testing.
 
 The app uses `devnet` by default. Devnet SOL has no real value.
 
@@ -40,10 +40,11 @@ pnpm --filter @vue-solana/example-vue-vite dev
 - Click `Load Blockhash` to call `connection.getLatestBlockhash()` directly.
 - Paste a devnet wallet address and refresh the balance.
 - Install a Solana browser wallet such as Phantom, Solflare, or Backpack.
+- On Android Chrome, install a compatible Solana mobile wallet and look for `Mobile Wallet Adapter`.
 - Switch the wallet to devnet.
 - Select and connect a discovered wallet.
 - Run the generic mock transaction.
-- Enter a recipient address and amount, then send a real devnet transfer.
+- Enter a recipient address and amount, then send a real transfer. Keep the example on devnet while testing.
 
 ## Devnet SOL
 
@@ -61,6 +62,6 @@ solana airdrop 1 YOUR_WALLET_ADDRESS --url devnet
 
 ## Wallet Note
 
-The example uses Solana Wallet Standard discovery. Wallet flows require a browser wallet extension and enough devnet SOL for transaction fees.
+The example uses Solana Wallet Standard discovery. Wallet flows require a browser extension wallet or, on supported Android Chrome runtimes, a compatible native mobile wallet exposed through `Mobile Wallet Adapter`. Use enough devnet SOL for transaction fees.
 
 See [Wallets](../../apps/docs/content/concepts/wallets.md) for the current wallet support status and [Vue Vite example docs](../../apps/docs/content/examples/vue-vite.md) for the docs-site page.

@@ -71,13 +71,17 @@ function createDeferred<T>() {
   return { promise, resolve, reject };
 }
 
-const { createSolanaContext, getRegisteredSolanaWallets, subscribeSolanaWallets } = vi.hoisted(
-  () => ({
-    createSolanaContext: vi.fn(),
-    getRegisteredSolanaWallets: vi.fn(),
-    subscribeSolanaWallets: vi.fn(),
-  }),
-);
+const {
+  createSolanaContext,
+  getRegisteredSolanaWallets,
+  registerSolanaMobileWallet,
+  subscribeSolanaWallets,
+} = vi.hoisted(() => ({
+  createSolanaContext: vi.fn(),
+  getRegisteredSolanaWallets: vi.fn(),
+  registerSolanaMobileWallet: vi.fn(),
+  subscribeSolanaWallets: vi.fn(),
+}));
 
 vi.mock("@vue-solana/core/rpc", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@vue-solana/core/rpc")>();
@@ -98,12 +102,22 @@ vi.mock("@vue-solana/core/wallet-standard", async (importOriginal) => {
   };
 });
 
+vi.mock("@vue-solana/core/mobile-wallet", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@vue-solana/core/mobile-wallet")>();
+
+  return {
+    ...actual,
+    registerSolanaMobileWallet,
+  };
+});
+
 describe("createSolanaPlugin", () => {
   afterEach(() => {
     vi.useRealTimers();
     vi.restoreAllMocks();
     createSolanaContext.mockReset();
     getRegisteredSolanaWallets.mockReset();
+    registerSolanaMobileWallet.mockReset();
     subscribeSolanaWallets.mockReset();
   });
 
@@ -208,6 +222,8 @@ describe("createSolanaPlugin", () => {
         },
       },
     );
+
+    await vi.advanceTimersByTimeAsync(0);
 
     expect(solana?.status.value).toBe("checking");
 
@@ -315,6 +331,106 @@ describe("createSolanaPlugin", () => {
     expect(getRegisteredSolanaWallets).toHaveBeenCalledOnce();
     expect(subscribeSolanaWallets).toHaveBeenCalledOnce();
     expect(solana?.wallets.value).toEqual([walletInfo]);
+  });
+
+  it("registers mobile wallets before wallet discovery refresh", async () => {
+    vi.spyOn(console, "info").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    mockSolanaContext();
+    getRegisteredSolanaWallets.mockReturnValue([]);
+    subscribeSolanaWallets.mockReturnValue(vi.fn());
+    let solana: ReturnType<typeof useSolana> | undefined;
+
+    mount(
+      defineComponent({
+        setup() {
+          solana = useSolana();
+
+          return () => h("div");
+        },
+      }),
+      {
+        global: {
+          plugins: [[createSolanaPlugin()]],
+        },
+      },
+    );
+
+    solana?.refreshWallets();
+
+    expect(registerSolanaMobileWallet).toHaveBeenCalledWith({ chains: ["solana:devnet"] });
+    expect(getRegisteredSolanaWallets).toHaveBeenCalledOnce();
+  });
+
+  it("passes mobile wallet options through registration", async () => {
+    vi.spyOn(console, "info").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    mockSolanaContext();
+    getRegisteredSolanaWallets.mockReturnValue([]);
+    subscribeSolanaWallets.mockReturnValue(vi.fn());
+    let solana: ReturnType<typeof useSolana> | undefined;
+
+    mount(
+      defineComponent({
+        setup() {
+          solana = useSolana();
+
+          return () => h("div");
+        },
+      }),
+      {
+        global: {
+          plugins: [
+            [
+              createSolanaPlugin({
+                mobileWallet: {
+                  appIdentity: { name: "Test App", uri: "https://example.com" },
+                  chains: ["solana:mainnet"],
+                  remoteHostAuthority: "example.com",
+                },
+              }),
+            ],
+          ],
+        },
+      },
+    );
+
+    solana?.refreshWallets();
+
+    expect(registerSolanaMobileWallet).toHaveBeenCalledWith({
+      chains: ["solana:mainnet"],
+      appIdentity: { name: "Test App", uri: "https://example.com" },
+      remoteHostAuthority: "example.com",
+    });
+  });
+
+  it("skips mobile wallet registration when disabled", async () => {
+    vi.spyOn(console, "info").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    mockSolanaContext();
+    getRegisteredSolanaWallets.mockReturnValue([]);
+    subscribeSolanaWallets.mockReturnValue(vi.fn());
+    let solana: ReturnType<typeof useSolana> | undefined;
+
+    mount(
+      defineComponent({
+        setup() {
+          solana = useSolana();
+
+          return () => h("div");
+        },
+      }),
+      {
+        global: {
+          plugins: [[createSolanaPlugin({ mobileWallet: false })]],
+        },
+      },
+    );
+
+    solana?.refreshWallets();
+
+    expect(registerSolanaMobileWallet).not.toHaveBeenCalled();
+    expect(getRegisteredSolanaWallets).toHaveBeenCalledOnce();
   });
 
   it("keeps selected standard wallets disconnected until explicit connect", async () => {

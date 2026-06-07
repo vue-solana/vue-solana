@@ -12,7 +12,6 @@ const connection = useSolanaConnection();
 const wallet = useSolanaWallet();
 const walletDiscovery = useSolanaWallets();
 const sendTransaction = useSolanaSignAndSendTransaction();
-const toast = useToast();
 
 const balanceAddress = ref("11111111111111111111111111111111");
 const transferRecipient = ref("11111111111111111111111111111111");
@@ -22,6 +21,7 @@ const directConnectionLoading = ref(false);
 const directConnectionError = ref<string | null>(null);
 const devnetTransferError = ref<unknown>(null);
 const walletsLoaded = ref(false);
+const walletNotice = ref<{ type: "success" | "error"; message: string } | null>(null);
 
 const systemProgramId = new PublicKey("11111111111111111111111111111111");
 
@@ -155,17 +155,15 @@ async function connectWallet() {
   try {
     await wallet.connect();
 
-    toast.add({
-      title: "Wallet connected",
-      description: wallet.publicKey.value?.toBase58() ?? "Connected to selected wallet.",
-      color: "success",
-    });
+    walletNotice.value = {
+      type: "success",
+      message: `Wallet connected: ${wallet.publicKey.value?.toBase58() ?? "selected wallet"}`,
+    };
   } catch (error) {
-    toast.add({
-      title: "Wallet connection failed",
-      description: formatError(error) ?? "Unable to connect to the selected wallet.",
-      color: "error",
-    });
+    walletNotice.value = {
+      type: "error",
+      message: formatError(error) ?? "Unable to connect to the selected wallet.",
+    };
   }
 }
 
@@ -175,17 +173,15 @@ async function disconnectWallet() {
   try {
     await wallet.disconnect();
 
-    toast.add({
-      title: "Wallet disconnected",
-      description: publicKey ?? "Disconnected from selected wallet.",
-      color: "success",
-    });
+    walletNotice.value = {
+      type: "success",
+      message: `Wallet disconnected: ${publicKey ?? "selected wallet"}`,
+    };
   } catch (error) {
-    toast.add({
-      title: "Wallet disconnection failed",
-      description: formatError(error) ?? "Unable to disconnect from the selected wallet.",
-      color: "error",
-    });
+    walletNotice.value = {
+      type: "error",
+      message: formatError(error) ?? "Unable to disconnect from the selected wallet.",
+    };
   }
 }
 
@@ -208,17 +204,15 @@ async function copyWalletAddress() {
   try {
     await navigator.clipboard.writeText(publicKey);
 
-    toast.add({
-      title: "Wallet address copied",
-      description: publicKey,
-      color: "success",
-    });
+    walletNotice.value = {
+      type: "success",
+      message: `Wallet address copied: ${publicKey}`,
+    };
   } catch (error) {
-    toast.add({
-      title: "Copy failed",
-      description: formatError(error) ?? "Unable to copy wallet address.",
-      color: "error",
-    });
+    walletNotice.value = {
+      type: "error",
+      message: formatError(error) ?? "Unable to copy wallet address.",
+    };
   }
 }
 
@@ -272,265 +266,326 @@ function createTransferInstruction(fromPubkey: PublicKey, toPubkey: PublicKey, l
 </script>
 
 <template>
-  <UApp>
-    <main class="dashboard">
-      <section class="hero panel">
-        <p class="eyebrow">Nuxt Solana Test App</p>
-        <h1>Composable Test Dashboard</h1>
-        <p>
-          This screen exercises the Nuxt module and auto-imported Solana composables: plugin
-          injection, RPC status, direct connection calls, balance lookup, browser wallet discovery,
-          generic transaction state, and real devnet transfers.
-        </p>
-      </section>
+  <main class="dashboard">
+    <section class="hero panel" data-testid="hero">
+      <p class="eyebrow">Nuxt Solana Test App</p>
+      <h1>Composable Test Dashboard</h1>
+      <p>
+        This screen exercises the Nuxt module and auto-imported Solana composables: plugin
+        injection, RPC status, direct connection calls, balance lookup, browser wallet discovery,
+        generic transaction state, and real devnet transfers.
+      </p>
+    </section>
 
-      <section class="panel">
-        <div class="panel-heading">
-          <div>
-            <p class="eyebrow">useSolana + useSolanaRpc</p>
-            <h2>Module And RPC Status</h2>
-          </div>
-          <span class="status-pill" :class="`status-pill--${rpc.status.value}`">
-            {{ rpc.status }}
-          </span>
+    <section class="panel" data-testid="rpc-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">useSolana + useSolanaRpc</p>
+          <h2>Module And RPC Status</h2>
         </div>
+        <span
+          class="status-pill"
+          :class="`status-pill--${rpc.status.value}`"
+          data-testid="rpc-status"
+        >
+          {{ rpc.status }}
+        </span>
+      </div>
 
-        <dl class="data-grid">
-          <div>
-            <dt>Plugin installed</dt>
-            <dd>{{ pluginInstalled ? "Yes" : "No" }}</dd>
-          </div>
-          <div>
-            <dt>Cluster</dt>
-            <dd>{{ rpc.cluster }}</dd>
-          </div>
-          <div>
-            <dt>RPC endpoint</dt>
-            <dd>{{ rpc.endpoint }}</dd>
-          </div>
-          <div>
-            <dt>WebSocket endpoint</dt>
-            <dd>{{ rpc.wsEndpoint }}</dd>
-          </div>
-          <div>
-            <dt>Latest blockhash</dt>
-            <dd>{{ rpc.latestBlockhash.value ?? "Not loaded yet" }}</dd>
-          </div>
-          <div v-if="rpc.error.value">
-            <dt>RPC error</dt>
-            <dd>{{ rpc.error.value }}</dd>
-          </div>
-        </dl>
-
-        <button type="button" @click="rpc.checkConnection">Check RPC Again</button>
-      </section>
-
-      <section class="panel">
-        <div class="panel-heading">
-          <div>
-            <p class="eyebrow">useSolanaConnection</p>
-            <h2>Direct Connection Call</h2>
-          </div>
+      <dl class="data-grid">
+        <div>
+          <dt>Plugin installed</dt>
+          <dd data-testid="plugin-installed">{{ pluginInstalled ? "Yes" : "No" }}</dd>
         </div>
+        <div>
+          <dt>Cluster</dt>
+          <dd data-testid="rpc-cluster">{{ rpc.cluster }}</dd>
+        </div>
+        <div>
+          <dt>RPC endpoint</dt>
+          <dd data-testid="rpc-endpoint">{{ rpc.endpoint }}</dd>
+        </div>
+        <div>
+          <dt>WebSocket endpoint</dt>
+          <dd>{{ rpc.wsEndpoint }}</dd>
+        </div>
+        <div>
+          <dt>Latest blockhash</dt>
+          <dd data-testid="rpc-latest-blockhash">
+            {{ rpc.latestBlockhash.value ?? "Not loaded yet" }}
+          </dd>
+        </div>
+        <div v-if="rpc.error.value">
+          <dt>RPC error</dt>
+          <dd>{{ rpc.error.value }}</dd>
+        </div>
+      </dl>
 
-        <p>
-          Calls <code>connection.getLatestBlockhash()</code> directly from the injected connection.
-        </p>
-        <button type="button" :disabled="directConnectionLoading" @click="loadDirectBlockhash">
-          {{ directConnectionLoading ? "Loading..." : "Load Blockhash" }}
+      <button type="button" data-testid="check-rpc" @click="rpc.checkConnection">
+        Check RPC Again
+      </button>
+    </section>
+
+    <section class="panel" data-testid="direct-connection-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">useSolanaConnection</p>
+          <h2>Direct Connection Call</h2>
+        </div>
+      </div>
+
+      <p>
+        Calls <code>connection.getLatestBlockhash()</code> directly from the injected connection.
+      </p>
+      <button
+        type="button"
+        data-testid="load-blockhash"
+        :disabled="directConnectionLoading"
+        @click="loadDirectBlockhash"
+      >
+        {{ directConnectionLoading ? "Loading..." : "Load Blockhash" }}
+      </button>
+      <p v-if="directBlockhash" class="result" data-testid="blockhash-result">
+        Blockhash: {{ directBlockhash }}
+      </p>
+      <p v-if="directConnectionError" class="error">{{ directConnectionError }}</p>
+    </section>
+
+    <section class="panel" data-testid="balance-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">useSolanaBalance</p>
+          <h2>Balance Lookup</h2>
+        </div>
+      </div>
+
+      <label>
+        Public key
+        <input
+          v-model="balanceAddress"
+          data-testid="balance-address"
+          placeholder="Enter a Solana public key"
+        />
+      </label>
+      <div class="actions">
+        <button
+          type="button"
+          data-testid="refresh-balance"
+          :disabled="balance.loading.value"
+          @click="balance.refresh"
+        >
+          {{ balance.loading.value ? "Loading..." : "Refresh Balance" }}
         </button>
-        <p v-if="directBlockhash" class="result">Blockhash: {{ directBlockhash }}</p>
-        <p v-if="directConnectionError" class="error">{{ directConnectionError }}</p>
-      </section>
+      </div>
+      <p class="result" data-testid="balance-lamports">
+        Lamports: {{ balance.balance.value ?? "No balance loaded" }}
+      </p>
+      <p class="result" data-testid="balance-sol">SOL: {{ balanceInSol }}</p>
+      <p v-if="balanceError" class="error">{{ balanceError }}</p>
+    </section>
 
-      <section class="panel">
-        <div class="panel-heading">
-          <div>
-            <p class="eyebrow">useSolanaBalance</p>
-            <h2>Balance Lookup</h2>
-          </div>
+    <section class="panel" data-testid="wallet-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">useSolanaWallets + useSolanaWallet</p>
+          <h2>Browser Wallets</h2>
         </div>
+        <span class="status-pill" :class="walletStatusClass">
+          {{ walletStatusText }}
+        </span>
+      </div>
 
-        <label>
-          Public key
-          <input v-model="balanceAddress" placeholder="Enter a Solana public key" />
-        </label>
-        <div class="actions">
-          <button type="button" :disabled="balance.loading.value" @click="balance.refresh">
-            {{ balance.loading.value ? "Loading..." : "Refresh Balance" }}
-          </button>
+      <p>
+        Click <strong>Load Wallets</strong> to discover Solana Wallet Standard browser wallets.
+        Install Phantom, Solflare, Backpack, or another standard wallet and switch it to devnet
+        before testing transfers.
+      </p>
+
+      <dl class="data-grid">
+        <div>
+          <dt>Discovered wallets</dt>
+          <dd data-testid="wallet-count">{{ discoveredWalletCount }}</dd>
         </div>
-        <p class="result">Lamports: {{ balance.balance.value ?? "No balance loaded" }}</p>
-        <p class="result">SOL: {{ balanceInSol }}</p>
-        <p v-if="balanceError" class="error">{{ balanceError }}</p>
-      </section>
-
-      <section class="panel">
-        <div class="panel-heading">
-          <div>
-            <p class="eyebrow">useSolanaWallets + useSolanaWallet</p>
-            <h2>Browser Wallets</h2>
-          </div>
-          <span class="status-pill" :class="walletStatusClass">
-            {{ walletStatusText }}
-          </span>
+        <div>
+          <dt>Selected wallet</dt>
+          <dd data-testid="selected-wallet">
+            {{ walletDiscovery.selectedWallet.value?.name ?? "None" }}
+          </dd>
         </div>
-
-        <p>
-          Click <strong>Load Wallets</strong> to discover Solana Wallet Standard browser wallets.
-          Install Phantom, Solflare, Backpack, or another standard wallet and switch it to devnet
-          before testing transfers.
-        </p>
-
-        <dl class="data-grid">
-          <div>
-            <dt>Discovered wallets</dt>
-            <dd>{{ discoveredWalletCount }}</dd>
-          </div>
-          <div>
-            <dt>Selected wallet</dt>
-            <dd>{{ walletDiscovery.selectedWallet.value?.name ?? "None" }}</dd>
-          </div>
-          <div>
-            <dt>Wallet configured</dt>
-            <dd>{{ walletConfigured ? "Yes" : "No" }}</dd>
-          </div>
-          <div style="position: relative">
-            <dt>Public key</dt>
-            <dd>
-              <span class="copyable-address">
-                <code>{{ walletPublicKey }}</code>
-              </span>
-            </dd>
-            <button
-              v-if="wallet.publicKey.value"
-              type="button"
-              class="copy-address-button"
-              aria-label="Copy wallet address"
-              title="Copy wallet address"
-              @click="copyWalletAddress"
-            >
-              Copy
-            </button>
-          </div>
-          <div>
-            <dt>Connecting</dt>
-            <dd>{{ wallet.connecting.value ? "Yes" : "No" }}</dd>
-          </div>
-          <div>
-            <dt>Disconnecting</dt>
-            <dd>{{ wallet.disconnecting.value ? "Yes" : "No" }}</dd>
-          </div>
-        </dl>
-
-        <div v-if="walletsLoaded && walletDiscovery.wallets.value.length" class="wallet-list">
+        <div>
+          <dt>Wallet configured</dt>
+          <dd data-testid="wallet-configured">{{ walletConfigured ? "Yes" : "No" }}</dd>
+        </div>
+        <div style="position: relative">
+          <dt>Public key</dt>
+          <dd>
+            <span class="copyable-address">
+              <code data-testid="wallet-public-key">{{ walletPublicKey }}</code>
+            </span>
+          </dd>
           <button
-            v-for="discoveredWallet in walletDiscovery.wallets.value"
-            :key="discoveredWallet.name"
+            v-if="wallet.publicKey.value"
             type="button"
-            class="wallet-option"
-            :class="{
-              'wallet-option--selected':
-                walletDiscovery.selectedWallet.value?.name === discoveredWallet.name,
-            }"
-            @click="walletDiscovery.selectWallet(discoveredWallet)"
+            class="copy-address-button"
+            aria-label="Copy wallet address"
+            title="Copy wallet address"
+            @click="copyWalletAddress"
           >
-            <img :src="discoveredWallet.icon" :alt="`${discoveredWallet.name} icon`" />
-            <span>{{ discoveredWallet.name }}</span>
+            Copy
           </button>
         </div>
-        <p v-if="!walletsLoaded" class="hint">Wallet discovery has not been loaded yet.</p>
-        <p v-else-if="!walletDiscovery.wallets.value.length" class="hint">
-          No browser wallets detected. Install a Solana wallet extension, then refresh wallets.
-        </p>
-
-        <div class="actions">
-          <button type="button" @click="loadWallets">
-            {{ walletsLoaded ? "Refresh Wallets" : "Load Wallets" }}
-          </button>
-          <button type="button" :disabled="!canConnectWallet" @click="connectWallet">
-            {{ wallet.connecting.value ? "Connecting..." : "Connect" }}
-          </button>
-          <button type="button" :disabled="!canDisconnectWallet" @click="disconnectWallet">
-            {{ wallet.disconnecting.value ? "Disconnecting..." : "Disconnect" }}
-          </button>
-          <button
-            type="button"
-            class="button-muted"
-            :disabled="!walletConfigured"
-            @click="deselectWallet"
-          >
-            Deselect Wallet
-          </button>
+        <div>
+          <dt>Connecting</dt>
+          <dd>{{ wallet.connecting.value ? "Yes" : "No" }}</dd>
         </div>
-      </section>
-
-      <section class="panel">
-        <div class="panel-heading">
-          <div>
-            <p class="eyebrow">useTransaction</p>
-            <h2>Generic Transaction State</h2>
-          </div>
+        <div>
+          <dt>Disconnecting</dt>
+          <dd>{{ wallet.disconnecting.value ? "Yes" : "No" }}</dd>
         </div>
+      </dl>
 
-        <p>Runs a mock async handler to test loading, error, and signature state.</p>
-        <button type="button" :disabled="mockTransaction.loading.value" @click="runMockTransaction">
-          {{ mockTransaction.loading.value ? "Running..." : "Run Mock Transaction" }}
+      <div v-if="walletsLoaded && walletDiscovery.wallets.value.length" class="wallet-list">
+        <button
+          v-for="discoveredWallet in walletDiscovery.wallets.value"
+          :key="discoveredWallet.name"
+          type="button"
+          class="wallet-option"
+          :class="{
+            'wallet-option--selected':
+              walletDiscovery.selectedWallet.value?.name === discoveredWallet.name,
+          }"
+          @click="walletDiscovery.selectWallet(discoveredWallet)"
+        >
+          <img :src="discoveredWallet.icon" :alt="`${discoveredWallet.name} icon`" />
+          <span>{{ discoveredWallet.name }}</span>
         </button>
-        <p class="result">Signature: {{ mockTransaction.signature.value ?? "No signature yet" }}</p>
-        <p v-if="mockTransactionError" class="error">{{ mockTransactionError }}</p>
-      </section>
+      </div>
+      <p v-if="!walletsLoaded" class="hint" data-testid="wallet-message">
+        Wallet discovery has not been loaded yet.
+      </p>
+      <p
+        v-else-if="!walletDiscovery.wallets.value.length"
+        class="hint"
+        data-testid="wallet-message"
+      >
+        No browser wallets detected. Install a Solana wallet extension, then refresh wallets.
+      </p>
 
-      <section class="panel">
-        <div class="panel-heading">
-          <div>
-            <p class="eyebrow">useSolanaSignAndSendTransaction</p>
-            <h2>Real Devnet Transfer</h2>
-          </div>
-          <span
-            class="status-pill"
-            :class="signAndSendReady ? 'status-pill--connected' : 'status-pill--idle'"
-          >
-            {{ signAndSendStatus }}
-          </span>
+      <div class="actions">
+        <button type="button" data-testid="load-wallets" @click="loadWallets">
+          {{ walletsLoaded ? "Refresh Wallets" : "Load Wallets" }}
+        </button>
+        <button
+          type="button"
+          data-testid="connect-wallet"
+          :disabled="!canConnectWallet"
+          @click="connectWallet"
+        >
+          {{ wallet.connecting.value ? "Connecting..." : "Connect" }}
+        </button>
+        <button
+          type="button"
+          data-testid="disconnect-wallet"
+          :disabled="!canDisconnectWallet"
+          @click="disconnectWallet"
+        >
+          {{ wallet.disconnecting.value ? "Disconnecting..." : "Disconnect" }}
+        </button>
+        <button
+          type="button"
+          class="button-muted"
+          :disabled="!walletConfigured"
+          @click="deselectWallet"
+        >
+          Deselect Wallet
+        </button>
+      </div>
+      <p v-if="walletNotice" :class="walletNotice.type === 'error' ? 'error' : 'result'">
+        {{ walletNotice.message }}
+      </p>
+    </section>
+
+    <section class="panel" data-testid="transaction-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">useTransaction</p>
+          <h2>Generic Transaction State</h2>
         </div>
+      </div>
 
-        <p>
-          Sends a real transfer from the connected wallet. Use devnet, enter a recipient public key,
-          and start with a tiny amount such as <code>0.000001</code> SOL.
-        </p>
+      <p>Runs a mock async handler to test loading, error, and signature state.</p>
+      <button
+        type="button"
+        data-testid="run-mock-transaction"
+        :disabled="mockTransaction.loading.value"
+        @click="runMockTransaction"
+      >
+        {{ mockTransaction.loading.value ? "Running..." : "Run Mock Transaction" }}
+      </button>
+      <p class="result" data-testid="mock-transaction-signature">
+        Signature: {{ mockTransaction.signature.value ?? "No signature yet" }}
+      </p>
+      <p v-if="mockTransactionError" class="error">{{ mockTransactionError }}</p>
+    </section>
 
-        <dl class="data-grid compact-grid">
-          <div>
-            <dt>Wallet ready</dt>
-            <dd>{{ wallet.connected.value ? "Yes" : "No" }}</dd>
-          </div>
-          <div>
-            <dt>Transaction state</dt>
-            <dd>{{ signAndSendStatus }}</dd>
-          </div>
-        </dl>
-
-        <label>
-          Recipient address
-          <input v-model="transferRecipient" placeholder="Enter recipient public key" />
-        </label>
-        <label>
-          Amount in SOL
-          <input v-model="transferAmount" inputmode="decimal" placeholder="0.000001" />
-        </label>
-
-        <div class="actions">
-          <button type="button" :disabled="!signAndSendReady" @click="sendDevnetTransfer">
-            {{ sendTransaction.loading.value ? "Sending..." : "Send Devnet Transfer" }}
-          </button>
+    <section class="panel" data-testid="transfer-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">useSolanaSignAndSendTransaction</p>
+          <h2>Real Devnet Transfer</h2>
         </div>
-        <p v-if="signAndSendDisabledReason" class="hint">{{ signAndSendDisabledReason }}</p>
-        <p class="result">Signature: {{ sendTransaction.signature.value ?? "No signature yet" }}</p>
-        <p v-if="sendTransactionError" class="error">{{ sendTransactionError }}</p>
-      </section>
-    </main>
-  </UApp>
+        <span
+          class="status-pill"
+          :class="signAndSendReady ? 'status-pill--connected' : 'status-pill--idle'"
+        >
+          {{ signAndSendStatus }}
+        </span>
+      </div>
+
+      <p>
+        Sends a real transfer from the connected wallet. Use devnet, enter a recipient public key,
+        and start with a tiny amount such as <code>0.000001</code> SOL.
+      </p>
+
+      <dl class="data-grid compact-grid">
+        <div>
+          <dt>Wallet ready</dt>
+          <dd>{{ wallet.connected.value ? "Yes" : "No" }}</dd>
+        </div>
+        <div>
+          <dt>Transaction state</dt>
+          <dd>{{ signAndSendStatus }}</dd>
+        </div>
+      </dl>
+
+      <label>
+        Recipient address
+        <input v-model="transferRecipient" placeholder="Enter recipient public key" />
+      </label>
+      <label>
+        Amount in SOL
+        <input v-model="transferAmount" inputmode="decimal" placeholder="0.000001" />
+      </label>
+
+      <div class="actions">
+        <button
+          type="button"
+          data-testid="send-transfer"
+          :disabled="!signAndSendReady"
+          @click="sendDevnetTransfer"
+        >
+          {{ sendTransaction.loading.value ? "Sending..." : "Send Devnet Transfer" }}
+        </button>
+      </div>
+      <p v-if="signAndSendDisabledReason" class="hint" data-testid="transfer-disabled-reason">
+        {{ signAndSendDisabledReason }}
+      </p>
+      <p class="result" data-testid="transfer-signature">
+        Signature: {{ sendTransaction.signature.value ?? "No signature yet" }}
+      </p>
+      <p v-if="sendTransactionError" class="error">{{ sendTransactionError }}</p>
+    </section>
+  </main>
 </template>
 
 <style scoped>

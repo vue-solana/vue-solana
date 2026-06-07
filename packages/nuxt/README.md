@@ -16,11 +16,11 @@ New to Solana? Start with the official docs and the project concepts guide:
 ## Install
 
 ```sh
-pnpm add @vue-solana/nuxt @vue-solana/vue @vue-solana/core @solana/web3-compat
+pnpm add @vue-solana/nuxt @vue-solana/vue @vue-solana/core @solana/web3-compat buffer
 ```
 
 ```sh
-npm install @vue-solana/nuxt @vue-solana/vue @vue-solana/core @solana/web3-compat
+npm install @vue-solana/nuxt @vue-solana/vue @vue-solana/core @solana/web3-compat buffer
 ```
 
 ## Module Setup
@@ -63,10 +63,13 @@ The module auto-imports these composables from direct `@vue-solana/vue/*` subpat
 - `useSolanaRpc()`
 - `useSolanaConnection()`
 - `useSolanaWallet()`
+- `useSolanaWallets()`
 - `useSolanaBalance()`
 - `useSolanaSignAndSendTransaction()`
 
 The runtime plugin is client-only. Auto-imported composables can be called during SSR and return inert state until hydration provides the real client context. Trigger RPC and wallet work from client lifecycle hooks or user actions.
+
+Android Mobile Wallet Adapter registration also runs only on the client. On Android Chrome and Chrome PWAs, `Mobile Wallet Adapter` can appear in the same `useSolanaWallets()` list as browser extension wallets. iOS browser wallet adapters and desktop native app wallet adapters are planned but not implemented yet.
 
 ## Read RPC State
 
@@ -132,7 +135,7 @@ const { publicKey, connected, connect, disconnect } = useSolanaWallet();
 </template>
 ```
 
-Browser wallets are discovered through the Solana Wallet Standard. Wallet actions work after selecting a discovered wallet or configuring a custom `SolanaWallet`.
+Browser extension wallets are discovered through the Solana Wallet Standard. Android Mobile Wallet Adapter wallets are registered through `@solana-mobile/wallet-standard-mobile` on supported Android Chrome clients and exposed through the same wallet list. Wallet actions work after selecting a discovered wallet or configuring a custom `SolanaWallet`.
 
 ## Example App
 
@@ -171,4 +174,4 @@ Make sure your `tsconfig.json` includes `types/**/*.d.ts` or another pattern tha
 
 ## Status
 
-This package is early-stage. RPC, balance, wallet, and transaction composables are usable in Nuxt apps.
+This package is early-stage. RPC, balance, browser extension wallet, Android mobile wallet, and transaction composables are usable in Nuxt apps.

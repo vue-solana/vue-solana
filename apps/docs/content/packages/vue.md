@@ -24,10 +24,19 @@ createApp(App)
   .use(
     createSolanaPlugin({
       cluster: "devnet",
+      mobileWallet: {
+        appIdentity: {
+          name: "My Vue Solana App",
+          uri: "https://example.com",
+          icon: "favicon.ico",
+        },
+      },
     }),
   )
   .mount("#app");
 ```
+
+Android Mobile Wallet Adapter registration is enabled by default on supported Android Chrome clients. Pass `mobileWallet` options to customize the MWA app identity, or pass `mobileWallet: false` to disable Android mobile wallet registration.
 
 You can also pass a custom RPC endpoint:
 
@@ -65,7 +74,7 @@ Direct composable subpaths:
 - `useRpc()`: returns cluster, endpoint, connection status, latest blockhash, and `checkConnection()`.
 - `useConnection()`: returns the Solana `Connection`.
 - `useWallet()`: returns active wallet refs, computed connection state, and wallet actions.
-- `useWallets()`: returns discovered browser wallets and wallet selection actions.
+- `useWallets()`: returns discovered browser extension wallets, Android Mobile Wallet Adapter wallets, and wallet selection actions.
 - `useBalance(address, commitment?)`: loads lamport balance for a `PublicKey` or address string.
 - `useTransaction(handler)`: generic async transaction state helper.
 - `useSignAndSendTransaction()`: signs and sends a transaction through the configured wallet.
@@ -148,7 +157,9 @@ const { publicKey, connected, connecting, connect, disconnect } = useWallet();
 </template>
 ```
 
-Browser wallets are discovered through the Solana Wallet Standard. `refreshWallets()` only updates the discovered wallet list, and `selectWallet()` only configures the active wallet. `connected` remains false until `connect()` succeeds, even if the extension exposes previously authorized accounts after a page refresh.
+Browser extension wallets are discovered through the Solana Wallet Standard. Android Mobile Wallet Adapter wallets are registered through `@solana-mobile/wallet-standard-mobile` and exposed through the same `useWallets()` list on supported Android Chrome clients. `refreshWallets()` only updates the discovered wallet list, and `selectWallet()` only configures the active wallet. `connected` remains false until `connect()` succeeds, even if the extension exposes previously authorized accounts after a page refresh.
+
+iOS browser wallet adapters and desktop native app wallet adapters are not implemented yet. iOS support requires wallet-specific universal link or deep link flows, and desktop native support requires wallet-specific protocol links or future native Wallet Standard registration.
 
 Composables return inert SSR-safe state when no plugin context is available. Real RPC and wallet operations still require the plugin-provided client context.
 

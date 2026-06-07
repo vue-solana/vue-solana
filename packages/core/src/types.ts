@@ -48,6 +48,10 @@ export interface SolanaWalletInfo {
   name: string;
   icon: string;
   chains: readonly string[];
+  platform?: "browser" | "mobile" | "desktop";
+  source?: "wallet-standard" | "mobile-wallet-adapter" | "deep-link" | "protocol-link";
+  appUrl?: string;
+  installUrl?: string;
   accounts: readonly {
     address: string;
     publicKey: Uint8Array;

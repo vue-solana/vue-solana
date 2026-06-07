@@ -2,7 +2,7 @@
 
 Vue and Nuxt libraries for building Solana applications.
 
-This project is early-stage. RPC, balance, wallet, and transaction helpers are usable.
+This project is early-stage. RPC, balance, browser extension wallet, Android mobile wallet, and transaction helpers are usable.
 
 ## Packages
 
@@ -38,14 +38,30 @@ Use `mainnet-beta` rather than `mainnet`. See [Solana Concepts For Vue Developer
 For Vue:
 
 ```sh
-pnpm add @vue-solana/vue @vue-solana/core @solana/web3-compat
+pnpm add @vue-solana/vue @vue-solana/core @solana/web3-compat buffer
 ```
 
 For Nuxt:
 
 ```sh
-pnpm add @vue-solana/nuxt @vue-solana/vue @vue-solana/core @solana/web3-compat
+pnpm add @vue-solana/nuxt @vue-solana/vue @vue-solana/core @solana/web3-compat buffer
 ```
+
+## Wallet Support
+
+Current wallet support:
+
+- Browser extension wallets through Wallet Standard packages: `@wallet-standard/app`, `@wallet-standard/base`, `@wallet-standard/features`, and Solana signing features from `@solana/wallet-standard-features`.
+- Android native mobile wallets through `@solana-mobile/wallet-standard-mobile`, which registers Solana Mobile Wallet Adapter as a Wallet Standard wallet on Android Chrome and Chrome PWAs.
+- Manual/custom wallet objects that implement the `SolanaWallet` interface.
+
+Not supported yet, but planned:
+
+- iOS browser wallets. Mobile Wallet Adapter web support is Android Chrome-only, so iOS requires wallet-specific universal link or deep link adapters.
+- Desktop native app wallets. These require wallet-specific protocol links or future native Wallet Standard registration.
+- A built-in wallet modal. Apps should build their own selection UI with `useWallets()`.
+
+All supported wallet sources use the same public flow: `useWallets()` for discovery and selection, then `useWallet()` for active wallet state, `connect()`, `disconnect()`, and signing.
 
 ## Import Paths
 

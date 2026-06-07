@@ -4,6 +4,10 @@ import {
   getSolanaChain,
   subscribeSolanaWallets,
 } from "@vue-solana/core/wallet-standard";
+import {
+  registerSolanaMobileWallet,
+  type RegisterSolanaMobileWalletOptions,
+} from "@vue-solana/core/mobile-wallet";
 import { createSolanaContext } from "@vue-solana/core/rpc";
 import type { SolanaConfig, SolanaWallet, SolanaWalletInfo } from "@vue-solana/core/types";
 import { ref, shallowRef, triggerRef, type App } from "vue";
@@ -11,6 +15,7 @@ import { solanaInjectionKey, type VueSolanaContext } from "./injection";
 
 export interface VueSolanaPluginOptions extends SolanaConfig {
   wallet?: SolanaWallet | null;
+  mobileWallet?: false | RegisterSolanaMobileWalletOptions;
 }
 
 const RPC_CHECK_TIMEOUT_MS = 10_000;
@@ -74,6 +79,13 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}) {
       }
 
       function refreshWallets() {
+        if (options.mobileWallet !== false) {
+          registerSolanaMobileWallet({
+            chains: [getSolanaChain(context.cluster)],
+            ...(options.mobileWallet || {}),
+          });
+        }
+
         unsubscribeWallets ??= subscribeSolanaWallets(refreshWallets);
         wallets.value = getRegisteredSolanaWallets();
 
@@ -177,7 +189,9 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}) {
       app.provide(solanaInjectionKey, vueContext);
 
       if (typeof window !== "undefined") {
-        void checkConnection();
+        window.setTimeout(() => {
+          void checkConnection();
+        }, 0);
       }
     },
   };
