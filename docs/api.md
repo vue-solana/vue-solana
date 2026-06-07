@@ -8,6 +8,15 @@ For Solana terminology, see [Solana Concepts For Vue Developers](./solana-concep
 
 ## `@vue-solana/core`
 
+The root export remains supported. Direct subpath exports are also available when you want narrower imports:
+
+- `@vue-solana/core/types`
+- `@vue-solana/core/clusters`
+- `@vue-solana/core/rpc`
+- `@vue-solana/core/transaction`
+- `@vue-solana/core/wallet`
+- `@vue-solana/core/wallet-standard`
+
 ### Configuration
 
 ```ts
@@ -105,6 +114,24 @@ interface SolanaWalletInfo {
 
 ## `@vue-solana/vue`
 
+The root export remains supported for existing apps. For composables, prefer direct subpath imports in new code so bundlers do not need to evaluate the full Vue package barrel:
+
+```ts
+import { useRpc } from "@vue-solana/vue/useRpc";
+import { useWallet } from "@vue-solana/vue/useWallet";
+```
+
+Available composable subpaths:
+
+- `@vue-solana/vue/useSolana`
+- `@vue-solana/vue/useRpc`
+- `@vue-solana/vue/useConnection`
+- `@vue-solana/vue/useBalance`
+- `@vue-solana/vue/useWallet`
+- `@vue-solana/vue/useWallets`
+- `@vue-solana/vue/useTransaction`
+- `@vue-solana/vue/useSignAndSendTransaction`
+
 ### `createSolanaPlugin(options?)`
 
 Installs the Solana context into a Vue app.
@@ -122,7 +149,7 @@ createApp(App).use(
 
 ### `useSolana()`
 
-Returns the full injected Vue Solana context. Throws `Vue Solana plugin is not installed` if the plugin was not registered.
+Returns the full injected Vue Solana context. If the plugin has not been installed, such as during Nuxt SSR before the client-only plugin runs, it returns inert SSR-safe state instead of throwing. Runtime RPC and wallet actions still require the plugin-provided client context.
 
 ### `useRpc()`
 
@@ -168,6 +195,8 @@ Returns discovered browser wallets and selection actions:
 
 Loads the lamport balance for a `PublicKey` or address string.
 
+`useBalance()` lazy-loads `PublicKey` only when `refresh()` needs to parse an address string, so importing the composable does not statically import `@solana/web3-compat` runtime code.
+
 Returns:
 
 - `balance`
@@ -209,6 +238,8 @@ export default defineNuxtConfig({
 ```
 
 ### Auto-Imports
+
+The Nuxt module installs the runtime plugin on the client only and auto-imports composables from the direct `@vue-solana/vue/*` subpaths. This keeps SSR bundles from pulling in the full Vue package barrel solely because a page uses one composable.
 
 - `useSolana()`
 - `useSolanaRpc()`

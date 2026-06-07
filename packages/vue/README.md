@@ -53,6 +53,13 @@ createApp(App).use(
 
 Supported clusters are `mainnet-beta`, `devnet`, `testnet`, and `localnet`. Use `mainnet-beta` for Solana mainnet; this is Solana's official cluster name.
 
+The root export remains supported. For composables, prefer direct subpath imports in new code so bundlers can avoid evaluating unrelated package entry code:
+
+```ts
+import { useRpc } from "@vue-solana/vue/useRpc";
+import { useWallet } from "@vue-solana/vue/useWallet";
+```
+
 For development, use `devnet` and request free test SOL from the official faucet:
 
 ```txt
@@ -63,7 +70,7 @@ https://faucet.solana.com
 
 ```vue
 <script setup lang="ts">
-import { useRpc } from "@vue-solana/vue";
+import { useRpc } from "@vue-solana/vue/useRpc";
 
 const { cluster, endpoint, status, error, latestBlockhash, checkConnection } = useRpc();
 </script>
@@ -85,7 +92,7 @@ const { cluster, endpoint, status, error, latestBlockhash, checkConnection } = u
 ```vue
 <script setup lang="ts">
 import { ref } from "vue";
-import { useBalance } from "@vue-solana/vue";
+import { useBalance } from "@vue-solana/vue/useBalance";
 
 const address = ref("PASTE_A_SOLANA_ADDRESS");
 const { balance, loading, error, refresh } = useBalance(address);
@@ -105,7 +112,8 @@ const { balance, loading, error, refresh } = useBalance(address);
 
 ```vue
 <script setup lang="ts">
-import { useWallet, useWallets } from "@vue-solana/vue";
+import { useWallet } from "@vue-solana/vue/useWallet";
+import { useWallets } from "@vue-solana/vue/useWallets";
 
 const { wallets, selectedWallet, selectWallet, refreshWallets } = useWallets();
 const { publicKey, connected, connecting, connect, disconnect } = useWallet();
@@ -136,10 +144,12 @@ const { publicKey, connected, connecting, connect, disconnect } = useWallet();
 
 Browser wallets are discovered through the Solana Wallet Standard. `connect()` works after selecting a discovered wallet or configuring a custom `SolanaWallet`.
 
+Composables return inert SSR-safe state when no plugin context is available. Real RPC and wallet operations still require the plugin-provided client context.
+
 ## Transaction State
 
 ```ts
-import { useSignAndSendTransaction } from "@vue-solana/vue";
+import { useSignAndSendTransaction } from "@vue-solana/vue/useSignAndSendTransaction";
 
 const { signature, loading, error, execute } = useSignAndSendTransaction();
 
@@ -173,6 +183,17 @@ Live demo: [vue-solana-docs.vercel.app/demo](https://vue-solana-docs.vercel.app/
 - `useBalance(address, commitment?)`: loads lamport balance for a `PublicKey` or address string.
 - `useTransaction(handler)`: generic async transaction state helper.
 - `useSignAndSendTransaction()`: signs and sends a transaction through the configured wallet.
+
+Direct composable subpaths:
+
+- `@vue-solana/vue/useSolana`
+- `@vue-solana/vue/useRpc`
+- `@vue-solana/vue/useConnection`
+- `@vue-solana/vue/useBalance`
+- `@vue-solana/vue/useWallet`
+- `@vue-solana/vue/useWallets`
+- `@vue-solana/vue/useTransaction`
+- `@vue-solana/vue/useSignAndSendTransaction`
 
 ## Known TypeScript Issue
 

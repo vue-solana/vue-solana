@@ -19,7 +19,8 @@ Discovery, selection, and connection are separate steps. `refreshWallets()` only
 
 ```vue
 <script setup lang="ts">
-import { useWallet, useWallets } from "@vue-solana/vue";
+import { useWallet } from "@vue-solana/vue/useWallet";
+import { useWallets } from "@vue-solana/vue/useWallets";
 
 const { wallets, selectedWallet, refreshWallets, selectWallet } = useWallets();
 const { publicKey, connected, connecting, connect, disconnect } = useWallet();
@@ -76,7 +77,7 @@ Use devnet for testing. Devnet SOL has no real value, but fees still apply.
 Apps can still provide a wallet object that implements `SolanaWallet`.
 
 ```ts
-import type { SolanaWallet } from "@vue-solana/core";
+import type { SolanaWallet } from "@vue-solana/core/types";
 
 const wallet: SolanaWallet = {
   publicKey: null,
