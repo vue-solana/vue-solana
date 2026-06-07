@@ -1,5 +1,11 @@
 # @vue-solana/core
 
+## 0.3.0
+
+### Minor Changes
+
+- b2bd905: Add Solana Mobile Wallet Adapter registration and expose wallet metadata for unified browser and mobile wallet discovery.
+
 ## 0.2.1
 
 ### Patch Changes
