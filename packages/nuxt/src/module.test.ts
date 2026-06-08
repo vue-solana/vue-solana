@@ -27,6 +27,11 @@ interface ModuleUnderTest {
         runtimeConfig: {
           public: Record<string, unknown>;
         };
+        vite: {
+          optimizeDeps?: {
+            include?: string[];
+          };
+        };
       };
     },
   ) => void;
@@ -65,6 +70,7 @@ describe("Nuxt module", () => {
           runtimeConfig: {
             public: publicConfig,
           },
+          vite: {},
         },
       },
     );
@@ -94,5 +100,32 @@ describe("Nuxt module", () => {
         { name: "useWallets", as: "useSolanaWallets", from: "@vue-solana/vue/useWallets" },
       ]),
     );
+  });
+
+  it("adds Vite dependency optimization for mobile wallet dev interop", async () => {
+    const module = (await import("./module")).default as unknown as ModuleUnderTest;
+    const vite = {
+      optimizeDeps: {
+        include: ["existing-dependency", "qrcode"],
+      },
+    };
+
+    module.setup(
+      {},
+      {
+        options: {
+          runtimeConfig: {
+            public: {},
+          },
+          vite,
+        },
+      },
+    );
+
+    expect(vite.optimizeDeps.include).toEqual([
+      "existing-dependency",
+      "qrcode",
+      "@solana-mobile/wallet-standard-mobile",
+    ]);
   });
 });

@@ -5,6 +5,8 @@ export type ModuleOptions = SolanaConfig;
 
 type DefinedNuxtModule = ReturnType<ReturnType<typeof defineNuxtModule<ModuleOptions>>["with"]>;
 
+const VITE_OPTIMIZE_DEPS = ["qrcode", "@solana-mobile/wallet-standard-mobile"];
+
 const module: DefinedNuxtModule = defineNuxtModule<ModuleOptions>({
   meta: {
     name: "@vue-solana/nuxt",
@@ -24,6 +26,11 @@ const module: DefinedNuxtModule = defineNuxtModule<ModuleOptions>({
         : {}),
       ...options,
     };
+
+    nuxt.options.vite.optimizeDeps ??= {};
+    nuxt.options.vite.optimizeDeps.include = Array.from(
+      new Set([...(nuxt.options.vite.optimizeDeps.include ?? []), ...VITE_OPTIMIZE_DEPS]),
+    );
 
     addPlugin({
       src: resolver.resolve("./runtime/plugin"),

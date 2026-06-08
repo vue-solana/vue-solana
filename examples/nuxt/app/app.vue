@@ -388,7 +388,7 @@ function createTransferInstruction(fromPubkey: PublicKey, toPubkey: PublicKey, l
       <div class="panel-heading">
         <div>
           <p class="eyebrow">useSolanaWallets + useSolanaWallet</p>
-          <h2>Browser Wallets</h2>
+          <h2>Wallets</h2>
         </div>
         <span class="status-pill" :class="walletStatusClass">
           {{ walletStatusText }}
@@ -396,9 +396,9 @@ function createTransferInstruction(fromPubkey: PublicKey, toPubkey: PublicKey, l
       </div>
 
       <p>
-        Click <strong>Load Wallets</strong> to discover Solana Wallet Standard browser wallets.
-        Install Phantom, Solflare, Backpack, or another standard wallet and switch it to devnet
-        before testing transfers.
+        Click <strong>Load Wallets</strong> to discover Solana Wallet Standard browser wallets and
+        supported mobile wallets. Install Phantom, Solflare, Backpack, or another standard wallet
+        and switch it to devnet before testing transfers.
       </p>
 
       <dl class="data-grid">
@@ -468,7 +468,8 @@ function createTransferInstruction(fromPubkey: PublicKey, toPubkey: PublicKey, l
         class="hint"
         data-testid="wallet-message"
       >
-        No browser wallets detected. Install a Solana wallet extension, then refresh wallets.
+        No wallets detected. Install a Solana wallet extension or use a supported mobile wallet,
+        then refresh wallets.
       </p>
 
       <div class="actions">

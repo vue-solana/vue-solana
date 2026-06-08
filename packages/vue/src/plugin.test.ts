@@ -218,7 +218,7 @@ describe("createSolanaPlugin", () => {
       }),
       {
         global: {
-          plugins: [[createSolanaPlugin()]],
+          plugins: [[createSolanaPlugin({ mobileWallet: false })]],
         },
       },
     );
@@ -333,7 +333,7 @@ describe("createSolanaPlugin", () => {
     expect(solana?.wallets.value).toEqual([walletInfo]);
   });
 
-  it("registers mobile wallets before wallet discovery refresh", async () => {
+  it("registers mobile wallets after the initial wallet discovery refresh", async () => {
     vi.spyOn(console, "info").mockImplementation(() => {});
     vi.spyOn(console, "error").mockImplementation(() => {});
     mockSolanaContext();
@@ -358,8 +358,11 @@ describe("createSolanaPlugin", () => {
 
     solana?.refreshWallets();
 
-    expect(registerSolanaMobileWallet).toHaveBeenCalledWith({ chains: ["solana:devnet"] });
-    expect(getRegisteredSolanaWallets).toHaveBeenCalledOnce();
+    await vi.waitFor(() => {
+      expect(registerSolanaMobileWallet).toHaveBeenCalledWith({ chains: ["solana:devnet"] });
+    });
+
+    expect(getRegisteredSolanaWallets.mock.calls.length).toBeGreaterThanOrEqual(2);
   });
 
   it("passes mobile wallet options through registration", async () => {
@@ -397,10 +400,12 @@ describe("createSolanaPlugin", () => {
 
     solana?.refreshWallets();
 
-    expect(registerSolanaMobileWallet).toHaveBeenCalledWith({
-      chains: ["solana:mainnet"],
-      appIdentity: { name: "Test App", uri: "https://example.com" },
-      remoteHostAuthority: "example.com",
+    await vi.waitFor(() => {
+      expect(registerSolanaMobileWallet).toHaveBeenCalledWith({
+        chains: ["solana:mainnet"],
+        appIdentity: { name: "Test App", uri: "https://example.com" },
+        remoteHostAuthority: "example.com",
+      });
     });
   });
 

@@ -5,6 +5,7 @@ import {
   adaptSolanaStandardWallet,
   getSolanaChain,
   isSolanaStandardWallet,
+  SOLANA_MOBILE_WALLET_ADAPTER_WALLET_NAME,
 } from "./wallet-standard";
 import type { SolanaWalletInfo } from "./types";
 
@@ -56,6 +57,13 @@ describe("Wallet Standard adapter", () => {
     expect(getSolanaChain("testnet")).toBe("solana:testnet");
     expect(getSolanaChain("devnet")).toBe("solana:devnet");
     expect(getSolanaChain("localnet")).toBe("solana:localnet");
+  });
+
+  it("keeps the local mobile wallet adapter name aligned with the upstream package", async () => {
+    const { SolanaMobileWalletAdapterWalletName } =
+      await import("@solana-mobile/wallet-standard-mobile");
+
+    expect(SOLANA_MOBILE_WALLET_ADAPTER_WALLET_NAME).toBe(SolanaMobileWalletAdapterWalletName);
   });
 
   it("detects standard wallets that support Solana", () => {

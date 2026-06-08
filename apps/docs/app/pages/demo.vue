@@ -403,7 +403,7 @@ function createTransferInstruction(
       <div class="panel-heading">
         <div>
           <p class="eyebrow">useSolanaWallets + useSolanaWallet</p>
-          <h2>Browser Wallets</h2>
+          <h2>Wallets</h2>
         </div>
         <span class="status-pill" :class="walletStatusClass">
           {{ walletStatusText }}
@@ -411,8 +411,9 @@ function createTransferInstruction(
       </div>
 
       <p>
-        Click <strong>Load Wallets</strong> to discover Solana Wallet Standard browser wallets.
-        Install Phantom, Solflare, Backpack, or another standard wallet and switch it to devnet.
+        Click <strong>Load Wallets</strong> to discover Solana Wallet Standard browser wallets and
+        supported mobile wallets. Install Phantom, Solflare, Backpack, or another standard wallet
+        and switch it to devnet.
       </p>
 
       <dl class="data-grid">
@@ -466,7 +467,8 @@ function createTransferInstruction(
       </div>
       <p v-if="!walletsLoaded" class="hint">Wallet discovery has not been loaded yet.</p>
       <p v-else-if="!walletDiscovery.wallets.value.length" class="hint">
-        No browser wallets detected. Install a Solana wallet extension, then refresh wallets.
+        No wallets detected. Install a Solana wallet extension or use a supported mobile wallet,
+        then refresh wallets.
       </p>
 
       <div class="actions">
@@ -840,8 +842,8 @@ code {
   display: inline-flex;
   align-items: center;
   gap: 0.55rem;
-  border-color: rgb(203 213 225);
-  background: rgb(248 250 252);
+  border-color: rgb(3 13 25);
+  background: rgb(48 50 52);
 }
 
 .wallet-option--selected {

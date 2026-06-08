@@ -1,5 +1,4 @@
 import { getWallets } from "@wallet-standard/app";
-import { SolanaMobileWalletAdapterWalletName } from "@solana-mobile/wallet-standard-mobile";
 import type { Wallet, WalletAccount } from "@wallet-standard/base";
 import { StandardConnect, StandardDisconnect, StandardEvents } from "@wallet-standard/features";
 import {
@@ -23,6 +22,7 @@ const SOLANA_CHAINS: readonly SolanaChain[] = [
   "solana:devnet",
   "solana:localnet",
 ];
+export const SOLANA_MOBILE_WALLET_ADAPTER_WALLET_NAME = "Mobile Wallet Adapter";
 
 export interface AdaptSolanaWalletOptions {
   chain?: SolanaChain;
@@ -258,7 +258,7 @@ export function adaptSolanaStandardWallet(
 }
 
 function createSolanaWalletInfo(wallet: Wallet): SolanaWalletInfo {
-  const isMobileWallet = wallet.name === SolanaMobileWalletAdapterWalletName;
+  const isMobileWallet = wallet.name === SOLANA_MOBILE_WALLET_ADAPTER_WALLET_NAME;
 
   return {
     name: wallet.name,
