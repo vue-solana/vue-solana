@@ -466,7 +466,8 @@ function createTransferInstruction(fromPubkey: PublicKey, toPubkey: PublicKey, l
         class="help-text"
         data-testid="wallet-message"
       >
-        No browser wallets detected. Install a Solana wallet extension, then refresh wallets.
+        No wallets detected. Install a Solana wallet extension or use a supported mobile wallet,
+        then refresh wallets.
       </p>
 
       <div class="actions">
