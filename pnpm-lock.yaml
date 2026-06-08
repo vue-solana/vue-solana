@@ -90,8 +90,8 @@ importers:
         specifier: ^0.3.1
         version: 0.3.1(@solana/sysvars@6.9.0(typescript@5.9.3))(bufferutil@4.1.0)(react@19.2.7)(typescript@5.9.3)(utf-8-validate@6.0.6)
       '@vue-solana/nuxt':
-        specifier: ^0.2.5
-        version: 0.2.5(cde814d6147e4209db0aab679dd20de2)
+        specifier: ^0.2.6
+        version: 0.2.6(cde814d6147e4209db0aab679dd20de2)
       '@vue-solana/vue':
         specifier: ^0.3.1
         version: 0.3.1(@solana/sysvars@6.9.0(typescript@5.9.3))(@solana/web3-compat@0.0.21(@solana/sysvars@6.9.0(typescript@5.9.3))(bufferutil@4.1.0)(react@19.2.7)(typescript@5.9.3)(utf-8-validate@6.0.6))(bufferutil@4.1.0)(react@19.2.7)(typescript@5.9.3)(utf-8-validate@6.0.6)(vue@3.5.35(typescript@5.9.3))
@@ -3743,8 +3743,8 @@ packages:
   '@vue-solana/core@0.3.1':
     resolution: {integrity: sha512-nZolOw0Fkctd+4Kj/YjYGrJ6JBmWbmo/MnheImhMI2e8agMrWkR5akL8olT7jg0L/WCODS/2e2Wynul6Iea2qw==}
 
-  '@vue-solana/nuxt@0.2.5':
-    resolution: {integrity: sha512-YxV4mskj6h6KP8z1gtUmQj6f+19vIq5CpcijbGF4DYE+70+mYkb5v2Ht1Q2RAB6fpd+hvI1UIxgJwPceV9aQow==}
+  '@vue-solana/nuxt@0.2.6':
+    resolution: {integrity: sha512-yWSj55c+alq3eqfU81vZAg2LVhjYjbYD0vnbQ3wsulKDvlSqdi8NSGYWs2GMFStwQB5OwxqsQoObhThKAa3Rng==}
     peerDependencies:
       '@solana/web3-compat': ^0.0.21
       nuxt: ^3.0.0 || ^4.0.0
@@ -12644,7 +12644,7 @@ snapshots:
       - use-sync-external-store
       - utf-8-validate
 
-  '@vue-solana/nuxt@0.2.5(cde814d6147e4209db0aab679dd20de2)':
+  '@vue-solana/nuxt@0.2.6(cde814d6147e4209db0aab679dd20de2)':
     dependencies:
       '@solana/web3-compat': 0.0.21(@solana/sysvars@6.9.0(typescript@5.9.3))(bufferutil@4.1.0)(react@19.2.7)(typescript@5.9.3)(utf-8-validate@6.0.6)
       '@vue-solana/core': 0.3.1(@solana/sysvars@6.9.0(typescript@5.9.3))(bufferutil@4.1.0)(react@19.2.7)(typescript@5.9.3)(utf-8-validate@6.0.6)
