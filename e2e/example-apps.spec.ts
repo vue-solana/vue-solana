@@ -60,7 +60,7 @@ test("keeps wallet and transfer flows safe without a browser wallet", async ({ p
   );
 
   await page.getByTestId("load-wallets").click();
-  await expect(page.getByTestId("wallet-message")).toContainText("No browser wallets detected");
+  await expect(page.getByTestId("wallet-message")).toContainText("No wallets detected.");
   await expect(page.getByTestId("wallet-count")).toHaveText("0");
 });
 

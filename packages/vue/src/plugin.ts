@@ -4,10 +4,7 @@ import {
   getSolanaChain,
   subscribeSolanaWallets,
 } from "@vue-solana/core/wallet-standard";
-import {
-  registerSolanaMobileWallet,
-  type RegisterSolanaMobileWalletOptions,
-} from "@vue-solana/core/mobile-wallet";
+import type { RegisterSolanaMobileWalletOptions } from "@vue-solana/core/mobile-wallet";
 import { createSolanaContext } from "@vue-solana/core/rpc";
 import type { SolanaConfig, SolanaWallet, SolanaWalletInfo } from "@vue-solana/core/types";
 import { ref, shallowRef, triggerRef, type App } from "vue";
@@ -32,6 +29,7 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}) {
       const latestBlockhash = ref<string | null>(null);
       const adaptedWallets = new WeakMap<object, SolanaWallet>();
       let unsubscribeWallets: (() => void) | null = null;
+      let mobileWalletRegistrationPromise: Promise<void> | null = null;
       let rpcCheckId = 0;
 
       async function checkConnection() {
@@ -79,13 +77,6 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}) {
       }
 
       function refreshWallets() {
-        if (options.mobileWallet !== false) {
-          registerSolanaMobileWallet({
-            chains: [getSolanaChain(context.cluster)],
-            ...(options.mobileWallet || {}),
-          });
-        }
-
         unsubscribeWallets ??= subscribeSolanaWallets(refreshWallets);
         wallets.value = getRegisteredSolanaWallets();
 
@@ -98,6 +89,27 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}) {
             wallet.value = options.wallet ?? null;
           }
         }
+
+        if (options.mobileWallet !== false) {
+          registerMobileWallets();
+        }
+      }
+
+      function registerMobileWallets() {
+        mobileWalletRegistrationPromise ??= import("@vue-solana/core/mobile-wallet")
+          .then(({ registerSolanaMobileWallet }) => {
+            registerSolanaMobileWallet({
+              chains: [getSolanaChain(context.cluster)],
+              ...(options.mobileWallet || {}),
+            });
+            wallets.value = getRegisteredSolanaWallets();
+          })
+          .catch((cause) => {
+            console.error("[Vue Solana] Mobile wallet registration failed", cause);
+          })
+          .finally(() => {
+            mobileWalletRegistrationPromise = null;
+          });
       }
 
       function selectWallet(nextWallet: SolanaWalletInfo | null) {
