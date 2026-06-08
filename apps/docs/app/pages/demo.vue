@@ -444,7 +444,7 @@ function createTransferInstruction(
             title="Copy wallet address"
             @click="copyWalletAddress"
           >
-            Copy
+            <UIcon name="mdi:content-copy" />
           </button>
         </div>
       </dl>
@@ -804,6 +804,7 @@ code {
   max-width: 100%;
   align-items: center;
   gap: 0.35rem;
+  padding-top: 1rem;
 }
 
 .copyable-address code {
@@ -815,12 +816,13 @@ code {
   position: absolute;
   top: 0.64rem;
   right: 0.44rem;
-  flex: 0 0 auto;
-  padding: 0.24rem 0.45rem;
-  border-color: rgb(203 213 225);
-  background: white;
+  padding: 0.2rem;
+  border-color: rgb(3 13 25);
+  border-radius: 0.5rem;
+  width: 1.75rem;
+  height: 1.75rem;
   color: rgb(71 85 105);
-  font-size: 0.52rem;
+  font-size: 0.9rem;
 }
 
 .actions {
