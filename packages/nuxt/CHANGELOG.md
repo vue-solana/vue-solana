@@ -1,5 +1,14 @@
 # @vue-solana/nuxt
 
+## 0.2.5
+
+### Patch Changes
+
+- e22b88f: Fix Nuxt dev-mode wallet discovery by optimizing Solana mobile wallet dependencies and lazy-loading mobile wallet registration.
+- Updated dependencies [e22b88f]
+  - @vue-solana/core@0.3.1
+  - @vue-solana/vue@0.3.1
+
 ## 0.2.4
 
 ### Patch Changes
