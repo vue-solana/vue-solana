@@ -125,6 +125,16 @@ describe("Nuxt module", () => {
     expect(vite.optimizeDeps.include).toEqual([
       "existing-dependency",
       "qrcode",
+      "@solana/web3-compat",
+      "@solana/web3.js",
+      "buffer",
+      "bn.js",
+      "bs58",
+      "borsh",
+      "@solana/buffer-layout",
+      "jayson/lib/client/browser",
+      "eventemitter3",
+      "rpc-websockets",
       "@solana-mobile/wallet-standard-mobile",
     ]);
   });

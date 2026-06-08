@@ -5,7 +5,20 @@ export type ModuleOptions = SolanaConfig;
 
 type DefinedNuxtModule = ReturnType<ReturnType<typeof defineNuxtModule<ModuleOptions>>["with"]>;
 
-const VITE_OPTIMIZE_DEPS = ["qrcode", "@solana-mobile/wallet-standard-mobile"];
+const VITE_OPTIMIZE_DEPS = [
+  "@solana/web3-compat",
+  "@solana/web3.js",
+  "qrcode",
+  "buffer",
+  "bn.js",
+  "bs58",
+  "borsh",
+  "@solana/buffer-layout",
+  "jayson/lib/client/browser",
+  "eventemitter3",
+  "rpc-websockets",
+  "@solana-mobile/wallet-standard-mobile",
+];
 
 const module: DefinedNuxtModule = defineNuxtModule<ModuleOptions>({
   meta: {
