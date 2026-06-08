@@ -1,5 +1,11 @@
 # @vue-solana/nuxt
 
+## 0.2.6
+
+### Patch Changes
+
+- 50009a3: Optimize Solana browser dependency interop in Nuxt dev mode to prevent raw CommonJS modules from causing import errors.
+
 ## 0.2.5
 
 ### Patch Changes
