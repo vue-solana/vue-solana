@@ -6,9 +6,10 @@ Current wallet support is built on these libraries:
 
 - Browser extension wallets: discovered through `@wallet-standard/app`, `@wallet-standard/base`, `@wallet-standard/features`, and Solana signing features from `@solana/wallet-standard-features`.
 - Android mobile native wallets: registered through `@solana-mobile/wallet-standard-mobile`, which exposes Solana Mobile Wallet Adapter as a Wallet Standard wallet on supported Android Chrome mobile web and PWA runtimes.
+- iOS browser wallets: exposed as wallet-specific universal link entries for Phantom, Solflare, and Backpack on iOS browsers.
 - Solana primitives and transaction types: provided through `@solana/web3-compat`.
 
-Wallets such as Phantom, Solflare, Backpack, and other Solana Wallet Standard-compatible wallets can be discovered at runtime when they register with Wallet Standard. Android users can also see `Mobile Wallet Adapter` when browsing on supported Android Chrome runtimes with compatible native wallet apps.
+Wallets such as Phantom, Solflare, Backpack, and other Solana Wallet Standard-compatible wallets can be discovered at runtime when they register with Wallet Standard. Android users can also see `Mobile Wallet Adapter` when browsing on supported Android Chrome runtimes with compatible native wallet apps. iOS browser users can see Phantom, Solflare, and Backpack universal-link entries even though Mobile Wallet Adapter web flows are not available on iOS.
 
 ## Support Matrix
 
@@ -17,7 +18,7 @@ Wallets such as Phantom, Solflare, Backpack, and other Solana Wallet Standard-co
 | Browser extension wallets     | Supported      | Wallet Standard packages plus `@solana/wallet-standard-features`      | Works for wallets that register as Solana Wallet Standard wallets and expose compatible features.        |
 | Android native mobile wallets | Supported      | `@solana-mobile/wallet-standard-mobile`                               | Android Chrome and Chrome PWAs only. Appears as `Mobile Wallet Adapter` in the same `useWallets()` list. |
 | Manual/custom wallet object   | Supported      | `SolanaWallet` interface                                              | Useful for tests, mocks, and custom adapters via plugin `wallet` or `setWallet()`.                       |
-| iOS browser wallets           | Planned        | Wallet-specific universal link or deep link adapters                  | Not supported yet. iOS browsers do not support Mobile Wallet Adapter web flows.                          |
+| iOS browser wallets           | Supported      | Wallet-specific universal link adapters                               | Phantom, Solflare, and Backpack on iOS browsers. Requires redirect/callback handling.                    |
 | Desktop native app wallets    | Planned        | Wallet-specific protocol links or future Wallet Standard registration | Not supported yet.                                                                                       |
 | Wallet modal UI               | Not included   | App-owned UI                                                          | Build your own wallet list/modal with `useWallets()`.                                                    |
 
@@ -27,6 +28,7 @@ Wallets such as Phantom, Solflare, Backpack, and other Solana Wallet Standard-co
 - Balance reads for any public key.
 - Browser extension wallet discovery with `useWallets()`.
 - Android Mobile Wallet Adapter discovery through the same `useWallets()` list on supported Android Chrome runtimes.
+- iOS Phantom, Solflare, and Backpack universal-link discovery through the same `useWallets()` list on iOS browsers.
 - Wallet selection, connect, and disconnect.
 - Transaction signing through the active wallet when the wallet exposes compatible signing features.
 - Manual wallet injection with `setWallet()` for tests or custom adapters.
@@ -111,7 +113,57 @@ Platform notes:
 - The mobile wallet package handles installed-wallet fallback UI through its default wallet-not-found handler.
 - Browsers may show a one-time Local Network Access prompt before MWA can connect to an installed wallet app.
 
-`SolanaWalletInfo.platform` is `"mobile"` and `SolanaWalletInfo.source` is `"mobile-wallet-adapter"` for the Android MWA wallet. Browser extension wallets use `platform: "browser"` and `source: "wallet-standard"`.
+`SolanaWalletInfo.platform` is `"mobile"` and `SolanaWalletInfo.source` is `"mobile-wallet-adapter"` for the Android MWA wallet. Browser extension wallets use `platform: "browser"` and `source: "wallet-standard"`. iOS browser wallet entries use `platform: "mobile"` and `source: "deep-link"`.
+
+## iOS Browser Wallets
+
+iOS browser wallet support uses wallet-specific universal links because iOS browsers do not support Solana Mobile Wallet Adapter web flows. Vue Solana exposes Phantom, Solflare, and Backpack entries through the same `useWallets()` list on iOS browsers.
+
+Supported iOS wallet capabilities:
+
+| Wallet   | Connect | Sign transaction | Sign all transactions | Sign and send transaction |
+| -------- | ------- | ---------------- | --------------------- | ------------------------- |
+| Phantom  | Yes     | Yes              | Yes                   | No                        |
+| Solflare | Yes     | Yes              | Yes                   | Yes                       |
+| Backpack | Yes     | Yes              | Yes                   | Yes                       |
+
+Phantom's `signAndSendTransaction` deeplink is deprecated by Phantom, so Vue Solana does not expose that capability for Phantom iOS entries.
+
+Configure app identity and callback URL when installing the Vue plugin:
+
+```ts
+createApp(App).use(
+  createSolanaPlugin({
+    cluster: "devnet",
+    iosWallet: {
+      appIdentity: {
+        name: "My Vue Solana App",
+        uri: "https://example.com",
+        icon: "https://example.com/favicon.ico",
+      },
+      redirectUrl: "https://example.com/wallet-callback",
+    },
+  }),
+);
+```
+
+Disable iOS browser wallet entries if your app does not want them:
+
+```ts
+createApp(App).use(
+  createSolanaPlugin({
+    cluster: "devnet",
+    iosWallet: false,
+  }),
+);
+```
+
+Callback notes:
+
+- Wallet apps redirect back to `redirectUrl` with encrypted callback data.
+- The Vue plugin handles callbacks during `refreshWallets()` and stores iOS wallet sessions in `sessionStorage`.
+- Apps with custom callback routes can also call `handleSolanaIosWalletCallback()` from `@vue-solana/core/ios-wallet`.
+- Use an HTTPS callback URL for browser apps. Custom schemes are mainly for native apps.
 
 ## Real Transfer Flow
 
@@ -207,7 +259,7 @@ setWallet(wallet);
 - The library discovers standard wallets and exposes wallet metadata, but it does not render a wallet modal. Build your own selection UI with `useWallets()`.
 - Auto-connect is reserved for future persisted wallet selection. The library does not auto-connect to an arbitrary installed wallet or treat extension-exposed accounts as connected before `connect()` succeeds.
 - Signing support depends on each wallet exposing the relevant Solana Wallet Standard signing feature.
-- iOS browser wallet support is not implemented yet. It requires wallet-specific universal link or deep link adapters and callback handling.
+- iOS browser wallet support is available for Phantom, Solflare, and Backpack through universal links. Capability support differs by wallet.
 - Desktop native app wallet support is not implemented yet. It requires wallet-specific protocol links or future native Wallet Standard registration.
 
 Planned wallet work is tracked in [`docs/native-wallet-plan.md`](./native-wallet-plan.md).

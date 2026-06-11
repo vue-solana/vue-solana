@@ -22,11 +22,11 @@ Current wallet support:
 
 - Browser extension wallets through Solana Wallet Standard packages.
 - Android native mobile wallets through `@solana-mobile/wallet-standard-mobile` on Android Chrome and Chrome PWAs.
+- iOS browser wallets for Phantom, Solflare, and Backpack through wallet-specific universal links.
 - Manual/custom wallet objects that implement `SolanaWallet`.
 
 Planned but not supported yet:
 
-- iOS browser wallets through wallet-specific universal link or deep link adapters.
 - Desktop native app wallets through wallet-specific protocol links or future native Wallet Standard registration.
 
 ## Install For Vue
@@ -220,7 +220,7 @@ const { publicKey, connected, connect, disconnect } = useSolanaWallet();
 
 Select a wallet from `wallets`, then call `connect()`. Selecting a wallet only configures the active wallet; it does not connect it. Some extensions expose previously authorized accounts after a page refresh, but Vue Solana still keeps `connected` false until `connect()` succeeds.
 
-iOS browser wallet support is not implemented yet because Mobile Wallet Adapter web support is Android Chrome-only. iOS support is planned as wallet-specific universal link or deep link adapters.
+iOS browser wallet support uses wallet-specific universal links because Mobile Wallet Adapter web support is Android Chrome-only. Phantom, Solflare, and Backpack appear in the same `useWallets()` list on iOS browsers.
 
 ## Send A Transfer
 

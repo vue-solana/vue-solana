@@ -1,4 +1,5 @@
 export * from "./clusters";
+export * from "./ios-wallet";
 export * from "./mobile-wallet";
 export * from "./rpc";
 export * from "./transaction";

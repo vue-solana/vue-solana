@@ -1,6 +1,6 @@
 ---
 title: Wallets
-description: Browser and Android mobile wallet discovery, selection, connection, and transaction signing.
+description: Browser, Android, and iOS wallet discovery, selection, connection, and transaction signing.
 ---
 
 Vue Solana exposes supported wallet sources through one flow: `useWallets()` for discovery and selection, then `useWallet()` for active wallet state and actions.
@@ -9,6 +9,7 @@ Current wallet support is built on these libraries:
 
 - Browser extension wallets: `@wallet-standard/app`, `@wallet-standard/base`, `@wallet-standard/features`, and `@solana/wallet-standard-features`.
 - Android mobile native wallets: `@solana-mobile/wallet-standard-mobile`, which registers Solana Mobile Wallet Adapter as a Wallet Standard wallet on supported Android Chrome mobile web and PWA runtimes.
+- iOS browser wallets: wallet-specific universal links for Phantom, Solflare, and Backpack.
 - Solana primitives and transaction types: `@solana/web3-compat`.
 
 ## Support Matrix
@@ -18,7 +19,7 @@ Current wallet support is built on these libraries:
 | Browser extension wallets     | Supported      | Wallet Standard packages plus `@solana/wallet-standard-features`      | Works for wallets that register as Solana Wallet Standard wallets and expose compatible features.        |
 | Android native mobile wallets | Supported      | `@solana-mobile/wallet-standard-mobile`                               | Android Chrome and Chrome PWAs only. Appears as `Mobile Wallet Adapter` in the same `useWallets()` list. |
 | Manual/custom wallet object   | Supported      | `SolanaWallet` interface                                              | Useful for tests, mocks, and custom adapters via plugin `wallet` or `setWallet()`.                       |
-| iOS browser wallets           | Planned        | Wallet-specific universal link or deep link adapters                  | Not supported yet. iOS browsers do not support Mobile Wallet Adapter web flows.                          |
+| iOS browser wallets           | Supported      | Wallet-specific universal link adapters                               | Phantom, Solflare, and Backpack on iOS browsers. Requires redirect/callback handling.                    |
 | Desktop native app wallets    | Planned        | Wallet-specific protocol links or future Wallet Standard registration | Not supported yet.                                                                                       |
 | Wallet modal UI               | Not included   | App-owned UI                                                          | Build your own wallet list/modal with `useWallets()`.                                                    |
 
@@ -26,6 +27,7 @@ Current wallet support is built on these libraries:
 
 - Browser extension wallet discovery with `useWallets()`.
 - Android Mobile Wallet Adapter discovery through the same `useWallets()` list on supported Android Chrome runtimes.
+- iOS Phantom, Solflare, and Backpack universal-link discovery through the same `useWallets()` list on iOS browsers.
 - Wallet selection, connect, and disconnect.
 - Wallet state through `useWallet()` and `useSolanaWallet()`.
 - Transaction signing and sending when the selected wallet supports compatible Solana signing features.
@@ -173,7 +175,7 @@ setWallet(wallet);
 - Vue Solana does not render a wallet modal. Build your own selection UI with `useWallets()`.
 - Auto-connect to a persisted wallet selection is not implemented yet. Vue Solana does not treat extension-exposed accounts as connected before `connect()` succeeds.
 - Signing support depends on each wallet exposing compatible Solana Wallet Standard features.
-- iOS browser wallet support is not implemented yet. It requires wallet-specific universal link or deep link adapters and callback handling.
+- iOS browser wallet support is available for Phantom, Solflare, and Backpack through universal links. Capability support differs by wallet.
 - Desktop native app wallet support is not implemented yet. It requires wallet-specific protocol links or future native Wallet Standard registration.
 
 Official references:

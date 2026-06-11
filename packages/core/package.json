@@ -40,6 +40,11 @@
       "import": "./dist/clusters.mjs",
       "require": "./dist/clusters.cjs"
     },
+    "./ios-wallet": {
+      "types": "./dist/ios-wallet.d.ts",
+      "import": "./dist/ios-wallet.mjs",
+      "require": "./dist/ios-wallet.cjs"
+    },
     "./mobile-wallet": {
       "types": "./dist/mobile-wallet.d.ts",
       "import": "./dist/mobile-wallet.mjs",
@@ -85,7 +90,8 @@
     "@wallet-standard/app": "^1.1.1",
     "@wallet-standard/base": "^1.1.1",
     "@wallet-standard/features": "^1.1.1",
-    "bs58": "^6.0.0"
+    "bs58": "^6.0.0",
+    "tweetnacl": "^1.0.3"
   },
   "devDependencies": {
     "typescript": "^5.8.3",

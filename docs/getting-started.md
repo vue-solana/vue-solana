@@ -32,11 +32,11 @@ Current wallet support:
 
 - Browser extension wallets through Solana Wallet Standard packages.
 - Android native mobile wallets through `@solana-mobile/wallet-standard-mobile` on Android Chrome and Chrome PWAs.
+- iOS browser wallets for Phantom, Solflare, and Backpack through wallet-specific universal links.
 - Manual/custom wallet objects that implement `SolanaWallet`.
 
 Planned but not supported yet:
 
-- iOS browser wallets through wallet-specific universal link or deep link adapters.
 - Desktop native app wallets through wallet-specific protocol links or future native Wallet Standard registration.
 - A built-in wallet modal. Build your own wallet selection UI with `useWallets()`.
 
@@ -422,6 +422,8 @@ Install a Solana browser wallet such as Phantom, Solflare, or Backpack, switch i
 
 On Android Chrome or an Android Chrome PWA, install a compatible Solana mobile wallet such as Phantom, Solflare, or Seed Vault Wallet. `Mobile Wallet Adapter` can appear in the same wallet list after `refreshWallets()`.
 
+On iOS Safari or another iOS browser, install Phantom, Solflare, or Backpack. Those wallets can appear as universal-link wallet entries in the same wallet list after `refreshWallets()`.
+
 In Vue, discover and select wallets with `useWallets()`:
 
 ```vue
@@ -468,6 +470,7 @@ Expected result:
 
 - Installed standard wallets appear in the wallet list.
 - On Android Chrome, `Mobile Wallet Adapter` appears when a compatible native wallet is available through Solana Mobile Wallet Standard.
+- On iOS browsers, Phantom, Solflare, and Backpack can appear as universal-link entries.
 - Selecting a wallet configures the active wallet, but does not connect it.
 - `connect()` opens the wallet extension approval flow.
 - After approval, `publicKey` shows the connected wallet address.
@@ -509,7 +512,7 @@ createApp(App).use(
 Support notes:
 
 - Android Chrome and Chrome PWAs are the supported browser targets for local Mobile Wallet Adapter.
-- iOS browsers do not support Mobile Wallet Adapter. iOS wallet support requires wallet-specific universal link or deep link adapters and is planned separately.
+- iOS browsers do not support Mobile Wallet Adapter. iOS wallet support uses wallet-specific universal links instead.
 - Registration is SSR-safe. Nuxt installs the runtime plugin on the client, and core mobile wallet registration returns `false` when `window` is unavailable.
 - `@solana-mobile/wallet-standard-mobile` handles installed-wallet fallback UI through its default wallet-not-found handler.
 - New browser Local Network Access prompts may appear on first connection. Keep `@solana-mobile/wallet-standard-mobile` at `0.5.0` or newer.
@@ -521,6 +524,42 @@ Manual Android testing flow:
 - Tap `Refresh Wallets` and select `Mobile Wallet Adapter` from the same wallet list.
 - Call `connect()` from a direct user action, then approve the wallet prompt.
 - Test a devnet balance read or small transfer. Keep manual testing on devnet unless you intentionally configure mainnet and use real SOL.
+
+### iOS Browser Wallets
+
+iOS browser wallet support is available for Phantom, Solflare, and Backpack through universal links. These entries appear through the same `useWallets()` list as browser extension and Android MWA wallets.
+
+Configure a callback URL when installing the plugin:
+
+```ts
+createApp(App).use(
+  createSolanaPlugin({
+    cluster: "devnet",
+    iosWallet: {
+      appIdentity: {
+        name: "My Vue Solana App",
+        uri: "https://example.com",
+      },
+      redirectUrl: "https://example.com/wallet-callback",
+    },
+  }),
+);
+```
+
+Support notes:
+
+- Use HTTPS for browser callback URLs.
+- Phantom supports connect, sign transaction, and sign all transactions. Phantom's sign-and-send deeplink is deprecated, so that capability is not exposed.
+- Solflare and Backpack support connect, sign transaction, sign all transactions, and sign-and-send transaction.
+- Redirect sessions are stored in `sessionStorage`; clearing site data disconnects iOS browser wallet sessions.
+
+Manual iOS testing flow:
+
+- Open the Vue or Nuxt example on iOS Safari or another iOS browser.
+- Install Phantom, Solflare, or Backpack.
+- Tap `Refresh Wallets` and select the wallet entry.
+- Call `connect()` from a direct user action, approve in the wallet app, and return through the configured callback URL.
+- Test devnet balance reads or a small transfer with a wallet that supports the requested signing capability.
 
 ### 11. Send A Real Devnet Transfer
 

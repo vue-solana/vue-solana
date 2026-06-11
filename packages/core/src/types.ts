@@ -52,6 +52,13 @@ export interface SolanaWalletInfo {
   source?: "wallet-standard" | "mobile-wallet-adapter" | "deep-link" | "protocol-link";
   appUrl?: string;
   installUrl?: string;
+  callbackUrl?: string;
+  capabilities?: {
+    connect?: boolean;
+    signTransaction?: boolean;
+    signAllTransactions?: boolean;
+    signAndSendTransaction?: boolean;
+  };
   accounts: readonly {
     address: string;
     publicKey: Uint8Array;

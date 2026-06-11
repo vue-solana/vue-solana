@@ -1,4 +1,11 @@
 import {
+  adaptSolanaIosWallet,
+  getSolanaIosWallets,
+  handleSolanaIosWalletCallback,
+  isSolanaIosWalletInfo,
+  type GetSolanaIosWalletsOptions,
+} from "@vue-solana/core/ios-wallet";
+import {
   adaptSolanaStandardWallet,
   getRegisteredSolanaWallets,
   getSolanaChain,
@@ -13,6 +20,7 @@ import { solanaInjectionKey, type VueSolanaContext } from "./injection";
 export interface VueSolanaPluginOptions extends SolanaConfig {
   wallet?: SolanaWallet | null;
   mobileWallet?: false | RegisterSolanaMobileWalletOptions;
+  iosWallet?: false | GetSolanaIosWalletsOptions;
 }
 
 const RPC_CHECK_TIMEOUT_MS = 10_000;
@@ -78,11 +86,12 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}) {
 
       function refreshWallets() {
         unsubscribeWallets ??= subscribeSolanaWallets(refreshWallets);
-        wallets.value = getRegisteredSolanaWallets();
+        handleIosWalletCallback();
+        wallets.value = getDiscoveredWallets();
 
         if (selectedWallet.value) {
           selectedWallet.value =
-            wallets.value.find((nextWallet) => nextWallet.name === selectedWallet.value?.name) ??
+            wallets.value.find((nextWallet) => isSameWallet(nextWallet, selectedWallet.value)) ??
             null;
 
           if (!selectedWallet.value) {
@@ -102,7 +111,7 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}) {
               chains: [getSolanaChain(context.cluster)],
               ...(options.mobileWallet || {}),
             });
-            wallets.value = getRegisteredSolanaWallets();
+            wallets.value = getDiscoveredWallets();
           })
           .catch((cause) => {
             console.error("[Vue Solana] Mobile wallet registration failed", cause);
@@ -118,6 +127,15 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}) {
       }
 
       function getAdaptedWallet(walletInfo: SolanaWalletInfo) {
+        if (isSolanaIosWalletInfo(walletInfo)) {
+          return adaptSolanaIosWallet(walletInfo, {
+            chain: getSolanaChain(context.cluster),
+            cluster: context.cluster,
+            onChange: () => triggerRef(wallet),
+            ...(options.iosWallet || {}),
+          });
+        }
+
         if (!isObject(walletInfo.wallet)) {
           return adaptSolanaStandardWallet(walletInfo, {
             chain: getSolanaChain(context.cluster),
@@ -169,6 +187,27 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}) {
         return cachedAdapter;
       }
 
+      function getDiscoveredWallets() {
+        return [
+          ...getRegisteredSolanaWallets(),
+          ...(options.iosWallet === false
+            ? []
+            : getSolanaIosWallets({
+                chains: [getSolanaChain(context.cluster)],
+                cluster: context.cluster,
+                ...(options.iosWallet || {}),
+              })),
+        ];
+      }
+
+      function handleIosWalletCallback() {
+        try {
+          handleSolanaIosWalletCallback({ clearUrl: true });
+        } catch (cause) {
+          console.error("[Vue Solana] iOS wallet callback failed", cause);
+        }
+      }
+
       function* getCachedWallets() {
         for (const walletInfo of wallets.value) {
           if (isObject(walletInfo.wallet)) {
@@ -211,6 +250,14 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}) {
 
 function isObject(value: unknown): value is object {
   return (typeof value === "object" && value !== null) || typeof value === "function";
+}
+
+function isSameWallet(wallet: SolanaWalletInfo, selectedWallet: SolanaWalletInfo | null) {
+  return (
+    wallet.name === selectedWallet?.name &&
+    wallet.source === selectedWallet.source &&
+    wallet.platform === selectedWallet.platform
+  );
 }
 
 export const VueSolana = createSolanaPlugin;
