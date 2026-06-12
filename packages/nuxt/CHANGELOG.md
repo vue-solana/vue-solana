@@ -1,5 +1,14 @@
 # @vue-solana/nuxt
 
+## 0.2.8
+
+### Patch Changes
+
+- 337b99f: Document the installable Vue Solana Agent Skill in the published package READMEs.
+- Updated dependencies [337b99f]
+  - @vue-solana/core@0.3.3
+  - @vue-solana/vue@0.3.3
+
 ## 0.2.7
 
 ### Patch Changes

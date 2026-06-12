@@ -1,5 +1,13 @@
 # @vue-solana/vue
 
+## 0.3.3
+
+### Patch Changes
+
+- 337b99f: Document the installable Vue Solana Agent Skill in the published package READMEs.
+- Updated dependencies [337b99f]
+  - @vue-solana/core@0.3.3
+
 ## 0.3.2
 
 ### Patch Changes
