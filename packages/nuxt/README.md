@@ -11,6 +11,7 @@ New to Solana? Start with the official docs and the project concepts guide:
 - [Solana Clusters](https://solana.com/docs/references/clusters)
 - [Vue Solana Concepts Guide](https://vue-solana-docs.vercel.app/concepts/solana-for-vue-developers)
 - [`@vue-solana/nuxt` docs](https://vue-solana-docs.vercel.app/packages/nuxt)
+- [Agent Skill](https://vue-solana-docs.vercel.app/agent-skill)
 - [Live demo](https://vue-solana-docs.vercel.app/demo)
 
 ## Install
@@ -148,6 +149,16 @@ pnpm dev:nuxt
 Docs: <a href="https://vue-solana-docs.vercel.app/examples/nuxt" target="_blank" rel="noopener noreferrer"><code>examples/nuxt</code></a>
 
 Live demo: [vue-solana-docs.vercel.app/demo](https://vue-solana-docs.vercel.app/demo)
+
+## AI Agent Skill
+
+If you use an AI coding agent, install the Vue Solana Agent Skill for Nuxt module setup, auto-imported composables, SSR caveats, wallet flow guidance, and transaction gotchas:
+
+```sh
+npx skills add vue-solana/vue-solana --skill vue-solana
+```
+
+Docs: [Vue Solana Agent Skill](https://vue-solana-docs.vercel.app/agent-skill)
 
 ## Known TypeScript Issue
 

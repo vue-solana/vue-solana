@@ -7,6 +7,7 @@ const sections = [
     links: [
       { label: "Overview", to: "/" },
       { label: "Getting Started", to: "/getting-started" },
+      { label: "Agent Skill", to: "/agent-skill" },
       { label: "Troubleshooting", to: "/troubleshooting" },
     ],
   },
