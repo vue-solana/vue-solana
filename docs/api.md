@@ -218,7 +218,7 @@ Returns discovered wallet metadata and selection actions. Browser extension wall
 
 Loads the lamport balance for a `PublicKey` or address string.
 
-`useBalance()` lazy-loads `PublicKey` only when `refresh()` needs to parse an address string, so importing the composable does not statically import `@solana/web3-compat` runtime code.
+`useBalance()` accepts an existing `PublicKey` or parses an address string with `PublicKey` from `@solana/web3-compat`.
 
 Returns:
 
