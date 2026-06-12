@@ -17,6 +17,7 @@ Full Vue Solana docs:
 - [`@vue-solana/core`](https://vue-solana-docs.vercel.app/packages/core)
 - [Live demo](https://vue-solana-docs.vercel.app/demo)
 - [Getting Started](https://vue-solana-docs.vercel.app/getting-started)
+- [Agent Skill](https://vue-solana-docs.vercel.app/agent-skill)
 - [Troubleshooting](https://vue-solana-docs.vercel.app/troubleshooting)
 
 ## Install
@@ -131,6 +132,16 @@ For complete runnable Vue and Nuxt examples that use this package through the fr
 - [Live demo](https://vue-solana-docs.vercel.app/demo)
 - <a href="https://vue-solana-docs.vercel.app/examples/vue-vite" target="_blank" rel="noopener noreferrer"><code>examples/vue-vite</code></a>
 - <a href="https://vue-solana-docs.vercel.app/examples/nuxt" target="_blank" rel="noopener noreferrer"><code>examples/nuxt</code></a>
+
+## AI Agent Skill
+
+If you use an AI coding agent, install the Vue Solana Agent Skill for package selection, setup patterns, wallet flow guidance, Solana-specific gotchas, and verification commands:
+
+```sh
+npx skills add vue-solana/vue-solana --skill vue-solana
+```
+
+Docs: [Vue Solana Agent Skill](https://vue-solana-docs.vercel.app/agent-skill)
 
 ## Known TypeScript Issue
 
