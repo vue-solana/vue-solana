@@ -104,6 +104,12 @@ For Nuxt, use `pnpm dev:nuxt` after rebuilding packages.
 
 The configured wallet does not expose either `signAndSendTransaction` or `signTransaction`. Use a wallet that supports transaction signing for the selected Solana chain.
 
+## Wallet Transaction Did Not Return A Result
+
+This can happen when a wallet adapter starts a mobile handoff but never settles its browser promise. Vue Solana clears `loading` and sets `error` instead of leaving the app stuck in a sending state. The transaction may still have succeeded if the wallet submitted it before the response was lost, so check the wallet activity or a Solana explorer before retrying.
+
+Android Mobile Wallet Adapter wallets prefer wallet signing plus app-side RPC submission when `signTransaction` is available. That path avoids the common case where the wallet sends successfully but the browser page never receives the adapter's returned signature.
+
 ## `Buffer is not defined`
 
 Some `@solana/web3-compat` transaction paths still expect a Node-compatible `Buffer` global. In browser apps, install `buffer` and initialize the polyfill before creating or serializing transactions:

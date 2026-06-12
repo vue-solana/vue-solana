@@ -175,7 +175,9 @@ await execute(transaction, {
 });
 ```
 
-The current wallet must be connected and support either `signAndSendTransaction` or `signTransaction`.
+The current wallet must be connected and support either `signAndSendTransaction` or `signTransaction`. Android Mobile Wallet Adapter wallets prefer `signTransaction` plus app-side RPC submission when available. This avoids a mobile handoff edge case where the wallet sends successfully but the browser page does not receive the wallet adapter's returned signature.
+
+`useSignAndSendTransaction()` also clears `loading` if a wallet adapter never returns a result. In that stale case, `error` is set and the chain status may be unknown, so check the connected wallet or an explorer before retrying.
 
 ## Example App
 

@@ -10,6 +10,11 @@ export async function signAndSendTransaction(
 ): Promise<TransactionSignature> {
   assertWalletConnected(wallet);
 
+  if (isMobileWalletAdapterWallet(wallet) && wallet.signTransaction) {
+    assertWalletCanSign(wallet);
+    return signAndSendRawTransaction(connection, wallet, transaction, options);
+  }
+
   if (wallet.signAndSendTransaction) {
     const result = await wallet.signAndSendTransaction(transaction, options);
     return result.signature;
@@ -17,8 +22,21 @@ export async function signAndSendTransaction(
 
   assertWalletCanSign(wallet);
 
+  return signAndSendRawTransaction(connection, wallet, transaction, options);
+}
+
+async function signAndSendRawTransaction(
+  connection: Connection,
+  wallet: SolanaWallet & Required<Pick<SolanaWallet, "signTransaction">>,
+  transaction: SolanaTransaction,
+  options?: SendTransactionOptions,
+): Promise<TransactionSignature> {
   const signedTransaction = await wallet.signTransaction(transaction);
   const rawTransaction = signedTransaction.serialize();
 
   return connection.sendRawTransaction(rawTransaction, options);
+}
+
+function isMobileWalletAdapterWallet(wallet: SolanaWallet): boolean {
+  return wallet.source === "mobile-wallet-adapter";
 }

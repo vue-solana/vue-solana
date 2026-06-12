@@ -97,6 +97,23 @@ describe("Wallet Standard adapter", () => {
     expect(standardWallet.features[StandardDisconnect].disconnect).toHaveBeenCalledOnce();
   });
 
+  it("copies wallet source metadata onto adapted wallets", () => {
+    const standardWallet = createStandardWallet();
+    const walletInfo = {
+      name: standardWallet.name,
+      icon: standardWallet.icon,
+      chains: standardWallet.chains,
+      platform: "mobile",
+      source: "mobile-wallet-adapter",
+      accounts: [],
+      wallet: standardWallet,
+    } satisfies SolanaWalletInfo;
+    const wallet = adaptSolanaStandardWallet(walletInfo, { chain: "solana:devnet" });
+
+    expect(wallet.platform).toBe("mobile");
+    expect(wallet.source).toBe("mobile-wallet-adapter");
+  });
+
   it("starts disconnected when a standard wallet already exposes accounts", async () => {
     const standardWallet = createStandardWallet([account]) as Wallet & {
       emitAccountsChange(accounts: readonly WalletAccount[]): void;

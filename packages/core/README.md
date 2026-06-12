@@ -95,7 +95,7 @@ Direct subpaths:
 - `isWalletConnected(wallet)`: checks whether a wallet is connected and has a public key.
 - `assertWalletConnected(wallet)`: throws if the wallet is not connected.
 - `assertWalletCanSign(wallet)`: throws if the wallet cannot sign transactions.
-- `signAndSendTransaction(connection, wallet, transaction, options?)`: signs and sends a transaction using a configured wallet.
+- `signAndSendTransaction(connection, wallet, transaction, options?)`: signs and sends a transaction using a configured wallet. Android Mobile Wallet Adapter wallets prefer `signTransaction` plus app-side RPC submission when available so the app can reliably return the submitted signature.
 
 ## Wallet Interface
 

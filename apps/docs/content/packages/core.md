@@ -74,6 +74,9 @@ interface SolanaWallet {
   publicKey: PublicKey | null;
   connected: boolean;
   connecting?: boolean;
+  disconnecting?: boolean;
+  platform?: SolanaWalletInfo["platform"];
+  source?: SolanaWalletInfo["source"];
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
   signTransaction?: <T extends SolanaTransaction>(transaction: T) => Promise<T>;
@@ -148,7 +151,7 @@ Direct subpaths:
 - `isWalletConnected(wallet)`: checks whether a wallet is connected and has a public key.
 - `assertWalletConnected(wallet)`: throws if the wallet is not connected.
 - `assertWalletCanSign(wallet)`: throws if the wallet cannot sign transactions.
-- `signAndSendTransaction(connection, wallet, transaction, options?)`: signs and sends a transaction using a configured wallet.
+- `signAndSendTransaction(connection, wallet, transaction, options?)`: signs and sends a transaction using a configured wallet. Android Mobile Wallet Adapter wallets use `signTransaction` plus `connection.sendRawTransaction()` when available so the app owns submission and can reliably return the RPC signature after the wallet handoff.
 
 ## Known TypeScript Issue
 
