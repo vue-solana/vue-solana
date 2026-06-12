@@ -136,6 +136,8 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}) {
           onChange: () => triggerRef(wallet),
         });
         const cachedAdapter: SolanaWallet = {
+          platform: walletInfo.platform,
+          source: walletInfo.source,
           get publicKey() {
             return adaptedWallet.publicKey;
           },

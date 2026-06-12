@@ -143,6 +143,8 @@ export function adaptSolanaStandardWallet(
   });
 
   return {
+    platform: walletInfo.platform,
+    source: walletInfo.source,
     get publicKey() {
       return account ? new PublicKey(account.publicKey) : null;
     },

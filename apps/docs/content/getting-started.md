@@ -236,7 +236,7 @@ import { Buffer } from "buffer/";
 (globalThis as typeof globalThis & { Buffer: typeof Buffer }).Buffer = Buffer;
 ```
 
-The wallet will prompt you to approve the transaction. After approval, the example shows the transaction signature.
+The wallet will prompt you to approve the transaction. After approval, the example shows the transaction signature. On Android Mobile Wallet Adapter, Vue Solana prefers wallet signing plus app-side RPC submission when supported, which makes the returned signature more reliable after the wallet redirects back to the browser.
 
 ## More Reading
 
