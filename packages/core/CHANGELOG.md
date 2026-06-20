@@ -1,5 +1,19 @@
 # @vue-solana/core
 
+## 0.3.3
+
+### Patch Changes
+
+- 337b99f: Document the installable Vue Solana Agent Skill in the published package READMEs.
+
+## 0.3.2
+
+### Patch Changes
+
+- 5244d3b: Improve mobile wallet transaction completion handling across core transaction helpers and Vue transaction composables.
+
+  Replace the dynamic `@solana/web3-compat` import in `useBalance()` with a static `PublicKey` import to avoid ineffective dynamic import warnings in consuming Vite/Rollup apps.
+
 ## 0.3.1
 
 ### Patch Changes

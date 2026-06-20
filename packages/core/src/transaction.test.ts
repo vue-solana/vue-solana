@@ -22,6 +22,32 @@ describe("signAndSendTransaction", () => {
     expect(connection.sendRawTransaction).not.toHaveBeenCalled();
   });
 
+  it("prefers signing locally before sending for Mobile Wallet Adapter wallets", async () => {
+    const rawTransaction = new Uint8Array([1, 2, 3]);
+    const signedTransaction = {
+      serialize: vi.fn(() => rawTransaction),
+    } as unknown as SolanaTransaction;
+    const wallet = {
+      connected: true,
+      publicKey,
+      source: "mobile-wallet-adapter",
+      signTransaction: vi.fn().mockResolvedValue(signedTransaction),
+      signAndSendTransaction: vi.fn().mockResolvedValue({ signature: "wallet-signature" }),
+    } as unknown as SolanaWallet;
+    const connection = {
+      sendRawTransaction: vi.fn().mockResolvedValue("raw-signature"),
+    } as unknown as Connection;
+    const transaction = {} as SolanaTransaction;
+    const options = { skipPreflight: true };
+
+    await expect(signAndSendTransaction(connection, wallet, transaction, options)).resolves.toBe(
+      "raw-signature",
+    );
+    expect(wallet.signTransaction).toHaveBeenCalledWith(transaction);
+    expect(wallet.signAndSendTransaction).not.toHaveBeenCalled();
+    expect(connection.sendRawTransaction).toHaveBeenCalledWith(rawTransaction, options);
+  });
+
   it("signs and sends a raw transaction when the wallet cannot send directly", async () => {
     const rawTransaction = new Uint8Array([1, 2, 3]);
     const signedTransaction = {

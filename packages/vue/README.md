@@ -11,6 +11,7 @@ New to Solana? Start with the official docs and the project concepts guide:
 - [Solana Clusters](https://solana.com/docs/references/clusters)
 - [Vue Solana Concepts Guide](https://vue-solana-docs.vercel.app/concepts/solana-for-vue-developers)
 - [`@vue-solana/vue` docs](https://vue-solana-docs.vercel.app/packages/vue)
+- [Agent Skill](https://vue-solana-docs.vercel.app/agent-skill)
 - [Live demo](https://vue-solana-docs.vercel.app/demo)
 
 ## Install
@@ -169,7 +170,7 @@ await execute(transaction, {
 });
 ```
 
-The current wallet must be connected and support either `signAndSendTransaction` or `signTransaction`.
+The current wallet must be connected and support either `signAndSendTransaction` or `signTransaction`. Android Mobile Wallet Adapter wallets prefer `signTransaction` plus app-side RPC submission when available. `loading` is also cleared if a wallet adapter never returns a result; in that stale case, check the wallet or an explorer before retrying because chain status may be unknown.
 
 ## Example App
 
@@ -182,6 +183,16 @@ pnpm dev:vue
 Docs: <a href="https://vue-solana-docs.vercel.app/examples/vue-vite" target="_blank" rel="noopener noreferrer"><code>examples/vue-vite</code></a>
 
 Live demo: [vue-solana-docs.vercel.app/demo](https://vue-solana-docs.vercel.app/demo)
+
+## AI Agent Skill
+
+If you use an AI coding agent, install the Vue Solana Agent Skill for plugin setup, composable imports, wallet flow guidance, transaction gotchas, and verification commands:
+
+```sh
+npx skills add vue-solana/vue-solana --skill vue-solana
+```
+
+Docs: [Vue Solana Agent Skill](https://vue-solana-docs.vercel.app/agent-skill)
 
 ## API
 

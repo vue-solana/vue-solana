@@ -1,4 +1,4 @@
-import type { Commitment, PublicKey } from "@solana/web3-compat";
+import { PublicKey, type Commitment } from "@solana/web3-compat";
 import { onMounted, ref, toValue, watch, type MaybeRefOrGetter } from "vue";
 import { useConnection } from "./useConnection";
 import { tryUseSolana } from "./useSolana";
@@ -25,10 +25,7 @@ export function useBalance(
     error.value = null;
 
     try {
-      const publicKey =
-        typeof value === "string"
-          ? new (await import("@solana/web3-compat")).PublicKey(value)
-          : value;
+      const publicKey = typeof value === "string" ? new PublicKey(value) : value;
       balance.value = await connection.getBalance(publicKey, commitment);
       return balance.value;
     } catch (cause) {

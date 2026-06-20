@@ -165,6 +165,8 @@ Callback notes:
 - Apps with custom callback routes can also call `handleSolanaIosWalletCallback()` from `@vue-solana/core/ios-wallet`.
 - Use an HTTPS callback URL for browser apps. Custom schemes are mainly for native apps.
 
+For Android MWA transaction sends, Vue Solana asks the mobile wallet to sign and then submits the signed transaction through the app's RPC connection when the wallet supports `signTransaction`. This keeps the returned signature under app control and avoids a mobile handoff edge case where the wallet sends successfully but the browser page does not receive the wallet adapter response.
+
 ## Real Transfer Flow
 
 After a wallet is selected and connected, create a normal Solana transaction and send it with `useSignAndSendTransaction()`. Browser apps that use `@solana/web3-compat` transaction code should install `buffer` and import from `buffer/` so Vite/Nuxt use the browser polyfill instead of the Node builtin.

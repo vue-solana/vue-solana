@@ -109,10 +109,33 @@ Root `docs/` is kept for now as reference material:
 - [Solana Concepts For Vue Developers](./docs/solana-concepts.md)
 - [API Reference](./docs/api.md)
 - [Wallet Support](./docs/wallets.md)
+- [Agent Skill](./docs/agent-skill.md)
 - [Troubleshooting](./docs/troubleshooting.md)
 - [`@vue-solana/core` README](./packages/core/README.md)
 - [`@vue-solana/vue` README](./packages/vue/README.md)
 - [`@vue-solana/nuxt` README](./packages/nuxt/README.md)
+
+## Agent Skill
+
+This repository includes an installable Agent Skill for AI coding agents that support the Agent Skills format. The skill gives agents Vue Solana setup patterns, wallet flow guidance, Nuxt SSR caveats, transaction gotchas, and verification commands.
+
+```sh
+# Install all skills
+npx skills add vue-solana/vue-solana
+
+# Install the Vue Solana skill
+npx skills add vue-solana/vue-solana --skill vue-solana
+
+# List available skills
+npx skills add vue-solana/vue-solana --list
+
+# Install globally
+npx skills add vue-solana/vue-solana --global
+```
+
+Skill source: [`skills/vue-solana/SKILL.md`](./skills/vue-solana/SKILL.md)
+
+More details: [Agent Skill docs](./docs/agent-skill.md)
 
 ## Development
 

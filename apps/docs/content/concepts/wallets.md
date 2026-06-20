@@ -120,9 +120,11 @@ Platform notes:
 
 `SolanaWalletInfo.platform` is `"mobile"` and `SolanaWalletInfo.source` is `"mobile-wallet-adapter"` for the Android MWA wallet. Browser extension wallets use `platform: "browser"` and `source: "wallet-standard"`.
 
+For Android MWA transaction sends, Vue Solana asks the mobile wallet to sign and then submits the signed transaction through the app's RPC connection when the wallet supports `signTransaction`. This keeps the returned signature under app control and avoids a mobile handoff edge case where the wallet sends successfully but the browser page does not receive the wallet adapter response.
+
 ## Send A Transfer
 
-The examples include a real transfer form with recipient address and amount fields. It creates a Solana transaction, asks the connected wallet to sign/send, and displays the returned signature.
+The examples include a real transfer form with recipient address and amount fields. It creates a Solana transaction, asks the connected wallet to sign or send, and displays the returned signature.
 
 Browser apps that use `@solana/web3-compat` transaction code should install `buffer` and initialize it from `buffer/` before creating or serializing transactions:
 

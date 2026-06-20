@@ -34,6 +34,8 @@ export interface SolanaWallet {
   connected: boolean;
   connecting?: boolean;
   disconnecting?: boolean;
+  platform?: SolanaWalletInfo["platform"];
+  source?: SolanaWalletInfo["source"];
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
   signTransaction?: <T extends SolanaTransaction>(transaction: T) => Promise<T>;
