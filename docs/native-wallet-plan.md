@@ -14,16 +14,11 @@ Example completed feature format:
 
 ## [x] Android Mobile Native Wallets
 
-## [ ] iOS Browser Wallet Support
+## [x] iOS Browser Wallet Support
 
-- [ ] Research wallet-specific iOS universal link and deep link APIs for Phantom, Solflare, Backpack, and other major Solana wallets.
-- [ ] Define iOS wallet metadata in `SolanaWalletInfo`, including `platform`, `source`, `appUrl`, `installUrl`, callback URL requirements, and supported capabilities.
-- [ ] Add SSR-safe iOS runtime detection without assuming Mobile Wallet Adapter is available.
-- [ ] Add iOS wallet fallback entries to the unified wallet discovery path used by `useWallets()` without claiming unsupported signing capabilities.
-- [ ] Implement wallet-specific iOS connect, disconnect, sign, sign-all, and sign-and-send adapters only where the wallet protocol is documented and stable.
-- [ ] Add callback or redirect handling for iOS wallet flows where required.
-- [ ] Add tests for iOS discovery, unavailable wallet handling, link fallback behavior, callback validation, and unsupported capability reporting.
-- [ ] Document iOS browser limitations, supported wallets, setup requirements, callback URL requirements, and manual testing flow.
+## [ ] Future iOS Wallet Support
+
+- [ ] Research and add Trust Wallet support for iOS browser wallet flows through the unified `useWallets()` and `useWallet()` API.
 
 ## [ ] Desktop Native Wallets
 

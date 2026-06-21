@@ -1,7 +1,7 @@
 import { addImports, addPlugin, createResolver, defineNuxtModule } from "@nuxt/kit";
-import type { SolanaConfig } from "@vue-solana/core";
+import type { VueSolanaPluginOptions } from "@vue-solana/vue";
 
-export type ModuleOptions = SolanaConfig;
+export type ModuleOptions = VueSolanaPluginOptions;
 
 type DefinedNuxtModule = ReturnType<ReturnType<typeof defineNuxtModule<ModuleOptions>>["with"]>;
 
@@ -18,6 +18,7 @@ const VITE_OPTIMIZE_DEPS = [
   "eventemitter3",
   "rpc-websockets",
   "@solana-mobile/wallet-standard-mobile",
+  "tweetnacl",
 ];
 
 const module: DefinedNuxtModule = defineNuxtModule<ModuleOptions>({

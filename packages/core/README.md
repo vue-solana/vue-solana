@@ -112,17 +112,17 @@ const wallet: SolanaWallet = {
 };
 ```
 
-Browser extension wallets discovered through the Solana Wallet Standard are adapted into `SolanaWallet`. Android Mobile Wallet Adapter is registered through `@solana-mobile/wallet-standard-mobile` and then adapted through the same Wallet Standard adapter on supported Android Chrome clients. You can also provide a custom object that implements `SolanaWallet` for tests or custom adapters.
+Browser extension wallets discovered through the Solana Wallet Standard are adapted into `SolanaWallet`. Android Mobile Wallet Adapter is registered through `@solana-mobile/wallet-standard-mobile` and then adapted through the same Wallet Standard adapter on supported Android Chrome clients. iOS browser wallet entries for Phantom, Solflare, and Backpack are adapted through wallet-specific universal links. You can also provide a custom object that implements `SolanaWallet` for tests or custom adapters.
 
 Current wallet support:
 
 - Browser extension wallets through Wallet Standard packages.
 - Android native mobile wallets through `@solana-mobile/wallet-standard-mobile` on Android Chrome and Chrome PWAs.
+- iOS browser wallets for Phantom, Solflare, and Backpack through wallet-specific universal links.
 - Manual/custom wallet objects that implement `SolanaWallet`.
 
 Planned but not supported yet:
 
-- iOS browser wallets through wallet-specific universal link or deep link adapters.
 - Desktop native app wallets through wallet-specific protocol links or future native Wallet Standard registration.
 
 ## Examples

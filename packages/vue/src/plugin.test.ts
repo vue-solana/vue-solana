@@ -72,13 +72,21 @@ function createDeferred<T>() {
 }
 
 const {
+  adaptSolanaIosWallet,
   createSolanaContext,
+  getSolanaIosWallets,
   getRegisteredSolanaWallets,
+  handleSolanaIosWalletCallback,
+  isSolanaIosWalletInfo,
   registerSolanaMobileWallet,
   subscribeSolanaWallets,
 } = vi.hoisted(() => ({
+  adaptSolanaIosWallet: vi.fn(),
   createSolanaContext: vi.fn(),
+  getSolanaIosWallets: vi.fn(() => []),
   getRegisteredSolanaWallets: vi.fn(),
+  handleSolanaIosWalletCallback: vi.fn(),
+  isSolanaIosWalletInfo: vi.fn(() => false),
   registerSolanaMobileWallet: vi.fn(),
   subscribeSolanaWallets: vi.fn(),
 }));
@@ -111,12 +119,30 @@ vi.mock("@vue-solana/core/mobile-wallet", async (importOriginal) => {
   };
 });
 
+vi.mock("@vue-solana/core/ios-wallet", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@vue-solana/core/ios-wallet")>();
+
+  return {
+    ...actual,
+    adaptSolanaIosWallet,
+    getSolanaIosWallets,
+    handleSolanaIosWalletCallback,
+    isSolanaIosWalletInfo,
+  };
+});
+
 describe("createSolanaPlugin", () => {
   afterEach(() => {
     vi.useRealTimers();
     vi.restoreAllMocks();
     createSolanaContext.mockReset();
+    adaptSolanaIosWallet.mockReset();
+    getSolanaIosWallets.mockReset();
+    getSolanaIosWallets.mockReturnValue([]);
     getRegisteredSolanaWallets.mockReset();
+    handleSolanaIosWalletCallback.mockReset();
+    isSolanaIosWalletInfo.mockReset();
+    isSolanaIosWalletInfo.mockReturnValue(false);
     registerSolanaMobileWallet.mockReset();
     subscribeSolanaWallets.mockReset();
   });
@@ -436,6 +462,76 @@ describe("createSolanaPlugin", () => {
 
     expect(registerSolanaMobileWallet).not.toHaveBeenCalled();
     expect(getRegisteredSolanaWallets).toHaveBeenCalledOnce();
+  });
+
+  it("discovers and adapts iOS deep-link wallets through the unified wallet list", () => {
+    vi.spyOn(console, "info").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    mockSolanaContext();
+    const iosWalletInfo = {
+      name: "Phantom",
+      icon: "https://phantom.app/img/phantom-logo.svg",
+      chains: ["solana:devnet"],
+      platform: "mobile",
+      source: "deep-link",
+      accounts: [],
+      wallet: { id: "phantom" },
+    } satisfies SolanaWalletInfo;
+    const adaptedWallet = {
+      publicKey: null,
+      connected: false,
+      connect: vi.fn(),
+      disconnect: vi.fn(),
+    };
+    getRegisteredSolanaWallets.mockReturnValue([]);
+    getSolanaIosWallets.mockReturnValue([iosWalletInfo]);
+    isSolanaIosWalletInfo.mockReturnValue(true);
+    adaptSolanaIosWallet.mockReturnValue(adaptedWallet);
+    subscribeSolanaWallets.mockReturnValue(vi.fn());
+    let solana: ReturnType<typeof useSolana> | undefined;
+    let wallet: ReturnType<typeof useWallet> | undefined;
+
+    mount(
+      defineComponent({
+        setup() {
+          solana = useSolana();
+          wallet = useWallet();
+
+          return () => h("div");
+        },
+      }),
+      {
+        global: {
+          plugins: [
+            [
+              createSolanaPlugin({
+                mobileWallet: false,
+                iosWallet: { redirectUrl: "https://example.com/cb" },
+              }),
+            ],
+          ],
+        },
+      },
+    );
+
+    solana?.refreshWallets();
+    solana?.selectWallet(iosWalletInfo);
+
+    expect(handleSolanaIosWalletCallback).toHaveBeenCalledWith({ clearUrl: true });
+    expect(getSolanaIosWallets).toHaveBeenCalledWith({
+      chains: ["solana:devnet"],
+      cluster: "devnet",
+      redirectUrl: "https://example.com/cb",
+    });
+    expect(adaptSolanaIosWallet).toHaveBeenCalledWith(
+      iosWalletInfo,
+      expect.objectContaining({
+        chain: "solana:devnet",
+        cluster: "devnet",
+        redirectUrl: "https://example.com/cb",
+      }),
+    );
+    expect(wallet?.wallet.value).toBe(adaptedWallet);
   });
 
   it("keeps selected standard wallets disconnected until explicit connect", async () => {

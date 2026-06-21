@@ -152,9 +152,9 @@ const { publicKey, connected, connecting, connect, disconnect } = useWallet();
 </template>
 ```
 
-Browser extension wallets are discovered through the Solana Wallet Standard. Android Mobile Wallet Adapter wallets are registered through `@solana-mobile/wallet-standard-mobile` and exposed through the same `useWallets()` list on supported Android Chrome clients. `connect()` works after selecting a discovered wallet or configuring a custom `SolanaWallet`.
+Browser extension wallets are discovered through the Solana Wallet Standard. Android Mobile Wallet Adapter wallets are registered through `@solana-mobile/wallet-standard-mobile` and exposed through the same `useWallets()` list on supported Android Chrome clients. iOS Phantom, Solflare, and Backpack entries are exposed through wallet-specific universal links on iOS browsers. `connect()` works after selecting a discovered wallet or configuring a custom `SolanaWallet`.
 
-iOS browser wallet adapters and desktop native app wallet adapters are planned but not implemented yet.
+Desktop native app wallet adapters are planned but not implemented yet.
 
 Composables return inert SSR-safe state when no plugin context is available. Real RPC and wallet operations still require the plugin-provided client context.
 

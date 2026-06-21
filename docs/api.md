@@ -12,6 +12,7 @@ The root export remains supported. Direct subpath exports are also available whe
 
 - `@vue-solana/core/types`
 - `@vue-solana/core/clusters`
+- `@vue-solana/core/ios-wallet`
 - `@vue-solana/core/mobile-wallet`
 - `@vue-solana/core/rpc`
 - `@vue-solana/core/transaction`
@@ -88,6 +89,13 @@ interface SolanaWalletInfo {
   source?: "wallet-standard" | "mobile-wallet-adapter" | "deep-link" | "protocol-link";
   appUrl?: string;
   installUrl?: string;
+  callbackUrl?: string;
+  capabilities?: {
+    connect?: boolean;
+    signTransaction?: boolean;
+    signAllTransactions?: boolean;
+    signAndSendTransaction?: boolean;
+  };
   accounts: readonly {
     address: string;
     publicKey: Uint8Array;
@@ -103,7 +111,8 @@ Current metadata values:
 
 - Browser extension wallets use `platform: "browser"` and `source: "wallet-standard"`.
 - Android Mobile Wallet Adapter uses `platform: "mobile"` and `source: "mobile-wallet-adapter"`.
-- `deep-link` and `protocol-link` are reserved for planned iOS browser and desktop native wallet adapters.
+- iOS browser wallets use `platform: "mobile"` and `source: "deep-link"`.
+- `protocol-link` is reserved for planned desktop native wallet adapters.
 
 ### Helpers
 
@@ -125,6 +134,10 @@ Current metadata values:
 - `registerSolanaMobileWallet(options?)`: registers Android Mobile Wallet Adapter through Wallet Standard on supported Android Chrome clients.
 - `isSolanaMobileWalletSupported()`: returns whether the current runtime supports Android MWA web registration.
 - `getDefaultMobileWalletAppIdentity()`: derives a default Mobile Wallet Adapter app identity from the current document.
+- `getSolanaIosWallets(options?)`: returns Phantom, Solflare, and Backpack iOS browser wallet entries on iOS browsers.
+- `adaptSolanaIosWallet(walletInfo, options?)`: adapts an iOS deep-link wallet entry into `SolanaWallet`.
+- `handleSolanaIosWalletCallback(options?)`: validates and decrypts iOS wallet redirect callbacks.
+- `isSolanaIosBrowserWalletSupported()`: returns whether the current runtime should expose iOS browser wallet links.
 
 ## `@vue-solana/vue`
 
@@ -162,6 +175,9 @@ createApp(App).use(
         icon: "favicon.ico",
       },
     },
+    iosWallet: {
+      redirectUrl: "https://example.com/wallet-callback",
+    },
   }),
 );
 ```
@@ -169,6 +185,8 @@ createApp(App).use(
 `VueSolana` is an alias for `createSolanaPlugin`.
 
 `mobileWallet` controls Android Mobile Wallet Adapter registration. It defaults to enabled on supported Android Chrome clients, accepts `RegisterSolanaMobileWalletOptions`, and can be disabled with `mobileWallet: false`.
+
+`iosWallet` controls iOS browser wallet universal-link entries. It defaults to enabled on iOS browser clients, accepts app identity and redirect URL options, and can be disabled with `iosWallet: false`.
 
 ### `useSolana()`
 
@@ -205,7 +223,7 @@ Returns wallet state and actions:
 
 ### `useWallets()`
 
-Returns discovered wallet metadata and selection actions. Browser extension wallets and Android Mobile Wallet Adapter wallets share this list:
+Returns discovered wallet metadata and selection actions. Browser extension wallets, Android Mobile Wallet Adapter wallets, and supported iOS browser wallets share this list:
 
 - `wallets`
 - `selectedWallet`
@@ -256,6 +274,9 @@ export default defineNuxtConfig({
     endpoint: "https://api.devnet.solana.com",
     wsEndpoint: "wss://api.devnet.solana.com",
     commitment: "confirmed",
+    iosWallet: {
+      redirectUrl: "https://example.com/wallet-callback",
+    },
   },
 });
 ```

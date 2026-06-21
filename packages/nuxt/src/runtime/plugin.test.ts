@@ -28,6 +28,8 @@ describe("Nuxt runtime plugin", () => {
       wsEndpoint: "wss://rpc.example.com",
       commitment: "confirmed",
       autoConnect: true,
+      mobileWallet: false,
+      iosWallet: { redirectUrl: "https://example.com/wallet-callback" },
     };
     const vueApp = {
       use: vi.fn(),
@@ -42,6 +44,8 @@ describe("Nuxt runtime plugin", () => {
       wsEndpoint: "wss://rpc.example.com",
       commitment: "confirmed",
       autoConnect: true,
+      mobileWallet: false,
+      iosWallet: { redirectUrl: "https://example.com/wallet-callback" },
     });
     expect(vueApp.use).toHaveBeenCalledWith(createSolanaPlugin.mock.results[0]?.value);
   });

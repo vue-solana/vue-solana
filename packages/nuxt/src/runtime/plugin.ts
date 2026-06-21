@@ -1,9 +1,9 @@
 import { createSolanaPlugin } from "@vue-solana/vue";
-import type { SolanaConfig } from "@vue-solana/core";
+import type { VueSolanaPluginOptions } from "@vue-solana/vue";
 import { defineNuxtPlugin, useRuntimeConfig } from "#app";
 
 export default defineNuxtPlugin((nuxtApp) => {
-  const config = useRuntimeConfig().public.solana as SolanaConfig;
+  const config = useRuntimeConfig().public.solana as VueSolanaPluginOptions;
 
   nuxtApp.vueApp.use(
     createSolanaPlugin({
@@ -12,6 +12,8 @@ export default defineNuxtPlugin((nuxtApp) => {
       wsEndpoint: config.wsEndpoint,
       commitment: config.commitment,
       autoConnect: config.autoConnect,
+      mobileWallet: config.mobileWallet,
+      iosWallet: config.iosWallet,
     }),
   );
 });

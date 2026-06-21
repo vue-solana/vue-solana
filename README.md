@@ -53,11 +53,11 @@ Current wallet support:
 
 - Browser extension wallets through Wallet Standard packages: `@wallet-standard/app`, `@wallet-standard/base`, `@wallet-standard/features`, and Solana signing features from `@solana/wallet-standard-features`.
 - Android native mobile wallets through `@solana-mobile/wallet-standard-mobile`, which registers Solana Mobile Wallet Adapter as a Wallet Standard wallet on Android Chrome and Chrome PWAs.
+- iOS browser wallets for Phantom, Solflare, and Backpack through wallet-specific universal links.
 - Manual/custom wallet objects that implement the `SolanaWallet` interface.
 
 Not supported yet, but planned:
 
-- iOS browser wallets. Mobile Wallet Adapter web support is Android Chrome-only, so iOS requires wallet-specific universal link or deep link adapters.
 - Desktop native app wallets. These require wallet-specific protocol links or future native Wallet Standard registration.
 - A built-in wallet modal. Apps should build their own selection UI with `useWallets()`.
 

@@ -136,6 +136,7 @@ describe("Nuxt module", () => {
       "eventemitter3",
       "rpc-websockets",
       "@solana-mobile/wallet-standard-mobile",
+      "tweetnacl",
     ]);
   });
 });
