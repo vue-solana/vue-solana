@@ -16,6 +16,10 @@ Example completed feature format:
 
 ## [x] iOS Browser Wallet Support
 
+## [ ] Future iOS Wallet Support
+
+- [ ] Research and add Trust Wallet support for iOS browser wallet flows through the unified `useWallets()` and `useWallet()` API.
+
 ## [ ] Desktop Native Wallets
 
 - [ ] Research desktop native Solana wallet integration options, including Wallet Standard registration, protocol links, app install flows, and supported operating systems.
