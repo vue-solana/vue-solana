@@ -1,5 +1,18 @@
 # @vue-solana/vue
 
+## 0.4.0
+
+### Minor Changes
+
+- 04a4626: Add iOS mobile wallet support through the unified wallet flow.
+
+  The core package now exports iOS wallet helpers and related wallet metadata, while the Vue plugin and Nuxt module can configure and expose the mobile wallet flow alongside existing browser wallet support.
+
+### Patch Changes
+
+- Updated dependencies [04a4626]
+  - @vue-solana/core@0.4.0
+
 ## 0.3.3
 
 ### Patch Changes

@@ -1,6 +1,6 @@
 {
   "name": "@vue-solana/nuxt",
-  "version": "0.2.8",
+  "version": "0.3.0",
   "description": "Nuxt module for Solana applications.",
   "license": "MIT",
   "keywords": [
