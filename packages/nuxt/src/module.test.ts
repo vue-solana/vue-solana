@@ -30,6 +30,7 @@ interface ModuleUnderTest {
         vite: {
           optimizeDeps?: {
             include?: string[];
+            needsInterop?: string[];
           };
         };
       };
@@ -137,6 +138,8 @@ describe("Nuxt module", () => {
       "rpc-websockets",
       "@solana-mobile/wallet-standard-mobile",
       "tweetnacl",
+      "tweetnacl/nacl-fast.js",
     ]);
+    expect(vite.optimizeDeps.needsInterop).toEqual(["tweetnacl", "tweetnacl/nacl-fast.js"]);
   });
 });

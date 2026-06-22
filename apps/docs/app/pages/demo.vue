@@ -3,6 +3,7 @@ import { Buffer } from "buffer/";
 import { computed, onMounted, ref, shallowRef } from "vue";
 import type { PublicKey, TransactionInstruction } from "@solana/web3-compat";
 import { useTransaction } from "@vue-solana/vue";
+import docsPackage from "../../package.json";
 
 (globalThis as typeof globalThis & { Buffer: typeof Buffer }).Buffer = Buffer;
 
@@ -33,6 +34,13 @@ const mockTransaction = useTransaction(async (label: string) => {
   await new Promise((resolve) => window.setTimeout(resolve, 350));
   return `mock-${label}-${Date.now()}`;
 });
+const packageVersions = ["@vue-solana/core", "@vue-solana/vue", "@vue-solana/nuxt"].map((name) => ({
+  name,
+  version: docsPackage.dependencies[name as keyof typeof docsPackage.dependencies].replace(
+    /^[~^]/,
+    "",
+  ),
+}));
 
 const pluginInstalled = computed(() => Boolean(solana.connection && solana.endpoint));
 const walletPublicKey = computed(() => wallet.publicKey.value?.toBase58() ?? "Not connected");
@@ -316,6 +324,12 @@ function createTransferInstruction(
         This page runs against the published Vue Solana packages. Try RPC reads, balance lookup,
         Wallet Standard discovery, connect/disconnect, and a tiny real devnet transfer.
       </p>
+      <dl class="package-versions" aria-label="Vue Solana package versions">
+        <div v-for="pkg in packageVersions" :key="pkg.name">
+          <dt>{{ pkg.name }}</dt>
+          <dd>v{{ pkg.version }}</dd>
+        </div>
+      </dl>
     </section>
 
     <section class="demo-panel">
@@ -617,6 +631,41 @@ function createTransferInstruction(
   max-width: 13ch;
   margin-bottom: 0.85rem;
   font-size: clamp(2.35rem, 9vw, 5rem);
+}
+
+.package-versions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin: 1.2rem 0 0;
+}
+
+.package-versions div {
+  min-width: min(100%, 10.5rem);
+  padding: 0.65rem 0.8rem;
+  border: 1px solid rgb(167 139 250 / 0.45);
+  border-radius: 999px;
+  background: rgb(255 255 255 / 0.62);
+}
+
+:where(.dark, .dark-mode) .package-versions div {
+  border-color: rgb(196 181 253 / 0.28);
+  background: rgb(2 6 23 / 0.32);
+}
+
+.package-versions dt {
+  color: rgb(91 33 182);
+  font-size: 0.68rem;
+  font-weight: 900;
+}
+
+:where(.dark, .dark-mode) .package-versions dt {
+  color: rgb(221 214 254);
+}
+
+.package-versions dd {
+  margin-top: 0.1rem;
+  font-size: 0.95rem;
 }
 
 .demo-panel h2 {

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import bs58 from "bs58";
-import nacl from "tweetnacl";
+import * as nacl from "tweetnacl";
 import {
   adaptSolanaIosWallet,
   getSolanaIosWallets,
