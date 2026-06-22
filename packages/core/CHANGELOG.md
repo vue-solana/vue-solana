@@ -1,5 +1,11 @@
 # @vue-solana/core
 
+## 0.4.1
+
+### Patch Changes
+
+- f099ba0: Fix Nuxt docs demo loading with tweetnacl by improving Vite dependency interop handling and resolving tweetnacl safely in iOS wallet code.
+
 ## 0.4.0
 
 ### Minor Changes
