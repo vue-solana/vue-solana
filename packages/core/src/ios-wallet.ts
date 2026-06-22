@@ -1,6 +1,6 @@
 import { PublicKey, Transaction, VersionedTransaction } from "@solana/web3-compat";
 import bs58 from "bs58";
-import nacl from "tweetnacl";
+import * as naclModule from "tweetnacl";
 import type {
   SendTransactionOptions,
   SolanaChain,
@@ -9,6 +9,8 @@ import type {
   SolanaWallet,
   SolanaWalletInfo,
 } from "./types";
+
+const nacl = resolveTweetNaCl();
 
 export interface SolanaIosWalletAppIdentity {
   name: string;
@@ -42,6 +44,13 @@ interface IosWalletDefinition {
   signTransactionUrl?: string;
   signAllTransactionsUrl?: string;
   signAndSendTransactionUrl?: string;
+}
+
+function resolveTweetNaCl(): typeof naclModule {
+  const moduleDefault = (naclModule as typeof naclModule & { default?: typeof naclModule }).default;
+  const globalNacl = (globalThis as typeof globalThis & { nacl?: typeof naclModule }).nacl;
+
+  return ("box" in naclModule ? naclModule : (moduleDefault ?? globalNacl)) as typeof naclModule;
 }
 
 interface PendingIosWalletRequest {

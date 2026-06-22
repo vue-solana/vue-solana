@@ -19,6 +19,7 @@ const VITE_OPTIMIZE_DEPS = [
   "rpc-websockets",
   "@solana-mobile/wallet-standard-mobile",
   "tweetnacl",
+  "tweetnacl/nacl-fast.js",
 ];
 
 const module: DefinedNuxtModule = defineNuxtModule<ModuleOptions>({
@@ -44,6 +45,13 @@ const module: DefinedNuxtModule = defineNuxtModule<ModuleOptions>({
     nuxt.options.vite.optimizeDeps ??= {};
     nuxt.options.vite.optimizeDeps.include = Array.from(
       new Set([...(nuxt.options.vite.optimizeDeps.include ?? []), ...VITE_OPTIMIZE_DEPS]),
+    );
+    nuxt.options.vite.optimizeDeps.needsInterop = Array.from(
+      new Set([
+        ...(nuxt.options.vite.optimizeDeps.needsInterop ?? []),
+        "tweetnacl",
+        "tweetnacl/nacl-fast.js",
+      ]),
     );
 
     addPlugin({

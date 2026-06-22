@@ -15,4 +15,10 @@ export default defineNuxtConfig({
     "/demo": { ssr: false },
     "/**": { prerender: true },
   },
+  vite: {
+    optimizeDeps: {
+      include: ["tweetnacl", "tweetnacl/nacl-fast.js"],
+      needsInterop: ["tweetnacl", "tweetnacl/nacl-fast.js"],
+    },
+  },
 });
