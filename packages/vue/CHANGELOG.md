@@ -1,5 +1,12 @@
 # @vue-solana/vue
 
+## 0.4.1
+
+### Patch Changes
+
+- Updated dependencies [f099ba0]
+  - @vue-solana/core@0.4.1
+
 ## 0.4.0
 
 ### Minor Changes
