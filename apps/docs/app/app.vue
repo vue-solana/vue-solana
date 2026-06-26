@@ -3,6 +3,7 @@ const navLinks = [
   { label: "Get Started", to: "/getting-started" },
   { label: "Concepts", to: "/concepts/solana-for-vue-developers" },
   { label: "Packages", to: "/packages/vue" },
+  { label: "Roadmap", to: "/roadmap" },
   { label: "Examples", to: "/examples/vue-vite" },
   { label: "Agent Skill", to: "/agent-skill" },
   { label: "Demo", to: "/demo" },
