@@ -21,6 +21,7 @@ The project is early-stage. RPC setup, balance reads, browser extension wallet d
 - [Solana For Vue Developers](/concepts/solana-for-vue-developers)
 - [Clusters](/concepts/clusters)
 - [Wallets](/concepts/wallets)
+- [v1 Roadmap](/roadmap)
 - [Agent Skill](/agent-skill)
 - [Troubleshooting](/troubleshooting)
 

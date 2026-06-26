@@ -109,6 +109,7 @@ Root `docs/` is kept for now as reference material:
 - [Solana Concepts For Vue Developers](./docs/solana-concepts.md)
 - [API Reference](./docs/api.md)
 - [Wallet Support](./docs/wallets.md)
+- [v1 Roadmap](./docs/v1-roadmap.md)
 - [Agent Skill](./docs/agent-skill.md)
 - [Troubleshooting](./docs/troubleshooting.md)
 - [`@vue-solana/core` README](./packages/core/README.md)
