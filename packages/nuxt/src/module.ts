@@ -1,7 +1,7 @@
 import { addImports, addPlugin, createResolver, defineNuxtModule } from "@nuxt/kit";
 import type { VueSolanaPluginOptions } from "@vue-solana/vue";
 
-export type ModuleOptions = VueSolanaPluginOptions;
+export type ModuleOptions = Omit<VueSolanaPluginOptions, "wallet">;
 
 type DefinedNuxtModule = ReturnType<ReturnType<typeof defineNuxtModule<ModuleOptions>>["with"]>;
 
@@ -39,7 +39,7 @@ const module: DefinedNuxtModule = defineNuxtModule<ModuleOptions>({
       ...(typeof publicConfig.solana === "object" && publicConfig.solana !== null
         ? publicConfig.solana
         : {}),
-      ...options,
+      ...toPublicSolanaConfig(options),
     };
 
     nuxt.options.vite.optimizeDeps ??= {};
@@ -76,3 +76,11 @@ const module: DefinedNuxtModule = defineNuxtModule<ModuleOptions>({
 });
 
 export default module;
+
+function toPublicSolanaConfig(options: ModuleOptions): ModuleOptions {
+  const runtimeOptions = { ...options } as VueSolanaPluginOptions;
+
+  delete runtimeOptions.wallet;
+
+  return runtimeOptions;
+}

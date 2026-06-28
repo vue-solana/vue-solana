@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 import type { Wallet, WalletAccount } from "@wallet-standard/base";
 import { StandardConnect, StandardDisconnect, StandardEvents } from "@wallet-standard/features";
+import { SolanaSignTransaction } from "@solana/wallet-standard-features";
+import { PublicKey, SystemProgram, Transaction } from "@solana/web3-compat";
 import {
   adaptSolanaStandardWallet,
   getSolanaChain,
@@ -15,6 +17,21 @@ const account = {
   chains: ["solana:devnet"],
   features: [],
 } satisfies WalletAccount;
+
+function createTestTransaction() {
+  const publicKey = new PublicKey(account.address);
+
+  return new Transaction({
+    feePayer: new PublicKey(account.address),
+    recentBlockhash: "11111111111111111111111111111111",
+  }).add(
+    SystemProgram.transfer({
+      fromPubkey: publicKey,
+      toPubkey: publicKey,
+      lamports: 0,
+    }),
+  );
+}
 
 function createStandardWallet(accounts: readonly WalletAccount[] = []): Wallet {
   let eventsListener: ((properties: { accounts?: readonly WalletAccount[] }) => void) | null = null;
@@ -187,5 +204,30 @@ describe("Wallet Standard adapter", () => {
 
     expect(wallet.connected).toBe(false);
     expect(wallet.publicKey).toBeNull();
+  });
+
+  it("rejects signAllTransactions when a wallet returns fewer results than requested", async () => {
+    const standardWallet = createStandardWallet();
+    const signTransaction = vi.fn().mockResolvedValue([]);
+    standardWallet.features[SolanaSignTransaction] = {
+      version: "1.0.0",
+      supportedTransactionVersions: ["legacy"],
+      signTransaction,
+    };
+    const walletInfo = {
+      name: standardWallet.name,
+      icon: standardWallet.icon,
+      chains: standardWallet.chains,
+      accounts: [],
+      wallet: standardWallet,
+    } satisfies SolanaWalletInfo;
+    const wallet = adaptSolanaStandardWallet(walletInfo, { chain: "solana:devnet" });
+
+    await wallet.connect();
+
+    await expect(
+      wallet.signAllTransactions?.([createTestTransaction(), createTestTransaction()]),
+    ).rejects.toThrow("Solana wallet returned 0 signed transactions for 2 requested transactions");
+    expect(signTransaction).toHaveBeenCalledOnce();
   });
 });

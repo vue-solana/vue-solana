@@ -1,9 +1,9 @@
 import { createSolanaPlugin } from "@vue-solana/vue";
-import type { VueSolanaPluginOptions } from "@vue-solana/vue";
+import type { ModuleOptions } from "../module";
 import { defineNuxtPlugin, useRuntimeConfig } from "#app";
 
 export default defineNuxtPlugin((nuxtApp) => {
-  const config = useRuntimeConfig().public.solana as VueSolanaPluginOptions;
+  const config = useRuntimeConfig().public.solana as ModuleOptions;
 
   nuxtApp.vueApp.use(
     createSolanaPlugin({

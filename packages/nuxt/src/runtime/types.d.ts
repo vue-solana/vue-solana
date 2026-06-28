@@ -1,7 +1,7 @@
 declare module "nuxt/schema" {
-  import type { VueSolanaPluginOptions } from "@vue-solana/vue";
+  import type { ModuleOptions } from "../module";
 
   interface PublicRuntimeConfig {
-    solana?: VueSolanaPluginOptions;
+    solana?: ModuleOptions;
   }
 }

@@ -32,29 +32,11 @@ Example completed feature format:
 - [ ] Add tests for desktop native discovery, unavailable wallet handling, selection, connect failure, disconnect, and signing feature availability.
 - [ ] Document desktop native wallet setup, limitations, supported wallets, and manual testing flow.
 
-## [ ] Browser Extension Wallet Compatibility
+## [x] Browser Extension Wallet Compatibility
 
-- [ ] Verify existing Wallet Standard browser extension discovery still works after adding native wallet sources.
-- [ ] Ensure wallet selection continues to disconnect other connected adapters when a new wallet connects.
-- [ ] Preserve manual wallet injection through `setWallet()`.
-- [ ] Preserve SSR-safe behavior by returning no runtime wallets when `window` is unavailable.
-- [ ] Add regression tests around browser wallet discovery, selection, and signing.
-- [ ] Update docs to explain that browser extension, mobile native, and desktop native wallets share the same `useWallets()` and `useWallet()` flow.
+## [x] Public API And Types
 
-## [ ] Public API And Types
-
-- [ ] Extend wallet types with platform and source fields while keeping existing consumers source-compatible where possible.
-- [ ] Export any new adapter helpers from `@vue-solana/core`.
-- [ ] Confirm package export maps include new core modules.
-- [ ] Confirm Vue and Nuxt public composables do not need new names because native wallets use the unified `useWallets()` API.
-- [ ] Add or update API docs for new fields and helpers.
-
-## [ ] Nuxt Integration
-
-- [ ] Confirm native wallet discovery runs only on the client.
-- [ ] Update Nuxt runtime plugin only if new configuration is needed.
-- [ ] Add Nuxt module tests for any new runtime config or auto-import behavior.
-- [ ] Document Nuxt-specific setup and SSR caveats.
+## [x] Nuxt Integration
 
 ## [ ] Examples And Manual Testing
 

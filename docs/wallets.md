@@ -45,7 +45,7 @@ import { useWallet } from "@vue-solana/vue/useWallet";
 import { useWallets } from "@vue-solana/vue/useWallets";
 
 const { wallets, selectedWallet, selectWallet, refreshWallets } = useWallets();
-const { publicKey, connected, connecting, connect, disconnect } = useWallet();
+const { publicKey, connected, connecting, disconnecting, connect, disconnect } = useWallet();
 </script>
 
 <template>
@@ -68,7 +68,9 @@ const { publicKey, connected, connecting, connect, disconnect } = useWallet();
     <button type="button" :disabled="!selectedWallet || connected || connecting" @click="connect">
       {{ connecting ? "Connecting..." : "Connect" }}
     </button>
-    <button type="button" :disabled="!connected" @click="disconnect">Disconnect</button>
+    <button type="button" :disabled="!connected || disconnecting" @click="disconnect">
+      {{ disconnecting ? "Disconnecting..." : "Disconnect" }}
+    </button>
   </section>
 </template>
 ```
@@ -163,6 +165,8 @@ Callback notes:
 - Wallet apps redirect back to `redirectUrl` with encrypted callback data.
 - The Vue plugin handles callbacks during `refreshWallets()` and stores iOS wallet sessions in `sessionStorage`.
 - Apps with custom callback routes can also call `handleSolanaIosWalletCallback()` from `@vue-solana/core/ios-wallet`.
+- Pending iOS callback state expires after 10 minutes and is cleared after success, wallet errors, incomplete callbacks, decrypt failures, or invalid public keys.
+- iOS `connect()` opens a wallet app and waits for a redirect; the original promise does not resolve if the user cancels or never returns to the browser. Reflect that possibility in app UI.
 - Use an HTTPS callback URL for browser apps. Custom schemes are mainly for native apps.
 
 For Android MWA transaction sends, Vue Solana asks the mobile wallet to sign and then submits the signed transaction through the app's RPC connection when the wallet supports `signTransaction`. This keeps the returned signature under app control and avoids a mobile handoff edge case where the wallet sends successfully but the browser page does not receive the wallet adapter response.
@@ -231,6 +235,9 @@ const wallet: SolanaWallet = {
   publicKey: null,
   connected: false,
   connecting: false,
+  disconnecting: false,
+  platform: "browser",
+  source: "wallet-standard",
   connect: async () => {},
   disconnect: async () => {},
   signTransaction: async (transaction) => transaction,

@@ -103,6 +103,13 @@ interface SolanaWalletInfo {
   source?: "wallet-standard" | "mobile-wallet-adapter" | "deep-link" | "protocol-link";
   appUrl?: string;
   installUrl?: string;
+  callbackUrl?: string;
+  capabilities?: {
+    connect?: boolean;
+    signTransaction?: boolean;
+    signAllTransactions?: boolean;
+    signAndSendTransaction?: boolean;
+  };
   accounts: readonly SolanaWalletAccountInfo[];
   wallet: unknown;
 }
@@ -112,7 +119,8 @@ Current metadata values:
 
 - Browser extension wallets use `platform: "browser"` and `source: "wallet-standard"`.
 - Android Mobile Wallet Adapter uses `platform: "mobile"` and `source: "mobile-wallet-adapter"`.
-- `deep-link` and `protocol-link` are reserved for planned iOS browser and desktop native wallet adapters.
+- iOS browser wallets use `platform: "mobile"` and `source: "deep-link"`.
+- `protocol-link` is reserved for planned desktop native wallet adapters.
 
 ## Wallet Standard Helpers
 
@@ -127,8 +135,12 @@ Current metadata values:
 - `registerSolanaMobileWallet(options?)`: registers Android Mobile Wallet Adapter through Wallet Standard on supported Android Chrome clients.
 - `isSolanaMobileWalletSupported()`: returns whether the current runtime supports Android MWA web registration.
 - `getDefaultMobileWalletAppIdentity()`: derives a default Mobile Wallet Adapter app identity from the current document.
+- `getSolanaIosWallets(options?)`: returns Phantom, Solflare, and Backpack iOS browser wallet entries on iOS browsers.
+- `adaptSolanaIosWallet(walletInfo, options?)`: adapts an iOS deep-link wallet entry into `SolanaWallet`.
+- `handleSolanaIosWalletCallback(options?)`: validates and decrypts iOS wallet redirect callbacks.
+- `isSolanaIosBrowserWalletSupported()`: returns whether the current runtime should expose iOS browser wallet links.
 
-These helpers are SSR-safe. They return without registering when `window` is unavailable or when the browser is not an Android Chrome mobile web/PWA runtime.
+These helpers are SSR-safe. Android registration returns without registering when `window` is unavailable or when the browser is not an Android Chrome mobile web/PWA runtime. iOS wallet discovery returns an empty list when the browser is not an iOS browser runtime.
 
 ## Helpers
 
