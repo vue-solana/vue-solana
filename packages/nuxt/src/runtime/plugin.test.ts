@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import plugin from "./plugin";
-import { runtimeConfig, useRuntimeConfig } from "#app";
+import { runtimeConfig } from "../../../../test/stubs/nuxt-app";
+import { useRuntimeConfig } from "#app";
 
 const { createSolanaPlugin } = vi.hoisted(() => ({
   createSolanaPlugin: vi.fn(() => ({ install: vi.fn() })),
@@ -35,7 +36,9 @@ describe("Nuxt runtime plugin", () => {
       use: vi.fn(),
     };
 
-    plugin({ vueApp });
+    const runPlugin = plugin as (nuxtApp: { vueApp: typeof vueApp }) => void;
+
+    runPlugin({ vueApp });
 
     expect(useRuntimeConfig).toHaveBeenCalledOnce();
     expect(createSolanaPlugin).toHaveBeenCalledWith({

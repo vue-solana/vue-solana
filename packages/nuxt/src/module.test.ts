@@ -38,6 +38,13 @@ interface ModuleUnderTest {
   ) => void;
 }
 
+type TestViteOptions = {
+  optimizeDeps: {
+    include?: string[];
+    needsInterop?: string[];
+  };
+};
+
 describe("Nuxt module", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -105,7 +112,7 @@ describe("Nuxt module", () => {
 
   it("adds Vite dependency optimization for mobile wallet dev interop", async () => {
     const module = (await import("./module")).default as unknown as ModuleUnderTest;
-    const vite = {
+    const vite: TestViteOptions = {
       optimizeDeps: {
         include: ["existing-dependency", "qrcode"],
       },

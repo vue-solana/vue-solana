@@ -1,7 +1,8 @@
 import { mount } from "@vue/test-utils";
+import type { Mock } from "vitest";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { defineComponent, h } from "vue";
-import type { Wallet, WalletAccount } from "@wallet-standard/base";
+import type { SolanaWalletInfo } from "@vue-solana/core/types";
 import { createSolanaPlugin } from "./plugin";
 import { useSolana } from "./composables/useSolana";
 import { useWallet } from "./composables/useWallet";
@@ -9,17 +10,36 @@ import { useWallet } from "./composables/useWallet";
 const StandardConnect = "standard:connect";
 const StandardDisconnect = "standard:disconnect";
 
+type WalletAccount = SolanaWalletInfo["accounts"][number];
+
+type TestWalletAccount = WalletAccount & {
+  features: readonly string[];
+};
+
+type DisconnectFeature = {
+  disconnect: Mock;
+};
+
+type TestStandardWallet = {
+  version: "1.0.0";
+  name: string;
+  icon: string;
+  chains: readonly string[];
+  accounts: readonly TestWalletAccount[];
+  features: Record<string, unknown>;
+};
+
 const account = {
   address: "11111111111111111111111111111111",
   publicKey: new Uint8Array(32),
   chains: ["solana:devnet"],
   features: [],
-} satisfies WalletAccount;
+} satisfies TestWalletAccount;
 
 function createStandardWallet(
-  accounts: readonly WalletAccount[] = [],
+  accounts: readonly TestWalletAccount[] = [],
   name = "Test Wallet",
-): Wallet {
+): TestStandardWallet {
   return {
     version: "1.0.0",
     name,
@@ -36,10 +56,14 @@ function createStandardWallet(
         disconnect: vi.fn().mockResolvedValue(undefined),
       },
     },
-  } as Wallet;
+  };
 }
 
-function createWalletInfo(standardWallet: Wallet) {
+function getDisconnectFeature(wallet: TestStandardWallet): DisconnectFeature {
+  return wallet.features[StandardDisconnect] as DisconnectFeature;
+}
+
+function createWalletInfo(standardWallet: TestStandardWallet): SolanaWalletInfo {
   return {
     name: standardWallet.name,
     icon: standardWallet.icon,
@@ -83,8 +107,8 @@ const {
 } = vi.hoisted(() => ({
   adaptSolanaIosWallet: vi.fn(),
   createSolanaContext: vi.fn(),
-  getSolanaIosWallets: vi.fn(() => []),
-  getRegisteredSolanaWallets: vi.fn(),
+  getSolanaIosWallets: vi.fn<() => SolanaWalletInfo[]>(() => []),
+  getRegisteredSolanaWallets: vi.fn<() => SolanaWalletInfo[]>(),
   handleSolanaIosWalletCallback: vi.fn(),
   isSolanaIosWalletInfo: vi.fn(() => false),
   registerSolanaMobileWallet: vi.fn(),
@@ -616,7 +640,7 @@ describe("createSolanaPlugin", () => {
 
     expect(wallet?.connected.value).toBe(true);
     expect(wallet?.publicKey.value?.toBase58()).toBe(account.address);
-    expect(firstStandardWallet.features[StandardDisconnect].disconnect).not.toHaveBeenCalled();
+    expect(getDisconnectFeature(firstStandardWallet).disconnect).not.toHaveBeenCalled();
   });
 
   it("keeps a connected wallet connected when selection is cleared and restored", async () => {
@@ -653,7 +677,7 @@ describe("createSolanaPlugin", () => {
     solana?.selectWallet(null);
 
     expect(wallet?.wallet.value).toBeNull();
-    expect(standardWallet.features[StandardDisconnect].disconnect).not.toHaveBeenCalled();
+    expect(getDisconnectFeature(standardWallet).disconnect).not.toHaveBeenCalled();
 
     solana?.selectWallet(walletInfo);
 
@@ -697,7 +721,7 @@ describe("createSolanaPlugin", () => {
     await wallet?.connect();
 
     expect(wallet?.connected.value).toBe(true);
-    expect(firstStandardWallet.features[StandardDisconnect].disconnect).toHaveBeenCalledOnce();
+    expect(getDisconnectFeature(firstStandardWallet).disconnect).toHaveBeenCalledOnce();
 
     solana?.selectWallet(firstWalletInfo);
 
