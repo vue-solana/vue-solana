@@ -179,7 +179,17 @@ chore: scaffold vue solana monorepo
 When a user request matches an installed skill, use the `skill` tool before
 acting.
 
-- This repository stores installable skills under `.agents/skills/`.
+- The public installable skill lives under `skills/vue-solana/`; keep this as
+  the only skill exposed to `npx skills add vue-solana/vue-solana`.
+- Local development-only skills live under `.agents-dev/skills/`. This path is
+  ignored and untracked so it can support agent work without being included in
+  public skill installs.
+- Do not move development skills back under `.agents/skills/`; that path is
+  scanned by the skills CLI and would make public installs include internal
+  development skills.
+- If opencode does not surface `.agents-dev/skills/` after restart, configure
+  the local opencode skill paths to include `.agents-dev/skills` instead of
+  committing those skills under a scanned project-skill directory.
 - Always check whether an installed skill applies before acting.
 - If a skill clearly applies, use the `skill` tool before proceeding.
 - Do not skip required workflows from a loaded skill.

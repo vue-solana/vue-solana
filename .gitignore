@@ -36,3 +36,11 @@ pnpm-debug.log*
 # Temporary files
 tmp/
 temp/
+
+# Local agent development skills
+.agents/skills/
+.agents-dev/
+
+# Local opencode config
+opencode.json
+opencode.jsonc
