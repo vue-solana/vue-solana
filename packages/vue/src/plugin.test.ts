@@ -1,7 +1,7 @@
 import { mount } from "@vue/test-utils";
 import type { Mock } from "vitest";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { defineComponent, h } from "vue";
+import { defineComponent, h, type App } from "vue";
 import type { SolanaWalletInfo } from "@vue-solana/core/types";
 import { createSolanaPlugin } from "./plugin";
 import { useSolana } from "./composables/useSolana";
@@ -18,6 +18,10 @@ type TestWalletAccount = WalletAccount & {
 
 type DisconnectFeature = {
   disconnect: Mock;
+};
+
+type ConnectFeature = {
+  connect: Mock;
 };
 
 type TestStandardWallet = {
@@ -61,6 +65,10 @@ function createStandardWallet(
 
 function getDisconnectFeature(wallet: TestStandardWallet): DisconnectFeature {
   return wallet.features[StandardDisconnect] as DisconnectFeature;
+}
+
+function getConnectFeature(wallet: TestStandardWallet): ConnectFeature {
+  return wallet.features[StandardConnect] as ConnectFeature;
 }
 
 function createWalletInfo(standardWallet: TestStandardWallet): SolanaWalletInfo {
@@ -169,6 +177,7 @@ describe("createSolanaPlugin", () => {
     isSolanaIosWalletInfo.mockReturnValue(false);
     registerSolanaMobileWallet.mockReset();
     subscribeSolanaWallets.mockReset();
+    window.localStorage.clear();
   });
 
   it("provides Solana context and checks the RPC connection", async () => {
@@ -232,7 +241,7 @@ describe("createSolanaPlugin", () => {
       }),
       {
         global: {
-          plugins: [[createSolanaPlugin()]],
+          plugins: [[createSolanaPlugin({ mobileWallet: false })]],
         },
       },
     );
@@ -314,7 +323,7 @@ describe("createSolanaPlugin", () => {
       }),
       {
         global: {
-          plugins: [[createSolanaPlugin()]],
+          plugins: [[createSolanaPlugin({ mobileWallet: false })]],
         },
       },
     );
@@ -367,7 +376,7 @@ describe("createSolanaPlugin", () => {
       }),
       {
         global: {
-          plugins: [[createSolanaPlugin()]],
+          plugins: [[createSolanaPlugin({ mobileWallet: false })]],
         },
       },
     );
@@ -595,6 +604,435 @@ describe("createSolanaPlugin", () => {
 
     expect(wallet?.connected.value).toBe(true);
     expect(wallet?.publicKey.value?.toBase58()).toBe(account.address);
+  });
+
+  it("persists wallet selection without auto-connecting by default", () => {
+    vi.spyOn(console, "info").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const standardWallet = createStandardWallet([account]);
+    const walletInfo = createWalletInfo(standardWallet);
+    mockSolanaContext();
+    getRegisteredSolanaWallets.mockReturnValue([walletInfo]);
+    subscribeSolanaWallets.mockReturnValue(vi.fn());
+    let solana: ReturnType<typeof useSolana> | undefined;
+    let wallet: ReturnType<typeof useWallet> | undefined;
+
+    mount(
+      defineComponent({
+        setup() {
+          solana = useSolana();
+          wallet = useWallet();
+
+          return () => h("div");
+        },
+      }),
+      {
+        global: {
+          plugins: [[createSolanaPlugin({ mobileWallet: false })]],
+        },
+      },
+    );
+
+    solana?.refreshWallets();
+    solana?.selectWallet(walletInfo);
+
+    expect(window.localStorage.getItem("vue-solana:selected-wallet")).toBe(
+      JSON.stringify({ name: "Test Wallet" }),
+    );
+    expect(getConnectFeature(standardWallet).connect).not.toHaveBeenCalled();
+    expect(wallet?.connected.value).toBe(false);
+  });
+
+  it("restores a persisted wallet selection without connecting when autoConnect is disabled", () => {
+    vi.spyOn(console, "info").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    window.localStorage.setItem(
+      "vue-solana:selected-wallet",
+      JSON.stringify({ name: "Test Wallet" }),
+    );
+    const standardWallet = createStandardWallet([account]);
+    const walletInfo = createWalletInfo(standardWallet);
+    mockSolanaContext();
+    getRegisteredSolanaWallets.mockReturnValue([walletInfo]);
+    subscribeSolanaWallets.mockReturnValue(vi.fn());
+    let solana: ReturnType<typeof useSolana> | undefined;
+    let wallet: ReturnType<typeof useWallet> | undefined;
+
+    mount(
+      defineComponent({
+        setup() {
+          solana = useSolana();
+          wallet = useWallet();
+
+          return () => h("div");
+        },
+      }),
+      {
+        global: {
+          plugins: [[createSolanaPlugin({ autoConnect: false, mobileWallet: false })]],
+        },
+      },
+    );
+
+    solana?.refreshWallets();
+
+    expect(solana?.selectedWallet.value).toBe(walletInfo);
+    expect(wallet?.wallet.value).not.toBeNull();
+    expect(getConnectFeature(standardWallet).connect).not.toHaveBeenCalled();
+    expect(wallet?.connected.value).toBe(false);
+  });
+
+  it("restores wallets by name, platform, and source", () => {
+    vi.spyOn(console, "info").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    window.localStorage.setItem(
+      "vue-solana:selected-wallet",
+      JSON.stringify({
+        name: "Shared Wallet",
+        platform: "mobile",
+        source: "mobile-wallet-adapter",
+      }),
+    );
+    const browserWallet = createWalletInfo(createStandardWallet([account], "Shared Wallet"));
+    browserWallet.platform = "browser";
+    browserWallet.source = "wallet-standard";
+    const mobileWallet = createWalletInfo(createStandardWallet([account], "Shared Wallet"));
+    mobileWallet.platform = "mobile";
+    mobileWallet.source = "mobile-wallet-adapter";
+    mockSolanaContext();
+    getRegisteredSolanaWallets.mockReturnValue([browserWallet, mobileWallet]);
+    subscribeSolanaWallets.mockReturnValue(vi.fn());
+    let solana: ReturnType<typeof useSolana> | undefined;
+
+    mount(
+      defineComponent({
+        setup() {
+          solana = useSolana();
+
+          return () => h("div");
+        },
+      }),
+      {
+        global: {
+          plugins: [[createSolanaPlugin({ autoConnect: false, mobileWallet: false })]],
+        },
+      },
+    );
+
+    solana?.refreshWallets();
+
+    expect(solana?.selectedWallet.value).toBe(mobileWallet);
+  });
+
+  it("ignores invalid persisted wallet JSON", () => {
+    vi.spyOn(console, "info").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    window.localStorage.setItem("vue-solana:selected-wallet", "not json");
+    const standardWallet = createStandardWallet([account]);
+    const walletInfo = createWalletInfo(standardWallet);
+    mockSolanaContext();
+    getRegisteredSolanaWallets.mockReturnValue([walletInfo]);
+    subscribeSolanaWallets.mockReturnValue(vi.fn());
+    let solana: ReturnType<typeof useSolana> | undefined;
+
+    mount(
+      defineComponent({
+        setup() {
+          solana = useSolana();
+
+          return () => h("div");
+        },
+      }),
+      {
+        global: {
+          plugins: [[createSolanaPlugin({ autoConnect: true, mobileWallet: false })]],
+        },
+      },
+    );
+
+    expect(() => solana?.refreshWallets()).not.toThrow();
+    expect(solana?.selectedWallet.value).toBeNull();
+    expect(getConnectFeature(standardWallet).connect).not.toHaveBeenCalled();
+  });
+
+  it("ignores persisted wallet selection when storage reads fail", () => {
+    vi.spyOn(console, "info").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
+      throw new Error("storage blocked");
+    });
+    const standardWallet = createStandardWallet([account]);
+    const walletInfo = createWalletInfo(standardWallet);
+    mockSolanaContext();
+    getRegisteredSolanaWallets.mockReturnValue([walletInfo]);
+    subscribeSolanaWallets.mockReturnValue(vi.fn());
+    let solana: ReturnType<typeof useSolana> | undefined;
+
+    mount(
+      defineComponent({
+        setup() {
+          solana = useSolana();
+
+          return () => h("div");
+        },
+      }),
+      {
+        global: {
+          plugins: [[createSolanaPlugin({ autoConnect: true, mobileWallet: false })]],
+        },
+      },
+    );
+
+    expect(() => solana?.refreshWallets()).not.toThrow();
+    expect(solana?.selectedWallet.value).toBeNull();
+    expect(getConnectFeature(standardWallet).connect).not.toHaveBeenCalled();
+  });
+
+  it("auto-connects only a restored persisted wallet when enabled", async () => {
+    vi.spyOn(console, "info").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    window.localStorage.setItem(
+      "vue-solana:selected-wallet",
+      JSON.stringify({ name: "Test Wallet" }),
+    );
+    const standardWallet = createStandardWallet([account]);
+    const walletInfo = createWalletInfo(standardWallet);
+    mockSolanaContext();
+    getRegisteredSolanaWallets.mockReturnValue([walletInfo]);
+    subscribeSolanaWallets.mockReturnValue(vi.fn());
+    let solana: ReturnType<typeof useSolana> | undefined;
+    let wallet: ReturnType<typeof useWallet> | undefined;
+
+    mount(
+      defineComponent({
+        setup() {
+          solana = useSolana();
+          wallet = useWallet();
+
+          return () => h("div");
+        },
+      }),
+      {
+        global: {
+          plugins: [[createSolanaPlugin({ autoConnect: true, mobileWallet: false })]],
+        },
+      },
+    );
+
+    solana?.refreshWallets();
+
+    await vi.waitFor(() => {
+      expect(wallet?.connected.value).toBe(true);
+    });
+
+    expect(getConnectFeature(standardWallet).connect).toHaveBeenCalledOnce();
+    expect(wallet?.publicKey.value?.toBase58()).toBe(account.address);
+  });
+
+  it("restores and auto-connects a persisted Android mobile wallet after delayed registration", async () => {
+    vi.spyOn(console, "info").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    window.localStorage.setItem(
+      "vue-solana:selected-wallet",
+      JSON.stringify({
+        name: "Mobile Wallet Adapter",
+        platform: "mobile",
+        source: "mobile-wallet-adapter",
+      }),
+    );
+    const standardWallet = createStandardWallet([account], "Mobile Wallet Adapter");
+    const mobileWallet = createWalletInfo(standardWallet);
+    mobileWallet.platform = "mobile";
+    mobileWallet.source = "mobile-wallet-adapter";
+    mockSolanaContext();
+    getRegisteredSolanaWallets.mockReturnValueOnce([]).mockReturnValueOnce([mobileWallet]);
+    subscribeSolanaWallets.mockReturnValue(vi.fn());
+    let solana: ReturnType<typeof useSolana> | undefined;
+    let wallet: ReturnType<typeof useWallet> | undefined;
+
+    mount(
+      defineComponent({
+        setup() {
+          solana = useSolana();
+          wallet = useWallet();
+
+          return () => h("div");
+        },
+      }),
+      {
+        global: {
+          plugins: [[createSolanaPlugin({ autoConnect: true })]],
+        },
+      },
+    );
+
+    solana?.refreshWallets();
+
+    await vi.waitFor(() => {
+      expect(registerSolanaMobileWallet).toHaveBeenCalledWith({ chains: ["solana:devnet"] });
+      expect(wallet?.connected.value).toBe(true);
+    });
+
+    expect(solana?.selectedWallet.value).toBe(mobileWallet);
+    expect(getConnectFeature(standardWallet).connect).toHaveBeenCalledOnce();
+    expect(wallet?.publicKey.value?.toBase58()).toBe(account.address);
+  });
+
+  it("does not auto-connect arbitrary discovered wallets without persisted selection", () => {
+    vi.spyOn(console, "info").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const standardWallet = createStandardWallet([account]);
+    const walletInfo = createWalletInfo(standardWallet);
+    mockSolanaContext();
+    getRegisteredSolanaWallets.mockReturnValue([walletInfo]);
+    subscribeSolanaWallets.mockReturnValue(vi.fn());
+    let solana: ReturnType<typeof useSolana> | undefined;
+
+    mount(
+      defineComponent({
+        setup() {
+          solana = useSolana();
+
+          return () => h("div");
+        },
+      }),
+      {
+        global: {
+          plugins: [[createSolanaPlugin({ autoConnect: true, mobileWallet: false })]],
+        },
+      },
+    );
+
+    solana?.refreshWallets();
+
+    expect(solana?.selectedWallet.value).toBeNull();
+    expect(getConnectFeature(standardWallet).connect).not.toHaveBeenCalled();
+  });
+
+  it("keeps missing persisted wallet selections disconnected and stored", () => {
+    vi.spyOn(console, "info").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const storedSelection = JSON.stringify({ name: "Missing Wallet" });
+    window.localStorage.setItem("vue-solana:selected-wallet", storedSelection);
+    const standardWallet = createStandardWallet([account]);
+    const walletInfo = createWalletInfo(standardWallet);
+    mockSolanaContext();
+    getRegisteredSolanaWallets.mockReturnValue([walletInfo]);
+    subscribeSolanaWallets.mockReturnValue(vi.fn());
+    let solana: ReturnType<typeof useSolana> | undefined;
+
+    mount(
+      defineComponent({
+        setup() {
+          solana = useSolana();
+
+          return () => h("div");
+        },
+      }),
+      {
+        global: {
+          plugins: [[createSolanaPlugin({ autoConnect: true, mobileWallet: false })]],
+        },
+      },
+    );
+
+    solana?.refreshWallets();
+
+    expect(solana?.selectedWallet.value).toBeNull();
+    expect(getConnectFeature(standardWallet).connect).not.toHaveBeenCalled();
+    expect(window.localStorage.getItem("vue-solana:selected-wallet")).toBe(storedSelection);
+  });
+
+  it("removes persisted wallet selection when selection is cleared", () => {
+    vi.spyOn(console, "info").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const standardWallet = createStandardWallet([account]);
+    const walletInfo = createWalletInfo(standardWallet);
+    mockSolanaContext();
+    getRegisteredSolanaWallets.mockReturnValue([walletInfo]);
+    subscribeSolanaWallets.mockReturnValue(vi.fn());
+    let solana: ReturnType<typeof useSolana> | undefined;
+
+    mount(
+      defineComponent({
+        setup() {
+          solana = useSolana();
+
+          return () => h("div");
+        },
+      }),
+      {
+        global: {
+          plugins: [[createSolanaPlugin({ mobileWallet: false })]],
+        },
+      },
+    );
+
+    solana?.refreshWallets();
+    solana?.selectWallet(walletInfo);
+    solana?.selectWallet(null);
+
+    expect(window.localStorage.getItem("vue-solana:selected-wallet")).toBeNull();
+  });
+
+  it("keeps wallet selection working when browser storage fails", () => {
+    vi.spyOn(console, "info").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+      throw new Error("storage blocked");
+    });
+    const standardWallet = createStandardWallet([account]);
+    const walletInfo = createWalletInfo(standardWallet);
+    mockSolanaContext();
+    getRegisteredSolanaWallets.mockReturnValue([walletInfo]);
+    subscribeSolanaWallets.mockReturnValue(vi.fn());
+    let solana: ReturnType<typeof useSolana> | undefined;
+    let wallet: ReturnType<typeof useWallet> | undefined;
+
+    mount(
+      defineComponent({
+        setup() {
+          solana = useSolana();
+          wallet = useWallet();
+
+          return () => h("div");
+        },
+      }),
+      {
+        global: {
+          plugins: [[createSolanaPlugin({ mobileWallet: false })]],
+        },
+      },
+    );
+
+    solana?.refreshWallets();
+
+    expect(() => solana?.selectWallet(walletInfo)).not.toThrow();
+    expect(solana?.selectedWallet.value).toBe(walletInfo);
+    expect(wallet?.wallet.value).not.toBeNull();
+  });
+
+  it("keeps browser-only reconnect behavior inert without window", () => {
+    vi.spyOn(console, "info").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const windowDescriptor = Object.getOwnPropertyDescriptor(globalThis, "window");
+    mockSolanaContext();
+
+    Object.defineProperty(globalThis, "window", {
+      configurable: true,
+      value: undefined,
+    });
+
+    try {
+      expect(() =>
+        createSolanaPlugin({ autoConnect: true }).install({ provide: vi.fn() } as unknown as App),
+      ).not.toThrow();
+      expect(createSolanaContext).toHaveBeenCalledWith({ autoConnect: true });
+    } finally {
+      if (windowDescriptor) {
+        Object.defineProperty(globalThis, "window", windowDescriptor);
+      }
+    }
   });
 
   it("keeps a connected wallet connected when it is reselected", async () => {

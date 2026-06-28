@@ -24,6 +24,9 @@ export interface VueSolanaPluginOptions extends SolanaConfig {
 }
 
 const RPC_CHECK_TIMEOUT_MS = 10_000;
+const SELECTED_WALLET_STORAGE_KEY = "vue-solana:selected-wallet";
+
+type PersistedSelectedWallet = Pick<SolanaWalletInfo, "name" | "platform" | "source">;
 
 export function createSolanaPlugin(options: VueSolanaPluginOptions = {}) {
   return {
@@ -38,6 +41,7 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}) {
       const adaptedWallets = new WeakMap<object, SolanaWallet>();
       let unsubscribeWallets: (() => void) | null = null;
       let mobileWalletRegistrationPromise: Promise<void> | null = null;
+      let attemptedAutoConnectWallet: string | null = null;
       let rpcCheckId = 0;
 
       async function checkConnection() {
@@ -88,6 +92,7 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}) {
         unsubscribeWallets ??= subscribeSolanaWallets(refreshWallets);
         handleIosWalletCallback();
         wallets.value = getDiscoveredWallets();
+        let restoredWallet: SolanaWalletInfo | null = null;
 
         if (selectedWallet.value) {
           selectedWallet.value =
@@ -97,10 +102,25 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}) {
           if (!selectedWallet.value) {
             wallet.value = options.wallet ?? null;
           }
+        } else {
+          const persistedWallet = readSelectedWallet();
+          restoredWallet = persistedWallet
+            ? (wallets.value.find((nextWallet) => isSameWallet(nextWallet, persistedWallet)) ??
+              null)
+            : null;
+
+          if (restoredWallet) {
+            selectedWallet.value = restoredWallet;
+            wallet.value = getAdaptedWallet(restoredWallet);
+          }
         }
 
         if (options.mobileWallet !== false) {
           registerMobileWallets();
+        }
+
+        if (restoredWallet) {
+          autoConnectWallet(restoredWallet);
         }
       }
 
@@ -111,7 +131,7 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}) {
               chains: [getSolanaChain(context.cluster)],
               ...(options.mobileWallet || {}),
             });
-            wallets.value = getDiscoveredWallets();
+            refreshWallets();
           })
           .catch((cause) => {
             console.error("[Vue Solana] Mobile wallet registration failed", cause);
@@ -124,6 +144,35 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}) {
       function selectWallet(nextWallet: SolanaWalletInfo | null) {
         selectedWallet.value = nextWallet;
         wallet.value = nextWallet ? getAdaptedWallet(nextWallet) : (options.wallet ?? null);
+        writeSelectedWallet(nextWallet);
+      }
+
+      function autoConnectWallet(walletInfo: SolanaWalletInfo) {
+        if (!options.autoConnect) {
+          return;
+        }
+
+        const activeWallet = wallet.value;
+        const storageValue = stringifySelectedWallet(walletInfo);
+
+        if (
+          !activeWallet ||
+          activeWallet.connected ||
+          activeWallet.connecting ||
+          attemptedAutoConnectWallet === storageValue
+        ) {
+          return;
+        }
+
+        attemptedAutoConnectWallet = storageValue;
+        void activeWallet
+          .connect()
+          .catch((cause) => {
+            console.error("[Vue Solana] Wallet auto-connect failed", cause);
+          })
+          .finally(() => {
+            triggerRef(wallet);
+          });
       }
 
       function getAdaptedWallet(walletInfo: SolanaWalletInfo) {
@@ -236,6 +285,7 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}) {
         setWallet(nextWallet) {
           selectedWallet.value = null;
           wallet.value = nextWallet;
+          writeSelectedWallet(null);
         },
       };
 
@@ -254,12 +304,84 @@ function isObject(value: unknown): value is object {
   return (typeof value === "object" && value !== null) || typeof value === "function";
 }
 
-function isSameWallet(wallet: SolanaWalletInfo, selectedWallet: SolanaWalletInfo | null) {
+function isSameWallet(wallet: SolanaWalletInfo, selectedWallet: PersistedSelectedWallet | null) {
   return (
     wallet.name === selectedWallet?.name &&
     wallet.source === selectedWallet.source &&
     wallet.platform === selectedWallet.platform
   );
+}
+
+function readSelectedWallet(): PersistedSelectedWallet | null {
+  const storage = getLocalStorage();
+
+  if (!storage) {
+    return null;
+  }
+
+  try {
+    const value = storage.getItem(SELECTED_WALLET_STORAGE_KEY);
+
+    if (!value) {
+      return null;
+    }
+
+    const wallet = JSON.parse(value) as Partial<PersistedSelectedWallet>;
+
+    return typeof wallet.name === "string"
+      ? {
+          name: wallet.name,
+          platform: wallet.platform,
+          source: wallet.source,
+        }
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function writeSelectedWallet(wallet: SolanaWalletInfo | null) {
+  const storage = getLocalStorage();
+
+  if (!storage) {
+    return;
+  }
+
+  try {
+    if (wallet) {
+      storage.setItem(SELECTED_WALLET_STORAGE_KEY, stringifySelectedWallet(wallet));
+    } else {
+      storage.removeItem(SELECTED_WALLET_STORAGE_KEY);
+    }
+  } catch {
+    // Storage can be unavailable in private browsing or constrained webviews.
+  }
+}
+
+function stringifySelectedWallet(wallet: PersistedSelectedWallet): string {
+  const value: PersistedSelectedWallet = { name: wallet.name };
+
+  if (wallet.platform) {
+    value.platform = wallet.platform;
+  }
+
+  if (wallet.source) {
+    value.source = wallet.source;
+  }
+
+  return JSON.stringify(value);
+}
+
+function getLocalStorage(): Storage | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  try {
+    return window.localStorage;
+  } catch {
+    return null;
+  }
 }
 
 export const VueSolana = createSolanaPlugin;

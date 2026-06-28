@@ -171,4 +171,45 @@ describe("Nuxt module", () => {
       cluster: "devnet",
     });
   });
+
+  it("serializes reconnect and native wallet options into public runtime config", async () => {
+    const module = (await import("./module")).default as unknown as ModuleUnderTest;
+    const publicConfig: Record<string, unknown> = {};
+
+    module.setup(
+      {
+        autoConnect: true,
+        mobileWallet: {
+          appIdentity: {
+            name: "Vue Solana",
+            uri: "https://example.com",
+          },
+        },
+        iosWallet: {
+          redirectUrl: "https://example.com/wallet-callback",
+        },
+      },
+      {
+        options: {
+          runtimeConfig: {
+            public: publicConfig,
+          },
+          vite: {},
+        },
+      },
+    );
+
+    expect(publicConfig.solana).toEqual({
+      autoConnect: true,
+      mobileWallet: {
+        appIdentity: {
+          name: "Vue Solana",
+          uri: "https://example.com",
+        },
+      },
+      iosWallet: {
+        redirectUrl: "https://example.com/wallet-callback",
+      },
+    });
+  });
 });

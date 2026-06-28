@@ -30,19 +30,19 @@ pnpm test:e2e
 
 ## Phase 1: Public API Stabilization
 
-Status: planned.
+Status: complete.
 
 The current packages expose a useful API, but v1 should not ship with public options that are only placeholders.
 
 Tasks:
 
-- [ ] Decide whether `autoConnect` is part of v1.
-- [ ] If `autoConnect` ships, implement real persisted-wallet reconnect behavior.
-- [ ] If `autoConnect` does not ship, remove it from `SolanaConfig`, Nuxt module options, docs, and examples before v1.
-- [ ] Define stable public exports for `@vue-solana/core`, `@vue-solana/vue`, and `@vue-solana/nuxt`.
-- [ ] Confirm every documented subpath export exists in package export maps.
-- [ ] Add a v1 compatibility note for the current `@solana/web3-compat` dependency and its type metadata workaround.
-- [ ] Add package-facing changesets for any public API changes made during v1 work.
+- [x] Decide whether `autoConnect` is part of v1.
+- [x] If `autoConnect` ships, implement real persisted-wallet reconnect behavior.
+- [x] If `autoConnect` does not ship, remove it from `SolanaConfig`, Nuxt module options, docs, and examples before v1. Not applicable because `autoConnect` ships.
+- [x] Define stable public exports for `@vue-solana/core`, `@vue-solana/vue`, and `@vue-solana/nuxt`.
+- [x] Confirm every documented subpath export exists in package export maps.
+- [x] Add a v1 compatibility note for the current `@solana/web3-compat` dependency and its type metadata workaround.
+- [x] Add package-facing changesets for any public API changes made during v1 work.
 
 Acceptance criteria:
 
@@ -52,22 +52,22 @@ Acceptance criteria:
 
 ## Phase 2: Wallet UX Foundations
 
-Status: planned.
+Status: complete.
 
 Wallet discovery works today, but production apps need predictable selection restore and reconnect semantics.
 
 Tasks:
 
-- [ ] Add a persisted wallet selection key with a documented storage format.
-- [ ] Persist only user-selected wallet identity, not private keys or sensitive wallet session data.
-- [ ] Restore the selected wallet on client boot when the same wallet is discovered again.
-- [ ] Implement `autoConnect` only for a previously selected wallet and only when explicitly enabled.
-- [ ] Never auto-connect an arbitrary installed wallet.
-- [ ] Keep SSR behavior inert when `window` and browser storage are unavailable.
-- [ ] Preserve manual wallet injection through `setWallet()`.
-- [ ] Ensure selecting a new wallet still disconnects any other connected adapted wallet.
-- [ ] Add tests for persistence, restore, disabled `autoConnect`, enabled `autoConnect`, missing wallet, storage failure, and SSR/no-window behavior.
-- [ ] Document wallet selection persistence and auto-connect behavior in Vue, Nuxt, and wallet docs.
+- [x] Add a persisted wallet selection key with a documented storage format.
+- [x] Persist only user-selected wallet identity, not private keys or sensitive wallet session data.
+- [x] Restore the selected wallet on client boot when the same wallet is discovered again.
+- [x] Implement `autoConnect` only for a previously selected wallet and only when explicitly enabled.
+- [x] Never auto-connect an arbitrary installed wallet.
+- [x] Keep SSR behavior inert when `window` and browser storage are unavailable.
+- [x] Preserve manual wallet injection through `setWallet()`.
+- [x] Ensure connecting a newly selected wallet disconnects any other connected adapted wallet.
+- [x] Add tests for persistence, restore, disabled `autoConnect`, enabled `autoConnect`, missing wallet, storage failure, and SSR/no-window behavior.
+- [x] Document wallet selection persistence and auto-connect behavior in Vue, Nuxt, and wallet docs.
 
 Acceptance criteria:
 

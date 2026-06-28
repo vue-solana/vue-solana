@@ -140,6 +140,8 @@ const { publicKey, connected, connect, disconnect } = useSolanaWallet();
 
 Browser extension wallets are discovered through the Solana Wallet Standard. Android Mobile Wallet Adapter wallets are registered through `@solana-mobile/wallet-standard-mobile` on supported Android Chrome clients and exposed through the same wallet list. Wallet actions work after selecting a discovered wallet or configuring a custom `SolanaWallet`.
 
+Selected discovered wallets are persisted under `localStorage["vue-solana:selected-wallet"]` as non-sensitive identity metadata: `name`, and `platform`/`source` when available. On reload, Vue Solana restores the selected wallet if the same wallet is discovered again. Set `solana.autoConnect: true` to opt into calling `connect()` for that restored wallet; arbitrary installed wallets are never auto-connected. Calling `selectWallet(null)` or `setWallet(customWallet)` clears the stored selection.
+
 ## Example App
 
 This README includes small snippets for quick reference. For a complete runnable Nuxt flow, see the example app:
