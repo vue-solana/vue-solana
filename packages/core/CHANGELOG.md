@@ -1,5 +1,13 @@
 # @vue-solana/core
 
+## 0.4.2
+
+### Patch Changes
+
+- 6e1f094: Harden native wallet callback handling and transaction signing result validation.
+
+  Validate iOS wallet callback payloads, expire stale pending callback requests, clear consumed callback state on failures, and reject mismatched `signAllTransactions` results from iOS and Wallet Standard adapters. Also prevent stale balance refreshes from overwriting newer state and keep non-serializable Nuxt wallet instances out of public runtime config.
+
 ## 0.4.1
 
 ### Patch Changes
