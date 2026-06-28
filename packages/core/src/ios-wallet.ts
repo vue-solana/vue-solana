@@ -61,6 +61,7 @@ interface PendingIosWalletRequest {
   dappEncryptionSecretKey: string;
   redirectUrl: string;
   createdAt: number;
+  requestedTransactionCount?: number;
 }
 
 interface IosWalletSession {
@@ -81,6 +82,7 @@ type IosWalletMethod =
 
 const DEFAULT_IOS_WALLET_CHAINS: readonly SolanaChain[] = ["solana:mainnet", "solana:devnet"];
 const PENDING_REQUEST_KEY = "vue-solana:ios-wallet:pending";
+const PENDING_REQUEST_TTL_MS = 10 * 60 * 1000;
 const SESSION_PREFIX = "vue-solana:ios-wallet:session:";
 const CALLBACK_PARAMS = new Set([
   "data",
@@ -231,6 +233,12 @@ export function adaptSolanaIosWallet(
             options,
           );
 
+          if (signedTransactions.length !== transactions.length) {
+            throw new Error(
+              `iOS wallet returned ${signedTransactions.length} signed transactions for ${transactions.length} requested transactions`,
+            );
+          }
+
           return signedTransactions.map((transaction, index) =>
             deserializeTransaction(transactions[index], transaction),
           ) as T[];
@@ -277,42 +285,58 @@ export function handleSolanaIosWalletCallback(options: { clearUrl?: boolean } = 
     throw new Error("Received an iOS wallet callback without a pending request");
   }
 
+  if (isPendingRequestExpired(pending)) {
+    clearPendingRequest();
+    cleanCallbackUrl(url, options.clearUrl);
+    throw new Error("Received an expired iOS wallet callback");
+  }
+
   const definition = getIosWalletDefinitionById(pending.walletId);
   const walletEncryptionPublicKey = url.searchParams.get(definition.encryptionPublicKeyParam);
   const nonce = url.searchParams.get("nonce");
   const data = url.searchParams.get("data");
 
   if (!nonce || !data) {
+    clearPendingRequest();
+    cleanCallbackUrl(url, options.clearUrl);
     throw new Error("Received an incomplete iOS wallet callback");
   }
 
-  const sharedSecret = getSharedSecret(
-    walletEncryptionPublicKey ?? getStoredSession(pending.walletId)?.walletEncryptionPublicKey,
-    pending.dappEncryptionSecretKey,
-  );
-  const payload = decryptPayload(data, nonce, sharedSecret);
-  const result = createCallbackResult(pending, payload);
+  try {
+    const sharedSecret = getSharedSecret(
+      walletEncryptionPublicKey ?? getStoredSession(pending.walletId)?.walletEncryptionPublicKey,
+      pending.dappEncryptionSecretKey,
+    );
+    const payload = decryptPayload(data, nonce, sharedSecret);
+    const result = createCallbackResult(pending, payload);
 
-  if (pending.method === "connect") {
-    if (!walletEncryptionPublicKey) {
-      throw new Error("iOS wallet connect callback did not include an encryption public key");
+    if (pending.method === "connect") {
+      if (!walletEncryptionPublicKey) {
+        throw new Error("iOS wallet connect callback did not include an encryption public key");
+      }
+
+      const publicKey = getPublicKeyField(payload, "public_key");
+
+      storeSession({
+        walletId: pending.walletId,
+        publicKey,
+        session: getStringField(payload, "session"),
+        dappEncryptionPublicKey: pending.dappEncryptionPublicKey,
+        dappEncryptionSecretKey: pending.dappEncryptionSecretKey,
+        walletEncryptionPublicKey,
+        sharedSecret: bs58.encode(sharedSecret),
+      });
     }
 
-    storeSession({
-      walletId: pending.walletId,
-      publicKey: getStringField(payload, "public_key"),
-      session: getStringField(payload, "session"),
-      dappEncryptionPublicKey: pending.dappEncryptionPublicKey,
-      dappEncryptionSecretKey: pending.dappEncryptionSecretKey,
-      walletEncryptionPublicKey,
-      sharedSecret: bs58.encode(sharedSecret),
-    });
+    clearPendingRequest();
+    cleanCallbackUrl(url, options.clearUrl);
+
+    return result;
+  } catch (cause) {
+    clearPendingRequest();
+    cleanCallbackUrl(url, options.clearUrl);
+    throw cause;
   }
-
-  clearPendingRequest();
-  cleanCallbackUrl(url, options.clearUrl);
-
-  return result;
 }
 
 export function isSolanaIosWalletInfo(walletInfo: SolanaWalletInfo): boolean {
@@ -458,6 +482,9 @@ async function launchEncryptedWalletRequest(
       secretKey: bs58.decode(session.dappEncryptionSecretKey),
     },
     options.redirectUrl,
+    method === "signAllTransactions" && Array.isArray(payload.transactions)
+      ? payload.transactions.length
+      : undefined,
   );
   const nonce = nacl.randomBytes(nacl.box.nonceLength);
   const encryptedPayload = encryptPayload(
@@ -483,6 +510,7 @@ function createPendingRequest(
   method: IosWalletMethod,
   keyPair: nacl.BoxKeyPair,
   redirectUrl?: string,
+  requestedTransactionCount?: number,
 ): PendingIosWalletRequest {
   return {
     id: createRequestId(),
@@ -492,6 +520,7 @@ function createPendingRequest(
     dappEncryptionSecretKey: bs58.encode(keyPair.secretKey),
     redirectUrl: redirectUrl ?? getDefaultIosWalletRedirectUrl(),
     createdAt: Date.now(),
+    requestedTransactionCount,
   };
 }
 
@@ -500,7 +529,7 @@ function createCallbackResult(pending: PendingIosWalletRequest, payload: Record<
     return {
       walletId: pending.walletId,
       method: pending.method,
-      publicKey: getStringField(payload, "public_key"),
+      publicKey: getPublicKeyField(payload, "public_key"),
     };
   }
 
@@ -520,6 +549,15 @@ function createCallbackResult(pending: PendingIosWalletRequest, payload: Record<
       transactions.some((transaction) => typeof transaction !== "string")
     ) {
       throw new Error("iOS wallet returned invalid signed transactions");
+    }
+
+    if (
+      typeof pending.requestedTransactionCount === "number" &&
+      transactions.length !== pending.requestedTransactionCount
+    ) {
+      throw new Error(
+        `iOS wallet returned ${transactions.length} signed transactions for ${pending.requestedTransactionCount} requested transactions`,
+      );
     }
 
     return {
@@ -625,7 +663,11 @@ function getStoredSession(walletId: string): IosWalletSession | null {
   }
 
   try {
-    return JSON.parse(value) as IosWalletSession;
+    const session = JSON.parse(value) as IosWalletSession;
+
+    new PublicKey(session.publicKey);
+
+    return session;
   } catch {
     removeStoredSession(walletId);
     return null;
@@ -721,6 +763,22 @@ function getStringField(payload: Record<string, unknown>, field: string) {
   }
 
   return value;
+}
+
+function getPublicKeyField(payload: Record<string, unknown>, field: string) {
+  const value = getStringField(payload, field);
+
+  try {
+    new PublicKey(value);
+  } catch {
+    throw new Error(`iOS wallet callback returned an invalid ${field}`);
+  }
+
+  return value;
+}
+
+function isPendingRequestExpired(request: PendingIosWalletRequest) {
+  return Date.now() - request.createdAt > PENDING_REQUEST_TTL_MS;
 }
 
 function getIosWalletDefinition(walletInfo: SolanaWalletInfo) {

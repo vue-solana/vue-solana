@@ -3,6 +3,7 @@ node_modules/
 
 # Package manager
 .pnpm-store/
+package-lock.json
 
 # Build outputs
 dist/

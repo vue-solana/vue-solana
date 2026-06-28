@@ -1,6 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
+import type { Mock } from "vitest";
 import type { Wallet, WalletAccount } from "@wallet-standard/base";
 import { StandardConnect, StandardDisconnect, StandardEvents } from "@wallet-standard/features";
+import { SolanaSignTransaction } from "@solana/wallet-standard-features";
+import { PublicKey, SystemProgram, Transaction } from "@solana/web3-compat";
 import {
   adaptSolanaStandardWallet,
   getSolanaChain,
@@ -9,6 +12,13 @@ import {
 } from "./wallet-standard";
 import type { SolanaWalletInfo } from "./types";
 
+type TestStandardWallet = Wallet & {
+  emitAccountsChange(accounts: readonly WalletAccount[]): void;
+};
+
+type ConnectFeature = { connect: Mock };
+type DisconnectFeature = { disconnect: Mock };
+
 const account = {
   address: "11111111111111111111111111111111",
   publicKey: new Uint8Array(32),
@@ -16,7 +26,22 @@ const account = {
   features: [],
 } satisfies WalletAccount;
 
-function createStandardWallet(accounts: readonly WalletAccount[] = []): Wallet {
+function createTestTransaction() {
+  const publicKey = new PublicKey(account.address);
+
+  return new Transaction({
+    feePayer: new PublicKey(account.address),
+    recentBlockhash: "11111111111111111111111111111111",
+  }).add(
+    SystemProgram.transfer({
+      fromPubkey: publicKey,
+      toPubkey: publicKey,
+      lamports: 0,
+    }),
+  );
+}
+
+function createStandardWallet(accounts: readonly WalletAccount[] = []): TestStandardWallet {
   let eventsListener: ((properties: { accounts?: readonly WalletAccount[] }) => void) | null = null;
 
   return {
@@ -48,7 +73,15 @@ function createStandardWallet(accounts: readonly WalletAccount[] = []): Wallet {
     emitAccountsChange(accounts: readonly WalletAccount[]) {
       eventsListener?.({ accounts });
     },
-  } as Wallet & { emitAccountsChange(accounts: readonly WalletAccount[]): void };
+  } as TestStandardWallet;
+}
+
+function getConnectFeature(wallet: Wallet): ConnectFeature {
+  return wallet.features[StandardConnect] as ConnectFeature;
+}
+
+function getDisconnectFeature(wallet: Wallet): DisconnectFeature {
+  return wallet.features[StandardDisconnect] as DisconnectFeature;
 }
 
 describe("Wallet Standard adapter", () => {
@@ -89,12 +122,12 @@ describe("Wallet Standard adapter", () => {
 
     expect(wallet.connected).toBe(true);
     expect(wallet.publicKey?.toBase58()).toBe(account.address);
-    expect(standardWallet.features[StandardConnect].connect).toHaveBeenCalledOnce();
+    expect(getConnectFeature(standardWallet).connect).toHaveBeenCalledOnce();
 
     await wallet.disconnect();
 
     expect(wallet.connected).toBe(false);
-    expect(standardWallet.features[StandardDisconnect].disconnect).toHaveBeenCalledOnce();
+    expect(getDisconnectFeature(standardWallet).disconnect).toHaveBeenCalledOnce();
   });
 
   it("copies wallet source metadata onto adapted wallets", () => {
@@ -115,9 +148,7 @@ describe("Wallet Standard adapter", () => {
   });
 
   it("starts disconnected when a standard wallet already exposes accounts", async () => {
-    const standardWallet = createStandardWallet([account]) as Wallet & {
-      emitAccountsChange(accounts: readonly WalletAccount[]): void;
-    };
+    const standardWallet = createStandardWallet([account]);
     const walletInfo = {
       name: standardWallet.name,
       icon: standardWallet.icon,
@@ -143,9 +174,7 @@ describe("Wallet Standard adapter", () => {
 
   it("notifies when wallet state changes", async () => {
     const onChange = vi.fn();
-    const standardWallet = createStandardWallet() as Wallet & {
-      emitAccountsChange(accounts: readonly WalletAccount[]): void;
-    };
+    const standardWallet = createStandardWallet();
     const walletInfo = {
       name: standardWallet.name,
       icon: standardWallet.icon,
@@ -169,9 +198,7 @@ describe("Wallet Standard adapter", () => {
   });
 
   it("keeps a deliberately disconnected wallet disconnected across account events", async () => {
-    const standardWallet = createStandardWallet() as Wallet & {
-      emitAccountsChange(accounts: readonly WalletAccount[]): void;
-    };
+    const standardWallet = createStandardWallet();
     const walletInfo = {
       name: standardWallet.name,
       icon: standardWallet.icon,
@@ -187,5 +214,30 @@ describe("Wallet Standard adapter", () => {
 
     expect(wallet.connected).toBe(false);
     expect(wallet.publicKey).toBeNull();
+  });
+
+  it("rejects signAllTransactions when a wallet returns fewer results than requested", async () => {
+    const standardWallet = createStandardWallet();
+    const signTransaction = vi.fn().mockResolvedValue([]);
+    (standardWallet.features as Record<string, unknown>)[SolanaSignTransaction] = {
+      version: "1.0.0",
+      supportedTransactionVersions: ["legacy"],
+      signTransaction,
+    };
+    const walletInfo = {
+      name: standardWallet.name,
+      icon: standardWallet.icon,
+      chains: standardWallet.chains,
+      accounts: [],
+      wallet: standardWallet,
+    } satisfies SolanaWalletInfo;
+    const wallet = adaptSolanaStandardWallet(walletInfo, { chain: "solana:devnet" });
+
+    await wallet.connect();
+
+    await expect(
+      wallet.signAllTransactions?.([createTestTransaction(), createTestTransaction()]),
+    ).rejects.toThrow("Solana wallet returned 0 signed transactions for 2 requested transactions");
+    expect(signTransaction).toHaveBeenCalledOnce();
   });
 });

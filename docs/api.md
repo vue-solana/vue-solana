@@ -65,6 +65,9 @@ interface SolanaWallet {
   publicKey: PublicKey | null;
   connected: boolean;
   connecting?: boolean;
+  disconnecting?: boolean;
+  platform?: "browser" | "mobile" | "desktop";
+  source?: "wallet-standard" | "mobile-wallet-adapter" | "deep-link" | "protocol-link";
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
   signTransaction?: <T extends SolanaTransaction>(transaction: T) => Promise<T>;
@@ -217,6 +220,8 @@ Returns wallet state and actions:
 - `publicKey`
 - `connected`
 - `connecting`
+- `disconnecting`
+- `loading`
 - `setWallet(wallet)`
 - `connect()`
 - `disconnect()`
@@ -280,6 +285,8 @@ export default defineNuxtConfig({
   },
 });
 ```
+
+Nuxt module options are written to public runtime config, so they must be JSON-serializable. Use `wallet` only with the Vue plugin in client-only Vue code; Nuxt config intentionally omits custom wallet adapter objects.
 
 ### Auto-Imports
 

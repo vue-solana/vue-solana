@@ -38,6 +38,13 @@ interface ModuleUnderTest {
   ) => void;
 }
 
+type TestViteOptions = {
+  optimizeDeps: {
+    include?: string[];
+    needsInterop?: string[];
+  };
+};
+
 describe("Nuxt module", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -105,7 +112,7 @@ describe("Nuxt module", () => {
 
   it("adds Vite dependency optimization for mobile wallet dev interop", async () => {
     const module = (await import("./module")).default as unknown as ModuleUnderTest;
-    const vite = {
+    const vite: TestViteOptions = {
       optimizeDeps: {
         include: ["existing-dependency", "qrcode"],
       },
@@ -141,5 +148,27 @@ describe("Nuxt module", () => {
       "tweetnacl/nacl-fast.js",
     ]);
     expect(vite.optimizeDeps.needsInterop).toEqual(["tweetnacl", "tweetnacl/nacl-fast.js"]);
+  });
+
+  it("omits non-serializable wallet adapters from public runtime config", async () => {
+    const module = (await import("./module")).default as unknown as ModuleUnderTest;
+    const wallet = { connect: vi.fn() };
+    const publicConfig: Record<string, unknown> = {};
+
+    module.setup(
+      { cluster: "devnet", wallet },
+      {
+        options: {
+          runtimeConfig: {
+            public: publicConfig,
+          },
+          vite: {},
+        },
+      },
+    );
+
+    expect(publicConfig.solana).toEqual({
+      cluster: "devnet",
+    });
   });
 });

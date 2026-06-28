@@ -1,5 +1,5 @@
 import { PublicKey, type Commitment } from "@solana/web3-compat";
-import { onMounted, ref, toValue, watch, type MaybeRefOrGetter } from "vue";
+import { onMounted, shallowRef, toValue, watch, type MaybeRefOrGetter } from "vue";
 import { useConnection } from "./useConnection";
 import { tryUseSolana } from "./useSolana";
 
@@ -9,15 +9,19 @@ export function useBalance(
 ) {
   const solana = tryUseSolana();
   const connection = solana?.connection ?? useConnection();
-  const balance = ref<number | null>(null);
-  const loading = ref(false);
-  const error = ref<unknown>(null);
+  const balance = shallowRef<number | null>(null);
+  const loading = shallowRef(false);
+  const error = shallowRef<unknown>(null);
+  let refreshId = 0;
 
   async function refresh() {
+    const requestId = ++refreshId;
     const value = toValue(address);
 
     if (!value || !solana) {
       balance.value = null;
+      loading.value = false;
+      error.value = null;
       return null;
     }
 
@@ -26,13 +30,23 @@ export function useBalance(
 
     try {
       const publicKey = typeof value === "string" ? new PublicKey(value) : value;
-      balance.value = await connection.getBalance(publicKey, commitment);
-      return balance.value;
+      const nextBalance = await connection.getBalance(publicKey, commitment);
+
+      if (requestId === refreshId) {
+        balance.value = nextBalance;
+      }
+
+      return nextBalance;
     } catch (cause) {
-      error.value = cause;
+      if (requestId === refreshId) {
+        error.value = cause;
+      }
+
       throw cause;
     } finally {
-      loading.value = false;
+      if (requestId === refreshId) {
+        loading.value = false;
+      }
     }
   }
 

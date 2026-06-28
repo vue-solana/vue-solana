@@ -232,9 +232,19 @@ export function adaptSolanaStandardWallet(
             })),
           );
 
-          return results.map((result, index) =>
-            deserializeTransaction(transactions[index], result.signedTransaction),
-          ) as T[];
+          if (results.length !== transactions.length) {
+            throw new Error(
+              `Solana wallet returned ${results.length} signed transactions for ${transactions.length} requested transactions`,
+            );
+          }
+
+          return results.map((result, index) => {
+            if (!result) {
+              throw new Error("Solana wallet did not return a signed transaction");
+            }
+
+            return deserializeTransaction(transactions[index], result.signedTransaction);
+          }) as T[];
         }
       : undefined,
     signAndSendTransaction: hasSignAndSendTransaction(wallet)
