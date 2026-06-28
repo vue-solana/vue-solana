@@ -293,6 +293,12 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}) {
 
       if (typeof window !== "undefined") {
         window.setTimeout(() => {
+          try {
+            refreshWallets();
+          } catch (cause) {
+            console.error("[Vue Solana] Wallet refresh failed", cause);
+          }
+
           void checkConnection();
         }, 0);
       }
