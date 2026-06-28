@@ -61,6 +61,7 @@ interface PendingIosWalletRequest {
   dappEncryptionSecretKey: string;
   redirectUrl: string;
   createdAt: number;
+  requestedTransactionCount?: number;
 }
 
 interface IosWalletSession {
@@ -231,6 +232,12 @@ export function adaptSolanaIosWallet(
             transactions,
             options,
           );
+
+          if (signedTransactions.length !== transactions.length) {
+            throw new Error(
+              `iOS wallet returned ${signedTransactions.length} signed transactions for ${transactions.length} requested transactions`,
+            );
+          }
 
           return signedTransactions.map((transaction, index) =>
             deserializeTransaction(transactions[index], transaction),
@@ -475,6 +482,9 @@ async function launchEncryptedWalletRequest(
       secretKey: bs58.decode(session.dappEncryptionSecretKey),
     },
     options.redirectUrl,
+    method === "signAllTransactions" && Array.isArray(payload.transactions)
+      ? payload.transactions.length
+      : undefined,
   );
   const nonce = nacl.randomBytes(nacl.box.nonceLength);
   const encryptedPayload = encryptPayload(
@@ -500,6 +510,7 @@ function createPendingRequest(
   method: IosWalletMethod,
   keyPair: nacl.BoxKeyPair,
   redirectUrl?: string,
+  requestedTransactionCount?: number,
 ): PendingIosWalletRequest {
   return {
     id: createRequestId(),
@@ -509,6 +520,7 @@ function createPendingRequest(
     dappEncryptionSecretKey: bs58.encode(keyPair.secretKey),
     redirectUrl: redirectUrl ?? getDefaultIosWalletRedirectUrl(),
     createdAt: Date.now(),
+    requestedTransactionCount,
   };
 }
 
@@ -537,6 +549,15 @@ function createCallbackResult(pending: PendingIosWalletRequest, payload: Record<
       transactions.some((transaction) => typeof transaction !== "string")
     ) {
       throw new Error("iOS wallet returned invalid signed transactions");
+    }
+
+    if (
+      typeof pending.requestedTransactionCount === "number" &&
+      transactions.length !== pending.requestedTransactionCount
+    ) {
+      throw new Error(
+        `iOS wallet returned ${transactions.length} signed transactions for ${pending.requestedTransactionCount} requested transactions`,
+      );
     }
 
     return {

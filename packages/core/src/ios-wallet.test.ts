@@ -202,6 +202,30 @@ describe("iOS browser wallets", () => {
     expect(sessionStorage.getItem("vue-solana:ios-wallet:session:phantom")).toBeNull();
   });
 
+  it.each([
+    { requestedTransactionCount: 2, transactions: [bs58.encode(new Uint8Array([1, 2, 3]))] },
+    {
+      requestedTransactionCount: 1,
+      transactions: [
+        bs58.encode(new Uint8Array([1, 2, 3])),
+        bs58.encode(new Uint8Array([4, 5, 6])),
+      ],
+    },
+  ])(
+    "rejects signAllTransactions callbacks with $transactions.length signed transactions for $requestedTransactionCount requested",
+    ({ requestedTransactionCount, transactions }) => {
+      setEncryptedSignAllTransactionsCallbackUrl({
+        requestedTransactionCount,
+        transactions,
+      });
+
+      expect(() => handleSolanaIosWalletCallback()).toThrow(
+        `iOS wallet returned ${transactions.length} signed transactions for ${requestedTransactionCount} requested transactions`,
+      );
+      expect(sessionStorage.getItem("vue-solana:ios-wallet:pending")).toBeNull();
+    },
+  );
+
   it("ignores and removes stored sessions with invalid public keys", () => {
     mockIosNavigator();
     sessionStorage.setItem(
@@ -258,6 +282,51 @@ function setEncryptedConnectCallbackUrl({
     "",
     `/?phantom_encryption_public_key=${bs58.encode(walletKeyPair.publicKey)}&nonce=${bs58.encode(nonce)}&data=${data}`,
   );
+}
+
+function setEncryptedSignAllTransactionsCallbackUrl({
+  requestedTransactionCount,
+  transactions,
+}: {
+  requestedTransactionCount: number;
+  transactions: string[];
+}) {
+  const dappKeyPair = nacl.box.keyPair();
+  const walletKeyPair = nacl.box.keyPair();
+  const sharedSecret = nacl.box.before(walletKeyPair.publicKey, dappKeyPair.secretKey);
+
+  sessionStorage.setItem(
+    "vue-solana:ios-wallet:session:phantom",
+    JSON.stringify({
+      walletId: "phantom",
+      publicKey: "11111111111111111111111111111111",
+      session: "session-token",
+      dappEncryptionPublicKey: bs58.encode(dappKeyPair.publicKey),
+      dappEncryptionSecretKey: bs58.encode(dappKeyPair.secretKey),
+      walletEncryptionPublicKey: bs58.encode(walletKeyPair.publicKey),
+      sharedSecret: bs58.encode(sharedSecret),
+    }),
+  );
+  sessionStorage.setItem(
+    "vue-solana:ios-wallet:pending",
+    JSON.stringify({
+      id: "request-id",
+      walletId: "phantom",
+      method: "signAllTransactions",
+      dappEncryptionPublicKey: bs58.encode(dappKeyPair.publicKey),
+      dappEncryptionSecretKey: bs58.encode(dappKeyPair.secretKey),
+      redirectUrl: "https://example.com/callback",
+      createdAt: Date.now(),
+      requestedTransactionCount,
+    }),
+  );
+
+  const nonce = nacl.randomBytes(nacl.box.nonceLength);
+  const data = bs58.encode(
+    nacl.box.after(new TextEncoder().encode(JSON.stringify({ transactions })), nonce, sharedSecret),
+  );
+
+  history.replaceState(null, "", `/?nonce=${bs58.encode(nonce)}&data=${data}`);
 }
 
 function mockIosNavigator() {
