@@ -4,3 +4,5 @@
 ---
 
 Implement persisted wallet selection restore and opt-in `autoConnect` for previously selected wallets.
+
+Add optional timeout settings to `useTransaction()` with `timeoutMs` and `timeoutMessage`.

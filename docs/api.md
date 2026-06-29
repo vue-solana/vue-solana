@@ -254,9 +254,14 @@ Returns:
 - `error`
 - `refresh()`
 
-### `useTransaction(handler)`
+### `useTransaction(handler, options?)`
 
 Wraps an async transaction handler with state.
+
+Options:
+
+- `timeoutMs`: rejects `execute()` if the handler does not resolve before this many milliseconds.
+- `timeoutMessage`: custom error message for timeout failures. Defaults to `Transaction did not return a result before timing out.`
 
 Returns:
 

@@ -206,7 +206,7 @@ Docs: [Vue Solana Agent Skill](https://vue-solana-docs.vercel.app/agent-skill)
 - `useWallet()`: returns wallet refs, computed connection state, and wallet actions.
 - `useWallets()`: returns discovered browser extension wallets, Android Mobile Wallet Adapter wallets, iOS browser wallet links, and wallet selection actions.
 - `useBalance(address, commitment?)`: loads lamport balance for a `PublicKey` or address string.
-- `useTransaction(handler)`: generic async transaction state helper.
+- `useTransaction(handler, options?)`: generic async transaction state helper with optional timeout settings.
 - `useSignAndSendTransaction()`: signs and sends a transaction through the configured wallet.
 
 Direct composable subpaths:

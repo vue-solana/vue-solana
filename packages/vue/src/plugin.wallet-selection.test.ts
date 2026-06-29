@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import type { App } from "vue";
+import type { SolanaWallet } from "@vue-solana/core/types";
 import {
   account,
   createSolanaContext,
@@ -71,6 +72,33 @@ describe("createSolanaPlugin wallet selection", () => {
     expect(wallet?.wallet.value).not.toBeNull();
     expect(getConnectFeature(standardWallet).connect).not.toHaveBeenCalled();
     expect(wallet?.connected.value).toBe(false);
+  });
+
+  it("keeps an explicitly configured wallet active when a persisted selection exists", () => {
+    silenceConsole();
+    window.localStorage.setItem(
+      "vue-solana:selected-wallet",
+      JSON.stringify({ name: "Test Wallet" }),
+    );
+    const configuredWallet: SolanaWallet = {
+      publicKey: null,
+      connected: false,
+      connecting: false,
+      connect: vi.fn().mockResolvedValue(undefined),
+      disconnect: vi.fn().mockResolvedValue(undefined),
+    };
+    const { standardWallet } = mockStandardWalletDiscovery();
+    const { solana, wallet } = mountSolanaPlugin(
+      { autoConnect: true, mobileWallet: false, wallet: configuredWallet },
+      { wallet: true },
+    );
+
+    solana?.refreshWallets();
+
+    expect(solana?.selectedWallet.value).toBeNull();
+    expect(wallet?.wallet.value).toBe(configuredWallet);
+    expect(getConnectFeature(standardWallet).connect).not.toHaveBeenCalled();
+    expect(configuredWallet.connect).not.toHaveBeenCalled();
   });
 
   it("restores wallets by name, platform, and source", () => {

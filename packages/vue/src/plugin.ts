@@ -101,7 +101,7 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}) {
           if (!selectedWallet.value) {
             wallet.value = options.wallet ?? null;
           }
-        } else {
+        } else if (!options.wallet) {
           const persistedWallet = readSelectedWallet();
           restoredWallet = persistedWallet
             ? (wallets.value.find((nextWallet) => isSameWallet(nextWallet, persistedWallet)) ??
