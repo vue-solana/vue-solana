@@ -113,7 +113,7 @@ Current wallet limits:
 
 - Desktop native app wallets are not implemented yet. They require wallet-specific protocol links or future native Wallet Standard registration.
 - There is no built-in wallet modal. Apps should build their own selection UI with `useWallets()`.
-- `autoConnect` is reserved for future persisted wallet selection and should not be treated as active behavior.
+- `autoConnect` is active behavior only when explicitly enabled. It may reconnect a restored, previously selected wallet, but must never be used to connect an arbitrary installed wallet.
 
 ## RPC And Balance Reads
 

@@ -5,6 +5,20 @@ import { signAndSendTransaction } from "./transaction";
 
 const publicKey = { toBase58: () => "public-key" } as SolanaWallet["publicKey"];
 
+function createRawTransactionScenario() {
+  const rawTransaction = new Uint8Array([1, 2, 3]);
+  const signedTransaction = {
+    serialize: vi.fn(() => rawTransaction),
+  } as unknown as SolanaTransaction;
+  const connection = {
+    sendRawTransaction: vi.fn().mockResolvedValue("raw-signature"),
+  } as unknown as Connection;
+  const transaction = {} as SolanaTransaction;
+  const options = { skipPreflight: true };
+
+  return { connection, options, rawTransaction, signedTransaction, transaction };
+}
+
 describe("signAndSendTransaction", () => {
   it("uses a wallet signAndSendTransaction implementation when available", async () => {
     const wallet = {
@@ -23,10 +37,8 @@ describe("signAndSendTransaction", () => {
   });
 
   it("prefers signing locally before sending for Mobile Wallet Adapter wallets", async () => {
-    const rawTransaction = new Uint8Array([1, 2, 3]);
-    const signedTransaction = {
-      serialize: vi.fn(() => rawTransaction),
-    } as unknown as SolanaTransaction;
+    const { connection, options, rawTransaction, signedTransaction, transaction } =
+      createRawTransactionScenario();
     const wallet = {
       connected: true,
       publicKey,
@@ -34,11 +46,6 @@ describe("signAndSendTransaction", () => {
       signTransaction: vi.fn().mockResolvedValue(signedTransaction),
       signAndSendTransaction: vi.fn().mockResolvedValue({ signature: "wallet-signature" }),
     } as unknown as SolanaWallet;
-    const connection = {
-      sendRawTransaction: vi.fn().mockResolvedValue("raw-signature"),
-    } as unknown as Connection;
-    const transaction = {} as SolanaTransaction;
-    const options = { skipPreflight: true };
 
     await expect(signAndSendTransaction(connection, wallet, transaction, options)).resolves.toBe(
       "raw-signature",
@@ -49,20 +56,13 @@ describe("signAndSendTransaction", () => {
   });
 
   it("signs and sends a raw transaction when the wallet cannot send directly", async () => {
-    const rawTransaction = new Uint8Array([1, 2, 3]);
-    const signedTransaction = {
-      serialize: vi.fn(() => rawTransaction),
-    } as unknown as SolanaTransaction;
+    const { connection, options, rawTransaction, signedTransaction, transaction } =
+      createRawTransactionScenario();
     const wallet = {
       connected: true,
       publicKey,
       signTransaction: vi.fn().mockResolvedValue(signedTransaction),
     } as unknown as SolanaWallet;
-    const connection = {
-      sendRawTransaction: vi.fn().mockResolvedValue("raw-signature"),
-    } as unknown as Connection;
-    const transaction = {} as SolanaTransaction;
-    const options = { skipPreflight: true };
 
     await expect(signAndSendTransaction(connection, wallet, transaction, options)).resolves.toBe(
       "raw-signature",

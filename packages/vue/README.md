@@ -154,6 +154,8 @@ const { publicKey, connected, connecting, connect, disconnect } = useWallet();
 
 Browser extension wallets are discovered through the Solana Wallet Standard. Android Mobile Wallet Adapter wallets are registered through `@solana-mobile/wallet-standard-mobile` and exposed through the same `useWallets()` list on supported Android Chrome clients. iOS Phantom, Solflare, and Backpack entries are exposed through wallet-specific universal links on iOS browsers. `connect()` works after selecting a discovered wallet or configuring a custom `SolanaWallet`.
 
+Selected discovered wallets are persisted under `localStorage["vue-solana:selected-wallet"]` as non-sensitive identity metadata: `name`, and `platform`/`source` when available. On reload, Vue Solana restores the selected wallet if the same wallet is discovered again. Pass `autoConnect: true` to opt into calling `connect()` for that restored wallet; arbitrary installed wallets are never auto-connected. Calling `selectWallet(null)` or `setWallet(customWallet)` clears the stored selection.
+
 Desktop native app wallet adapters are planned but not implemented yet.
 
 Composables return inert SSR-safe state when no plugin context is available. Real RPC and wallet operations still require the plugin-provided client context.
@@ -202,9 +204,9 @@ Docs: [Vue Solana Agent Skill](https://vue-solana-docs.vercel.app/agent-skill)
 - `useRpc()`: returns cluster, endpoint, connection status, latest blockhash, and `checkConnection()`.
 - `useConnection()`: returns the Solana `Connection`.
 - `useWallet()`: returns wallet refs, computed connection state, and wallet actions.
-- `useWallets()`: returns discovered browser extension wallets, Android Mobile Wallet Adapter wallets, and wallet selection actions.
+- `useWallets()`: returns discovered browser extension wallets, Android Mobile Wallet Adapter wallets, iOS browser wallet links, and wallet selection actions.
 - `useBalance(address, commitment?)`: loads lamport balance for a `PublicKey` or address string.
-- `useTransaction(handler)`: generic async transaction state helper.
+- `useTransaction(handler, options?)`: generic async transaction state helper with optional timeout settings.
 - `useSignAndSendTransaction()`: signs and sends a transaction through the configured wallet.
 
 Direct composable subpaths:

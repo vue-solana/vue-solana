@@ -67,6 +67,8 @@ const config: SolanaConfig = {
 
 Supported clusters are `mainnet-beta`, `testnet`, `devnet`, and `localnet`. If `endpoint` is omitted, the package uses the public Solana RPC endpoint for the selected cluster. If `wsEndpoint` is omitted, it is derived from the RPC endpoint.
 
+`autoConnect` is consumed by the Vue plugin and Nuxt module. It defaults to `false`; when set to `true`, Vue Solana reconnects only a previously selected wallet identity that is discovered again on the client.
+
 Use `mainnet-beta` for Solana mainnet. This is Solana's official cluster name; the package intentionally does not use `mainnet` as an alias.
 
 For development, use `devnet` and request free test SOL from the official faucet:
@@ -81,8 +83,9 @@ Direct subpaths:
 
 - `@vue-solana/core/types`
 - `@vue-solana/core/clusters`
-- `@vue-solana/core/rpc`
+- `@vue-solana/core/ios-wallet`
 - `@vue-solana/core/mobile-wallet`
+- `@vue-solana/core/rpc`
 - `@vue-solana/core/transaction`
 - `@vue-solana/core/wallet`
 - `@vue-solana/core/wallet-standard`

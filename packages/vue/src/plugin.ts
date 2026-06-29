@@ -1,21 +1,18 @@
-import {
-  adaptSolanaIosWallet,
-  getSolanaIosWallets,
-  handleSolanaIosWalletCallback,
-  isSolanaIosWalletInfo,
-  type GetSolanaIosWalletsOptions,
-} from "@vue-solana/core/ios-wallet";
-import {
-  adaptSolanaStandardWallet,
-  getRegisteredSolanaWallets,
-  getSolanaChain,
-  subscribeSolanaWallets,
-} from "@vue-solana/core/wallet-standard";
+import type { GetSolanaIosWalletsOptions } from "@vue-solana/core/ios-wallet";
 import type { RegisterSolanaMobileWalletOptions } from "@vue-solana/core/mobile-wallet";
 import { createSolanaContext } from "@vue-solana/core/rpc";
 import type { SolanaConfig, SolanaWallet, SolanaWalletInfo } from "@vue-solana/core/types";
+import { getSolanaChain, subscribeSolanaWallets } from "@vue-solana/core/wallet-standard";
 import { ref, shallowRef, triggerRef, type App } from "vue";
 import { solanaInjectionKey, type VueSolanaContext } from "./injection";
+import {
+  readSelectedWallet,
+  stringifySelectedWallet,
+  writeSelectedWallet,
+  type PersistedSelectedWallet,
+} from "./plugin/selected-wallet-storage";
+import { withTimeout } from "./plugin/timeout";
+import { createSolanaWalletRegistry } from "./plugin/wallet-registry";
 
 export interface VueSolanaPluginOptions extends SolanaConfig {
   wallet?: SolanaWallet | null;
@@ -35,9 +32,15 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}) {
       const status = ref<VueSolanaContext["status"]["value"]>("idle");
       const error = ref<string | null>(null);
       const latestBlockhash = ref<string | null>(null);
-      const adaptedWallets = new WeakMap<object, SolanaWallet>();
+      const walletRegistry = createSolanaWalletRegistry({
+        cluster: context.cluster,
+        iosWallet: options.iosWallet,
+        getWalletInfos: () => wallets.value,
+        onWalletChange: () => triggerRef(wallet),
+      });
       let unsubscribeWallets: (() => void) | null = null;
       let mobileWalletRegistrationPromise: Promise<void> | null = null;
+      let attemptedAutoConnectWallet: string | null = null;
       let rpcCheckId = 0;
 
       async function checkConnection() {
@@ -86,8 +89,9 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}) {
 
       function refreshWallets() {
         unsubscribeWallets ??= subscribeSolanaWallets(refreshWallets);
-        handleIosWalletCallback();
-        wallets.value = getDiscoveredWallets();
+        walletRegistry.handleIosWalletCallback();
+        wallets.value = walletRegistry.getDiscoveredWallets();
+        let restoredWallet: SolanaWalletInfo | null = null;
 
         if (selectedWallet.value) {
           selectedWallet.value =
@@ -97,10 +101,25 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}) {
           if (!selectedWallet.value) {
             wallet.value = options.wallet ?? null;
           }
+        } else if (!options.wallet) {
+          const persistedWallet = readSelectedWallet();
+          restoredWallet = persistedWallet
+            ? (wallets.value.find((nextWallet) => isSameWallet(nextWallet, persistedWallet)) ??
+              null)
+            : null;
+
+          if (restoredWallet) {
+            selectedWallet.value = restoredWallet;
+            wallet.value = walletRegistry.getAdaptedWallet(restoredWallet);
+          }
         }
 
         if (options.mobileWallet !== false) {
           registerMobileWallets();
+        }
+
+        if (restoredWallet) {
+          autoConnectWallet(restoredWallet);
         }
       }
 
@@ -111,7 +130,7 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}) {
               chains: [getSolanaChain(context.cluster)],
               ...(options.mobileWallet || {}),
             });
-            wallets.value = getDiscoveredWallets();
+            refreshWallets();
           })
           .catch((cause) => {
             console.error("[Vue Solana] Mobile wallet registration failed", cause);
@@ -123,103 +142,38 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}) {
 
       function selectWallet(nextWallet: SolanaWalletInfo | null) {
         selectedWallet.value = nextWallet;
-        wallet.value = nextWallet ? getAdaptedWallet(nextWallet) : (options.wallet ?? null);
+        wallet.value = nextWallet
+          ? walletRegistry.getAdaptedWallet(nextWallet)
+          : (options.wallet ?? null);
+        writeSelectedWallet(nextWallet);
       }
 
-      function getAdaptedWallet(walletInfo: SolanaWalletInfo) {
-        if (isSolanaIosWalletInfo(walletInfo)) {
-          return adaptSolanaIosWallet(walletInfo, {
-            chain: getSolanaChain(context.cluster),
-            cluster: context.cluster,
-            onChange: () => triggerRef(wallet),
-            ...(options.iosWallet || {}),
+      function autoConnectWallet(walletInfo: SolanaWalletInfo) {
+        if (!options.autoConnect) {
+          return;
+        }
+
+        const activeWallet = wallet.value;
+        const storageValue = stringifySelectedWallet(walletInfo);
+
+        if (
+          !activeWallet ||
+          activeWallet.connected ||
+          activeWallet.connecting ||
+          attemptedAutoConnectWallet === storageValue
+        ) {
+          return;
+        }
+
+        attemptedAutoConnectWallet = storageValue;
+        void activeWallet
+          .connect()
+          .catch((cause) => {
+            console.error("[Vue Solana] Wallet auto-connect failed", cause);
+          })
+          .finally(() => {
+            triggerRef(wallet);
           });
-        }
-
-        if (!isObject(walletInfo.wallet)) {
-          return adaptSolanaStandardWallet(walletInfo, {
-            chain: getSolanaChain(context.cluster),
-            onChange: () => triggerRef(wallet),
-          });
-        }
-
-        const cachedWallet = adaptedWallets.get(walletInfo.wallet);
-
-        if (cachedWallet) {
-          return cachedWallet;
-        }
-
-        const adaptedWallet = adaptSolanaStandardWallet(walletInfo, {
-          chain: getSolanaChain(context.cluster),
-          onChange: () => triggerRef(wallet),
-        });
-        const cachedAdapter: SolanaWallet = {
-          platform: walletInfo.platform,
-          source: walletInfo.source,
-          get publicKey() {
-            return adaptedWallet.publicKey;
-          },
-          get connected() {
-            return adaptedWallet.connected;
-          },
-          get connecting() {
-            return adaptedWallet.connecting;
-          },
-          get disconnecting() {
-            return adaptedWallet.disconnecting;
-          },
-          async connect() {
-            await adaptedWallet.connect();
-
-            await Promise.all(
-              Array.from(getCachedWallets()).map((otherWallet) =>
-                otherWallet !== cachedAdapter && otherWallet.connected
-                  ? otherWallet.disconnect()
-                  : undefined,
-              ),
-            );
-          },
-          disconnect: () => adaptedWallet.disconnect(),
-          signTransaction: adaptedWallet.signTransaction?.bind(adaptedWallet),
-          signAllTransactions: adaptedWallet.signAllTransactions?.bind(adaptedWallet),
-          signAndSendTransaction: adaptedWallet.signAndSendTransaction?.bind(adaptedWallet),
-        };
-
-        adaptedWallets.set(walletInfo.wallet, cachedAdapter);
-        return cachedAdapter;
-      }
-
-      function getDiscoveredWallets() {
-        return [
-          ...getRegisteredSolanaWallets(),
-          ...(options.iosWallet === false
-            ? []
-            : getSolanaIosWallets({
-                chains: [getSolanaChain(context.cluster)],
-                cluster: context.cluster,
-                ...(options.iosWallet || {}),
-              })),
-        ];
-      }
-
-      function handleIosWalletCallback() {
-        try {
-          handleSolanaIosWalletCallback({ clearUrl: true });
-        } catch (cause) {
-          console.error("[Vue Solana] iOS wallet callback failed", cause);
-        }
-      }
-
-      function* getCachedWallets() {
-        for (const walletInfo of wallets.value) {
-          if (isObject(walletInfo.wallet)) {
-            const cachedWallet = adaptedWallets.get(walletInfo.wallet);
-
-            if (cachedWallet) {
-              yield cachedWallet;
-            }
-          }
-        }
       }
 
       const vueContext: VueSolanaContext = {
@@ -236,6 +190,7 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}) {
         setWallet(nextWallet) {
           selectedWallet.value = null;
           wallet.value = nextWallet;
+          writeSelectedWallet(null);
         },
       };
 
@@ -243,6 +198,12 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}) {
 
       if (typeof window !== "undefined") {
         window.setTimeout(() => {
+          try {
+            refreshWallets();
+          } catch (cause) {
+            console.error("[Vue Solana] Wallet refresh failed", cause);
+          }
+
           void checkConnection();
         }, 0);
       }
@@ -250,11 +211,7 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}) {
   };
 }
 
-function isObject(value: unknown): value is object {
-  return (typeof value === "object" && value !== null) || typeof value === "function";
-}
-
-function isSameWallet(wallet: SolanaWalletInfo, selectedWallet: SolanaWalletInfo | null) {
+function isSameWallet(wallet: SolanaWalletInfo, selectedWallet: PersistedSelectedWallet | null) {
   return (
     wallet.name === selectedWallet?.name &&
     wallet.source === selectedWallet.source &&
@@ -263,19 +220,3 @@ function isSameWallet(wallet: SolanaWalletInfo, selectedWallet: SolanaWalletInfo
 }
 
 export const VueSolana = createSolanaPlugin;
-
-function withTimeout<T>(promise: Promise<T>, timeoutMs: number, message: string): Promise<T> {
-  let timeoutId: ReturnType<typeof setTimeout> | undefined;
-
-  const timeout = new Promise<never>((_, reject) => {
-    timeoutId = setTimeout(() => {
-      reject(new Error(message));
-    }, timeoutMs);
-  });
-
-  return Promise.race([promise, timeout]).finally(() => {
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-    }
-  });
-}

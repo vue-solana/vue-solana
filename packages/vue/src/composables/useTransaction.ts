@@ -1,5 +1,6 @@
 import type { TransactionSignature } from "@solana/web3-compat";
 import { ref } from "vue";
+import { withTimeout } from "../plugin/timeout";
 
 export interface UseTransactionOptions {
   timeoutMs?: number;
@@ -52,23 +53,4 @@ export function useTransaction<TArgs extends unknown[]>(
     error,
     execute,
   };
-}
-
-function withTimeout<T>(promise: Promise<T>, timeoutMs: number | undefined, message: string) {
-  if (!timeoutMs) {
-    return promise;
-  }
-
-  let timeoutId: ReturnType<typeof setTimeout> | undefined;
-  const timeout = new Promise<never>((_, reject) => {
-    timeoutId = setTimeout(() => {
-      reject(new Error(message));
-    }, timeoutMs);
-  });
-
-  return Promise.race([promise, timeout]).finally(() => {
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-    }
-  });
 }

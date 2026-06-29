@@ -175,7 +175,8 @@ setWallet(wallet);
 ## Current Limits
 
 - Vue Solana does not render a wallet modal. Build your own selection UI with `useWallets()`.
-- Auto-connect to a persisted wallet selection is not implemented yet. Vue Solana does not treat extension-exposed accounts as connected before `connect()` succeeds.
+- Wallet selection is persisted under `localStorage["vue-solana:selected-wallet"]` as non-sensitive identity metadata: `name`, and `platform`/`source` when available. If the same wallet is discovered after reload, the selected wallet is restored. If it is missing, the stored identity is kept so it can restore later. Calling `selectWallet(null)` or `setWallet(customWallet)` clears the stored selection.
+- `autoConnect` is opt-in and only calls `connect()` for a restored, previously selected wallet. Vue Solana does not auto-connect arbitrary installed wallets or treat extension-exposed accounts as connected before `connect()` succeeds.
 - Signing support depends on each wallet exposing compatible Solana Wallet Standard features.
 - iOS browser wallet support is available for Phantom, Solflare, and Backpack through universal links. Capability support differs by wallet.
 - Desktop native app wallet support is not implemented yet. It requires wallet-specific protocol links or future native Wallet Standard registration.

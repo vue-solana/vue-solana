@@ -1,109 +1,16 @@
 import { describe, expect, it, vi } from "vitest";
-import type { Mock } from "vitest";
-import type { Wallet, WalletAccount } from "@wallet-standard/base";
-import { StandardConnect, StandardDisconnect, StandardEvents } from "@wallet-standard/features";
 import { SolanaSignTransaction } from "@solana/wallet-standard-features";
-import { PublicKey, SystemProgram, Transaction } from "@solana/web3-compat";
+import { adaptSolanaStandardWallet } from "./adapter";
+import type { SolanaWalletInfo } from "../types";
 import {
-  adaptSolanaStandardWallet,
-  getSolanaChain,
-  isSolanaStandardWallet,
-  SOLANA_MOBILE_WALLET_ADAPTER_WALLET_NAME,
-} from "./wallet-standard";
-import type { SolanaWalletInfo } from "./types";
-
-type TestStandardWallet = Wallet & {
-  emitAccountsChange(accounts: readonly WalletAccount[]): void;
-};
-
-type ConnectFeature = { connect: Mock };
-type DisconnectFeature = { disconnect: Mock };
-
-const account = {
-  address: "11111111111111111111111111111111",
-  publicKey: new Uint8Array(32),
-  chains: ["solana:devnet"],
-  features: [],
-} satisfies WalletAccount;
-
-function createTestTransaction() {
-  const publicKey = new PublicKey(account.address);
-
-  return new Transaction({
-    feePayer: new PublicKey(account.address),
-    recentBlockhash: "11111111111111111111111111111111",
-  }).add(
-    SystemProgram.transfer({
-      fromPubkey: publicKey,
-      toPubkey: publicKey,
-      lamports: 0,
-    }),
-  );
-}
-
-function createStandardWallet(accounts: readonly WalletAccount[] = []): TestStandardWallet {
-  let eventsListener: ((properties: { accounts?: readonly WalletAccount[] }) => void) | null = null;
-
-  return {
-    version: "1.0.0",
-    name: "Test Wallet",
-    icon: "data:image/png;base64,AA==",
-    chains: ["solana:devnet"],
-    accounts,
-    features: {
-      [StandardConnect]: {
-        version: "1.0.0",
-        connect: vi.fn().mockResolvedValue({ accounts: [account] }),
-      },
-      [StandardDisconnect]: {
-        version: "1.0.0",
-        disconnect: vi.fn().mockResolvedValue(undefined),
-      },
-      [StandardEvents]: {
-        version: "1.0.0",
-        on: vi.fn((event, listener) => {
-          if (event === "change") {
-            eventsListener = listener;
-          }
-
-          return vi.fn();
-        }),
-      },
-    },
-    emitAccountsChange(accounts: readonly WalletAccount[]) {
-      eventsListener?.({ accounts });
-    },
-  } as TestStandardWallet;
-}
-
-function getConnectFeature(wallet: Wallet): ConnectFeature {
-  return wallet.features[StandardConnect] as ConnectFeature;
-}
-
-function getDisconnectFeature(wallet: Wallet): DisconnectFeature {
-  return wallet.features[StandardDisconnect] as DisconnectFeature;
-}
+  account,
+  createStandardWallet,
+  createTestTransaction,
+  getConnectFeature,
+  getDisconnectFeature,
+} from "./test-utils.test-utils";
 
 describe("Wallet Standard adapter", () => {
-  it("maps Solana clusters to Wallet Standard chains", () => {
-    expect(getSolanaChain("mainnet-beta")).toBe("solana:mainnet");
-    expect(getSolanaChain("testnet")).toBe("solana:testnet");
-    expect(getSolanaChain("devnet")).toBe("solana:devnet");
-    expect(getSolanaChain("localnet")).toBe("solana:localnet");
-  });
-
-  it("keeps the local mobile wallet adapter name aligned with the upstream package", async () => {
-    const { SolanaMobileWalletAdapterWalletName } =
-      await import("@solana-mobile/wallet-standard-mobile");
-
-    expect(SOLANA_MOBILE_WALLET_ADAPTER_WALLET_NAME).toBe(SolanaMobileWalletAdapterWalletName);
-  });
-
-  it("detects standard wallets that support Solana", () => {
-    expect(isSolanaStandardWallet(createStandardWallet())).toBe(true);
-    expect(isSolanaStandardWallet({ ...createStandardWallet(), chains: ["eip155:1"] })).toBe(false);
-  });
-
   it("adapts connect and disconnect to SolanaWallet", async () => {
     const standardWallet = createStandardWallet();
     const walletInfo = {

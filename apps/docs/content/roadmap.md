@@ -5,7 +5,7 @@ description: Planned feature work before the first stable Vue Solana package rel
 
 Vue Solana is currently pre-v1. The packages are already usable for RPC setup, wallet discovery, wallet connection, balance reads, and devnet transaction flows, but a stable v1 release needs a few more production-oriented APIs.
 
-The detailed implementation tracker lives in [`docs/v1-roadmap.md`](https://github.com/vue-solana/vue-solana/blob/main/docs/v1-roadmap.md). This page summarizes the roadmap for application developers.
+The detailed implementation tracker lives in [`docs/plans/v1-roadmap.md`](https://github.com/vue-solana/vue-solana/blob/main/docs/plans/v1-roadmap.md). This page summarizes the roadmap for application developers.
 
 ## v1 Release Goals
 
@@ -23,7 +23,7 @@ The detailed implementation tracker lives in [`docs/v1-roadmap.md`](https://gith
 
 ### 1. Public API Stabilization
 
-The first phase is to make sure every public option is either implemented or removed before v1. The main decision is `autoConnect`, which is currently documented as reserved for future persisted wallet selection.
+The first phase is to make sure every public option is either implemented or removed before v1. `autoConnect` is included in v1 as opt-in reconnect behavior for a previously selected wallet identity.
 
 ### 2. Wallet UX Foundations
 

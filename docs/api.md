@@ -36,7 +36,11 @@ interface SolanaConfig {
 
 If `endpoint` is omitted, the default public endpoint for the selected cluster is used. If `wsEndpoint` is omitted, it is derived from the selected cluster or custom endpoint.
 
-`autoConnect` is reserved for future persisted wallet selection and is not currently used to connect discovered wallets automatically.
+`autoConnect` defaults to `false`. When enabled in the Vue plugin or Nuxt module, Vue Solana reconnects only a wallet identity that the user previously selected and that is discovered again on the client. It stores only wallet identity metadata under `localStorage["vue-solana:selected-wallet"]`: `name`, and `platform`/`source` when available. It never stores private keys, session data, or transaction data, and it never connects an arbitrary installed wallet. Calling `selectWallet(null)` or `setWallet(customWallet)` clears the stored selection.
+
+### `@solana/web3-compat` compatibility
+
+The v1 package line uses `@solana/web3-compat` for Solana primitives so applications can interoperate with the modern Solana package family while Vue Solana keeps familiar `Connection`, `PublicKey`, and transaction types at its public boundary. The current `@solana/web3-compat@0.0.21` package has broken TypeScript root metadata, so this repository includes a temporary `types/web3-compat.d.ts` shim. Runtime imports still resolve to the published package. Re-check the upstream package metadata before v1 and remove the shim once the package publishes valid root declarations.
 
 Supported clusters:
 
@@ -250,9 +254,14 @@ Returns:
 - `error`
 - `refresh()`
 
-### `useTransaction(handler)`
+### `useTransaction(handler, options?)`
 
 Wraps an async transaction handler with state.
+
+Options:
+
+- `timeoutMs`: rejects `execute()` if the handler does not resolve before this many milliseconds.
+- `timeoutMessage`: custom error message for timeout failures. Defaults to `Transaction did not return a result before timing out.`
 
 Returns:
 

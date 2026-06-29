@@ -31,9 +31,6 @@ export function createSolanaContext(config: SolanaConfig = {}): SolanaContext {
     cluster,
     endpoint,
     wsEndpoint,
-    connection: new Connection(endpoint, {
-      commitment: config.commitment,
-      wsEndpoint,
-    }),
+    connection: createSolanaConnection(config),
   };
 }
