@@ -29,6 +29,7 @@ import type {
   AdaptSolanaIosWalletOptions,
   GetSolanaIosWalletsOptions,
   IosWalletDefinition,
+  IosWalletInfo,
   IosWalletSignMethod,
 } from "./types";
 
@@ -151,7 +152,7 @@ export function adaptSolanaIosWallet(
   };
 }
 
-export function isSolanaIosWalletInfo(walletInfo: SolanaWalletInfo): boolean {
+export function isSolanaIosWalletInfo(walletInfo: SolanaWalletInfo): walletInfo is IosWalletInfo {
   return walletInfo.source === "deep-link" && isIosWalletDefinition(walletInfo.wallet);
 }
 

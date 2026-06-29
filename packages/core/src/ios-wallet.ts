@@ -14,5 +14,7 @@ export type {
   AdaptSolanaIosWalletOptions,
   GetSolanaIosWalletsOptions,
   IosWalletCallbackResult,
+  IosWalletInfo,
+  IosWalletMethod,
   SolanaIosWalletAppIdentity,
 } from "./ios-wallet/types";
