@@ -3,9 +3,9 @@ import type { Mock } from "vitest";
 import { afterEach, beforeEach, vi } from "vitest";
 import { defineComponent, h, type App } from "vue";
 import type { SolanaWalletInfo } from "@vue-solana/core/types";
-import { createSolanaPlugin } from "./plugin";
-import { useSolana } from "./composables/useSolana";
-import { useWallet } from "./composables/useWallet";
+import { createSolanaPlugin } from "../plugin";
+import { useSolana } from "../composables/useSolana";
+import { useWallet } from "../composables/useWallet";
 
 const StandardConnect = "standard:connect";
 const StandardDisconnect = "standard:disconnect";
