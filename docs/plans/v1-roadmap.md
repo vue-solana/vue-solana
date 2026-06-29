@@ -77,7 +77,7 @@ Acceptance criteria:
 
 ## Phase 3: Transaction Lifecycle
 
-Status: done.
+Status: complete.
 
 `signAndSendTransaction()` currently returns a signature. v1 apps also need confirmation and status handling.
 

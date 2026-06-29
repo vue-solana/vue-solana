@@ -63,6 +63,7 @@ Prefer direct composable subpath imports in Vue apps:
 
 ```ts
 import { useRpc } from "@vue-solana/vue/useRpc";
+import { useTransactionConfirmation } from "@vue-solana/vue/useTransactionConfirmation";
 import { useWallet } from "@vue-solana/vue/useWallet";
 import { useWallets } from "@vue-solana/vue/useWallets";
 ```
@@ -89,6 +90,7 @@ Nuxt auto-imports these composables:
 - `useSolanaWallets()`
 - `useSolanaBalance()`
 - `useSolanaSignAndSendTransaction()`
+- `useSolanaTransactionConfirmation()`
 
 The Nuxt runtime plugin is client-only. Composables are SSR-safe and may return inert state during SSR; run real RPC and wallet work after hydration, in client lifecycle hooks, or from user actions.
 
@@ -129,6 +131,8 @@ Use `useSignAndSendTransaction()` or `useSolanaSignAndSendTransaction()` after a
 
 The active wallet must support either `signAndSendTransaction` or `signTransaction`. Android Mobile Wallet Adapter wallets prefer `signTransaction` plus app-side RPC submission when available so the app can reliably return the submitted signature.
 
+Use `useTransactionConfirmation()` or `useSolanaTransactionConfirmation()` when an app already has a submitted signature and wants to wait for a requested commitment separately from signing and sending.
+
 When browser transaction code needs `Buffer`, install `buffer` and import from `buffer/`:
 
 ```ts
@@ -154,6 +158,7 @@ For changes inside the Vue Solana repository, prefer these checks from the repo 
 
 ```sh
 pnpm lint
+pnpm format
 pnpm test
 pnpm typecheck
 pnpm build:packages
