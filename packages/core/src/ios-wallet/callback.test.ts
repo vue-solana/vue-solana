@@ -1,6 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import bs58 from "bs58";
-import * as nacl from "tweetnacl";
 import { adaptSolanaIosWallet, getSolanaIosWallets } from "./adapter";
 import { handleSolanaIosWalletCallback } from "./callback";
 import {
@@ -21,33 +20,7 @@ describe("iOS wallet callbacks", () => {
 
     void wallet.connect();
 
-    const pending = JSON.parse(sessionStorage.getItem("vue-solana:ios-wallet:pending")!) as {
-      dappEncryptionSecretKey: string;
-    };
-    const walletKeyPair = nacl.box.keyPair();
-    const sharedSecret = nacl.box.before(
-      bs58.decode(bs58.encode(walletKeyPair.publicKey)),
-      bs58.decode(pending.dappEncryptionSecretKey),
-    );
-    const nonce = nacl.randomBytes(nacl.box.nonceLength);
-    const data = bs58.encode(
-      nacl.box.after(
-        new TextEncoder().encode(
-          JSON.stringify({
-            public_key: "11111111111111111111111111111111",
-            session: "session-token",
-          }),
-        ),
-        nonce,
-        sharedSecret,
-      ),
-    );
-
-    history.replaceState(
-      null,
-      "",
-      `/?phantom_encryption_public_key=${bs58.encode(walletKeyPair.publicKey)}&nonce=${bs58.encode(nonce)}&data=${data}`,
-    );
+    setEncryptedConnectCallbackUrl({ publicKey: "11111111111111111111111111111111" });
 
     const result = handleSolanaIosWalletCallback({ clearUrl: true });
 

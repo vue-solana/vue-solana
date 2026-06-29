@@ -1,5 +1,19 @@
 import { describe, expect, it } from "vitest";
-import { createSolanaContext } from "./rpc";
+import { createSolanaConnection, createSolanaContext } from "./rpc";
+
+describe("createSolanaConnection", () => {
+  it("creates a devnet connection by default", () => {
+    const connection = createSolanaConnection();
+
+    expect(connection.rpcEndpoint).toBe("https://api.devnet.solana.com");
+  });
+
+  it("creates a connection for a custom endpoint", () => {
+    const connection = createSolanaConnection({ endpoint: "https://rpc.example.com" });
+
+    expect(connection.rpcEndpoint).toBe("https://rpc.example.com");
+  });
+});
 
 describe("createSolanaContext", () => {
   it("creates a devnet context by default", () => {
