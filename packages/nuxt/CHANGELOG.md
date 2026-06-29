@@ -1,5 +1,18 @@
 # @vue-solana/nuxt
 
+## 0.4.0
+
+### Minor Changes
+
+- 9809f38: Implement persisted wallet selection restore and opt-in `autoConnect` for previously selected wallets.
+
+  Add optional timeout settings to `useTransaction()` with `timeoutMs` and `timeoutMessage`.
+
+### Patch Changes
+
+- Updated dependencies [9809f38]
+  - @vue-solana/vue@0.5.0
+
 ## 0.3.2
 
 ### Patch Changes
