@@ -123,6 +123,21 @@ Current metadata values:
 
 ### Helpers
 
+Transaction confirmation types:
+
+```ts
+interface ConfirmTransactionOptions {
+  commitment?: Commitment;
+  timeoutMs?: number;
+}
+
+interface TransactionConfirmation {
+  signature: TransactionSignature;
+  commitment: Commitment;
+  result: RpcResponseAndContext<SignatureResult>;
+}
+```
+
 - `DEFAULT_CLUSTER`: the default cluster, currently `devnet`.
 - `getClusterEndpoint(cluster?)`: returns the HTTP RPC endpoint for a cluster.
 - `getClusterWebSocketEndpoint(cluster?)`: returns the WebSocket endpoint for a cluster.
@@ -133,6 +148,7 @@ Current metadata values:
 - `assertWalletConnected(wallet)`: throws if the wallet is not connected.
 - `assertWalletCanSign(wallet)`: throws if the wallet cannot sign transactions.
 - `signAndSendTransaction(connection, wallet, transaction, options?)`: signs and sends a transaction using wallet capabilities. Android Mobile Wallet Adapter wallets prefer `signTransaction` plus app-side RPC submission when available so the app can reliably return the submitted signature.
+- `confirmTransactionSignature(connection, signature, options?)`: waits for a submitted signature to reach the requested commitment. Defaults to `confirmed` commitment and a 60 second timeout. It returns `TransactionConfirmation` and throws a clear timeout or failed-confirmation error.
 - `getSolanaChain(cluster)`: maps a package cluster to a Wallet Standard chain ID.
 - `isSolanaStandardWallet(wallet)`: checks whether a Wallet Standard wallet supports Solana.
 - `getRegisteredSolanaWallets()`: returns discovered Solana Wallet Standard wallets in browser environments, including Android Mobile Wallet Adapter after it is registered on supported clients.
@@ -164,6 +180,7 @@ Available composable subpaths:
 - `@vue-solana/vue/useWallet`
 - `@vue-solana/vue/useWallets`
 - `@vue-solana/vue/useTransaction`
+- `@vue-solana/vue/useTransactionConfirmation`
 - `@vue-solana/vue/useSignAndSendTransaction`
 
 ### `createSolanaPlugin(options?)`
@@ -274,7 +291,48 @@ Returns:
 
 Uses the current connection and configured wallet to sign and send a transaction.
 
-Returns the same state shape as `useTransaction()`.
+By default, `execute(transaction, options?)` returns after submission and sets `status` to `sent`. Pass `confirm: true` to wait for confirmation after the signature is submitted:
+
+```ts
+await sendTransaction.execute(transaction, {
+  confirm: true,
+  confirmation: { commitment: "confirmed", timeoutMs: 60_000 },
+  skipPreflight: false,
+});
+```
+
+Returns:
+
+- `signature`
+- `confirmation`
+- `status`: `idle`, `sending`, `sent`, `confirming`, `processed`, `confirmed`, `finalized`, or `error`
+- `loading`
+- `error`
+- `execute(transaction, options?)`
+
+The submitted signature remains available if confirmation times out or RPC confirmation fails, so apps can still link users to an explorer.
+
+### `useTransactionConfirmation(options?)`
+
+Waits for a submitted signature to reach a requested commitment without coupling confirmation to the send step.
+
+```ts
+const confirmation = useTransactionConfirmation({ commitment: "confirmed" });
+
+await confirmation.confirm(signature, { timeoutMs: 60_000 });
+```
+
+Returns:
+
+- `signature`
+- `confirmation`
+- `status`: `idle`, `confirming`, `processed`, `confirmed`, `finalized`, or `error`
+- `loading`
+- `error`
+- `confirm(signature, options?)`
+- `reset()`
+
+For explorer links, render after `signature` is set. For devnet, use a URL such as `https://explorer.solana.com/tx/${signature}?cluster=devnet`. Use `mainnet-beta`, `testnet`, or `localnet` to match the app cluster.
 
 ## `@vue-solana/nuxt`
 
@@ -308,3 +366,4 @@ The Nuxt module installs the runtime plugin on the client only and auto-imports 
 - `useSolanaWallets()`
 - `useSolanaBalance()`
 - `useSolanaSignAndSendTransaction()`
+- `useSolanaTransactionConfirmation()`

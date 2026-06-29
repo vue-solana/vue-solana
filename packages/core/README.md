@@ -100,6 +100,7 @@ Direct subpaths:
 - `assertWalletConnected(wallet)`: throws if the wallet is not connected.
 - `assertWalletCanSign(wallet)`: throws if the wallet cannot sign transactions.
 - `signAndSendTransaction(connection, wallet, transaction, options?)`: signs and sends a transaction using a configured wallet. Android Mobile Wallet Adapter wallets prefer `signTransaction` plus app-side RPC submission when available so the app can reliably return the submitted signature.
+- `confirmTransactionSignature(connection, signature, options?)`: waits for a submitted signature to reach a requested commitment. Defaults to `confirmed` commitment and a 60 second timeout.
 
 ## Wallet Interface
 
@@ -154,7 +155,13 @@ If TypeScript cannot resolve `@solana/web3-compat`, add `types/web3-compat.d.ts`
 
 ```ts
 declare module "@solana/web3-compat" {
-  export type { Commitment, SendOptions, TransactionSignature } from "@solana/web3.js";
+  export type {
+    Commitment,
+    RpcResponseAndContext,
+    SendOptions,
+    SignatureResult,
+    TransactionSignature,
+  } from "@solana/web3.js";
   export {
     Connection,
     Keypair,

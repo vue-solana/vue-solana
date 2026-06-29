@@ -9,6 +9,7 @@ export default defineBuildConfig({
     "src/useSignAndSendTransaction",
     "src/useSolana",
     "src/useTransaction",
+    "src/useTransactionConfirmation",
     "src/useWallet",
     "src/useWallets",
   ],

@@ -20,7 +20,7 @@ const sendTransaction = useSolanaSignAndSendTransaction();
 const toast = useToast();
 
 const balanceAddress = ref("11111111111111111111111111111111");
-const transferRecipient = ref("11111111111111111111111111111111");
+const transferRecipient = ref("");
 const transferAmount = ref("0.000001");
 const directBlockhash = ref<string | null>(null);
 const directConnectionLoading = ref(false);
@@ -101,15 +101,20 @@ const signAndSendReady = computed(
     !sendTransaction.loading.value,
 );
 const signAndSendStatus = computed(() => {
-  if (sendTransaction.loading.value) {
-    return "sending";
-  }
-
-  if (sendTransaction.signature.value) {
-    return "signed";
+  if (sendTransaction.status.value !== "idle") {
+    return sendTransaction.status.value;
   }
 
   return wallet.connected.value ? "ready" : "waiting";
+});
+const transferExplorerUrl = computed(() => {
+  const signature = sendTransaction.signature.value;
+
+  if (!signature) {
+    return null;
+  }
+
+  return `https://explorer.solana.com/tx/${signature}?cluster=${rpc.cluster.value}`;
 });
 const signAndSendDisabledReason = computed(() => {
   if (!walletConfigured.value) {
@@ -285,6 +290,8 @@ async function sendDevnetTransfer() {
     transaction.add(createTransferInstruction(web3Compat, fromPubkey, toPubkey, lamports));
 
     await sendTransaction.execute(transaction, {
+      confirm: true,
+      confirmation: { commitment: "confirmed" },
       skipPreflight: false,
     });
   } catch (error) {
@@ -528,17 +535,15 @@ function createTransferInstruction(
           <p class="eyebrow">useSolanaSignAndSendTransaction</p>
           <h2>Real Devnet Transfer</h2>
         </div>
-        <span
-          class="status-pill"
-          :class="signAndSendReady ? 'status-pill--connected' : 'status-pill--idle'"
-        >
+        <span class="status-pill" :class="`status-pill--${sendTransaction.status.value}`">
           {{ signAndSendStatus }}
         </span>
       </div>
 
       <p>
-        Sends a real transfer from the connected wallet. Use devnet, enter a recipient public key,
-        and start with a tiny amount such as <code>0.000001</code> SOL.
+        Sends a real transfer from the connected wallet, then waits for confirmed commitment. Use
+        devnet, enter a recipient public key, and start with a tiny amount such as
+        <code>0.000001</code> SOL.
       </p>
 
       <dl class="data-grid compact-grid">
@@ -547,8 +552,12 @@ function createTransferInstruction(
           <dd>{{ wallet.connected.value ? "Yes" : "No" }}</dd>
         </div>
         <div>
-          <dt>Transaction state</dt>
-          <dd>{{ signAndSendStatus }}</dd>
+          <dt>Submitted signature</dt>
+          <dd>{{ sendTransaction.signature.value ?? "No signature yet" }}</dd>
+        </div>
+        <div>
+          <dt>Confirmation state</dt>
+          <dd data-testid="transfer-confirmation-state">{{ sendTransaction.status.value }}</dd>
         </div>
       </dl>
 
@@ -567,7 +576,13 @@ function createTransferInstruction(
         </button>
       </div>
       <p v-if="signAndSendDisabledReason" class="hint">{{ signAndSendDisabledReason }}</p>
-      <p class="result">Signature: {{ sendTransaction.signature.value ?? "No signature yet" }}</p>
+      <p class="result" data-testid="transfer-signature">
+        Signature: {{ sendTransaction.signature.value ?? "No signature yet" }}
+      </p>
+      <p v-if="transferExplorerUrl" class="result" data-testid="transfer-explorer-link">
+        Explorer:
+        <a :href="transferExplorerUrl" target="_blank" rel="noreferrer">View transaction</a>
+      </p>
       <p v-if="sendTransactionError" class="error">{{ sendTransactionError }}</p>
     </section>
   </main>
@@ -938,6 +953,20 @@ code {
 .status-pill--checking {
   border-color: rgb(234 179 8 / 0.5);
   color: rgb(161 98 7);
+}
+
+.status-pill--sending,
+.status-pill--sent,
+.status-pill--confirming {
+  border-color: rgb(59 130 246 / 0.45);
+  color: rgb(37 99 235);
+}
+
+.status-pill--processed,
+.status-pill--confirmed,
+.status-pill--finalized {
+  border-color: rgb(16 185 129 / 0.45);
+  color: rgb(5 150 105);
 }
 
 .status-pill--error {

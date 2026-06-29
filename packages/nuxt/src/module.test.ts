@@ -104,6 +104,11 @@ describe("Nuxt module", () => {
           from: "@vue-solana/vue/useSignAndSendTransaction",
         },
         { name: "useSolana", as: "useSolana", from: "@vue-solana/vue/useSolana" },
+        {
+          name: "useTransactionConfirmation",
+          as: "useSolanaTransactionConfirmation",
+          from: "@vue-solana/vue/useTransactionConfirmation",
+        },
         { name: "useWallet", as: "useSolanaWallet", from: "@vue-solana/vue/useWallet" },
         { name: "useWallets", as: "useSolanaWallets", from: "@vue-solana/vue/useWallets" },
       ]),

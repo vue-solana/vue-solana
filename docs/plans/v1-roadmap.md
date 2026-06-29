@@ -77,21 +77,21 @@ Acceptance criteria:
 
 ## Phase 3: Transaction Lifecycle
 
-Status: planned.
+Status: done.
 
 `signAndSendTransaction()` currently returns a signature. v1 apps also need confirmation and status handling.
 
 Tasks:
 
-- [ ] Add a core helper for confirming a transaction signature.
-- [ ] Support caller-selected commitment, with safe defaults for common app flows.
-- [ ] Add a Vue composable such as `useTransactionConfirmation()`.
-- [ ] Consider adding confirmation options to `useSignAndSendTransaction()` without making the simple signature-only flow harder.
-- [ ] Track status values such as `idle`, `sending`, `sent`, `confirming`, `confirmed`, `finalized`, and `error` where appropriate.
-- [ ] Preserve stale execution protection when multiple sends or confirmations overlap.
-- [ ] Add timeout handling with a clear error message for transactions that do not settle in time.
-- [ ] Document how apps should link to explorers after receiving a signature.
-- [ ] Update examples to show the difference between submitted and confirmed transactions.
+- [x] Add a core helper for confirming a transaction signature.
+- [x] Support caller-selected commitment, with safe defaults for common app flows.
+- [x] Add a Vue composable such as `useTransactionConfirmation()`.
+- [x] Consider adding confirmation options to `useSignAndSendTransaction()` without making the simple signature-only flow harder.
+- [x] Track status values such as `idle`, `sending`, `sent`, `confirming`, `processed`, `confirmed`, `finalized`, and `error` where appropriate.
+- [x] Preserve stale execution protection when multiple sends or confirmations overlap.
+- [x] Add timeout handling with a clear error message for transactions that do not settle in time.
+- [x] Document how apps should link to explorers after receiving a signature.
+- [x] Update examples to show the difference between submitted and confirmed transactions.
 
 Acceptance criteria:
 

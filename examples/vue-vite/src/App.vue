@@ -23,7 +23,7 @@ const walletDiscovery = useWallets();
 const sendTransaction = useSignAndSendTransaction();
 
 const balanceAddress = ref("11111111111111111111111111111111");
-const transferRecipient = ref("11111111111111111111111111111111");
+const transferRecipient = ref("");
 const transferAmount = ref("0.000001");
 const directBlockhash = ref<string | null>(null);
 const directConnectionLoading = ref(false);
@@ -95,6 +95,22 @@ const signAndSendReady = computed(
     Boolean(transferLamports.value) &&
     !sendTransaction.loading.value,
 );
+const signAndSendStatus = computed(() => {
+  if (sendTransaction.status.value !== "idle") {
+    return sendTransaction.status.value;
+  }
+
+  return wallet.connected.value ? "ready" : "waiting";
+});
+const transferExplorerUrl = computed(() => {
+  const signature = sendTransaction.signature.value;
+
+  if (!signature) {
+    return null;
+  }
+
+  return `https://explorer.solana.com/tx/${signature}?cluster=${rpc.cluster.value}`;
+});
 const signAndSendDisabledReason = computed(() => {
   if (!walletConfigured.value) {
     return "Select a discovered wallet first.";
@@ -238,6 +254,8 @@ async function sendDevnetTransfer() {
     transaction.add(createTransferInstruction(fromPubkey, toPubkey, lamports));
 
     await sendTransaction.execute(transaction, {
+      confirm: true,
+      confirmation: { commitment: "confirmed" },
       skipPreflight: false,
     });
   } catch (error) {
@@ -528,12 +546,26 @@ function createTransferInstruction(fromPubkey: PublicKey, toPubkey: PublicKey, l
           <p class="eyebrow">useSignAndSendTransaction</p>
           <h2>Real Devnet Transfer</h2>
         </div>
+        <span class="status-pill" :class="`status-pill--${sendTransaction.status.value}`">
+          {{ signAndSendStatus }}
+        </span>
       </div>
 
       <p>
-        Sends a real transfer from the connected wallet. Use devnet, enter a recipient public key,
-        and start with a tiny amount such as <code>0.000001</code> SOL.
+        Sends a real transfer from the connected wallet, then waits for confirmed commitment. Use
+        devnet, enter a recipient public key, and start with a tiny amount such as
+        <code>0.000001</code> SOL.
       </p>
+      <dl class="data-grid compact-grid">
+        <div>
+          <dt>Submitted signature</dt>
+          <dd>{{ sendTransaction.signature.value ?? "No signature yet" }}</dd>
+        </div>
+        <div>
+          <dt>Confirmation state</dt>
+          <dd data-testid="transfer-confirmation-state">{{ sendTransaction.status.value }}</dd>
+        </div>
+      </dl>
       <label>
         Recipient address
         <input v-model="transferRecipient" placeholder="Enter recipient public key" />
@@ -557,6 +589,10 @@ function createTransferInstruction(fromPubkey: PublicKey, toPubkey: PublicKey, l
       </p>
       <p class="result" data-testid="transfer-signature">
         Signature: {{ sendTransaction.signature.value ?? "No signature yet" }}
+      </p>
+      <p v-if="transferExplorerUrl" class="result" data-testid="transfer-explorer-link">
+        Explorer:
+        <a :href="transferExplorerUrl" target="_blank" rel="noreferrer">View transaction</a>
       </p>
       <p v-if="sendTransactionError" class="error">{{ sendTransactionError }}</p>
     </section>
@@ -632,6 +668,10 @@ function createTransferInstruction(fromPubkey: PublicKey, toPubkey: PublicKey, l
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
   gap: 0.75rem;
   margin: 0 0 1rem;
+}
+
+.compact-grid {
+  margin-top: 1rem;
 }
 
 .panel > p + .data-grid,
@@ -771,6 +811,19 @@ code {
 .status-pill--connected {
   border-color: hsla(160, 100%, 37%, 0.4);
   color: hsla(160, 100%, 37%, 1);
+}
+
+.status-pill--sent,
+.status-pill--confirmed,
+.status-pill--finalized {
+  border-color: hsla(160, 100%, 37%, 0.4);
+  color: hsla(160, 100%, 37%, 1);
+}
+
+.status-pill--sending,
+.status-pill--confirming {
+  border-color: hsla(48, 100%, 45%, 0.5);
+  color: hsl(48, 100%, 42%);
 }
 
 .status-pill--checking {

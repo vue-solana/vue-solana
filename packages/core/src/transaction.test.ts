@@ -1,9 +1,13 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Connection } from "@solana/web3-compat";
 import type { SolanaTransaction, SolanaWallet } from "./types";
-import { signAndSendTransaction } from "./transaction";
+import { confirmTransactionSignature, signAndSendTransaction } from "./transaction";
 
 const publicKey = { toBase58: () => "public-key" } as SolanaWallet["publicKey"];
+
+afterEach(() => {
+  vi.useRealTimers();
+});
 
 function createRawTransactionScenario() {
   const rawTransaction = new Uint8Array([1, 2, 3]);
@@ -79,5 +83,58 @@ describe("signAndSendTransaction", () => {
     await expect(
       signAndSendTransaction(connection, wallet, {} as SolanaTransaction),
     ).rejects.toThrow("Solana wallet is not connected");
+  });
+});
+
+describe("confirmTransactionSignature", () => {
+  it("confirms a signature with confirmed commitment by default", async () => {
+    const result = { value: { err: null } };
+    const connection = {
+      confirmTransaction: vi.fn().mockResolvedValue(result),
+    } as unknown as Connection;
+
+    await expect(confirmTransactionSignature(connection, "signature")).resolves.toEqual({
+      signature: "signature",
+      commitment: "confirmed",
+      result,
+    });
+    expect(connection.confirmTransaction).toHaveBeenCalledWith("signature", "confirmed");
+  });
+
+  it("supports caller-selected commitment", async () => {
+    const connection = {
+      confirmTransaction: vi.fn().mockResolvedValue({ value: { err: null } }),
+    } as unknown as Connection;
+
+    await expect(
+      confirmTransactionSignature(connection, "signature", { commitment: "finalized" }),
+    ).resolves.toMatchObject({ commitment: "finalized" });
+    expect(connection.confirmTransaction).toHaveBeenCalledWith("signature", "finalized");
+  });
+
+  it("rejects when the confirmation result contains an error", async () => {
+    const connection = {
+      confirmTransaction: vi.fn().mockResolvedValue({
+        value: { err: { InstructionError: [0, "Custom"] } },
+      }),
+    } as unknown as Connection;
+
+    await expect(confirmTransactionSignature(connection, "signature")).rejects.toThrow(
+      "Transaction signature failed to reach confirmed commitment.",
+    );
+  });
+
+  it("rejects with a clear timeout message", async () => {
+    vi.useFakeTimers();
+    const connection = {
+      confirmTransaction: vi.fn(() => new Promise(() => undefined)),
+    } as unknown as Connection;
+    const promise = confirmTransactionSignature(connection, "signature", { timeoutMs: 10 });
+    const rejection = expect(promise).rejects.toThrow(
+      "Timed out waiting for transaction signature to reach confirmed commitment.",
+    );
+
+    await vi.advanceTimersByTimeAsync(10);
+    await rejection;
   });
 });

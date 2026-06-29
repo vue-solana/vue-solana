@@ -165,6 +165,7 @@ Direct subpaths:
 - `assertWalletConnected(wallet)`: throws if the wallet is not connected.
 - `assertWalletCanSign(wallet)`: throws if the wallet cannot sign transactions.
 - `signAndSendTransaction(connection, wallet, transaction, options?)`: signs and sends a transaction using a configured wallet. Android Mobile Wallet Adapter wallets use `signTransaction` plus `connection.sendRawTransaction()` when available so the app owns submission and can reliably return the RPC signature after the wallet handoff.
+- `confirmTransactionSignature(connection, signature, options?)`: waits for a submitted signature to reach a requested commitment. Defaults to `confirmed` commitment and a 60 second timeout.
 
 ## Known TypeScript Issue
 

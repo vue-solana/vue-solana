@@ -1,6 +1,15 @@
 import type { Connection, TransactionSignature } from "@solana/web3-compat";
 import { assertWalletCanSign, assertWalletConnected } from "./wallet";
-import type { SendTransactionOptions, SolanaTransaction, SolanaWallet } from "./types";
+import type {
+  ConfirmTransactionOptions,
+  SendTransactionOptions,
+  SolanaTransaction,
+  SolanaWallet,
+  TransactionConfirmation,
+} from "./types";
+
+const DEFAULT_CONFIRMATION_COMMITMENT = "confirmed";
+const DEFAULT_CONFIRMATION_TIMEOUT_MS = 60_000;
 
 export async function signAndSendTransaction(
   connection: Connection,
@@ -25,6 +34,32 @@ export async function signAndSendTransaction(
   return signAndSendRawTransaction(connection, wallet, transaction, options);
 }
 
+export async function confirmTransactionSignature(
+  connection: Connection,
+  signature: TransactionSignature,
+  options: ConfirmTransactionOptions = {},
+): Promise<TransactionConfirmation> {
+  const commitment = options.commitment ?? DEFAULT_CONFIRMATION_COMMITMENT;
+  const confirmation = connection.confirmTransaction(signature, commitment) as Promise<
+    TransactionConfirmation["result"]
+  >;
+  const result = await withTransactionTimeout(
+    confirmation,
+    options.timeoutMs ?? DEFAULT_CONFIRMATION_TIMEOUT_MS,
+    `Timed out waiting for transaction ${signature} to reach ${commitment} commitment.`,
+  );
+
+  if (result.value.err) {
+    throw new Error(`Transaction ${signature} failed to reach ${commitment} commitment.`);
+  }
+
+  return {
+    signature,
+    commitment,
+    result,
+  };
+}
+
 async function signAndSendRawTransaction(
   connection: Connection,
   wallet: SolanaWallet & Required<Pick<SolanaWallet, "signTransaction">>,
@@ -39,4 +74,26 @@ async function signAndSendRawTransaction(
 
 function isMobileWalletAdapterWallet(wallet: SolanaWallet): boolean {
   return wallet.source === "mobile-wallet-adapter";
+}
+
+async function withTransactionTimeout<T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+  message: string,
+): Promise<T> {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+
+  try {
+    const timeout = new Promise<never>((_, reject) => {
+      timeoutId = setTimeout(() => {
+        reject(new Error(message));
+      }, timeoutMs);
+    });
+
+    return await Promise.race([promise, timeout]);
+  } finally {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+  }
 }
