@@ -1,5 +1,11 @@
 # @vue-solana/core
 
+## 0.5.0
+
+### Minor Changes
+
+- ed16ec2: Add transaction confirmation helpers, Vue confirmation state, and Nuxt auto-import support.
+
 ## 0.4.2
 
 ### Patch Changes
