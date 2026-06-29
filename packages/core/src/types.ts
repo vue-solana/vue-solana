@@ -1,8 +1,10 @@
 import type {
   Commitment,
   Connection,
+  RpcResponseAndContext,
   PublicKey,
   SendOptions,
+  SignatureResult,
   Transaction,
   TransactionSignature,
   VersionedTransaction,
@@ -73,4 +75,15 @@ export interface SolanaWalletInfo {
 
 export interface SendTransactionOptions extends SendOptions {
   skipPreflight?: boolean;
+}
+
+export interface ConfirmTransactionOptions {
+  commitment?: Commitment;
+  timeoutMs?: number;
+}
+
+export interface TransactionConfirmation {
+  signature: TransactionSignature;
+  commitment: Commitment;
+  result: RpcResponseAndContext<SignatureResult>;
 }

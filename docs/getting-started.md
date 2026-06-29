@@ -88,7 +88,13 @@ Runtime imports still use the real `@solana/web3-compat` package. If TypeScript 
 
 ```ts
 declare module "@solana/web3-compat" {
-  export type { Commitment, SendOptions, TransactionSignature } from "@solana/web3.js";
+  export type {
+    Commitment,
+    RpcResponseAndContext,
+    SendOptions,
+    SignatureResult,
+    TransactionSignature,
+  } from "@solana/web3.js";
   export {
     Connection,
     Keypair,
@@ -598,14 +604,25 @@ transaction.add(
 );
 
 await sendTransaction.execute(transaction, {
+  confirm: true,
+  confirmation: { commitment: "confirmed" },
   skipPreflight: false,
 });
+```
+
+`confirm: true` keeps the simple signature flow available while letting this example wait for confirmation. During the send, `sendTransaction.status.value` moves through `sending`, `confirming`, and then `processed`, `confirmed`, or `finalized` depending on the requested commitment. If confirmation times out, the submitted `signature` remains available for troubleshooting.
+
+After a signature is available, link to an explorer that matches the active cluster:
+
+```ts
+const explorerUrl = `https://explorer.solana.com/tx/${signature}?cluster=devnet`;
 ```
 
 Expected result:
 
 - The wallet prompts you to approve the transfer.
-- The example displays a transaction signature.
+- The example displays a submitted transaction signature and confirmation status.
+- The example shows a Solana Explorer link after receiving a signature.
 - The sender balance decreases by the transfer amount plus fees.
 
 ### 12. Final Verification

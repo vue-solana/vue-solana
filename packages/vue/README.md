@@ -165,14 +165,30 @@ Composables return inert SSR-safe state when no plugin context is available. Rea
 ```ts
 import { useSignAndSendTransaction } from "@vue-solana/vue/useSignAndSendTransaction";
 
-const { signature, loading, error, execute } = useSignAndSendTransaction();
+const { signature, confirmation, status, loading, error, execute } = useSignAndSendTransaction();
 
 await execute(transaction, {
+  confirm: true,
+  confirmation: { commitment: "confirmed" },
   skipPreflight: false,
 });
 ```
 
-The current wallet must be connected and support either `signAndSendTransaction` or `signTransaction`. Android Mobile Wallet Adapter wallets prefer `signTransaction` plus app-side RPC submission when available. `loading` is also cleared if a wallet adapter never returns a result; in that stale case, check the wallet or an explorer before retrying because chain status may be unknown.
+The current wallet must be connected and support either `signAndSendTransaction` or `signTransaction`. Android Mobile Wallet Adapter wallets prefer `signTransaction` plus app-side RPC submission when available. This avoids a mobile handoff edge case where the wallet sends successfully but the browser page does not receive the wallet adapter's returned signature.
+
+Without `confirm: true`, `execute()` returns after submission and sets `status` to `sent`. With confirmation enabled, status moves through `sending`, `confirming`, and then `processed`, `confirmed`, or `finalized` to match the requested commitment. If confirmation times out or fails, the submitted `signature` remains available so the app can link to an explorer.
+
+Use `useTransactionConfirmation()` when you already have a submitted signature and want to wait for confirmation separately:
+
+```ts
+import { useTransactionConfirmation } from "@vue-solana/vue/useTransactionConfirmation";
+
+const confirmation = useTransactionConfirmation({ commitment: "finalized" });
+
+await confirmation.confirm(signature);
+```
+
+`useSignAndSendTransaction()` also clears `loading` if a wallet adapter never returns a result. In that stale case, `error` is set and the chain status may be unknown, so check the connected wallet or an explorer before retrying.
 
 ## Example App
 
@@ -207,7 +223,8 @@ Docs: [Vue Solana Agent Skill](https://vue-solana-docs.vercel.app/agent-skill)
 - `useWallets()`: returns discovered browser extension wallets, Android Mobile Wallet Adapter wallets, iOS browser wallet links, and wallet selection actions.
 - `useBalance(address, commitment?)`: loads lamport balance for a `PublicKey` or address string.
 - `useTransaction(handler, options?)`: generic async transaction state helper with optional timeout settings.
-- `useSignAndSendTransaction()`: signs and sends a transaction through the configured wallet.
+- `useTransactionConfirmation(options?)`: confirms a submitted signature with reactive status and timeout/error state.
+- `useSignAndSendTransaction()`: signs and sends a transaction through the configured wallet, with optional confirmation waiting.
 
 Direct composable subpaths:
 
@@ -218,6 +235,7 @@ Direct composable subpaths:
 - `@vue-solana/vue/useWallet`
 - `@vue-solana/vue/useWallets`
 - `@vue-solana/vue/useTransaction`
+- `@vue-solana/vue/useTransactionConfirmation`
 - `@vue-solana/vue/useSignAndSendTransaction`
 
 ## Known TypeScript Issue
@@ -228,7 +246,13 @@ If TypeScript cannot resolve `@solana/web3-compat`, add `types/web3-compat.d.ts`
 
 ```ts
 declare module "@solana/web3-compat" {
-  export type { Commitment, SendOptions, TransactionSignature } from "@solana/web3.js";
+  export type {
+    Commitment,
+    RpcResponseAndContext,
+    SendOptions,
+    SignatureResult,
+    TransactionSignature,
+  } from "@solana/web3.js";
   export {
     Connection,
     Keypair,

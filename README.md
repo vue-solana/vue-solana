@@ -241,7 +241,13 @@ If your app reports that TypeScript cannot find declarations for `@solana/web3-c
 
 ```ts
 declare module "@solana/web3-compat" {
-  export type { Commitment, SendOptions, TransactionSignature } from "@solana/web3.js";
+  export type {
+    Commitment,
+    RpcResponseAndContext,
+    SendOptions,
+    SignatureResult,
+    TransactionSignature,
+  } from "@solana/web3.js";
   export {
     Connection,
     Keypair,

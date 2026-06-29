@@ -64,6 +64,15 @@ test("keeps wallet and transfer flows safe without a browser wallet", async ({ p
   await expect(page.getByTestId("wallet-count")).toHaveText("0");
 });
 
+test("renders submitted-vs-confirmed transaction state", async ({ page }) => {
+  await page.goto("/");
+
+  await expect(page.getByTestId("transfer-panel")).toContainText("waits for confirmed commitment");
+  await expect(page.getByTestId("transfer-signature")).toHaveText("Signature: No signature yet");
+  await expect(page.getByTestId("transfer-confirmation-state")).toHaveText("idle");
+  await expect(page.getByTestId("transfer-explorer-link")).toHaveCount(0);
+});
+
 test("runs the mock transaction helper", async ({ page }) => {
   await page.goto("/");
 

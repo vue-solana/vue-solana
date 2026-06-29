@@ -59,7 +59,13 @@ Runtime imports still use the real `@solana/web3-compat` package. If TypeScript 
 
 ```ts
 declare module "@solana/web3-compat" {
-  export type { Commitment, SendOptions, TransactionSignature } from "@solana/web3.js";
+  export type {
+    Commitment,
+    RpcResponseAndContext,
+    SendOptions,
+    SignatureResult,
+    TransactionSignature,
+  } from "@solana/web3.js";
   export {
     Connection,
     Keypair,

@@ -20,7 +20,7 @@ export default defineNuxtConfig({
     },
   },
   routeRules: {
-    "/demo": { ssr: false },
+    "/demo": { ssr: false, prerender: false },
     "/**": { prerender: true },
   },
   vite: {

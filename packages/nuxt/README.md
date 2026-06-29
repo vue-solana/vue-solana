@@ -68,6 +68,7 @@ The module auto-imports these composables from direct `@vue-solana/vue/*` subpat
 - `useSolanaWallet()`
 - `useSolanaWallets()`
 - `useSolanaBalance()`
+- `useSolanaTransactionConfirmation()`
 - `useSolanaSignAndSendTransaction()`
 
 The runtime plugin is client-only. Auto-imported composables can be called during SSR and return inert state until hydration provides the real client context. Trigger RPC and wallet work from client lifecycle hooks or user actions.
@@ -172,7 +173,13 @@ If TypeScript cannot resolve `@solana/web3-compat`, add `types/web3-compat.d.ts`
 
 ```ts
 declare module "@solana/web3-compat" {
-  export type { Commitment, SendOptions, TransactionSignature } from "@solana/web3.js";
+  export type {
+    Commitment,
+    RpcResponseAndContext,
+    SendOptions,
+    SignatureResult,
+    TransactionSignature,
+  } from "@solana/web3.js";
   export {
     Connection,
     Keypair,

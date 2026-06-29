@@ -68,6 +68,7 @@ Direct composable subpaths:
 - `@vue-solana/vue/useWallet`
 - `@vue-solana/vue/useWallets`
 - `@vue-solana/vue/useTransaction`
+- `@vue-solana/vue/useTransactionConfirmation`
 - `@vue-solana/vue/useSignAndSendTransaction`
 
 - `useSolana()`: returns the full injected Solana context.
@@ -77,7 +78,8 @@ Direct composable subpaths:
 - `useWallets()`: returns discovered browser extension wallets, Android Mobile Wallet Adapter wallets, and wallet selection actions.
 - `useBalance(address, commitment?)`: loads lamport balance for a `PublicKey` or address string.
 - `useTransaction(handler, options?)`: generic async transaction state helper with optional timeout settings.
-- `useSignAndSendTransaction()`: signs and sends a transaction through the configured wallet.
+- `useTransactionConfirmation(options?)`: confirms a submitted signature with reactive status and timeout/error state.
+- `useSignAndSendTransaction()`: signs and sends a transaction through the configured wallet, with optional confirmation waiting.
 
 ## Read RPC State
 
@@ -168,16 +170,35 @@ Composables return inert SSR-safe state when no plugin context is available. Rea
 ```ts
 import { useSignAndSendTransaction } from "@vue-solana/vue/useSignAndSendTransaction";
 
-const { signature, loading, error, execute } = useSignAndSendTransaction();
+const { signature, confirmation, status, loading, error, execute } = useSignAndSendTransaction();
 
 await execute(transaction, {
+  confirm: true,
+  confirmation: { commitment: "confirmed" },
   skipPreflight: false,
 });
 ```
 
 The current wallet must be connected and support either `signAndSendTransaction` or `signTransaction`. Android Mobile Wallet Adapter wallets prefer `signTransaction` plus app-side RPC submission when available. This avoids a mobile handoff edge case where the wallet sends successfully but the browser page does not receive the wallet adapter's returned signature.
 
+Without `confirm: true`, `execute()` returns after submission and sets `status` to `sent`. With confirmation enabled, status moves through `sending`, `confirming`, and then `processed`, `confirmed`, or `finalized` to match the requested commitment. If confirmation times out or fails, the submitted `signature` remains available so the app can link to an explorer.
+
 `useSignAndSendTransaction()` also clears `loading` if a wallet adapter never returns a result. In that stale case, `error` is set and the chain status may be unknown, so check the connected wallet or an explorer before retrying.
+
+## Confirm an Existing Signature
+
+Use `useTransactionConfirmation()` when your app already has a submitted signature and wants to wait for a specific commitment separately from signing and sending:
+
+```ts
+import { useTransactionConfirmation } from "@vue-solana/vue/useTransactionConfirmation";
+
+const { signature, confirmation, status, loading, error, confirm, reset } =
+  useTransactionConfirmation({ commitment: "confirmed", timeoutMs: 60_000 });
+
+await confirm("PASTE_SUBMITTED_SIGNATURE", { commitment: "finalized" });
+```
+
+The composable preserves the submitted `signature` when confirmation times out or the RPC call fails, so apps can still show an explorer link while surfacing `error` to the user.
 
 ## Example App
 

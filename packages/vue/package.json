@@ -65,6 +65,11 @@
       "import": "./dist/useTransaction.mjs",
       "require": "./dist/useTransaction.cjs"
     },
+    "./useTransactionConfirmation": {
+      "types": "./dist/useTransactionConfirmation.d.ts",
+      "import": "./dist/useTransactionConfirmation.mjs",
+      "require": "./dist/useTransactionConfirmation.cjs"
+    },
     "./useSignAndSendTransaction": {
       "types": "./dist/useSignAndSendTransaction.d.ts",
       "import": "./dist/useSignAndSendTransaction.mjs",

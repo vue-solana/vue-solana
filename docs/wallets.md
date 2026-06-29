@@ -216,13 +216,21 @@ async function sendLamports(recipient: string, lamports: number) {
     }),
   );
 
-  await sendTransaction.execute(transaction, {
+  const signature = await sendTransaction.execute(transaction, {
     skipPreflight: false,
+    confirm: true,
+    confirmation: { commitment: "confirmed" },
   });
+
+  return {
+    signature,
+    status: sendTransaction.status.value,
+    explorerUrl: `https://explorer.solana.com/tx/${signature}?cluster=devnet`,
+  };
 }
 ```
 
-Use devnet while testing. Devnet SOL has no real value, but transactions still consume fees.
+Use devnet while testing. Devnet SOL has no real value, but transactions still consume fees. The returned signature is safe to display immediately; render the confirmation `status` separately so users can distinguish a submitted transaction from one that reached the requested commitment. If you intentionally want signature-only behavior, omit `confirm: true` and direct users to the explorer link for final status.
 
 ## Manual Wallet Interface
 
