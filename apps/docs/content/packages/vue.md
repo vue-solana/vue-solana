@@ -278,7 +278,7 @@ const { status, loading, error, refresh, stopPolling, stopSubscription } = useSi
 );
 ```
 
-Polling uses `getSignatureStatuses()` on every interval, so stop polling when the UI no longer needs updates. Invalid signatures clear stale `status`, set `error`, and do not call RPC or start polling. Invalid `pollIntervalMs` values less than or equal to `0` set a `RangeError` and do not start polling. `subscribe: true` uses `onSignature()` and removes the listener on component unmount. Calling `stopSubscription()` removes the current signature listener and prevents automatic restarts for that composable instance.
+Polling uses `getSignatureStatuses()` on every interval, so stop polling when the UI no longer needs updates. Calling `stopPolling()` clears the current interval and prevents automatic polling restarts for that composable instance. Invalid signatures clear stale `status`, set `error`, and do not call RPC or start polling. Invalid `pollIntervalMs` values less than or equal to `0` set a `RangeError` and do not start polling. `subscribe: true` uses `onSignature()` and removes the listener on component unmount. Calling `stopSubscription()` removes the current signature listener and prevents automatic restarts for that composable instance.
 
 `useProgramAccounts()` calls `getProgramAccounts()` on each refresh. Broad program scans are expensive on public RPC endpoints and usually need app-specific filters, indexing, caching, or dedicated RPC infrastructure.
 

@@ -4,11 +4,13 @@ import { onMounted, onUnmounted, shallowRef, toValue, watch, type MaybeRefOrGett
 import { useConnection } from "./useConnection";
 import { tryUseSolana } from "./useSolana";
 
+export type ProgramAccountMemcmpEncoding = "base58" | "base64" | "base64+zstd" | "bytes";
+
 export type ProgramAccountMemcmpFilter = {
   memcmp: {
     offset: number;
     bytes: string;
-    encoding?: string;
+    encoding?: ProgramAccountMemcmpEncoding;
   };
 };
 

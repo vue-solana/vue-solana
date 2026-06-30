@@ -40,6 +40,9 @@ export default defineConfig({
       "@vue-solana/vue/useConnection": fileURLToPath(
         new URL("./packages/vue/src/useConnection.ts", import.meta.url),
       ),
+      "@vue-solana/vue/useProgramAccounts": fileURLToPath(
+        new URL("./packages/vue/src/useProgramAccounts.ts", import.meta.url),
+      ),
       "@vue-solana/vue/useRpc": fileURLToPath(
         new URL("./packages/vue/src/useRpc.ts", import.meta.url),
       ),

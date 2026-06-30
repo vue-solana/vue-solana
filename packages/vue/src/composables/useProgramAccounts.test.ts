@@ -1,9 +1,12 @@
 import { PublicKey } from "@solana/web3-compat";
 import { flushPromises } from "@vue/test-utils";
-import { describe, expect, expectTypeOf, it, vi } from "vitest";
+import {
+  useProgramAccounts,
+  type UseProgramAccountsOptions,
+} from "@vue-solana/vue/useProgramAccounts";
+import { describe, expect, it, vi } from "vitest";
 import { defineComponent, h, ref } from "vue";
 import { createMockSolanaContext, mountWithSolana } from "../../test-utils";
-import { useProgramAccounts, type UseProgramAccountsOptions } from "./useProgramAccounts";
 
 function deferred<T>() {
   let resolve!: (value: T) => void;
@@ -47,14 +50,30 @@ function mountProgramAccounts(
 
 describe("useProgramAccounts", () => {
   it("accepts Solana SDK getProgramAccounts option shapes", () => {
-    expectTypeOf({
+    const validOptions = {
       commitment: "confirmed",
       dataSlice: { offset: 1, length: 32 },
       filters: [
         { dataSize: 165 },
         { memcmp: { offset: 0, bytes: "11111111111111111111111111111111", encoding: "base64" } },
       ],
-    }).toExtend<UseProgramAccountsOptions>();
+    } satisfies UseProgramAccountsOptions;
+
+    const invalidOptions: UseProgramAccountsOptions = {
+      filters: [
+        {
+          memcmp: {
+            offset: 0,
+            bytes: "abc",
+            // @ts-expect-error memcmp encoding must match Solana RPC's supported literals.
+            encoding: "hex",
+          },
+        },
+      ],
+    };
+
+    expect(validOptions.filters).toHaveLength(2);
+    expect(invalidOptions.filters).toHaveLength(1);
   });
 
   it("loads accounts for a program id string with config", async () => {

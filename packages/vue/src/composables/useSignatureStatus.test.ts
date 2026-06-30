@@ -170,4 +170,26 @@ describe("useSignatureStatus", () => {
     await vi.advanceTimersByTimeAsync(50);
     expect(getSignatureStatuses).toHaveBeenCalledTimes(2);
   });
+
+  it("does not restart polling after manual stop when the input changes", async () => {
+    vi.useFakeTimers();
+    const getSignatureStatuses = vi.fn().mockResolvedValue({ value: [null] });
+    const signatureRef = ref(signature);
+    const { result } = mountUseSignatureStatus(
+      signatureRef,
+      { pollIntervalMs: 50 },
+      {
+        getSignatureStatuses,
+      },
+    );
+
+    await flushPromises();
+    result.stopPolling();
+
+    signatureRef.value = nextSignature;
+    await flushPromises();
+    await vi.advanceTimersByTimeAsync(50);
+
+    expect(getSignatureStatuses).toHaveBeenCalledTimes(2);
+  });
 });

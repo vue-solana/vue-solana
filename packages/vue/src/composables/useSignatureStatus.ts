@@ -29,6 +29,7 @@ export function useSignatureStatus(
   let subscriptionStartId = 0;
   let pollId: ReturnType<typeof setInterval> | null = null;
   let subscriptionId: number | null = null;
+  let manuallyStoppedPolling = false;
   let manuallyStoppedSubscription = false;
 
   async function refresh() {
@@ -72,6 +73,11 @@ export function useSignatureStatus(
   }
 
   function stopPolling() {
+    manuallyStoppedPolling = true;
+    stopCurrentPolling();
+  }
+
+  function stopCurrentPolling() {
     if (pollId === null) {
       return;
     }
@@ -81,11 +87,11 @@ export function useSignatureStatus(
   }
 
   function startPolling() {
-    stopPolling();
+    stopCurrentPolling();
 
     const value = toValue(signature);
 
-    if (!options.pollIntervalMs || !value || !solana) {
+    if (manuallyStoppedPolling || !options.pollIntervalMs || !value || !solana) {
       return;
     }
 
