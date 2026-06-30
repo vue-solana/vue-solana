@@ -95,13 +95,28 @@ describe("Nuxt module", () => {
     });
     expect(kit.addImports).toHaveBeenCalledWith(
       expect.arrayContaining([
+        {
+          name: "useAccountInfo",
+          as: "useSolanaAccountInfo",
+          from: "@vue-solana/vue/useAccountInfo",
+        },
         { name: "useBalance", as: "useSolanaBalance", from: "@vue-solana/vue/useBalance" },
         { name: "useConnection", as: "useSolanaConnection", from: "@vue-solana/vue/useConnection" },
+        {
+          name: "useProgramAccounts",
+          as: "useSolanaProgramAccounts",
+          from: "@vue-solana/vue/useProgramAccounts",
+        },
         { name: "useRpc", as: "useSolanaRpc", from: "@vue-solana/vue/useRpc" },
         {
           name: "useSignAndSendTransaction",
           as: "useSolanaSignAndSendTransaction",
           from: "@vue-solana/vue/useSignAndSendTransaction",
+        },
+        {
+          name: "useSignatureStatus",
+          as: "useSolanaSignatureStatus",
+          from: "@vue-solana/vue/useSignatureStatus",
         },
         { name: "useSolana", as: "useSolana", from: "@vue-solana/vue/useSolana" },
         {

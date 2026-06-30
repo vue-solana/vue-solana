@@ -118,6 +118,26 @@ const { balance, loading, error, refresh } = useBalance(address);
 </template>
 ```
 
+## Read Account Data
+
+```ts
+import { useAccountInfo } from "@vue-solana/vue/useAccountInfo";
+import { useProgramAccounts } from "@vue-solana/vue/useProgramAccounts";
+import { useSignatureStatus } from "@vue-solana/vue/useSignatureStatus";
+
+const account = useAccountInfo(address, { watch: true });
+const programAccounts = useProgramAccounts(programId, {
+  dataSlice: { offset: 0, length: 32 },
+  filters: [{ dataSize: 165 }],
+});
+const signatureStatus = useSignatureStatus(signature, {
+  pollIntervalMs: 2_000,
+  searchTransactionHistory: true,
+});
+```
+
+`useProgramAccounts()` can be expensive on public RPC nodes. Prefer narrow `filters`, use `dataSlice` when you only need part of account data, and avoid polling broad program scans.
+
 ## Wallet State
 
 ```vue
@@ -222,8 +242,11 @@ Docs: [Vue Solana Agent Skill](https://vue-solana-docs.vercel.app/agent-skill)
 - `useWallet()`: returns wallet refs, computed connection state, and wallet actions.
 - `useWallets()`: returns discovered browser extension wallets, Android Mobile Wallet Adapter wallets, iOS browser wallet links, and wallet selection actions.
 - `useBalance(address, commitment?)`: loads lamport balance for a `PublicKey` or address string.
+- `useAccountInfo(address, options?)`: loads account info and can subscribe to account changes with `watch: true`.
+- `useProgramAccounts(programId, config?)`: loads accounts owned by a program with optional filters, commitment, and `dataSlice`.
 - `useTransaction(handler, options?)`: generic async transaction state helper with optional timeout settings.
 - `useTransactionConfirmation(options?)`: confirms a submitted signature with reactive status and timeout/error state.
+- `useSignatureStatus(signature, options?)`: reads a transaction signature status with optional polling or websocket subscription.
 - `useSignAndSendTransaction()`: signs and sends a transaction through the configured wallet, with optional confirmation waiting.
 
 Direct composable subpaths:
@@ -231,11 +254,14 @@ Direct composable subpaths:
 - `@vue-solana/vue/useSolana`
 - `@vue-solana/vue/useRpc`
 - `@vue-solana/vue/useConnection`
+- `@vue-solana/vue/useAccountInfo`
 - `@vue-solana/vue/useBalance`
+- `@vue-solana/vue/useProgramAccounts`
 - `@vue-solana/vue/useWallet`
 - `@vue-solana/vue/useWallets`
 - `@vue-solana/vue/useTransaction`
 - `@vue-solana/vue/useTransactionConfirmation`
+- `@vue-solana/vue/useSignatureStatus`
 - `@vue-solana/vue/useSignAndSendTransaction`
 
 ## Known TypeScript Issue
@@ -247,10 +273,12 @@ If TypeScript cannot resolve `@solana/web3-compat`, add `types/web3-compat.d.ts`
 ```ts
 declare module "@solana/web3-compat" {
   export type {
+    AccountInfo,
     Commitment,
     RpcResponseAndContext,
     SendOptions,
     SignatureResult,
+    SignatureStatus,
     TransactionSignature,
   } from "@solana/web3.js";
   export {

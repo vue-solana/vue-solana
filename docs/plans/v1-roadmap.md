@@ -101,20 +101,20 @@ Acceptance criteria:
 
 ## Phase 4: Reactive Account Data
 
-Status: planned.
+Status: complete.
 
 `useBalance()` is useful, but v1 should include common account and signature reads as first-class composables.
 
 Tasks:
 
-- [ ] Add `useAccountInfo(address, options?)` for one-shot account loading.
-- [ ] Add optional account subscription support with cleanup on component unmount.
-- [ ] Add `useSignatureStatus(signature, options?)` for polling or subscription-style status tracking.
-- [ ] Consider `useSlot()` or `useBlockHeight()` if needed for transaction freshness and UI status.
-- [ ] Decide whether `useProgramAccounts()` belongs in v1 or should be deferred because it can be expensive on public RPC endpoints.
-- [ ] Add shared helpers for parsing public keys from strings, refs, and getters.
-- [ ] Add tests for valid input, invalid input, null input, refresh behavior, cleanup behavior, and stale responses.
-- [ ] Document RPC cost considerations for account and program account reads.
+- [x] Add `useAccountInfo(address, options?)` for one-shot account loading.
+- [x] Add optional account subscription support with cleanup on component unmount.
+- [x] Add `useSignatureStatus(signature, options?)` for polling or subscription-style status tracking.
+- [x] Consider `useSlot()` or `useBlockHeight()` if needed for transaction freshness and UI status. Not needed for v1 because signature status and transaction confirmation cover the current freshness UI needs.
+- [x] Include `useProgramAccounts()` in v1 with explicit RPC cost documentation and filter/data-slice support.
+- [x] Add shared helpers for parsing public keys from strings, refs, and getters.
+- [x] Add tests for valid input, invalid input, null input, refresh behavior, cleanup behavior, and stale responses.
+- [x] Document RPC cost considerations for account and program account reads.
 
 Acceptance criteria:
 
