@@ -109,6 +109,11 @@ describe("Nuxt module", () => {
         },
         { name: "useRpc", as: "useSolanaRpc", from: "@vue-solana/vue/useRpc" },
         {
+          name: "useSignMessage",
+          as: "useSolanaSignMessage",
+          from: "@vue-solana/vue/useSignMessage",
+        },
+        {
           name: "useSignAndSendTransaction",
           as: "useSolanaSignAndSendTransaction",
           from: "@vue-solana/vue/useSignAndSendTransaction",

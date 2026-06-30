@@ -124,20 +124,20 @@ Acceptance criteria:
 
 ## Phase 5: Message Signing And Capabilities
 
-Status: planned.
+Status: reviewing.
 
 Many Solana apps use message signing for wallet authentication. v1 should support it where wallets expose it.
 
 Tasks:
 
-- [ ] Extend `SolanaWallet` with optional `signMessage` support.
-- [ ] Adapt Wallet Standard message signing features when available.
-- [ ] Add `useSignMessage()` to `@vue-solana/vue`.
-- [ ] Auto-import the Nuxt alias, likely `useSolanaSignMessage()`.
-- [ ] Expose active wallet capabilities from `useWallet()` as computed values.
-- [ ] Include capability flags for connect, disconnect, sign message, sign transaction, sign all transactions, and sign-and-send transaction.
-- [ ] Add tests for wallets with and without message signing support.
-- [ ] Document wallet-auth patterns and clearly state that message signing is not transaction signing.
+- [x] Extend `SolanaWallet` with optional `signMessage` support.
+- [x] Adapt Wallet Standard message signing features when available.
+- [x] Add `useSignMessage()` to `@vue-solana/vue`.
+- [x] Auto-import the Nuxt alias, likely `useSolanaSignMessage()`.
+- [x] Expose active wallet capabilities from `useWallet()` as computed values.
+- [x] Include capability flags for connect, disconnect, sign message, sign transaction, sign all transactions, and sign-and-send transaction.
+- [x] Add tests for wallets with and without message signing support.
+- [x] Document wallet-auth patterns and clearly state that message signing is not transaction signing.
 
 Acceptance criteria:
 

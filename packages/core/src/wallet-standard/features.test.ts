@@ -1,9 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   SolanaSignAndSendTransaction,
+  SolanaSignMessage,
   SolanaSignTransaction,
 } from "@solana/wallet-standard-features";
-import { hasSignAndSendTransaction, hasSignTransaction } from "./features";
+import { hasSignAndSendTransaction, hasSignMessage, hasSignTransaction } from "./features";
 import { createStandardWallet } from "./test-utils.test-utils";
 
 describe("Wallet Standard feature guards", () => {
@@ -31,10 +32,23 @@ describe("Wallet Standard feature guards", () => {
     expect(hasSignTransaction(wallet)).toBe(false);
   });
 
+  it("detects wallets that support signing messages", () => {
+    const wallet = createStandardWallet();
+    (wallet.features as Record<string, unknown>)[SolanaSignMessage] = {
+      version: "1.0.0",
+      signMessage: vi.fn(),
+    };
+
+    expect(hasSignMessage(wallet)).toBe(true);
+    expect(hasSignTransaction(wallet)).toBe(false);
+    expect(hasSignAndSendTransaction(wallet)).toBe(false);
+  });
+
   it("returns false when Solana signing features are missing", () => {
     const wallet = createStandardWallet();
 
     expect(hasSignTransaction(wallet)).toBe(false);
     expect(hasSignAndSendTransaction(wallet)).toBe(false);
+    expect(hasSignMessage(wallet)).toBe(false);
   });
 });

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { SolanaSignTransaction } from "@solana/wallet-standard-features";
+import { SolanaSignMessage, SolanaSignTransaction } from "@solana/wallet-standard-features";
 import { adaptSolanaStandardWallet } from "./adapter";
 import type { SolanaWalletInfo } from "../types";
 import {
@@ -146,5 +146,44 @@ describe("Wallet Standard adapter", () => {
       wallet.signAllTransactions?.([createTestTransaction(), createTestTransaction()]),
     ).rejects.toThrow("Solana wallet returned 0 signed transactions for 2 requested transactions");
     expect(signTransaction).toHaveBeenCalledOnce();
+  });
+
+  it("adapts message signing when the wallet supports it", async () => {
+    const standardWallet = createStandardWallet();
+    const message = new Uint8Array([1, 2, 3]);
+    const signedMessage = new Uint8Array([4, 5, 6]);
+    const signature = new Uint8Array([7, 8, 9]);
+    const signMessage = vi.fn().mockResolvedValue([{ signedMessage, signature }]);
+    (standardWallet.features as Record<string, unknown>)[SolanaSignMessage] = {
+      version: "1.0.0",
+      signMessage,
+    };
+    const walletInfo = {
+      name: standardWallet.name,
+      icon: standardWallet.icon,
+      chains: standardWallet.chains,
+      accounts: [],
+      wallet: standardWallet,
+    } satisfies SolanaWalletInfo;
+    const wallet = adaptSolanaStandardWallet(walletInfo, { chain: "solana:devnet" });
+
+    await wallet.connect();
+
+    await expect(wallet.signMessage?.(message)).resolves.toEqual({ signedMessage, signature });
+    expect(signMessage).toHaveBeenCalledWith({ account, message });
+  });
+
+  it("omits message signing when the wallet does not support it", () => {
+    const standardWallet = createStandardWallet();
+    const walletInfo = {
+      name: standardWallet.name,
+      icon: standardWallet.icon,
+      chains: standardWallet.chains,
+      accounts: [],
+      wallet: standardWallet,
+    } satisfies SolanaWalletInfo;
+    const wallet = adaptSolanaStandardWallet(walletInfo, { chain: "solana:devnet" });
+
+    expect(wallet.signMessage).toBeUndefined();
   });
 });

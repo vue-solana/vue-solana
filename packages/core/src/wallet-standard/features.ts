@@ -3,6 +3,7 @@ import type { Wallet, WalletAccount } from "@wallet-standard/base";
 import { StandardConnect, StandardDisconnect, StandardEvents } from "@wallet-standard/features";
 import {
   SolanaSignAndSendTransaction,
+  SolanaSignMessage,
   SolanaSignTransaction,
 } from "@solana/wallet-standard-features";
 
@@ -53,6 +54,17 @@ export type SolanaSignAndSendTransactionFeature = {
   };
 };
 
+export type SolanaSignMessageFeature = {
+  [SolanaSignMessage]: {
+    signMessage(
+      ...inputs: readonly {
+        account: WalletAccount;
+        message: Uint8Array;
+      }[]
+    ): Promise<readonly { signedMessage: Uint8Array; signature: Uint8Array }[]>;
+  };
+};
+
 export function hasSignTransaction(
   wallet: Wallet,
 ): wallet is Wallet & { features: SolanaSignTransactionFeature } {
@@ -63,4 +75,10 @@ export function hasSignAndSendTransaction(
   wallet: Wallet,
 ): wallet is Wallet & { features: SolanaSignAndSendTransactionFeature } {
   return SolanaSignAndSendTransaction in wallet.features;
+}
+
+export function hasSignMessage(
+  wallet: Wallet,
+): wallet is Wallet & { features: SolanaSignMessageFeature } {
+  return SolanaSignMessage in wallet.features;
 }

@@ -9,6 +9,7 @@ export default defineBuildConfig({
     "src/useProgramAccounts",
     "src/useRpc",
     "src/useSignAndSendTransaction",
+    "src/useSignMessage",
     "src/useSignatureStatus",
     "src/useSolana",
     "src/useTransaction",

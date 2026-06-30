@@ -75,6 +75,10 @@ interface SolanaWallet {
   source?: "wallet-standard" | "mobile-wallet-adapter" | "deep-link" | "protocol-link";
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
+  signMessage?: (message: Uint8Array) => Promise<{
+    signedMessage: Uint8Array;
+    signature: Uint8Array;
+  }>;
   signTransaction?: <T extends SolanaTransaction>(transaction: T) => Promise<T>;
   signAllTransactions?: <T extends SolanaTransaction>(transactions: T[]) => Promise<T[]>;
   signAndSendTransaction?: (
@@ -100,6 +104,7 @@ interface SolanaWalletInfo {
   callbackUrl?: string;
   capabilities?: {
     connect?: boolean;
+    signMessage?: boolean;
     signTransaction?: boolean;
     signAllTransactions?: boolean;
     signAndSendTransaction?: boolean;
@@ -148,6 +153,7 @@ interface TransactionConfirmation {
 - `isWalletConnected(wallet)`: returns whether a wallet is connected and has a public key.
 - `assertWalletConnected(wallet)`: throws if the wallet is not connected.
 - `assertWalletCanSign(wallet)`: throws if the wallet cannot sign transactions.
+- `assertWalletCanSignMessage(wallet)`: throws if the wallet cannot sign messages.
 - `signAndSendTransaction(connection, wallet, transaction, options?)`: signs and sends a transaction using wallet capabilities. Android Mobile Wallet Adapter wallets prefer `signTransaction` plus app-side RPC submission when available so the app can reliably return the submitted signature.
 - `confirmTransactionSignature(connection, signature, options?)`: waits for a submitted signature to reach the requested commitment. Defaults to `confirmed` commitment and a 60 second timeout. It returns `TransactionConfirmation` and throws a clear timeout or failed-confirmation error.
 - `getSolanaChain(cluster)`: maps a package cluster to a Wallet Standard chain ID.
@@ -185,6 +191,7 @@ Available composable subpaths:
 - `@vue-solana/vue/useTransaction`
 - `@vue-solana/vue/useTransactionConfirmation`
 - `@vue-solana/vue/useSignatureStatus`
+- `@vue-solana/vue/useSignMessage`
 - `@vue-solana/vue/useSignAndSendTransaction`
 
 ### `createSolanaPlugin(options?)`
@@ -247,6 +254,13 @@ Returns wallet state and actions:
 - `connecting`
 - `disconnecting`
 - `loading`
+- `capabilities`
+- `canConnect`
+- `canDisconnect`
+- `canSignMessage`
+- `canSignTransaction`
+- `canSignAllTransactions`
+- `canSignAndSendTransaction`
 - `setWallet(wallet)`
 - `connect()`
 - `disconnect()`
@@ -356,6 +370,31 @@ Returns:
 
 The submitted signature remains available if confirmation times out or RPC confirmation fails, so apps can still link users to an explorer.
 
+### `useSignMessage()`
+
+Uses the current connected wallet to sign arbitrary message bytes for wallet-auth flows. Message signing is not transaction signing: signed messages do not authorize token transfers, account changes, or on-chain execution.
+
+```ts
+const { canSignMessage, connected } = useWallet();
+const signMessage = useSignMessage();
+
+if (connected.value && canSignMessage.value) {
+  const message = new TextEncoder().encode("Sign in to example.com: nonce-123");
+  const { signature } = await signMessage.execute(message);
+}
+```
+
+Returns:
+
+- `signedMessage`
+- `signature`
+- `status`: `idle`, `signing`, `signed`, or `error`
+- `loading`
+- `error`
+- `execute(message)`
+
+Apps should render message-auth UI only when `useWallet().canSignMessage` is true. Unsupported wallets throw `Solana wallet does not support signMessage`.
+
 ### `useTransactionConfirmation(options?)`
 
 Waits for a submitted signature to reach a requested commitment without coupling confirmation to the send step.
@@ -435,6 +474,7 @@ The Nuxt module installs the runtime plugin on the client only and auto-imports 
 - `useSolanaWallet()`
 - `useSolanaWallets()`
 - `useSolanaBalance()`
+- `useSolanaSignMessage()`
 - `useSolanaSignAndSendTransaction()`
 - `useSolanaTransactionConfirmation()`
 - `useSolanaSignatureStatus()`

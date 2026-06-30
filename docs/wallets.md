@@ -30,6 +30,7 @@ Wallets such as Phantom, Solflare, Backpack, and other Solana Wallet Standard-co
 - Android Mobile Wallet Adapter discovery through the same `useWallets()` list on supported Android Chrome runtimes.
 - iOS Phantom, Solflare, and Backpack universal-link discovery through the same `useWallets()` list on iOS browsers.
 - Wallet selection, connect, and disconnect.
+- Message signing for wallet-auth flows when the active wallet exposes a compatible message signing feature.
 - Transaction signing through the active wallet when the wallet exposes compatible signing features.
 - Manual wallet injection with `setWallet()` for tests or custom adapters.
 
@@ -45,7 +46,8 @@ import { useWallet } from "@vue-solana/vue/useWallet";
 import { useWallets } from "@vue-solana/vue/useWallets";
 
 const { wallets, selectedWallet, selectWallet, refreshWallets } = useWallets();
-const { publicKey, connected, connecting, disconnecting, connect, disconnect } = useWallet();
+const { publicKey, connected, connecting, disconnecting, canSignMessage, connect, disconnect } =
+  useWallet();
 </script>
 
 <template>
@@ -71,9 +73,44 @@ const { publicKey, connected, connecting, disconnecting, connect, disconnect } =
     <button type="button" :disabled="!connected || disconnecting" @click="disconnect">
       {{ disconnecting ? "Disconnecting..." : "Disconnect" }}
     </button>
+
+    <p>Message auth: {{ canSignMessage ? "Supported" : "Unsupported" }}</p>
   </section>
 </template>
 ```
+
+## Message Signing For Authentication
+
+Use message signing for wallet-auth challenges only after a wallet is selected and connected, and only when `useWallet().canSignMessage` is true. Message signing proves that the connected wallet can sign a specific byte message; it does not sign or authorize a Solana transaction.
+
+```ts
+import { useSignMessage } from "@vue-solana/vue/useSignMessage";
+import { useWallet } from "@vue-solana/vue/useWallet";
+
+const wallet = useWallet();
+const signMessage = useSignMessage();
+
+async function signIn(nonce: string) {
+  if (!wallet.connected.value) {
+    throw new Error("Connect a wallet first");
+  }
+
+  if (!wallet.canSignMessage.value) {
+    throw new Error("Selected wallet does not support message signing");
+  }
+
+  const message = new TextEncoder().encode(`Sign in to example.com: ${nonce}`);
+  const result = await signMessage.execute(message);
+
+  return {
+    publicKey: wallet.publicKey.value?.toBase58(),
+    message: result.signedMessage,
+    signature: result.signature,
+  };
+}
+```
+
+Server-side auth flows should generate a fresh nonce, verify the returned signature against the exact signed message bytes and wallet public key, expire used nonces, and bind the challenge to your origin and intended action.
 
 ## Android Mobile Wallets
 
@@ -123,11 +160,11 @@ iOS browser wallet support uses wallet-specific universal links because iOS brow
 
 Supported iOS wallet capabilities:
 
-| Wallet   | Connect | Sign transaction | Sign all transactions | Sign and send transaction |
-| -------- | ------- | ---------------- | --------------------- | ------------------------- |
-| Phantom  | Yes     | Yes              | Yes                   | No                        |
-| Solflare | Yes     | Yes              | Yes                   | Yes                       |
-| Backpack | Yes     | Yes              | Yes                   | Yes                       |
+| Wallet   | Connect | Sign message | Sign transaction | Sign all transactions | Sign and send transaction |
+| -------- | ------- | ------------ | ---------------- | --------------------- | ------------------------- |
+| Phantom  | Yes     | No           | Yes              | Yes                   | No                        |
+| Solflare | Yes     | No           | Yes              | Yes                   | Yes                       |
+| Backpack | Yes     | No           | Yes              | Yes                   | Yes                       |
 
 Phantom's `signAndSendTransaction` deeplink is deprecated by Phantom, so Vue Solana does not expose that capability for Phantom iOS entries.
 
@@ -248,6 +285,7 @@ const wallet: SolanaWallet = {
   source: "wallet-standard",
   connect: async () => {},
   disconnect: async () => {},
+  signMessage: async (message) => ({ signedMessage: message, signature: new Uint8Array(64) }),
   signTransaction: async (transaction) => transaction,
 };
 ```
@@ -277,6 +315,7 @@ setWallet(wallet);
 - Wallet selection is persisted under `localStorage["vue-solana:selected-wallet"]` as non-sensitive identity metadata: `name`, and `platform`/`source` when available. If the same wallet is discovered after reload, the selected wallet is restored. If it is missing, the stored identity is kept so it can restore later. Calling `selectWallet(null)` or `setWallet(customWallet)` clears the stored selection.
 - `autoConnect` is opt-in and only calls `connect()` for a restored, previously selected wallet. The library does not auto-connect to an arbitrary installed wallet or treat extension-exposed accounts as connected before `connect()` succeeds.
 - Signing support depends on each wallet exposing the relevant Solana Wallet Standard signing feature.
+- Message signing support is exposed separately from transaction signing through `canSignMessage` and `signMessage`.
 - iOS browser wallet support is available for Phantom, Solflare, and Backpack through universal links. Capability support differs by wallet.
 - Desktop native app wallet support is not implemented yet. It requires wallet-specific protocol links or future native Wallet Standard registration.
 

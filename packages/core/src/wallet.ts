@@ -23,3 +23,13 @@ export function assertWalletCanSign(
     throw new Error("Solana wallet does not support signTransaction");
   }
 }
+
+export function assertWalletCanSignMessage(
+  wallet: SolanaWallet | null | undefined,
+): asserts wallet is SolanaWallet & Required<Pick<SolanaWallet, "signMessage">> {
+  assertWalletConnected(wallet);
+
+  if (!wallet.signMessage) {
+    throw new Error("Solana wallet does not support signMessage");
+  }
+}
