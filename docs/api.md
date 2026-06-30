@@ -290,7 +290,7 @@ Returns:
 - `loading`
 - `error`
 - `refresh()`
-- `stopWatching()`
+- `stopWatching()`: removes the current account listener and prevents automatic restarts for this composable instance.
 
 Null input clears state without calling RPC. Invalid address strings set `error` and do not call `getAccountInfo()`.
 
@@ -396,7 +396,7 @@ Returns:
 - `error`
 - `refresh()`
 - `stopPolling()`
-- `stopSubscription()`
+- `stopSubscription()`: removes the current signature listener and prevents automatic subscription restarts for this composable instance.
 
 Null input clears state without calling RPC. Invalid signatures are rejected before RPC: the signature must be base58-encoded and decode to exactly 64 bytes. Invalid `pollIntervalMs` values less than or equal to `0` set a `RangeError` and do not start polling.
 

@@ -21,6 +21,7 @@ export function useAccountInfo(
   let refreshId = 0;
   let watchId = 0;
   let subscriptionId: number | null = null;
+  let manuallyStopped = false;
 
   async function refresh() {
     const requestId = ++refreshId;
@@ -66,6 +67,7 @@ export function useAccountInfo(
   }
 
   async function stopWatching() {
+    manuallyStopped = true;
     watchId += 1;
     await stopCurrentWatcher();
   }
@@ -77,7 +79,12 @@ export function useAccountInfo(
 
     const currentSubscriptionId = subscriptionId;
     subscriptionId = null;
-    await connection.removeAccountChangeListener(currentSubscriptionId);
+
+    try {
+      await connection.removeAccountChangeListener(currentSubscriptionId);
+    } catch (cause) {
+      error.value = cause;
+    }
   }
 
   async function startWatching() {
@@ -88,7 +95,7 @@ export function useAccountInfo(
       return;
     }
 
-    if (!options.watch || !solana) {
+    if (manuallyStopped || !options.watch || !solana) {
       return;
     }
 

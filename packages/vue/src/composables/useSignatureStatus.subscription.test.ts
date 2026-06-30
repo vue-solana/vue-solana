@@ -151,4 +151,78 @@ describe("useSignatureStatus subscriptions", () => {
 
     expect(onSignature).toHaveBeenCalledTimes(2);
   });
+
+  it("captures cleanup failures while resubscribing after the input changes", async () => {
+    const cleanupError = new Error("cleanup failed");
+    const getSignatureStatuses = vi.fn().mockResolvedValue({ value: [null] });
+    const onSignature = vi.fn().mockReturnValueOnce(7).mockReturnValueOnce(8);
+    const removeSignatureListener = vi.fn().mockRejectedValue(cleanupError);
+    const signatureRef = ref(signature);
+    const { result } = mountUseSignatureStatus(
+      signatureRef,
+      { subscribe: true },
+      {
+        getSignatureStatuses,
+        onSignature,
+        removeSignatureListener,
+      },
+    );
+
+    await flushPromises();
+
+    signatureRef.value = nextSignature;
+    await flushPromises();
+
+    expect(removeSignatureListener).toHaveBeenCalledWith(7);
+    expect(result.error.value).toBe(cleanupError);
+    expect(onSignature).toHaveBeenCalledTimes(2);
+  });
+
+  it("captures cleanup failures from manual stop without rejecting", async () => {
+    const cleanupError = new Error("cleanup failed");
+    const getSignatureStatuses = vi.fn().mockResolvedValue({ value: [null] });
+    const onSignature = vi.fn().mockReturnValue(7);
+    const removeSignatureListener = vi.fn().mockRejectedValue(cleanupError);
+    const { result } = mountUseSignatureStatus(
+      signature,
+      { subscribe: true },
+      {
+        getSignatureStatuses,
+        onSignature,
+        removeSignatureListener,
+      },
+    );
+
+    await flushPromises();
+
+    await expect(result.stopSubscription()).resolves.toBeUndefined();
+
+    expect(removeSignatureListener).toHaveBeenCalledWith(7);
+    expect(result.error.value).toBe(cleanupError);
+  });
+
+  it("does not restart signature subscriptions after manual stop when the input changes", async () => {
+    const getSignatureStatuses = vi.fn().mockResolvedValue({ value: [null] });
+    const onSignature = vi.fn().mockReturnValue(7);
+    const removeSignatureListener = vi.fn().mockResolvedValue(undefined);
+    const signatureRef = ref(signature);
+    const { result } = mountUseSignatureStatus(
+      signatureRef,
+      { subscribe: true },
+      {
+        getSignatureStatuses,
+        onSignature,
+        removeSignatureListener,
+      },
+    );
+
+    await flushPromises();
+    await result.stopSubscription();
+
+    signatureRef.value = nextSignature;
+    await flushPromises();
+
+    expect(removeSignatureListener).toHaveBeenCalledWith(7);
+    expect(onSignature).toHaveBeenCalledTimes(1);
+  });
 });

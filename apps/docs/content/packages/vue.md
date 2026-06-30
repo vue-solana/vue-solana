@@ -154,7 +154,7 @@ const { accountInfo, loading, error, refresh, stopWatching } = useAccountInfo(ad
 </template>
 ```
 
-`useAccountInfo()` clears state without calling RPC when the address is null. Invalid address strings clear stale `accountInfo`, set `error`, and do not call `getAccountInfo()`. When `watch: true` is enabled, the websocket listener is removed automatically on component unmount.
+`useAccountInfo()` clears state without calling RPC when the address is null. Invalid address strings clear stale `accountInfo`, set `error`, and do not call `getAccountInfo()`. When `watch: true` is enabled, the websocket listener is removed automatically on component unmount. Calling `stopWatching()` removes the current listener and prevents automatic restarts for that composable instance.
 
 ## Read Program Accounts
 
@@ -278,7 +278,7 @@ const { status, loading, error, refresh, stopPolling, stopSubscription } = useSi
 );
 ```
 
-Polling uses `getSignatureStatuses()` on every interval, so stop polling when the UI no longer needs updates. Invalid signatures clear stale `status`, set `error`, and do not call RPC or start polling. Invalid `pollIntervalMs` values less than or equal to `0` set a `RangeError` and do not start polling. `subscribe: true` uses `onSignature()` and removes the listener on component unmount.
+Polling uses `getSignatureStatuses()` on every interval, so stop polling when the UI no longer needs updates. Invalid signatures clear stale `status`, set `error`, and do not call RPC or start polling. Invalid `pollIntervalMs` values less than or equal to `0` set a `RangeError` and do not start polling. `subscribe: true` uses `onSignature()` and removes the listener on component unmount. Calling `stopSubscription()` removes the current signature listener and prevents automatic restarts for that composable instance.
 
 `useProgramAccounts()` calls `getProgramAccounts()` on each refresh. Broad program scans are expensive on public RPC endpoints and usually need app-specific filters, indexing, caching, or dedicated RPC infrastructure.
 

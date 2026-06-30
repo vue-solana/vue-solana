@@ -1,48 +1,36 @@
 import { PublicKey } from "@solana/web3-compat";
 import { flushPromises } from "@vue/test-utils";
 import { describe, expect, it, vi } from "vitest";
-import { defineComponent, h, ref } from "vue";
-import { createMockSolanaContext, mountWithSolana } from "../../test-utils";
-import { useAccountInfo } from "./useAccountInfo";
+import { ref } from "vue";
+import {
+  deferred,
+  mountUseAccountInfo,
+  systemProgram,
+  wrappedSol,
+} from "../../test-utils/useAccountInfo";
 
-function deferred<T>() {
-  let resolve!: (value: T) => void;
-  const promise = new Promise<T>((promiseResolve) => {
-    resolve = promiseResolve;
-  });
+function rejectedCleanup() {
+  const cleanupError = new Error("cleanup failed");
 
-  return { promise, resolve };
+  return {
+    cleanupError,
+    removeAccountChangeListener: vi.fn().mockRejectedValue(cleanupError),
+  };
 }
 
 describe("useAccountInfo subscriptions", () => {
-  const systemProgram = "11111111111111111111111111111111";
-  const wrappedSol = "So11111111111111111111111111111111111111112";
-
   it("subscribes to account changes and cleans up on unmount", async () => {
     const getAccountInfo = vi.fn().mockResolvedValue(null);
     const onAccountChange = vi.fn().mockReturnValue(42);
     const removeAccountChangeListener = vi.fn().mockResolvedValue(undefined);
-    const context = createMockSolanaContext({
-      connection: {
+    const { result, wrapper } = mountUseAccountInfo(
+      systemProgram,
+      { commitment: "processed", watch: true },
+      {
         getAccountInfo,
         onAccountChange,
         removeAccountChangeListener,
-      } as unknown as ReturnType<typeof createMockSolanaContext>["connection"],
-    });
-    let result: ReturnType<typeof useAccountInfo> | undefined;
-
-    const wrapper = mountWithSolana(
-      defineComponent({
-        setup() {
-          result = useAccountInfo("11111111111111111111111111111111", {
-            commitment: "processed",
-            watch: true,
-          });
-
-          return () => h("div");
-        },
-      }),
-      context,
+      },
     );
 
     await flushPromises();
@@ -51,7 +39,7 @@ describe("useAccountInfo subscriptions", () => {
     const nextAccount = { lamports: 999 };
     listener(nextAccount);
 
-    expect(result?.accountInfo.value).toBe(nextAccount);
+    expect(result.accountInfo.value).toBe(nextAccount);
     expect(onAccountChange).toHaveBeenCalledWith(
       expect.any(PublicKey),
       expect.any(Function),
@@ -68,25 +56,15 @@ describe("useAccountInfo subscriptions", () => {
     const getAccountInfo = vi.fn().mockResolvedValue(null);
     const onAccountChange = vi.fn().mockReturnValueOnce(42).mockReturnValueOnce(43);
     const removeAccountChangeListener = vi.fn().mockResolvedValue(undefined);
-    const context = createMockSolanaContext({
-      connection: {
+    const address = ref(systemProgram);
+    const { result } = mountUseAccountInfo(
+      address,
+      { watch: true },
+      {
         getAccountInfo,
         onAccountChange,
         removeAccountChangeListener,
-      } as unknown as ReturnType<typeof createMockSolanaContext>["connection"],
-    });
-    const address = ref(systemProgram);
-    let result: ReturnType<typeof useAccountInfo> | undefined;
-
-    mountWithSolana(
-      defineComponent({
-        setup() {
-          result = useAccountInfo(address, { watch: true });
-
-          return () => h("div");
-        },
-      }),
-      context,
+      },
     );
 
     await flushPromises();
@@ -98,11 +76,11 @@ describe("useAccountInfo subscriptions", () => {
 
     const newest = { lamports: 222 };
     currentListener(newest);
-    expect(result?.accountInfo.value).toBe(newest);
+    expect(result.accountInfo.value).toBe(newest);
 
     staleListener({ lamports: 111 });
 
-    expect(result?.accountInfo.value).toBe(newest);
+    expect(result.accountInfo.value).toBe(newest);
   });
 
   it("does not leak stale account listeners when watched input changes during cleanup", async () => {
@@ -113,24 +91,16 @@ describe("useAccountInfo subscriptions", () => {
       .fn()
       .mockReturnValueOnce(stopInitialListener.promise)
       .mockResolvedValue(undefined);
-    const context = createMockSolanaContext({
-      connection: {
+    const address = ref(systemProgram);
+
+    mountUseAccountInfo(
+      address,
+      { watch: true },
+      {
         getAccountInfo,
         onAccountChange,
         removeAccountChangeListener,
-      } as unknown as ReturnType<typeof createMockSolanaContext>["connection"],
-    });
-    const address = ref(systemProgram);
-
-    mountWithSolana(
-      defineComponent({
-        setup() {
-          useAccountInfo(address, { watch: true });
-
-          return () => h("div");
-        },
-      }),
-      context,
+      },
     );
 
     await flushPromises();
@@ -149,5 +119,77 @@ describe("useAccountInfo subscriptions", () => {
     await flushPromises();
 
     expect(onAccountChange).toHaveBeenCalledTimes(2);
+  });
+
+  it("captures cleanup failures while resubscribing after the input changes", async () => {
+    const getAccountInfo = vi.fn().mockResolvedValue(null);
+    const onAccountChange = vi.fn().mockReturnValueOnce(42).mockReturnValueOnce(43);
+    const { cleanupError, removeAccountChangeListener } = rejectedCleanup();
+    const address = ref(systemProgram);
+    const { result } = mountUseAccountInfo(
+      address,
+      { watch: true },
+      {
+        getAccountInfo,
+        onAccountChange,
+        removeAccountChangeListener,
+      },
+    );
+
+    await flushPromises();
+
+    address.value = wrappedSol;
+    await flushPromises();
+
+    expect(removeAccountChangeListener).toHaveBeenCalledWith(42);
+    expect(result.error.value).toBe(cleanupError);
+    expect(onAccountChange).toHaveBeenCalledTimes(2);
+  });
+
+  it("captures cleanup failures from manual stop without rejecting", async () => {
+    const getAccountInfo = vi.fn().mockResolvedValue(null);
+    const onAccountChange = vi.fn().mockReturnValue(42);
+    const { cleanupError, removeAccountChangeListener } = rejectedCleanup();
+    const { result } = mountUseAccountInfo(
+      systemProgram,
+      { watch: true },
+      {
+        getAccountInfo,
+        onAccountChange,
+        removeAccountChangeListener,
+      },
+    );
+
+    await flushPromises();
+
+    await expect(result.stopWatching()).resolves.toBeUndefined();
+
+    expect(removeAccountChangeListener).toHaveBeenCalledWith(42);
+    expect(result.error.value).toBe(cleanupError);
+  });
+
+  it("does not restart account watching after manual stop when the input changes", async () => {
+    const getAccountInfo = vi.fn().mockResolvedValue(null);
+    const onAccountChange = vi.fn().mockReturnValue(42);
+    const removeAccountChangeListener = vi.fn().mockResolvedValue(undefined);
+    const address = ref(systemProgram);
+    const { result } = mountUseAccountInfo(
+      address,
+      { watch: true },
+      {
+        getAccountInfo,
+        onAccountChange,
+        removeAccountChangeListener,
+      },
+    );
+
+    await flushPromises();
+    await result.stopWatching();
+
+    address.value = wrappedSol;
+    await flushPromises();
+
+    expect(removeAccountChangeListener).toHaveBeenCalledWith(42);
+    expect(onAccountChange).toHaveBeenCalledTimes(1);
   });
 });

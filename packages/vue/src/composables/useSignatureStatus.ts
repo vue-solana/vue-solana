@@ -29,6 +29,7 @@ export function useSignatureStatus(
   let subscriptionStartId = 0;
   let pollId: ReturnType<typeof setInterval> | null = null;
   let subscriptionId: number | null = null;
+  let manuallyStoppedSubscription = false;
 
   async function refresh() {
     const requestId = ++refreshId;
@@ -106,6 +107,7 @@ export function useSignatureStatus(
   }
 
   async function stopSubscription() {
+    manuallyStoppedSubscription = true;
     subscriptionStartId += 1;
     await stopCurrentSubscription();
   }
@@ -117,7 +119,12 @@ export function useSignatureStatus(
 
     const currentSubscriptionId = subscriptionId;
     subscriptionId = null;
-    await connection.removeSignatureListener(currentSubscriptionId);
+
+    try {
+      await connection.removeSignatureListener(currentSubscriptionId);
+    } catch (cause) {
+      error.value = cause;
+    }
   }
 
   async function startSubscription() {
@@ -130,7 +137,7 @@ export function useSignatureStatus(
 
     const value = toValue(signature);
 
-    if (!options.subscribe || !value || !solana) {
+    if (manuallyStoppedSubscription || !options.subscribe || !value || !solana) {
       return;
     }
 

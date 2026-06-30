@@ -5,7 +5,7 @@ description: Planned feature work before the first stable Vue Solana package rel
 
 Vue Solana is currently pre-v1. The packages are already usable for RPC setup, wallet discovery, wallet connection, balance reads, and devnet transaction flows, but a stable v1 release needs a few more production-oriented APIs.
 
-The detailed implementation tracker lives in [`docs/plans/v1-roadmap.md`](https://github.com/vue-solana/vue-solana/blob/main/docs/plans/v1-roadmap.md). This page summarizes the roadmap for application developers.
+The detailed implementation tracker lives in [`docs/plans/v1-roadmap.md`](https://github.com/vue-solana/vue-solana/blob/main/docs/plans/v1-roadmap.md). This page summarizes completed and remaining roadmap work for application developers.
 
 ## v1 Release Goals
 
@@ -19,23 +19,23 @@ The detailed implementation tracker lives in [`docs/plans/v1-roadmap.md`](https:
 - Clear desktop native wallet support status.
 - Updated examples, package docs, tests, and E2E coverage.
 
-## Planned Phases
+## Roadmap Phases
 
 ### 1. Public API Stabilization
 
-The first phase is to make sure every public option is either implemented or removed before v1. `autoConnect` is included in v1 as opt-in reconnect behavior for a previously selected wallet identity.
+Status: complete. Every public option is either implemented or removed before v1. `autoConnect` is included in v1 as opt-in reconnect behavior for a previously selected wallet identity.
 
 ### 2. Wallet UX Foundations
 
-Wallet selection should survive reloads without connecting arbitrary installed wallets. v1 should restore only the wallet the user selected previously, and auto-connect only when explicitly enabled.
+Status: complete. Wallet selection survives reloads without connecting arbitrary installed wallets. v1 restores only the wallet the user selected previously, and auto-connects only when explicitly enabled.
 
 ### 3. Transaction Lifecycle
 
-Submitting a transaction is not enough for most dapps. v1 should include confirmation helpers and reactive transaction status so apps can show progress from signing through confirmation or timeout.
+Status: complete. v1 includes confirmation helpers and reactive transaction status so apps can show progress from signing through confirmation or timeout.
 
 ### 4. Reactive Account Data
 
-`useBalance()` is the first account-read composable. v1 should add account and signature status composables such as `useAccountInfo()` and `useSignatureStatus()`, with safe cleanup for subscriptions.
+Status: complete. v1 includes account and signature status composables such as `useAccountInfo()` and `useSignatureStatus()`, with safe cleanup for subscriptions.
 
 ### 5. Message Signing And Capabilities
 
