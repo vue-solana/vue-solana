@@ -303,7 +303,7 @@ Loads accounts owned by a program id, with optional `getProgramAccounts()` filte
 Options:
 
 - `commitment`: RPC commitment for the read.
-- `filters`: `dataSize` or `memcmp` filters forwarded to `getProgramAccounts()`.
+- `filters`: `dataSize` or `memcmp` filters forwarded to `getProgramAccounts()`, including optional `memcmp.encoding`.
 - `dataSlice`: byte range returned for each account's data.
 
 Returns:
@@ -380,7 +380,7 @@ For explorer links, render after `signature` is set. For devnet, use a URL such 
 
 ### `useSignatureStatus(signature, options?)`
 
-Reads the current status for a submitted signature. Pass `pollIntervalMs` to poll, or `subscribe: true` to receive an `onSignature()` websocket update. Both polling intervals and signature listeners are cleaned up on component unmount.
+Reads the current status for a submitted signature. Pass `pollIntervalMs` to poll, or `subscribe: true` to receive an `onSignature()` websocket update. Both polling intervals and signature listeners are cleaned up on component unmount. Websocket notifications do not include a full `getSignatureStatuses()` response, so subscription updates set `confirmationStatus` from the requested `commitment`, defaulting to `confirmed`.
 
 Options:
 

@@ -49,6 +49,31 @@ describe("useSignatureStatus subscriptions", () => {
     expect(removeSignatureListener).toHaveBeenCalledWith(7);
   });
 
+  it("derives websocket confirmation status from the requested commitment", async () => {
+    const getSignatureStatuses = vi.fn().mockResolvedValue({ value: [null] });
+    const onSignature = vi.fn().mockReturnValue(7);
+    const removeSignatureListener = vi.fn().mockResolvedValue(undefined);
+    const { result } = mountUseSignatureStatus(
+      signature,
+      { commitment: "processed", subscribe: true },
+      {
+        getSignatureStatuses,
+        onSignature,
+        removeSignatureListener,
+      },
+    );
+
+    await flushPromises();
+
+    const listener = onSignature.mock.calls[0]?.[1] as (
+      notification: { err: unknown },
+      context: { slot: number },
+    ) => void;
+    listener({ err: null }, { slot: 42 });
+
+    expect(result.status.value?.confirmationStatus).toBe("processed");
+  });
+
   it("ignores stale signature subscription callbacks after the input changes", async () => {
     const getSignatureStatuses = vi.fn().mockResolvedValue({ value: [null] });
     const onSignature = vi.fn().mockReturnValueOnce(7).mockReturnValueOnce(8);

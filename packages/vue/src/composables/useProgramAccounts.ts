@@ -1,6 +1,6 @@
 import { parsePublicKey, type PublicKeyInput } from "@vue-solana/core/address";
 import type { AccountInfo, Commitment, PublicKey } from "@solana/web3-compat";
-import { onMounted, shallowRef, toValue, watch, type MaybeRefOrGetter } from "vue";
+import { onMounted, onUnmounted, shallowRef, toValue, watch, type MaybeRefOrGetter } from "vue";
 import { useConnection } from "./useConnection";
 import { tryUseSolana } from "./useSolana";
 
@@ -8,6 +8,7 @@ export type ProgramAccountMemcmpFilter = {
   memcmp: {
     offset: number;
     bytes: string;
+    encoding?: string;
   };
 };
 
@@ -93,6 +94,10 @@ export function useProgramAccounts(
 
   onMounted(() => {
     void refresh().catch(() => undefined);
+  });
+
+  onUnmounted(() => {
+    refreshId += 1;
   });
 
   watch(
