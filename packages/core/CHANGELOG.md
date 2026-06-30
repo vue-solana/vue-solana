@@ -1,5 +1,11 @@
 # @vue-solana/core
 
+## 0.5.1
+
+### Patch Changes
+
+- 739a418: Harden reactive account and signature composables, document new public account-data APIs, and keep package export/build metadata aligned.
+
 ## 0.5.0
 
 ### Minor Changes
