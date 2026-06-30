@@ -15,7 +15,7 @@ Live demo: [vue-solana-docs.vercel.app/demo](https://vue-solana-docs.vercel.app/
 - Reading RPC status with `useRpc()`.
 - Using the injected `Connection` with `useConnection()`.
 - Reading lamport balances with `useBalance()`.
-- Discovering browser extension wallets and Android Mobile Wallet Adapter wallets with `useWallets()`.
+- Discovering browser extension wallets, Android Mobile Wallet Adapter wallets, and supported iOS browser wallet entries with `useWallets()`.
 - Managing active wallet state with `useWallet()`.
 - Tracking async transaction state with `useTransaction()`.
 - Sending a real transfer with `useSignAndSendTransaction()`. The example uses devnet by default for safe testing.
@@ -39,6 +39,7 @@ Open the Vite URL printed in the terminal, usually `http://localhost:5173`.
 - Paste a devnet wallet address and refresh the balance.
 - Install a Solana browser wallet and switch it to devnet.
 - On Android Chrome, install a compatible Solana mobile wallet and look for `Mobile Wallet Adapter`.
+- On iOS browsers, install Phantom, Solflare, or Backpack and look for the wallet entry in the same list.
 - Select and connect a discovered wallet.
 - Run the generic mock transaction.
 - Enter a recipient address and amount, then send a real transfer. Keep the example on devnet while testing.
@@ -55,4 +56,4 @@ https://faucet.solana.com
 
 ## Wallet Note
 
-The example uses Solana Wallet Standard discovery. Install Phantom, Solflare, Backpack, or another standard wallet before testing browser extension wallet flows. On supported Android Chrome runtimes, `@solana-mobile/wallet-standard-mobile` can expose installed native mobile wallets through `Mobile Wallet Adapter` in the same wallet list.
+The example uses unified wallet discovery. Install Phantom, Solflare, Backpack, or another standard wallet before testing browser extension wallet flows. On supported Android Chrome runtimes, `@solana-mobile/wallet-standard-mobile` can expose installed native mobile wallets through `Mobile Wallet Adapter` in the same wallet list. On iOS browsers, Phantom, Solflare, and Backpack can appear through wallet-specific universal links.

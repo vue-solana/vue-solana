@@ -91,10 +91,22 @@ createApp(App)
   .use(
     createSolanaPlugin({
       cluster: "devnet",
+      mobileWallet: {
+        appIdentity: {
+          name: "My Vue Solana App",
+        },
+      },
+      iosWallet: {
+        appIdentity: {
+          name: "My Vue Solana App",
+        },
+      },
     }),
   )
   .mount("#app");
 ```
+
+`mobileWallet` and `iosWallet` are optional. Android Mobile Wallet Adapter registration and iOS Phantom, Solflare, and Backpack links are enabled by default when the browser runtime supports them. Pass `mobileWallet: false` or `iosWallet: false` to disable either source.
 
 For Vue composables, prefer direct subpath imports in new code:
 
@@ -110,11 +122,21 @@ export default defineNuxtConfig({
   modules: ["@vue-solana/nuxt"],
   solana: {
     cluster: "devnet",
+    mobileWallet: {
+      appIdentity: {
+        name: "My Nuxt Solana App",
+      },
+    },
+    iosWallet: {
+      appIdentity: {
+        name: "My Nuxt Solana App",
+      },
+    },
   },
 });
 ```
 
-The Nuxt module installs the runtime plugin on the client only and auto-imports composables from direct `@vue-solana/vue/*` subpaths. Composables are safe to call during SSR, but real RPC and wallet operations should run after hydration, such as from `onMounted()` or user actions.
+The Nuxt module installs the runtime plugin on the client only and auto-imports composables from direct `@vue-solana/vue/*` subpaths. Composables are safe to call during SSR, but real RPC and wallet operations should run after hydration, such as from `onMounted()` or user actions. Nuxt `solana` options live in public runtime config, so keep them JSON-serializable.
 
 ## Test RPC Without A Wallet
 

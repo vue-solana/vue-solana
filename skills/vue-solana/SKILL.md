@@ -62,7 +62,10 @@ createApp(App)
 Prefer direct composable subpath imports in Vue apps:
 
 ```ts
+import { useAccountInfo } from "@vue-solana/vue/useAccountInfo";
+import { useProgramAccounts } from "@vue-solana/vue/useProgramAccounts";
 import { useRpc } from "@vue-solana/vue/useRpc";
+import { useSignatureStatus } from "@vue-solana/vue/useSignatureStatus";
 import { useTransactionConfirmation } from "@vue-solana/vue/useTransactionConfirmation";
 import { useWallet } from "@vue-solana/vue/useWallet";
 import { useWallets } from "@vue-solana/vue/useWallets";
@@ -86,11 +89,14 @@ Nuxt auto-imports these composables:
 - `useSolana()`
 - `useSolanaRpc()`
 - `useSolanaConnection()`
+- `useSolanaAccountInfo()`
 - `useSolanaWallet()`
 - `useSolanaWallets()`
 - `useSolanaBalance()`
+- `useSolanaProgramAccounts()`
 - `useSolanaSignAndSendTransaction()`
 - `useSolanaTransactionConfirmation()`
+- `useSolanaSignatureStatus()`
 
 The Nuxt runtime plugin is client-only. Composables are SSR-safe and may return inert state during SSR; run real RPC and wallet work after hydration, in client lifecycle hooks, or from user actions.
 
@@ -117,13 +123,19 @@ Current wallet limits:
 - There is no built-in wallet modal. Apps should build their own selection UI with `useWallets()`.
 - `autoConnect` is active behavior only when explicitly enabled. It may reconnect a restored, previously selected wallet, but must never be used to connect an arbitrary installed wallet.
 
-## RPC And Balance Reads
+## RPC, Account, And Balance Reads
 
 Use `useRpc()` or `useSolanaRpc()` to show cluster, endpoint, connection status, latest blockhash, and `checkConnection()`.
 
 Use `useBalance(address, commitment?)` or `useSolanaBalance(address, commitment?)` for lamport balances. The address may be a `PublicKey` or a base58 address string.
 
-Balance and RPC reads do not require a connected wallet.
+Use `useAccountInfo(address, options?)` or `useSolanaAccountInfo(address, options?)` to read account data and optionally subscribe to account changes.
+
+Use `useProgramAccounts(programId, config?)` or `useSolanaProgramAccounts(programId, config?)` for program-owned account scans. Program scans can be expensive on public RPC nodes; prefer narrow filters, `dataSlice`, and dedicated RPC infrastructure for production reads.
+
+Use `useSignatureStatus(signature, options?)` or `useSolanaSignatureStatus(signature, options?)` to read, poll, or subscribe to submitted transaction status.
+
+RPC, balance, account, program-account, and signature-status reads do not require a connected wallet.
 
 ## Transactions
 

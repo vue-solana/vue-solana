@@ -87,6 +87,33 @@ Common causes:
 
 Install a wallet such as Phantom, Solflare, or Backpack, then call `refreshWallets()` after the page loads.
 
+## Mobile Wallet Adapter Is Not Detected
+
+Android Mobile Wallet Adapter web registration works only on supported Android Chrome mobile web and Chrome PWA runtimes.
+
+Common causes:
+
+- The app is running on desktop, iOS, Firefox Android, Brave Android, Opera Android, or another unsupported browser.
+- No compatible Solana mobile wallet is installed.
+- `mobileWallet: false` was passed to the Vue plugin or Nuxt module.
+- Wallet discovery ran before hydration or before the page could access `window`.
+
+Open the app in Android Chrome, install a compatible wallet, then call `refreshWallets()` after the page loads.
+
+## iOS Wallet Link Does Not Complete
+
+iOS wallet support uses Phantom, Solflare, and Backpack universal links. The wallet app redirects back to your app URL after approval.
+
+Common causes:
+
+- The app is not running in an iOS browser.
+- Phantom, Solflare, or Backpack is not installed on the device.
+- `iosWallet: false` was passed to the Vue plugin or Nuxt module.
+- The configured `redirectUrl` does not return to the same app page that refreshes wallet state.
+- Wallet refresh or callback handling is only running during SSR instead of on the client.
+
+Keep iOS wallet work client-side, make sure the redirect URL loads the app again, and call `refreshWallets()` after the redirected page loads. The Vue plugin handles iOS callbacks during wallet refresh; apps using core helpers directly should call `handleSolanaIosWalletCallback()` before relying on the returned connection.
+
 ## `Solana wallet is not connected`
 
 The transaction helper was called before the wallet reported `connected: true` and a non-null `publicKey`.

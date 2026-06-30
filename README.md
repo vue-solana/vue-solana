@@ -2,7 +2,7 @@
 
 Vue and Nuxt libraries for building Solana applications.
 
-This project is early-stage. RPC, balance, browser extension wallet, Android mobile wallet, and transaction helpers are usable.
+This project is early-stage. RPC reads, account reads, balance reads, browser extension wallets, Android mobile wallets, iOS browser wallets, and transaction helpers are usable.
 
 ## Packages
 
@@ -70,11 +70,16 @@ Root package exports remain supported for compatibility. New code can use direct
 ```ts
 import { createSolanaContext } from "@vue-solana/core/rpc";
 import type { SolanaConfig } from "@vue-solana/core/types";
+import { useAccountInfo } from "@vue-solana/vue/useAccountInfo";
+import { useProgramAccounts } from "@vue-solana/vue/useProgramAccounts";
 import { useRpc } from "@vue-solana/vue/useRpc";
+import { useSignatureStatus } from "@vue-solana/vue/useSignatureStatus";
 import { useWallet } from "@vue-solana/vue/useWallet";
 ```
 
 The Nuxt module auto-imports composables from these direct Vue subpaths and keeps its runtime plugin client-only. Auto-imported composables are SSR-safe, but real RPC and wallet work should run after hydration.
+
+Use `useProgramAccounts()` carefully on public RPC nodes. Prefer narrow filters, `dataSlice`, and dedicated RPC infrastructure for production account scans.
 
 ## Documentation
 

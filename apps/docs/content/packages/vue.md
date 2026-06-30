@@ -38,6 +38,8 @@ createApp(App)
 
 Android Mobile Wallet Adapter registration is enabled by default on supported Android Chrome clients. Pass `mobileWallet` options to customize the MWA app identity, or pass `mobileWallet: false` to disable Android mobile wallet registration.
 
+iOS browser wallet links are enabled by default on iOS browsers for Phantom, Solflare, and Backpack. Pass `iosWallet` options to customize app identity, redirect URL, chains, or cluster, or pass `iosWallet: false` to disable iOS wallet link discovery.
+
 You can also pass a custom RPC endpoint:
 
 ```ts
@@ -80,7 +82,7 @@ Direct composable subpaths:
 - `useAccountInfo(address, options?)`: loads account data and can subscribe to account changes.
 - `useProgramAccounts(programId, options?)`: loads accounts owned by a program id with optional filters and data slicing.
 - `useWallet()`: returns active wallet refs, computed connection state, and wallet actions.
-- `useWallets()`: returns discovered browser extension wallets, Android Mobile Wallet Adapter wallets, and wallet selection actions.
+- `useWallets()`: returns discovered browser extension wallets, Android Mobile Wallet Adapter wallets, supported iOS browser wallet entries, and wallet selection actions.
 - `useBalance(address, commitment?)`: loads lamport balance for a `PublicKey` or address string.
 - `useTransaction(handler, options?)`: generic async transaction state helper with optional timeout settings.
 - `useTransactionConfirmation(options?)`: confirms a submitted signature with reactive status and timeout/error state.
@@ -279,8 +281,6 @@ const { status, loading, error, refresh, stopPolling, stopSubscription } = useSi
 ```
 
 Polling uses `getSignatureStatuses()` on every interval, so stop polling when the UI no longer needs updates. Calling `stopPolling()` clears the current interval and prevents automatic polling restarts for that composable instance. Invalid signatures clear stale `status`, set `error`, and do not call RPC or start polling. Invalid `pollIntervalMs` values less than or equal to `0` set a `RangeError` and do not start polling. `subscribe: true` uses `onSignature()` and removes the listener on component unmount. Calling `stopSubscription()` removes the current signature listener and prevents automatic restarts for that composable instance.
-
-`useProgramAccounts()` calls `getProgramAccounts()` on each refresh. Broad program scans are expensive on public RPC endpoints and usually need app-specific filters, indexing, caching, or dedicated RPC infrastructure.
 
 ## Example App
 

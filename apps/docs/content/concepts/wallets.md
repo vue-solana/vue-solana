@@ -122,6 +122,49 @@ Platform notes:
 
 For Android MWA transaction sends, Vue Solana asks the mobile wallet to sign and then submits the signed transaction through the app's RPC connection when the wallet supports `signTransaction`. This keeps the returned signature under app control and avoids a mobile handoff edge case where the wallet sends successfully but the browser page does not receive the wallet adapter response.
 
+## iOS Browser Wallets
+
+iOS browser wallet support uses wallet-specific universal links because Mobile Wallet Adapter web registration is Android Chrome-only. Phantom, Solflare, and Backpack entries are enabled by default on iOS browsers and appear in the same `useWallets()` list as other wallet sources.
+
+Configure iOS wallet identity or redirect behavior when installing the Vue plugin:
+
+```ts
+createApp(App).use(
+  createSolanaPlugin({
+    cluster: "devnet",
+    iosWallet: {
+      appIdentity: {
+        name: "My Vue Solana App",
+        uri: "https://example.com",
+        icon: "favicon.ico",
+      },
+      redirectUrl: "https://example.com",
+    },
+  }),
+);
+```
+
+Disable iOS wallet link discovery if your app does not want it:
+
+```ts
+createApp(App).use(
+  createSolanaPlugin({
+    cluster: "devnet",
+    iosWallet: false,
+  }),
+);
+```
+
+Platform notes:
+
+- Supported: iOS browsers with Phantom, Solflare, or Backpack installed.
+- Not supported by these adapters: desktop native apps and wallets without a supported universal-link flow.
+- The Vue plugin handles wallet redirect callbacks during wallet refresh on the client.
+- If you use core helpers directly, call `handleSolanaIosWalletCallback()` before relying on a returned iOS wallet connection.
+- Capability support differs by wallet. Check each discovered wallet's metadata before rendering transaction actions.
+
+`SolanaWalletInfo.platform` is `"mobile"` and `SolanaWalletInfo.source` is `"deep-link"` for iOS browser wallet entries.
+
 ## Send A Transfer
 
 The examples include a real transfer form with recipient address and amount fields. It creates a Solana transaction, asks the connected wallet to sign or send, and displays the returned signature.

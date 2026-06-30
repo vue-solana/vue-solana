@@ -41,6 +41,32 @@ Supported clusters are `mainnet-beta`, `devnet`, `testnet`, and `localnet`. Use 
 
 Nuxt module options are stored in public runtime config, so they must be JSON-serializable. Custom `wallet` adapter objects are intentionally excluded from Nuxt config; use the Vue plugin directly in client-only Vue code if you need to inject a custom wallet object.
 
+Mobile wallet options are safe to configure in `nuxt.config.ts` when they contain only JSON-serializable app identity and redirect settings:
+
+```ts
+export default defineNuxtConfig({
+  modules: ["@vue-solana/nuxt"],
+  solana: {
+    cluster: "devnet",
+    mobileWallet: {
+      appIdentity: {
+        name: "My Nuxt Solana App",
+        uri: "https://example.com",
+        icon: "favicon.ico",
+      },
+    },
+    iosWallet: {
+      appIdentity: {
+        name: "My Nuxt Solana App",
+      },
+      redirectUrl: "https://example.com",
+    },
+  },
+});
+```
+
+Pass `mobileWallet: false` or `iosWallet: false` to disable either mobile wallet source. The module also pre-optimizes common Solana, Wallet Adapter, and mobile wallet dependencies so Vite can bundle browser transaction and wallet code correctly.
+
 ## Auto-Imported Composables
 
 The module auto-imports these composables from direct `@vue-solana/vue/*` subpaths rather than the root Vue package barrel. This keeps Nuxt SSR bundles from pulling in unrelated Solana runtime code just because a page uses one composable.
@@ -48,9 +74,13 @@ The module auto-imports these composables from direct `@vue-solana/vue/*` subpat
 - `useSolana()`
 - `useSolanaRpc()`
 - `useSolanaConnection()`
+- `useSolanaAccountInfo()`
 - `useSolanaWallet()`
 - `useSolanaWallets()`
 - `useSolanaBalance()`
+- `useSolanaProgramAccounts()`
+- `useSolanaTransactionConfirmation()`
+- `useSolanaSignatureStatus()`
 - `useSolanaSignAndSendTransaction()`
 
 The runtime plugin is client-only. Auto-imported composables can be called during SSR and return inert state until hydration provides the real client context. Trigger RPC and wallet work from client lifecycle hooks or user actions.
@@ -93,6 +123,25 @@ const { balance, loading, error, refresh } = useSolanaBalance(address);
 </template>
 ```
 
+## Read Account Data
+
+```vue
+<script setup lang="ts">
+const address = ref("PASTE_A_SOLANA_ADDRESS");
+const programId = ref("PASTE_A_SOLANA_PROGRAM_ID");
+const signature = ref("PASTE_A_TRANSACTION_SIGNATURE");
+
+const account = useSolanaAccountInfo(address, { watch: true });
+const programAccounts = useSolanaProgramAccounts(programId, {
+  dataSlice: { offset: 0, length: 32 },
+  filters: [{ dataSize: 165 }],
+});
+const signatureStatus = useSolanaSignatureStatus(signature, { pollIntervalMs: 2_000 });
+</script>
+```
+
+Use `useSolanaProgramAccounts()` carefully on public RPC nodes. Prefer narrow filters, use `dataSlice` for partial reads, and avoid polling broad scans.
+
 ## Wallet State
 
 ```vue
@@ -123,7 +172,7 @@ const { publicKey, connected, connect, disconnect } = useSolanaWallet();
 </template>
 ```
 
-Browser extension wallets are discovered through the Solana Wallet Standard. Android Mobile Wallet Adapter wallets are registered through `@solana-mobile/wallet-standard-mobile` on supported Android Chrome clients and exposed through the same wallet list. `refreshWallets()` only updates the discovered wallet list, and `selectWallet()` only configures the active wallet. `connected` remains false until `connect()` succeeds, even if the extension exposes previously authorized accounts after a page refresh.
+Browser extension wallets are discovered through the Solana Wallet Standard. Android Mobile Wallet Adapter wallets are registered through `@solana-mobile/wallet-standard-mobile` on supported Android Chrome clients and exposed through the same wallet list. iOS Phantom, Solflare, and Backpack entries are exposed through wallet-specific universal links on iOS browsers. `refreshWallets()` only updates the discovered wallet list, and `selectWallet()` only configures the active wallet. `connected` remains false until `connect()` succeeds, even if the extension exposes previously authorized accounts after a page refresh.
 
 ## Example App
 

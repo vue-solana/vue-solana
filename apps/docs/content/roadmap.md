@@ -39,7 +39,7 @@ Status: complete. v1 includes account and signature status composables such as `
 
 ### 5. Message Signing And Capabilities
 
-Wallet authentication usually needs message signing. v1 should add `signMessage` support where wallets provide it, plus capability flags so apps can render the right UI for each selected wallet.
+Wallet authentication usually needs message signing. v1 should add `signMessage` support where wallets provide it and expose active-wallet capability helpers so apps can render the right UI for the selected wallet. Discovered wallet metadata already includes transaction capability hints.
 
 ### 6. Error Model
 
