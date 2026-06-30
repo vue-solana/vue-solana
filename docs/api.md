@@ -10,6 +10,7 @@ For Solana terminology, see [Solana Concepts For Vue Developers](./solana-concep
 
 The root export remains supported. Direct subpath exports are also available when you want narrower imports:
 
+- `@vue-solana/core/address`
 - `@vue-solana/core/types`
 - `@vue-solana/core/clusters`
 - `@vue-solana/core/ios-wallet`
@@ -176,11 +177,14 @@ Available composable subpaths:
 - `@vue-solana/vue/useSolana`
 - `@vue-solana/vue/useRpc`
 - `@vue-solana/vue/useConnection`
+- `@vue-solana/vue/useAccountInfo`
 - `@vue-solana/vue/useBalance`
+- `@vue-solana/vue/useProgramAccounts`
 - `@vue-solana/vue/useWallet`
 - `@vue-solana/vue/useWallets`
 - `@vue-solana/vue/useTransaction`
 - `@vue-solana/vue/useTransactionConfirmation`
+- `@vue-solana/vue/useSignatureStatus`
 - `@vue-solana/vue/useSignAndSendTransaction`
 
 ### `createSolanaPlugin(options?)`
@@ -271,6 +275,46 @@ Returns:
 - `error`
 - `refresh()`
 
+### `useAccountInfo(address, options?)`
+
+Loads account data for a `PublicKey` or address string, with optional websocket subscription updates.
+
+Options:
+
+- `commitment`: RPC commitment for the initial read and subscription.
+- `watch`: when `true`, subscribes with `connection.onAccountChange()` and removes the listener on component unmount.
+
+Returns:
+
+- `accountInfo`
+- `loading`
+- `error`
+- `refresh()`
+- `stopWatching()`
+
+Null input clears state without calling RPC. Invalid address strings set `error` and do not call `getAccountInfo()`.
+
+### `useProgramAccounts(programId, options?)`
+
+Loads accounts owned by a program id, with optional `getProgramAccounts()` filters and data slicing.
+
+> Warning: `useProgramAccounts()` can be expensive. Each refresh may scan a large program-owned account set, consume significant RPC credits, hit provider rate limits, or time out. Do not run broad scans from high-traffic UI paths. Use narrow `filters`, `dataSlice`, caching, indexing, pagination strategies, or dedicated RPC infrastructure for production reads.
+
+Options:
+
+- `commitment`: RPC commitment for the read.
+- `filters`: `dataSize` or `memcmp` filters forwarded to `getProgramAccounts()`.
+- `dataSlice`: byte range returned for each account's data.
+
+Returns:
+
+- `accounts`
+- `loading`
+- `error`
+- `refresh()`
+
+Null input clears state without calling RPC. Invalid program id strings set `error` and do not call `getProgramAccounts()`.
+
 ### `useTransaction(handler, options?)`
 
 Wraps an async transaction handler with state.
@@ -334,6 +378,30 @@ Returns:
 
 For explorer links, render after `signature` is set. For devnet, use a URL such as `https://explorer.solana.com/tx/${signature}?cluster=devnet`. Use `mainnet-beta`, `testnet`, or `localnet` to match the app cluster.
 
+### `useSignatureStatus(signature, options?)`
+
+Reads the current status for a submitted signature. Pass `pollIntervalMs` to poll, or `subscribe: true` to receive an `onSignature()` websocket update. Both polling intervals and signature listeners are cleaned up on component unmount.
+
+Options:
+
+- `commitment`: commitment used for websocket signature subscriptions.
+- `pollIntervalMs`: interval in milliseconds for repeated `getSignatureStatuses()` calls.
+- `searchTransactionHistory`: forwards to `getSignatureStatuses()` for older signatures.
+- `subscribe`: enables `connection.onSignature()` listener setup.
+
+Returns:
+
+- `status`
+- `loading`
+- `error`
+- `refresh()`
+- `stopPolling()`
+- `stopSubscription()`
+
+Null input clears state without calling RPC.
+
+RPC cost note: `useAccountInfo()` performs one `getAccountInfo()` call per refresh, and subscriptions consume websocket resources until cleaned up. `useSignatureStatus()` polling calls `getSignatureStatuses()` on every interval, so prefer modest intervals and stop polling once the signature reaches the status your UI needs. `useProgramAccounts()` is the highest-risk read in this group because broad program scans can consume significant RPC credits, hit rate limits, or time out. Use filters, data slicing, caching, pagination/indexing strategies, or dedicated RPC infrastructure for production-scale reads.
+
 ## `@vue-solana/nuxt`
 
 ### Module Config
@@ -362,8 +430,11 @@ The Nuxt module installs the runtime plugin on the client only and auto-imports 
 - `useSolana()`
 - `useSolanaRpc()`
 - `useSolanaConnection()`
+- `useSolanaAccountInfo()`
+- `useSolanaProgramAccounts()`
 - `useSolanaWallet()`
 - `useSolanaWallets()`
 - `useSolanaBalance()`
 - `useSolanaSignAndSendTransaction()`
 - `useSolanaTransactionConfirmation()`
+- `useSolanaSignatureStatus()`

@@ -5,6 +5,9 @@ export default defineConfig({
   resolve: {
     alias: {
       "#app": fileURLToPath(new URL("./test/stubs/nuxt-app.ts", import.meta.url)),
+      "@vue-solana/core/address": fileURLToPath(
+        new URL("./packages/core/src/address.ts", import.meta.url),
+      ),
       "@vue-solana/core/clusters": fileURLToPath(
         new URL("./packages/core/src/clusters.ts", import.meta.url),
       ),
@@ -31,6 +34,9 @@ export default defineConfig({
       "@vue-solana/vue/useBalance": fileURLToPath(
         new URL("./packages/vue/src/useBalance.ts", import.meta.url),
       ),
+      "@vue-solana/vue/useAccountInfo": fileURLToPath(
+        new URL("./packages/vue/src/useAccountInfo.ts", import.meta.url),
+      ),
       "@vue-solana/vue/useConnection": fileURLToPath(
         new URL("./packages/vue/src/useConnection.ts", import.meta.url),
       ),
@@ -40,11 +46,17 @@ export default defineConfig({
       "@vue-solana/vue/useSignAndSendTransaction": fileURLToPath(
         new URL("./packages/vue/src/useSignAndSendTransaction.ts", import.meta.url),
       ),
+      "@vue-solana/vue/useSignatureStatus": fileURLToPath(
+        new URL("./packages/vue/src/useSignatureStatus.ts", import.meta.url),
+      ),
       "@vue-solana/vue/useSolana": fileURLToPath(
         new URL("./packages/vue/src/useSolana.ts", import.meta.url),
       ),
       "@vue-solana/vue/useTransaction": fileURLToPath(
         new URL("./packages/vue/src/useTransaction.ts", import.meta.url),
+      ),
+      "@vue-solana/vue/useTransactionConfirmation": fileURLToPath(
+        new URL("./packages/vue/src/useTransactionConfirmation.ts", import.meta.url),
       ),
       "@vue-solana/vue/useWallet": fileURLToPath(
         new URL("./packages/vue/src/useWallet.ts", import.meta.url),

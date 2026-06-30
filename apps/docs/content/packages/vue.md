@@ -64,21 +64,27 @@ Direct composable subpaths:
 - `@vue-solana/vue/useSolana`
 - `@vue-solana/vue/useRpc`
 - `@vue-solana/vue/useConnection`
+- `@vue-solana/vue/useAccountInfo`
 - `@vue-solana/vue/useBalance`
+- `@vue-solana/vue/useProgramAccounts`
 - `@vue-solana/vue/useWallet`
 - `@vue-solana/vue/useWallets`
 - `@vue-solana/vue/useTransaction`
 - `@vue-solana/vue/useTransactionConfirmation`
+- `@vue-solana/vue/useSignatureStatus`
 - `@vue-solana/vue/useSignAndSendTransaction`
 
 - `useSolana()`: returns the full injected Solana context.
 - `useRpc()`: returns cluster, endpoint, connection status, latest blockhash, and `checkConnection()`.
 - `useConnection()`: returns the Solana `Connection`.
+- `useAccountInfo(address, options?)`: loads account data and can subscribe to account changes.
+- `useProgramAccounts(programId, options?)`: loads accounts owned by a program id with optional filters and data slicing.
 - `useWallet()`: returns active wallet refs, computed connection state, and wallet actions.
 - `useWallets()`: returns discovered browser extension wallets, Android Mobile Wallet Adapter wallets, and wallet selection actions.
 - `useBalance(address, commitment?)`: loads lamport balance for a `PublicKey` or address string.
 - `useTransaction(handler, options?)`: generic async transaction state helper with optional timeout settings.
 - `useTransactionConfirmation(options?)`: confirms a submitted signature with reactive status and timeout/error state.
+- `useSignatureStatus(signature, options?)`: reads, polls, or subscribes to signature status updates.
 - `useSignAndSendTransaction()`: signs and sends a transaction through the configured wallet, with optional confirmation waiting.
 
 ## Read RPC State
@@ -122,6 +128,62 @@ const { balance, loading, error, refresh } = useBalance(address);
   </section>
 </template>
 ```
+
+## Read Account Info
+
+```vue
+<script setup lang="ts">
+import { ref } from "vue";
+import { useAccountInfo } from "@vue-solana/vue/useAccountInfo";
+
+const address = ref("PASTE_A_SOLANA_ADDRESS");
+const { accountInfo, loading, error, refresh, stopWatching } = useAccountInfo(address, {
+  commitment: "confirmed",
+  watch: true,
+});
+</script>
+
+<template>
+  <section>
+    <p>Lamports: {{ accountInfo?.lamports ?? "Unknown" }}</p>
+    <p v-if="loading">Loading...</p>
+    <pre v-if="error">{{ error }}</pre>
+    <button type="button" @click="refresh">Refresh</button>
+    <button type="button" @click="stopWatching">Stop watching</button>
+  </section>
+</template>
+```
+
+`useAccountInfo()` clears state without calling RPC when the address is null. Invalid address strings set `error` without calling `getAccountInfo()`. When `watch: true` is enabled, the websocket listener is removed automatically on component unmount.
+
+## Read Program Accounts
+
+```vue
+<script setup lang="ts">
+import { ref } from "vue";
+import { useProgramAccounts } from "@vue-solana/vue/useProgramAccounts";
+
+const programId = ref("PASTE_A_SOLANA_PROGRAM_ID");
+const { accounts, loading, error, refresh } = useProgramAccounts(programId, {
+  commitment: "confirmed",
+  filters: [{ dataSize: 165 }],
+  dataSlice: { offset: 0, length: 32 },
+});
+</script>
+
+<template>
+  <section>
+    <p>Accounts: {{ accounts.length }}</p>
+    <p v-if="loading">Loading...</p>
+    <pre v-if="error">{{ error }}</pre>
+    <button type="button" @click="refresh">Refresh</button>
+  </section>
+</template>
+```
+
+`useProgramAccounts()` clears state without calling RPC when the program id is null. Invalid program id strings set `error` without calling `getProgramAccounts()`.
+
+> Warning: `useProgramAccounts()` can be expensive. Each refresh may scan a large program-owned account set, consume significant RPC credits, hit provider rate limits, or time out. Do not run broad scans from high-traffic UI paths. Use narrow filters, `dataSlice`, caching, indexing, pagination strategies, or dedicated RPC infrastructure for production reads.
 
 ## Wallet State
 
@@ -199,6 +261,26 @@ await confirm("PASTE_SUBMITTED_SIGNATURE", { commitment: "finalized" });
 ```
 
 The composable preserves the submitted `signature` when confirmation times out or the RPC call fails, so apps can still show an explorer link while surfacing `error` to the user.
+
+## Track Signature Status
+
+```ts
+import { useSignatureStatus } from "@vue-solana/vue/useSignatureStatus";
+
+const { status, loading, error, refresh, stopPolling, stopSubscription } = useSignatureStatus(
+  "PASTE_SUBMITTED_SIGNATURE",
+  {
+    pollIntervalMs: 5_000,
+    searchTransactionHistory: true,
+    subscribe: true,
+    commitment: "confirmed",
+  },
+);
+```
+
+Polling uses `getSignatureStatuses()` on every interval, so stop polling when the UI no longer needs updates. `subscribe: true` uses `onSignature()` and removes the listener on component unmount.
+
+`useProgramAccounts()` calls `getProgramAccounts()` on each refresh. Broad program scans are expensive on public RPC endpoints and usually need app-specific filters, indexing, caching, or dedicated RPC infrastructure.
 
 ## Example App
 

@@ -45,10 +45,20 @@
       "import": "./dist/useConnection.mjs",
       "require": "./dist/useConnection.cjs"
     },
+    "./useAccountInfo": {
+      "types": "./dist/useAccountInfo.d.ts",
+      "import": "./dist/useAccountInfo.mjs",
+      "require": "./dist/useAccountInfo.cjs"
+    },
     "./useBalance": {
       "types": "./dist/useBalance.d.ts",
       "import": "./dist/useBalance.mjs",
       "require": "./dist/useBalance.cjs"
+    },
+    "./useProgramAccounts": {
+      "types": "./dist/useProgramAccounts.d.ts",
+      "import": "./dist/useProgramAccounts.mjs",
+      "require": "./dist/useProgramAccounts.cjs"
     },
     "./useWallet": {
       "types": "./dist/useWallet.d.ts",
@@ -69,6 +79,11 @@
       "types": "./dist/useTransactionConfirmation.d.ts",
       "import": "./dist/useTransactionConfirmation.mjs",
       "require": "./dist/useTransactionConfirmation.cjs"
+    },
+    "./useSignatureStatus": {
+      "types": "./dist/useSignatureStatus.d.ts",
+      "import": "./dist/useSignatureStatus.mjs",
+      "require": "./dist/useSignatureStatus.cjs"
     },
     "./useSignAndSendTransaction": {
       "types": "./dist/useSignAndSendTransaction.d.ts",
