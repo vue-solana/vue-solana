@@ -79,6 +79,7 @@ export function useProgramAccounts(
       return nextAccounts;
     } catch (cause) {
       if (requestId === refreshId) {
+        accounts.value = [];
         error.value = cause;
       }
 

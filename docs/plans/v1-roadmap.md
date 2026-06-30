@@ -231,7 +231,6 @@ These features are useful, but they should not block v1 unless product scope cha
 - Full desktop native wallet coverage if not included in v1.
 - Additional iOS wallet providers such as Trust Wallet.
 - Advanced program account indexing patterns.
-- `useProgramAccounts()` after explicit filter, cost, and indexing guidance exists.
 - RPC provider failover and rate-limit handling.
 
 ## Tracking Rules

@@ -20,6 +20,18 @@ describe("parsePublicKey", () => {
     );
   });
 
+  it("parses public keys from refs", () => {
+    expect(parsePublicKey({ value: "11111111111111111111111111111111" })?.toBase58()).toBe(
+      "11111111111111111111111111111111",
+    );
+  });
+
+  it("parses public keys from getters", () => {
+    expect(parsePublicKey(() => "11111111111111111111111111111111")?.toBase58()).toBe(
+      "11111111111111111111111111111111",
+    );
+  });
+
   it("throws for invalid public key strings", () => {
     expect(() => parsePublicKey("not-a-public-key")).toThrow();
   });

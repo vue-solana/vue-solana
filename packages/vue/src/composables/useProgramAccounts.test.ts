@@ -14,116 +14,110 @@ function deferred<T>() {
   return { promise, resolve };
 }
 
+function createProgramAccountsContext(getProgramAccounts: unknown) {
+  return createMockSolanaContext({
+    connection: { getProgramAccounts } as ReturnType<typeof createMockSolanaContext>["connection"],
+  });
+}
+
+function mountProgramAccounts(
+  context: ReturnType<typeof createMockSolanaContext>,
+  programId: Parameters<typeof useProgramAccounts>[0],
+  options?: Parameters<typeof useProgramAccounts>[1],
+) {
+  let result: ReturnType<typeof useProgramAccounts> | undefined;
+
+  mountWithSolana(
+    defineComponent({
+      setup() {
+        result = useProgramAccounts(programId, options);
+
+        return () => h("div");
+      },
+    }),
+    context,
+  );
+
+  if (!result) {
+    throw new Error("useProgramAccounts did not mount");
+  }
+
+  return result;
+}
+
 describe("useProgramAccounts", () => {
   it("loads accounts for a program id string with config", async () => {
     const accounts = [
       { pubkey: new PublicKey("11111111111111111111111111111111"), account: { lamports: 123 } },
     ];
     const getProgramAccounts = vi.fn().mockResolvedValue(accounts);
-    const context = createMockSolanaContext({
-      connection: { getProgramAccounts } as ReturnType<
-        typeof createMockSolanaContext
-      >["connection"],
+    const context = createProgramAccountsContext(getProgramAccounts);
+    const result = mountProgramAccounts(context, "11111111111111111111111111111111", {
+      commitment: "confirmed",
+      dataSlice: { offset: 1, length: 32 },
+      filters: [{ dataSize: 165 }],
     });
-    let result: ReturnType<typeof useProgramAccounts> | undefined;
-
-    mountWithSolana(
-      defineComponent({
-        setup() {
-          result = useProgramAccounts("11111111111111111111111111111111", {
-            commitment: "confirmed",
-            filters: [{ dataSize: 165 }],
-          });
-
-          return () => h("div");
-        },
-      }),
-      context,
-    );
 
     await flushPromises();
 
-    expect(result?.accounts.value).toBe(accounts);
-    expect(result?.loading.value).toBe(false);
-    expect(result?.error.value).toBeNull();
+    expect(result.accounts.value).toBe(accounts);
+    expect(result.loading.value).toBe(false);
+    expect(result.error.value).toBeNull();
     expect(getProgramAccounts).toHaveBeenCalledWith(expect.any(PublicKey), {
       commitment: "confirmed",
+      dataSlice: { offset: 1, length: 32 },
       filters: [{ dataSize: 165 }],
     });
   });
 
   it("does not call RPC for null input", async () => {
     const getProgramAccounts = vi.fn();
-    const context = createMockSolanaContext({
-      connection: { getProgramAccounts } as ReturnType<
-        typeof createMockSolanaContext
-      >["connection"],
-    });
-    let result: ReturnType<typeof useProgramAccounts> | undefined;
-
-    mountWithSolana(
-      defineComponent({
-        setup() {
-          result = useProgramAccounts(null);
-
-          return () => h("div");
-        },
-      }),
-      context,
-    );
+    const context = createProgramAccountsContext(getProgramAccounts);
+    const result = mountProgramAccounts(context, null);
 
     await flushPromises();
 
-    expect(result?.accounts.value).toEqual([]);
+    expect(result.accounts.value).toEqual([]);
     expect(getProgramAccounts).not.toHaveBeenCalled();
   });
 
   it("stores invalid public key errors without spamming RPC", async () => {
     const getProgramAccounts = vi.fn();
-    const context = createMockSolanaContext({
-      connection: { getProgramAccounts } as ReturnType<
-        typeof createMockSolanaContext
-      >["connection"],
-    });
-    let result: ReturnType<typeof useProgramAccounts> | undefined;
-
-    mountWithSolana(
-      defineComponent({
-        setup() {
-          result = useProgramAccounts("not-a-public-key");
-
-          return () => h("div");
-        },
-      }),
-      context,
-    );
+    const context = createProgramAccountsContext(getProgramAccounts);
+    const result = mountProgramAccounts(context, "not-a-public-key");
 
     await flushPromises();
 
-    await expect(result?.refresh()).rejects.toThrow();
-    expect(result?.error.value).toBeInstanceOf(Error);
+    await expect(result.refresh()).rejects.toThrow();
+    expect(result.error.value).toBeInstanceOf(Error);
     expect(getProgramAccounts).not.toHaveBeenCalled();
+  });
+
+  it("clears stale program accounts when a loaded program id becomes invalid", async () => {
+    const accounts = [
+      { pubkey: new PublicKey("11111111111111111111111111111111"), account: { lamports: 123 } },
+    ];
+    const getProgramAccounts = vi.fn().mockResolvedValue(accounts);
+    const context = createProgramAccountsContext(getProgramAccounts);
+    const programId = ref("11111111111111111111111111111111");
+    const result = mountProgramAccounts(context, programId);
+
+    await flushPromises();
+    expect(result.accounts.value).toBe(accounts);
+
+    programId.value = "not-a-public-key";
+    await flushPromises();
+
+    expect(result.accounts.value).toEqual([]);
+    expect(result.error.value).toBeInstanceOf(Error);
+    expect(getProgramAccounts).toHaveBeenCalledTimes(1);
   });
 
   it("refreshes when the program id changes", async () => {
     const getProgramAccounts = vi.fn().mockResolvedValueOnce([]).mockResolvedValueOnce([]);
-    const context = createMockSolanaContext({
-      connection: { getProgramAccounts } as ReturnType<
-        typeof createMockSolanaContext
-      >["connection"],
-    });
+    const context = createProgramAccountsContext(getProgramAccounts);
     const programId = ref("11111111111111111111111111111111");
-
-    mountWithSolana(
-      defineComponent({
-        setup() {
-          useProgramAccounts(programId);
-
-          return () => h("div");
-        },
-      }),
-      context,
-    );
+    mountProgramAccounts(context, programId);
 
     await flushPromises();
     programId.value = "So11111111111111111111111111111111111111112";
@@ -139,24 +133,9 @@ describe("useProgramAccounts", () => {
       .fn()
       .mockReturnValueOnce(firstRequest.promise)
       .mockReturnValueOnce(secondRequest.promise);
-    const context = createMockSolanaContext({
-      connection: { getProgramAccounts } as ReturnType<
-        typeof createMockSolanaContext
-      >["connection"],
-    });
+    const context = createProgramAccountsContext(getProgramAccounts);
     const programId = ref("11111111111111111111111111111111");
-    let result: ReturnType<typeof useProgramAccounts> | undefined;
-
-    mountWithSolana(
-      defineComponent({
-        setup() {
-          result = useProgramAccounts(programId);
-
-          return () => h("div");
-        },
-      }),
-      context,
-    );
+    const result = mountProgramAccounts(context, programId);
 
     await flushPromises();
     programId.value = "So11111111111111111111111111111111111111112";
@@ -168,14 +147,14 @@ describe("useProgramAccounts", () => {
     secondRequest.resolve(newest);
     await flushPromises();
 
-    expect(result?.accounts.value).toBe(newest);
+    expect(result.accounts.value).toBe(newest);
 
     firstRequest.resolve([
       { pubkey: new PublicKey("11111111111111111111111111111111"), account: { lamports: 123 } },
     ]);
     await flushPromises();
 
-    expect(result?.accounts.value).toBe(newest);
+    expect(result.accounts.value).toBe(newest);
     expect(getProgramAccounts).toHaveBeenCalledTimes(2);
   });
 });

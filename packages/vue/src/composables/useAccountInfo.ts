@@ -19,6 +19,7 @@ export function useAccountInfo(
   const loading = shallowRef(false);
   const error = shallowRef<unknown>(null);
   let refreshId = 0;
+  let watchId = 0;
   let subscriptionId: number | null = null;
 
   async function refresh() {
@@ -52,6 +53,7 @@ export function useAccountInfo(
       return nextAccountInfo;
     } catch (cause) {
       if (requestId === refreshId) {
+        accountInfo.value = null;
         error.value = cause;
       }
 
@@ -64,6 +66,11 @@ export function useAccountInfo(
   }
 
   async function stopWatching() {
+    watchId += 1;
+    await stopCurrentWatcher();
+  }
+
+  async function stopCurrentWatcher() {
     if (subscriptionId === null) {
       return;
     }
@@ -74,7 +81,12 @@ export function useAccountInfo(
   }
 
   async function startWatching() {
-    await stopWatching();
+    const requestId = ++watchId;
+    await stopCurrentWatcher();
+
+    if (requestId !== watchId) {
+      return;
+    }
 
     if (!options.watch || !solana) {
       return;
@@ -87,16 +99,29 @@ export function useAccountInfo(
         return;
       }
 
-      subscriptionId = connection.onAccountChange(
+      const nextSubscriptionId = connection.onAccountChange(
         publicKey,
         (nextAccountInfo: AccountInfo<Buffer>) => {
+          if (requestId !== watchId) {
+            return;
+          }
+
           accountInfo.value = nextAccountInfo;
           error.value = null;
         },
         options.commitment,
       );
+
+      if (requestId !== watchId) {
+        await connection.removeAccountChangeListener(nextSubscriptionId);
+        return;
+      }
+
+      subscriptionId = nextSubscriptionId;
     } catch (cause) {
-      error.value = cause;
+      if (requestId === watchId) {
+        error.value = cause;
+      }
     }
   }
 

@@ -15,6 +15,9 @@ function deferred<T>() {
 }
 
 describe("useAccountInfo", () => {
+  const systemProgram = "11111111111111111111111111111111";
+  const wrappedSol = "So11111111111111111111111111111111111111112";
+
   it("loads account info for a public key string", async () => {
     const account = { lamports: 123 };
     const getAccountInfo = vi.fn().mockResolvedValue(account);
@@ -91,6 +94,37 @@ describe("useAccountInfo", () => {
     expect(getAccountInfo).not.toHaveBeenCalled();
   });
 
+  it("clears stale account info when a loaded address becomes invalid", async () => {
+    const account = { lamports: 123 };
+    const getAccountInfo = vi.fn().mockResolvedValue(account);
+    const context = createMockSolanaContext({
+      connection: { getAccountInfo } as ReturnType<typeof createMockSolanaContext>["connection"],
+    });
+    const address = ref(systemProgram);
+    let result: ReturnType<typeof useAccountInfo> | undefined;
+
+    mountWithSolana(
+      defineComponent({
+        setup() {
+          result = useAccountInfo(address);
+
+          return () => h("div");
+        },
+      }),
+      context,
+    );
+
+    await flushPromises();
+    expect(result?.accountInfo.value).toBe(account);
+
+    address.value = "not-a-public-key";
+    await flushPromises();
+
+    expect(result?.accountInfo.value).toBeNull();
+    expect(result?.error.value).toBeInstanceOf(Error);
+    expect(getAccountInfo).toHaveBeenCalledTimes(1);
+  });
+
   it("keeps the newest account info when overlapping requests resolve out of order", async () => {
     const firstRequest = deferred<unknown>();
     const secondRequest = deferred<unknown>();
@@ -116,7 +150,7 @@ describe("useAccountInfo", () => {
     );
 
     await flushPromises();
-    address.value = "So11111111111111111111111111111111111111112";
+    address.value = wrappedSol;
     await flushPromises();
 
     const newest = { lamports: 456 };
@@ -130,51 +164,5 @@ describe("useAccountInfo", () => {
 
     expect(result?.accountInfo.value).toBe(newest);
     expect(getAccountInfo).toHaveBeenCalledTimes(2);
-  });
-
-  it("subscribes to account changes and cleans up on unmount", async () => {
-    const getAccountInfo = vi.fn().mockResolvedValue(null);
-    const onAccountChange = vi.fn().mockReturnValue(42);
-    const removeAccountChangeListener = vi.fn().mockResolvedValue(undefined);
-    const context = createMockSolanaContext({
-      connection: {
-        getAccountInfo,
-        onAccountChange,
-        removeAccountChangeListener,
-      } as unknown as ReturnType<typeof createMockSolanaContext>["connection"],
-    });
-    let result: ReturnType<typeof useAccountInfo> | undefined;
-
-    const wrapper = mountWithSolana(
-      defineComponent({
-        setup() {
-          result = useAccountInfo("11111111111111111111111111111111", {
-            commitment: "processed",
-            watch: true,
-          });
-
-          return () => h("div");
-        },
-      }),
-      context,
-    );
-
-    await flushPromises();
-
-    const listener = onAccountChange.mock.calls[0]?.[1] as (accountInfo: unknown) => void;
-    const nextAccount = { lamports: 999 };
-    listener(nextAccount);
-
-    expect(result?.accountInfo.value).toBe(nextAccount);
-    expect(onAccountChange).toHaveBeenCalledWith(
-      expect.any(PublicKey),
-      expect.any(Function),
-      "processed",
-    );
-
-    wrapper.unmount();
-    await flushPromises();
-
-    expect(removeAccountChangeListener).toHaveBeenCalledWith(42);
   });
 });

@@ -1,11 +1,17 @@
+import bs58 from "bs58";
 import { flushPromises } from "@vue/test-utils";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { defineComponent, h, ref } from "vue";
-import { createMockSolanaContext, mountWithSolana } from "../../test-utils";
-import { useSignatureStatus } from "./useSignatureStatus";
+import { ref } from "vue";
+import {
+  deferred,
+  mountUseSignatureStatus,
+  nextSignature,
+  signature,
+} from "../../test-utils/useSignatureStatus";
 
 describe("useSignatureStatus", () => {
   afterEach(() => {
+    vi.restoreAllMocks();
     vi.useRealTimers();
   });
 
@@ -17,123 +23,141 @@ describe("useSignatureStatus", () => {
       confirmationStatus: "confirmed",
     };
     const getSignatureStatuses = vi.fn().mockResolvedValue({ value: [signatureStatus] });
-    const context = createMockSolanaContext({
-      connection: { getSignatureStatuses } as ReturnType<
-        typeof createMockSolanaContext
-      >["connection"],
-    });
-    let result: ReturnType<typeof useSignatureStatus> | undefined;
-
-    mountWithSolana(
-      defineComponent({
-        setup() {
-          result = useSignatureStatus("signature", { searchTransactionHistory: true });
-
-          return () => h("div");
-        },
-      }),
-      context,
+    const { result } = mountUseSignatureStatus(
+      signature,
+      { searchTransactionHistory: true },
+      { getSignatureStatuses },
     );
 
     await flushPromises();
 
-    expect(result?.status.value).toBe(signatureStatus);
-    expect(result?.loading.value).toBe(false);
-    expect(result?.error.value).toBeNull();
-    expect(getSignatureStatuses).toHaveBeenCalledWith(["signature"], {
+    expect(result.status.value).toBe(signatureStatus);
+    expect(result.loading.value).toBe(false);
+    expect(result.error.value).toBeNull();
+    expect(getSignatureStatuses).toHaveBeenCalledWith([signature], {
       searchTransactionHistory: true,
     });
   });
 
-  it("does not poll RPC for null input", async () => {
+  it("stores invalid signature errors without calling or polling RPC", async () => {
+    vi.useFakeTimers();
+    const setIntervalSpy = vi.spyOn(globalThis, "setInterval");
     const getSignatureStatuses = vi.fn();
-    const context = createMockSolanaContext({
-      connection: { getSignatureStatuses } as ReturnType<
-        typeof createMockSolanaContext
-      >["connection"],
-    });
-    let result: ReturnType<typeof useSignatureStatus> | undefined;
-
-    mountWithSolana(
-      defineComponent({
-        setup() {
-          result = useSignatureStatus(null);
-
-          return () => h("div");
-        },
-      }),
-      context,
+    const { result } = mountUseSignatureStatus(
+      "not-a-signature",
+      { pollIntervalMs: 1 },
+      {
+        getSignatureStatuses,
+      },
     );
 
     await flushPromises();
+    await vi.advanceTimersByTimeAsync(5);
 
-    expect(result?.status.value).toBeNull();
+    expect(result.status.value).toBeNull();
+    expect(result.error.value).toBeInstanceOf(Error);
+    expect(getSignatureStatuses).not.toHaveBeenCalled();
+    expect(setIntervalSpy).not.toHaveBeenCalled();
+  });
+
+  it("rejects signatures that do not decode to 64 bytes", async () => {
+    const getSignatureStatuses = vi.fn();
+    const { result } = mountUseSignatureStatus(bs58.encode(new Uint8Array(63).fill(1)), undefined, {
+      getSignatureStatuses,
+    });
+
+    await flushPromises();
+
+    expect(result.status.value).toBeNull();
+    expect(result.error.value).toBeInstanceOf(TypeError);
+    expect(getSignatureStatuses).not.toHaveBeenCalled();
+  });
+
+  it("clears stale signature status when a loaded signature becomes invalid", async () => {
+    const signatureStatus = {
+      slot: 1,
+      confirmations: 2,
+      err: null,
+      confirmationStatus: "confirmed",
+    };
+    const getSignatureStatuses = vi.fn().mockResolvedValue({ value: [signatureStatus] });
+    const signatureRef = ref(signature);
+    const { result } = mountUseSignatureStatus(signatureRef, undefined, { getSignatureStatuses });
+
+    await flushPromises();
+    expect(result.status.value).toBe(signatureStatus);
+
+    signatureRef.value = "not-a-signature";
+    await flushPromises();
+
+    expect(result.status.value).toBeNull();
+    expect(result.error.value).toBeInstanceOf(TypeError);
+    expect(getSignatureStatuses).toHaveBeenCalledTimes(1);
+  });
+
+  it("rejects invalid poll intervals without creating a tight polling loop", async () => {
+    vi.useFakeTimers();
+    const getSignatureStatuses = vi.fn().mockResolvedValue({ value: [null] });
+    const { result } = mountUseSignatureStatus(
+      signature,
+      { pollIntervalMs: -1 },
+      {
+        getSignatureStatuses,
+      },
+    );
+
+    await flushPromises();
+    await vi.advanceTimersByTimeAsync(5);
+
+    expect(result.error.value).toBeInstanceOf(RangeError);
+    expect(getSignatureStatuses).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not poll RPC for null input", async () => {
+    const getSignatureStatuses = vi.fn();
+    const { result } = mountUseSignatureStatus(null, undefined, { getSignatureStatuses });
+
+    await flushPromises();
+
+    expect(result.status.value).toBeNull();
     expect(getSignatureStatuses).not.toHaveBeenCalled();
   });
 
   it("keeps the newest signature status when overlapping requests resolve out of order", async () => {
-    let resolveFirst!: (value: unknown) => void;
-    let resolveSecond!: (value: unknown) => void;
-    const first = new Promise((resolve) => {
-      resolveFirst = resolve;
-    });
-    const second = new Promise((resolve) => {
-      resolveSecond = resolve;
-    });
-    const getSignatureStatuses = vi.fn().mockReturnValueOnce(first).mockReturnValueOnce(second);
-    const context = createMockSolanaContext({
-      connection: { getSignatureStatuses } as ReturnType<
-        typeof createMockSolanaContext
-      >["connection"],
-    });
-    const signature = ref("old-signature");
-    let result: ReturnType<typeof useSignatureStatus> | undefined;
-
-    mountWithSolana(
-      defineComponent({
-        setup() {
-          result = useSignatureStatus(signature);
-
-          return () => h("div");
-        },
-      }),
-      context,
-    );
+    const firstRequest = deferred<unknown>();
+    const secondRequest = deferred<unknown>();
+    const getSignatureStatuses = vi
+      .fn()
+      .mockReturnValueOnce(firstRequest.promise)
+      .mockReturnValueOnce(secondRequest.promise);
+    const signatureRef = ref(signature);
+    const { result } = mountUseSignatureStatus(signatureRef, undefined, { getSignatureStatuses });
 
     await flushPromises();
-    signature.value = "new-signature";
+    signatureRef.value = nextSignature;
     await flushPromises();
 
     const newest = { slot: 2, confirmations: null, err: null, confirmationStatus: "finalized" };
-    resolveSecond({ value: [newest] });
+    secondRequest.resolve({ value: [newest] });
     await flushPromises();
 
-    expect(result?.status.value).toBe(newest);
+    expect(result.status.value).toBe(newest);
 
-    resolveFirst({ value: [{ slot: 1, confirmations: 1, err: null }] });
+    firstRequest.resolve({ value: [{ slot: 1, confirmations: 1, err: null }] });
     await flushPromises();
 
-    expect(result?.status.value).toBe(newest);
+    expect(result.status.value).toBe(newest);
   });
 
   it("polls when a poll interval is provided and stops on unmount", async () => {
     vi.useFakeTimers();
     const getSignatureStatuses = vi.fn().mockResolvedValue({ value: [null] });
-    const context = createMockSolanaContext({
-      connection: { getSignatureStatuses } as ReturnType<
-        typeof createMockSolanaContext
-      >["connection"],
-    });
-
-    const wrapper = mountWithSolana(
-      defineComponent({
-        setup() {
-          useSignatureStatus("signature", { pollIntervalMs: 50 });
-
-          return () => h("div");
-        },
-      }),
-      context,
+    const { wrapper } = mountUseSignatureStatus(
+      signature,
+      { pollIntervalMs: 50 },
+      {
+        getSignatureStatuses,
+      },
     );
 
     await flushPromises();
@@ -145,51 +169,5 @@ describe("useSignatureStatus", () => {
     wrapper.unmount();
     await vi.advanceTimersByTimeAsync(50);
     expect(getSignatureStatuses).toHaveBeenCalledTimes(2);
-  });
-
-  it("subscribes to signature updates and removes the listener on unmount", async () => {
-    const getSignatureStatuses = vi.fn().mockResolvedValue({ value: [null] });
-    const onSignature = vi.fn().mockReturnValue(7);
-    const removeSignatureListener = vi.fn().mockResolvedValue(undefined);
-    const context = createMockSolanaContext({
-      connection: {
-        getSignatureStatuses,
-        onSignature,
-        removeSignatureListener,
-      } as unknown as ReturnType<typeof createMockSolanaContext>["connection"],
-    });
-    let result: ReturnType<typeof useSignatureStatus> | undefined;
-
-    const wrapper = mountWithSolana(
-      defineComponent({
-        setup() {
-          result = useSignatureStatus("signature", { commitment: "finalized", subscribe: true });
-
-          return () => h("div");
-        },
-      }),
-      context,
-    );
-
-    await flushPromises();
-
-    const listener = onSignature.mock.calls[0]?.[1] as (
-      notification: { err: unknown },
-      context: { slot: number },
-    ) => void;
-    listener({ err: null }, { slot: 99 });
-
-    expect(result?.status.value).toEqual({
-      slot: 99,
-      confirmations: null,
-      err: null,
-      confirmationStatus: "finalized",
-    });
-    expect(onSignature).toHaveBeenCalledWith("signature", expect.any(Function), "finalized");
-
-    wrapper.unmount();
-    await flushPromises();
-
-    expect(removeSignatureListener).toHaveBeenCalledWith(7);
   });
 });

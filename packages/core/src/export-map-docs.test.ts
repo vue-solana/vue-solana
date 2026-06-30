@@ -7,6 +7,18 @@ type PackageJson = {
 };
 
 describe("documented package subpaths", () => {
+  it("keeps core build entries aligned with the package export map", () => {
+    const expected = getExportedBuildEntries("../package.json");
+
+    expect([...getBuildEntries("../build.config.ts")].sort()).toEqual([...expected].sort());
+  });
+
+  it("keeps Vue build entries aligned with the package export map", () => {
+    const expected = getExportedBuildEntries("../../vue/package.json");
+
+    expect([...getBuildEntries("../../vue/build.config.ts")].sort()).toEqual([...expected].sort());
+  });
+
   it("keeps core subpath docs aligned with the package export map", () => {
     const expected = getExportedSubpaths("../package.json");
 
@@ -42,6 +54,25 @@ function getExportedSubpaths(packageJsonPath: string) {
   return Object.keys(packageJson.exports)
     .filter((exportPath) => exportPath !== ".")
     .map((exportPath) => `${packageJson.name}${exportPath.slice(1)}`);
+}
+
+function getExportedBuildEntries(packageJsonPath: string) {
+  const packageJson = readJson<PackageJson>(packageJsonPath);
+
+  return Object.keys(packageJson.exports).map((exportPath) =>
+    exportPath === "." ? "src/index" : `src/${exportPath.slice(2)}`,
+  );
+}
+
+function getBuildEntries(buildConfigPath: string) {
+  const content = readText(buildConfigPath);
+  const match = /entries:\s*\[([\s\S]*?)]/.exec(content);
+
+  if (!match?.[1]) {
+    throw new Error(`Could not find build entries in ${buildConfigPath}`);
+  }
+
+  return Array.from(match[1].matchAll(/"([^"]+)"/g), ([, entry]) => entry);
 }
 
 function getBacktickedListAfter(markdownPath: string, marker: string) {

@@ -261,6 +261,9 @@ importers:
       '@vue-solana/core':
         specifier: workspace:*
         version: link:../core
+      bs58:
+        specifier: ^6.0.0
+        version: 6.0.0
     devDependencies:
       '@solana/web3-compat':
         specifier: ^0.0.21

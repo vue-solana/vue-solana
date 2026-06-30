@@ -48,6 +48,7 @@ The root export remains supported. Direct subpath exports are also available for
 
 ```ts
 import { createSolanaContext } from "@vue-solana/core/rpc";
+import { parsePublicKey } from "@vue-solana/core/address";
 import type { SolanaConfig } from "@vue-solana/core/types";
 ```
 
@@ -82,6 +83,7 @@ https://faucet.solana.com
 Direct subpaths:
 
 - `@vue-solana/core/types`
+- `@vue-solana/core/address`
 - `@vue-solana/core/clusters`
 - `@vue-solana/core/ios-wallet`
 - `@vue-solana/core/mobile-wallet`
@@ -91,6 +93,7 @@ Direct subpaths:
 - `@vue-solana/core/wallet-standard`
 
 - `DEFAULT_CLUSTER`: default cluster, currently `devnet`.
+- `parsePublicKey(value)`: parses a `PublicKey`, address string, ref-like `{ value }`, getter, `null`, or `undefined` into a `PublicKey | null`.
 - `createSolanaConnection(config?)`: creates a `Connection`.
 - `createSolanaContext(config?)`: creates `{ cluster, endpoint, wsEndpoint, connection }`.
 - `getClusterEndpoint(cluster?)`: returns the HTTP RPC endpoint for a cluster.
@@ -156,10 +159,12 @@ If TypeScript cannot resolve `@solana/web3-compat`, add `types/web3-compat.d.ts`
 ```ts
 declare module "@solana/web3-compat" {
   export type {
+    AccountInfo,
     Commitment,
     RpcResponseAndContext,
     SendOptions,
     SignatureResult,
+    SignatureStatus,
     TransactionSignature,
   } from "@solana/web3.js";
   export {

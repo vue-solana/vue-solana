@@ -65,10 +65,13 @@ The module auto-imports these composables from direct `@vue-solana/vue/*` subpat
 - `useSolana()`
 - `useSolanaRpc()`
 - `useSolanaConnection()`
+- `useSolanaAccountInfo()`
 - `useSolanaWallet()`
 - `useSolanaWallets()`
 - `useSolanaBalance()`
+- `useSolanaProgramAccounts()`
 - `useSolanaTransactionConfirmation()`
+- `useSolanaSignatureStatus()`
 - `useSolanaSignAndSendTransaction()`
 
 The runtime plugin is client-only. Auto-imported composables can be called during SSR and return inert state until hydration provides the real client context. Trigger RPC and wallet work from client lifecycle hooks or user actions.
@@ -110,6 +113,25 @@ const { balance, loading, error, refresh } = useSolanaBalance(address);
   </section>
 </template>
 ```
+
+## Read Account Data
+
+```vue
+<script setup lang="ts">
+const address = ref("PASTE_A_SOLANA_ADDRESS");
+const programId = ref("PASTE_A_SOLANA_PROGRAM_ID");
+const signature = ref("PASTE_A_TRANSACTION_SIGNATURE");
+
+const account = useSolanaAccountInfo(address, { watch: true });
+const programAccounts = useSolanaProgramAccounts(programId, {
+  dataSlice: { offset: 0, length: 32 },
+  filters: [{ dataSize: 165 }],
+});
+const signatureStatus = useSolanaSignatureStatus(signature, { pollIntervalMs: 2_000 });
+</script>
+```
+
+Use `useSolanaProgramAccounts()` carefully on public RPC nodes. Prefer narrow filters, use `dataSlice` for partial reads, and avoid polling broad scans.
 
 ## Wallet State
 
@@ -174,10 +196,12 @@ If TypeScript cannot resolve `@solana/web3-compat`, add `types/web3-compat.d.ts`
 ```ts
 declare module "@solana/web3-compat" {
   export type {
+    AccountInfo,
     Commitment,
     RpcResponseAndContext,
     SendOptions,
     SignatureResult,
+    SignatureStatus,
     TransactionSignature,
   } from "@solana/web3.js";
   export {

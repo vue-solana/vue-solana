@@ -162,7 +162,7 @@ Direct subpaths:
 - `getClusterEndpoint(cluster?)`: returns the HTTP RPC endpoint for a cluster.
 - `getClusterWebSocketEndpoint(cluster?)`: returns the WebSocket endpoint for a cluster.
 - `getWebSocketEndpoint(endpoint)`: converts `http`/`https` RPC URLs to `ws`/`wss` URLs.
-- `parsePublicKey(value)`: parses a `PublicKey` or address string and returns `null` for nullish input.
+- `parsePublicKey(value)`: parses a `PublicKey`, address string, ref-like value, or getter and returns `null` for nullish input.
 - `isWalletConnected(wallet)`: checks whether a wallet is connected and has a public key.
 - `assertWalletConnected(wallet)`: throws if the wallet is not connected.
 - `assertWalletCanSign(wallet)`: throws if the wallet cannot sign transactions.

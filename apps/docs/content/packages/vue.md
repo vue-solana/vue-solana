@@ -154,7 +154,7 @@ const { accountInfo, loading, error, refresh, stopWatching } = useAccountInfo(ad
 </template>
 ```
 
-`useAccountInfo()` clears state without calling RPC when the address is null. Invalid address strings set `error` without calling `getAccountInfo()`. When `watch: true` is enabled, the websocket listener is removed automatically on component unmount.
+`useAccountInfo()` clears state without calling RPC when the address is null. Invalid address strings clear stale `accountInfo`, set `error`, and do not call `getAccountInfo()`. When `watch: true` is enabled, the websocket listener is removed automatically on component unmount.
 
 ## Read Program Accounts
 
@@ -181,7 +181,7 @@ const { accounts, loading, error, refresh } = useProgramAccounts(programId, {
 </template>
 ```
 
-`useProgramAccounts()` clears state without calling RPC when the program id is null. Invalid program id strings set `error` without calling `getProgramAccounts()`.
+`useProgramAccounts()` clears state without calling RPC when the program id is null. Invalid program id strings clear stale `accounts`, set `error`, and do not call `getProgramAccounts()`.
 
 > Warning: `useProgramAccounts()` can be expensive. Each refresh may scan a large program-owned account set, consume significant RPC credits, hit provider rate limits, or time out. Do not run broad scans from high-traffic UI paths. Use narrow filters, `dataSlice`, caching, indexing, pagination strategies, or dedicated RPC infrastructure for production reads.
 
@@ -278,7 +278,7 @@ const { status, loading, error, refresh, stopPolling, stopSubscription } = useSi
 );
 ```
 
-Polling uses `getSignatureStatuses()` on every interval, so stop polling when the UI no longer needs updates. `subscribe: true` uses `onSignature()` and removes the listener on component unmount.
+Polling uses `getSignatureStatuses()` on every interval, so stop polling when the UI no longer needs updates. Invalid signatures clear stale `status`, set `error`, and do not call RPC or start polling. Invalid `pollIntervalMs` values less than or equal to `0` set a `RangeError` and do not start polling. `subscribe: true` uses `onSignature()` and removes the listener on component unmount.
 
 `useProgramAccounts()` calls `getProgramAccounts()` on each refresh. Broad program scans are expensive on public RPC endpoints and usually need app-specific filters, indexing, caching, or dedicated RPC infrastructure.
 

@@ -104,7 +104,8 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@vue-solana/core": "workspace:*"
+    "@vue-solana/core": "workspace:*",
+    "bs58": "^6.0.0"
   },
   "peerDependencies": {
     "@solana/web3-compat": "^0.0.21",
