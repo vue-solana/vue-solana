@@ -96,16 +96,7 @@ describe("useSignMessage", () => {
     const scenario = createOverlappingSignMessageScenario();
     const firstSignature = new Uint8Array([1]);
 
-    scenario.secondSign.resolve({
-      signedMessage: new Uint8Array([2]),
-      signature: scenario.secondSignature,
-    });
-    await expect(scenario.second).resolves.toEqual({
-      signedMessage: new Uint8Array([2]),
-      signature: scenario.secondSignature,
-    });
-    expect(scenario.result.signature.value).toBe(scenario.secondSignature);
-    expect(scenario.result.status.value).toBe("signed");
+    await resolveSecondSign(scenario);
 
     scenario.firstSign.resolve({ signedMessage: new Uint8Array([1]), signature: firstSignature });
     await expect(scenario.first).resolves.toEqual({
@@ -120,16 +111,7 @@ describe("useSignMessage", () => {
   it("ignores an older rejection that settles after a newer signature", async () => {
     const scenario = createOverlappingSignMessageScenario();
 
-    scenario.secondSign.resolve({
-      signedMessage: new Uint8Array([2]),
-      signature: scenario.secondSignature,
-    });
-    await expect(scenario.second).resolves.toEqual({
-      signedMessage: new Uint8Array([2]),
-      signature: scenario.secondSignature,
-    });
-    expect(scenario.result.signature.value).toBe(scenario.secondSignature);
-    expect(scenario.result.status.value).toBe("signed");
+    await resolveSecondSign(scenario);
 
     scenario.firstSign.reject(new Error("Older request failed"));
     await expect(scenario.first).rejects.toThrow("Older request failed");
@@ -182,6 +164,21 @@ function createOverlappingSignMessageScenario() {
   const second = result.execute(new Uint8Array([2]));
 
   return { first, firstSign, result, second, secondSign, secondSignature };
+}
+
+async function resolveSecondSign(
+  scenario: ReturnType<typeof createOverlappingSignMessageScenario>,
+) {
+  scenario.secondSign.resolve({
+    signedMessage: new Uint8Array([2]),
+    signature: scenario.secondSignature,
+  });
+  await expect(scenario.second).resolves.toEqual({
+    signedMessage: new Uint8Array([2]),
+    signature: scenario.secondSignature,
+  });
+  expect(scenario.result.signature.value).toBe(scenario.secondSignature);
+  expect(scenario.result.status.value).toBe("signed");
 }
 
 function createDeferred<T>(): Deferred<T> {

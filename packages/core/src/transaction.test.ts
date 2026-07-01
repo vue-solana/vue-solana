@@ -139,17 +139,32 @@ describe("confirmTransactionSignature", () => {
       confirmTransaction: vi.fn(() => new Promise(() => undefined)),
     } as unknown as Connection;
     const promise = confirmTransactionSignature(connection, "signature", { timeoutMs: 10 });
-    const rejection = expect(promise).rejects.toThrow(
-      "Timed out waiting for transaction signature to reach confirmed commitment.",
+    const rejection = promise.then(
+      () => {
+        throw new Error("Expected confirmation to time out.");
+      },
+      (error: unknown) => {
+        expect(error).toBeInstanceOf(SolanaError);
+        expect((error as SolanaError).message).toBe(
+          "Timed out waiting for transaction signature to reach confirmed commitment.",
+        );
+      },
     );
 
     await vi.advanceTimersByTimeAsync(10);
     await rejection;
 
     const nextPromise = confirmTransactionSignature(connection, "signature", { timeoutMs: 10 });
-    const nextRejection = expect(nextPromise).rejects.toMatchObject({
-      code: "TRANSACTION_TIMEOUT",
-    });
+    const nextRejection = nextPromise.then(
+      () => {
+        throw new Error("Expected confirmation to time out.");
+      },
+      (error: unknown) => {
+        expect(error).toMatchObject({
+          code: "TRANSACTION_TIMEOUT",
+        });
+      },
+    );
 
     await vi.advanceTimersByTimeAsync(10);
     await nextRejection;
