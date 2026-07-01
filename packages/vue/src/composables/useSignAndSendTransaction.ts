@@ -48,13 +48,20 @@ export function useSignAndSendTransaction() {
     error.value = null;
     confirmation.value = null;
 
-    try {
-      if (!wallet.value) {
-        throw new Error("No Solana wallet is configured");
-      }
+    const activeWallet = wallet.value;
 
+    if (!activeWallet) {
+      const cause = new Error("No Solana wallet is configured");
+      error.value = cause;
+      status.value = "error";
+      loading.value = false;
+
+      throw cause;
+    }
+
+    try {
       const nextSignature = await withWalletTransactionTimeout(
-        signAndSendTransaction(connection, wallet.value, transaction, transactionOptions),
+        signAndSendTransaction(connection, activeWallet, transaction, transactionOptions),
       );
 
       if (currentExecutionId === executionId) {

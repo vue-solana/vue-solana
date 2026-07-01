@@ -23,14 +23,21 @@ export function useSignMessage() {
     signedMessage.value = null;
     signature.value = null;
 
+    const activeWallet = wallet.value;
+
+    if (!activeWallet) {
+      const cause = new Error("No Solana wallet is configured");
+      error.value = cause;
+      status.value = "error";
+      loading.value = false;
+
+      throw cause;
+    }
+
     try {
-      if (!wallet.value) {
-        throw new Error("No Solana wallet is configured");
-      }
+      assertWalletCanSignMessage(activeWallet);
 
-      assertWalletCanSignMessage(wallet.value);
-
-      const result = await wallet.value.signMessage(message);
+      const result = await activeWallet.signMessage(message);
 
       if (currentExecutionId === executionId) {
         signedMessage.value = result.signedMessage;
