@@ -47,7 +47,7 @@ Tasks:
 Acceptance criteria:
 
 - No documented v1 option is described as reserved, planned, or unused.
-- Package README files and `docs/api.md` agree on the public API surface.
+- Package README files, the `docs/api.md` index, and `docs/api/*` package pages agree on the public API surface.
 - Existing consumers can identify any breaking changes from changesets and changelogs.
 
 ## Phase 2: Wallet UX Foundations
@@ -124,20 +124,20 @@ Acceptance criteria:
 
 ## Phase 5: Message Signing And Capabilities
 
-Status: planned.
+Status: complete.
 
 Many Solana apps use message signing for wallet authentication. v1 should support it where wallets expose it.
 
 Tasks:
 
-- [ ] Extend `SolanaWallet` with optional `signMessage` support.
-- [ ] Adapt Wallet Standard message signing features when available.
-- [ ] Add `useSignMessage()` to `@vue-solana/vue`.
-- [ ] Auto-import the Nuxt alias, likely `useSolanaSignMessage()`.
-- [ ] Expose active wallet capabilities from `useWallet()` as computed values.
-- [ ] Include capability flags for connect, disconnect, sign message, sign transaction, sign all transactions, and sign-and-send transaction.
-- [ ] Add tests for wallets with and without message signing support.
-- [ ] Document wallet-auth patterns and clearly state that message signing is not transaction signing.
+- [x] Extend `SolanaWallet` with optional `signMessage` support.
+- [x] Adapt Wallet Standard message signing features when available.
+- [x] Add `useSignMessage()` to `@vue-solana/vue`.
+- [x] Auto-import the Nuxt alias, likely `useSolanaSignMessage()`.
+- [x] Expose active wallet capabilities from `useWallet()` as computed values.
+- [x] Include capability flags for connect, disconnect, sign message, sign transaction, sign all transactions, and sign-and-send transaction.
+- [x] Add tests for wallets with and without message signing support.
+- [x] Document wallet-auth patterns and clearly state that message signing is not transaction signing.
 
 Acceptance criteria:
 
@@ -193,7 +193,7 @@ Every v1 feature should ship with docs and verification coverage.
 
 Tasks:
 
-- [ ] Update `docs/api.md` and docs app package pages for every new public API.
+- [ ] Update `docs/api.md`, `docs/api/*`, and docs app package pages for every new public API.
 - [ ] Update the Vue Vite example with persisted wallet selection, transaction confirmation, and message signing examples.
 - [ ] Update the Nuxt example with the same v1 flows using Nuxt auto-imports.
 - [ ] Add mocked Wallet Standard E2E coverage for discovery, selection, connect, disconnect, and unsupported capabilities.

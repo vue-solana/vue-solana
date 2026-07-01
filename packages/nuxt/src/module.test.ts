@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { SOLANA_IMPORTS } from "./imports";
 
 const kit = vi.hoisted(() => ({
   addImports: vi.fn(),
@@ -45,6 +46,29 @@ type TestViteOptions = {
   };
 };
 
+function setupModule(
+  module: ModuleUnderTest,
+  options: Record<string, unknown> = {},
+  context: {
+    publicConfig?: Record<string, unknown>;
+    vite?: TestViteOptions | Record<string, unknown>;
+  } = {},
+) {
+  const publicConfig = context.publicConfig ?? {};
+  const vite = context.vite ?? {};
+
+  module.setup(options, {
+    options: {
+      runtimeConfig: {
+        public: publicConfig,
+      },
+      vite,
+    },
+  });
+
+  return { publicConfig, vite };
+}
+
 describe("Nuxt module", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -71,16 +95,10 @@ describe("Nuxt module", () => {
       },
     };
 
-    module.setup(
+    setupModule(
+      module,
       { cluster: "testnet", endpoint: "https://rpc.example.com" },
-      {
-        options: {
-          runtimeConfig: {
-            public: publicConfig,
-          },
-          vite: {},
-        },
-      },
+      { publicConfig },
     );
 
     expect(publicConfig.solana).toEqual({
@@ -93,41 +111,7 @@ describe("Nuxt module", () => {
       src: "resolved:./runtime/plugin",
       mode: "client",
     });
-    expect(kit.addImports).toHaveBeenCalledWith(
-      expect.arrayContaining([
-        {
-          name: "useAccountInfo",
-          as: "useSolanaAccountInfo",
-          from: "@vue-solana/vue/useAccountInfo",
-        },
-        { name: "useBalance", as: "useSolanaBalance", from: "@vue-solana/vue/useBalance" },
-        { name: "useConnection", as: "useSolanaConnection", from: "@vue-solana/vue/useConnection" },
-        {
-          name: "useProgramAccounts",
-          as: "useSolanaProgramAccounts",
-          from: "@vue-solana/vue/useProgramAccounts",
-        },
-        { name: "useRpc", as: "useSolanaRpc", from: "@vue-solana/vue/useRpc" },
-        {
-          name: "useSignAndSendTransaction",
-          as: "useSolanaSignAndSendTransaction",
-          from: "@vue-solana/vue/useSignAndSendTransaction",
-        },
-        {
-          name: "useSignatureStatus",
-          as: "useSolanaSignatureStatus",
-          from: "@vue-solana/vue/useSignatureStatus",
-        },
-        { name: "useSolana", as: "useSolana", from: "@vue-solana/vue/useSolana" },
-        {
-          name: "useTransactionConfirmation",
-          as: "useSolanaTransactionConfirmation",
-          from: "@vue-solana/vue/useTransactionConfirmation",
-        },
-        { name: "useWallet", as: "useSolanaWallet", from: "@vue-solana/vue/useWallet" },
-        { name: "useWallets", as: "useSolanaWallets", from: "@vue-solana/vue/useWallets" },
-      ]),
-    );
+    expect(kit.addImports).toHaveBeenCalledWith(expect.arrayContaining(SOLANA_IMPORTS));
   });
 
   it("adds Vite dependency optimization for mobile wallet dev interop", async () => {
@@ -138,17 +122,7 @@ describe("Nuxt module", () => {
       },
     };
 
-    module.setup(
-      {},
-      {
-        options: {
-          runtimeConfig: {
-            public: {},
-          },
-          vite,
-        },
-      },
-    );
+    setupModule(module, {}, { vite });
 
     expect(vite.optimizeDeps.include).toEqual([
       "existing-dependency",
@@ -175,17 +149,7 @@ describe("Nuxt module", () => {
     const wallet = { connect: vi.fn() };
     const publicConfig: Record<string, unknown> = {};
 
-    module.setup(
-      { cluster: "devnet", wallet },
-      {
-        options: {
-          runtimeConfig: {
-            public: publicConfig,
-          },
-          vite: {},
-        },
-      },
-    );
+    setupModule(module, { cluster: "devnet", wallet }, { publicConfig });
 
     expect(publicConfig.solana).toEqual({
       cluster: "devnet",
@@ -196,7 +160,8 @@ describe("Nuxt module", () => {
     const module = (await import("./module")).default as unknown as ModuleUnderTest;
     const publicConfig: Record<string, unknown> = {};
 
-    module.setup(
+    setupModule(
+      module,
       {
         autoConnect: true,
         mobileWallet: {
@@ -209,14 +174,7 @@ describe("Nuxt module", () => {
           redirectUrl: "https://example.com/wallet-callback",
         },
       },
-      {
-        options: {
-          runtimeConfig: {
-            public: publicConfig,
-          },
-          vite: {},
-        },
-      },
+      { publicConfig },
     );
 
     expect(publicConfig.solana).toEqual({

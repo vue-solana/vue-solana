@@ -2,6 +2,7 @@ import type { Wallet, WalletAccount } from "@wallet-standard/base";
 import { StandardConnect, StandardDisconnect, StandardEvents } from "@wallet-standard/features";
 import {
   SolanaSignAndSendTransaction,
+  SolanaSignMessage,
   SolanaSignTransaction,
 } from "@solana/wallet-standard-features";
 import { PublicKey } from "@solana/web3-compat";
@@ -10,6 +11,7 @@ import type { SolanaChain, SolanaTransaction, SolanaWallet, SolanaWalletInfo } f
 import { SOLANA_CHAINS } from "./chains";
 import {
   hasSignAndSendTransaction,
+  hasSignMessage,
   hasSignTransaction,
   type StandardConnectFeature,
   type StandardDisconnectFeature,
@@ -112,6 +114,21 @@ export function adaptSolanaStandardWallet(
         options.onChange?.();
       }
     },
+    signMessage: hasSignMessage(wallet)
+      ? async (message) => {
+          const activeAccount = getActiveAccount(account);
+          const [result] = await wallet.features[SolanaSignMessage].signMessage({
+            account: activeAccount,
+            message,
+          });
+
+          if (!result) {
+            throw new Error("Solana wallet did not return a message signature");
+          }
+
+          return result;
+        }
+      : undefined,
     signTransaction: hasSignTransaction(wallet)
       ? async <T extends SolanaTransaction>(transaction: T): Promise<T> => {
           const activeAccount = getActiveAccount(account);

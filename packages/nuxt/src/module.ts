@@ -1,5 +1,6 @@
 import { addImports, addPlugin, createResolver, defineNuxtModule } from "@nuxt/kit";
 import type { VueSolanaPluginOptions } from "@vue-solana/vue";
+import { SOLANA_IMPORTS } from "./imports";
 
 export type ModuleOptions = Omit<VueSolanaPluginOptions, "wallet">;
 
@@ -59,39 +60,7 @@ const module: DefinedNuxtModule = defineNuxtModule<ModuleOptions>({
       mode: "client",
     });
 
-    addImports([
-      {
-        name: "useAccountInfo",
-        as: "useSolanaAccountInfo",
-        from: "@vue-solana/vue/useAccountInfo",
-      },
-      { name: "useBalance", as: "useSolanaBalance", from: "@vue-solana/vue/useBalance" },
-      { name: "useConnection", as: "useSolanaConnection", from: "@vue-solana/vue/useConnection" },
-      {
-        name: "useProgramAccounts",
-        as: "useSolanaProgramAccounts",
-        from: "@vue-solana/vue/useProgramAccounts",
-      },
-      { name: "useRpc", as: "useSolanaRpc", from: "@vue-solana/vue/useRpc" },
-      {
-        name: "useSignAndSendTransaction",
-        as: "useSolanaSignAndSendTransaction",
-        from: "@vue-solana/vue/useSignAndSendTransaction",
-      },
-      {
-        name: "useSignatureStatus",
-        as: "useSolanaSignatureStatus",
-        from: "@vue-solana/vue/useSignatureStatus",
-      },
-      { name: "useSolana", as: "useSolana", from: "@vue-solana/vue/useSolana" },
-      {
-        name: "useTransactionConfirmation",
-        as: "useSolanaTransactionConfirmation",
-        from: "@vue-solana/vue/useTransactionConfirmation",
-      },
-      { name: "useWallet", as: "useSolanaWallet", from: "@vue-solana/vue/useWallet" },
-      { name: "useWallets", as: "useSolanaWallets", from: "@vue-solana/vue/useWallets" },
-    ]);
+    addImports(SOLANA_IMPORTS);
   },
 });
 

@@ -49,6 +49,9 @@ export default defineConfig({
       "@vue-solana/vue/useSignAndSendTransaction": fileURLToPath(
         new URL("./packages/vue/src/useSignAndSendTransaction.ts", import.meta.url),
       ),
+      "@vue-solana/vue/useSignMessage": fileURLToPath(
+        new URL("./packages/vue/src/useSignMessage.ts", import.meta.url),
+      ),
       "@vue-solana/vue/useSignatureStatus": fileURLToPath(
         new URL("./packages/vue/src/useSignatureStatus.ts", import.meta.url),
       ),

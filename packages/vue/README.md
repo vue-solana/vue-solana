@@ -2,7 +2,7 @@
 
 Vue plugin and composables for Solana applications.
 
-Use this package in Vue 3 apps that need Solana RPC access, balance reads, wallet state, and transaction helper state.
+Use this package in Vue 3 apps that need Solana RPC access, balance reads, wallet state, message signing, and transaction helper state.
 
 New to Solana? Start with the official docs and the project concepts guide:
 
@@ -68,6 +68,7 @@ The root export remains supported. For composables, prefer direct subpath import
 ```ts
 import { useRpc } from "@vue-solana/vue/useRpc";
 import { useWallet } from "@vue-solana/vue/useWallet";
+import { useSignMessage } from "@vue-solana/vue/useSignMessage";
 ```
 
 For development, use `devnet` and request free test SOL from the official faucet:
@@ -146,7 +147,7 @@ import { useWallet } from "@vue-solana/vue/useWallet";
 import { useWallets } from "@vue-solana/vue/useWallets";
 
 const { wallets, selectedWallet, selectWallet, refreshWallets } = useWallets();
-const { publicKey, connected, connecting, connect, disconnect } = useWallet();
+const { publicKey, connected, connecting, canSignMessage, connect, disconnect } = useWallet();
 </script>
 
 <template>
@@ -163,6 +164,7 @@ const { publicKey, connected, connecting, connect, disconnect } = useWallet();
     <p>Selected: {{ selectedWallet?.name ?? "None" }}</p>
     <p>Connected: {{ connected }}</p>
     <p>Public key: {{ publicKey?.toBase58() }}</p>
+    <p>Can sign messages: {{ canSignMessage }}</p>
     <p v-if="connecting">Connecting...</p>
     <button type="button" :disabled="!selectedWallet || connected || connecting" @click="connect">
       Connect
@@ -179,6 +181,38 @@ Selected discovered wallets are persisted under `localStorage["vue-solana:select
 Desktop native app wallet adapters are planned but not implemented yet.
 
 Composables return inert SSR-safe state when no plugin context is available. Real RPC and wallet operations still require the plugin-provided client context.
+
+## Message Signing
+
+```vue
+<script setup lang="ts">
+import { computed } from "vue";
+import { useSignMessage } from "@vue-solana/vue/useSignMessage";
+import { useWallet } from "@vue-solana/vue/useWallet";
+
+const { connected, canSignMessage } = useWallet();
+const { signature, status, error, execute } = useSignMessage();
+
+const message = computed(() => new TextEncoder().encode("Sign in to My Vue Solana App"));
+
+async function signIn() {
+  await execute(message.value);
+}
+</script>
+
+<template>
+  <section>
+    <button type="button" :disabled="!connected || !canSignMessage" @click="signIn">
+      Sign message
+    </button>
+    <p>Status: {{ status }}</p>
+    <p v-if="signature">Signature bytes: {{ signature.length }}</p>
+    <pre v-if="error">{{ error.message }}</pre>
+  </section>
+</template>
+```
+
+Message signing proves wallet ownership for flows like authentication challenges. It does not sign, submit, or authorize Solana transactions. For authentication, issue a server-generated nonce, include domain and expiration details in the message, and verify the returned signature server-side.
 
 ## Transaction State
 
@@ -241,6 +275,7 @@ Docs: [Vue Solana Agent Skill](https://vue-solana-docs.vercel.app/agent-skill)
 - `useConnection()`: returns the Solana `Connection`.
 - `useWallet()`: returns wallet refs, computed connection state, and wallet actions.
 - `useWallets()`: returns discovered browser extension wallets, Android Mobile Wallet Adapter wallets, iOS browser wallet links, and wallet selection actions.
+- `useSignMessage()`: signs arbitrary message bytes through the connected wallet when message signing is supported.
 - `useBalance(address, commitment?)`: loads lamport balance for a `PublicKey` or address string.
 - `useAccountInfo(address, options?)`: loads account info and can subscribe to account changes with `watch: true`.
 - `useProgramAccounts(programId, config?)`: loads accounts owned by a program with optional filters, commitment, and `dataSlice`.
@@ -259,6 +294,7 @@ Direct composable subpaths:
 - `@vue-solana/vue/useProgramAccounts`
 - `@vue-solana/vue/useWallet`
 - `@vue-solana/vue/useWallets`
+- `@vue-solana/vue/useSignMessage`
 - `@vue-solana/vue/useTransaction`
 - `@vue-solana/vue/useTransactionConfirmation`
 - `@vue-solana/vue/useSignatureStatus`
@@ -297,4 +333,4 @@ Make sure your `tsconfig.json` includes `types/**/*.d.ts` or another pattern tha
 
 ## Status
 
-This package is early-stage. RPC, balance, browser extension wallet, Android mobile wallet, and transaction composables are usable.
+This package is early-stage. RPC, balance, browser extension wallet, Android mobile wallet, iOS browser wallet, message signing, and transaction composables are usable.

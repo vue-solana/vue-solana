@@ -24,7 +24,7 @@ describe("documented package subpaths", () => {
 
     expect(
       getBacktickedListAfter(
-        "../../../docs/api.md",
+        "../../../docs/api/core.md",
         "The root export remains supported. Direct subpath exports",
       ),
     ).toEqual(expected);
@@ -37,7 +37,7 @@ describe("documented package subpaths", () => {
     const expected = getExportedSubpaths("../../vue/package.json");
 
     expect(
-      getBacktickedListAfter("../../../docs/api.md", "Available composable subpaths:"),
+      getBacktickedListAfter("../../../docs/api/vue.md", "Available composable subpaths:"),
     ).toEqual(expected);
     expect(
       getBacktickedListAfter(

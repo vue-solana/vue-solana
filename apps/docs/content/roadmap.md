@@ -39,7 +39,7 @@ Status: complete. v1 includes account and signature status composables such as `
 
 ### 5. Message Signing And Capabilities
 
-Wallet authentication usually needs message signing. v1 should add `signMessage` support where wallets provide it and expose active-wallet capability helpers so apps can render the right UI for the selected wallet. Discovered wallet metadata already includes transaction capability hints.
+Status: complete. v1 includes wallet message signing with `signMessage`, `useSignMessage()`, and the Nuxt `useSolanaSignMessage()` auto-import. Active-wallet and discovered-wallet capability helpers let apps render the right UI for connect, disconnect, message signing, and transaction signing support.
 
 ### 6. Error Model
 

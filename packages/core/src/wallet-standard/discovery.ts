@@ -3,6 +3,7 @@ import type { Wallet } from "@wallet-standard/base";
 import { StandardConnect, StandardDisconnect } from "@wallet-standard/features";
 import type { SolanaChain, SolanaWalletInfo } from "../types";
 import { SOLANA_CHAINS } from "./chains";
+import { hasSignAndSendTransaction, hasSignMessage, hasSignTransaction } from "./features";
 
 export const SOLANA_MOBILE_WALLET_ADAPTER_WALLET_NAME = "Mobile Wallet Adapter";
 
@@ -47,6 +48,14 @@ function createSolanaWalletInfo(wallet: Wallet): SolanaWalletInfo {
     platform: isMobileWallet ? "mobile" : "browser",
     source: isMobileWallet ? "mobile-wallet-adapter" : "wallet-standard",
     appUrl: getWalletUrl(wallet),
+    capabilities: {
+      connect: true,
+      disconnect: true,
+      signMessage: hasSignMessage(wallet),
+      signTransaction: hasSignTransaction(wallet),
+      signAllTransactions: hasSignTransaction(wallet),
+      signAndSendTransaction: hasSignAndSendTransaction(wallet),
+    },
     accounts: wallet.accounts.map((account) => ({
       address: account.address,
       publicKey: Uint8Array.from(account.publicKey),

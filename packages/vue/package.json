@@ -85,6 +85,11 @@
       "import": "./dist/useSignatureStatus.mjs",
       "require": "./dist/useSignatureStatus.cjs"
     },
+    "./useSignMessage": {
+      "types": "./dist/useSignMessage.d.ts",
+      "import": "./dist/useSignMessage.mjs",
+      "require": "./dist/useSignMessage.cjs"
+    },
     "./useSignAndSendTransaction": {
       "types": "./dist/useSignAndSendTransaction.d.ts",
       "import": "./dist/useSignAndSendTransaction.mjs",

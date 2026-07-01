@@ -74,6 +74,7 @@ Direct composable subpaths:
 - `@vue-solana/vue/useTransaction`
 - `@vue-solana/vue/useTransactionConfirmation`
 - `@vue-solana/vue/useSignatureStatus`
+- `@vue-solana/vue/useSignMessage`
 - `@vue-solana/vue/useSignAndSendTransaction`
 
 - `useSolana()`: returns the full injected Solana context.
@@ -87,6 +88,7 @@ Direct composable subpaths:
 - `useTransaction(handler, options?)`: generic async transaction state helper with optional timeout settings.
 - `useTransactionConfirmation(options?)`: confirms a submitted signature with reactive status and timeout/error state.
 - `useSignatureStatus(signature, options?)`: reads, polls, or subscribes to signature status updates.
+- `useSignMessage()`: signs arbitrary authentication messages through the configured wallet when supported.
 - `useSignAndSendTransaction()`: signs and sends a transaction through the configured wallet, with optional confirmation waiting.
 
 ## Read RPC State
@@ -228,6 +230,22 @@ Browser extension wallets are discovered through the Solana Wallet Standard. And
 Desktop native app wallet adapters are not implemented yet. Desktop native support requires wallet-specific protocol links or future native Wallet Standard registration.
 
 Composables return inert SSR-safe state when no plugin context is available. Real RPC and wallet operations still require the plugin-provided client context.
+
+## Message Signing
+
+```ts
+import { useSignMessage } from "@vue-solana/vue/useSignMessage";
+import { useWallet } from "@vue-solana/vue/useWallet";
+
+const { connected, canSignMessage } = useWallet();
+const { signature, status, error, execute } = useSignMessage();
+
+if (connected.value && canSignMessage.value) {
+  await execute(new TextEncoder().encode("Sign in to example.com"));
+}
+```
+
+Message signing is for wallet ownership or authentication challenges. It is not transaction signing and does not authorize on-chain state changes. Wallets that do not expose message signing report `canSignMessage` as false and `execute()` rejects with an unsupported-wallet error.
 
 ## Transaction State
 

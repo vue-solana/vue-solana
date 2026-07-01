@@ -64,6 +64,20 @@ export function useWallet() {
   const isDisconnecting = computed(() =>
     Boolean(disconnecting.value || wallet.value?.disconnecting),
   );
+  const canConnect = computed(() => Boolean(wallet.value?.connect));
+  const canDisconnect = computed(() => Boolean(wallet.value?.disconnect));
+  const canSignMessage = computed(() => Boolean(wallet.value?.signMessage));
+  const canSignTransaction = computed(() => Boolean(wallet.value?.signTransaction));
+  const canSignAllTransactions = computed(() => Boolean(wallet.value?.signAllTransactions));
+  const canSignAndSendTransaction = computed(() => Boolean(wallet.value?.signAndSendTransaction));
+  const capabilities = computed(() => ({
+    connect: canConnect.value,
+    disconnect: canDisconnect.value,
+    signMessage: canSignMessage.value,
+    signTransaction: canSignTransaction.value,
+    signAllTransactions: canSignAllTransactions.value,
+    signAndSendTransaction: canSignAndSendTransaction.value,
+  }));
 
   return {
     wallet,
@@ -72,6 +86,13 @@ export function useWallet() {
     connecting: isConnecting,
     disconnecting: isDisconnecting,
     loading: computed(() => isConnecting.value || isDisconnecting.value),
+    capabilities,
+    canConnect,
+    canDisconnect,
+    canSignMessage,
+    canSignTransaction,
+    canSignAllTransactions,
+    canSignAndSendTransaction,
     setWallet: solana.setWallet,
     connect,
     disconnect,

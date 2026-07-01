@@ -2,7 +2,7 @@
 
 Vue and Nuxt libraries for building Solana applications.
 
-This project is early-stage. RPC reads, account reads, balance reads, browser extension wallets, Android mobile wallets, iOS browser wallets, and transaction helpers are usable.
+This project is early-stage. RPC reads, account reads, balance reads, browser extension wallets, Android mobile wallets, iOS browser wallets, message signing, and transaction helpers are usable.
 
 ## Packages
 
@@ -61,7 +61,7 @@ Not supported yet, but planned:
 - Desktop native app wallets. These require wallet-specific protocol links or future native Wallet Standard registration.
 - A built-in wallet modal. Apps should build their own selection UI with `useWallets()`.
 
-All supported wallet sources use the same public flow: `useWallets()` for discovery and selection, then `useWallet()` for active wallet state, `connect()`, `disconnect()`, and signing.
+All supported wallet sources use the same public flow: `useWallets()` for discovery and selection, then `useWallet()` for active wallet state, `connect()`, `disconnect()`, capability flags, and signing. Use `useSignMessage()` or Nuxt's `useSolanaSignMessage()` for wallet-auth message challenges when the active wallet reports `canSignMessage`.
 
 ## Import Paths
 
@@ -74,6 +74,7 @@ import { useAccountInfo } from "@vue-solana/vue/useAccountInfo";
 import { useProgramAccounts } from "@vue-solana/vue/useProgramAccounts";
 import { useRpc } from "@vue-solana/vue/useRpc";
 import { useSignatureStatus } from "@vue-solana/vue/useSignatureStatus";
+import { useSignMessage } from "@vue-solana/vue/useSignMessage";
 import { useWallet } from "@vue-solana/vue/useWallet";
 ```
 
@@ -113,6 +114,9 @@ Root `docs/` is kept for now as reference material:
 - [Getting Started](./docs/getting-started.md)
 - [Solana Concepts For Vue Developers](./docs/solana-concepts.md)
 - [API Reference](./docs/api.md)
+- [`@vue-solana/core` API](./docs/api/core.md)
+- [`@vue-solana/vue` API](./docs/api/vue.md)
+- [`@vue-solana/nuxt` API](./docs/api/nuxt.md)
 - [Wallet Support](./docs/wallets.md)
 - [v1 Roadmap](./docs/plans/v1-roadmap.md)
 - [Agent Skill](./docs/agent-skill.md)

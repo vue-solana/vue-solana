@@ -31,6 +31,11 @@ export interface SolanaContext {
 
 export type SolanaTransaction = Transaction | VersionedTransaction;
 
+export interface SolanaSignMessageResult {
+  signedMessage: Uint8Array;
+  signature: Uint8Array;
+}
+
 export interface SolanaWallet {
   publicKey: PublicKey | null;
   connected: boolean;
@@ -40,6 +45,7 @@ export interface SolanaWallet {
   source?: SolanaWalletInfo["source"];
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
+  signMessage?: (message: Uint8Array) => Promise<SolanaSignMessageResult>;
   signTransaction?: <T extends SolanaTransaction>(transaction: T) => Promise<T>;
   signAllTransactions?: <T extends SolanaTransaction>(transactions: T[]) => Promise<T[]>;
   signAndSendTransaction?: (
@@ -59,6 +65,8 @@ export interface SolanaWalletInfo {
   callbackUrl?: string;
   capabilities?: {
     connect?: boolean;
+    disconnect?: boolean;
+    signMessage?: boolean;
     signTransaction?: boolean;
     signAllTransactions?: boolean;
     signAndSendTransaction?: boolean;

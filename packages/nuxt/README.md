@@ -2,7 +2,7 @@
 
 Nuxt module for Solana applications.
 
-Use this package in Nuxt apps that need the Vue Solana plugin installed automatically plus auto-imported composables.
+Use this package in Nuxt apps that need the Vue Solana plugin installed automatically plus auto-imported composables for RPC, wallet state, message signing, and transactions.
 
 New to Solana? Start with the official docs and the project concepts guide:
 
@@ -72,6 +72,7 @@ The module auto-imports these composables from direct `@vue-solana/vue/*` subpat
 - `useSolanaProgramAccounts()`
 - `useSolanaTransactionConfirmation()`
 - `useSolanaSignatureStatus()`
+- `useSolanaSignMessage()`
 - `useSolanaSignAndSendTransaction()`
 
 The runtime plugin is client-only. Auto-imported composables can be called during SSR and return inert state until hydration provides the real client context. Trigger RPC and wallet work from client lifecycle hooks or user actions.
@@ -138,7 +139,7 @@ Use `useSolanaProgramAccounts()` carefully on public RPC nodes. Prefer narrow fi
 ```vue
 <script setup lang="ts">
 const { wallets, selectedWallet, selectWallet, refreshWallets } = useSolanaWallets();
-const { publicKey, connected, connect, disconnect } = useSolanaWallet();
+const { publicKey, connected, canSignMessage, connect, disconnect } = useSolanaWallet();
 </script>
 
 <template>
@@ -155,6 +156,7 @@ const { publicKey, connected, connect, disconnect } = useSolanaWallet();
     <p>Selected: {{ selectedWallet?.name ?? "None" }}</p>
     <p>Connected: {{ connected }}</p>
     <p>Public key: {{ publicKey?.toBase58() }}</p>
+    <p>Can sign messages: {{ canSignMessage }}</p>
     <button type="button" :disabled="!selectedWallet || connected" @click="connect">Connect</button>
     <button type="button" :disabled="!connected" @click="disconnect">Disconnect</button>
   </section>
@@ -164,6 +166,33 @@ const { publicKey, connected, connect, disconnect } = useSolanaWallet();
 Browser extension wallets are discovered through the Solana Wallet Standard. Android Mobile Wallet Adapter wallets are registered through `@solana-mobile/wallet-standard-mobile` on supported Android Chrome clients and exposed through the same wallet list. Wallet actions work after selecting a discovered wallet or configuring a custom `SolanaWallet`.
 
 Selected discovered wallets are persisted under `localStorage["vue-solana:selected-wallet"]` as non-sensitive identity metadata: `name`, and `platform`/`source` when available. On reload, Vue Solana restores the selected wallet if the same wallet is discovered again. Set `solana.autoConnect: true` to opt into calling `connect()` for that restored wallet; arbitrary installed wallets are never auto-connected. Calling `selectWallet(null)` or `setWallet(customWallet)` clears the stored selection.
+
+## Message Signing
+
+```vue
+<script setup lang="ts">
+const { connected, canSignMessage } = useSolanaWallet();
+const { signature, status, error, execute } = useSolanaSignMessage();
+
+async function signIn() {
+  const message = new TextEncoder().encode("Sign in to My Nuxt Solana App");
+  await execute(message);
+}
+</script>
+
+<template>
+  <section>
+    <button type="button" :disabled="!connected || !canSignMessage" @click="signIn">
+      Sign message
+    </button>
+    <p>Status: {{ status }}</p>
+    <p v-if="signature">Signature bytes: {{ signature.length }}</p>
+    <pre v-if="error">{{ error.message }}</pre>
+  </section>
+</template>
+```
+
+Message signing is for wallet ownership or authentication challenges. It is separate from transaction signing and does not authorize on-chain activity. For auth flows, use a server-issued nonce and verify the returned signature server-side.
 
 ## Example App
 
@@ -220,4 +249,4 @@ Make sure your `tsconfig.json` includes `types/**/*.d.ts` or another pattern tha
 
 ## Status
 
-This package is early-stage. RPC, balance, browser extension wallet, Android mobile wallet, and transaction composables are usable in Nuxt apps.
+This package is early-stage. RPC, balance, browser extension wallet, Android mobile wallet, iOS browser wallet, message signing, and transaction composables are usable in Nuxt apps.

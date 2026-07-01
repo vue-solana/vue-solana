@@ -31,6 +31,7 @@ describe("iOS wallet adapter", () => {
       callbackUrl: "https://example.com/callback",
       capabilities: {
         connect: true,
+        disconnect: true,
         signTransaction: true,
         signAllTransactions: true,
         signAndSendTransaction: false,

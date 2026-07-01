@@ -3,6 +3,7 @@ export * from "./composables/useBalance";
 export * from "./composables/useConnection";
 export * from "./composables/useProgramAccounts";
 export * from "./composables/useRpc";
+export * from "./composables/useSignMessage";
 export * from "./composables/useSignAndSendTransaction";
 export * from "./composables/useSignatureStatus";
 export * from "./composables/useSolana";

@@ -20,6 +20,7 @@ describe("useWallet", () => {
       connecting: false,
       connect: vi.fn().mockResolvedValue(undefined),
       disconnect: vi.fn().mockResolvedValue(undefined),
+      signMessage: vi.fn(),
     } as SolanaWallet;
     const context = createMockSolanaContext({ wallet: shallowRef(wallet) });
     let result: ReturnType<typeof useWallet> | undefined;
@@ -40,6 +41,20 @@ describe("useWallet", () => {
     expect(result?.connecting.value).toBe(false);
     expect(result?.disconnecting.value).toBe(false);
     expect(result?.loading.value).toBe(false);
+    expect(result?.canConnect.value).toBe(true);
+    expect(result?.canDisconnect.value).toBe(true);
+    expect(result?.canSignMessage.value).toBe(true);
+    expect(result?.canSignTransaction.value).toBe(false);
+    expect(result?.canSignAllTransactions.value).toBe(false);
+    expect(result?.canSignAndSendTransaction.value).toBe(false);
+    expect(result?.capabilities.value).toEqual({
+      connect: true,
+      disconnect: true,
+      signMessage: true,
+      signTransaction: false,
+      signAllTransactions: false,
+      signAndSendTransaction: false,
+    });
 
     await result?.connect();
     await result?.disconnect();
@@ -163,6 +178,45 @@ describe("useWallet", () => {
     result?.setWallet(null);
     expect(result?.wallet.value).toBeNull();
     expect(result?.connected.value).toBe(false);
+  });
+
+  it("updates capability flags when the active wallet changes", () => {
+    const context = createMockSolanaContext();
+    const wallet = {
+      publicKey,
+      connected: true,
+      connect: vi.fn(),
+      disconnect: vi.fn(),
+      signMessage: vi.fn(),
+      signTransaction: vi.fn(),
+      signAllTransactions: vi.fn(),
+      signAndSendTransaction: vi.fn(),
+    } as unknown as SolanaWallet;
+    let result: ReturnType<typeof useWallet> | undefined;
+
+    mountWithSolana(
+      defineComponent({
+        setup() {
+          result = useWallet();
+
+          return () => h("div");
+        },
+      }),
+      context,
+    );
+
+    expect(result?.canSignMessage.value).toBe(false);
+
+    result?.setWallet(wallet);
+
+    expect(result?.capabilities.value).toEqual({
+      connect: true,
+      disconnect: true,
+      signMessage: true,
+      signTransaction: true,
+      signAllTransactions: true,
+      signAndSendTransaction: true,
+    });
   });
 
   it("rejects connect when no wallet is configured and resolves disconnect", async () => {
