@@ -1,5 +1,11 @@
 # @vue-solana/core
 
+## 0.6.0
+
+### Minor Changes
+
+- c060c45: Add wallet message signing support and expose wallet capability flags for Vue and Nuxt applications.
+
 ## 0.5.1
 
 ### Patch Changes
