@@ -1,4 +1,5 @@
 import type { Connection, TransactionSignature } from "@solana/web3-compat";
+import { createSolanaError, normalizeSolanaError } from "./errors";
 import { assertWalletCanSign, assertWalletConnected } from "./wallet";
 import type {
   ConfirmTransactionOptions,
@@ -43,14 +44,24 @@ export async function confirmTransactionSignature(
   const confirmation = connection.confirmTransaction(signature, commitment) as Promise<
     TransactionConfirmation["result"]
   >;
-  const result = await withTransactionTimeout(
-    confirmation,
-    options.timeoutMs ?? DEFAULT_CONFIRMATION_TIMEOUT_MS,
-    `Timed out waiting for transaction ${signature} to reach ${commitment} commitment.`,
-  );
+  let result: TransactionConfirmation["result"];
+
+  try {
+    result = await withTransactionTimeout(
+      confirmation,
+      options.timeoutMs ?? DEFAULT_CONFIRMATION_TIMEOUT_MS,
+      `Timed out waiting for transaction ${signature} to reach ${commitment} commitment.`,
+    );
+  } catch (cause) {
+    throw normalizeSolanaError(cause, "RPC_FAILURE");
+  }
 
   if (result.value.err) {
-    throw new Error(`Transaction ${signature} failed to reach ${commitment} commitment.`);
+    throw createSolanaError(
+      "RPC_FAILURE",
+      `Transaction ${signature} failed to reach ${commitment} commitment.`,
+      { cause: result.value.err },
+    );
   }
 
   return {
@@ -86,7 +97,7 @@ async function withTransactionTimeout<T>(
   try {
     const timeout = new Promise<never>((_, reject) => {
       timeoutId = setTimeout(() => {
-        reject(new Error(message));
+        reject(createSolanaError("TRANSACTION_TIMEOUT", message));
       }, timeoutMs);
     });
 

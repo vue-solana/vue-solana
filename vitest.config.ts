@@ -11,6 +11,9 @@ export default defineConfig({
       "@vue-solana/core/clusters": fileURLToPath(
         new URL("./packages/core/src/clusters.ts", import.meta.url),
       ),
+      "@vue-solana/core/errors": fileURLToPath(
+        new URL("./packages/core/src/errors.ts", import.meta.url),
+      ),
       "@vue-solana/core/ios-wallet": fileURLToPath(
         new URL("./packages/core/src/ios-wallet.ts", import.meta.url),
       ),

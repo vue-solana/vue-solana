@@ -35,3 +35,24 @@ The Nuxt module installs the runtime plugin on the client only and auto-imports 
 - `useSolanaSignAndSendTransaction()`
 - `useSolanaTransactionConfirmation()`
 - `useSolanaSignatureStatus()`
+
+## Error Handling
+
+Nuxt auto-imported composables expose the same normalized `SolanaError` values as `@vue-solana/vue`. Branch on `error.value?.code` for UI states and use `error.value?.cause` for diagnostics.
+
+```vue
+<script setup lang="ts">
+const rpc = useSolanaRpc();
+const rpcError = rpc.error;
+
+async function checkConnection() {
+  await rpc.checkConnection();
+}
+</script>
+
+<template>
+  <button type="button" @click="checkConnection">Check RPC</button>
+
+  <p v-if="rpcError?.code === 'RPC_FAILURE'">RPC is unavailable. Try again in a moment.</p>
+</template>
+```

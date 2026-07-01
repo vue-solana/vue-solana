@@ -1,3 +1,4 @@
+import { normalizeSolanaError } from "@vue-solana/core/errors";
 import type { GetSolanaIosWalletsOptions } from "@vue-solana/core/ios-wallet";
 import type { RegisterSolanaMobileWalletOptions } from "@vue-solana/core/mobile-wallet";
 import { createSolanaContext } from "@vue-solana/core/rpc";
@@ -30,7 +31,7 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}) {
       const wallets = shallowRef<SolanaWalletInfo[]>([]);
       const selectedWallet = shallowRef<SolanaWalletInfo | null>(null);
       const status = ref<VueSolanaContext["status"]["value"]>("idle");
-      const error = ref<string | null>(null);
+      const error = ref<VueSolanaContext["error"]["value"]>(null);
       const latestBlockhash = ref<string | null>(null);
       const walletRegistry = createSolanaWalletRegistry({
         cluster: context.cluster,
@@ -81,7 +82,7 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}) {
           }
 
           status.value = "error";
-          error.value = cause instanceof Error ? cause.message : String(cause);
+          error.value = normalizeSolanaError(cause, "RPC_FAILURE");
 
           console.error("[Vue Solana] Connection failed", cause);
         }
@@ -145,7 +146,12 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}) {
         wallet.value = nextWallet
           ? walletRegistry.getAdaptedWallet(nextWallet)
           : (options.wallet ?? null);
-        writeSelectedWallet(nextWallet);
+        const storageError = writeSelectedWallet(nextWallet);
+
+        if (storageError) {
+          error.value = storageError;
+          console.error("[Vue Solana] Selected wallet persistence failed", storageError);
+        }
       }
 
       function autoConnectWallet(walletInfo: SolanaWalletInfo) {
@@ -190,7 +196,12 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}) {
         setWallet(nextWallet) {
           selectedWallet.value = null;
           wallet.value = nextWallet;
-          writeSelectedWallet(null);
+          const storageError = writeSelectedWallet(null);
+
+          if (storageError) {
+            error.value = storageError;
+            console.error("[Vue Solana] Selected wallet persistence failed", storageError);
+          }
         },
       };
 

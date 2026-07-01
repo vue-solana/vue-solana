@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { defineComponent, h, shallowRef } from "vue";
 import type { SolanaWallet } from "@vue-solana/core";
+import type { SolanaError } from "@vue-solana/core/errors";
 import { SolanaWalletError } from "@vue-solana/core/wallet";
 import { createMockSolanaContext, mountWithSolana } from "../../test-utils";
 import { useSignMessage } from "./useSignMessage";
@@ -37,10 +38,9 @@ describe("useSignMessage", () => {
   it("rejects when no wallet is configured", async () => {
     const result = mountUseSignMessage();
 
-    await expect(result.execute(new Uint8Array())).rejects.toThrow(
-      "No Solana wallet is configured",
-    );
+    await expect(result.execute(new Uint8Array())).rejects.toThrow("No Solana wallet is selected");
     expect(result.status.value).toBe("error");
+    expect(result.error.value?.code).toBe("NO_WALLET_SELECTED");
   });
 
   it("rejects when the active wallet cannot sign messages", async () => {
@@ -52,8 +52,9 @@ describe("useSignMessage", () => {
     expect(result.status.value).toBe("error");
     expect(result.error.value).toBeInstanceOf(SolanaWalletError);
     expect((result.error.value as SolanaWalletError | null)?.code).toBe(
-      "WALLET_SIGN_MESSAGE_UNSUPPORTED",
+      "WALLET_FEATURE_UNSUPPORTED",
     );
+    expect((result.error.value as SolanaWalletError | null)?.feature).toBe("signMessage");
   });
 
   it("rejects with a typed error when the active wallet is disconnected", async () => {
@@ -84,6 +85,10 @@ describe("useSignMessage", () => {
     expect(result.status.value).toBe("error");
     expect(result.loading.value).toBe(false);
     expect(result.error.value).toBeInstanceOf(Error);
+    expect((result.error.value as SolanaError | null)?.code).toBe("USER_REJECTED");
+    expect((result.error.value as SolanaError | null)?.cause).toBe(
+      "User rejected the message signing request",
+    );
     expect(result.error.value?.message).toBe("User rejected the message signing request");
   });
 

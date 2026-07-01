@@ -5,6 +5,7 @@ The root export remains supported. Direct subpath exports are also available whe
 - `@vue-solana/core/address`
 - `@vue-solana/core/types`
 - `@vue-solana/core/clusters`
+- `@vue-solana/core/errors`
 - `@vue-solana/core/ios-wallet`
 - `@vue-solana/core/mobile-wallet`
 - `@vue-solana/core/rpc`
@@ -124,6 +125,28 @@ For wallet behavior and platform support, see [Wallet Support](../wallets.md).
 
 ## Helpers
 
+Normalized errors:
+
+```ts
+type SolanaErrorCode =
+  | "NO_WALLET_SELECTED"
+  | "WALLET_NOT_CONNECTED"
+  | "WALLET_FEATURE_UNSUPPORTED"
+  | "USER_REJECTED"
+  | "INVALID_ADDRESS"
+  | "TRANSACTION_TIMEOUT"
+  | "RPC_FAILURE"
+  | "STORAGE_FAILURE";
+
+class SolanaError extends Error {
+  readonly code: SolanaErrorCode;
+  readonly cause?: unknown;
+  readonly feature?: string;
+}
+```
+
+Vue Solana throws or stores `SolanaError` for common wallet, address, transaction, RPC, and storage failures. Apps should branch UI on `error.code` and use `error.cause` only for diagnostics or logging.
+
 Transaction confirmation types:
 
 ```ts
@@ -145,6 +168,9 @@ interface TransactionConfirmation {
 - `getWebSocketEndpoint(endpoint)`: converts `http`/`https` endpoints to `ws`/`wss` endpoints.
 - `createSolanaConnection(config?)`: creates a Solana `Connection`.
 - `createSolanaContext(config?)`: creates a `SolanaContext`.
+- `createSolanaError(code, message, options?)`: creates a normalized `SolanaError` with optional original `cause` and wallet `feature` metadata.
+- `isSolanaError(error)`: checks whether an unknown thrown value is a `SolanaError`.
+- `normalizeSolanaError(cause, fallbackCode, fallbackMessage?, options?)`: preserves existing `SolanaError` values, maps wallet rejection values to `USER_REJECTED`, and otherwise wraps the original cause in a fallback `SolanaError`.
 - `isWalletConnected(wallet)`: returns whether a wallet is connected and has a public key.
 - `assertWalletConnected(wallet)`: throws if the wallet is not connected.
 - `assertWalletCanSign(wallet)`: throws if the wallet cannot sign transactions.

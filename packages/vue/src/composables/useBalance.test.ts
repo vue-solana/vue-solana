@@ -91,7 +91,8 @@ describe("useBalance", () => {
     await flushPromises();
 
     await expect(result?.refresh()).rejects.toThrow("RPC failed");
-    expect(result?.error.value).toBe(failure);
+    expect(result?.error.value?.code).toBe("RPC_FAILURE");
+    expect(result?.error.value?.cause).toBe(failure);
     expect(result?.loading.value).toBe(false);
   });
 

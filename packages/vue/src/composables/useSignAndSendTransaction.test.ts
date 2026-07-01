@@ -241,7 +241,8 @@ describe("useSignAndSendTransaction", () => {
     );
     expect(result?.signature.value).toBe("signature");
     expect(result?.status.value).toBe("error");
-    expect(result?.error.value).toBe(failure);
+    expect(result?.error.value?.code).toBe("RPC_FAILURE");
+    expect(result?.error.value?.cause).toBe(failure);
   });
 
   it("rejects when no wallet is configured", async () => {
@@ -258,9 +259,10 @@ describe("useSignAndSendTransaction", () => {
     );
 
     await expect(result?.execute({} as SolanaTransaction)).rejects.toThrow(
-      "No Solana wallet is configured",
+      "No Solana wallet is selected",
     );
     expect(result?.status.value).toBe("error");
+    expect(result?.error.value?.code).toBe("NO_WALLET_SELECTED");
   });
 
   it("times out when the wallet does not return a signature", async () => {
@@ -295,6 +297,7 @@ describe("useSignAndSendTransaction", () => {
     await rejection;
     expect(result?.status.value).toBe("error");
     expect(result?.signature.value).toBeNull();
+    expect(result?.error.value?.code).toBe("TRANSACTION_TIMEOUT");
   });
 });
 

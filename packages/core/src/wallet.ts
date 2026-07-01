@@ -1,18 +1,24 @@
 import type { SolanaWallet } from "./types";
+import { SolanaError } from "./errors";
 
 export type SolanaWalletErrorCode =
+  | "NO_WALLET_SELECTED"
   | "WALLET_NOT_CONNECTED"
-  | "WALLET_SIGN_MESSAGE_UNSUPPORTED"
-  | "WALLET_SIGN_TRANSACTION_UNSUPPORTED";
+  | "WALLET_FEATURE_UNSUPPORTED";
 
-export class SolanaWalletError extends Error {
+export class SolanaWalletError extends SolanaError {
   constructor(
-    public readonly code: SolanaWalletErrorCode,
+    code: SolanaWalletErrorCode,
     message: string,
+    options: { cause?: unknown; feature?: string } = {},
   ) {
-    super(message);
+    super(code, message, options);
     this.name = "SolanaWalletError";
   }
+}
+
+export function createNoWalletSelectedError(cause?: unknown): SolanaWalletError {
+  return new SolanaWalletError("NO_WALLET_SELECTED", "No Solana wallet is selected", { cause });
 }
 
 export function isWalletConnected(
@@ -36,8 +42,9 @@ export function assertWalletCanSign(
 
   if (!wallet.signTransaction) {
     throw new SolanaWalletError(
-      "WALLET_SIGN_TRANSACTION_UNSUPPORTED",
+      "WALLET_FEATURE_UNSUPPORTED",
       "Solana wallet does not support signTransaction",
+      { feature: "signTransaction" },
     );
   }
 }
@@ -49,8 +56,9 @@ export function assertWalletCanSignMessage(
 
   if (!wallet.signMessage) {
     throw new SolanaWalletError(
-      "WALLET_SIGN_MESSAGE_UNSUPPORTED",
+      "WALLET_FEATURE_UNSUPPORTED",
       "Solana wallet does not support signMessage",
+      { feature: "signMessage" },
     );
   }
 }

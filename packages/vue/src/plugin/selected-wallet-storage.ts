@@ -1,3 +1,4 @@
+import { createSolanaError, type SolanaError } from "@vue-solana/core/errors";
 import type { SolanaWalletInfo } from "@vue-solana/core/types";
 
 const SELECTED_WALLET_STORAGE_KEY = "vue-solana:selected-wallet";
@@ -32,11 +33,11 @@ export function readSelectedWallet(): PersistedSelectedWallet | null {
   }
 }
 
-export function writeSelectedWallet(wallet: SolanaWalletInfo | null) {
+export function writeSelectedWallet(wallet: SolanaWalletInfo | null): SolanaError | null {
   const storage = getLocalStorage();
 
   if (!storage) {
-    return;
+    return null;
   }
 
   try {
@@ -45,8 +46,12 @@ export function writeSelectedWallet(wallet: SolanaWalletInfo | null) {
     } else {
       storage.removeItem(SELECTED_WALLET_STORAGE_KEY);
     }
-  } catch {
+    return null;
+  } catch (cause) {
     // Storage can be unavailable in private browsing or constrained webviews.
+    return createSolanaError("STORAGE_FAILURE", "Unable to persist the selected Solana wallet", {
+      cause,
+    });
   }
 }
 

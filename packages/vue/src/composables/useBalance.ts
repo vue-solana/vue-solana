@@ -1,4 +1,6 @@
-import { PublicKey, type Commitment } from "@solana/web3-compat";
+import type { Commitment, PublicKey } from "@solana/web3-compat";
+import { parsePublicKey } from "@vue-solana/core/address";
+import { normalizeSolanaError, type SolanaError } from "@vue-solana/core/errors";
 import { onMounted, shallowRef, toValue, watch, type MaybeRefOrGetter } from "vue";
 import { useConnection } from "./useConnection";
 import { tryUseSolana } from "./useSolana";
@@ -11,7 +13,7 @@ export function useBalance(
   const connection = solana?.connection ?? useConnection();
   const balance = shallowRef<number | null>(null);
   const loading = shallowRef(false);
-  const error = shallowRef<unknown>(null);
+  const error = shallowRef<SolanaError | null>(null);
   let refreshId = 0;
 
   async function refresh() {
@@ -29,7 +31,13 @@ export function useBalance(
     error.value = null;
 
     try {
-      const publicKey = typeof value === "string" ? new PublicKey(value) : value;
+      const publicKey = parsePublicKey(value);
+
+      if (!publicKey) {
+        balance.value = null;
+        return null;
+      }
+
       const nextBalance = await connection.getBalance(publicKey, commitment);
 
       if (requestId === refreshId) {
@@ -38,11 +46,13 @@ export function useBalance(
 
       return nextBalance;
     } catch (cause) {
+      const normalizedError = normalizeSolanaError(cause, "RPC_FAILURE");
+
       if (requestId === refreshId) {
-        error.value = cause;
+        error.value = normalizedError;
       }
 
-      throw cause;
+      throw normalizedError;
     } finally {
       if (requestId === refreshId) {
         loading.value = false;

@@ -1,4 +1,5 @@
-import { assertWalletCanSignMessage } from "@vue-solana/core/wallet";
+import { normalizeSolanaError, type SolanaError } from "@vue-solana/core/errors";
+import { assertWalletCanSignMessage, createNoWalletSelectedError } from "@vue-solana/core/wallet";
 import type { SolanaSignMessageResult } from "@vue-solana/core/types";
 import { ref } from "vue";
 import { useWallet } from "./useWallet";
@@ -11,7 +12,7 @@ export function useSignMessage() {
   const signature = ref<Uint8Array | null>(null);
   const status = ref<SignMessageStatus>("idle");
   const loading = ref(false);
-  const error = ref<Error | null>(null);
+  const error = ref<SolanaError | null>(null);
   let executionId = 0;
 
   async function execute(message: Uint8Array): Promise<SolanaSignMessageResult> {
@@ -26,12 +27,12 @@ export function useSignMessage() {
     const activeWallet = wallet.value;
 
     if (!activeWallet) {
-      const cause = new Error("No Solana wallet is configured");
-      error.value = cause;
+      const normalizedError = createNoWalletSelectedError();
+      error.value = normalizedError;
       status.value = "error";
       loading.value = false;
 
-      throw cause;
+      throw normalizedError;
     }
 
     try {
@@ -47,7 +48,9 @@ export function useSignMessage() {
 
       return result;
     } catch (cause) {
-      const normalizedError = normalizeError(cause);
+      const normalizedError = normalizeSolanaError(cause, "WALLET_FEATURE_UNSUPPORTED", undefined, {
+        feature: "signMessage",
+      });
 
       if (currentExecutionId === executionId) {
         error.value = normalizedError;
@@ -70,8 +73,4 @@ export function useSignMessage() {
     error,
     execute,
   };
-}
-
-function normalizeError(cause: unknown): Error {
-  return cause instanceof Error ? cause : new Error(String(cause));
 }

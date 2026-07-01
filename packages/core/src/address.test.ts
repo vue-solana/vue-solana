@@ -1,6 +1,7 @@
 import { PublicKey } from "@solana/web3-compat";
 import { describe, expect, it } from "vitest";
 import { parsePublicKey } from "./address";
+import { SolanaError } from "./errors";
 
 describe("parsePublicKey", () => {
   it("returns null for nullish input", () => {
@@ -34,5 +35,13 @@ describe("parsePublicKey", () => {
 
   it("throws for invalid public key strings", () => {
     expect(() => parsePublicKey("not-a-public-key")).toThrow();
+
+    try {
+      parsePublicKey("not-a-public-key");
+    } catch (error) {
+      expect(error).toBeInstanceOf(SolanaError);
+      expect((error as SolanaError).code).toBe("INVALID_ADDRESS");
+      expect((error as SolanaError).cause).toBeInstanceOf(Error);
+    }
   });
 });

@@ -45,6 +45,7 @@ describe("useAccountInfo", () => {
 
     await expect(result.refresh()).rejects.toThrow();
     expect(result.error.value).toBeInstanceOf(Error);
+    expect(result.error.value).toMatchObject({ code: "INVALID_ADDRESS" });
     expect(getAccountInfo).not.toHaveBeenCalled();
   });
 
@@ -62,6 +63,7 @@ describe("useAccountInfo", () => {
 
     expect(result.accountInfo.value).toBeNull();
     expect(result.error.value).toBeInstanceOf(Error);
+    expect(result.error.value).toMatchObject({ code: "INVALID_ADDRESS" });
     expect(getAccountInfo).toHaveBeenCalledTimes(1);
   });
 

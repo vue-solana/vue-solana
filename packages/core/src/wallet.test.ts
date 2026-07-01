@@ -4,6 +4,7 @@ import {
   assertWalletCanSign,
   assertWalletCanSignMessage,
   assertWalletConnected,
+  createNoWalletSelectedError,
   isWalletConnected,
   SolanaWalletError,
 } from "./wallet";
@@ -43,7 +44,8 @@ describe("wallet helpers", () => {
       assertWalletCanSign(wallet);
     } catch (error) {
       expect(error).toBeInstanceOf(SolanaWalletError);
-      expect((error as SolanaWalletError).code).toBe("WALLET_SIGN_TRANSACTION_UNSUPPORTED");
+      expect((error as SolanaWalletError).code).toBe("WALLET_FEATURE_UNSUPPORTED");
+      expect((error as SolanaWalletError).feature).toBe("signTransaction");
     }
   });
 
@@ -68,7 +70,8 @@ describe("wallet helpers", () => {
       assertWalletCanSignMessage(wallet);
     } catch (error) {
       expect(error).toBeInstanceOf(SolanaWalletError);
-      expect((error as SolanaWalletError).code).toBe("WALLET_SIGN_MESSAGE_UNSUPPORTED");
+      expect((error as SolanaWalletError).code).toBe("WALLET_FEATURE_UNSUPPORTED");
+      expect((error as SolanaWalletError).feature).toBe("signMessage");
     }
   });
 
@@ -99,5 +102,14 @@ describe("wallet helpers", () => {
     } as SolanaWallet;
 
     expect(() => assertWalletCanSignMessage(wallet)).not.toThrow();
+  });
+
+  it("creates no-wallet-selected errors with a stable code", () => {
+    const cause = new Error("missing selection");
+    const error = createNoWalletSelectedError(cause);
+
+    expect(error).toBeInstanceOf(SolanaWalletError);
+    expect(error.code).toBe("NO_WALLET_SELECTED");
+    expect(error.cause).toBe(cause);
   });
 });

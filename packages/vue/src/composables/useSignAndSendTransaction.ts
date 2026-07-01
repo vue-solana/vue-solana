@@ -1,3 +1,4 @@
+import { createSolanaError, normalizeSolanaError, type SolanaError } from "@vue-solana/core/errors";
 import { confirmTransactionSignature, signAndSendTransaction } from "@vue-solana/core/transaction";
 import type {
   ConfirmTransactionOptions,
@@ -5,6 +6,7 @@ import type {
   SolanaTransaction,
   TransactionConfirmation,
 } from "@vue-solana/core/types";
+import { createNoWalletSelectedError } from "@vue-solana/core/wallet";
 import type { TransactionSignature } from "@solana/web3-compat";
 import { ref } from "vue";
 import { useConnection } from "./useConnection";
@@ -35,7 +37,7 @@ export function useSignAndSendTransaction() {
   const confirmation = ref<TransactionConfirmation | null>(null);
   const status = ref<SignAndSendTransactionStatus>("idle");
   const loading = ref(false);
-  const error = ref<unknown>(null);
+  const error = ref<SolanaError | null>(null);
   let executionId = 0;
 
   async function execute(transaction: SolanaTransaction, options?: SignAndSendTransactionOptions) {
@@ -51,12 +53,12 @@ export function useSignAndSendTransaction() {
     const activeWallet = wallet.value;
 
     if (!activeWallet) {
-      const cause = new Error("No Solana wallet is configured");
-      error.value = cause;
+      const normalizedError = createNoWalletSelectedError();
+      error.value = normalizedError;
       status.value = "error";
       loading.value = false;
 
-      throw cause;
+      throw normalizedError;
     }
 
     try {
@@ -86,12 +88,14 @@ export function useSignAndSendTransaction() {
 
       return nextSignature;
     } catch (cause) {
+      const normalizedError = normalizeSolanaError(cause, "RPC_FAILURE");
+
       if (currentExecutionId === executionId) {
-        error.value = cause;
+        error.value = normalizedError;
         status.value = "error";
       }
 
-      throw cause;
+      throw normalizedError;
     } finally {
       if (currentExecutionId === executionId) {
         loading.value = false;
@@ -116,7 +120,8 @@ async function withWalletTransactionTimeout<T>(promise: Promise<T>): Promise<T> 
     const timeout = new Promise<never>((_, reject) => {
       timeoutId = setTimeout(() => {
         reject(
-          new Error(
+          createSolanaError(
+            "TRANSACTION_TIMEOUT",
             "Wallet transaction did not return a result. Check your wallet or explorer for the final status.",
           ),
         );

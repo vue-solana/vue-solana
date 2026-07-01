@@ -232,7 +232,7 @@ describe("useWallet", () => {
       }),
     );
 
-    await expect(result?.connect()).rejects.toThrow("No Solana wallet is configured");
+    await expect(result?.connect()).rejects.toThrow("No Solana wallet is selected");
     await expect(result?.disconnect()).resolves.toBeUndefined();
   });
 });

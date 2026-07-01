@@ -1,3 +1,4 @@
+import { createNoWalletSelectedError } from "@vue-solana/core/wallet";
 import { computed, ref, triggerRef } from "vue";
 import { useSolana } from "./useSolana";
 
@@ -11,7 +12,7 @@ export function useWallet() {
     const activeWallet = wallet.value;
 
     if (!activeWallet) {
-      throw new Error("No Solana wallet is configured");
+      throw createNoWalletSelectedError();
     }
 
     connecting.value = true;

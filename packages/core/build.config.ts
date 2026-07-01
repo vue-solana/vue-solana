@@ -5,6 +5,7 @@ export default defineBuildConfig({
     "src/index",
     "src/address",
     "src/clusters",
+    "src/errors",
     "src/ios-wallet",
     "src/mobile-wallet",
     "src/rpc",

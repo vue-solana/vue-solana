@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Connection } from "@solana/web3-compat";
+import { SolanaError } from "./errors";
 import type { SolanaTransaction, SolanaWallet } from "./types";
 import { confirmTransactionSignature, signAndSendTransaction } from "./transaction";
 
@@ -122,6 +123,14 @@ describe("confirmTransactionSignature", () => {
     await expect(confirmTransactionSignature(connection, "signature")).rejects.toThrow(
       "Transaction signature failed to reach confirmed commitment.",
     );
+
+    try {
+      await confirmTransactionSignature(connection, "signature");
+    } catch (error) {
+      expect(error).toBeInstanceOf(SolanaError);
+      expect((error as SolanaError).code).toBe("RPC_FAILURE");
+      expect((error as SolanaError).cause).toEqual({ InstructionError: [0, "Custom"] });
+    }
   });
 
   it("rejects with a clear timeout message", async () => {
@@ -136,5 +145,13 @@ describe("confirmTransactionSignature", () => {
 
     await vi.advanceTimersByTimeAsync(10);
     await rejection;
+
+    const nextPromise = confirmTransactionSignature(connection, "signature", { timeoutMs: 10 });
+    const nextRejection = expect(nextPromise).rejects.toMatchObject({
+      code: "TRANSACTION_TIMEOUT",
+    });
+
+    await vi.advanceTimersByTimeAsync(10);
+    await nextRejection;
   });
 });
