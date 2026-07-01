@@ -98,6 +98,37 @@ describe("useSignMessage", () => {
     );
   });
 
+  it("rejects with a typed error when the active wallet is disconnected", async () => {
+    const wallet = {
+      publicKey,
+      connected: false,
+      connect: vi.fn(),
+      disconnect: vi.fn(),
+      signMessage: vi.fn(),
+    } as unknown as SolanaWallet;
+    const context = createMockSolanaContext({ wallet: shallowRef(wallet) });
+    let result: ReturnType<typeof useSignMessage> | undefined;
+
+    mountWithSolana(
+      defineComponent({
+        setup() {
+          result = useSignMessage();
+
+          return () => h("div");
+        },
+      }),
+      context,
+    );
+
+    await expect(result?.execute(new Uint8Array())).rejects.toThrow(
+      "Solana wallet is not connected",
+    );
+    expect(wallet.signMessage).not.toHaveBeenCalled();
+    expect(result?.status.value).toBe("error");
+    expect(result?.error.value).toBeInstanceOf(SolanaWalletError);
+    expect((result?.error.value as SolanaWalletError | null)?.code).toBe("WALLET_NOT_CONNECTED");
+  });
+
   it("normalizes wallet signing rejections before storing and rethrowing them", async () => {
     const wallet = {
       publicKey,
