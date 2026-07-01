@@ -52,6 +52,7 @@ export function getSolanaIosWallets(options: GetSolanaIosWalletsOptions = {}): S
     callbackUrl,
     capabilities: {
       connect: true,
+      disconnect: true,
       signTransaction: Boolean(wallet.signTransactionUrl),
       signAllTransactions: Boolean(wallet.signAllTransactionsUrl),
       signAndSendTransaction: Boolean(wallet.signAndSendTransactionUrl),

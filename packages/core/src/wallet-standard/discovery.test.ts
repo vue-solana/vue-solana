@@ -61,6 +61,7 @@ describe("Wallet Standard discovery", () => {
 
     expect(getRegisteredSolanaWallets()[0]?.capabilities).toEqual({
       connect: true,
+      disconnect: true,
       signMessage: true,
       signTransaction: true,
       signAllTransactions: true,

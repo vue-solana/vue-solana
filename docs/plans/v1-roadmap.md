@@ -124,7 +124,7 @@ Acceptance criteria:
 
 ## Phase 5: Message Signing And Capabilities
 
-Status: reviewing.
+Status: complete.
 
 Many Solana apps use message signing for wallet authentication. v1 should support it where wallets expose it.
 

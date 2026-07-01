@@ -209,6 +209,52 @@ describe("useSignMessage", () => {
     expect(result?.status.value).toBe("signed");
     expect(result?.error.value).toBeNull();
   });
+
+  it("ignores an older rejection that settles after a newer signature", async () => {
+    const firstSign = createDeferred<{ signedMessage: Uint8Array; signature: Uint8Array }>();
+    const secondSign = createDeferred<{ signedMessage: Uint8Array; signature: Uint8Array }>();
+    const secondSignature = new Uint8Array([2]);
+    const wallet = {
+      publicKey,
+      connected: true,
+      connect: vi.fn(),
+      disconnect: vi.fn(),
+      signMessage: vi
+        .fn()
+        .mockReturnValueOnce(firstSign.promise)
+        .mockReturnValueOnce(secondSign.promise),
+    } as unknown as SolanaWallet;
+    const context = createMockSolanaContext({ wallet: shallowRef(wallet) });
+    let result: ReturnType<typeof useSignMessage> | undefined;
+
+    mountWithSolana(
+      defineComponent({
+        setup() {
+          result = useSignMessage();
+
+          return () => h("div");
+        },
+      }),
+      context,
+    );
+
+    const first = result?.execute(new Uint8Array([1]));
+    const second = result?.execute(new Uint8Array([2]));
+
+    secondSign.resolve({ signedMessage: new Uint8Array([2]), signature: secondSignature });
+    await expect(second).resolves.toEqual({
+      signedMessage: new Uint8Array([2]),
+      signature: secondSignature,
+    });
+    expect(result?.signature.value).toBe(secondSignature);
+    expect(result?.status.value).toBe("signed");
+
+    firstSign.reject(new Error("Older request failed"));
+    await expect(first).rejects.toThrow("Older request failed");
+    expect(result?.signature.value).toBe(secondSignature);
+    expect(result?.status.value).toBe("signed");
+    expect(result?.error.value).toBeNull();
+  });
 });
 
 function createDeferred<T>(): Deferred<T> {

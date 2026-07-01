@@ -104,6 +104,7 @@ interface SolanaWalletInfo {
   callbackUrl?: string;
   capabilities?: {
     connect?: boolean;
+    disconnect?: boolean;
     signMessage?: boolean;
     signTransaction?: boolean;
     signAllTransactions?: boolean;

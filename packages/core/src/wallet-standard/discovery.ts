@@ -50,6 +50,7 @@ function createSolanaWalletInfo(wallet: Wallet): SolanaWalletInfo {
     appUrl: getWalletUrl(wallet),
     capabilities: {
       connect: true,
+      disconnect: true,
       signMessage: hasSignMessage(wallet),
       signTransaction: hasSignTransaction(wallet),
       signAllTransactions: hasSignTransaction(wallet),
