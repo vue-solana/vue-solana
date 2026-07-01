@@ -2,7 +2,7 @@
 
 Framework-agnostic Solana primitives used by the Vue Solana packages.
 
-Use this package directly when you want connection helpers, shared wallet types, Android Mobile Wallet Adapter registration helpers, and transaction helpers without installing the Vue plugin.
+Use this package directly when you want connection helpers, shared wallet types, Android Mobile Wallet Adapter registration helpers, message signing support, and transaction helpers without installing the Vue plugin.
 
 `@vue-solana/core` does not replace `@solana/web3-compat`. Use `@solana/web3-compat` for raw Solana primitives like `Connection`, `PublicKey`, and transactions. Use `@vue-solana/core` for Vue Solana shared configuration, cluster endpoint defaults, wallet interfaces, and transaction helpers.
 
@@ -101,6 +101,7 @@ Direct subpaths:
 - `getWebSocketEndpoint(endpoint)`: converts `http`/`https` RPC URLs to `ws`/`wss` URLs.
 - `isWalletConnected(wallet)`: checks whether a wallet is connected and has a public key.
 - `assertWalletConnected(wallet)`: throws if the wallet is not connected.
+- `assertWalletCanSignMessage(wallet)`: throws if the wallet is disconnected or cannot sign messages.
 - `assertWalletCanSign(wallet)`: throws if the wallet cannot sign transactions.
 - `signAndSendTransaction(connection, wallet, transaction, options?)`: signs and sends a transaction using a configured wallet. Android Mobile Wallet Adapter wallets prefer `signTransaction` plus app-side RPC submission when available so the app can reliably return the submitted signature.
 - `confirmTransactionSignature(connection, signature, options?)`: waits for a submitted signature to reach a requested commitment. Defaults to `confirmed` commitment and a 60 second timeout.
@@ -115,17 +116,19 @@ const wallet: SolanaWallet = {
   connected: false,
   connect: async () => {},
   disconnect: async () => {},
+  signMessage: async (message) => ({ signedMessage: message, signature: new Uint8Array() }),
   signTransaction: async (transaction) => transaction,
 };
 ```
 
-Browser extension wallets discovered through the Solana Wallet Standard are adapted into `SolanaWallet`. Android Mobile Wallet Adapter is registered through `@solana-mobile/wallet-standard-mobile` and then adapted through the same Wallet Standard adapter on supported Android Chrome clients. iOS browser wallet entries for Phantom, Solflare, and Backpack are adapted through wallet-specific universal links. You can also provide a custom object that implements `SolanaWallet` for tests or custom adapters.
+Browser extension wallets discovered through the Solana Wallet Standard are adapted into `SolanaWallet`. Android Mobile Wallet Adapter is registered through `@solana-mobile/wallet-standard-mobile` and then adapted through the same Wallet Standard adapter on supported Android Chrome clients. iOS browser wallet entries for Phantom, Solflare, and Backpack are adapted through wallet-specific universal links. Wallet capability metadata exposes whether each wallet supports message signing, transaction signing, and sign-and-send flows. You can also provide a custom object that implements `SolanaWallet` for tests or custom adapters.
 
 Current wallet support:
 
 - Browser extension wallets through Wallet Standard packages.
 - Android native mobile wallets through `@solana-mobile/wallet-standard-mobile` on Android Chrome and Chrome PWAs.
 - iOS browser wallets for Phantom, Solflare, and Backpack through wallet-specific universal links.
+- Message signing when the active wallet exposes `signMessage`.
 - Manual/custom wallet objects that implement `SolanaWallet`.
 
 Planned but not supported yet:
@@ -183,4 +186,4 @@ Make sure your `tsconfig.json` includes `types/**/*.d.ts` or another pattern tha
 
 ## Status
 
-This package is early-stage. RPC helpers, browser extension wallet primitives, Android mobile wallet registration, and transaction helpers are usable.
+This package is early-stage. RPC helpers, browser extension wallet primitives, Android mobile wallet registration, message signing, and transaction helpers are usable.

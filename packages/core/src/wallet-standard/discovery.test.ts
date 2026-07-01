@@ -68,4 +68,18 @@ describe("Wallet Standard discovery", () => {
       signAndSendTransaction: true,
     });
   });
+
+  it("marks unsupported signing capabilities as false", () => {
+    walletRegistry.wallets = [createStandardWallet()];
+    vi.stubGlobal("window", {});
+
+    expect(getRegisteredSolanaWallets()[0]?.capabilities).toEqual({
+      connect: true,
+      disconnect: true,
+      signMessage: false,
+      signTransaction: false,
+      signAllTransactions: false,
+      signAndSendTransaction: false,
+    });
+  });
 });
