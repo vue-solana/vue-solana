@@ -112,6 +112,15 @@ describe("Nuxt module", () => {
       mode: "client",
     });
     expect(kit.addImports).toHaveBeenCalledWith(expect.arrayContaining(SOLANA_IMPORTS));
+    expect(kit.addImports).toHaveBeenCalledWith(
+      expect.arrayContaining([
+        {
+          name: "useSignMessage",
+          as: "useSolanaSignMessage",
+          from: "@vue-solana/vue/useSignMessage",
+        },
+      ]),
+    );
   });
 
   it("adds Vite dependency optimization for mobile wallet dev interop", async () => {

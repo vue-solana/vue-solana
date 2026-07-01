@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { defineComponent, h, shallowRef } from "vue";
 import type { SolanaWallet } from "@vue-solana/core";
+import { SolanaWalletError } from "@vue-solana/core/wallet";
 import { createMockSolanaContext, mountWithSolana } from "../../test-utils";
 import { useSignMessage } from "./useSignMessage";
 
@@ -91,6 +92,41 @@ describe("useSignMessage", () => {
       "Solana wallet does not support signMessage",
     );
     expect(result?.status.value).toBe("error");
+    expect(result?.error.value).toBeInstanceOf(SolanaWalletError);
+    expect((result?.error.value as SolanaWalletError | null)?.code).toBe(
+      "WALLET_SIGN_MESSAGE_UNSUPPORTED",
+    );
+  });
+
+  it("normalizes wallet signing rejections before storing and rethrowing them", async () => {
+    const wallet = {
+      publicKey,
+      connected: true,
+      connect: vi.fn(),
+      disconnect: vi.fn(),
+      signMessage: vi.fn().mockRejectedValue("User rejected the message signing request"),
+    } as unknown as SolanaWallet;
+    const context = createMockSolanaContext({ wallet: shallowRef(wallet) });
+    let result: ReturnType<typeof useSignMessage> | undefined;
+
+    mountWithSolana(
+      defineComponent({
+        setup() {
+          result = useSignMessage();
+
+          return () => h("div");
+        },
+      }),
+      context,
+    );
+
+    await expect(result?.execute(new Uint8Array([1, 2, 3]))).rejects.toThrow(
+      "User rejected the message signing request",
+    );
+    expect(result?.status.value).toBe("error");
+    expect(result?.loading.value).toBe(false);
+    expect(result?.error.value).toBeInstanceOf(Error);
+    expect(result?.error.value?.message).toBe("User rejected the message signing request");
   });
 
   it("ignores an older signature that resolves after a newer signature", async () => {

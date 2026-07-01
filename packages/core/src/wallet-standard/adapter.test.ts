@@ -173,6 +173,30 @@ describe("Wallet Standard adapter", () => {
     expect(signMessage).toHaveBeenCalledWith({ account, message });
   });
 
+  it("rejects message signing when a wallet returns no signature result", async () => {
+    const standardWallet = createStandardWallet();
+    const signMessage = vi.fn().mockResolvedValue([]);
+    (standardWallet.features as Record<string, unknown>)[SolanaSignMessage] = {
+      version: "1.0.0",
+      signMessage,
+    };
+    const walletInfo = {
+      name: standardWallet.name,
+      icon: standardWallet.icon,
+      chains: standardWallet.chains,
+      accounts: [],
+      wallet: standardWallet,
+    } satisfies SolanaWalletInfo;
+    const wallet = adaptSolanaStandardWallet(walletInfo, { chain: "solana:devnet" });
+
+    await wallet.connect();
+
+    await expect(wallet.signMessage?.(new Uint8Array([1, 2, 3]))).rejects.toThrow(
+      "Solana wallet did not return a message signature",
+    );
+    expect(signMessage).toHaveBeenCalledOnce();
+  });
+
   it("omits message signing when the wallet does not support it", () => {
     const standardWallet = createStandardWallet();
     const walletInfo = {

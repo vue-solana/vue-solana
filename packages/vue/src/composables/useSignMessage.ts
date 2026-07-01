@@ -11,7 +11,7 @@ export function useSignMessage() {
   const signature = ref<Uint8Array | null>(null);
   const status = ref<SignMessageStatus>("idle");
   const loading = ref(false);
-  const error = ref<unknown>(null);
+  const error = ref<Error | null>(null);
   let executionId = 0;
 
   async function execute(message: Uint8Array): Promise<SolanaSignMessageResult> {
@@ -47,12 +47,14 @@ export function useSignMessage() {
 
       return result;
     } catch (cause) {
+      const normalizedError = normalizeError(cause);
+
       if (currentExecutionId === executionId) {
-        error.value = cause;
+        error.value = normalizedError;
         status.value = "error";
       }
 
-      throw cause;
+      throw normalizedError;
     } finally {
       if (currentExecutionId === executionId) {
         loading.value = false;
@@ -68,4 +70,8 @@ export function useSignMessage() {
     error,
     execute,
   };
+}
+
+function normalizeError(cause: unknown): Error {
+  return cause instanceof Error ? cause : new Error(String(cause));
 }
