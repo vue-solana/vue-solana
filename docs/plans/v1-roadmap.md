@@ -47,7 +47,7 @@ Tasks:
 Acceptance criteria:
 
 - No documented v1 option is described as reserved, planned, or unused.
-- Package README files and `docs/api.md` agree on the public API surface.
+- Package README files, the `docs/api.md` index, and `docs/api/*` package pages agree on the public API surface.
 - Existing consumers can identify any breaking changes from changesets and changelogs.
 
 ## Phase 2: Wallet UX Foundations
@@ -193,7 +193,7 @@ Every v1 feature should ship with docs and verification coverage.
 
 Tasks:
 
-- [ ] Update `docs/api.md` and docs app package pages for every new public API.
+- [ ] Update `docs/api.md`, `docs/api/*`, and docs app package pages for every new public API.
 - [ ] Update the Vue Vite example with persisted wallet selection, transaction confirmation, and message signing examples.
 - [ ] Update the Nuxt example with the same v1 flows using Nuxt auto-imports.
 - [ ] Add mocked Wallet Standard E2E coverage for discovery, selection, connect, disconnect, and unsupported capabilities.
