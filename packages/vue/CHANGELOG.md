@@ -1,5 +1,16 @@
 # @vue-solana/vue
 
+## 0.8.0
+
+### Minor Changes
+
+- e77115b: Add normalized Solana errors with stable error codes and use them across core helpers and Vue composables.
+
+### Patch Changes
+
+- Updated dependencies [e77115b]
+  - @vue-solana/core@0.7.0
+
 ## 0.7.0
 
 ### Minor Changes
