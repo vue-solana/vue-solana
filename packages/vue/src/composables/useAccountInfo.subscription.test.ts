@@ -19,6 +19,12 @@ function rejectedCleanup() {
   };
 }
 
+function expectCleanupFailure(error: unknown, cleanupError: Error) {
+  expect(error).toBeInstanceOf(Error);
+  expect((error as SolanaError | null)?.code).toBe("RPC_FAILURE");
+  expect((error as SolanaError | null)?.cause).toBe(cleanupError);
+}
+
 describe("useAccountInfo subscriptions", () => {
   it("subscribes to account changes and cleans up on unmount", async () => {
     const getAccountInfo = vi.fn().mockResolvedValue(null);
@@ -143,9 +149,7 @@ describe("useAccountInfo subscriptions", () => {
     await flushPromises();
 
     expect(removeAccountChangeListener).toHaveBeenCalledWith(42);
-    expect(result.error.value).toBeInstanceOf(Error);
-    expect((result.error.value as SolanaError | null)?.code).toBe("RPC_FAILURE");
-    expect((result.error.value as SolanaError | null)?.cause).toBe(cleanupError);
+    expectCleanupFailure(result.error.value, cleanupError);
     expect(onAccountChange).toHaveBeenCalledTimes(2);
   });
 
@@ -168,9 +172,7 @@ describe("useAccountInfo subscriptions", () => {
     await expect(result.stopWatching()).resolves.toBeUndefined();
 
     expect(removeAccountChangeListener).toHaveBeenCalledWith(42);
-    expect(result.error.value).toBeInstanceOf(Error);
-    expect((result.error.value as SolanaError | null)?.code).toBe("RPC_FAILURE");
-    expect((result.error.value as SolanaError | null)?.cause).toBe(cleanupError);
+    expectCleanupFailure(result.error.value, cleanupError);
   });
 
   it("does not restart account watching after manual stop when the input changes", async () => {

@@ -1,5 +1,6 @@
 import type { Connection, TransactionSignature } from "@solana/web3-compat";
 import { createSolanaError, normalizeSolanaError } from "./errors";
+import { withSolanaTimeout } from "./timeout";
 import { assertWalletCanSign, assertWalletConnected } from "./wallet";
 import type {
   ConfirmTransactionOptions,
@@ -51,7 +52,7 @@ export async function confirmTransactionSignature(
   let result: TransactionConfirmation["result"];
 
   try {
-    result = await withTransactionTimeout(
+    result = await withSolanaTimeout(
       confirmation,
       options.timeoutMs ?? DEFAULT_CONFIRMATION_TIMEOUT_MS,
       `Timed out waiting for transaction ${signature} to reach ${commitment} commitment.`,
@@ -89,26 +90,4 @@ async function signAndSendRawTransaction(
 
 function isMobileWalletAdapterWallet(wallet: SolanaWallet): boolean {
   return wallet.source === "mobile-wallet-adapter";
-}
-
-async function withTransactionTimeout<T>(
-  promise: Promise<T>,
-  timeoutMs: number,
-  message: string,
-): Promise<T> {
-  let timeoutId: ReturnType<typeof setTimeout> | undefined;
-
-  try {
-    const timeout = new Promise<never>((_, reject) => {
-      timeoutId = setTimeout(() => {
-        reject(createSolanaError("TRANSACTION_TIMEOUT", message));
-      }, timeoutMs);
-    });
-
-    return await Promise.race([promise, timeout]);
-  } finally {
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-    }
-  }
 }

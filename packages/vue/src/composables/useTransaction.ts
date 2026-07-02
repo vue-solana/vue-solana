@@ -1,5 +1,6 @@
 import type { TransactionSignature } from "@solana/web3-compat";
-import { createSolanaError, normalizeSolanaError, type SolanaError } from "@vue-solana/core/errors";
+import { normalizeSolanaError, type SolanaError } from "@vue-solana/core/errors";
+import { withSolanaTimeout } from "@vue-solana/core/timeout";
 import { ref } from "vue";
 
 export interface UseTransactionOptions {
@@ -23,7 +24,7 @@ export function useTransaction<TArgs extends unknown[]>(
     error.value = null;
 
     try {
-      const nextSignature = await withTransactionTimeout(
+      const nextSignature = await withSolanaTimeout(
         handler(...args),
         options.timeoutMs,
         options.timeoutMessage ?? "Transaction did not return a result before timing out.",
@@ -55,30 +56,4 @@ export function useTransaction<TArgs extends unknown[]>(
     error,
     execute,
   };
-}
-
-async function withTransactionTimeout<T>(
-  promise: Promise<T>,
-  timeoutMs: number | undefined,
-  message: string,
-): Promise<T> {
-  if (!timeoutMs) {
-    return promise;
-  }
-
-  let timeoutId: ReturnType<typeof setTimeout> | undefined;
-
-  try {
-    const timeout = new Promise<never>((_, reject) => {
-      timeoutId = setTimeout(() => {
-        reject(createSolanaError("TRANSACTION_TIMEOUT", message));
-      }, timeoutMs);
-    });
-
-    return await Promise.race([promise, timeout]);
-  } finally {
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-    }
-  }
 }

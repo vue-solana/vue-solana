@@ -2,6 +2,7 @@ import { normalizeSolanaError } from "@vue-solana/core/errors";
 import type { GetSolanaIosWalletsOptions } from "@vue-solana/core/ios-wallet";
 import type { RegisterSolanaMobileWalletOptions } from "@vue-solana/core/mobile-wallet";
 import { createSolanaContext } from "@vue-solana/core/rpc";
+import { withTimeout } from "@vue-solana/core/timeout";
 import type { SolanaConfig, SolanaWallet, SolanaWalletInfo } from "@vue-solana/core/types";
 import { getSolanaChain, subscribeSolanaWallets } from "@vue-solana/core/wallet-standard";
 import { ref, shallowRef, triggerRef, type App } from "vue";
@@ -12,7 +13,6 @@ import {
   writeSelectedWallet,
   type PersistedSelectedWallet,
 } from "./plugin/selected-wallet-storage";
-import { withTimeout } from "./plugin/timeout";
 import { createSolanaWalletRegistry } from "./plugin/wallet-registry";
 
 export interface VueSolanaPluginOptions extends SolanaConfig {
@@ -60,7 +60,10 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}) {
           const blockhash = await withTimeout(
             context.connection.getLatestBlockhash() as Promise<{ blockhash: string }>,
             RPC_CHECK_TIMEOUT_MS,
-            `RPC connection check timed out after ${RPC_CHECK_TIMEOUT_MS / 1_000} seconds.`,
+            () =>
+              new Error(
+                `RPC connection check timed out after ${RPC_CHECK_TIMEOUT_MS / 1_000} seconds.`,
+              ),
           );
 
           if (checkId !== rpcCheckId) {

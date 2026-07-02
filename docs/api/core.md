@@ -9,6 +9,7 @@ The root export remains supported. Direct subpath exports are also available whe
 - `@vue-solana/core/ios-wallet`
 - `@vue-solana/core/mobile-wallet`
 - `@vue-solana/core/rpc`
+- `@vue-solana/core/timeout`
 - `@vue-solana/core/transaction`
 - `@vue-solana/core/wallet`
 - `@vue-solana/core/wallet-standard`

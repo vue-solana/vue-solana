@@ -65,6 +65,11 @@
       "import": "./dist/rpc.mjs",
       "require": "./dist/rpc.cjs"
     },
+    "./timeout": {
+      "types": "./dist/timeout.d.ts",
+      "import": "./dist/timeout.mjs",
+      "require": "./dist/timeout.cjs"
+    },
     "./transaction": {
       "types": "./dist/transaction.d.ts",
       "import": "./dist/transaction.mjs",

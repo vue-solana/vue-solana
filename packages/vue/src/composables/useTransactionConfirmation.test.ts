@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { defineComponent, h } from "vue";
 import type { Connection } from "@solana/web3-compat";
 import type { SolanaError } from "@vue-solana/core/errors";
+import type { ConfirmTransactionOptions } from "@vue-solana/core/types";
 import { createMockSolanaContext, mountWithSolana } from "../../test-utils";
 import { useTransactionConfirmation } from "./useTransactionConfirmation";
 
@@ -10,6 +11,8 @@ interface Deferred<T> {
   resolve: (value: T) => void;
   reject: (cause: unknown) => void;
 }
+
+type TransactionConfirmationComposable = ReturnType<typeof useTransactionConfirmation>;
 
 describe("useTransactionConfirmation", () => {
   afterEach(() => {
@@ -21,31 +24,19 @@ describe("useTransactionConfirmation", () => {
     const connection = {
       confirmTransaction: vi.fn().mockResolvedValue(confirmationResult),
     } as unknown as Connection;
-    const context = createMockSolanaContext({ connection });
-    let result: ReturnType<typeof useTransactionConfirmation> | undefined;
+    const result = mountTransactionConfirmation(connection);
 
-    mountWithSolana(
-      defineComponent({
-        setup() {
-          result = useTransactionConfirmation();
+    const confirmation = result.confirm("signature");
 
-          return () => h("div");
-        },
-      }),
-      context,
-    );
-
-    const confirmation = result?.confirm("signature");
-
-    expect(result?.status.value).toBe("confirming");
+    expect(result.status.value).toBe("confirming");
     await expect(confirmation).resolves.toEqual({
       signature: "signature",
       commitment: "confirmed",
       result: confirmationResult,
     });
-    expect(result?.status.value).toBe("confirmed");
-    expect(result?.signature.value).toBe("signature");
-    expect(result?.confirmation.value?.result).toEqual(confirmationResult);
+    expect(result.status.value).toBe("confirmed");
+    expect(result.signature.value).toBe("signature");
+    expect(result.confirmation.value?.result).toEqual(confirmationResult);
     expect(connection.confirmTransaction).toHaveBeenCalledWith("signature", "confirmed");
   });
 
@@ -53,23 +44,11 @@ describe("useTransactionConfirmation", () => {
     const connection = {
       confirmTransaction: vi.fn().mockResolvedValue({ value: { err: null } }),
     } as unknown as Connection;
-    const context = createMockSolanaContext({ connection });
-    let result: ReturnType<typeof useTransactionConfirmation> | undefined;
+    const result = mountTransactionConfirmation(connection, { commitment: "finalized" });
 
-    mountWithSolana(
-      defineComponent({
-        setup() {
-          result = useTransactionConfirmation({ commitment: "finalized" });
+    await result.confirm("signature");
 
-          return () => h("div");
-        },
-      }),
-      context,
-    );
-
-    await result?.confirm("signature");
-
-    expect(result?.status.value).toBe("finalized");
+    expect(result.status.value).toBe("finalized");
     expect(connection.confirmTransaction).toHaveBeenCalledWith("signature", "finalized");
   });
 
@@ -77,23 +56,11 @@ describe("useTransactionConfirmation", () => {
     const connection = {
       confirmTransaction: vi.fn().mockResolvedValue({ value: { err: null } }),
     } as unknown as Connection;
-    const context = createMockSolanaContext({ connection });
-    let result: ReturnType<typeof useTransactionConfirmation> | undefined;
+    const result = mountTransactionConfirmation(connection, { commitment: "processed" });
 
-    mountWithSolana(
-      defineComponent({
-        setup() {
-          result = useTransactionConfirmation({ commitment: "processed" });
+    await result.confirm("signature");
 
-          return () => h("div");
-        },
-      }),
-      context,
-    );
-
-    await result?.confirm("signature");
-
-    expect(result?.status.value).toBe("processed");
+    expect(result.status.value).toBe("processed");
     expect(connection.confirmTransaction).toHaveBeenCalledWith("signature", "processed");
   });
 
@@ -106,33 +73,21 @@ describe("useTransactionConfirmation", () => {
         .mockReturnValueOnce(firstConfirmation.promise)
         .mockReturnValueOnce(secondConfirmation.promise),
     } as unknown as Connection;
-    const context = createMockSolanaContext({ connection });
-    let result: ReturnType<typeof useTransactionConfirmation> | undefined;
+    const result = mountTransactionConfirmation(connection);
 
-    mountWithSolana(
-      defineComponent({
-        setup() {
-          result = useTransactionConfirmation();
-
-          return () => h("div");
-        },
-      }),
-      context,
-    );
-
-    const first = result?.confirm("old-signature");
-    const second = result?.confirm("new-signature", { commitment: "finalized" });
+    const first = result.confirm("old-signature");
+    const second = result.confirm("new-signature", { commitment: "finalized" });
 
     secondConfirmation.resolve({ value: { err: null } });
     await expect(second).resolves.toMatchObject({ signature: "new-signature" });
-    expect(result?.signature.value).toBe("new-signature");
-    expect(result?.status.value).toBe("finalized");
+    expect(result.signature.value).toBe("new-signature");
+    expect(result.status.value).toBe("finalized");
 
     firstConfirmation.resolve({ value: { err: null } });
     await expect(first).resolves.toMatchObject({ signature: "old-signature" });
-    expect(result?.signature.value).toBe("new-signature");
-    expect(result?.status.value).toBe("finalized");
-    expect(result?.confirmation.value?.signature).toBe("new-signature");
+    expect(result.signature.value).toBe("new-signature");
+    expect(result.status.value).toBe("finalized");
+    expect(result.confirmation.value?.signature).toBe("new-signature");
   });
 
   it("ignores an older confirmation that rejects after a newer confirmation", async () => {
@@ -145,31 +100,19 @@ describe("useTransactionConfirmation", () => {
         .mockReturnValueOnce(firstConfirmation.promise)
         .mockReturnValueOnce(secondConfirmation.promise),
     } as unknown as Connection;
-    const context = createMockSolanaContext({ connection });
-    let result: ReturnType<typeof useTransactionConfirmation> | undefined;
+    const result = mountTransactionConfirmation(connection);
 
-    mountWithSolana(
-      defineComponent({
-        setup() {
-          result = useTransactionConfirmation();
-
-          return () => h("div");
-        },
-      }),
-      context,
-    );
-
-    const first = result?.confirm("old-signature");
-    const second = result?.confirm("new-signature");
+    const first = result.confirm("old-signature");
+    const second = result.confirm("new-signature");
 
     secondConfirmation.resolve({ value: { err: null } });
     await expect(second).resolves.toMatchObject({ signature: "new-signature" });
 
     firstConfirmation.reject(staleFailure);
     await expect(first).rejects.toThrow("stale confirmation failed");
-    expect(result?.signature.value).toBe("new-signature");
-    expect(result?.status.value).toBe("confirmed");
-    expect(result?.error.value).toBeNull();
+    expect(result.signature.value).toBe("new-signature");
+    expect(result.status.value).toBe("confirmed");
+    expect(result.error.value).toBeNull();
   });
 
   it("preserves the submitted signature when confirmation times out", async () => {
@@ -177,31 +120,18 @@ describe("useTransactionConfirmation", () => {
     const connection = {
       confirmTransaction: vi.fn(() => new Promise(() => undefined)),
     } as unknown as Connection;
-    const context = createMockSolanaContext({ connection });
-    let result: ReturnType<typeof useTransactionConfirmation> | undefined;
+    const result = mountTransactionConfirmation(connection, { timeoutMs: 10 });
 
-    mountWithSolana(
-      defineComponent({
-        setup() {
-          result = useTransactionConfirmation({ timeoutMs: 10 });
-
-          return () => h("div");
-        },
-      }),
-      context,
-    );
-
-    const confirmation = result?.confirm("signature");
-    const rejection = expect(confirmation).rejects.toThrow(
-      "Timed out waiting for transaction signature to reach confirmed commitment.",
-    );
+    const rejection = result.confirm("signature").catch((cause: unknown) => cause);
 
     await vi.advanceTimersByTimeAsync(10);
-    await rejection;
-    expect(result?.signature.value).toBe("signature");
-    expect(result?.status.value).toBe("error");
-    expect(result?.loading.value).toBe(false);
-    expect((result?.error.value as SolanaError | null)?.code).toBe("TRANSACTION_TIMEOUT");
+    await expect(rejection).resolves.toMatchObject({
+      message: "Timed out waiting for transaction signature to reach confirmed commitment.",
+    });
+    expect(result.signature.value).toBe("signature");
+    expect(result.status.value).toBe("error");
+    expect(result.loading.value).toBe(false);
+    expect((result.error.value as SolanaError | null)?.code).toBe("TRANSACTION_TIMEOUT");
   });
 
   it("normalizes confirmation failures", async () => {
@@ -209,26 +139,39 @@ describe("useTransactionConfirmation", () => {
     const connection = {
       confirmTransaction: vi.fn().mockRejectedValue(failure),
     } as unknown as Connection;
-    const context = createMockSolanaContext({ connection });
-    let result: ReturnType<typeof useTransactionConfirmation> | undefined;
+    const result = mountTransactionConfirmation(connection);
 
-    mountWithSolana(
-      defineComponent({
-        setup() {
-          result = useTransactionConfirmation();
-
-          return () => h("div");
-        },
-      }),
-      context,
-    );
-
-    await expect(result?.confirm("signature")).rejects.toThrow("confirmation RPC failed");
-    expect(result?.status.value).toBe("error");
-    expect(result?.error.value?.code).toBe("RPC_FAILURE");
-    expect(result?.error.value?.cause).toBe(failure);
+    await expect(result.confirm("signature")).rejects.toThrow("confirmation RPC failed");
+    expect(result.status.value).toBe("error");
+    expect(result.error.value?.code).toBe("RPC_FAILURE");
+    expect(result.error.value?.cause).toBe(failure);
   });
 });
+
+function mountTransactionConfirmation(
+  connection: Connection,
+  options?: ConfirmTransactionOptions,
+): TransactionConfirmationComposable {
+  const context = createMockSolanaContext({ connection });
+  let result: TransactionConfirmationComposable | undefined;
+
+  mountWithSolana(
+    defineComponent({
+      setup() {
+        result = useTransactionConfirmation(options);
+
+        return () => h("div");
+      },
+    }),
+    context,
+  );
+
+  if (!result) {
+    throw new Error("useTransactionConfirmation test component did not mount.");
+  }
+
+  return result;
+}
 
 function createDeferred<T>(): Deferred<T> {
   let resolve!: Deferred<T>["resolve"];

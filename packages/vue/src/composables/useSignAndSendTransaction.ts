@@ -1,4 +1,5 @@
-import { createSolanaError, normalizeSolanaError, type SolanaError } from "@vue-solana/core/errors";
+import { normalizeSolanaError, type SolanaError } from "@vue-solana/core/errors";
+import { withSolanaTimeout } from "@vue-solana/core/timeout";
 import { confirmTransactionSignature, signAndSendTransaction } from "@vue-solana/core/transaction";
 import type {
   ConfirmTransactionOptions,
@@ -62,8 +63,10 @@ export function useSignAndSendTransaction() {
     }
 
     try {
-      const nextSignature = await withWalletTransactionTimeout(
+      const nextSignature = await withSolanaTimeout(
         signAndSendTransaction(connection, activeWallet, transaction, transactionOptions),
+        SIGN_AND_SEND_TIMEOUT_MS,
+        "Wallet transaction did not return a result. Check your wallet or explorer for the final status.",
       );
 
       if (currentExecutionId === executionId) {
@@ -111,27 +114,4 @@ export function useSignAndSendTransaction() {
     error,
     execute,
   };
-}
-
-async function withWalletTransactionTimeout<T>(promise: Promise<T>): Promise<T> {
-  let timeoutId: ReturnType<typeof setTimeout> | undefined;
-
-  try {
-    const timeout = new Promise<never>((_, reject) => {
-      timeoutId = setTimeout(() => {
-        reject(
-          createSolanaError(
-            "TRANSACTION_TIMEOUT",
-            "Wallet transaction did not return a result. Check your wallet or explorer for the final status.",
-          ),
-        );
-      }, SIGN_AND_SEND_TIMEOUT_MS);
-    });
-
-    return await Promise.race([promise, timeout]);
-  } finally {
-    if (timeoutId) {
-      clearTimeout(timeoutId);
-    }
-  }
 }

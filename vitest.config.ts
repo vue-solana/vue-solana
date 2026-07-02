@@ -21,6 +21,9 @@ export default defineConfig({
         new URL("./packages/core/src/mobile-wallet.ts", import.meta.url),
       ),
       "@vue-solana/core/rpc": fileURLToPath(new URL("./packages/core/src/rpc.ts", import.meta.url)),
+      "@vue-solana/core/timeout": fileURLToPath(
+        new URL("./packages/core/src/timeout.ts", import.meta.url),
+      ),
       "@vue-solana/core/transaction": fileURLToPath(
         new URL("./packages/core/src/transaction.ts", import.meta.url),
       ),

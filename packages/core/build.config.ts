@@ -9,6 +9,7 @@ export default defineBuildConfig({
     "src/ios-wallet",
     "src/mobile-wallet",
     "src/rpc",
+    "src/timeout",
     "src/transaction",
     "src/types",
     "src/wallet",

@@ -15,6 +15,17 @@ import {
 describe("createSolanaPlugin wallet selection persistence", () => {
   installPluginTestHooks();
 
+  function expectPersistedSelectionStorageFailure(storageError: Error) {
+    const { standardWallet } = mockStandardWalletDiscovery();
+    const { solana } = mountSolanaPlugin({ autoConnect: true, mobileWallet: false });
+
+    expect(() => solana?.refreshWallets()).not.toThrow();
+    expect(solana?.selectedWallet.value).toBeNull();
+    expect(solana?.error.value?.code).toBe("STORAGE_FAILURE");
+    expect(solana?.error.value?.cause).toBe(storageError);
+    expect(getConnectFeature(standardWallet).connect).not.toHaveBeenCalled();
+  }
+
   it("persists wallet selection without auto-connecting by default", () => {
     silenceConsole();
     const { standardWallet, walletInfo } = mockStandardWalletDiscovery();
@@ -93,14 +104,8 @@ describe("createSolanaPlugin wallet selection persistence", () => {
     const getItemSpy = vi.spyOn(window.localStorage, "getItem").mockImplementation(() => {
       throw storageError;
     });
-    const { standardWallet } = mockStandardWalletDiscovery();
-    const { solana } = mountSolanaPlugin({ autoConnect: true, mobileWallet: false });
 
-    expect(() => solana?.refreshWallets()).not.toThrow();
-    expect(solana?.selectedWallet.value).toBeNull();
-    expect(solana?.error.value?.code).toBe("STORAGE_FAILURE");
-    expect(solana?.error.value?.cause).toBe(storageError);
-    expect(getConnectFeature(standardWallet).connect).not.toHaveBeenCalled();
+    expectPersistedSelectionStorageFailure(storageError);
     getItemSpy.mockRestore();
   });
 
@@ -110,14 +115,8 @@ describe("createSolanaPlugin wallet selection persistence", () => {
     vi.spyOn(window, "localStorage", "get").mockImplementation(() => {
       throw storageError;
     });
-    const { standardWallet } = mockStandardWalletDiscovery();
-    const { solana } = mountSolanaPlugin({ autoConnect: true, mobileWallet: false });
 
-    expect(() => solana?.refreshWallets()).not.toThrow();
-    expect(solana?.selectedWallet.value).toBeNull();
-    expect(solana?.error.value?.code).toBe("STORAGE_FAILURE");
-    expect(solana?.error.value?.cause).toBe(storageError);
-    expect(getConnectFeature(standardWallet).connect).not.toHaveBeenCalled();
+    expectPersistedSelectionStorageFailure(storageError);
   });
 
   it("keeps missing persisted wallet selections disconnected and stored", () => {
