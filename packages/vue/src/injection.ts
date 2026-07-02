@@ -17,4 +17,6 @@ export interface VueSolanaContext extends SolanaContext {
   selectWallet: (wallet: SolanaWalletInfo | null) => void;
 }
 
-export const solanaInjectionKey: InjectionKey<VueSolanaContext> = Symbol("VueSolana");
+export const solanaInjectionKey: InjectionKey<VueSolanaContext> = Symbol.for(
+  "vue-solana:context",
+) as InjectionKey<VueSolanaContext>;

@@ -34,6 +34,29 @@ describe("createSolanaPlugin wallet selection", () => {
     expect(wallet?.publicKey.value?.toBase58()).toBe(account.address);
   });
 
+  it("preserves message signing capability on selected standard wallets", async () => {
+    silenceConsole();
+    const signMessage = vi.fn(async ({ message }: { message: Uint8Array }) => [
+      { signedMessage: message, signature: Uint8Array.from([1, 2, 3]) },
+    ]);
+    const { standardWallet, walletInfo } = mockStandardWalletDiscovery();
+    standardWallet.features["solana:signMessage"] = {
+      version: "1.0.0",
+      signMessage,
+    };
+    const { solana, wallet } = mountSolanaPlugin(undefined, { wallet: true });
+    const message = new Uint8Array([4, 5, 6]);
+
+    solana?.refreshWallets();
+    solana?.selectWallet(walletInfo);
+    await wallet?.connect();
+    const result = await wallet?.wallet.value?.signMessage?.(message);
+
+    expect(wallet?.canSignMessage.value).toBe(true);
+    expect(signMessage).toHaveBeenCalledWith({ account, message });
+    expect(result).toEqual({ signedMessage: message, signature: Uint8Array.from([1, 2, 3]) });
+  });
+
   it("keeps an explicitly configured wallet active when a persisted selection exists", () => {
     silenceConsole();
     window.localStorage.setItem(
