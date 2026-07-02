@@ -1,5 +1,12 @@
 # @vue-solana/nuxt
 
+## 0.6.2
+
+### Patch Changes
+
+- Updated dependencies [1308d50]
+  - @vue-solana/vue@0.8.1
+
 ## 0.6.1
 
 ### Patch Changes
