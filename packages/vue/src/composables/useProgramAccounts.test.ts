@@ -120,6 +120,7 @@ describe("useProgramAccounts", () => {
 
     await expect(result.refresh()).rejects.toThrow();
     expect(result.error.value).toBeInstanceOf(Error);
+    expect(result.error.value).toMatchObject({ code: "INVALID_ADDRESS" });
     expect(getProgramAccounts).not.toHaveBeenCalled();
   });
 
@@ -140,6 +141,7 @@ describe("useProgramAccounts", () => {
 
     expect(result.accounts.value).toEqual([]);
     expect(result.error.value).toBeInstanceOf(Error);
+    expect(result.error.value).toMatchObject({ code: "INVALID_ADDRESS" });
     expect(getProgramAccounts).toHaveBeenCalledTimes(1);
   });
 

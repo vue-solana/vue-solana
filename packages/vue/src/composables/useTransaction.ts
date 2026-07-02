@@ -1,6 +1,7 @@
 import type { TransactionSignature } from "@solana/web3-compat";
+import { normalizeSolanaError, type SolanaError } from "@vue-solana/core/errors";
+import { withSolanaTimeout } from "@vue-solana/core/timeout";
 import { ref } from "vue";
-import { withTimeout } from "../plugin/timeout";
 
 export interface UseTransactionOptions {
   timeoutMs?: number;
@@ -13,7 +14,7 @@ export function useTransaction<TArgs extends unknown[]>(
 ) {
   const signature = ref<TransactionSignature | null>(null);
   const loading = ref(false);
-  const error = ref<unknown>(null);
+  const error = ref<SolanaError | null>(null);
   let executionId = 0;
 
   async function execute(...args: TArgs) {
@@ -23,7 +24,7 @@ export function useTransaction<TArgs extends unknown[]>(
     error.value = null;
 
     try {
-      const nextSignature = await withTimeout(
+      const nextSignature = await withSolanaTimeout(
         handler(...args),
         options.timeoutMs,
         options.timeoutMessage ?? "Transaction did not return a result before timing out.",
@@ -35,11 +36,13 @@ export function useTransaction<TArgs extends unknown[]>(
 
       return nextSignature;
     } catch (cause) {
+      const normalizedError = normalizeSolanaError(cause, "RPC_FAILURE");
+
       if (currentExecutionId === executionId) {
-        error.value = cause;
+        error.value = normalizedError;
       }
 
-      throw cause;
+      throw normalizedError;
     } finally {
       if (currentExecutionId === executionId) {
         loading.value = false;

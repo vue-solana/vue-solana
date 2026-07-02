@@ -4,6 +4,7 @@ import type {
   SignatureStatus,
   TransactionSignature,
 } from "@solana/web3-compat";
+import { createSolanaError, normalizeSolanaError, type SolanaError } from "@vue-solana/core/errors";
 import bs58 from "bs58";
 import { onMounted, onUnmounted, shallowRef, toValue, watch, type MaybeRefOrGetter } from "vue";
 import { useConnection } from "./useConnection";
@@ -24,7 +25,7 @@ export function useSignatureStatus(
   const connection = solana?.connection ?? useConnection();
   const status = shallowRef<SignatureStatus | null>(null);
   const loading = shallowRef(false);
-  const error = shallowRef<unknown>(null);
+  const error = shallowRef<SolanaError | null>(null);
   let refreshId = 0;
   let subscriptionStartId = 0;
   let pollId: ReturnType<typeof setInterval> | null = null;
@@ -59,12 +60,14 @@ export function useSignatureStatus(
 
       return nextStatus;
     } catch (cause) {
+      const normalizedError = normalizeSolanaError(cause, "RPC_FAILURE");
+
       if (requestId === refreshId) {
         status.value = null;
-        error.value = cause;
+        error.value = normalizedError;
       }
 
-      throw cause;
+      throw normalizedError;
     } finally {
       if (requestId === refreshId) {
         loading.value = false;
@@ -96,14 +99,14 @@ export function useSignatureStatus(
     }
 
     if (options.pollIntervalMs <= 0) {
-      error.value = new RangeError("pollIntervalMs must be greater than 0");
+      error.value = createSolanaError("RPC_FAILURE", "pollIntervalMs must be greater than 0");
       return;
     }
 
     try {
       parseTransactionSignature(value);
     } catch (cause) {
-      error.value = cause;
+      error.value = normalizeSolanaError(cause, "RPC_FAILURE");
       return;
     }
 
@@ -129,7 +132,7 @@ export function useSignatureStatus(
     try {
       await connection.removeSignatureListener(currentSubscriptionId);
     } catch (cause) {
-      error.value = cause;
+      error.value = normalizeSolanaError(cause, "RPC_FAILURE");
     }
   }
 
@@ -175,7 +178,7 @@ export function useSignatureStatus(
       subscriptionId = nextSubscriptionId;
     } catch (cause) {
       if (requestId === subscriptionStartId) {
-        error.value = cause;
+        error.value = normalizeSolanaError(cause, "RPC_FAILURE");
       }
     }
   }

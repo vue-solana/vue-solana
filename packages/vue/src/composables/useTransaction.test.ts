@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
+import type { SolanaError } from "@vue-solana/core/errors";
 import { useTransaction } from "./useTransaction";
 
 describe("useTransaction", () => {
@@ -26,7 +27,8 @@ describe("useTransaction", () => {
 
     expect(transaction.signature.value).toBeNull();
     expect(transaction.loading.value).toBe(false);
-    expect(transaction.error.value).toBe(failure);
+    expect(transaction.error.value?.code).toBe("RPC_FAILURE");
+    expect(transaction.error.value?.cause).toBe(failure);
   });
 
   it("clears loading when a transaction does not settle before its timeout", async () => {
@@ -47,6 +49,7 @@ describe("useTransaction", () => {
     expect(transaction.signature.value).toBeNull();
     expect(transaction.loading.value).toBe(false);
     expect(transaction.error.value).toBeInstanceOf(Error);
+    expect((transaction.error.value as SolanaError | null)?.code).toBe("TRANSACTION_TIMEOUT");
   });
 
   it("does not let an older stale transaction clear newer loading state", async () => {

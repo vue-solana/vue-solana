@@ -1,10 +1,14 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { defineComponent, h, shallowRef } from "vue";
 import type { SolanaWallet } from "@vue-solana/core";
+import type { SolanaError } from "@vue-solana/core/errors";
 import { createMockSolanaContext, mountWithSolana } from "../../test-utils";
 import { useWallet } from "./useWallet";
 
 const publicKey = { toBase58: () => "public-key" } as SolanaWallet["publicKey"];
+
+type WalletResult = ReturnType<typeof useWallet>;
+type TestSolanaContext = ReturnType<typeof createMockSolanaContext>;
 
 describe("useWallet", () => {
   afterEach(() => {
@@ -23,31 +27,20 @@ describe("useWallet", () => {
       signMessage: vi.fn(),
     } as SolanaWallet;
     const context = createMockSolanaContext({ wallet: shallowRef(wallet) });
-    let result: ReturnType<typeof useWallet> | undefined;
+    const result = mountUseWallet(context);
 
-    mountWithSolana(
-      defineComponent({
-        setup() {
-          result = useWallet();
-
-          return () => h("div");
-        },
-      }),
-      context,
-    );
-
-    expect(result?.publicKey.value).toBe(publicKey);
-    expect(result?.connected.value).toBe(true);
-    expect(result?.connecting.value).toBe(false);
-    expect(result?.disconnecting.value).toBe(false);
-    expect(result?.loading.value).toBe(false);
-    expect(result?.canConnect.value).toBe(true);
-    expect(result?.canDisconnect.value).toBe(true);
-    expect(result?.canSignMessage.value).toBe(true);
-    expect(result?.canSignTransaction.value).toBe(false);
-    expect(result?.canSignAllTransactions.value).toBe(false);
-    expect(result?.canSignAndSendTransaction.value).toBe(false);
-    expect(result?.capabilities.value).toEqual({
+    expect(result.publicKey.value).toBe(publicKey);
+    expect(result.connected.value).toBe(true);
+    expect(result.connecting.value).toBe(false);
+    expect(result.disconnecting.value).toBe(false);
+    expect(result.loading.value).toBe(false);
+    expect(result.canConnect.value).toBe(true);
+    expect(result.canDisconnect.value).toBe(true);
+    expect(result.canSignMessage.value).toBe(true);
+    expect(result.canSignTransaction.value).toBe(false);
+    expect(result.canSignAllTransactions.value).toBe(false);
+    expect(result.canSignAndSendTransaction.value).toBe(false);
+    expect(result.capabilities.value).toEqual({
       connect: true,
       disconnect: true,
       signMessage: true,
@@ -56,8 +49,8 @@ describe("useWallet", () => {
       signAndSendTransaction: false,
     });
 
-    await result?.connect();
-    await result?.disconnect();
+    await result.connect();
+    await result.disconnect();
 
     expect(wallet.connect).toHaveBeenCalledOnce();
     expect(wallet.disconnect).toHaveBeenCalledOnce();
@@ -88,25 +81,14 @@ describe("useWallet", () => {
       }),
     } as SolanaWallet;
     const context = createMockSolanaContext({ wallet: shallowRef(wallet) });
-    let result: ReturnType<typeof useWallet> | undefined;
+    const result = mountUseWallet(context);
 
-    mountWithSolana(
-      defineComponent({
-        setup() {
-          result = useWallet();
+    expect(result.connected.value).toBe(true);
 
-          return () => h("div");
-        },
-      }),
-      context,
-    );
+    await result.disconnect();
 
-    expect(result?.connected.value).toBe(true);
-
-    await result?.disconnect();
-
-    expect(result?.connected.value).toBe(false);
-    expect(result?.publicKey.value).toBeNull();
+    expect(result.connected.value).toBe(false);
+    expect(result.publicKey.value).toBeNull();
   });
 
   it("tracks disconnect loading state while disconnect is pending", async () => {
@@ -125,29 +107,18 @@ describe("useWallet", () => {
       ),
     } as SolanaWallet;
     const context = createMockSolanaContext({ wallet: shallowRef(wallet) });
-    let result: ReturnType<typeof useWallet> | undefined;
+    const result = mountUseWallet(context);
 
-    mountWithSolana(
-      defineComponent({
-        setup() {
-          result = useWallet();
+    const disconnect = result.disconnect();
 
-          return () => h("div");
-        },
-      }),
-      context,
-    );
-
-    const disconnect = result?.disconnect();
-
-    expect(result?.disconnecting.value).toBe(true);
-    expect(result?.loading.value).toBe(true);
+    expect(result.disconnecting.value).toBe(true);
+    expect(result.loading.value).toBe(true);
 
     resolveDisconnect?.();
     await disconnect;
 
-    expect(result?.disconnecting.value).toBe(false);
-    expect(result?.loading.value).toBe(false);
+    expect(result.disconnecting.value).toBe(false);
+    expect(result.loading.value).toBe(false);
   });
 
   it("sets and clears the active wallet", () => {
@@ -158,26 +129,15 @@ describe("useWallet", () => {
       connect: vi.fn(),
       disconnect: vi.fn(),
     } as unknown as SolanaWallet;
-    let result: ReturnType<typeof useWallet> | undefined;
+    const result = mountUseWallet(context);
 
-    mountWithSolana(
-      defineComponent({
-        setup() {
-          result = useWallet();
+    result.setWallet(wallet);
+    expect(result.wallet.value).toBe(wallet);
+    expect(result.connected.value).toBe(true);
 
-          return () => h("div");
-        },
-      }),
-      context,
-    );
-
-    result?.setWallet(wallet);
-    expect(result?.wallet.value).toBe(wallet);
-    expect(result?.connected.value).toBe(true);
-
-    result?.setWallet(null);
-    expect(result?.wallet.value).toBeNull();
-    expect(result?.connected.value).toBe(false);
+    result.setWallet(null);
+    expect(result.wallet.value).toBeNull();
+    expect(result.connected.value).toBe(false);
   });
 
   it("updates capability flags when the active wallet changes", () => {
@@ -192,24 +152,13 @@ describe("useWallet", () => {
       signAllTransactions: vi.fn(),
       signAndSendTransaction: vi.fn(),
     } as unknown as SolanaWallet;
-    let result: ReturnType<typeof useWallet> | undefined;
+    const result = mountUseWallet(context);
 
-    mountWithSolana(
-      defineComponent({
-        setup() {
-          result = useWallet();
+    expect(result.canSignMessage.value).toBe(false);
 
-          return () => h("div");
-        },
-      }),
-      context,
-    );
+    result.setWallet(wallet);
 
-    expect(result?.canSignMessage.value).toBe(false);
-
-    result?.setWallet(wallet);
-
-    expect(result?.capabilities.value).toEqual({
+    expect(result.capabilities.value).toEqual({
       connect: true,
       disconnect: true,
       signMessage: true,
@@ -220,19 +169,66 @@ describe("useWallet", () => {
   });
 
   it("rejects connect when no wallet is configured and resolves disconnect", async () => {
-    let result: ReturnType<typeof useWallet> | undefined;
+    const result = mountUseWallet();
 
-    mountWithSolana(
-      defineComponent({
-        setup() {
-          result = useWallet();
+    await expect(result.connect()).rejects.toThrow("No Solana wallet is selected");
+    await expect(result.disconnect()).resolves.toBeUndefined();
+  });
 
-          return () => h("div");
-        },
-      }),
-    );
+  it("normalizes wallet connect rejections", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const cause = { code: 4001, message: "User rejected connection" };
+    const wallet = {
+      publicKey: null,
+      connected: false,
+      connect: vi.fn().mockRejectedValue(cause),
+      disconnect: vi.fn(),
+    } as unknown as SolanaWallet;
+    const context = createMockSolanaContext({ wallet: shallowRef(wallet) });
+    const result = mountUseWallet(context);
 
-    await expect(result?.connect()).rejects.toThrow("No Solana wallet is configured");
-    await expect(result?.disconnect()).resolves.toBeUndefined();
+    await expect(result.connect()).rejects.toMatchObject({
+      code: "USER_REJECTED",
+      cause,
+    } satisfies Partial<SolanaError>);
+  });
+
+  it("normalizes wallet disconnect failures", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const cause = new Error("disconnect transport failed");
+    const wallet = {
+      publicKey,
+      connected: true,
+      connect: vi.fn(),
+      disconnect: vi.fn().mockRejectedValue(cause),
+    } as unknown as SolanaWallet;
+    const context = createMockSolanaContext({ wallet: shallowRef(wallet) });
+    const result = mountUseWallet(context);
+
+    await expect(result.disconnect()).rejects.toMatchObject({
+      code: "RPC_FAILURE",
+      cause,
+    } satisfies Partial<SolanaError>);
   });
 });
+
+function mountUseWallet(context?: TestSolanaContext): WalletResult {
+  let result: WalletResult | undefined;
+
+  mountWithSolana(
+    defineComponent({
+      setup() {
+        result = useWallet();
+
+        return () => h("div");
+      },
+    }),
+    context,
+  );
+
+  if (!result) {
+    throw new Error("useWallet did not mount.");
+  }
+
+  return result;
+}

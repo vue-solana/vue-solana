@@ -1,4 +1,5 @@
 import { parsePublicKey, type PublicKeyInput } from "@vue-solana/core/address";
+import { normalizeSolanaError, type SolanaError } from "@vue-solana/core/errors";
 import type { AccountInfo, Commitment, PublicKey } from "@solana/web3-compat";
 import { onMounted, onUnmounted, shallowRef, toValue, watch, type MaybeRefOrGetter } from "vue";
 import { useConnection } from "./useConnection";
@@ -44,7 +45,7 @@ export function useProgramAccounts(
   const connection = solana?.connection ?? useConnection();
   const accounts = shallowRef<ProgramAccount[]>([]);
   const loading = shallowRef(false);
-  const error = shallowRef<unknown>(null);
+  const error = shallowRef<SolanaError | null>(null);
   let refreshId = 0;
 
   async function refresh() {
@@ -81,12 +82,14 @@ export function useProgramAccounts(
 
       return nextAccounts;
     } catch (cause) {
+      const normalizedError = normalizeSolanaError(cause, "RPC_FAILURE");
+
       if (requestId === refreshId) {
         accounts.value = [];
-        error.value = cause;
+        error.value = normalizedError;
       }
 
-      throw cause;
+      throw normalizedError;
     } finally {
       if (requestId === refreshId) {
         loading.value = false;

@@ -147,18 +147,18 @@ Acceptance criteria:
 
 ## Phase 6: Error Model
 
-Status: planned.
+Status: completed.
 
 Apps need stable error categories for wallet and transaction UI. v1 should avoid forcing every app to inspect arbitrary thrown values.
 
 Tasks:
 
-- [ ] Add normalized error classes or error codes in `@vue-solana/core`.
-- [ ] Cover no wallet selected, wallet not connected, unsupported wallet feature, user rejection, invalid address, transaction timeout, RPC failure, and storage failure.
-- [ ] Preserve the original cause on normalized errors.
-- [ ] Use normalized errors in core helpers and Vue composables.
-- [ ] Document error handling examples for Vue and Nuxt apps.
-- [ ] Add tests that assert stable error codes for common failure paths.
+- [x] Add normalized error classes or error codes in `@vue-solana/core`.
+- [x] Cover no wallet selected, wallet not connected, unsupported wallet feature, user rejection, invalid address, transaction timeout, RPC failure, and storage failure.
+- [x] Preserve the original cause on normalized errors.
+- [x] Use normalized errors in core helpers and Vue composables.
+- [x] Document error handling examples for Vue and Nuxt apps.
+- [x] Add tests that assert stable error codes for common failure paths.
 
 Acceptance criteria:
 

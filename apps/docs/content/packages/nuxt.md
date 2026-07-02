@@ -91,7 +91,14 @@ Android Mobile Wallet Adapter registration also runs only on the client. On Andr
 
 ```vue
 <script setup lang="ts">
-const { cluster, endpoint, status, latestBlockhash, checkConnection } = useSolanaRpc();
+const { cluster, endpoint, status, error, latestBlockhash, checkConnection } = useSolanaRpc();
+
+const rpcErrorMessage = computed(() => {
+  if (!error.value) return null;
+  return error.value.code === "RPC_FAILURE"
+    ? "Unable to reach the configured Solana RPC endpoint."
+    : "Unable to check the Solana connection.";
+});
 </script>
 
 <template>
@@ -100,6 +107,7 @@ const { cluster, endpoint, status, latestBlockhash, checkConnection } = useSolan
     <p>Endpoint: {{ endpoint }}</p>
     <p>Status: {{ status }}</p>
     <p>Latest blockhash: {{ latestBlockhash }}</p>
+    <p v-if="rpcErrorMessage">{{ rpcErrorMessage }}</p>
     <button type="button" @click="checkConnection">Check RPC</button>
   </section>
 </template>
@@ -111,16 +119,52 @@ const { cluster, endpoint, status, latestBlockhash, checkConnection } = useSolan
 <script setup lang="ts">
 const address = ref("PASTE_A_SOLANA_ADDRESS");
 const { balance, loading, error, refresh } = useSolanaBalance(address);
+
+const balanceErrorMessage = computed(() => {
+  switch (error.value?.code) {
+    case "INVALID_ADDRESS":
+      return "Enter a valid Solana address.";
+    case "RPC_FAILURE":
+      return "Unable to load the balance from RPC.";
+    default:
+      return null;
+  }
+});
 </script>
 
 <template>
   <section>
     <p>Lamports: {{ balance }}</p>
     <p v-if="loading">Loading...</p>
-    <pre v-if="error">{{ error }}</pre>
+    <p v-if="balanceErrorMessage">{{ balanceErrorMessage }}</p>
     <button type="button" @click="refresh">Refresh</button>
   </section>
 </template>
+```
+
+## Error Handling
+
+Nuxt auto-imported composables expose the same normalized `SolanaError | null` refs as `@vue-solana/vue`. Use stable `error.value.code` values for UI branches and keep `error.value.cause` for logging original wallet, RPC, parsing, timeout, or storage failures.
+
+```vue
+<script setup lang="ts">
+const { error, execute } = useSolanaSignAndSendTransaction();
+
+const message = computed(() => {
+  switch (error.value?.code) {
+    case "NO_WALLET_SELECTED":
+      return "Choose a wallet first.";
+    case "USER_REJECTED":
+      return "The wallet request was rejected.";
+    case "TRANSACTION_TIMEOUT":
+      return "The transaction is taking longer than expected.";
+    case "RPC_FAILURE":
+      return "The Solana RPC request failed.";
+    default:
+      return null;
+  }
+});
+</script>
 ```
 
 ## Read Account Data

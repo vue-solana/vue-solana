@@ -104,6 +104,37 @@ describe("createSolanaPlugin wallet selection", () => {
     expect(window.localStorage.getItem("vue-solana:selected-wallet")).toBeNull();
   });
 
+  it("stores typed errors when selected wallet persistence fails", () => {
+    silenceConsole();
+    const failure = new Error("storage unavailable");
+    const originalLocalStorage = window.localStorage;
+
+    Object.defineProperty(window, "localStorage", {
+      configurable: true,
+      value: {
+        getItem: vi.fn(),
+        removeItem: vi.fn(),
+        setItem: vi.fn(() => {
+          throw failure;
+        }),
+      },
+    });
+
+    const { walletInfo } = mockStandardWalletDiscovery();
+    const { solana } = mountSolanaPlugin({ mobileWallet: false });
+
+    solana?.refreshWallets();
+    solana?.selectWallet(walletInfo);
+
+    expect(solana?.error.value?.code).toBe("STORAGE_FAILURE");
+    expect(solana?.error.value?.cause).toBe(failure);
+
+    Object.defineProperty(window, "localStorage", {
+      configurable: true,
+      value: originalLocalStorage,
+    });
+  });
+
   it("clears selected wallet metadata when setting a wallet directly", () => {
     silenceConsole();
     const configuredWallet: SolanaWallet = {

@@ -137,6 +137,42 @@ Use `useSignatureStatus(signature, options?)` or `useSolanaSignatureStatus(signa
 
 RPC, balance, account, program-account, and signature-status reads do not require a connected wallet.
 
+## Error Handling
+
+Vue Solana normalizes common failures into `SolanaError` from `@vue-solana/core/errors`. Public examples and docs should branch on stable `error.code` values instead of rendering raw error objects or parsing wallet/RPC messages.
+
+Stable codes:
+
+- `NO_WALLET_SELECTED`
+- `WALLET_NOT_CONNECTED`
+- `WALLET_FEATURE_UNSUPPORTED`
+- `USER_REJECTED`
+- `INVALID_ADDRESS`
+- `TRANSACTION_TIMEOUT`
+- `RPC_FAILURE`
+- `STORAGE_FAILURE`
+
+Use `error.cause` only for debugging/logging the original wallet adapter, RPC, parsing, timeout, or storage failure. Do not show raw `cause` details to users by default.
+
+Vue composables expose `Ref<SolanaError | null>` error refs. Nuxt auto-imported composables expose the same error shape.
+
+```ts
+const message = computed(() => {
+  switch (error.value?.code) {
+    case "NO_WALLET_SELECTED":
+      return "Choose a wallet first.";
+    case "USER_REJECTED":
+      return "The wallet request was rejected.";
+    case "TRANSACTION_TIMEOUT":
+      return "The transaction is taking longer than expected.";
+    case "RPC_FAILURE":
+      return "The Solana RPC request failed.";
+    default:
+      return null;
+  }
+});
+```
+
 ## Transactions
 
 Use `useSignAndSendTransaction()` or `useSolanaSignAndSendTransaction()` after a wallet is selected and connected.

@@ -2,6 +2,7 @@ import bs58 from "bs58";
 import { flushPromises } from "@vue/test-utils";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ref } from "vue";
+import type { SolanaError } from "@vue-solana/core/errors";
 import {
   deferred,
   mountUseSignatureStatus,
@@ -56,6 +57,7 @@ describe("useSignatureStatus", () => {
 
     expect(result.status.value).toBeNull();
     expect(result.error.value).toBeInstanceOf(Error);
+    expect((result.error.value as SolanaError | null)?.code).toBe("RPC_FAILURE");
     expect(getSignatureStatuses).not.toHaveBeenCalled();
     expect(setIntervalSpy).not.toHaveBeenCalled();
   });
@@ -69,7 +71,8 @@ describe("useSignatureStatus", () => {
     await flushPromises();
 
     expect(result.status.value).toBeNull();
-    expect(result.error.value).toBeInstanceOf(TypeError);
+    expect(result.error.value).toBeInstanceOf(Error);
+    expect((result.error.value as SolanaError | null)?.code).toBe("RPC_FAILURE");
     expect(getSignatureStatuses).not.toHaveBeenCalled();
   });
 
@@ -91,7 +94,8 @@ describe("useSignatureStatus", () => {
     await flushPromises();
 
     expect(result.status.value).toBeNull();
-    expect(result.error.value).toBeInstanceOf(TypeError);
+    expect(result.error.value).toBeInstanceOf(Error);
+    expect((result.error.value as SolanaError | null)?.code).toBe("RPC_FAILURE");
     expect(getSignatureStatuses).toHaveBeenCalledTimes(1);
   });
 
@@ -109,8 +113,21 @@ describe("useSignatureStatus", () => {
     await flushPromises();
     await vi.advanceTimersByTimeAsync(5);
 
-    expect(result.error.value).toBeInstanceOf(RangeError);
+    expect(result.error.value).toBeInstanceOf(Error);
+    expect((result.error.value as SolanaError | null)?.code).toBe("RPC_FAILURE");
     expect(getSignatureStatuses).toHaveBeenCalledTimes(1);
+  });
+
+  it("normalizes RPC failures while refreshing signature status", async () => {
+    const cause = new Error("status RPC failed");
+    const getSignatureStatuses = vi.fn().mockRejectedValue(cause);
+    const { result } = mountUseSignatureStatus(signature, undefined, { getSignatureStatuses });
+
+    await flushPromises();
+
+    expect(result.status.value).toBeNull();
+    expect((result.error.value as SolanaError | null)?.code).toBe("RPC_FAILURE");
+    expect((result.error.value as SolanaError | null)?.cause).toBe(cause);
   });
 
   it("does not poll RPC for null input", async () => {

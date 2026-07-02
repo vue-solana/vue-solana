@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { defineComponent, h, shallowRef } from "vue";
 import type { SolanaWallet } from "@vue-solana/core";
+import type { SolanaError } from "@vue-solana/core/errors";
 import { SolanaWalletError } from "@vue-solana/core/wallet";
 import { createMockSolanaContext, mountWithSolana } from "../../test-utils";
 import { useSignMessage } from "./useSignMessage";
@@ -37,10 +38,9 @@ describe("useSignMessage", () => {
   it("rejects when no wallet is configured", async () => {
     const result = mountUseSignMessage();
 
-    await expect(result.execute(new Uint8Array())).rejects.toThrow(
-      "No Solana wallet is configured",
-    );
+    await expect(result.execute(new Uint8Array())).rejects.toThrow("No Solana wallet is selected");
     expect(result.status.value).toBe("error");
+    expect(result.error.value?.code).toBe("NO_WALLET_SELECTED");
   });
 
   it("rejects when the active wallet cannot sign messages", async () => {
@@ -52,8 +52,9 @@ describe("useSignMessage", () => {
     expect(result.status.value).toBe("error");
     expect(result.error.value).toBeInstanceOf(SolanaWalletError);
     expect((result.error.value as SolanaWalletError | null)?.code).toBe(
-      "WALLET_SIGN_MESSAGE_UNSUPPORTED",
+      "WALLET_FEATURE_UNSUPPORTED",
     );
+    expect((result.error.value as SolanaWalletError | null)?.feature).toBe("signMessage");
   });
 
   it("rejects with a typed error when the active wallet is disconnected", async () => {
@@ -84,23 +85,32 @@ describe("useSignMessage", () => {
     expect(result.status.value).toBe("error");
     expect(result.loading.value).toBe(false);
     expect(result.error.value).toBeInstanceOf(Error);
+    expect((result.error.value as SolanaError | null)?.code).toBe("USER_REJECTED");
+    expect((result.error.value as SolanaError | null)?.cause).toBe(
+      "User rejected the message signing request",
+    );
     expect(result.error.value?.message).toBe("User rejected the message signing request");
+  });
+
+  it("normalizes generic wallet signing failures as RPC failures", async () => {
+    const cause = new Error("wallet transport failed");
+    const wallet = createWallet({
+      signMessage: vi.fn().mockRejectedValue(cause),
+    });
+    const result = mountUseSignMessage(wallet);
+
+    await expect(result.execute(new Uint8Array([1, 2, 3]))).rejects.toThrow(
+      "wallet transport failed",
+    );
+    expect(result.error.value?.code).toBe("RPC_FAILURE");
+    expect(result.error.value?.cause).toBe(cause);
   });
 
   it("ignores an older signature that resolves after a newer signature", async () => {
     const scenario = createOverlappingSignMessageScenario();
     const firstSignature = new Uint8Array([1]);
 
-    scenario.secondSign.resolve({
-      signedMessage: new Uint8Array([2]),
-      signature: scenario.secondSignature,
-    });
-    await expect(scenario.second).resolves.toEqual({
-      signedMessage: new Uint8Array([2]),
-      signature: scenario.secondSignature,
-    });
-    expect(scenario.result.signature.value).toBe(scenario.secondSignature);
-    expect(scenario.result.status.value).toBe("signed");
+    await resolveSecondSign(scenario);
 
     scenario.firstSign.resolve({ signedMessage: new Uint8Array([1]), signature: firstSignature });
     await expect(scenario.first).resolves.toEqual({
@@ -115,16 +125,7 @@ describe("useSignMessage", () => {
   it("ignores an older rejection that settles after a newer signature", async () => {
     const scenario = createOverlappingSignMessageScenario();
 
-    scenario.secondSign.resolve({
-      signedMessage: new Uint8Array([2]),
-      signature: scenario.secondSignature,
-    });
-    await expect(scenario.second).resolves.toEqual({
-      signedMessage: new Uint8Array([2]),
-      signature: scenario.secondSignature,
-    });
-    expect(scenario.result.signature.value).toBe(scenario.secondSignature);
-    expect(scenario.result.status.value).toBe("signed");
+    await resolveSecondSign(scenario);
 
     scenario.firstSign.reject(new Error("Older request failed"));
     await expect(scenario.first).rejects.toThrow("Older request failed");
@@ -177,6 +178,21 @@ function createOverlappingSignMessageScenario() {
   const second = result.execute(new Uint8Array([2]));
 
   return { first, firstSign, result, second, secondSign, secondSignature };
+}
+
+async function resolveSecondSign(
+  scenario: ReturnType<typeof createOverlappingSignMessageScenario>,
+) {
+  scenario.secondSign.resolve({
+    signedMessage: new Uint8Array([2]),
+    signature: scenario.secondSignature,
+  });
+  await expect(scenario.second).resolves.toEqual({
+    signedMessage: new Uint8Array([2]),
+    signature: scenario.secondSignature,
+  });
+  expect(scenario.result.signature.value).toBe(scenario.secondSignature);
+  expect(scenario.result.status.value).toBe("signed");
 }
 
 function createDeferred<T>(): Deferred<T> {

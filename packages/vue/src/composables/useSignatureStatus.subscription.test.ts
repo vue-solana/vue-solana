@@ -1,6 +1,7 @@
 import { flushPromises } from "@vue/test-utils";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ref } from "vue";
+import type { SolanaError } from "@vue-solana/core/errors";
 import {
   deferred,
   mountUseSignatureStatus,
@@ -174,7 +175,8 @@ describe("useSignatureStatus subscriptions", () => {
     await flushPromises();
 
     expect(removeSignatureListener).toHaveBeenCalledWith(7);
-    expect(result.error.value).toBe(cleanupError);
+    expect((result.error.value as SolanaError | null)?.code).toBe("RPC_FAILURE");
+    expect((result.error.value as SolanaError | null)?.cause).toBe(cleanupError);
     expect(onSignature).toHaveBeenCalledTimes(2);
   });
 
@@ -198,7 +200,29 @@ describe("useSignatureStatus subscriptions", () => {
     await expect(result.stopSubscription()).resolves.toBeUndefined();
 
     expect(removeSignatureListener).toHaveBeenCalledWith(7);
-    expect(result.error.value).toBe(cleanupError);
+    expect((result.error.value as SolanaError | null)?.code).toBe("RPC_FAILURE");
+    expect((result.error.value as SolanaError | null)?.cause).toBe(cleanupError);
+  });
+
+  it("normalizes subscription start failures", async () => {
+    const subscribeError = new Error("subscribe failed");
+    const getSignatureStatuses = vi.fn().mockResolvedValue({ value: [null] });
+    const onSignature = vi.fn(() => {
+      throw subscribeError;
+    });
+    const { result } = mountUseSignatureStatus(
+      signature,
+      { subscribe: true },
+      {
+        getSignatureStatuses,
+        onSignature,
+      },
+    );
+
+    await flushPromises();
+
+    expect((result.error.value as SolanaError | null)?.code).toBe("RPC_FAILURE");
+    expect((result.error.value as SolanaError | null)?.cause).toBe(subscribeError);
   });
 
   it("does not restart signature subscriptions after manual stop when the input changes", async () => {

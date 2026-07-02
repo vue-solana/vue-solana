@@ -79,7 +79,8 @@ describe("createSolanaPlugin RPC connection", () => {
       expect(solana?.status.value).toBe("error");
     });
 
-    expect(solana?.error.value).toBe("offline");
+    expect(solana?.error.value?.code).toBe("RPC_FAILURE");
+    expect(solana?.error.value?.message).toBe("offline");
   });
 
   it("sets an error when the RPC connection check times out", async () => {
@@ -105,7 +106,8 @@ describe("createSolanaPlugin RPC connection", () => {
       expect(solana?.status.value).toBe("error");
     });
 
-    expect(solana?.error.value).toBe("RPC connection check timed out after 10 seconds.");
+    expect(solana?.error.value?.code).toBe("RPC_FAILURE");
+    expect(solana?.error.value?.message).toBe("RPC connection check timed out after 10 seconds.");
   });
 
   it("ignores stale RPC connection check results", async () => {

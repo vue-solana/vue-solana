@@ -45,6 +45,11 @@
       "import": "./dist/clusters.mjs",
       "require": "./dist/clusters.cjs"
     },
+    "./errors": {
+      "types": "./dist/errors.d.ts",
+      "import": "./dist/errors.mjs",
+      "require": "./dist/errors.cjs"
+    },
     "./ios-wallet": {
       "types": "./dist/ios-wallet.d.ts",
       "import": "./dist/ios-wallet.mjs",
@@ -59,6 +64,11 @@
       "types": "./dist/rpc.d.ts",
       "import": "./dist/rpc.mjs",
       "require": "./dist/rpc.cjs"
+    },
+    "./timeout": {
+      "types": "./dist/timeout.d.ts",
+      "import": "./dist/timeout.mjs",
+      "require": "./dist/timeout.cjs"
     },
     "./transaction": {
       "types": "./dist/transaction.d.ts",

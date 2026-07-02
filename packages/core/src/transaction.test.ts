@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import type { Connection } from "@solana/web3-compat";
+import { SolanaError } from "./errors";
 import type { SolanaTransaction, SolanaWallet } from "./types";
 import { confirmTransactionSignature, signAndSendTransaction } from "./transaction";
 
@@ -84,6 +85,45 @@ describe("signAndSendTransaction", () => {
       signAndSendTransaction(connection, wallet, {} as SolanaTransaction),
     ).rejects.toThrow("Solana wallet is not connected");
   });
+
+  it("normalizes wallet signing rejections", async () => {
+    const walletRejection = { code: 4001, message: "User rejected signing" };
+    const wallet = {
+      connected: true,
+      publicKey,
+      signAndSendTransaction: vi.fn().mockRejectedValue(walletRejection),
+    } as unknown as SolanaWallet;
+    const connection = { sendRawTransaction: vi.fn() } as unknown as Connection;
+
+    try {
+      await signAndSendTransaction(connection, wallet, {} as SolanaTransaction);
+      throw new Error("Expected signAndSendTransaction to reject.");
+    } catch (error) {
+      expect(error).toBeInstanceOf(SolanaError);
+      expect((error as SolanaError).code).toBe("USER_REJECTED");
+      expect((error as SolanaError).cause).toBe(walletRejection);
+    }
+  });
+
+  it("normalizes raw transaction send failures", async () => {
+    const { connection, signedTransaction, transaction } = createRawTransactionScenario();
+    const sendFailure = new Error("RPC send failed");
+    vi.mocked(connection.sendRawTransaction).mockRejectedValue(sendFailure);
+    const wallet = {
+      connected: true,
+      publicKey,
+      signTransaction: vi.fn().mockResolvedValue(signedTransaction),
+    } as unknown as SolanaWallet;
+
+    try {
+      await signAndSendTransaction(connection, wallet, transaction);
+      throw new Error("Expected signAndSendTransaction to reject.");
+    } catch (error) {
+      expect(error).toBeInstanceOf(SolanaError);
+      expect((error as SolanaError).code).toBe("RPC_FAILURE");
+      expect((error as SolanaError).cause).toBe(sendFailure);
+    }
+  });
 });
 
 describe("confirmTransactionSignature", () => {
@@ -122,6 +162,14 @@ describe("confirmTransactionSignature", () => {
     await expect(confirmTransactionSignature(connection, "signature")).rejects.toThrow(
       "Transaction signature failed to reach confirmed commitment.",
     );
+
+    try {
+      await confirmTransactionSignature(connection, "signature");
+    } catch (error) {
+      expect(error).toBeInstanceOf(SolanaError);
+      expect((error as SolanaError).code).toBe("RPC_FAILURE");
+      expect((error as SolanaError).cause).toEqual({ InstructionError: [0, "Custom"] });
+    }
   });
 
   it("rejects with a clear timeout message", async () => {
@@ -130,11 +178,34 @@ describe("confirmTransactionSignature", () => {
       confirmTransaction: vi.fn(() => new Promise(() => undefined)),
     } as unknown as Connection;
     const promise = confirmTransactionSignature(connection, "signature", { timeoutMs: 10 });
-    const rejection = expect(promise).rejects.toThrow(
-      "Timed out waiting for transaction signature to reach confirmed commitment.",
+    const rejection = promise.then(
+      () => {
+        throw new Error("Expected confirmation to time out.");
+      },
+      (error: unknown) => {
+        expect(error).toBeInstanceOf(SolanaError);
+        expect((error as SolanaError).message).toBe(
+          "Timed out waiting for transaction signature to reach confirmed commitment.",
+        );
+      },
     );
 
     await vi.advanceTimersByTimeAsync(10);
     await rejection;
+
+    const nextPromise = confirmTransactionSignature(connection, "signature", { timeoutMs: 10 });
+    const nextRejection = nextPromise.then(
+      () => {
+        throw new Error("Expected confirmation to time out.");
+      },
+      (error: unknown) => {
+        expect(error).toMatchObject({
+          code: "TRANSACTION_TIMEOUT",
+        });
+      },
+    );
+
+    await vi.advanceTimersByTimeAsync(10);
+    await nextRejection;
   });
 });

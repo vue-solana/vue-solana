@@ -69,6 +69,8 @@ Returns RPC state and connection helpers:
 - `checkConnection()`
 - `connection`
 
+`error` is `SolanaError | null`. For example, connection checks normalize RPC failures to `RPC_FAILURE` while preserving the original thrown value on `error.cause`.
+
 ## `useConnection()`
 
 Returns the Solana `Connection` directly.
@@ -111,7 +113,7 @@ For wallet behavior and platform support, see [Wallet Support](../wallets.md).
 
 Loads the lamport balance for a `PublicKey` or address string.
 
-`useBalance()` accepts an existing `PublicKey` or parses an address string with `PublicKey` from `@solana/web3-compat`.
+`useBalance()` accepts an existing `PublicKey` or parses an address string through the core address helper. Invalid address strings set a normalized `INVALID_ADDRESS` error before any RPC call is made.
 
 Returns:
 
@@ -119,6 +121,37 @@ Returns:
 - `loading`
 - `error`
 - `refresh()`
+
+## Error Handling
+
+Composable `error` refs use normalized `SolanaError` values for common failures, including wallet selection, unsupported features, user rejection, invalid addresses, transaction timeouts, RPC failures, and wallet-selection storage failures.
+
+```ts
+import { isSolanaError } from "@vue-solana/core/errors";
+
+const sendTransaction = useSignAndSendTransaction();
+
+try {
+  await sendTransaction.execute(transaction, { confirm: true });
+} catch (error) {
+  if (isSolanaError(error)) {
+    switch (error.code) {
+      case "NO_WALLET_SELECTED":
+        // Ask the user to choose a wallet.
+        break;
+      case "USER_REJECTED":
+        // Keep the user on the same screen and let them retry.
+        break;
+      case "TRANSACTION_TIMEOUT":
+        // Show the submitted signature if one is available.
+        break;
+      case "RPC_FAILURE":
+        // Surface a retry action and log error.cause for diagnostics.
+        break;
+    }
+  }
+}
+```
 
 ## `useAccountInfo(address, options?)`
 
