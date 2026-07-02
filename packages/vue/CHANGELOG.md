@@ -1,5 +1,11 @@
 # @vue-solana/vue
 
+## 0.8.1
+
+### Patch Changes
+
+- 1308d50: Stabilize the Vue Solana injection key across root and subpath imports so duplicated package/module instances still resolve the provided Solana context.
+
 ## 0.8.0
 
 ### Minor Changes
