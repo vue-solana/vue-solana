@@ -92,6 +92,20 @@ describe("useSignMessage", () => {
     expect(result.error.value?.message).toBe("User rejected the message signing request");
   });
 
+  it("normalizes generic wallet signing failures as RPC failures", async () => {
+    const cause = new Error("wallet transport failed");
+    const wallet = createWallet({
+      signMessage: vi.fn().mockRejectedValue(cause),
+    });
+    const result = mountUseSignMessage(wallet);
+
+    await expect(result.execute(new Uint8Array([1, 2, 3]))).rejects.toThrow(
+      "wallet transport failed",
+    );
+    expect(result.error.value?.code).toBe("RPC_FAILURE");
+    expect(result.error.value?.cause).toBe(cause);
+  });
+
   it("ignores an older signature that resolves after a newer signature", async () => {
     const scenario = createOverlappingSignMessageScenario();
     const firstSignature = new Uint8Array([1]);

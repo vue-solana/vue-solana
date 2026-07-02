@@ -83,19 +83,40 @@ describe("createSolanaPlugin wallet selection persistence", () => {
 
     expect(() => solana?.refreshWallets()).not.toThrow();
     expect(solana?.selectedWallet.value).toBeNull();
+    expect(solana?.error.value?.code).toBe("STORAGE_FAILURE");
     expect(getConnectFeature(standardWallet).connect).not.toHaveBeenCalled();
   });
 
   it("ignores persisted wallet selection when storage reads fail", () => {
     silenceConsole();
-    vi.spyOn(Storage.prototype, "getItem").mockImplementation(() => {
-      throw new Error("storage blocked");
+    const storageError = new Error("storage blocked");
+    const getItemSpy = vi.spyOn(window.localStorage, "getItem").mockImplementation(() => {
+      throw storageError;
     });
     const { standardWallet } = mockStandardWalletDiscovery();
     const { solana } = mountSolanaPlugin({ autoConnect: true, mobileWallet: false });
 
     expect(() => solana?.refreshWallets()).not.toThrow();
     expect(solana?.selectedWallet.value).toBeNull();
+    expect(solana?.error.value?.code).toBe("STORAGE_FAILURE");
+    expect(solana?.error.value?.cause).toBe(storageError);
+    expect(getConnectFeature(standardWallet).connect).not.toHaveBeenCalled();
+    getItemSpy.mockRestore();
+  });
+
+  it("ignores persisted wallet selection when localStorage access fails", () => {
+    silenceConsole();
+    const storageError = new Error("localStorage blocked");
+    vi.spyOn(window, "localStorage", "get").mockImplementation(() => {
+      throw storageError;
+    });
+    const { standardWallet } = mockStandardWalletDiscovery();
+    const { solana } = mountSolanaPlugin({ autoConnect: true, mobileWallet: false });
+
+    expect(() => solana?.refreshWallets()).not.toThrow();
+    expect(solana?.selectedWallet.value).toBeNull();
+    expect(solana?.error.value?.code).toBe("STORAGE_FAILURE");
+    expect(solana?.error.value?.cause).toBe(storageError);
     expect(getConnectFeature(standardWallet).connect).not.toHaveBeenCalled();
   });
 
@@ -115,7 +136,7 @@ describe("createSolanaPlugin wallet selection persistence", () => {
 
   it("keeps wallet selection working when browser storage fails", () => {
     silenceConsole();
-    vi.spyOn(Storage.prototype, "setItem").mockImplementation(() => {
+    vi.spyOn(window.localStorage, "setItem").mockImplementation(() => {
       throw new Error("storage blocked");
     });
     const { walletInfo } = mockStandardWalletDiscovery();
@@ -126,5 +147,6 @@ describe("createSolanaPlugin wallet selection persistence", () => {
     expect(() => solana?.selectWallet(walletInfo)).not.toThrow();
     expect(solana?.selectedWallet.value).toBe(walletInfo);
     expect(wallet?.wallet.value).not.toBeNull();
+    expect(solana?.error.value?.code).toBe("STORAGE_FAILURE");
   });
 });

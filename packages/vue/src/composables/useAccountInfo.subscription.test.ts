@@ -2,6 +2,7 @@ import { PublicKey } from "@solana/web3-compat";
 import { flushPromises } from "@vue/test-utils";
 import { describe, expect, it, vi } from "vitest";
 import { ref } from "vue";
+import type { SolanaError } from "@vue-solana/core/errors";
 import {
   deferred,
   mountUseAccountInfo,
@@ -142,7 +143,9 @@ describe("useAccountInfo subscriptions", () => {
     await flushPromises();
 
     expect(removeAccountChangeListener).toHaveBeenCalledWith(42);
-    expect(result.error.value).toBe(cleanupError);
+    expect(result.error.value).toBeInstanceOf(Error);
+    expect((result.error.value as SolanaError | null)?.code).toBe("RPC_FAILURE");
+    expect((result.error.value as SolanaError | null)?.cause).toBe(cleanupError);
     expect(onAccountChange).toHaveBeenCalledTimes(2);
   });
 
@@ -165,7 +168,9 @@ describe("useAccountInfo subscriptions", () => {
     await expect(result.stopWatching()).resolves.toBeUndefined();
 
     expect(removeAccountChangeListener).toHaveBeenCalledWith(42);
-    expect(result.error.value).toBe(cleanupError);
+    expect(result.error.value).toBeInstanceOf(Error);
+    expect((result.error.value as SolanaError | null)?.code).toBe("RPC_FAILURE");
+    expect((result.error.value as SolanaError | null)?.cause).toBe(cleanupError);
   });
 
   it("does not restart account watching after manual stop when the input changes", async () => {

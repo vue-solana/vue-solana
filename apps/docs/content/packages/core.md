@@ -149,6 +149,7 @@ Direct subpaths:
 - `@vue-solana/core/address`
 - `@vue-solana/core/types`
 - `@vue-solana/core/clusters`
+- `@vue-solana/core/errors`
 - `@vue-solana/core/ios-wallet`
 - `@vue-solana/core/mobile-wallet`
 - `@vue-solana/core/rpc`

@@ -18,7 +18,7 @@ export function useAccountInfo(
   const connection = solana?.connection ?? useConnection();
   const accountInfo = shallowRef<AccountInfo<Buffer> | null>(null);
   const loading = shallowRef(false);
-  const error = shallowRef<SolanaError | unknown | null>(null);
+  const error = shallowRef<SolanaError | null>(null);
   let refreshId = 0;
   let watchId = 0;
   let subscriptionId: number | null = null;
@@ -86,7 +86,7 @@ export function useAccountInfo(
     try {
       await connection.removeAccountChangeListener(currentSubscriptionId);
     } catch (cause) {
-      error.value = cause;
+      error.value = normalizeSolanaError(cause, "RPC_FAILURE");
     }
   }
 

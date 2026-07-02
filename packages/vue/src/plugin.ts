@@ -104,9 +104,15 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}) {
           }
         } else if (!options.wallet) {
           const persistedWallet = readSelectedWallet();
-          restoredWallet = persistedWallet
-            ? (wallets.value.find((nextWallet) => isSameWallet(nextWallet, persistedWallet)) ??
-              null)
+          if (persistedWallet.error) {
+            error.value = persistedWallet.error;
+            console.error("[Vue Solana] Selected wallet restoration failed", persistedWallet.error);
+          }
+
+          restoredWallet = persistedWallet.wallet
+            ? (wallets.value.find((nextWallet) =>
+                isSameWallet(nextWallet, persistedWallet.wallet),
+              ) ?? null)
             : null;
 
           if (restoredWallet) {

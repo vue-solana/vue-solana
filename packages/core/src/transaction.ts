@@ -18,21 +18,25 @@ export async function signAndSendTransaction(
   transaction: SolanaTransaction,
   options?: SendTransactionOptions,
 ): Promise<TransactionSignature> {
-  assertWalletConnected(wallet);
+  try {
+    assertWalletConnected(wallet);
 
-  if (isMobileWalletAdapterWallet(wallet) && wallet.signTransaction) {
+    if (isMobileWalletAdapterWallet(wallet) && wallet.signTransaction) {
+      assertWalletCanSign(wallet);
+      return await signAndSendRawTransaction(connection, wallet, transaction, options);
+    }
+
+    if (wallet.signAndSendTransaction) {
+      const result = await wallet.signAndSendTransaction(transaction, options);
+      return result.signature;
+    }
+
     assertWalletCanSign(wallet);
-    return signAndSendRawTransaction(connection, wallet, transaction, options);
+
+    return await signAndSendRawTransaction(connection, wallet, transaction, options);
+  } catch (cause) {
+    throw normalizeSolanaError(cause, "RPC_FAILURE");
   }
-
-  if (wallet.signAndSendTransaction) {
-    const result = await wallet.signAndSendTransaction(transaction, options);
-    return result.signature;
-  }
-
-  assertWalletCanSign(wallet);
-
-  return signAndSendRawTransaction(connection, wallet, transaction, options);
 }
 
 export async function confirmTransactionSignature(

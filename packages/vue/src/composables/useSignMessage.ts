@@ -48,9 +48,7 @@ export function useSignMessage() {
 
       return result;
     } catch (cause) {
-      const normalizedError = normalizeSolanaError(cause, "WALLET_FEATURE_UNSUPPORTED", undefined, {
-        feature: "signMessage",
-      });
+      const normalizedError = normalizeSolanaError(cause, "RPC_FAILURE");
 
       if (currentExecutionId === executionId) {
         error.value = normalizedError;

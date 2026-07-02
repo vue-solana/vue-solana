@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { defineComponent, h } from "vue";
 import type { Connection } from "@solana/web3-compat";
+import type { SolanaError } from "@vue-solana/core/errors";
 import { createMockSolanaContext, mountWithSolana } from "../../test-utils";
 import { useTransactionConfirmation } from "./useTransactionConfirmation";
 
@@ -200,6 +201,32 @@ describe("useTransactionConfirmation", () => {
     expect(result?.signature.value).toBe("signature");
     expect(result?.status.value).toBe("error");
     expect(result?.loading.value).toBe(false);
+    expect((result?.error.value as SolanaError | null)?.code).toBe("TRANSACTION_TIMEOUT");
+  });
+
+  it("normalizes confirmation failures", async () => {
+    const failure = new Error("confirmation RPC failed");
+    const connection = {
+      confirmTransaction: vi.fn().mockRejectedValue(failure),
+    } as unknown as Connection;
+    const context = createMockSolanaContext({ connection });
+    let result: ReturnType<typeof useTransactionConfirmation> | undefined;
+
+    mountWithSolana(
+      defineComponent({
+        setup() {
+          result = useTransactionConfirmation();
+
+          return () => h("div");
+        },
+      }),
+      context,
+    );
+
+    await expect(result?.confirm("signature")).rejects.toThrow("confirmation RPC failed");
+    expect(result?.status.value).toBe("error");
+    expect(result?.error.value?.code).toBe("RPC_FAILURE");
+    expect(result?.error.value?.cause).toBe(failure);
   });
 });
 

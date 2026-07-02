@@ -85,6 +85,45 @@ describe("signAndSendTransaction", () => {
       signAndSendTransaction(connection, wallet, {} as SolanaTransaction),
     ).rejects.toThrow("Solana wallet is not connected");
   });
+
+  it("normalizes wallet signing rejections", async () => {
+    const walletRejection = { code: 4001, message: "User rejected signing" };
+    const wallet = {
+      connected: true,
+      publicKey,
+      signAndSendTransaction: vi.fn().mockRejectedValue(walletRejection),
+    } as unknown as SolanaWallet;
+    const connection = { sendRawTransaction: vi.fn() } as unknown as Connection;
+
+    try {
+      await signAndSendTransaction(connection, wallet, {} as SolanaTransaction);
+      throw new Error("Expected signAndSendTransaction to reject.");
+    } catch (error) {
+      expect(error).toBeInstanceOf(SolanaError);
+      expect((error as SolanaError).code).toBe("USER_REJECTED");
+      expect((error as SolanaError).cause).toBe(walletRejection);
+    }
+  });
+
+  it("normalizes raw transaction send failures", async () => {
+    const { connection, signedTransaction, transaction } = createRawTransactionScenario();
+    const sendFailure = new Error("RPC send failed");
+    vi.mocked(connection.sendRawTransaction).mockRejectedValue(sendFailure);
+    const wallet = {
+      connected: true,
+      publicKey,
+      signTransaction: vi.fn().mockResolvedValue(signedTransaction),
+    } as unknown as SolanaWallet;
+
+    try {
+      await signAndSendTransaction(connection, wallet, transaction);
+      throw new Error("Expected signAndSendTransaction to reject.");
+    } catch (error) {
+      expect(error).toBeInstanceOf(SolanaError);
+      expect((error as SolanaError).code).toBe("RPC_FAILURE");
+      expect((error as SolanaError).cause).toBe(sendFailure);
+    }
+  });
 });
 
 describe("confirmTransactionSignature", () => {

@@ -1,3 +1,4 @@
+import { normalizeSolanaError } from "@vue-solana/core/errors";
 import { createNoWalletSelectedError } from "@vue-solana/core/wallet";
 import { computed, ref, triggerRef } from "vue";
 import { useSolana } from "./useSolana";
@@ -28,9 +29,11 @@ export function useWallet() {
         publicKey: activeWallet.publicKey?.toBase58() ?? null,
       });
     } catch (error) {
+      const normalizedError = normalizeSolanaError(error, "RPC_FAILURE");
+
       triggerRef(wallet);
-      console.error("[Vue Solana] Wallet connection failed", error);
-      throw error;
+      console.error("[Vue Solana] Wallet connection failed", normalizedError);
+      throw normalizedError;
     } finally {
       connecting.value = false;
     }
@@ -53,9 +56,11 @@ export function useWallet() {
 
       console.info("[Vue Solana] Wallet disconnected", { publicKey });
     } catch (error) {
+      const normalizedError = normalizeSolanaError(error, "RPC_FAILURE");
+
       triggerRef(wallet);
-      console.error("[Vue Solana] Wallet disconnection failed", error);
-      throw error;
+      console.error("[Vue Solana] Wallet disconnection failed", normalizedError);
+      throw normalizedError;
     } finally {
       disconnecting.value = false;
     }

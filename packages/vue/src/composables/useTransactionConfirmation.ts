@@ -1,6 +1,7 @@
 import { confirmTransactionSignature } from "@vue-solana/core/transaction";
 import type { ConfirmTransactionOptions, TransactionConfirmation } from "@vue-solana/core/types";
 import type { TransactionSignature } from "@solana/web3-compat";
+import { normalizeSolanaError, type SolanaError } from "@vue-solana/core/errors";
 import { ref } from "vue";
 import { useConnection } from "./useConnection";
 
@@ -28,7 +29,7 @@ export function useTransactionConfirmation(defaultOptions: ConfirmTransactionOpt
   const confirmation = ref<TransactionConfirmation | null>(null);
   const status = ref<TransactionConfirmationStatus>("idle");
   const loading = ref(false);
-  const error = ref<unknown>(null);
+  const error = ref<SolanaError | null>(null);
   let executionId = 0;
 
   async function confirm(
@@ -58,12 +59,14 @@ export function useTransactionConfirmation(defaultOptions: ConfirmTransactionOpt
 
       return nextConfirmation;
     } catch (cause) {
+      const normalizedError = normalizeSolanaError(cause, "RPC_FAILURE");
+
       if (currentExecutionId === executionId) {
-        error.value = cause;
+        error.value = normalizedError;
         status.value = "error";
       }
 
-      throw cause;
+      throw normalizedError;
     } finally {
       if (currentExecutionId === executionId) {
         loading.value = false;

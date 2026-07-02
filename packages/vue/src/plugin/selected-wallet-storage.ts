@@ -5,39 +5,53 @@ const SELECTED_WALLET_STORAGE_KEY = "vue-solana:selected-wallet";
 
 export type PersistedSelectedWallet = Pick<SolanaWalletInfo, "name" | "platform" | "source">;
 
-export function readSelectedWallet(): PersistedSelectedWallet | null {
-  const storage = getLocalStorage();
+export interface ReadSelectedWalletResult {
+  wallet: PersistedSelectedWallet | null;
+  error: SolanaError | null;
+}
 
-  if (!storage) {
-    return null;
+export function readSelectedWallet(): ReadSelectedWalletResult {
+  const { storage, error } = getLocalStorage();
+
+  if (error || !storage) {
+    return { wallet: null, error };
   }
 
   try {
     const value = storage.getItem(SELECTED_WALLET_STORAGE_KEY);
 
     if (!value) {
-      return null;
+      return { wallet: null, error: null };
     }
 
     const wallet = JSON.parse(value) as Partial<PersistedSelectedWallet>;
 
-    return typeof wallet.name === "string"
-      ? {
-          name: wallet.name,
-          platform: wallet.platform,
-          source: wallet.source,
-        }
-      : null;
-  } catch {
-    return null;
+    return {
+      wallet:
+        typeof wallet.name === "string"
+          ? {
+              name: wallet.name,
+              platform: wallet.platform,
+              source: wallet.source,
+            }
+          : null,
+      error: null,
+    };
+  } catch (cause) {
+    return {
+      wallet: null,
+      error: createSolanaError("STORAGE_FAILURE", "Unable to read the selected Solana wallet", {
+        cause,
+      }),
+    };
   }
 }
 
 export function writeSelectedWallet(wallet: SolanaWalletInfo | null): SolanaError | null {
-  const storage = getLocalStorage();
+  const { storage, error } = getLocalStorage();
 
-  if (!storage) {
-    return null;
+  if (error || !storage) {
+    return error;
   }
 
   try {
@@ -69,14 +83,24 @@ export function stringifySelectedWallet(wallet: PersistedSelectedWallet): string
   return JSON.stringify(value);
 }
 
-function getLocalStorage(): Storage | null {
+interface LocalStorageResult {
+  storage: Storage | null;
+  error: SolanaError | null;
+}
+
+function getLocalStorage(): LocalStorageResult {
   if (typeof window === "undefined") {
-    return null;
+    return { storage: null, error: null };
   }
 
   try {
-    return window.localStorage;
-  } catch {
-    return null;
+    return { storage: window.localStorage, error: null };
+  } catch (cause) {
+    return {
+      storage: null,
+      error: createSolanaError("STORAGE_FAILURE", "Unable to read the selected Solana wallet", {
+        cause,
+      }),
+    };
   }
 }

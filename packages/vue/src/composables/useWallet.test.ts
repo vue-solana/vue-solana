@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { defineComponent, h, shallowRef } from "vue";
 import type { SolanaWallet } from "@vue-solana/core";
+import type { SolanaError } from "@vue-solana/core/errors";
 import { createMockSolanaContext, mountWithSolana } from "../../test-utils";
 import { useWallet } from "./useWallet";
 
@@ -234,5 +235,69 @@ describe("useWallet", () => {
 
     await expect(result?.connect()).rejects.toThrow("No Solana wallet is selected");
     await expect(result?.disconnect()).resolves.toBeUndefined();
+  });
+
+  it("normalizes wallet connect rejections", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const cause = { code: 4001, message: "User rejected connection" };
+    const wallet = {
+      publicKey: null,
+      connected: false,
+      connect: vi.fn().mockRejectedValue(cause),
+      disconnect: vi.fn(),
+    } as unknown as SolanaWallet;
+    const context = createMockSolanaContext({ wallet: shallowRef(wallet) });
+    let result: ReturnType<typeof useWallet> | undefined;
+
+    mountWithSolana(
+      defineComponent({
+        setup() {
+          result = useWallet();
+
+          return () => h("div");
+        },
+      }),
+      context,
+    );
+
+    try {
+      await result?.connect();
+      throw new Error("Expected connect to reject.");
+    } catch (error) {
+      expect((error as SolanaError).code).toBe("USER_REJECTED");
+      expect((error as SolanaError).cause).toBe(cause);
+    }
+  });
+
+  it("normalizes wallet disconnect failures", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const cause = new Error("disconnect transport failed");
+    const wallet = {
+      publicKey,
+      connected: true,
+      connect: vi.fn(),
+      disconnect: vi.fn().mockRejectedValue(cause),
+    } as unknown as SolanaWallet;
+    const context = createMockSolanaContext({ wallet: shallowRef(wallet) });
+    let result: ReturnType<typeof useWallet> | undefined;
+
+    mountWithSolana(
+      defineComponent({
+        setup() {
+          result = useWallet();
+
+          return () => h("div");
+        },
+      }),
+      context,
+    );
+
+    try {
+      await result?.disconnect();
+      throw new Error("Expected disconnect to reject.");
+    } catch (error) {
+      expect((error as SolanaError).code).toBe("RPC_FAILURE");
+      expect((error as SolanaError).cause).toBe(cause);
+    }
   });
 });
