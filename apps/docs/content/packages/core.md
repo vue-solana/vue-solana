@@ -171,6 +171,46 @@ Direct subpaths:
 - `signAndSendTransaction(connection, wallet, transaction, options?)`: signs and sends a transaction using a configured wallet. Android Mobile Wallet Adapter wallets use `signTransaction` plus `connection.sendRawTransaction()` when available so the app owns submission and can reliably return the RPC signature after the wallet handoff.
 - `confirmTransactionSignature(connection, signature, options?)`: waits for a submitted signature to reach a requested commitment. Defaults to `confirmed` commitment and a 60 second timeout.
 
+## Error Model
+
+Vue Solana normalizes common wallet, RPC, address, transaction, and storage failures into `SolanaError`. Apps should branch on the stable `error.code` value instead of parsing adapter or RPC messages.
+
+```ts
+import { isSolanaError } from "@vue-solana/core/errors";
+
+try {
+  await signAndSendTransaction(connection, wallet, transaction);
+} catch (error) {
+  if (isSolanaError(error)) {
+    switch (error.code) {
+      case "USER_REJECTED":
+        // The user declined a wallet prompt.
+        break;
+      case "TRANSACTION_TIMEOUT":
+        // The operation timed out; check signature state before retrying.
+        break;
+      case "RPC_FAILURE":
+        // RPC or confirmation failed.
+        console.error(error.cause);
+        break;
+    }
+  }
+}
+```
+
+Stable error codes are:
+
+- `NO_WALLET_SELECTED`
+- `WALLET_NOT_CONNECTED`
+- `WALLET_FEATURE_UNSUPPORTED`
+- `USER_REJECTED`
+- `INVALID_ADDRESS`
+- `TRANSACTION_TIMEOUT`
+- `RPC_FAILURE`
+- `STORAGE_FAILURE`
+
+`SolanaError.cause` preserves the original wallet adapter, RPC, parsing, or storage error for debugging. Do not show raw `cause` details to end users unless the app explicitly trusts that source.
+
 ## Known TypeScript Issue
 
 See [Troubleshooting](/troubleshooting) for the `@solana/web3-compat@0.0.21` TypeScript metadata issue and consumer shim workaround.

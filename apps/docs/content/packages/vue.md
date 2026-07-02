@@ -95,9 +95,17 @@ Direct composable subpaths:
 
 ```vue
 <script setup lang="ts">
+import { computed } from "vue";
 import { useRpc } from "@vue-solana/vue/useRpc";
 
 const { cluster, endpoint, status, error, latestBlockhash, checkConnection } = useRpc();
+
+const rpcErrorMessage = computed(() => {
+  if (!error.value) return null;
+  return error.value.code === "RPC_FAILURE"
+    ? "Unable to reach the configured Solana RPC endpoint."
+    : "Unable to check the Solana connection.";
+});
 </script>
 
 <template>
@@ -106,7 +114,7 @@ const { cluster, endpoint, status, error, latestBlockhash, checkConnection } = u
     <p>Endpoint: {{ endpoint }}</p>
     <p>Status: {{ status }}</p>
     <p>Latest blockhash: {{ latestBlockhash }}</p>
-    <p v-if="error">Error: {{ error }}</p>
+    <p v-if="rpcErrorMessage">{{ rpcErrorMessage }}</p>
     <button type="button" @click="checkConnection">Check RPC</button>
   </section>
 </template>
@@ -116,28 +124,66 @@ const { cluster, endpoint, status, error, latestBlockhash, checkConnection } = u
 
 ```vue
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { useBalance } from "@vue-solana/vue/useBalance";
 
 const address = ref("PASTE_A_SOLANA_ADDRESS");
 const { balance, loading, error, refresh } = useBalance(address);
+
+const balanceErrorMessage = computed(() => {
+  switch (error.value?.code) {
+    case "INVALID_ADDRESS":
+      return "Enter a valid Solana address.";
+    case "RPC_FAILURE":
+      return "Unable to load the balance from RPC.";
+    default:
+      return null;
+  }
+});
 </script>
 
 <template>
   <section>
     <p>Lamports: {{ balance }}</p>
     <p v-if="loading">Loading...</p>
-    <pre v-if="error">{{ error }}</pre>
+    <p v-if="balanceErrorMessage">{{ balanceErrorMessage }}</p>
     <button type="button" @click="refresh">Refresh</button>
   </section>
 </template>
+```
+
+## Error Handling
+
+Composable `error` refs use `SolanaError | null` from `@vue-solana/core/errors`. Branch on `error.value.code` for user-facing UI and keep `error.value.cause` for debugging original wallet, RPC, address parsing, timeout, or storage failures.
+
+```ts
+const message = computed(() => {
+  switch (error.value?.code) {
+    case "NO_WALLET_SELECTED":
+      return "Choose a wallet first.";
+    case "USER_REJECTED":
+      return "The wallet request was rejected.";
+    case "TRANSACTION_TIMEOUT":
+      return "The transaction is taking longer than expected.";
+    case "RPC_FAILURE":
+      return "The Solana RPC request failed.";
+    default:
+      return null;
+  }
+});
+
+watchEffect(() => {
+  if (error.value?.cause) {
+    console.debug("Original Solana error", error.value.cause);
+  }
+});
 ```
 
 ## Read Account Info
 
 ```vue
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { useAccountInfo } from "@vue-solana/vue/useAccountInfo";
 
 const address = ref("PASTE_A_SOLANA_ADDRESS");
@@ -145,13 +191,24 @@ const { accountInfo, loading, error, refresh, stopWatching } = useAccountInfo(ad
   commitment: "confirmed",
   watch: true,
 });
+
+const accountInfoErrorMessage = computed(() => {
+  switch (error.value?.code) {
+    case "INVALID_ADDRESS":
+      return "Enter a valid Solana address.";
+    case "RPC_FAILURE":
+      return "Unable to load account data from RPC.";
+    default:
+      return null;
+  }
+});
 </script>
 
 <template>
   <section>
     <p>Lamports: {{ accountInfo?.lamports ?? "Unknown" }}</p>
     <p v-if="loading">Loading...</p>
-    <pre v-if="error">{{ error }}</pre>
+    <p v-if="accountInfoErrorMessage">{{ accountInfoErrorMessage }}</p>
     <button type="button" @click="refresh">Refresh</button>
     <button type="button" @click="stopWatching">Stop watching</button>
   </section>
@@ -164,7 +221,7 @@ const { accountInfo, loading, error, refresh, stopWatching } = useAccountInfo(ad
 
 ```vue
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { useProgramAccounts } from "@vue-solana/vue/useProgramAccounts";
 
 const programId = ref("PASTE_A_SOLANA_PROGRAM_ID");
@@ -173,13 +230,24 @@ const { accounts, loading, error, refresh } = useProgramAccounts(programId, {
   filters: [{ dataSize: 165 }],
   dataSlice: { offset: 0, length: 32 },
 });
+
+const programAccountsErrorMessage = computed(() => {
+  switch (error.value?.code) {
+    case "INVALID_ADDRESS":
+      return "Enter a valid Solana program id.";
+    case "RPC_FAILURE":
+      return "Unable to load program accounts from RPC.";
+    default:
+      return null;
+  }
+});
 </script>
 
 <template>
   <section>
     <p>Accounts: {{ accounts.length }}</p>
     <p v-if="loading">Loading...</p>
-    <pre v-if="error">{{ error }}</pre>
+    <p v-if="programAccountsErrorMessage">{{ programAccountsErrorMessage }}</p>
     <button type="button" @click="refresh">Refresh</button>
   </section>
 </template>
