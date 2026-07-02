@@ -36,6 +36,20 @@ import { createSolanaContext } from "@vue-solana/core/rpc";
 import type { SolanaConfig } from "@vue-solana/core/types";
 ```
 
+Direct subpaths:
+
+- `@vue-solana/core/address`
+- `@vue-solana/core/types`
+- `@vue-solana/core/clusters`
+- `@vue-solana/core/errors`
+- `@vue-solana/core/ios-wallet`
+- `@vue-solana/core/mobile-wallet`
+- `@vue-solana/core/rpc`
+- `@vue-solana/core/timeout`
+- `@vue-solana/core/transaction`
+- `@vue-solana/core/wallet`
+- `@vue-solana/core/wallet-standard`
+
 ## Related Guides
 
 - [RPC and Clusters](/guides/rpc-and-clusters): configure cluster names, custom RPC endpoints, WebSocket endpoints, and connection helpers.
