@@ -76,6 +76,7 @@ export function createSolanaWalletRegistry(options: SolanaWalletRegistryOptions)
         );
       },
       disconnect: () => adaptedWallet.disconnect(),
+      signMessage: adaptedWallet.signMessage?.bind(adaptedWallet),
       signTransaction: adaptedWallet.signTransaction?.bind(adaptedWallet),
       signAllTransactions: adaptedWallet.signAllTransactions?.bind(adaptedWallet),
       signAndSendTransaction: adaptedWallet.signAndSendTransaction?.bind(adaptedWallet),
