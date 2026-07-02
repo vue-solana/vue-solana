@@ -1,6 +1,7 @@
 import { computed, shallowRef } from "vue";
 import { formatError } from "./demo/errors";
 import { packageVersions } from "./demo/packageVersions";
+import { useDemoMessageSigning } from "./demo/useDemoMessageSigning";
 import { useDemoTransfer } from "./demo/useDemoTransfer";
 import { useDemoWallet } from "./demo/useDemoWallet";
 import { useDirectBlockhash } from "./demo/useDirectBlockhash";
@@ -13,6 +14,7 @@ export function useDemoPage() {
   const balance = useSolanaBalance(balanceAddress);
   const directConnection = useDirectBlockhash();
   const mockTransactionDemo = useMockTransactionDemo();
+  const messageSigning = useDemoMessageSigning();
   const transfer = useDemoTransfer();
   const demoWallet = useDemoWallet();
 
@@ -33,6 +35,7 @@ export function useDemoPage() {
     balanceInSol,
     ...demoWallet,
     ...directConnection,
+    ...messageSigning,
     ...mockTransactionDemo,
     packageVersions,
     pluginInstalled,

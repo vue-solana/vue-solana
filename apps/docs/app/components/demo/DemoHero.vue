@@ -20,7 +20,8 @@ defineProps<{
     </h1>
     <p class="mt-4 max-w-3xl text-base leading-7 text-slate-600 dark:text-slate-300">
       This page runs against the published Vue Solana packages. Try RPC reads, balance lookup,
-      Wallet Standard discovery, connect/disconnect, and a tiny real devnet transfer.
+      Wallet Standard discovery, connect/disconnect, message signing, and a tiny real devnet
+      transfer.
     </p>
 
     <dl class="mt-5 flex flex-wrap gap-3" aria-label="Vue Solana package versions">

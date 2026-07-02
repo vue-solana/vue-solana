@@ -224,7 +224,7 @@ For Nuxt:
 pnpm dev:nuxt
 ```
 
-The examples demonstrate plugin/module setup, RPC state, direct connection calls, balance reads, unified wallet discovery, wallet state, generic transaction state, and transaction transfer flows. They use devnet by default for safe testing.
+The examples demonstrate plugin/module setup, RPC state, direct connection calls, balance reads, unified wallet discovery, wallet state, message signing, generic transaction state, and transaction transfer flows. They use devnet by default for safe testing.
 
 ## Connect A Wallet
 
@@ -249,6 +249,34 @@ const { publicKey, connected, connect, disconnect } = useSolanaWallet();
 Select a wallet from `wallets`, then call `connect()`. Selecting a wallet only configures the active wallet; it does not connect it. Some extensions expose previously authorized accounts after a page refresh, but Vue Solana still keeps `connected` false until `connect()` succeeds.
 
 iOS browser wallet support uses wallet-specific universal links because Mobile Wallet Adapter web support is Android Chrome-only. Phantom, Solflare, and Backpack appear in the same `useWallets()` list on iOS browsers.
+
+## Sign A Message
+
+Use message signing for wallet ownership checks or authentication challenges. It does not submit a transaction and does not authorize on-chain state changes.
+
+In Vue:
+
+```ts
+const { connected, canSignMessage } = useWallet();
+const signMessage = useSignMessage();
+
+if (connected.value && canSignMessage.value) {
+  await signMessage.execute(new TextEncoder().encode("Sign in to example.com"));
+}
+```
+
+In Nuxt:
+
+```ts
+const { connected, canSignMessage } = useSolanaWallet();
+const signMessage = useSolanaSignMessage();
+
+if (connected.value && canSignMessage.value) {
+  await signMessage.execute(new TextEncoder().encode("Sign in to example.com"));
+}
+```
+
+Render a disabled auth button when `canSignMessage` is false. Some wallets can connect and sign transactions without supporting arbitrary message signing.
 
 ## Send A Transfer
 

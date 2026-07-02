@@ -167,18 +167,18 @@ Acceptance criteria:
 
 ## Phase 7: Desktop Native Wallet Decision
 
-Status: planned.
+Status: complete.
 
-Desktop native wallet support is currently documented as planned. The v1 release should make a deliberate decision.
+Decision: desktop native wallet support is deferred from v1. v1 will keep the unified `useWallets()` and `useWallet()` flow focused on browser extension wallets, Android Mobile Wallet Adapter support, iOS browser wallet entries, and custom wallet injection. Desktop native wallet work remains a post-v1 candidate instead of a v1 release blocker.
 
 Tasks:
 
-- [ ] Research supported desktop native Solana wallet options and protocol-link behavior.
-- [ ] Decide whether minimal desktop native wallet support is a v1 requirement.
-- [ ] If included in v1, implement the smallest supported adapter through the existing `useWallets()` and `useWallet()` flow.
-- [ ] If deferred, update README, package docs, docs app, and `docs/native-wallet-plan.md` to mark it as post-v1.
-- [ ] Avoid adding separate public composables for desktop wallets unless the architecture is deliberately revised.
-- [ ] Add tests or manual testing notes for whichever decision is made.
+- [x] Research supported desktop native Solana wallet options and protocol-link behavior. Deferred from v1 because a minimal cross-wallet desktop native adapter is not required for the first stable release.
+- [x] Decide whether minimal desktop native wallet support is a v1 requirement. Decision: not required for v1.
+- [x] If included in v1, implement the smallest supported adapter through the existing `useWallets()` and `useWallet()` flow. Not applicable because desktop native support is deferred.
+- [x] If deferred, update README, package docs, docs app, and `docs/native-wallet-plan.md` to mark it as post-v1.
+- [x] Avoid adding separate public composables for desktop wallets unless the architecture is deliberately revised.
+- [x] Add tests or manual testing notes for whichever decision is made. No v1 adapter tests are required because no desktop native adapter ships in v1; manual v1 testing should verify that desktop native wallets are documented as unsupported/post-v1.
 
 Acceptance criteria:
 
@@ -187,19 +187,19 @@ Acceptance criteria:
 
 ## Phase 8: Documentation, Examples, And Tests
 
-Status: planned.
+Status: complete.
 
 Every v1 feature should ship with docs and verification coverage.
 
 Tasks:
 
-- [ ] Update `docs/api.md`, `docs/api/*`, and docs app package pages for every new public API.
-- [ ] Update the Vue Vite example with persisted wallet selection, transaction confirmation, and message signing examples.
-- [ ] Update the Nuxt example with the same v1 flows using Nuxt auto-imports.
-- [ ] Add mocked Wallet Standard E2E coverage for discovery, selection, connect, disconnect, and unsupported capabilities.
-- [ ] Add unit tests for new core helpers and Vue composables.
-- [ ] Add manual testing instructions for browser extensions, Android MWA, iOS deep-link wallets, and any desktop native wallet decision.
-- [ ] Confirm package README files are consistent with the docs app.
+- [x] Update `docs/api.md`, `docs/api/*`, and docs app package pages for every new public API.
+- [x] Update the Vue Vite example with persisted wallet selection, transaction confirmation, and message signing examples.
+- [x] Update the Nuxt example with the same v1 flows using Nuxt auto-imports.
+- [x] Add mocked Wallet Standard E2E coverage for discovery, selection, connect, disconnect, and unsupported capabilities.
+- [x] Add unit tests for new core helpers and Vue composables.
+- [x] Add manual testing instructions for browser extensions, Android MWA, iOS deep-link wallets, and any desktop native wallet decision.
+- [x] Confirm package README files are consistent with the docs app.
 
 Acceptance criteria:
 
@@ -228,7 +228,7 @@ These features are useful, but they should not block v1 unless product scope cha
 - Anchor provider and program helpers.
 - A dedicated wallet modal or UI package.
 - Nuxt server RPC utilities for server-side reads.
-- Full desktop native wallet coverage if not included in v1.
+- Desktop native wallet support.
 - Additional iOS wallet providers such as Trust Wallet.
 - Advanced program account indexing patterns.
 - RPC provider failover and rate-limit handling.

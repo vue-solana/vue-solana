@@ -24,6 +24,14 @@ const {
   loadWallets,
   mockTransaction,
   mockTransactionError,
+  canSignMessage,
+  messageSignatureBase64,
+  messageSigningDisabledReason,
+  messageSigningError,
+  messageSigningReady,
+  messageSigningStatus,
+  messageSigningStatusColor,
+  messageToSign,
   packageVersions,
   pluginInstalled,
   rpc,
@@ -36,6 +44,9 @@ const {
   signAndSendReady,
   signAndSendState,
   signAndSendStatus,
+  signMessage,
+  signedMessageText,
+  signWalletMessage,
   transferAmount,
   transferExplorerUrl,
   transferRecipient,
@@ -108,6 +119,21 @@ const {
       :signature="mockTransaction.signature.value"
       :error="mockTransactionError"
       @run="runMockTransaction"
+    />
+
+    <DemoMessageSigningPanel
+      v-model:message="messageToSign"
+      :wallet-ready="wallet.connected.value"
+      :can-sign-message="canSignMessage"
+      :signature="messageSignatureBase64"
+      :signed-message="signedMessageText"
+      :status="messageSigningStatus"
+      :status-color="messageSigningStatusColor"
+      :ready="messageSigningReady"
+      :loading="signMessage.loading.value"
+      :disabled-reason="messageSigningDisabledReason"
+      :error="messageSigningError"
+      @sign="signWalletMessage"
     />
 
     <DemoTransferPanel

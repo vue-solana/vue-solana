@@ -18,6 +18,7 @@ Live demo: [vue-solana-docs.vercel.app/demo](https://vue-solana-docs.vercel.app/
 - Reading lamport balances with `useSolanaBalance()`.
 - Discovering browser extension wallets, Android Mobile Wallet Adapter wallets, and supported iOS browser wallet entries with `useSolanaWallets()`.
 - Managing active wallet state with `useSolanaWallet()`.
+- Signing an authentication message with auto-imported `useSolanaSignMessage()` when the connected wallet supports it.
 - Sending a real transfer with `useSolanaSignAndSendTransaction()`. The example uses devnet by default for safe testing.
 - Using `useTransaction()` from `@vue-solana/vue/useTransaction` for generic async transaction state.
 
@@ -42,6 +43,7 @@ Open the Nuxt URL printed in the terminal, usually `http://localhost:3000`.
 - On Android Chrome, install a compatible Solana mobile wallet and look for `Mobile Wallet Adapter`.
 - On iOS browsers, install Phantom, Solflare, or Backpack and look for the wallet entry in the same list.
 - Select and connect a discovered wallet.
+- Sign the sample auth message if the wallet reports message-signing support.
 - Run the generic mock transaction.
 - Enter a recipient address and amount, then send a real transfer. Keep the example on devnet while testing.
 

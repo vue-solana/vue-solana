@@ -186,4 +186,4 @@ Make sure your `tsconfig.json` includes `types/**/*.d.ts` or another pattern tha
 
 ## Status
 
-This package is early-stage. RPC helpers, browser extension wallet primitives, Android mobile wallet registration, message signing, and transaction helpers are usable.
+This package provides RPC helpers, browser extension wallet primitives, Android mobile wallet registration, message signing, and transaction helpers.

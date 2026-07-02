@@ -480,8 +480,45 @@ Expected result:
 - Selecting a wallet configures the active wallet, but does not connect it.
 - `connect()` opens the wallet extension approval flow.
 - After approval, `publicKey` shows the connected wallet address.
+- The example shows whether the connected wallet supports message signing before enabling the sign-message button.
 
 Some extensions expose previously authorized accounts after a page refresh. Vue Solana still keeps `connected` false until the app explicitly calls `connect()` and that call succeeds.
+
+### Test Message Signing
+
+Use message signing for wallet ownership or authentication challenges. It does not submit a transaction and does not authorize on-chain state changes.
+
+In Vue:
+
+```ts
+import { useSignMessage } from "@vue-solana/vue/useSignMessage";
+import { useWallet } from "@vue-solana/vue/useWallet";
+
+const { connected, canSignMessage } = useWallet();
+const signMessage = useSignMessage();
+
+if (connected.value && canSignMessage.value) {
+  await signMessage.execute(new TextEncoder().encode("Sign in to example.com"));
+}
+```
+
+In Nuxt:
+
+```ts
+const { connected, canSignMessage } = useSolanaWallet();
+const signMessage = useSolanaSignMessage();
+
+if (connected.value && canSignMessage.value) {
+  await signMessage.execute(new TextEncoder().encode("Sign in to example.com"));
+}
+```
+
+Manual message-signing flow:
+
+- Select and connect a browser extension, Android MWA, or iOS browser wallet.
+- Confirm the example reports `Can sign messages: Yes` before clicking `Sign Message`.
+- Approve the wallet prompt and confirm the example displays a signature.
+- If the wallet reports `Can sign messages: No`, keep the button disabled and render an unsupported-capability message instead of calling `execute()`.
 
 ### Android Mobile Wallets
 
@@ -566,6 +603,10 @@ Manual iOS testing flow:
 - Tap `Refresh Wallets` and select the wallet entry.
 - Call `connect()` from a direct user action, approve in the wallet app, and return through the configured callback URL.
 - Test devnet balance reads or a small transfer with a wallet that supports the requested signing capability.
+
+### Desktop Native Wallet Status
+
+Desktop native wallet adapters are intentionally deferred from v1. On desktop, manually verify that browser extension wallets still appear through `useWallets()` and that documentation describes desktop native apps as post-v1 work rather than a supported v1 path.
 
 ### 11. Send A Real Devnet Transfer
 

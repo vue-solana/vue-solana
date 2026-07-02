@@ -81,7 +81,7 @@ A wallet stores keys and signs transactions. Browser extension wallets include P
 
 Vue Solana discovers Solana Wallet Standard browser extension wallets and Android Mobile Wallet Adapter wallets through the unified `useWallets()` flow. RPC reads and balance reads work without a wallet. Connecting, signing, and sending transactions require a discovered wallet or custom object that implements the `SolanaWallet` interface.
 
-See [Wallet Support](./wallets.md) for current support and planned iOS browser and desktop native wallet adapters.
+See [Wallet Support](./wallets.md) for current support, iOS browser wallet entries, and desktop native wallet limits.
 
 ## Transactions And Signing
 

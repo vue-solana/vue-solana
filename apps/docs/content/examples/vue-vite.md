@@ -18,6 +18,7 @@ Live demo: [vue-solana-docs.vercel.app/demo](https://vue-solana-docs.vercel.app/
 - Discovering browser extension wallets, Android Mobile Wallet Adapter wallets, and supported iOS browser wallet entries with `useWallets()`.
 - Managing active wallet state with `useWallet()`.
 - Tracking async transaction state with `useTransaction()`.
+- Signing an authentication message with `useSignMessage()` when the connected wallet supports it.
 - Sending a real transfer with `useSignAndSendTransaction()`. The example uses devnet by default for safe testing.
 
 The app uses `devnet` by default. Devnet SOL has no real value.
@@ -41,6 +42,7 @@ Open the Vite URL printed in the terminal, usually `http://localhost:5173`.
 - On Android Chrome, install a compatible Solana mobile wallet and look for `Mobile Wallet Adapter`.
 - On iOS browsers, install Phantom, Solflare, or Backpack and look for the wallet entry in the same list.
 - Select and connect a discovered wallet.
+- Sign the sample auth message if the wallet reports message-signing support.
 - Run the generic mock transaction.
 - Enter a recipient address and amount, then send a real transfer. Keep the example on devnet while testing.
 

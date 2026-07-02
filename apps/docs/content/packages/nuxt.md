@@ -81,11 +81,21 @@ The module auto-imports these composables from direct `@vue-solana/vue/*` subpat
 - `useSolanaProgramAccounts()`
 - `useSolanaTransactionConfirmation()`
 - `useSolanaSignatureStatus()`
+- `useSolanaSignMessage()`
 - `useSolanaSignAndSendTransaction()`
 
 The runtime plugin is client-only. Auto-imported composables can be called during SSR and return inert state until hydration provides the real client context. Trigger RPC and wallet work from client lifecycle hooks or user actions.
 
 Android Mobile Wallet Adapter registration also runs only on the client. On Android Chrome and Chrome PWAs, `Mobile Wallet Adapter` can appear in the same `useSolanaWallets()` list as browser extension wallets. On iOS browsers, Phantom, Solflare, and Backpack can appear in the same list through wallet-specific universal links. Desktop native app wallet adapters are planned but not implemented yet.
+
+## Related Guides
+
+- [RPC and Clusters](/guides/rpc-and-clusters): configure the Nuxt module and read RPC state.
+- [Wallets](/guides/wallets): use `useSolanaWallets()` and `useSolanaWallet()` safely in client flows.
+- [Account Reads](/guides/account-reads): read balances, account data, program accounts, and signature status.
+- [Transactions](/guides/transactions): sign, send, confirm, and handle transaction status from Nuxt.
+- [Message Signing](/guides/message-signing): request wallet signatures for off-chain messages.
+- [Errors](/guides/errors): map auto-imported composable errors to safe UI messages.
 
 ## Read RPC State
 
@@ -217,6 +227,21 @@ const { publicKey, connected, connect, disconnect } = useSolanaWallet();
 ```
 
 Browser extension wallets are discovered through the Solana Wallet Standard. Android Mobile Wallet Adapter wallets are registered through `@solana-mobile/wallet-standard-mobile` on supported Android Chrome clients and exposed through the same wallet list. iOS Phantom, Solflare, and Backpack entries are exposed through wallet-specific universal links on iOS browsers. `refreshWallets()` only updates the discovered wallet list, and `selectWallet()` only configures the active wallet. `connected` remains false until `connect()` succeeds, even if the extension exposes previously authorized accounts after a page refresh.
+
+## Message Signing
+
+```vue
+<script setup lang="ts">
+const { connected, canSignMessage } = useSolanaWallet();
+const { signature, status, error, execute } = useSolanaSignMessage();
+
+if (connected.value && canSignMessage.value) {
+  await execute(new TextEncoder().encode("Sign in to example.com"));
+}
+</script>
+```
+
+Message signing is for wallet ownership or authentication challenges. It is not transaction signing and does not authorize on-chain state changes. Wallets that do not expose message signing report `canSignMessage` as false and `execute()` rejects with an unsupported-wallet error.
 
 ## Example App
 

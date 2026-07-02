@@ -47,7 +47,7 @@ Apps need stable error categories for user-facing wallet and transaction UI. v1 
 
 ### 7. Desktop Native Wallet Decision
 
-Desktop native wallets are currently planned but not implemented. Before v1, the project should either implement a minimal supported adapter or explicitly defer desktop native support to post-v1 documentation.
+Status: complete. Desktop native wallet support is explicitly deferred from v1 and remains a post-v1 candidate. v1 keeps wallet selection unified through `useWallets()` and `useWallet()` without adding a desktop-native-specific public flow.
 
 ### 8. Documentation, Examples, And Tests
 
@@ -61,7 +61,7 @@ These are useful but should not block the first stable release:
 - Anchor provider and program helpers.
 - A wallet modal or UI package.
 - Nuxt server RPC utilities.
-- Full desktop native wallet coverage if not included in v1.
+- Desktop native wallet support.
 - Additional iOS wallet providers.
 - Advanced program account indexing patterns.
 - RPC provider failover and rate-limit handling.

@@ -51,6 +51,17 @@ export const docsNavSections: DocsNavSection[] = [
     ],
   },
   {
+    title: "Guides",
+    links: [
+      { label: "RPC and Clusters", to: "/guides/rpc-and-clusters" },
+      { label: "Wallets", to: "/guides/wallets" },
+      { label: "Account Reads", to: "/guides/account-reads" },
+      { label: "Transactions", to: "/guides/transactions" },
+      { label: "Message Signing", to: "/guides/message-signing" },
+      { label: "Errors", to: "/guides/errors" },
+    ],
+  },
+  {
     title: "Packages",
     links: [
       { label: "@vue-solana/core", to: "/packages/core" },

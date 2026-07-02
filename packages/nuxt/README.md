@@ -249,4 +249,4 @@ Make sure your `tsconfig.json` includes `types/**/*.d.ts` or another pattern tha
 
 ## Status
 
-This package is early-stage. RPC, balance, browser extension wallet, Android mobile wallet, iOS browser wallet, message signing, and transaction composables are usable in Nuxt apps.
+This package provides RPC, balance, browser extension wallet, Android mobile wallet, iOS browser wallet, message signing, and transaction composables for Nuxt apps.

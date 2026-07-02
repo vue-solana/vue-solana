@@ -91,6 +91,15 @@ Direct composable subpaths:
 - `useSignMessage()`: signs arbitrary authentication messages through the configured wallet when supported.
 - `useSignAndSendTransaction()`: signs and sends a transaction through the configured wallet, with optional confirmation waiting.
 
+## Related Guides
+
+- [RPC and Clusters](/guides/rpc-and-clusters): read connection state and configure endpoints.
+- [Wallets](/guides/wallets): discover, select, connect, disconnect, and check wallet capabilities.
+- [Account Reads](/guides/account-reads): read balances, account info, program accounts, and signature status.
+- [Transactions](/guides/transactions): sign, send, confirm, and show transaction progress.
+- [Message Signing](/guides/message-signing): sign off-chain authentication or ownership challenges.
+- [Errors](/guides/errors): map composable `error` refs to safe UI messages.
+
 ## Read RPC State
 
 ```vue
