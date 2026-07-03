@@ -1,6 +1,11 @@
 # @vue-solana/nuxt
 
-Nuxt module for Solana applications.
+[![npm version](https://img.shields.io/npm/v/@vue-solana/nuxt.svg)](https://www.npmjs.com/package/@vue-solana/nuxt)
+[![npm downloads](https://img.shields.io/npm/dt/@vue-solana/nuxt.svg)](https://www.npmjs.com/package/@vue-solana/nuxt)
+[![license](https://img.shields.io/npm/l/@vue-solana/nuxt.svg)](https://github.com/vue-solana/vue-solana/blob/main/LICENSE)
+[![docs](https://img.shields.io/badge/docs-vue--solana-blue)](https://vue-solana-docs.vercel.app/packages/nuxt)
+
+Nuxt module for Solana wallet, RPC, account, message signing, and transaction composables with auto-imports.
 
 Use this package in Nuxt apps that need the Vue Solana plugin installed automatically plus auto-imported composables for RPC, wallet state, message signing, and transactions.
 
@@ -13,6 +18,24 @@ New to Solana? Start with the official docs and the project concepts guide:
 - [`@vue-solana/nuxt` docs](https://vue-solana-docs.vercel.app/packages/nuxt)
 - [Agent Skill](https://vue-solana-docs.vercel.app/agent-skill)
 - [Live demo](https://vue-solana-docs.vercel.app/demo)
+
+## Features
+
+- Installs the Vue Solana plugin automatically.
+- Auto-imports Solana RPC, wallet, account, balance, message signing, and transaction composables.
+- Uses direct Vue package subpaths to avoid pulling unrelated runtime code into Nuxt bundles.
+- Client-only runtime plugin with SSR-safe inert composable state before hydration.
+- Unified wallet discovery for browser extensions, Android Mobile Wallet Adapter, and supported iOS browser wallets.
+- Nuxt 3 and Nuxt 4 support.
+
+## Compatibility
+
+| Requirement        | Supported                                       |
+| ------------------ | ----------------------------------------------- |
+| Nuxt               | `^3.0.0 \|\| ^4.0.0`                            |
+| TypeScript         | TypeScript 5.x recommended                      |
+| Solana client peer | `@solana/web3-compat@^0.0.21`                   |
+| Clusters           | `mainnet-beta`, `devnet`, `testnet`, `localnet` |
 
 ## Install
 
@@ -52,6 +75,17 @@ Supported clusters are `mainnet-beta`, `devnet`, `testnet`, and `localnet`. Use 
 
 Nuxt module options are stored in public runtime config, so they must be JSON-serializable. Custom `wallet` adapter objects are intentionally excluded from Nuxt config; use the Vue plugin directly in client-only Vue code if you need to inject a custom wallet object.
 
+### Module Options
+
+| Option         | Type                                                    | Default                              | Description                                                                                   |
+| -------------- | ------------------------------------------------------- | ------------------------------------ | --------------------------------------------------------------------------------------------- |
+| `cluster`      | `"mainnet-beta" \| "devnet" \| "testnet" \| "localnet"` | `"devnet"`                           | Solana cluster used when `endpoint` is omitted.                                               |
+| `endpoint`     | `string`                                                | Public endpoint for `cluster`        | HTTP RPC endpoint. Use a dedicated RPC provider for production apps.                          |
+| `wsEndpoint`   | `string`                                                | Derived from `endpoint`              | WebSocket RPC endpoint.                                                                       |
+| `commitment`   | Solana commitment                                       | Solana client default                | Default commitment for created connections.                                                   |
+| `autoConnect`  | `boolean`                                               | `false`                              | Reconnects only a previously selected discovered wallet identity when it is discovered again. |
+| `mobileWallet` | JSON-serializable mobile wallet options or `false`      | Enabled on supported Android clients | Configures or disables Android Mobile Wallet Adapter registration.                            |
+
 For development, use `devnet` and request free test SOL from the official faucet:
 
 ```txt
@@ -74,6 +108,21 @@ The module auto-imports these composables from direct `@vue-solana/vue/*` subpat
 - `useSolanaSignatureStatus()`
 - `useSolanaSignMessage()`
 - `useSolanaSignAndSendTransaction()`
+
+| Composable                           | Purpose                                                                          |
+| ------------------------------------ | -------------------------------------------------------------------------------- |
+| `useSolana()`                        | Full Solana context.                                                             |
+| `useSolanaRpc()`                     | Cluster, endpoint, connection status, latest blockhash, and `checkConnection()`. |
+| `useSolanaConnection()`              | Raw Solana `Connection`.                                                         |
+| `useSolanaAccountInfo()`             | Account info reads and optional subscriptions.                                   |
+| `useSolanaWallet()`                  | Active wallet state and connect/disconnect actions.                              |
+| `useSolanaWallets()`                 | Wallet discovery, selected wallet state, and selection actions.                  |
+| `useSolanaBalance()`                 | Lamport balance reads.                                                           |
+| `useSolanaProgramAccounts()`         | Program account scans with filters and `dataSlice`.                              |
+| `useSolanaTransactionConfirmation()` | Confirmation state for an already submitted signature.                           |
+| `useSolanaSignatureStatus()`         | Signature status reads with optional polling or websocket subscription.          |
+| `useSolanaSignMessage()`             | Wallet message signing.                                                          |
+| `useSolanaSignAndSendTransaction()`  | Wallet transaction signing, sending, and optional confirmation.                  |
 
 The runtime plugin is client-only. Auto-imported composables can be called during SSR and return inert state until hydration provides the real client context. Trigger RPC and wallet work from client lifecycle hooks or user actions.
 
@@ -216,36 +265,15 @@ npx skills add vue-solana/vue-solana --skill vue-solana
 
 Docs: [Vue Solana Agent Skill](https://vue-solana-docs.vercel.app/agent-skill)
 
-## Known TypeScript Issue
+## Caveats
 
-`@solana/web3-compat@0.0.21` currently has broken TypeScript metadata. Runtime imports still use the real package, but TypeScript consumers may need a local declaration shim.
-
-If TypeScript cannot resolve `@solana/web3-compat`, add `types/web3-compat.d.ts` to your app:
-
-```ts
-declare module "@solana/web3-compat" {
-  export type {
-    AccountInfo,
-    Commitment,
-    RpcResponseAndContext,
-    SendOptions,
-    SignatureResult,
-    SignatureStatus,
-    TransactionSignature,
-  } from "@solana/web3.js";
-  export {
-    Connection,
-    Keypair,
-    PublicKey,
-    SystemProgram,
-    Transaction,
-    TransactionInstruction,
-    VersionedTransaction,
-  } from "@solana/web3.js";
-}
-```
-
-Make sure your `tsconfig.json` includes `types/**/*.d.ts` or another pattern that includes the shim.
+- The runtime plugin is client-only. Auto-imported composables are SSR-safe, but real RPC and wallet work should run after hydration or in user actions.
+- Nuxt module options are stored in public runtime config, so they must be JSON-serializable.
+- Public Solana RPC endpoints are useful for development, but production apps should use dedicated RPC infrastructure.
+- Broad `useSolanaProgramAccounts()` scans can be expensive or blocked on public RPC nodes. Prefer narrow filters and `dataSlice`.
+- Use `mainnet-beta` for Solana mainnet. `mainnet` is intentionally not accepted as a cluster alias.
+- `@solana/web3-compat@0.0.21` currently has broken TypeScript package metadata. Runtime imports still use the real package, but TypeScript consumers may need a local declaration shim. See [Troubleshooting](https://vue-solana-docs.vercel.app/troubleshooting) for the workaround.
+- Desktop native app wallets are planned but not implemented yet.
 
 ## Status
 

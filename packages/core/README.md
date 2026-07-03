@@ -1,6 +1,11 @@
 # @vue-solana/core
 
-Framework-agnostic Solana primitives used by the Vue Solana packages.
+[![npm version](https://img.shields.io/npm/v/@vue-solana/core.svg)](https://www.npmjs.com/package/@vue-solana/core)
+[![npm downloads](https://img.shields.io/npm/dt/@vue-solana/core.svg)](https://www.npmjs.com/package/@vue-solana/core)
+[![license](https://img.shields.io/npm/l/@vue-solana/core.svg)](https://github.com/vue-solana/vue-solana/blob/main/LICENSE)
+[![docs](https://img.shields.io/badge/docs-vue--solana-blue)](https://vue-solana-docs.vercel.app/packages/core)
+
+Framework-agnostic Solana primitives for Vue Solana libraries and apps that want shared RPC, wallet, and transaction helpers without installing a Vue plugin.
 
 Use this package directly when you want connection helpers, shared wallet types, Android Mobile Wallet Adapter registration helpers, message signing support, and transaction helpers without installing the Vue plugin.
 
@@ -19,6 +24,27 @@ Full Vue Solana docs:
 - [Getting Started](https://vue-solana-docs.vercel.app/getting-started)
 - [Agent Skill](https://vue-solana-docs.vercel.app/agent-skill)
 - [Troubleshooting](https://vue-solana-docs.vercel.app/troubleshooting)
+
+## Features
+
+- Cluster-aware RPC connection helpers with HTTP and WebSocket endpoint defaults.
+- Shared `SolanaConfig`, `SolanaContext`, and `SolanaWallet` types for framework integrations.
+- Wallet capability assertions for connection, message signing, and transaction signing flows.
+- Browser Wallet Standard adaptation primitives.
+- Android Mobile Wallet Adapter registration helpers.
+- iOS browser wallet link helpers for supported wallets.
+- Transaction submission and confirmation helpers.
+
+## Compatibility
+
+| Requirement   | Supported                                       |
+| ------------- | ----------------------------------------------- |
+| Runtime       | Modern ESM or CommonJS bundlers                 |
+| TypeScript    | TypeScript 5.x recommended                      |
+| Solana client | `@solana/web3-compat@^0.0.21`                   |
+| Clusters      | `mainnet-beta`, `devnet`, `testnet`, `localnet` |
+
+This package intentionally keeps raw Solana primitives in `@solana/web3-compat`. Import `Connection`, `PublicKey`, `Transaction`, and `VersionedTransaction` from Solana packages; import Vue Solana configuration, wallet interfaces, and helpers from `@vue-solana/core`.
 
 ## Install
 
@@ -66,6 +92,14 @@ const config: SolanaConfig = {
 };
 ```
 
+| Option        | Type                                                    | Default                       | Description                                                                             |
+| ------------- | ------------------------------------------------------- | ----------------------------- | --------------------------------------------------------------------------------------- |
+| `cluster`     | `"mainnet-beta" \| "devnet" \| "testnet" \| "localnet"` | `"devnet"`                    | Solana cluster used when `endpoint` is omitted.                                         |
+| `endpoint`    | `string`                                                | Public endpoint for `cluster` | HTTP RPC endpoint. Use a dedicated RPC provider for production apps.                    |
+| `wsEndpoint`  | `string`                                                | Derived from `endpoint`       | WebSocket RPC endpoint.                                                                 |
+| `commitment`  | Solana commitment                                       | Solana client default         | Default commitment for created connections.                                             |
+| `autoConnect` | `boolean`                                               | `false`                       | Consumed by Vue/Nuxt integrations to reconnect a previously selected discovered wallet. |
+
 Supported clusters are `mainnet-beta`, `testnet`, `devnet`, and `localnet`. If `endpoint` is omitted, the package uses the public Solana RPC endpoint for the selected cluster. If `wsEndpoint` is omitted, it is derived from the RPC endpoint.
 
 `autoConnect` is consumed by the Vue plugin and Nuxt module. It defaults to `false`; when set to `true`, Vue Solana reconnects only a previously selected wallet identity that is discovered again on the client.
@@ -92,19 +126,21 @@ Direct subpaths:
 - `@vue-solana/core/wallet`
 - `@vue-solana/core/wallet-standard`
 
-- `DEFAULT_CLUSTER`: default cluster, currently `devnet`.
-- `parsePublicKey(value)`: parses a `PublicKey`, address string, ref-like `{ value }`, getter, `null`, or `undefined` into a `PublicKey | null`.
-- `createSolanaConnection(config?)`: creates a `Connection`.
-- `createSolanaContext(config?)`: creates `{ cluster, endpoint, wsEndpoint, connection }`.
-- `getClusterEndpoint(cluster?)`: returns the HTTP RPC endpoint for a cluster.
-- `getClusterWebSocketEndpoint(cluster?)`: returns the WebSocket endpoint for a cluster.
-- `getWebSocketEndpoint(endpoint)`: converts `http`/`https` RPC URLs to `ws`/`wss` URLs.
-- `isWalletConnected(wallet)`: checks whether a wallet is connected and has a public key.
-- `assertWalletConnected(wallet)`: throws if the wallet is not connected.
-- `assertWalletCanSignMessage(wallet)`: throws if the wallet is disconnected or cannot sign messages.
-- `assertWalletCanSign(wallet)`: throws if the wallet cannot sign transactions.
-- `signAndSendTransaction(connection, wallet, transaction, options?)`: signs and sends a transaction using a configured wallet. Android Mobile Wallet Adapter wallets prefer `signTransaction` plus app-side RPC submission when available so the app can reliably return the submitted signature.
-- `confirmTransactionSignature(connection, signature, options?)`: waits for a submitted signature to reach a requested commitment. Defaults to `confirmed` commitment and a 60 second timeout.
+| API                                                                 | Description                                                                                                                                        |
+| ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DEFAULT_CLUSTER`                                                   | Default cluster, currently `devnet`.                                                                                                               |
+| `parsePublicKey(value)`                                             | Parses a `PublicKey`, address string, ref-like `{ value }`, getter, `null`, or `undefined` into a `PublicKey \| null`.                             |
+| `createSolanaConnection(config?)`                                   | Creates a Solana `Connection`.                                                                                                                     |
+| `createSolanaContext(config?)`                                      | Creates `{ cluster, endpoint, wsEndpoint, connection }`.                                                                                           |
+| `getClusterEndpoint(cluster?)`                                      | Returns the HTTP RPC endpoint for a cluster.                                                                                                       |
+| `getClusterWebSocketEndpoint(cluster?)`                             | Returns the WebSocket endpoint for a cluster.                                                                                                      |
+| `getWebSocketEndpoint(endpoint)`                                    | Converts `http`/`https` RPC URLs to `ws`/`wss` URLs.                                                                                               |
+| `isWalletConnected(wallet)`                                         | Checks whether a wallet is connected and has a public key.                                                                                         |
+| `assertWalletConnected(wallet)`                                     | Throws if the wallet is not connected.                                                                                                             |
+| `assertWalletCanSignMessage(wallet)`                                | Throws if the wallet is disconnected or cannot sign messages.                                                                                      |
+| `assertWalletCanSign(wallet)`                                       | Throws if the wallet cannot sign transactions.                                                                                                     |
+| `signAndSendTransaction(connection, wallet, transaction, options?)` | Signs and sends a transaction using a configured wallet. Android MWA wallets prefer `signTransaction` plus app-side RPC submission when available. |
+| `confirmTransactionSignature(connection, signature, options?)`      | Waits for a submitted signature to reach a requested commitment. Defaults to `confirmed` and a 60 second timeout.                                  |
 
 ## Wallet Interface
 
@@ -153,36 +189,12 @@ npx skills add vue-solana/vue-solana --skill vue-solana
 
 Docs: [Vue Solana Agent Skill](https://vue-solana-docs.vercel.app/agent-skill)
 
-## Known TypeScript Issue
+## Caveats
 
-`@solana/web3-compat@0.0.21` currently has broken TypeScript metadata. Runtime imports still use the real package, but TypeScript consumers may need a local declaration shim.
-
-If TypeScript cannot resolve `@solana/web3-compat`, add `types/web3-compat.d.ts` to your app:
-
-```ts
-declare module "@solana/web3-compat" {
-  export type {
-    AccountInfo,
-    Commitment,
-    RpcResponseAndContext,
-    SendOptions,
-    SignatureResult,
-    SignatureStatus,
-    TransactionSignature,
-  } from "@solana/web3.js";
-  export {
-    Connection,
-    Keypair,
-    PublicKey,
-    SystemProgram,
-    Transaction,
-    TransactionInstruction,
-    VersionedTransaction,
-  } from "@solana/web3.js";
-}
-```
-
-Make sure your `tsconfig.json` includes `types/**/*.d.ts` or another pattern that includes the shim.
+- Public Solana RPC endpoints are useful for development, but production apps should use dedicated RPC infrastructure.
+- Use `mainnet-beta` for Solana mainnet. `mainnet` is intentionally not accepted as a cluster alias.
+- `@solana/web3-compat@0.0.21` currently has broken TypeScript package metadata. Runtime imports still use the real package, but TypeScript consumers may need a local declaration shim. See [Troubleshooting](https://vue-solana-docs.vercel.app/troubleshooting) for the workaround.
+- Desktop native app wallets are planned but not implemented yet.
 
 ## Status
 
