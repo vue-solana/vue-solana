@@ -1,11 +1,12 @@
 ---
 title: Vue Solana Documentation
 description: Documentation for Vue and Nuxt libraries that help developers use Solana.
+surroundOrder: 1
 ---
 
 Vue Solana is a small ecosystem of Vue and Nuxt packages for building Solana applications.
 
-The project is early-stage. RPC setup, reactive account reads, balance reads, browser extension wallet discovery, Android Mobile Wallet Adapter discovery, iOS browser wallet links, wallet connect/disconnect, and transaction transfer flows are usable today through Vue and Nuxt composables. The examples use devnet by default for safe testing.
+Vue Solana provides RPC setup, reactive account reads, balance reads, browser extension wallet discovery, Android Mobile Wallet Adapter discovery, iOS browser wallet links, wallet connect/disconnect, and transaction transfer flows through Vue and Nuxt composables. The examples use devnet by default for safe testing.
 
 ## Packages
 
@@ -18,12 +19,20 @@ The project is early-stage. RPC setup, reactive account reads, balance reads, br
 ## Start Here
 
 - [Getting Started](/getting-started)
+- [Wallet Guide](/guides/wallets)
+- [Transaction Guide](/guides/transactions)
 - [Solana For Vue Developers](/concepts/solana-for-vue-developers)
 - [Clusters](/concepts/clusters)
 - [Wallets](/concepts/wallets)
 - [v1 Roadmap](/roadmap)
 - [Agent Skill](/agent-skill)
 - [Troubleshooting](/troubleshooting)
+
+## API Reference
+
+- [`@vue-solana/core`](/packages/core): config, endpoints, wallet interfaces, Wallet Standard helpers, mobile/iOS helpers, transaction helpers, and normalized errors.
+- [`@vue-solana/vue`](/packages/vue): Vue plugin and composables for RPC, account reads, wallets, messages, signatures, and transactions.
+- [`@vue-solana/nuxt`](/packages/nuxt): Nuxt module options, runtime behavior, and auto-imported composables.
 
 ## Examples
 

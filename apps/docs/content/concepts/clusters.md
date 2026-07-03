@@ -1,6 +1,7 @@
 ---
 title: Clusters
 description: Solana cluster names, RPC endpoints, and faucet instructions.
+surroundOrder: 6
 ---
 
 A Solana cluster is a network of validators. Apps choose which cluster to connect to.

@@ -1,6 +1,11 @@
 # @vue-solana/vue
 
-Vue plugin and composables for Solana applications.
+[![npm version](https://img.shields.io/npm/v/@vue-solana/vue.svg)](https://www.npmjs.com/package/@vue-solana/vue)
+[![npm downloads](https://img.shields.io/npm/dt/@vue-solana/vue.svg)](https://www.npmjs.com/package/@vue-solana/vue)
+[![license](https://img.shields.io/npm/l/@vue-solana/vue.svg)](https://github.com/vue-solana/vue-solana/blob/main/LICENSE)
+[![docs](https://img.shields.io/badge/docs-vue--solana-blue)](https://vue-solana-docs.vercel.app/packages/vue)
+
+Solana wallet, RPC, account, message signing, and transaction composables for Vue 3.
 
 Use this package in Vue 3 apps that need Solana RPC access, balance reads, wallet state, message signing, and transaction helper state.
 
@@ -13,6 +18,26 @@ New to Solana? Start with the official docs and the project concepts guide:
 - [`@vue-solana/vue` docs](https://vue-solana-docs.vercel.app/packages/vue)
 - [Agent Skill](https://vue-solana-docs.vercel.app/agent-skill)
 - [Live demo](https://vue-solana-docs.vercel.app/demo)
+
+## Features
+
+- Vue plugin for shared Solana RPC and wallet context.
+- SSR-safe composables that return inert state when no client plugin context is available.
+- RPC status and latest blockhash reads.
+- Balance, account info, program account, and signature status composables.
+- Unified wallet discovery and selection for browser extensions, Android Mobile Wallet Adapter, and supported iOS browser wallets.
+- Message signing helpers for wallet ownership and authentication challenges.
+- Transaction submission and confirmation state helpers.
+- Direct subpath exports for narrower imports.
+
+## Compatibility
+
+| Requirement        | Supported                                       |
+| ------------------ | ----------------------------------------------- |
+| Vue                | `^3.5.0`                                        |
+| TypeScript         | TypeScript 5.x recommended                      |
+| Solana client peer | `@solana/web3-compat@^0.0.21`                   |
+| Clusters           | `mainnet-beta`, `devnet`, `testnet`, `localnet` |
 
 ## Install
 
@@ -62,6 +87,18 @@ createApp(App).use(
 ```
 
 Supported clusters are `mainnet-beta`, `devnet`, `testnet`, and `localnet`. Use `mainnet-beta` for Solana mainnet; this is Solana's official cluster name.
+
+### Plugin Options
+
+| Option         | Type                                                    | Default                              | Description                                                                                   |
+| -------------- | ------------------------------------------------------- | ------------------------------------ | --------------------------------------------------------------------------------------------- |
+| `cluster`      | `"mainnet-beta" \| "devnet" \| "testnet" \| "localnet"` | `"devnet"`                           | Solana cluster used when `endpoint` is omitted.                                               |
+| `endpoint`     | `string`                                                | Public endpoint for `cluster`        | HTTP RPC endpoint. Use a dedicated RPC provider for production apps.                          |
+| `wsEndpoint`   | `string`                                                | Derived from `endpoint`              | WebSocket RPC endpoint.                                                                       |
+| `commitment`   | Solana commitment                                       | Solana client default                | Default commitment for created connections.                                                   |
+| `autoConnect`  | `boolean`                                               | `false`                              | Reconnects only a previously selected discovered wallet identity when it is discovered again. |
+| `wallet`       | `SolanaWallet`                                          | Disabled                             | Custom wallet adapter, useful for tests or custom integrations.                               |
+| `mobileWallet` | `MobileWalletOptions \| false`                          | Enabled on supported Android clients | Configures or disables Android Mobile Wallet Adapter registration.                            |
 
 The root export remains supported. For composables, prefer direct subpath imports in new code so bundlers can avoid evaluating unrelated package entry code:
 
@@ -268,21 +305,23 @@ Docs: [Vue Solana Agent Skill](https://vue-solana-docs.vercel.app/agent-skill)
 
 ## API
 
-- `createSolanaPlugin(options?)`: installs the Vue Solana context.
-- `VueSolana`: alias for `createSolanaPlugin`.
-- `useSolana()`: returns the full injected Solana context.
-- `useRpc()`: returns cluster, endpoint, connection status, latest blockhash, and `checkConnection()`.
-- `useConnection()`: returns the Solana `Connection`.
-- `useWallet()`: returns wallet refs, computed connection state, and wallet actions.
-- `useWallets()`: returns discovered browser extension wallets, Android Mobile Wallet Adapter wallets, iOS browser wallet links, and wallet selection actions.
-- `useSignMessage()`: signs arbitrary message bytes through the connected wallet when message signing is supported.
-- `useBalance(address, commitment?)`: loads lamport balance for a `PublicKey` or address string.
-- `useAccountInfo(address, options?)`: loads account info and can subscribe to account changes with `watch: true`.
-- `useProgramAccounts(programId, config?)`: loads accounts owned by a program with optional filters, commitment, and `dataSlice`.
-- `useTransaction(handler, options?)`: generic async transaction state helper with optional timeout settings.
-- `useTransactionConfirmation(options?)`: confirms a submitted signature with reactive status and timeout/error state.
-- `useSignatureStatus(signature, options?)`: reads a transaction signature status with optional polling or websocket subscription.
-- `useSignAndSendTransaction()`: signs and sends a transaction through the configured wallet, with optional confirmation waiting.
+| API                                       | Description                                                                                                                |
+| ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `createSolanaPlugin(options?)`            | Installs the Vue Solana context.                                                                                           |
+| `VueSolana`                               | Alias for `createSolanaPlugin`.                                                                                            |
+| `useSolana()`                             | Returns the full injected Solana context.                                                                                  |
+| `useRpc()`                                | Returns cluster, endpoint, connection status, latest blockhash, and `checkConnection()`.                                   |
+| `useConnection()`                         | Returns the Solana `Connection`.                                                                                           |
+| `useWallet()`                             | Returns wallet refs, computed connection state, and wallet actions.                                                        |
+| `useWallets()`                            | Returns discovered browser extension wallets, Android MWA wallets, iOS browser wallet links, and wallet selection actions. |
+| `useSignMessage()`                        | Signs arbitrary message bytes through the connected wallet when message signing is supported.                              |
+| `useBalance(address, commitment?)`        | Loads lamport balance for a `PublicKey` or address string.                                                                 |
+| `useAccountInfo(address, options?)`       | Loads account info and can subscribe to account changes with `watch: true`.                                                |
+| `useProgramAccounts(programId, config?)`  | Loads accounts owned by a program with optional filters, commitment, and `dataSlice`.                                      |
+| `useTransaction(handler, options?)`       | Generic async transaction state helper with optional timeout settings.                                                     |
+| `useTransactionConfirmation(options?)`    | Confirms a submitted signature with reactive status and timeout/error state.                                               |
+| `useSignatureStatus(signature, options?)` | Reads a transaction signature status with optional polling or websocket subscription.                                      |
+| `useSignAndSendTransaction()`             | Signs and sends a transaction through the configured wallet, with optional confirmation waiting.                           |
 
 Direct composable subpaths:
 
@@ -300,37 +339,15 @@ Direct composable subpaths:
 - `@vue-solana/vue/useSignatureStatus`
 - `@vue-solana/vue/useSignAndSendTransaction`
 
-## Known TypeScript Issue
+## Caveats
 
-`@solana/web3-compat@0.0.21` currently has broken TypeScript metadata. Runtime imports still use the real package, but TypeScript consumers may need a local declaration shim.
-
-If TypeScript cannot resolve `@solana/web3-compat`, add `types/web3-compat.d.ts` to your app:
-
-```ts
-declare module "@solana/web3-compat" {
-  export type {
-    AccountInfo,
-    Commitment,
-    RpcResponseAndContext,
-    SendOptions,
-    SignatureResult,
-    SignatureStatus,
-    TransactionSignature,
-  } from "@solana/web3.js";
-  export {
-    Connection,
-    Keypair,
-    PublicKey,
-    SystemProgram,
-    Transaction,
-    TransactionInstruction,
-    VersionedTransaction,
-  } from "@solana/web3.js";
-}
-```
-
-Make sure your `tsconfig.json` includes `types/**/*.d.ts` or another pattern that includes the shim.
+- Wallet and RPC operations require the plugin-provided client context. Composables are SSR-safe, but real wallet work should run after hydration or in user actions.
+- Public Solana RPC endpoints are useful for development, but production apps should use dedicated RPC infrastructure.
+- Broad `useProgramAccounts()` scans can be expensive or blocked on public RPC nodes. Prefer narrow filters and `dataSlice`.
+- Use `mainnet-beta` for Solana mainnet. `mainnet` is intentionally not accepted as a cluster alias.
+- `@solana/web3-compat@0.0.21` currently has broken TypeScript package metadata. Runtime imports still use the real package, but TypeScript consumers may need a local declaration shim. See [Troubleshooting](https://vue-solana-docs.vercel.app/troubleshooting) for the workaround.
+- Desktop native app wallets are planned but not implemented yet.
 
 ## Status
 
-This package is early-stage. RPC, balance, browser extension wallet, Android mobile wallet, iOS browser wallet, message signing, and transaction composables are usable.
+This package provides RPC, balance, browser extension wallet, Android mobile wallet, iOS browser wallet, message signing, and transaction composables.

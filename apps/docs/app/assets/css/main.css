@@ -24,6 +24,10 @@
   color: rgb(15 23 42);
 }
 
+.docs-content h2 > a > span:first-child {
+  top: calc(0.8rem + 0.25rem);
+}
+
 :where(.dark, .dark-mode) .docs-content h2 {
   border-top-color: rgb(51 65 85);
   color: white;

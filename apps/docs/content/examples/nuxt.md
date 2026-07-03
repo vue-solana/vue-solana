@@ -1,6 +1,7 @@
 ---
 title: Nuxt Example
 description: Runnable Nuxt example app for @vue-solana/nuxt.
+surroundOrder: 18
 ---
 
 The Nuxt example is a runnable Nuxt app for `@vue-solana/nuxt`.
@@ -18,7 +19,12 @@ Live demo: [vue-solana-docs.vercel.app/demo](https://vue-solana-docs.vercel.app/
 - Reading lamport balances with `useSolanaBalance()`.
 - Discovering browser extension wallets, Android Mobile Wallet Adapter wallets, and supported iOS browser wallet entries with `useSolanaWallets()`.
 - Managing active wallet state with `useSolanaWallet()`.
-- Sending a real transfer with `useSolanaSignAndSendTransaction()`. The example uses devnet by default for safe testing.
+- Persisting wallet selection metadata and restoring the previously selected wallet identity on reload.
+- Optional `autoConnect` behavior that reconnects only the previously selected wallet when it is discovered again.
+- Rendering unsupported-capability states for wallets that cannot sign messages or transactions.
+- Signing an authentication message with auto-imported `useSolanaSignMessage()` when the connected wallet supports it.
+- Sending a real transfer with `useSolanaSignAndSendTransaction()` and showing submitted vs confirmed transaction status. The example uses devnet by default for safe testing.
+- Building cluster-aware Solana Explorer links for submitted signatures.
 - Using `useTransaction()` from `@vue-solana/vue/useTransaction` for generic async transaction state.
 
 The app uses `devnet` by default. Devnet SOL has no real value.
@@ -42,10 +48,17 @@ Open the Nuxt URL printed in the terminal, usually `http://localhost:3000`.
 - On Android Chrome, install a compatible Solana mobile wallet and look for `Mobile Wallet Adapter`.
 - On iOS browsers, install Phantom, Solflare, or Backpack and look for the wallet entry in the same list.
 - Select and connect a discovered wallet.
+- Reload the page and verify the same selected wallet identity is restored without selecting an arbitrary installed wallet.
+- Sign the sample auth message if the wallet reports message-signing support.
+- Confirm the message-signing button is disabled or explained when the selected wallet does not support `signMessage`.
 - Run the generic mock transaction.
 - Enter a recipient address and amount, then send a real transfer. Keep the example on devnet while testing.
+- Watch the transaction move from submitted signature to confirmation status.
+- Open the explorer link and verify it includes `?cluster=devnet`.
 
 The transfer example initializes the `buffer` browser polyfill with `import { Buffer } from "buffer/"`. Restart the Nuxt dev server if Vite previously cached an externalized `buffer` import.
+
+If confirmation times out after a signature appears, do not immediately submit a duplicate transfer. Use the example's signature status or explorer link to check whether the transaction later confirmed.
 
 ## Devnet SOL
 
@@ -58,3 +71,5 @@ https://faucet.solana.com
 ## Wallet Note
 
 The example uses unified wallet discovery. Install Phantom, Solflare, Backpack, or another standard wallet before testing browser extension wallet flows. On supported Android Chrome runtimes, `@solana-mobile/wallet-standard-mobile` can expose installed native mobile wallets through `Mobile Wallet Adapter` in the same wallet list. On iOS browsers, Phantom, Solflare, and Backpack can appear through wallet-specific universal links.
+
+Desktop native wallet protocol-link support is intentionally not part of the v1 example flow.

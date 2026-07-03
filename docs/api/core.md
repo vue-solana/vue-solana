@@ -120,7 +120,7 @@ Current metadata values:
 - Browser extension wallets use `platform: "browser"` and `source: "wallet-standard"`.
 - Android Mobile Wallet Adapter uses `platform: "mobile"` and `source: "mobile-wallet-adapter"`.
 - iOS browser wallets use `platform: "mobile"` and `source: "deep-link"`.
-- `protocol-link` is reserved for planned desktop native wallet adapters.
+- `protocol-link` is reserved for possible post-v1 desktop native wallet adapters.
 
 For wallet behavior and platform support, see [Wallet Support](../wallets.md).
 

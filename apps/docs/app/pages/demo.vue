@@ -24,6 +24,14 @@ const {
   loadWallets,
   mockTransaction,
   mockTransactionError,
+  canSignMessage,
+  messageSignatureBase64,
+  messageSigningDisabledReason,
+  messageSigningError,
+  messageSigningReady,
+  messageSigningStatus,
+  messageSigningStatusColor,
+  messageToSign,
   packageVersions,
   pluginInstalled,
   rpc,
@@ -36,6 +44,9 @@ const {
   signAndSendReady,
   signAndSendState,
   signAndSendStatus,
+  signMessage,
+  signedMessageText,
+  signWalletMessage,
   transferAmount,
   transferExplorerUrl,
   transferRecipient,
@@ -51,7 +62,7 @@ const {
 
 <template>
   <main
-    class="hide-scrollbar mx-auto grid w-full max-w-[1180px] flex-1 gap-4 py-6 lg:min-h-0 lg:grid-cols-2 lg:overflow-y-auto xl:grid-cols-3"
+    class="hide-scrollbar mx-auto grid w-full max-w-[1180px] flex-1 gap-4 px-4 py-6 sm:px-6 lg:min-h-0 lg:grid-cols-2 lg:overflow-y-auto lg:px-8 xl:grid-cols-3"
   >
     <DemoHero :package-versions="packageVersions" />
 
@@ -108,6 +119,21 @@ const {
       :signature="mockTransaction.signature.value"
       :error="mockTransactionError"
       @run="runMockTransaction"
+    />
+
+    <DemoMessageSigningPanel
+      v-model:message="messageToSign"
+      :wallet-ready="wallet.connected.value"
+      :can-sign-message="canSignMessage"
+      :signature="messageSignatureBase64"
+      :signed-message="signedMessageText"
+      :status="messageSigningStatus"
+      :status-color="messageSigningStatusColor"
+      :ready="messageSigningReady"
+      :loading="signMessage.loading.value"
+      :disabled-reason="messageSigningDisabledReason"
+      :error="messageSigningError"
+      @sign="signWalletMessage"
     />
 
     <DemoTransferPanel

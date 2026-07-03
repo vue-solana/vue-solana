@@ -1,6 +1,7 @@
 ---
 title: Agent Skill
 description: Install the Vue Solana Agent Skill for AI coding agents.
+surroundOrder: 3
 ---
 
 Vue Solana ships an installable Agent Skill for AI coding agents that support the Agent Skills format. The skill gives agents Vue Solana setup patterns, package selection rules, wallet flow guidance, Nuxt SSR caveats, transaction gotchas, and verification commands.

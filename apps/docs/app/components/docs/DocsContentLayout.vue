@@ -1,15 +1,41 @@
 <script setup lang="ts">
+type TocLink = {
+  id: string;
+  text: string;
+  depth: number;
+  children?: TocLink[];
+};
+
+type DocsPage = {
+  title?: unknown;
+  description?: unknown;
+  body?: {
+    toc?: {
+      links?: TocLink[];
+    };
+  };
+};
+
+type SurroundLink = {
+  title: string;
+  path: string;
+  description?: string;
+  [key: string]: unknown;
+};
+
 defineProps<{
   activePath: string;
-  page: Record<string, unknown>;
+  page: DocsPage;
+  surround?: SurroundLink[] | null;
 }>();
 </script>
 
 <template>
-  <main
-    class="grid flex-1 gap-6 pb-12 pt-3 lg:min-h-0 lg:grid-cols-[18rem_minmax(0,1fr)] lg:overflow-hidden lg:gap-8 lg:pb-8 lg:pt-6"
-  >
-    <DocsSidebar :active-path="activePath" />
-    <DocsArticle :page="page" />
-  </main>
+  <UPage class="mx-auto w-full max-w-[1180px] flex-1 px-4 sm:px-6 lg:px-8">
+    <template #left>
+      <DocsSidebar :active-path="activePath" />
+    </template>
+
+    <DocsArticle :page="page" :surround="surround" />
+  </UPage>
 </template>

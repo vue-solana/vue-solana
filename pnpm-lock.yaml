@@ -90,14 +90,14 @@ importers:
         specifier: ^2.0.1
         version: 2.0.1(nuxt@4.4.7(@babel/plugin-proposal-decorators@7.29.7(@babel/core@7.29.7))(@babel/plugin-syntax-jsx@7.29.7(@babel/core@7.29.7))(@babel/plugin-syntax-typescript@7.29.7(@babel/core@7.29.7))(@parcel/watcher@2.5.6)(@types/node@24.12.4)(@vue/compiler-sfc@3.5.35)(better-sqlite3@12.10.0)(bufferutil@4.1.0)(cac@6.7.14)(commander@13.1.0)(db0@0.3.4(better-sqlite3@12.10.0))(eslint@10.4.1(jiti@2.7.0))(ioredis@5.11.0)(lightningcss@1.32.0)(magicast@0.5.3)(optionator@0.9.4)(rolldown@1.0.3)(rollup-plugin-visualizer@7.0.1(rolldown@1.0.3)(rollup@4.61.0))(rollup@4.61.0)(srvx@0.11.16)(terser@5.48.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(vite@8.0.16(@types/node@24.12.4)(esbuild@0.28.0)(jiti@2.7.0)(terser@5.48.0)(yaml@2.9.0))(vue-tsc@3.3.3(typescript@5.9.3))(yaml@2.9.0))(react@19.2.7)(vue-router@5.1.0(@vue/compiler-sfc@3.5.35)(vite@8.0.16(@types/node@24.12.4)(esbuild@0.28.0)(jiti@2.7.0)(terser@5.48.0)(yaml@2.9.0))(vue@3.5.35(typescript@5.9.3)))(vue@3.5.35(typescript@5.9.3))
       '@vue-solana/core':
-        specifier: ^0.5.1
-        version: 0.5.1(@solana/sysvars@6.9.0(typescript@5.9.3))(bufferutil@4.1.0)(react@19.2.7)(typescript@5.9.3)(utf-8-validate@6.0.6)
+        specifier: ^0.7.0
+        version: 0.7.0(@solana/sysvars@6.9.0(typescript@5.9.3))(bufferutil@4.1.0)(react@19.2.7)(typescript@5.9.3)(utf-8-validate@6.0.6)
       '@vue-solana/nuxt':
-        specifier: ^0.5.1
-        version: 0.5.1(cde814d6147e4209db0aab679dd20de2)
+        specifier: ^0.6.2
+        version: 0.6.2(cde814d6147e4209db0aab679dd20de2)
       '@vue-solana/vue':
-        specifier: ^0.6.1
-        version: 0.6.1(@solana/sysvars@6.9.0(typescript@5.9.3))(@solana/web3-compat@0.0.21(@solana/sysvars@6.9.0(typescript@5.9.3))(bufferutil@4.1.0)(react@19.2.7)(typescript@5.9.3)(utf-8-validate@6.0.6))(bufferutil@4.1.0)(react@19.2.7)(typescript@5.9.3)(utf-8-validate@6.0.6)(vue@3.5.35(typescript@5.9.3))
+        specifier: ^0.8.1
+        version: 0.8.1(@solana/sysvars@6.9.0(typescript@5.9.3))(@solana/web3-compat@0.0.21(@solana/sysvars@6.9.0(typescript@5.9.3))(bufferutil@4.1.0)(react@19.2.7)(typescript@5.9.3)(utf-8-validate@6.0.6))(bufferutil@4.1.0)(react@19.2.7)(typescript@5.9.3)(utf-8-validate@6.0.6)(vue@3.5.35(typescript@5.9.3))
       buffer:
         specifier: ^6.0.3
         version: 6.0.3
@@ -3778,17 +3778,17 @@ packages:
       vue:
         optional: true
 
-  '@vue-solana/core@0.5.1':
-    resolution: {integrity: sha512-uOQy5SNN2SiXw0EaD/y9u5HqP2j2gHsz5BHwj41umEtCj6hkbLH7y3fTJUPG7GLanNWZap/+F9aKrBHd1iyetw==}
+  '@vue-solana/core@0.7.0':
+    resolution: {integrity: sha512-E43LzPSfSKkPujeVWVPrgOeM2nEGClbH3tCzLHlO81v7IZyOdIaEJTjc4eFw37HW2nNvq4ECwt5ehTQt13GGFg==}
 
-  '@vue-solana/nuxt@0.5.1':
-    resolution: {integrity: sha512-uHlMK+zRUTHmpjGNqaDmNJdhNDEfQmPPlIiJb2hUEWcugCOxE2hr1xOlUf6FRDDNekKHe6Cc7EbDUo4bsOJuKQ==}
+  '@vue-solana/nuxt@0.6.2':
+    resolution: {integrity: sha512-4reMs6dJYLbWgHmNFqmMIi6KI3MEPckK2GvXNWCoYsHRPgmk/UkkhZKeBlMVfkBP1fa/AogCfXrKEF7vgjfWww==}
     peerDependencies:
       '@solana/web3-compat': ^0.0.21
       nuxt: ^3.0.0 || ^4.0.0
 
-  '@vue-solana/vue@0.6.1':
-    resolution: {integrity: sha512-b3ydhW4oWW0xBtG23vqnHBo1K3CapYCKf4coVz9QYpc9HTcfC6Pp8n86nLPOl0q5+WV36IabOMxdBKYc1uDcJw==}
+  '@vue-solana/vue@0.8.1':
+    resolution: {integrity: sha512-n8It1owDeUF3AH0hgNcUVtPeTniUnxne5L696B6t2l70uIaaW3vy0rE1oTIXS+4mPlmS9fyAsN3b+u2OB3GUuA==}
     peerDependencies:
       '@solana/web3-compat': ^0.0.21
       vue: ^3.5.0
@@ -12669,7 +12669,7 @@ snapshots:
     optionalDependencies:
       vue: 3.5.35(typescript@5.9.3)
 
-  '@vue-solana/core@0.5.1(@solana/sysvars@6.9.0(typescript@5.9.3))(bufferutil@4.1.0)(react@19.2.7)(typescript@5.9.3)(utf-8-validate@6.0.6)':
+  '@vue-solana/core@0.7.0(@solana/sysvars@6.9.0(typescript@5.9.3))(bufferutil@4.1.0)(react@19.2.7)(typescript@5.9.3)(utf-8-validate@6.0.6)':
     dependencies:
       '@solana-mobile/wallet-standard-mobile': 0.5.3(bufferutil@4.1.0)(react-native@0.85.3(@babel/core@7.29.7)(bufferutil@4.1.0)(react@19.2.7)(utf-8-validate@6.0.6))(typescript@5.9.3)(utf-8-validate@6.0.6)
       '@solana/wallet-standard-features': 1.3.0
@@ -12693,11 +12693,11 @@ snapshots:
       - use-sync-external-store
       - utf-8-validate
 
-  '@vue-solana/nuxt@0.5.1(cde814d6147e4209db0aab679dd20de2)':
+  '@vue-solana/nuxt@0.6.2(cde814d6147e4209db0aab679dd20de2)':
     dependencies:
       '@solana/web3-compat': 0.0.21(@solana/sysvars@6.9.0(typescript@5.9.3))(bufferutil@4.1.0)(react@19.2.7)(typescript@5.9.3)(utf-8-validate@6.0.6)
-      '@vue-solana/core': 0.5.1(@solana/sysvars@6.9.0(typescript@5.9.3))(bufferutil@4.1.0)(react@19.2.7)(typescript@5.9.3)(utf-8-validate@6.0.6)
-      '@vue-solana/vue': 0.6.1(@solana/sysvars@6.9.0(typescript@5.9.3))(@solana/web3-compat@0.0.21(@solana/sysvars@6.9.0(typescript@5.9.3))(bufferutil@4.1.0)(react@19.2.7)(typescript@5.9.3)(utf-8-validate@6.0.6))(bufferutil@4.1.0)(react@19.2.7)(typescript@5.9.3)(utf-8-validate@6.0.6)(vue@3.5.35(typescript@5.9.3))
+      '@vue-solana/core': 0.7.0(@solana/sysvars@6.9.0(typescript@5.9.3))(bufferutil@4.1.0)(react@19.2.7)(typescript@5.9.3)(utf-8-validate@6.0.6)
+      '@vue-solana/vue': 0.8.1(@solana/sysvars@6.9.0(typescript@5.9.3))(@solana/web3-compat@0.0.21(@solana/sysvars@6.9.0(typescript@5.9.3))(bufferutil@4.1.0)(react@19.2.7)(typescript@5.9.3)(utf-8-validate@6.0.6))(bufferutil@4.1.0)(react@19.2.7)(typescript@5.9.3)(utf-8-validate@6.0.6)(vue@3.5.35(typescript@5.9.3))
       nuxt: 4.4.7(@babel/plugin-proposal-decorators@7.29.7(@babel/core@7.29.7))(@babel/plugin-syntax-jsx@7.29.7(@babel/core@7.29.7))(@babel/plugin-syntax-typescript@7.29.7(@babel/core@7.29.7))(@parcel/watcher@2.5.6)(@types/node@24.12.4)(@vue/compiler-sfc@3.5.35)(better-sqlite3@12.10.0)(bufferutil@4.1.0)(cac@6.7.14)(commander@13.1.0)(db0@0.3.4(better-sqlite3@12.10.0))(eslint@10.4.1(jiti@2.7.0))(ioredis@5.11.0)(lightningcss@1.32.0)(magicast@0.5.3)(optionator@0.9.4)(rolldown@1.0.3)(rollup-plugin-visualizer@7.0.1(rolldown@1.0.3)(rollup@4.61.0))(rollup@4.61.0)(srvx@0.11.16)(terser@5.48.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(vite@8.0.16(@types/node@24.12.4)(esbuild@0.28.0)(jiti@2.7.0)(terser@5.48.0)(yaml@2.9.0))(vue-tsc@3.3.3(typescript@5.9.3))(yaml@2.9.0)
     transitivePeerDependencies:
       - '@solana/connector'
@@ -12714,10 +12714,10 @@ snapshots:
       - utf-8-validate
       - vue
 
-  '@vue-solana/vue@0.6.1(@solana/sysvars@6.9.0(typescript@5.9.3))(@solana/web3-compat@0.0.21(@solana/sysvars@6.9.0(typescript@5.9.3))(bufferutil@4.1.0)(react@19.2.7)(typescript@5.9.3)(utf-8-validate@6.0.6))(bufferutil@4.1.0)(react@19.2.7)(typescript@5.9.3)(utf-8-validate@6.0.6)(vue@3.5.35(typescript@5.9.3))':
+  '@vue-solana/vue@0.8.1(@solana/sysvars@6.9.0(typescript@5.9.3))(@solana/web3-compat@0.0.21(@solana/sysvars@6.9.0(typescript@5.9.3))(bufferutil@4.1.0)(react@19.2.7)(typescript@5.9.3)(utf-8-validate@6.0.6))(bufferutil@4.1.0)(react@19.2.7)(typescript@5.9.3)(utf-8-validate@6.0.6)(vue@3.5.35(typescript@5.9.3))':
     dependencies:
       '@solana/web3-compat': 0.0.21(@solana/sysvars@6.9.0(typescript@5.9.3))(bufferutil@4.1.0)(react@19.2.7)(typescript@5.9.3)(utf-8-validate@6.0.6)
-      '@vue-solana/core': 0.5.1(@solana/sysvars@6.9.0(typescript@5.9.3))(bufferutil@4.1.0)(react@19.2.7)(typescript@5.9.3)(utf-8-validate@6.0.6)
+      '@vue-solana/core': 0.7.0(@solana/sysvars@6.9.0(typescript@5.9.3))(bufferutil@4.1.0)(react@19.2.7)(typescript@5.9.3)(utf-8-validate@6.0.6)
       bs58: 6.0.0
       vue: 3.5.35(typescript@5.9.3)
     transitivePeerDependencies:
