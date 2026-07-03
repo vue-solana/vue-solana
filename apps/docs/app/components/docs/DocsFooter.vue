@@ -12,7 +12,7 @@ const copyrightYear = 2026;
       <p>
         &copy; {{ copyrightYear }} Vue Solana. Released under the
         <NuxtLink
-          to="https://github.com/vue-solana/vue-solana?tab=MIT-1-ov-file"
+          to="https://github.com/vue-solana/vue-solana/blob/main/LICENSE"
           target="_blank"
           rel="noopener noreferrer"
           class="inline-flex items-center gap-1"

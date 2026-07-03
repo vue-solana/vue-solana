@@ -1,6 +1,6 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  modules: ["@nuxt/ui", "@nuxt/content", "@vue-solana/nuxt", "@vercel/analytics"],
+  modules: ["@nuxt/ui", "@nuxt/content", "@vue-solana/nuxt", "@vercel/analytics", "@nuxt/image"],
   css: ["~/assets/css/main.css"],
   app: {
     head: {
