@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { queryCollectionNavigation } from "#imports";
+import { queryCollectionNavigation, useSearchCollection } from "#imports";
 
 const { data: navigation } = await useAsyncData("content-navigation", () => {
   return queryCollectionNavigation("content");
 });
+
+const { search, status: searchStatus } = useSearchCollection("content");
 </script>
 
 <template>
@@ -12,6 +14,12 @@ const { data: navigation } = await useAsyncData("content-navigation", () => {
     <DocsAppShell>
       <NuxtPage />
     </DocsAppShell>
-    <UContentSearch :navigation="navigation ?? []" />
+    <UContentSearch
+      :navigation="navigation ?? []"
+      :search="search"
+      :search-status="searchStatus"
+      :color-mode="false"
+      placeholder="Search documentation..."
+    />
   </UApp>
 </template>
