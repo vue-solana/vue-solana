@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen overflow-x-hidden bg-default text-highlighted">
+  <div class="min-h-screen overflow-x-clip bg-default text-highlighted">
     <DocsBackground />
     <DocsHeader />
 
