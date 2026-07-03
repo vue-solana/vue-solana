@@ -55,7 +55,7 @@ const surroundLinks = computed(() => props.surround ?? undefined);
     </UPageBody>
 
     <template #right>
-      <UContentToc v-if="tocLinks.length" :links="tocLinks" />
+      <DocsTableOfContents :links="tocLinks" />
     </template>
   </UPage>
 </template>

@@ -6,5 +6,7 @@
     <UMain class="relative">
       <slot />
     </UMain>
+
+    <DocsFooter />
   </div>
 </template>
