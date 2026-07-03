@@ -43,7 +43,7 @@ Status: complete. v1 includes wallet message signing with `signMessage`, `useSig
 
 ### 6. Error Model
 
-Apps need stable error categories for user-facing wallet and transaction UI. v1 should normalize common failures such as no selected wallet, unsupported feature, user rejection, invalid address, timeout, and RPC failure.
+Status: complete. v1 normalizes common failures such as no selected wallet, unsupported feature, user rejection, invalid address, timeout, storage failure, and RPC failure into stable `SolanaError` codes for user-facing UI.
 
 ### 7. Desktop Native Wallet Decision
 
@@ -51,7 +51,9 @@ Status: complete. Desktop native wallet support is explicitly deferred from v1 a
 
 ### 8. Documentation, Examples, And Tests
 
-Every v1 feature should be documented and covered by unit tests or E2E tests. The Vue Vite and Nuxt examples should demonstrate the stable v1 workflows on devnet.
+Status: complete. The docs app is the primary source of truth for v1 usage. Start with [Getting Started](/getting-started), then use the package references for [`@vue-solana/core`](/packages/core), [`@vue-solana/vue`](/packages/vue), and [`@vue-solana/nuxt`](/packages/nuxt) for public APIs. The [Wallets](/guides/wallets), [Transactions](/guides/transactions), [Account Reads](/guides/account-reads), [Message Signing](/guides/message-signing), and [Errors](/guides/errors) guides cover the stable v1 workflows without requiring source-code inspection.
+
+The [Vue Vite example](/examples/vue-vite) and [Nuxt example](/examples/nuxt) demonstrate devnet-first usage, persisted wallet selection, wallet capability checks, message signing, transaction submission, confirmation status, explorer links, and unsupported-capability UI paths. Unit tests and Wallet Standard E2E coverage live in the repository test suite; run the verification commands below before tagging v1.
 
 ## Post-v1 Candidates
 

@@ -3,7 +3,7 @@ title: Getting Started
 description: Install Vue Solana packages, configure Vue or Nuxt, and test RPC reads on devnet.
 ---
 
-This guide covers installing the Vue Solana packages, configuring Vue or Nuxt, testing Solana RPC reads, connecting supported wallets, and sending a transaction. The examples use devnet by default for safe testing.
+This guide covers installing the Vue Solana packages, configuring Vue or Nuxt, testing Solana RPC reads, connecting supported wallets, signing messages, sending a real devnet transfer, and verifying the result. The examples use devnet by default for safe testing.
 
 ## Before You Start
 
@@ -224,7 +224,7 @@ For Nuxt:
 pnpm dev:nuxt
 ```
 
-The examples demonstrate plugin/module setup, RPC state, direct connection calls, balance reads, unified wallet discovery, wallet state, message signing, generic transaction state, and transaction transfer flows. They use devnet by default for safe testing.
+The examples demonstrate plugin/module setup, RPC state, direct connection calls, balance reads, unified wallet discovery, persisted wallet selection, wallet state, message signing, generic transaction state, transaction transfer flows, confirmation status, explorer links, and unsupported capability UI. They use devnet by default for safe testing.
 
 ## Connect A Wallet
 
@@ -248,7 +248,33 @@ const { publicKey, connected, connect, disconnect } = useSolanaWallet();
 
 Select a wallet from `wallets`, then call `connect()`. Selecting a wallet only configures the active wallet; it does not connect it. Some extensions expose previously authorized accounts after a page refresh, but Vue Solana still keeps `connected` false until `connect()` succeeds.
 
+When `autoConnect` is enabled, Vue Solana restores only the wallet identity the user selected previously and only after that wallet is discovered again on the client. It stores `name`, `platform`, and `source` metadata in `localStorage`, not private keys, sessions, or transactions.
+
 iOS browser wallet support uses wallet-specific universal links because Mobile Wallet Adapter web support is Android Chrome-only. Phantom, Solflare, and Backpack appear in the same `useWallets()` list on iOS browsers.
+
+## Manual Wallet Testing
+
+Use this checklist when validating a browser extension, Android MWA wallet, or iOS browser wallet by hand.
+
+1. Configure the app for `devnet` and verify the UI shows the devnet endpoint.
+2. Install a supported wallet and switch the wallet itself to devnet.
+3. Fund the wallet with devnet SOL from `https://faucet.solana.com`.
+4. Open the example app and click the wallet refresh action.
+5. Confirm the wallet appears in the unified wallet list with the expected source.
+6. Select the wallet and verify selection alone does not connect it.
+7. Click connect and approve the wallet prompt.
+8. Confirm the public key and `connected` state update after `connect()` resolves.
+9. Reload the page and confirm the previously selected wallet identity can be restored without arbitrary wallet selection.
+10. Disconnect and verify public key and connected state clear.
+
+Expected wallet sources:
+
+| Platform                     | Expected source         | Notes                                                                              |
+| ---------------------------- | ----------------------- | ---------------------------------------------------------------------------------- |
+| Desktop browser extension    | `wallet-standard`       | Phantom, Solflare, Backpack, and other standard wallets can appear when installed. |
+| Android Chrome or Chrome PWA | `mobile-wallet-adapter` | Requires a compatible native wallet and Android MWA browser support.               |
+| iOS browser                  | `deep-link`             | Phantom, Solflare, and Backpack entries use wallet-specific universal links.       |
+| Desktop native app           | Not implemented in v1   | Desktop native protocol links are explicitly deferred from v1.                     |
 
 ## Sign A Message
 
@@ -278,6 +304,16 @@ if (connected.value && canSignMessage.value) {
 
 Render a disabled auth button when `canSignMessage` is false. Some wallets can connect and sign transactions without supporting arbitrary message signing.
 
+For manual testing, use a clear challenge string that includes your domain, a nonce, and an expiration time. Never ask users to sign blank or ambiguous messages.
+
+```ts
+const challenge = new TextEncoder().encode(
+  "Sign in to example.com\nNonce: 8f1a2c\nExpires: 2026-07-03T12:00:00Z",
+);
+```
+
+After signing, verify that the UI shows the returned signature bytes and does not treat the message signature as an on-chain transaction.
+
 ## Send A Transfer
 
 The Vue and Nuxt examples include recipient address and amount fields for a real transfer. They use devnet by default so you can test with SOL that has no real value. For mainnet, configure `mainnet-beta` or a mainnet RPC endpoint and use a wallet with real SOL for fees.
@@ -292,12 +328,49 @@ import { Buffer } from "buffer/";
 (globalThis as typeof globalThis & { Buffer: typeof Buffer }).Buffer = Buffer;
 ```
 
-The wallet will prompt you to approve the transaction. After approval, the example shows the transaction signature. On Android Mobile Wallet Adapter, Vue Solana prefers wallet signing plus app-side RPC submission when supported, which makes the returned signature more reliable after the wallet redirects back to the browser.
+The wallet will prompt you to approve the transaction. After approval, the example shows the transaction signature, confirmation state, and explorer link. On Android Mobile Wallet Adapter, Vue Solana prefers wallet signing plus app-side RPC submission when supported, which makes the returned signature more reliable after the wallet redirects back to the browser.
+
+For manual transfer testing:
+
+1. Keep both the app and wallet on devnet.
+2. Use a recipient address you control or a newly generated devnet wallet.
+3. Start with `0.000001` SOL.
+4. Review the wallet prompt before approval.
+5. After submission, wait for the example to show confirmation status.
+6. Open the explorer link and confirm it uses the devnet cluster query.
+7. Refresh the sender and recipient balances.
+
+Explorer URLs should be cluster-aware:
+
+```ts
+function explorerUrl(signature: string, cluster: string) {
+  const suffix = cluster === "mainnet-beta" ? "" : `?cluster=${cluster}`;
+  return `https://explorer.solana.com/tx/${signature}${suffix}`;
+}
+```
+
+If confirmation times out after a signature is returned, do not immediately resubmit. Check the signature status or explorer first; the transaction may still confirm.
+
+## Final Verification
+
+Before relying on an app flow, verify these behaviors on devnet:
+
+- RPC reads work without a wallet.
+- Wallet discovery shows only supported wallet sources for the current platform.
+- Wallet selection and connection are separate user actions.
+- Optional `autoConnect` restores only the previously selected wallet identity.
+- Unsupported message signing or transaction signing capabilities are disabled in the UI.
+- Message signing returns a signature without submitting an on-chain transaction.
+- Transfer submission returns a signature and confirmation status.
+- Explorer links point to the same cluster as the app.
+- `mainnet-beta` is used only when you intentionally configure mainnet and understand that real SOL is at risk.
 
 ## More Reading
 
 - [Solana For Vue Developers](/concepts/solana-for-vue-developers)
 - [Clusters](/concepts/clusters)
 - [Wallets](/concepts/wallets)
+- [Wallet Guide](/guides/wallets)
+- [Transaction Guide](/guides/transactions)
 - [Troubleshooting](/troubleshooting)
 - [Solana Documentation](https://solana.com/docs)

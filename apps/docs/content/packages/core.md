@@ -3,7 +3,7 @@ title: "@vue-solana/core"
 description: Framework-agnostic Solana configuration, RPC, wallet types, and transaction helpers.
 ---
 
-`@vue-solana/core` contains framework-agnostic Solana primitives used by the Vue Solana packages.
+`@vue-solana/core` ([npm](https://www.npmjs.com/package/@vue-solana/core)) contains framework-agnostic Solana primitives used by the Vue Solana packages.
 
 Use this package directly when you want connection helpers, shared wallet types, Android Mobile Wallet Adapter registration helpers, iOS browser wallet helpers, and transaction helpers without installing the Vue plugin.
 
@@ -62,6 +62,8 @@ Direct subpaths:
 ```ts
 type SolanaCluster = "mainnet-beta" | "testnet" | "devnet" | "localnet";
 
+type SolanaChain = "solana:mainnet" | "solana:devnet" | "solana:testnet" | "solana:localnet";
+
 interface SolanaConfig {
   cluster?: SolanaCluster;
   endpoint?: string;
@@ -71,7 +73,7 @@ interface SolanaConfig {
 }
 ```
 
-Supported clusters are `mainnet-beta`, `testnet`, `devnet`, and `localnet`. If `endpoint` is omitted, the package uses the public Solana RPC endpoint for the selected cluster. If `wsEndpoint` is omitted, it is derived from the RPC endpoint.
+Supported clusters are `mainnet-beta`, `testnet`, `devnet`, and `localnet`. `SolanaChain` is the Wallet Standard chain identifier derived from a cluster by `getSolanaChain()`. If `endpoint` is omitted, the package uses the public Solana RPC endpoint for the selected cluster. If `wsEndpoint` is omitted, it is derived from the RPC endpoint.
 
 `autoConnect` defaults to `false`. When enabled through the Vue plugin or Nuxt module, Vue Solana reconnects only a wallet identity that the user previously selected and that is discovered again on the client. It stores only wallet identity metadata under `localStorage["vue-solana:selected-wallet"]`: `name`, and `platform`/`source` when available. It never stores private keys, session data, or transaction data, and it never connects an arbitrary installed wallet.
 
@@ -100,6 +102,7 @@ interface SolanaWallet {
   source?: SolanaWalletInfo["source"];
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
+  signMessage?: (message: Uint8Array) => Promise<SolanaSignMessageResult>;
   signTransaction?: <T extends SolanaTransaction>(transaction: T) => Promise<T>;
   signAllTransactions?: <T extends SolanaTransaction>(transactions: T[]) => Promise<T[]>;
   signAndSendTransaction?: (
@@ -127,6 +130,8 @@ interface SolanaWalletInfo {
   callbackUrl?: string;
   capabilities?: {
     connect?: boolean;
+    disconnect?: boolean;
+    signMessage?: boolean;
     signTransaction?: boolean;
     signAllTransactions?: boolean;
     signAndSendTransaction?: boolean;

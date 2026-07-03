@@ -18,12 +18,20 @@ Vue Solana provides RPC setup, reactive account reads, balance reads, browser ex
 ## Start Here
 
 - [Getting Started](/getting-started)
+- [Wallet Guide](/guides/wallets)
+- [Transaction Guide](/guides/transactions)
 - [Solana For Vue Developers](/concepts/solana-for-vue-developers)
 - [Clusters](/concepts/clusters)
 - [Wallets](/concepts/wallets)
 - [v1 Roadmap](/roadmap)
 - [Agent Skill](/agent-skill)
 - [Troubleshooting](/troubleshooting)
+
+## API Reference
+
+- [`@vue-solana/core`](/packages/core): config, endpoints, wallet interfaces, Wallet Standard helpers, mobile/iOS helpers, transaction helpers, and normalized errors.
+- [`@vue-solana/vue`](/packages/vue): Vue plugin and composables for RPC, account reads, wallets, messages, signatures, and transactions.
+- [`@vue-solana/nuxt`](/packages/nuxt): Nuxt module options, runtime behavior, and auto-imported composables.
 
 ## Examples
 

@@ -40,29 +40,83 @@ console.log(confirmation.signature, confirmation.commitment);
 
 Confirmation defaults to `confirmed` commitment and a 60 second timeout.
 
+## Build A Real Devnet Transfer
+
+This example creates a tiny system transfer on devnet. It uses `@solana/web3-compat` for raw Solana primitives and Vue Solana for wallet state and submission.
+
+Browser apps that create or serialize transactions should initialize the `buffer` polyfill once before transaction code runs:
+
+```ts
+import { Buffer } from "buffer/";
+
+(globalThis as typeof globalThis & { Buffer: typeof Buffer }).Buffer = Buffer;
+```
+
+```ts
+import { PublicKey, SystemProgram, Transaction } from "@solana/web3-compat";
+
+async function createTransferTransaction(params: {
+  connection: Connection;
+  from: PublicKey;
+  to: string;
+  lamports: number;
+}) {
+  const recipient = new PublicKey(params.to);
+  const { blockhash, lastValidBlockHeight } = await params.connection.getLatestBlockhash();
+
+  const transaction = new Transaction({
+    feePayer: params.from,
+    blockhash,
+    lastValidBlockHeight,
+  });
+
+  transaction.add(
+    SystemProgram.transfer({
+      fromPubkey: params.from,
+      toPubkey: recipient,
+      lamports: params.lamports,
+    }),
+  );
+
+  return transaction;
+}
+```
+
+Use devnet SOL while testing. Start with a tiny value such as `1_000` lamports (`0.000001` SOL). Never use a wallet with real funds while validating a tutorial or example flow.
+
 ## Vue Sign and Send Flow
 
 Use `useSignAndSendTransaction()` when a Vue component needs reactive status, errors, and optional confirmation.
 
 ```vue
 <script setup lang="ts">
-import { Transaction } from "@solana/web3-compat";
 import { computed } from "vue";
 import { useSignAndSendTransaction } from "@vue-solana/vue/useSignAndSendTransaction";
+import { useConnection } from "@vue-solana/vue/useConnection";
 import { useWallet } from "@vue-solana/vue/useWallet";
 
-const { connected, canSignTransaction } = useWallet();
-const { signature, confirmation, status, error, execute } = useSignAndSendTransaction({
-  confirm: true,
-  commitment: "confirmed",
-});
+const recipient = ref("PASTE_DEVNET_RECIPIENT_ADDRESS");
+const lamports = ref(1_000);
+const connection = useConnection();
+const { publicKey, connected, canSignTransaction } = useWallet();
+const { signature, confirmation, status, error, execute } = useSignAndSendTransaction();
 
 const canSubmit = computed(() => connected.value && canSignTransaction.value);
 
 async function submitTransaction() {
-  const transaction = new Transaction();
+  if (!publicKey.value) return;
 
-  await execute(transaction);
+  const transaction = await createTransferTransaction({
+    connection,
+    from: publicKey.value,
+    to: recipient.value,
+    lamports: lamports.value,
+  });
+
+  await execute(transaction, {
+    confirm: true,
+    confirmation: { commitment: "confirmed" },
+  });
 }
 </script>
 
@@ -79,7 +133,20 @@ async function submitTransaction() {
 </template>
 ```
 
-This example uses an empty transaction as a placeholder. Real apps must add valid instructions, recent blockhash data, and fee payer configuration before requesting a signature.
+`status` distinguishes submission from confirmation. A returned `signature` means the transaction was submitted to RPC. `confirmation` means the submitted signature reached the requested commitment. If confirmation times out after submission, keep showing the signature and check its status before retrying.
+
+## Explorer Links
+
+Explorer links should match the cluster your app is using.
+
+```ts
+function explorerUrl(signature: string, cluster: string) {
+  const suffix = cluster === "mainnet-beta" ? "" : `?cluster=${cluster}`;
+  return `https://explorer.solana.com/tx/${signature}${suffix}`;
+}
+```
+
+For devnet, links should look like `https://explorer.solana.com/tx/SIGNATURE?cluster=devnet`. Mainnet links intentionally omit the cluster query.
 
 ## Generic Transaction State
 
@@ -105,13 +172,17 @@ Nuxt exposes:
 
 ```vue
 <script setup lang="ts">
-const { signature, status, error, execute } = useSolanaSignAndSendTransaction({
-  confirm: true,
-});
+const { signature, status, error, execute } = useSolanaSignAndSendTransaction();
+
+async function submit(transaction: Transaction) {
+  await execute(transaction, { confirm: true });
+}
 </script>
 ```
 
 Call transaction methods from user actions on the client. Do not trigger wallet signing during SSR.
+
+Use `useSolanaTransactionConfirmation({ commitment: "confirmed" })` and call `confirm(signature)` when you need to confirm a signature returned by another flow. Use `useSolanaSignatureStatus(signature, { pollIntervalMs: 2_000 })` when you want to keep checking status after a timeout or redirect.
 
 ## Error Handling
 
@@ -155,3 +226,5 @@ try {
 - Check wallet capabilities before showing signing actions.
 - Treat RPC and wallet errors as untrusted data; map them to safe UI messages.
 - After a timeout, check signature status before retrying to avoid duplicate submissions.
+- Preserve the submitted signature in the UI even when confirmation fails or times out.
+- Link to the correct Solana Explorer cluster so users do not mistake devnet and mainnet transactions.
