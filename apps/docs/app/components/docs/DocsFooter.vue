@@ -9,7 +9,17 @@ const copyrightYear = 2026;
     <div
       class="mx-auto flex w-full max-w-[1180px] flex-wrap items-center justify-between gap-2 px-4 py-3 text-xs text-muted sm:px-6 lg:px-8"
     >
-      <p>&copy; {{ copyrightYear }} Vue Solana. All rights reserved.</p>
+      <p>
+        &copy; {{ copyrightYear }} Vue Solana. Released under the
+        <NuxtLink
+          to="https://github.com/vue-solana/vue-solana?tab=MIT-1-ov-file"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="inline-flex items-center gap-1"
+        >
+          MIT License. <UIcon name="i-ph-arrow-up-right" class="w-4 h-4" />
+        </NuxtLink>
+      </p>
 
       <nav class="flex items-center gap-1" aria-label="Package and source links">
         <UButton
