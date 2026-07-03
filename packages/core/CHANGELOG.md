@@ -1,5 +1,11 @@
 # @vue-solana/core
 
+## 0.7.1
+
+### Patch Changes
+
+- 16fd954: Improve package README structure for npm with badges, feature summaries, compatibility details, option tables, API tables, and caveats.
+
 ## 0.7.0
 
 ### Minor Changes

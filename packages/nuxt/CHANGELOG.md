@@ -1,5 +1,14 @@
 # @vue-solana/nuxt
 
+## 0.6.3
+
+### Patch Changes
+
+- 16fd954: Improve package README structure for npm with badges, feature summaries, compatibility details, option tables, API tables, and caveats.
+- Updated dependencies [16fd954]
+  - @vue-solana/core@0.7.1
+  - @vue-solana/vue@0.8.2
+
 ## 0.6.2
 
 ### Patch Changes
