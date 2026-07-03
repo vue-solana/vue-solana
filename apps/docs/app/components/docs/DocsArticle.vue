@@ -1,17 +1,61 @@
 <script setup lang="ts">
-defineProps<{
-  page: Record<string, unknown>;
+import { computed } from "vue";
+
+type TocLink = {
+  id: string;
+  text: string;
+  depth: number;
+  children?: TocLink[];
+};
+
+type DocsPage = {
+  title?: unknown;
+  description?: unknown;
+  body?: {
+    toc?: {
+      links?: TocLink[];
+    };
+  };
+};
+
+type SurroundLink = {
+  title: string;
+  path: string;
+  description?: string;
+  [key: string]: unknown;
+};
+
+const props = defineProps<{
+  page: DocsPage;
+  surround?: SurroundLink[] | null;
 }>();
+
+const title = computed(() => (typeof props.page.title === "string" ? props.page.title : "Docs"));
+const description = computed(() =>
+  typeof props.page.description === "string" ? props.page.description : undefined,
+);
+const tocLinks = computed<TocLink[]>(() => {
+  return props.page.body?.toc?.links ?? [];
+});
+
+const surroundLinks = computed(() => props.surround ?? undefined);
 </script>
 
 <template>
-  <UCard
-    variant="subtle"
-    class="hide-scrollbar min-w-0 border-slate-200/80 bg-white/90 shadow-xl shadow-slate-900/5 backdrop-blur lg:min-h-0 lg:overflow-y-auto dark:border-slate-800 dark:bg-slate-900/85 dark:shadow-black/20"
-    :ui="{ body: 'p-6 sm:p-8 lg:p-10' }"
-  >
-    <article class="docs-content">
-      <ContentRenderer :value="page" />
-    </article>
-  </UCard>
+  <UPage>
+    <UPageHeader :title="title" :description="description" />
+
+    <UPageBody>
+      <article class="docs-content">
+        <ContentRenderer :value="page" />
+      </article>
+
+      <USeparator class="my-10" />
+      <UContentSurround :surround="surroundLinks" />
+    </UPageBody>
+
+    <template #right>
+      <UContentToc v-if="tocLinks.length" :links="tocLinks" />
+    </template>
+  </UPage>
 </template>

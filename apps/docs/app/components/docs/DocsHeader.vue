@@ -1,31 +1,43 @@
 <script setup lang="ts">
-import { externalNavLinks, isPrimaryNavLinkActive, primaryNavLinks } from "~/utils/docsNavigation";
+import { computed } from "vue";
+
+import {
+  createPrimaryNavigationItems,
+  createSidebarNavigationItems,
+  externalNavLinks,
+} from "~/utils/docsNavigation";
 
 const route = useRoute();
+
+const primaryItems = computed(() => createPrimaryNavigationItems(route.path));
+const mobileItems = computed(() => [
+  primaryItems.value,
+  ...createSidebarNavigationItems(route.path),
+]);
 </script>
 
 <template>
-  <header
-    class="sticky top-0 z-20 flex flex-col gap-5 border-b border-slate-200/70 bg-white/85 py-5 backdrop-blur sm:py-6 lg:flex-row lg:items-center lg:justify-between dark:border-slate-800/80 dark:bg-slate-950/85"
+  <UHeader
+    :ui="{
+      root: 'border-default/70 bg-default/85 backdrop-blur supports-[backdrop-filter]:bg-default/75',
+      container: 'mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-8',
+    }"
   >
-    <DocsBrandLink />
+    <template #title>
+      <DocsBrandLink />
+    </template>
 
-    <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between lg:justify-end">
-      <nav class="flex flex-wrap gap-2" aria-label="Primary navigation">
-        <UButton
-          v-for="link in primaryNavLinks"
-          :key="link.to"
-          :to="link.to"
-          :variant="isPrimaryNavLinkActive(route.path, link.to) ? 'soft' : 'ghost'"
-          color="neutral"
-          size="sm"
-          class="font-semibold"
-        >
-          {{ link.label }}
-        </UButton>
-      </nav>
+    <UNavigationMenu
+      :items="primaryItems"
+      color="neutral"
+      variant="link"
+      highlight
+      class="hidden lg:flex"
+    />
 
-      <nav class="flex flex-wrap gap-2" aria-label="External links">
+    <template #right>
+      <UContentSearchButton class="hidden sm:inline-flex" />
+      <div class="hidden items-center gap-1 sm:flex" aria-label="External links">
         <UButton
           v-for="link in externalNavLinks"
           :key="link.to"
@@ -38,7 +50,39 @@ const route = useRoute();
           color="neutral"
           size="sm"
         />
-      </nav>
-    </div>
-  </header>
+      </div>
+      <UColorModeButton color="neutral" variant="ghost" />
+    </template>
+
+    <template #body>
+      <div class="grid gap-4 pb-4">
+        <UContentSearchButton block />
+        <UNavigationMenu
+          :items="mobileItems"
+          orientation="vertical"
+          color="neutral"
+          variant="link"
+          highlight
+          class="-mx-2.5"
+        />
+        <div
+          class="flex items-center gap-1 border-t border-default pt-3"
+          aria-label="External links"
+        >
+          <UButton
+            v-for="link in externalNavLinks"
+            :key="link.to"
+            :to="link.to"
+            :icon="link.icon"
+            :label="link.label"
+            target="_blank"
+            rel="noopener noreferrer"
+            variant="ghost"
+            color="neutral"
+            size="sm"
+          />
+        </div>
+      </div>
+    </template>
+  </UHeader>
 </template>

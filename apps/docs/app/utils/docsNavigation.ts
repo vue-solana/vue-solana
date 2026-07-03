@@ -1,3 +1,5 @@
+import type { NavigationMenuItem } from "@nuxt/ui";
+
 export type DocsNavLink = {
   label: string;
   to: string;
@@ -12,10 +14,9 @@ export type DocsNavSection = {
 export const primaryNavLinks: DocsNavLink[] = [
   { label: "Get Started", to: "/getting-started" },
   { label: "Concepts", to: "/concepts/solana-for-vue-developers" },
+  { label: "Guides", to: "/guides/rpc-and-clusters" },
   { label: "Packages", to: "/packages/vue" },
-  { label: "Roadmap", to: "/roadmap" },
   { label: "Examples", to: "/examples/vue-vite" },
-  { label: "Agent Skill", to: "/agent-skill" },
   { label: "Demo", to: "/demo" },
 ];
 
@@ -83,4 +84,24 @@ export function isPrimaryNavLinkActive(currentPath: string, linkPath: string) {
   const basePath = linkPath.split("/").slice(0, 2).join("/") || "/";
 
   return currentPath === linkPath || (basePath !== "/" && currentPath.startsWith(basePath));
+}
+
+export function createPrimaryNavigationItems(currentPath: string): NavigationMenuItem[] {
+  return primaryNavLinks.map((link) => ({
+    ...link,
+    active: isPrimaryNavLinkActive(currentPath, link.to),
+  }));
+}
+
+export function createSidebarNavigationItems(currentPath: string): NavigationMenuItem[][] {
+  return docsNavSections.map((section) => [
+    {
+      label: section.title,
+      type: "label",
+    },
+    ...section.links.map((link) => ({
+      ...link,
+      active: currentPath === link.to,
+    })),
+  ]);
 }
