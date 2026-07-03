@@ -1,6 +1,7 @@
 ---
 title: Troubleshooting
 description: Common setup, TypeScript, wallet, RPC, and Nuxt issues.
+surroundOrder: 4
 ---
 
 ## TypeScript Cannot Resolve `@solana/web3-compat`

@@ -1,6 +1,7 @@
 ---
 title: "Transactions"
 description: Sign, send, confirm, and handle transaction state with Vue Solana.
+surroundOrder: 11
 ---
 
 Vue Solana provides wallet-aware helpers for submitting transactions and composables for reactive transaction state.

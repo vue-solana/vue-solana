@@ -1,9 +1,10 @@
 ---
 title: "@vue-solana/core"
 description: Framework-agnostic Solana configuration, RPC, wallet types, and transaction helpers.
+surroundOrder: 14
 ---
 
-`@vue-solana/core` ([npm](https://www.npmjs.com/package/@vue-solana/core)) contains framework-agnostic Solana primitives used by the Vue Solana packages.
+[`@vue-solana/core`](https://www.npmjs.com/package/@vue-solana/core) contains framework-agnostic Solana primitives used by the Vue Solana packages.
 
 Use this package directly when you want connection helpers, shared wallet types, Android Mobile Wallet Adapter registration helpers, iOS browser wallet helpers, and transaction helpers without installing the Vue plugin.
 

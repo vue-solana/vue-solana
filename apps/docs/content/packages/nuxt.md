@@ -1,9 +1,10 @@
 ---
 title: "@vue-solana/nuxt"
 description: Nuxt module for Solana applications.
+surroundOrder: 16
 ---
 
-`@vue-solana/nuxt` ([npm](https://www.npmjs.com/package/@vue-solana/nuxt)) installs the Vue Solana plugin in Nuxt apps and auto-imports composables.
+[`@vue-solana/nuxt`](https://www.npmjs.com/package/@vue-solana/nuxt) installs the Vue Solana plugin in Nuxt apps and auto-imports composables.
 
 ## Install
 

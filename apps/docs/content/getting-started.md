@@ -1,6 +1,7 @@
 ---
 title: Getting Started
 description: Install Vue Solana packages, configure Vue or Nuxt, and test RPC reads on devnet.
+surroundOrder: 2
 ---
 
 This guide covers installing the Vue Solana packages, configuring Vue or Nuxt, testing Solana RPC reads, connecting supported wallets, signing messages, sending a real devnet transfer, and verifying the result. The examples use devnet by default for safe testing.

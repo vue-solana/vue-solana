@@ -1,6 +1,7 @@
 ---
 title: "Account Reads"
 description: Read balances, account data, program accounts, and signature status safely from Vue or Nuxt.
+surroundOrder: 10
 ---
 
 Vue Solana includes composables for common Solana read paths: balances, account info, program accounts, and signature status.

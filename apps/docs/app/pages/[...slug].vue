@@ -8,7 +8,7 @@ const { data: page } = await useAsyncData("page-" + route.path, () => {
 });
 
 const { data: surround } = await useAsyncData("surround-" + route.path, () => {
-  return queryCollectionItemSurroundings("content", route.path);
+  return queryCollectionItemSurroundings("content", route.path).order("surroundOrder", "ASC");
 });
 
 if (!page.value) {

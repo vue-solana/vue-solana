@@ -1,9 +1,10 @@
 ---
 title: "@vue-solana/vue"
 description: Vue plugin and composables for Solana applications.
+surroundOrder: 15
 ---
 
-`@vue-solana/vue` ([npm](https://www.npmjs.com/package/@vue-solana/vue)) provides a Vue plugin and composables for Solana RPC access, balance reads, wallet state, and transaction helper state.
+[`@vue-solana/vue`](https://www.npmjs.com/package/@vue-solana/vue) provides a Vue plugin and composables for Solana RPC access, balance reads, wallet state, and transaction helper state.
 
 ## Install
 

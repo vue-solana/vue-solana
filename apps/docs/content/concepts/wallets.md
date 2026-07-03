@@ -1,6 +1,7 @@
 ---
 title: Wallets
 description: Browser, Android, and iOS wallet discovery, selection, connection, and transaction signing.
+surroundOrder: 7
 ---
 
 Vue Solana exposes supported wallet sources through one flow: `useWallets()` for discovery and selection, then `useWallet()` for active wallet state and actions.

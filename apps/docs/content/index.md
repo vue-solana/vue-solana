@@ -1,6 +1,7 @@
 ---
 title: Vue Solana Documentation
 description: Documentation for Vue and Nuxt libraries that help developers use Solana.
+surroundOrder: 1
 ---
 
 Vue Solana is a small ecosystem of Vue and Nuxt packages for building Solana applications.

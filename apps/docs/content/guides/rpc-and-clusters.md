@@ -1,6 +1,7 @@
 ---
 title: "RPC and Clusters"
 description: Configure Solana clusters, RPC endpoints, WebSocket endpoints, and connection helpers.
+surroundOrder: 8
 ---
 
 Vue Solana keeps cluster and endpoint configuration shared across `@vue-solana/core`, `@vue-solana/vue`, and `@vue-solana/nuxt`.

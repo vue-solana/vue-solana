@@ -18,6 +18,7 @@ export const primaryNavLinks: DocsNavLink[] = [
   { label: "Packages", to: "/packages/vue" },
   { label: "Examples", to: "/examples/vue-vite" },
   { label: "Demo", to: "/demo" },
+  { label: "Roadmap", to: "/roadmap" },
 ];
 
 export const externalNavLinks: DocsNavLink[] = [
@@ -77,6 +78,10 @@ export const docsNavSections: DocsNavSection[] = [
       { label: "Vue Vite", to: "/examples/vue-vite" },
       { label: "Nuxt", to: "/examples/nuxt" },
     ],
+  },
+  {
+    title: "Roadmap",
+    links: [{ label: "v1 Roadmap", to: "/roadmap" }],
   },
 ];
 

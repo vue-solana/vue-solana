@@ -1,6 +1,7 @@
 ---
 title: Vue Vite Example
 description: Runnable Vue 3 and Vite example app for @vue-solana/vue.
+surroundOrder: 17
 ---
 
 The Vue Vite example is a runnable Vue 3 app for `@vue-solana/vue`.

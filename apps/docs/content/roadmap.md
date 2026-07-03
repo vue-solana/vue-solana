@@ -1,6 +1,7 @@
 ---
 title: v1 Roadmap
 description: Planned feature work before the first stable Vue Solana package release.
+surroundOrder: 19
 ---
 
 Vue Solana is currently pre-v1. The packages are already usable for RPC setup, wallet discovery, wallet connection, balance reads, and devnet transaction flows, but a stable v1 release needs a few more production-oriented APIs.

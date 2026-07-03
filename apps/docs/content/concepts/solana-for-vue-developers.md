@@ -1,6 +1,7 @@
 ---
 title: Solana For Vue Developers
 description: Practical Solana concepts for Vue and Nuxt developers.
+surroundOrder: 5
 ---
 
 This page explains the Solana terms you will see when using the Vue Solana packages. It is practical rather than exhaustive.
