@@ -1,5 +1,11 @@
 # @vue-solana/nuxt
 
+## 0.6.5
+
+### Patch Changes
+
+- 2b460cd: Force Solana wallet dependencies into Nuxt's final client Vite optimization config and mark `eventemitter3` for interop.
+
 ## 0.6.4
 
 ### Patch Changes
