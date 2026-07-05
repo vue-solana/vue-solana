@@ -14,7 +14,7 @@
     "@nuxt/image": "2.0.0",
     "@nuxt/ui": "^4.8.1",
     "@vercel/analytics": "^2.0.1",
-    "@vue-solana/nuxt": "0.6.4",
+    "@vue-solana/nuxt": "0.6.5",
     "nuxt": "^4.4.6",
     "tailwindcss": "^4.3.0",
     "typescript": "^5.8.3",
