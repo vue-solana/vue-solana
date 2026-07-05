@@ -8,6 +8,7 @@ const repoRoot = dirname(fileURLToPath(new URL("../package.json", import.meta.ur
 const tempRoot = mkdtempSync(join(tmpdir(), "vue-solana-standalone-"));
 const packDir = join(tempRoot, "packs");
 const pnpm = process.platform === "win32" ? "pnpm.cmd" : "pnpm";
+const skipBuild = process.env.SKIP_STANDALONE_SMOKE_BUILD === "1";
 
 mkdirSync(packDir, { recursive: true });
 
@@ -100,7 +101,9 @@ function installAndTypecheck(label, consumerDir) {
 
 try {
   console.log(`Using temp directory: ${tempRoot}`);
-  run(pnpm, ["build:packages"]);
+  if (!skipBuild) {
+    run(pnpm, ["build:packages"]);
+  }
 
   const packages = {
     core: {

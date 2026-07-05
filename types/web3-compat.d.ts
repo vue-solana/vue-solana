@@ -73,6 +73,8 @@ declare module "@solana/web3-compat" {
   }
 
   export class Transaction {
+    feePayer?: PublicKey;
+    recentBlockhash?: string;
     constructor(options?: { feePayer?: PublicKey; recentBlockhash?: string });
     add(...instructions: TransactionInstruction[]): this;
     serialize(options?: { requireAllSignatures?: boolean; verifySignatures?: boolean }): Uint8Array;

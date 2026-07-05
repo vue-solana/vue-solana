@@ -127,13 +127,17 @@ Direct subpaths:
 
 - `@vue-solana/core/types`
 - `@vue-solana/core/address`
+- `@vue-solana/core/buffer-polyfill`
 - `@vue-solana/core/clusters`
+- `@vue-solana/core/errors`
 - `@vue-solana/core/ios-wallet`
 - `@vue-solana/core/mobile-wallet`
 - `@vue-solana/core/rpc`
+- `@vue-solana/core/timeout`
 - `@vue-solana/core/transaction`
 - `@vue-solana/core/wallet`
 - `@vue-solana/core/wallet-standard`
+- `@vue-solana/core/web3`
 
 | API                                                                 | Description                                                                                                                                        |
 | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |

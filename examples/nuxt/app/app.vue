@@ -2,6 +2,7 @@
 import { computed, ref } from "vue";
 import { Buffer, installSolanaBufferPolyfill } from "@vue-solana/nuxt/buffer-polyfill";
 import { PublicKey, Transaction, TransactionInstruction } from "@vue-solana/nuxt/web3";
+import { useTransaction } from "@vue-solana/vue/useTransaction";
 
 installSolanaBufferPolyfill();
 
@@ -27,6 +28,11 @@ const walletNotice = ref<{ type: "success" | "error"; message: string } | null>(
 const systemProgramId = new PublicKey("11111111111111111111111111111111");
 
 const balance = useSolanaBalance(balanceAddress);
+
+const mockTransaction = useTransaction(async (label: string) => {
+  await new Promise((resolve) => window.setTimeout(resolve, 350));
+  return `mock-${label}-${Date.now()}`;
+});
 
 const pluginInstalled = computed(() => Boolean(solana.connection && solana.endpoint));
 const walletPublicKey = computed(() => wallet.publicKey.value?.toBase58() ?? "Not connected");
@@ -159,6 +165,7 @@ const balanceInSol = computed(() => {
   return `${balance.balance.value / 1_000_000_000} SOL`;
 });
 const balanceError = computed(() => formatError(balance.error.value));
+const mockTransactionError = computed(() => formatError(mockTransaction.error.value));
 const signMessageError = computed(() => formatError(signMessage.error.value));
 const sendTransactionError = computed(() =>
   formatError(devnetTransferError.value ?? sendTransaction.error.value),
@@ -249,6 +256,10 @@ async function copyWalletAddress() {
       message: formatError(error) ?? "Unable to copy wallet address.",
     };
   }
+}
+
+async function runMockTransaction() {
+  await mockTransaction.execute("transaction");
 }
 
 async function signWalletMessage() {
@@ -386,6 +397,29 @@ function createTransferInstruction(fromPubkey: PublicKey, toPubkey: PublicKey, l
         Blockhash: {{ directBlockhash }}
       </p>
       <p v-if="directConnectionError" class="error">{{ directConnectionError }}</p>
+    </section>
+
+    <section class="panel" data-testid="transaction-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">useTransaction</p>
+          <h2>Generic Transaction State</h2>
+        </div>
+      </div>
+
+      <p>Runs a mock async handler to test loading, error, and signature state.</p>
+      <button
+        type="button"
+        data-testid="run-mock-transaction"
+        :disabled="mockTransaction.loading.value"
+        @click="runMockTransaction"
+      >
+        {{ mockTransaction.loading.value ? "Running..." : "Run Mock Transaction" }}
+      </button>
+      <p class="result" data-testid="mock-transaction-signature">
+        Signature: {{ mockTransaction.signature.value ?? "No signature yet" }}
+      </p>
+      <p v-if="mockTransactionError" class="error">{{ mockTransactionError }}</p>
     </section>
 
     <section class="panel" data-testid="balance-panel">

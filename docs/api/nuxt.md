@@ -47,6 +47,11 @@ import { PublicKey, Transaction } from "@vue-solana/nuxt/web3";
 
 Use direct `@vue-solana/core/*` imports only for lower-level core usage.
 
+Available package subpaths:
+
+- `@vue-solana/nuxt/buffer-polyfill`
+- `@vue-solana/nuxt/web3`
+
 ## Error Handling
 
 Nuxt auto-imported composables expose the same normalized `SolanaError` values as `@vue-solana/vue`. Branch on `error.value?.code` for UI states and use `error.value?.cause` for diagnostics.

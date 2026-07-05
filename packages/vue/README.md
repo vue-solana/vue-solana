@@ -339,6 +339,11 @@ Direct composable subpaths:
 - `@vue-solana/vue/useSignatureStatus`
 - `@vue-solana/vue/useSignAndSendTransaction`
 
+Other direct subpaths:
+
+- `@vue-solana/vue/web3`
+- `@vue-solana/vue/buffer-polyfill`
+
 ## Caveats
 
 - Wallet and RPC operations require the plugin-provided client context. Composables are SSR-safe, but real wallet work should run after hydration or in user actions.

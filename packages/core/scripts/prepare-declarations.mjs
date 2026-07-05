@@ -1,12 +1,10 @@
 import { readdir, readFile, writeFile } from "node:fs/promises";
-import { extname, join } from "node:path";
+import { dirname, extname, join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const distDir = fileURLToPath(new URL("../dist/", import.meta.url));
-const references = [
-  '/// <reference path="../types/web3-compat.d.ts" />',
-  '/// <reference path="../types/buffer.d.ts" />',
-];
+const typesDir = fileURLToPath(new URL("../types/", import.meta.url));
+const shims = ["web3-compat.d.ts", "buffer.d.ts"];
 
 const declarationExtensions = new Set([".ts", ".mts", ".cts"]);
 
@@ -35,6 +33,7 @@ async function prepareDeclarations(directory) {
       continue;
     }
 
+    const references = getReferences(filePath);
     const missingReferences = references.filter((reference) => !content.includes(reference));
 
     if (!missingReferences.length) {
@@ -43,4 +42,14 @@ async function prepareDeclarations(directory) {
 
     await writeFile(filePath, `${missingReferences.join("\n")}\n${content}`);
   }
+}
+
+function getReferences(filePath) {
+  const declarationDir = dirname(filePath);
+
+  return shims.map((shim) => {
+    const referencePath = relative(declarationDir, join(typesDir, shim)).split(sep).join("/");
+
+    return `/// <reference path="${referencePath}" />`;
+  });
 }

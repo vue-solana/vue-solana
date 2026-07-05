@@ -96,6 +96,7 @@ Nuxt auto-imports these composables:
 - `useSolanaWallets()`
 - `useSolanaBalance()`
 - `useSolanaProgramAccounts()`
+- `useSolanaSignMessage()`
 - `useSolanaSignAndSendTransaction()`
 - `useSolanaTransactionConfirmation()`
 - `useSolanaSignatureStatus()`
@@ -214,6 +215,12 @@ pnpm format
 pnpm test
 pnpm typecheck
 pnpm build:packages
+```
+
+Before release-facing package changes, also run:
+
+```sh
+pnpm smoke:standalone-installs
 ```
 
 For consumer app examples, verify the app starts and the relevant flow works on `devnet`. For wallet or transaction work, include manual browser testing with a Solana wallet when feasible.
