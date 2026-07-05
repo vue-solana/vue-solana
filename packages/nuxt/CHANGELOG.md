@@ -1,5 +1,11 @@
 # @vue-solana/nuxt
 
+## 0.6.7
+
+### Patch Changes
+
+- 7656f4b: Fix Nuxt dev dependency optimization for the `buffer/` subpath used by the Solana buffer polyfill.
+
 ## 0.6.6
 
 ### Patch Changes
