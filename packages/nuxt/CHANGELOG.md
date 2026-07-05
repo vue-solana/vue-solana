@@ -1,5 +1,11 @@
 # @vue-solana/nuxt
 
+## 0.6.6
+
+### Patch Changes
+
+- caac8a9: Optimize Solana transitive dependencies with pnpm-safe Vite dev entries so Nuxt apps avoid CommonJS interop failures from packages such as eventemitter3.
+
 ## 0.6.5
 
 ### Patch Changes
