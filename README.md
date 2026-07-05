@@ -12,7 +12,7 @@ Vue Solana provides RPC reads, account reads, balance reads, browser extension w
 
 ## Which Package Should I Use?
 
-Use `@solana/web3-compat` directly if you only need raw Solana APIs such as `Connection`, `PublicKey`, and transactions.
+Use `@vue-solana/core` directly if you only need Solana APIs such as `Connection`, `PublicKey`, and transactions plus shared Vue Solana helpers.
 
 Use [`@vue-solana/core`](https://www.npmjs.com/package/@vue-solana/core) if you want shared Solana config, cluster endpoint defaults, wallet types, and transaction helpers without Vue.
 
@@ -20,7 +20,7 @@ Use [`@vue-solana/vue`](https://www.npmjs.com/package/@vue-solana/vue) in Vue ap
 
 Use [`@vue-solana/nuxt`](https://www.npmjs.com/package/@vue-solana/nuxt) in Nuxt apps.
 
-`@vue-solana/core` does not replace `@solana/web3-compat`. It builds on top of it and keeps shared Vue Solana behavior in one place.
+`@vue-solana/core` builds on top of `@solana/web3-compat` and re-exports the supported compatibility primitives so apps can use one Vue Solana package entry point.
 
 ## Clusters
 
@@ -38,13 +38,13 @@ Use `mainnet-beta` rather than `mainnet`. See [Solana Concepts For Vue Developer
 For Vue:
 
 ```sh
-pnpm add @vue-solana/vue @vue-solana/core @solana/web3-compat buffer
+pnpm add @vue-solana/vue
 ```
 
 For Nuxt:
 
 ```sh
-pnpm add @vue-solana/nuxt @vue-solana/vue @vue-solana/core @solana/web3-compat buffer
+npx nuxt module add @vue-solana/nuxt
 ```
 
 ## Wallet Support
@@ -70,6 +70,8 @@ Root package exports remain supported for compatibility. New code can use direct
 ```ts
 import { createSolanaContext } from "@vue-solana/core/rpc";
 import type { SolanaConfig } from "@vue-solana/core/types";
+import { PublicKey, Transaction } from "@vue-solana/vue/web3";
+import { installSolanaBufferPolyfill } from "@vue-solana/vue/buffer-polyfill";
 import { useAccountInfo } from "@vue-solana/vue/useAccountInfo";
 import { useProgramAccounts } from "@vue-solana/vue/useProgramAccounts";
 import { useRpc } from "@vue-solana/vue/useRpc";
@@ -77,6 +79,8 @@ import { useSignatureStatus } from "@vue-solana/vue/useSignatureStatus";
 import { useSignMessage } from "@vue-solana/vue/useSignMessage";
 import { useWallet } from "@vue-solana/vue/useWallet";
 ```
+
+Vue apps can import transaction primitives from `@vue-solana/vue/web3` and the Buffer helper from `@vue-solana/vue/buffer-polyfill` without installing `@vue-solana/core`, `@solana/web3-compat`, or `buffer` directly. Nuxt apps use the equivalent `@vue-solana/nuxt/web3` and `@vue-solana/nuxt/buffer-polyfill` subpaths. Direct `@vue-solana/core/*` imports remain supported for lower-level core usage.
 
 The Nuxt module auto-imports composables from these direct Vue subpaths and keeps its runtime plugin client-only. Auto-imported composables are SSR-safe, but real RPC and wallet work should run after hydration.
 
@@ -156,12 +160,15 @@ pnpm format
 pnpm test
 pnpm typecheck
 pnpm build:packages
+pnpm smoke:standalone-installs
 pnpm dev:docs
 ```
 
 `pnpm install` runs the root `prepare` script and installs the Husky Git hooks. If hooks are missing after changing package managers or reinstalling dependencies, run `pnpm prepare` from the repository root.
 
 Pre-commit checks run through lint-staged and only lint/format staged files. Run `pnpm lint`, `pnpm format`, `pnpm test`, `pnpm typecheck`, and `pnpm build:packages` before opening larger pull requests.
+
+Run `pnpm smoke:standalone-installs` before release-facing package changes. It builds and packs `@vue-solana/core`, `@vue-solana/vue`, and `@vue-solana/nuxt`, installs each tarball into a fresh temporary TypeScript consumer, and typechecks representative root, `web3`, and `buffer-polyfill` imports without workspace aliases or repo-local shims. Set `KEEP_STANDALONE_SMOKE=1` to keep the temporary projects for debugging.
 
 ## CI And Releases
 
@@ -242,11 +249,11 @@ pnpm dev:docs
 
 `@solana/web3-compat@0.0.21` currently has broken TypeScript metadata. Its package metadata points to `dist/types/index.d.ts`, but that file is not included in the published package.
 
-This repository includes `types/web3-compat.d.ts` as a temporary shim so TypeScript can resolve the package while runtime imports still use `@solana/web3-compat`.
+This repository includes temporary declaration shims so TypeScript can resolve Vue Solana's public type surface while runtime imports still use `@solana/web3-compat`. Current `@vue-solana/core` packages publish those shims for the documented `@vue-solana/core`, `@vue-solana/core/web3`, and `@vue-solana/core/buffer-polyfill` imports.
 
-Consumer workaround:
+Consumer workaround for older package versions or direct `@solana/web3-compat` imports:
 
-If your app reports that TypeScript cannot find declarations for `@solana/web3-compat`, add a local declaration file such as `types/web3-compat.d.ts`:
+If your app imports `@solana/web3-compat` directly and TypeScript cannot find declarations for it, add a local declaration file such as `types/web3-compat.d.ts`:
 
 ```ts
 declare module "@solana/web3-compat" {
@@ -276,5 +283,5 @@ Make sure the file is included by your `tsconfig.json`, for example by including
 TODO:
 
 - [ ] Re-check this after each new `@solana/web3-compat` release.
-- [ ] Remove `types/web3-compat.d.ts` once the package ships valid root declarations.
+- [ ] Remove the package-owned and repo-local shims once the package ships valid root declarations.
 - [ ] Re-run `pnpm typecheck` and `pnpm build` after removing the shim.

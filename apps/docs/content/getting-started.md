@@ -8,7 +8,7 @@ This guide covers installing the Vue Solana packages, configuring Vue or Nuxt, t
 
 ## Before You Start
 
-Use `@solana/web3-compat` directly if you only need raw Solana APIs. Use `@vue-solana/vue` or `@vue-solana/nuxt` when you want framework integration.
+Use `@vue-solana/core` directly if you need Solana primitives such as `Connection`, `PublicKey`, and transactions without Vue/Nuxt integration. Use `@vue-solana/vue` or `@vue-solana/nuxt` when you want framework integration.
 
 Supported clusters:
 
@@ -33,53 +33,34 @@ Planned but not supported yet:
 ## Install For Vue
 
 ```sh
-pnpm add @vue-solana/vue @vue-solana/core @solana/web3-compat buffer
+pnpm add @vue-solana/vue
 ```
 
 ```sh
-npm install @vue-solana/vue @vue-solana/core @solana/web3-compat buffer
+npm install @vue-solana/vue
 ```
 
 For local workspace development inside this monorepo, the examples use workspace links instead of published versions.
 
+Vue apps can use `@vue-solana/vue/web3` and `@vue-solana/vue/buffer-polyfill` without installing low-level Solana or Buffer packages directly.
+
 ## Install For Nuxt
 
 ```sh
-pnpm add @vue-solana/nuxt @vue-solana/vue @vue-solana/core @solana/web3-compat buffer
+npx nuxt module add @vue-solana/nuxt
 ```
 
-```sh
-npm install @vue-solana/nuxt @vue-solana/vue @vue-solana/core @solana/web3-compat buffer
-```
+This installs the package and adds `@vue-solana/nuxt` to the `modules` array in `nuxt.config.ts`.
+
+Nuxt apps can use `@vue-solana/nuxt/web3` and `@vue-solana/nuxt/buffer-polyfill` without installing `@vue-solana/core`, `@vue-solana/vue`, or low-level Solana and Buffer packages directly.
 
 ## Known TypeScript Issue
 
 `@solana/web3-compat@0.0.21` currently has broken TypeScript package metadata. Its package metadata points to `dist/types/index.d.ts`, but that file is not included in the published package.
 
-Runtime imports still use the real `@solana/web3-compat` package. If TypeScript reports that it cannot find declarations for `@solana/web3-compat`, add this local declaration file to your app as `types/web3-compat.d.ts`:
+Runtime imports still use the real `@solana/web3-compat` package. Current Vue Solana packages publish temporary package-owned declaration shims, so apps following the documented `@vue-solana/core`, `@vue-solana/vue`, or `@vue-solana/nuxt` imports should not need their own local shim.
 
-```ts
-declare module "@solana/web3-compat" {
-  export type {
-    Commitment,
-    RpcResponseAndContext,
-    SendOptions,
-    SignatureResult,
-    TransactionSignature,
-  } from "@solana/web3.js";
-  export {
-    Connection,
-    Keypair,
-    PublicKey,
-    SystemProgram,
-    Transaction,
-    TransactionInstruction,
-    VersionedTransaction,
-  } from "@solana/web3.js";
-}
-```
-
-Make sure your `tsconfig.json` includes the file. Most Vue and Nuxt apps include `**/*.d.ts` by default. If yours does not, add an include pattern such as `types/**/*.d.ts`.
+Only add a local shim if you are using an older Vue Solana package version or importing `@solana/web3-compat` directly from app code. Re-check this note after each new `@solana/web3-compat` release; the package-owned shim should be removed once upstream ships valid root declarations.
 
 ## Vue Setup
 
@@ -321,12 +302,12 @@ The Vue and Nuxt examples include recipient address and amount fields for a real
 
 Start with a tiny amount such as `0.000001` SOL while testing.
 
-Browser apps that create or serialize `@solana/web3-compat` transactions should initialize the `buffer` polyfill before transaction code:
+Browser apps that create or serialize transactions should initialize the framework package Buffer polyfill before transaction code:
 
 ```ts
-import { Buffer } from "buffer/";
+import { installSolanaBufferPolyfill } from "@vue-solana/vue/buffer-polyfill";
 
-(globalThis as typeof globalThis & { Buffer: typeof Buffer }).Buffer = Buffer;
+installSolanaBufferPolyfill();
 ```
 
 The wallet will prompt you to approve the transaction. After approval, the example shows the transaction signature, confirmation state, and explorer link. On Android Mobile Wallet Adapter, Vue Solana prefers wallet signing plus app-side RPC submission when supported, which makes the returned signature more reliable after the wallet redirects back to the browser.

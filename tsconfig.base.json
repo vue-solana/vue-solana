@@ -7,6 +7,8 @@
     "paths": {
       "@vue-solana/core": ["packages/core/src/index.ts"],
       "@vue-solana/core/*": ["packages/core/src/*.ts"],
+      "@vue-solana/nuxt": ["packages/nuxt/src/module.ts"],
+      "@vue-solana/nuxt/*": ["packages/nuxt/src/runtime/*.ts"],
       "@vue-solana/vue": ["packages/vue/src/index.ts"],
       "@vue-solana/vue/*": ["packages/vue/src/*.ts"]
     },

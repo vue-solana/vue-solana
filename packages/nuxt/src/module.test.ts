@@ -80,6 +80,9 @@ describe("Nuxt module", () => {
     expect(module.meta).toEqual({
       name: "@vue-solana/nuxt",
       configKey: "solana",
+      compatibility: {
+        nuxt: "^3.0.0 || ^4.0.0",
+      },
     });
     expect(module.defaults).toEqual({
       cluster: "devnet",

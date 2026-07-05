@@ -11,7 +11,7 @@ Current wallet support is built on these libraries:
 - Browser extension wallets: `@wallet-standard/app`, `@wallet-standard/base`, `@wallet-standard/features`, and `@solana/wallet-standard-features`.
 - Android mobile native wallets: `@solana-mobile/wallet-standard-mobile`, which registers Solana Mobile Wallet Adapter as a Wallet Standard wallet on supported Android Chrome mobile web and PWA runtimes.
 - iOS browser wallets: wallet-specific universal links for Phantom, Solflare, and Backpack.
-- Solana primitives and transaction types: `@solana/web3-compat`.
+- Solana primitives and transaction types: `@vue-solana/vue/web3` for Vue apps, `@vue-solana/nuxt/web3` for Nuxt apps, and `@vue-solana/core/web3` for framework-agnostic core usage.
 
 ## Support Matrix
 
@@ -170,12 +170,12 @@ Platform notes:
 
 The examples include a real transfer form with recipient address and amount fields. It creates a Solana transaction, asks the connected wallet to sign or send, and displays the returned signature.
 
-Browser apps that use `@solana/web3-compat` transaction code should install `buffer` and initialize it from `buffer/` before creating or serializing transactions:
+Browser apps that create or serialize transactions should initialize the framework package Buffer polyfill before transaction code runs:
 
 ```ts
-import { Buffer } from "buffer/";
+import { installSolanaBufferPolyfill } from "@vue-solana/vue/buffer-polyfill";
 
-(globalThis as typeof globalThis & { Buffer: typeof Buffer }).Buffer = Buffer;
+installSolanaBufferPolyfill();
 ```
 
 Use devnet for testing. Devnet SOL has no real value, but fees still apply.

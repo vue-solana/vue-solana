@@ -35,6 +35,11 @@
       "import": "./dist/address.mjs",
       "require": "./dist/address.cjs"
     },
+    "./buffer-polyfill": {
+      "types": "./dist/buffer-polyfill.d.ts",
+      "import": "./dist/buffer-polyfill.mjs",
+      "require": "./dist/buffer-polyfill.cjs"
+    },
     "./types": {
       "types": "./dist/types.d.ts",
       "import": "./dist/types.mjs",
@@ -84,16 +89,22 @@
       "types": "./dist/wallet-standard.d.ts",
       "import": "./dist/wallet-standard.mjs",
       "require": "./dist/wallet-standard.cjs"
+    },
+    "./web3": {
+      "types": "./dist/web3.d.ts",
+      "import": "./dist/web3.mjs",
+      "require": "./dist/web3.cjs"
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "types"
   ],
   "publishConfig": {
     "access": "public"
   },
   "scripts": {
-    "build": "unbuild",
+    "build": "unbuild && node scripts/prepare-declarations.mjs",
     "dev": "unbuild --stub",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist"
@@ -105,6 +116,7 @@
     "@wallet-standard/app": "^1.1.1",
     "@wallet-standard/base": "^1.1.1",
     "@wallet-standard/features": "^1.1.1",
+    "buffer": "^6.0.3",
     "bs58": "^6.0.0",
     "tweetnacl": "^1.0.3"
   },

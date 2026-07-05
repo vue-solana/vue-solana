@@ -1,6 +1,6 @@
 import { confirmTransactionSignature } from "@vue-solana/core/transaction";
 import type { ConfirmTransactionOptions, TransactionConfirmation } from "@vue-solana/core/types";
-import type { TransactionSignature } from "@solana/web3-compat";
+import type { TransactionSignature } from "@vue-solana/core/web3";
 import { normalizeSolanaError, type SolanaError } from "@vue-solana/core/errors";
 import { ref } from "vue";
 import { useConnection } from "./useConnection";

@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { Buffer } from "buffer/";
 import { computed, ref } from "vue";
-import { PublicKey, Transaction, TransactionInstruction } from "@solana/web3-compat";
-import { useTransaction } from "@vue-solana/vue";
+import { Buffer, installSolanaBufferPolyfill } from "@vue-solana/nuxt/buffer-polyfill";
+import { PublicKey, Transaction, TransactionInstruction } from "@vue-solana/nuxt/web3";
+import { useTransaction } from "@vue-solana/vue/useTransaction";
 
-(globalThis as typeof globalThis & { Buffer: typeof Buffer }).Buffer = Buffer;
+installSolanaBufferPolyfill();
 
 const solana = useSolana();
 const rpc = useSolanaRpc();
@@ -321,7 +321,7 @@ function createTransferInstruction(fromPubkey: PublicKey, toPubkey: PublicKey, l
       <p>
         This screen exercises the Nuxt module and auto-imported Solana composables: plugin
         injection, RPC status, direct connection calls, balance lookup, browser wallet discovery,
-        generic transaction state, and real devnet transfers.
+        message signing, and real devnet transfers.
       </p>
     </section>
 
@@ -397,6 +397,29 @@ function createTransferInstruction(fromPubkey: PublicKey, toPubkey: PublicKey, l
         Blockhash: {{ directBlockhash }}
       </p>
       <p v-if="directConnectionError" class="error">{{ directConnectionError }}</p>
+    </section>
+
+    <section class="panel" data-testid="transaction-panel">
+      <div class="panel-heading">
+        <div>
+          <p class="eyebrow">useTransaction</p>
+          <h2>Generic Transaction State</h2>
+        </div>
+      </div>
+
+      <p>Runs a mock async handler to test loading, error, and signature state.</p>
+      <button
+        type="button"
+        data-testid="run-mock-transaction"
+        :disabled="mockTransaction.loading.value"
+        @click="runMockTransaction"
+      >
+        {{ mockTransaction.loading.value ? "Running..." : "Run Mock Transaction" }}
+      </button>
+      <p class="result" data-testid="mock-transaction-signature">
+        Signature: {{ mockTransaction.signature.value ?? "No signature yet" }}
+      </p>
+      <p v-if="mockTransactionError" class="error">{{ mockTransactionError }}</p>
     </section>
 
     <section class="panel" data-testid="balance-panel">
@@ -552,29 +575,6 @@ function createTransferInstruction(fromPubkey: PublicKey, toPubkey: PublicKey, l
       <p v-if="walletNotice" :class="walletNotice.type === 'error' ? 'error' : 'result'">
         {{ walletNotice.message }}
       </p>
-    </section>
-
-    <section class="panel" data-testid="transaction-panel">
-      <div class="panel-heading">
-        <div>
-          <p class="eyebrow">useTransaction</p>
-          <h2>Generic Transaction State</h2>
-        </div>
-      </div>
-
-      <p>Runs a mock async handler to test loading, error, and signature state.</p>
-      <button
-        type="button"
-        data-testid="run-mock-transaction"
-        :disabled="mockTransaction.loading.value"
-        @click="runMockTransaction"
-      >
-        {{ mockTransaction.loading.value ? "Running..." : "Run Mock Transaction" }}
-      </button>
-      <p class="result" data-testid="mock-transaction-signature">
-        Signature: {{ mockTransaction.signature.value ?? "No signature yet" }}
-      </p>
-      <p v-if="mockTransactionError" class="error">{{ mockTransactionError }}</p>
     </section>
 
     <section class="panel" data-testid="message-signing-panel">

@@ -36,6 +36,22 @@ The Nuxt module installs the runtime plugin on the client only and auto-imports 
 - `useSolanaTransactionConfirmation()`
 - `useSolanaSignatureStatus()`
 
+## Explicit Solana Imports
+
+Raw Solana primitives and the browser Buffer helper are explicit imports, not auto-imports:
+
+```ts
+import { installSolanaBufferPolyfill } from "@vue-solana/nuxt/buffer-polyfill";
+import { PublicKey, Transaction } from "@vue-solana/nuxt/web3";
+```
+
+Use direct `@vue-solana/core/*` imports only for lower-level core usage.
+
+Available package subpaths:
+
+- `@vue-solana/nuxt/buffer-polyfill`
+- `@vue-solana/nuxt/web3`
+
 ## Error Handling
 
 Nuxt auto-imported composables expose the same normalized `SolanaError` values as `@vue-solana/vue`. Branch on `error.value?.code` for UI states and use `error.value?.cause` for diagnostics.

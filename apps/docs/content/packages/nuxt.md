@@ -9,10 +9,12 @@ surroundOrder: 16
 ## Install
 
 ```sh
-pnpm add @vue-solana/nuxt @vue-solana/vue @vue-solana/core @solana/web3-compat buffer
+npx nuxt module add @vue-solana/nuxt
 ```
 
-The `buffer` package is needed for browser apps that create or serialize `@solana/web3-compat` transactions.
+This installs the package and adds `@vue-solana/nuxt` to the `modules` array in `nuxt.config.ts`.
+
+Browser apps that create or serialize transactions can initialize the Buffer polyfill from `@vue-solana/nuxt/buffer-polyfill` and import supported Solana primitives from `@vue-solana/nuxt/web3`.
 
 ## Module Setup
 
@@ -86,6 +88,20 @@ The module auto-imports these composables from direct `@vue-solana/vue/*` subpat
 - `useSolanaSignAndSendTransaction()`: signs, sends, and optionally confirms transactions.
 
 These are Nuxt aliases for the Vue composables. Use the Nuxt names inside Nuxt apps so auto-imports work without explicit imports.
+
+Raw Solana primitives and the browser Buffer helper are explicit imports, not auto-imports:
+
+```ts
+import { installSolanaBufferPolyfill } from "@vue-solana/nuxt/buffer-polyfill";
+import { PublicKey, Transaction } from "@vue-solana/nuxt/web3";
+```
+
+Use direct `@vue-solana/core/*` imports only for lower-level core usage.
+
+Direct package subpaths:
+
+- `@vue-solana/nuxt/buffer-polyfill`
+- `@vue-solana/nuxt/web3`
 
 The runtime plugin is client-only. Auto-imported composables can be called during SSR and return inert state until hydration provides the real client context. Trigger RPC and wallet work from client lifecycle hooks or user actions.
 
@@ -252,7 +268,7 @@ Use `useSolanaSignAndSendTransaction()` from a client-side user action when the 
 
 ```vue
 <script setup lang="ts">
-import { Transaction } from "@solana/web3-compat";
+import { Transaction } from "@vue-solana/nuxt/web3";
 
 const { connected, canSignTransaction } = useSolanaWallet();
 const { signature, confirmation, status, loading, error, execute } =

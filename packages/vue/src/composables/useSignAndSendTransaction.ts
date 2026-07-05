@@ -8,7 +8,7 @@ import type {
   TransactionConfirmation,
 } from "@vue-solana/core/types";
 import { createNoWalletSelectedError } from "@vue-solana/core/wallet";
-import type { TransactionSignature } from "@solana/web3-compat";
+import type { TransactionSignature } from "@vue-solana/core/web3";
 import { ref } from "vue";
 import { useConnection } from "./useConnection";
 import { useWallet } from "./useWallet";

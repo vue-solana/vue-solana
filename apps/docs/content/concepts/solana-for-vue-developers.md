@@ -15,7 +15,7 @@ Official references:
 
 ## Connections And RPC
 
-Frontend apps read Solana data through an RPC endpoint. `@solana/web3-compat` exposes the `Connection` class that sends requests to that endpoint.
+Frontend apps read Solana data through an RPC endpoint. `@vue-solana/vue/web3` and `@vue-solana/nuxt/web3` expose the supported `Connection` class that sends requests to that endpoint.
 
 Vue Solana packages create and provide that connection for Vue and Nuxt code so composables can share the same cluster, endpoint, commitment, and wallet state.
 
@@ -31,7 +31,7 @@ createSolanaPlugin({
 A public key is a Solana account address. You can safely show public keys in a frontend app.
 
 ```ts
-import { PublicKey } from "@solana/web3-compat";
+import { PublicKey } from "@vue-solana/vue/web3";
 
 const publicKey = new PublicKey("PASTE_A_SOLANA_ADDRESS");
 ```

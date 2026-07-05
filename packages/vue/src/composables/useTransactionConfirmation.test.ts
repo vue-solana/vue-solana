@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { defineComponent, h } from "vue";
-import type { Connection } from "@solana/web3-compat";
+import type { Connection } from "@vue-solana/core/web3";
 import type { SolanaError } from "@vue-solana/core/errors";
 import type { ConfirmTransactionOptions } from "@vue-solana/core/types";
 import { createMockSolanaContext, mountWithSolana } from "../../test-utils";

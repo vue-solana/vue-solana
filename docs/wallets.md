@@ -7,7 +7,7 @@ Current wallet support is built on these libraries:
 - Browser extension wallets: discovered through `@wallet-standard/app`, `@wallet-standard/base`, `@wallet-standard/features`, and Solana signing features from `@solana/wallet-standard-features`.
 - Android mobile native wallets: registered through `@solana-mobile/wallet-standard-mobile`, which exposes Solana Mobile Wallet Adapter as a Wallet Standard wallet on supported Android Chrome mobile web and PWA runtimes.
 - iOS browser wallets: exposed as wallet-specific universal link entries for Phantom, Solflare, and Backpack on iOS browsers.
-- Solana primitives and transaction types: provided through `@solana/web3-compat`.
+- Solana primitives and transaction types: provided through `@vue-solana/vue/web3` for Vue apps, `@vue-solana/nuxt/web3` for Nuxt apps, and `@vue-solana/core/web3` for framework-agnostic core usage.
 
 Wallets such as Phantom, Solflare, Backpack, and other Solana Wallet Standard-compatible wallets can be discovered at runtime when they register with Wallet Standard. Android users can also see `Mobile Wallet Adapter` when browsing on supported Android Chrome runtimes with compatible native wallet apps. iOS browser users can see Phantom, Solflare, and Backpack universal-link entries even though Mobile Wallet Adapter web flows are not available on iOS.
 
@@ -210,16 +210,16 @@ For Android MWA transaction sends, Vue Solana asks the mobile wallet to sign and
 
 ## Real Transfer Flow
 
-After a wallet is selected and connected, create a normal Solana transaction and send it with `useSignAndSendTransaction()`. Browser apps that use `@solana/web3-compat` transaction code should install `buffer` and import from `buffer/` so Vite/Nuxt use the browser polyfill instead of the Node builtin.
+After a wallet is selected and connected, create a normal Solana transaction and send it with `useSignAndSendTransaction()`. Browser apps that create or serialize transactions should initialize the Vue package Buffer polyfill before transaction code runs.
 
 ```ts
-import { Buffer } from "buffer/";
-import { PublicKey, Transaction, TransactionInstruction } from "@solana/web3-compat";
+import { installSolanaBufferPolyfill } from "@vue-solana/vue/buffer-polyfill";
+import { PublicKey, Transaction, TransactionInstruction } from "@vue-solana/vue/web3";
 import { useConnection } from "@vue-solana/vue/useConnection";
 import { useSignAndSendTransaction } from "@vue-solana/vue/useSignAndSendTransaction";
 import { useWallet } from "@vue-solana/vue/useWallet";
 
-(globalThis as typeof globalThis & { Buffer: typeof Buffer }).Buffer = Buffer;
+installSolanaBufferPolyfill();
 
 const connection = useConnection();
 const wallet = useWallet();

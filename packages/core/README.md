@@ -9,7 +9,7 @@ Framework-agnostic Solana primitives for Vue Solana libraries and apps that want
 
 Use this package directly when you want connection helpers, shared wallet types, Android Mobile Wallet Adapter registration helpers, message signing support, and transaction helpers without installing the Vue plugin.
 
-`@vue-solana/core` does not replace `@solana/web3-compat`. Use `@solana/web3-compat` for raw Solana primitives like `Connection`, `PublicKey`, and transactions. Use `@vue-solana/core` for Vue Solana shared configuration, cluster endpoint defaults, wallet interfaces, and transaction helpers.
+`@vue-solana/core` wraps `@solana/web3-compat` and re-exports the Solana primitives most Vue Solana apps need, including `Connection`, `PublicKey`, `Transaction`, and `VersionedTransaction`.
 
 Official Solana docs:
 
@@ -44,16 +44,16 @@ Full Vue Solana docs:
 | Solana client | `@solana/web3-compat@^0.0.21`                   |
 | Clusters      | `mainnet-beta`, `devnet`, `testnet`, `localnet` |
 
-This package intentionally keeps raw Solana primitives in `@solana/web3-compat`. Import `Connection`, `PublicKey`, `Transaction`, and `VersionedTransaction` from Solana packages; import Vue Solana configuration, wallet interfaces, and helpers from `@vue-solana/core`.
+This package depends on `@solana/web3-compat` and exposes the supported compatibility primitives through `@vue-solana/core` and `@vue-solana/core/web3`, so apps do not need to install `@solana/web3-compat` directly for normal Vue Solana usage.
 
 ## Install
 
 ```sh
-pnpm add @vue-solana/core @solana/web3-compat
+pnpm add @vue-solana/core
 ```
 
 ```sh
-npm install @vue-solana/core @solana/web3-compat
+npm install @vue-solana/core
 ```
 
 ## Quick Start
@@ -75,7 +75,16 @@ The root export remains supported. Direct subpath exports are also available for
 ```ts
 import { createSolanaContext } from "@vue-solana/core/rpc";
 import { parsePublicKey } from "@vue-solana/core/address";
+import { PublicKey, Transaction } from "@vue-solana/core/web3";
 import type { SolanaConfig } from "@vue-solana/core/types";
+```
+
+Browser apps that create or serialize legacy transactions can install the Buffer polyfill before transaction code runs:
+
+```ts
+import { installSolanaBufferPolyfill } from "@vue-solana/core/buffer-polyfill";
+
+installSolanaBufferPolyfill();
 ```
 
 ## Configuration
@@ -118,13 +127,17 @@ Direct subpaths:
 
 - `@vue-solana/core/types`
 - `@vue-solana/core/address`
+- `@vue-solana/core/buffer-polyfill`
 - `@vue-solana/core/clusters`
+- `@vue-solana/core/errors`
 - `@vue-solana/core/ios-wallet`
 - `@vue-solana/core/mobile-wallet`
 - `@vue-solana/core/rpc`
+- `@vue-solana/core/timeout`
 - `@vue-solana/core/transaction`
 - `@vue-solana/core/wallet`
 - `@vue-solana/core/wallet-standard`
+- `@vue-solana/core/web3`
 
 | API                                                                 | Description                                                                                                                                        |
 | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -193,7 +206,7 @@ Docs: [Vue Solana Agent Skill](https://vue-solana-docs.vercel.app/agent-skill)
 
 - Public Solana RPC endpoints are useful for development, but production apps should use dedicated RPC infrastructure.
 - Use `mainnet-beta` for Solana mainnet. `mainnet` is intentionally not accepted as a cluster alias.
-- `@solana/web3-compat@0.0.21` currently has broken TypeScript package metadata. Runtime imports still use the real package, but TypeScript consumers may need a local declaration shim. See [Troubleshooting](https://vue-solana-docs.vercel.app/troubleshooting) for the workaround.
+- `@solana/web3-compat@0.0.21` currently has broken TypeScript package metadata. Runtime imports still use the real package, and current core packages publish temporary declaration shims for the documented import paths. See [Troubleshooting](https://vue-solana-docs.vercel.app/troubleshooting) for details.
 - Desktop native app wallets are planned but not implemented yet.
 
 ## Status

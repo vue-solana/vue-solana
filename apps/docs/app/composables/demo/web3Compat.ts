@@ -1,16 +1,16 @@
-import { Buffer } from "buffer/";
+import { installSolanaBufferPolyfill } from "@vue-solana/nuxt/buffer-polyfill";
 
-(globalThis as typeof globalThis & { Buffer: typeof Buffer }).Buffer = Buffer;
+installSolanaBufferPolyfill();
 
 export type Web3Compat = Pick<
-  typeof import("@solana/web3-compat"),
+  typeof import("@vue-solana/nuxt/web3"),
   "PublicKey" | "Transaction" | "TransactionInstruction"
 >;
 
 let web3Promise: Promise<Web3Compat> | null = null;
 
 export function loadWeb3Compat() {
-  web3Promise ??= import("@solana/web3-compat").then((module) => ({
+  web3Promise ??= import("@vue-solana/nuxt/web3").then((module) => ({
     PublicKey: module.PublicKey,
     Transaction: module.Transaction,
     TransactionInstruction: module.TransactionInstruction,

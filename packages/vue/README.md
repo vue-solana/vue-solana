@@ -32,21 +32,21 @@ New to Solana? Start with the official docs and the project concepts guide:
 
 ## Compatibility
 
-| Requirement        | Supported                                       |
-| ------------------ | ----------------------------------------------- |
-| Vue                | `^3.5.0`                                        |
-| TypeScript         | TypeScript 5.x recommended                      |
-| Solana client peer | `@solana/web3-compat@^0.0.21`                   |
-| Clusters           | `mainnet-beta`, `devnet`, `testnet`, `localnet` |
+| Requirement   | Supported                                       |
+| ------------- | ----------------------------------------------- |
+| Vue           | `^3.5.0`                                        |
+| TypeScript    | TypeScript 5.x recommended                      |
+| Solana client | Provided through `@vue-solana/core`             |
+| Clusters      | `mainnet-beta`, `devnet`, `testnet`, `localnet` |
 
 ## Install
 
 ```sh
-pnpm add @vue-solana/vue @vue-solana/core @solana/web3-compat buffer
+pnpm add @vue-solana/vue
 ```
 
 ```sh
-npm install @vue-solana/vue @vue-solana/core @solana/web3-compat buffer
+npm install @vue-solana/vue
 ```
 
 ## Plugin Setup
@@ -339,13 +339,18 @@ Direct composable subpaths:
 - `@vue-solana/vue/useSignatureStatus`
 - `@vue-solana/vue/useSignAndSendTransaction`
 
+Other direct subpaths:
+
+- `@vue-solana/vue/web3`
+- `@vue-solana/vue/buffer-polyfill`
+
 ## Caveats
 
 - Wallet and RPC operations require the plugin-provided client context. Composables are SSR-safe, but real wallet work should run after hydration or in user actions.
 - Public Solana RPC endpoints are useful for development, but production apps should use dedicated RPC infrastructure.
 - Broad `useProgramAccounts()` scans can be expensive or blocked on public RPC nodes. Prefer narrow filters and `dataSlice`.
 - Use `mainnet-beta` for Solana mainnet. `mainnet` is intentionally not accepted as a cluster alias.
-- `@solana/web3-compat@0.0.21` currently has broken TypeScript package metadata. Runtime imports still use the real package, but TypeScript consumers may need a local declaration shim. See [Troubleshooting](https://vue-solana-docs.vercel.app/troubleshooting) for the workaround.
+- `@solana/web3-compat@0.0.21` currently has broken TypeScript package metadata. Runtime imports still use the real package, and current Vue Solana packages publish temporary declaration shims for documented imports. See [Troubleshooting](https://vue-solana-docs.vercel.app/troubleshooting) for details.
 - Desktop native app wallets are planned but not implemented yet.
 
 ## Status

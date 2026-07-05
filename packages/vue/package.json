@@ -30,6 +30,11 @@
       "import": "./dist/index.mjs",
       "require": "./dist/index.cjs"
     },
+    "./buffer-polyfill": {
+      "types": "./dist/buffer-polyfill.d.ts",
+      "import": "./dist/buffer-polyfill.mjs",
+      "require": "./dist/buffer-polyfill.cjs"
+    },
     "./useSolana": {
       "types": "./dist/useSolana.d.ts",
       "import": "./dist/useSolana.mjs",
@@ -94,6 +99,11 @@
       "types": "./dist/useSignAndSendTransaction.d.ts",
       "import": "./dist/useSignAndSendTransaction.mjs",
       "require": "./dist/useSignAndSendTransaction.cjs"
+    },
+    "./web3": {
+      "types": "./dist/web3.d.ts",
+      "import": "./dist/web3.mjs",
+      "require": "./dist/web3.cjs"
     }
   },
   "files": [
@@ -109,15 +119,14 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
+    "@solana/web3-compat": "^0.0.21",
     "@vue-solana/core": "workspace:*",
     "bs58": "^6.0.0"
   },
   "peerDependencies": {
-    "@solana/web3-compat": "^0.0.21",
     "vue": "^3.5.0"
   },
   "devDependencies": {
-    "@solana/web3-compat": "^0.0.21",
     "typescript": "^5.8.3",
     "unbuild": "^3.5.0",
     "vue": "^3.5.16"

@@ -1,4 +1,4 @@
-import { PublicKey } from "@solana/web3-compat";
+import { PublicKey } from "@vue-solana/core/web3";
 import { flushPromises } from "@vue/test-utils";
 import { describe, expect, it, vi } from "vitest";
 import { defineComponent, h, ref } from "vue";
@@ -20,7 +20,9 @@ describe("useBalance", () => {
   it("loads a balance for a provided public key string", async () => {
     const getBalance = vi.fn().mockResolvedValue(123);
     const context = createMockSolanaContext({
-      connection: { getBalance } as ReturnType<typeof createMockSolanaContext>["connection"],
+      connection: { getBalance } as unknown as ReturnType<
+        typeof createMockSolanaContext
+      >["connection"],
     });
     const address = ref("11111111111111111111111111111111");
     let result: ReturnType<typeof useBalance> | undefined;
@@ -47,7 +49,9 @@ describe("useBalance", () => {
   it("clears the balance when no address is provided", async () => {
     const getBalance = vi.fn();
     const context = createMockSolanaContext({
-      connection: { getBalance } as ReturnType<typeof createMockSolanaContext>["connection"],
+      connection: { getBalance } as unknown as ReturnType<
+        typeof createMockSolanaContext
+      >["connection"],
     });
     let result: ReturnType<typeof useBalance> | undefined;
 
@@ -73,7 +77,7 @@ describe("useBalance", () => {
     const context = createMockSolanaContext({
       connection: {
         getBalance: vi.fn().mockRejectedValue(failure),
-      } as ReturnType<typeof createMockSolanaContext>["connection"],
+      } as unknown as ReturnType<typeof createMockSolanaContext>["connection"],
     });
     let result: ReturnType<typeof useBalance> | undefined;
 
@@ -104,7 +108,9 @@ describe("useBalance", () => {
       .mockReturnValueOnce(firstRequest.promise)
       .mockReturnValueOnce(secondRequest.promise);
     const context = createMockSolanaContext({
-      connection: { getBalance } as ReturnType<typeof createMockSolanaContext>["connection"],
+      connection: { getBalance } as unknown as ReturnType<
+        typeof createMockSolanaContext
+      >["connection"],
     });
     const address = ref("11111111111111111111111111111111");
     let result: ReturnType<typeof useBalance> | undefined;

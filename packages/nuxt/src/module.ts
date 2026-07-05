@@ -27,6 +27,9 @@ const module: DefinedNuxtModule = defineNuxtModule<ModuleOptions>({
   meta: {
     name: "@vue-solana/nuxt",
     configKey: "solana",
+    compatibility: {
+      nuxt: "^3.0.0 || ^4.0.0",
+    },
   },
   defaults: {
     cluster: "devnet",

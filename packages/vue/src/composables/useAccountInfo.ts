@@ -1,6 +1,6 @@
 import { parsePublicKey, type PublicKeyInput } from "@vue-solana/core/address";
 import { normalizeSolanaError, type SolanaError } from "@vue-solana/core/errors";
-import type { AccountInfo, Commitment } from "@solana/web3-compat";
+import type { AccountInfo, Commitment } from "@vue-solana/core/web3";
 import { onMounted, onUnmounted, shallowRef, toValue, watch, type MaybeRefOrGetter } from "vue";
 import { useConnection } from "./useConnection";
 import { tryUseSolana } from "./useSolana";
@@ -16,7 +16,7 @@ export function useAccountInfo(
 ) {
   const solana = tryUseSolana();
   const connection = solana?.connection ?? useConnection();
-  const accountInfo = shallowRef<AccountInfo<Buffer> | null>(null);
+  const accountInfo = shallowRef<AccountInfo<Uint8Array> | null>(null);
   const loading = shallowRef(false);
   const error = shallowRef<SolanaError | null>(null);
   let refreshId = 0;
@@ -111,7 +111,7 @@ export function useAccountInfo(
 
       const nextSubscriptionId = connection.onAccountChange(
         publicKey,
-        (nextAccountInfo: AccountInfo<Buffer>) => {
+        (nextAccountInfo: AccountInfo<Uint8Array>) => {
           if (requestId !== watchId) {
             return;
           }

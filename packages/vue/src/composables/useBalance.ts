@@ -1,4 +1,4 @@
-import type { Commitment, PublicKey } from "@solana/web3-compat";
+import type { Commitment, PublicKey } from "@vue-solana/core/web3";
 import { parsePublicKey } from "@vue-solana/core/address";
 import { normalizeSolanaError, type SolanaError } from "@vue-solana/core/errors";
 import { onMounted, shallowRef, toValue, watch, type MaybeRefOrGetter } from "vue";

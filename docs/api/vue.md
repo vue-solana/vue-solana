@@ -7,8 +7,9 @@ import { useRpc } from "@vue-solana/vue/useRpc";
 import { useWallet } from "@vue-solana/vue/useWallet";
 ```
 
-Available composable subpaths:
+Available package subpaths:
 
+- `@vue-solana/vue/buffer-polyfill`
 - `@vue-solana/vue/useSolana`
 - `@vue-solana/vue/useRpc`
 - `@vue-solana/vue/useConnection`
@@ -22,6 +23,9 @@ Available composable subpaths:
 - `@vue-solana/vue/useSignatureStatus`
 - `@vue-solana/vue/useSignMessage`
 - `@vue-solana/vue/useSignAndSendTransaction`
+- `@vue-solana/vue/web3`
+
+Use `@vue-solana/vue/web3` for supported raw Solana primitives such as `PublicKey`, `Transaction`, and `TransactionInstruction`. Use `@vue-solana/vue/buffer-polyfill` when browser transaction code needs the Buffer polyfill. Direct `@vue-solana/core/*` imports remain supported for lower-level core usage.
 
 ## `createSolanaPlugin(options?)`
 

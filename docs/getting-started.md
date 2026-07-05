@@ -17,7 +17,7 @@ Official Solana references:
 
 ## Before You Start
 
-Use `@solana/web3-compat` directly if you only need raw Solana APIs. Use `@vue-solana/vue` or `@vue-solana/nuxt` when you want Vue/Nuxt integration.
+Use `@vue-solana/core` directly if you need Solana primitives such as `Connection`, `PublicKey`, and transactions without Vue/Nuxt integration. Use `@vue-solana/vue` or `@vue-solana/nuxt` when you want framework integration.
 
 Supported clusters:
 
@@ -43,13 +43,13 @@ Planned but not supported yet:
 Install the package for your framework:
 
 ```sh
-pnpm add @vue-solana/vue @vue-solana/core @solana/web3-compat buffer
+pnpm add @vue-solana/vue
 ```
 
 For local development, use workspace linking instead:
 
 ```sh
-pnpm add '@vue-solana/vue@workspace:*' '@vue-solana/core@workspace:*' @solana/web3-compat buffer
+pnpm add '@vue-solana/vue@workspace:*'
 ```
 
 That only works inside this monorepo or another pnpm workspace that includes these packages.
@@ -57,19 +57,21 @@ That only works inside this monorepo or another pnpm workspace that includes the
 For an external example app before publishing, use one of these:
 
 ```sh
-pnpm add ../path-to/vue-solana/packages/vue ../path-to/vue-solana/packages/core @solana/web3-compat buffer
+pnpm add ../path-to/vue-solana/packages/vue
 ```
 
 For Nuxt:
 
 ```sh
-pnpm add @vue-solana/nuxt @vue-solana/vue @vue-solana/core @solana/web3-compat buffer
+npx nuxt module add @vue-solana/nuxt
 ```
+
+This installs the package and adds `@vue-solana/nuxt` to the `modules` array in `nuxt.config.ts`.
 
 Again, for local development, use workspace linking instead:
 
 ```sh
-pnpm add '@vue-solana/nuxt@workspace:*' '@vue-solana/vue@workspace:*' '@vue-solana/core@workspace:*' @solana/web3-compat buffer
+pnpm add '@vue-solana/nuxt@workspace:*'
 ```
 
 That only works inside this monorepo or another pnpm workspace that includes these packages.
@@ -77,37 +79,16 @@ That only works inside this monorepo or another pnpm workspace that includes the
 For an external example app before publishing, use one of these:
 
 ```sh
-pnpm add ../path-to/vue-solana/packages/nuxt ../path-to/vue-solana/packages/vue ../path-to/vue-solana/packages/core @solana/web3-compat buffer
+pnpm add ../path-to/vue-solana/packages/nuxt
 ```
 
 ## Known TypeScript Issue
 
 `@solana/web3-compat@0.0.21` currently has broken TypeScript metadata. Its package metadata points to `dist/types/index.d.ts`, but that file is not included in the published package.
 
-Runtime imports still use the real `@solana/web3-compat` package. If TypeScript reports that it cannot find declarations for `@solana/web3-compat`, add this local declaration file to your app as `types/web3-compat.d.ts`:
+Runtime imports still use the real `@solana/web3-compat` package. Current Vue Solana packages publish temporary package-owned declaration shims, so apps following the documented `@vue-solana/core`, `@vue-solana/vue`, or `@vue-solana/nuxt` imports should not need their own local shim.
 
-```ts
-declare module "@solana/web3-compat" {
-  export type {
-    Commitment,
-    RpcResponseAndContext,
-    SendOptions,
-    SignatureResult,
-    TransactionSignature,
-  } from "@solana/web3.js";
-  export {
-    Connection,
-    Keypair,
-    PublicKey,
-    SystemProgram,
-    Transaction,
-    TransactionInstruction,
-    VersionedTransaction,
-  } from "@solana/web3.js";
-}
-```
-
-Make sure your `tsconfig.json` includes the file. Most Vue and Nuxt apps include `**/*.d.ts` by default. If yours does not, add an include pattern such as `types/**/*.d.ts`.
+Only add a local shim if you are using an older Vue Solana package version or importing `@solana/web3-compat` directly from app code. Re-check this note after each new `@solana/web3-compat` release; the package-owned shim should be removed once upstream ships valid root declarations.
 
 ## Vue
 
@@ -229,14 +210,13 @@ If you are wiring your own playground, use these dependencies:
 ```json
 {
   "dependencies": {
-    "@solana/web3-compat": "^0.0.21",
-    "@vue-solana/core": "workspace:*",
     "@vue-solana/vue": "workspace:*",
-    "buffer": "^6.0.3",
     "vue": "^3.5.0"
   }
 }
 ```
+
+Vue apps can import supported Solana primitives from `@vue-solana/vue/web3` and the Buffer helper from `@vue-solana/vue/buffer-polyfill` without installing `@vue-solana/core`, `@solana/web3-compat`, or `buffer` directly.
 
 Then install again from the repository root:
 
@@ -354,16 +334,14 @@ If you are wiring your own Nuxt app, use these dependencies:
 ```json
 {
   "dependencies": {
-    "@solana/web3-compat": "^0.0.21",
-    "@vue-solana/core": "workspace:*",
-    "@vue-solana/vue": "workspace:*",
     "@vue-solana/nuxt": "workspace:*",
-    "buffer": "^6.0.3",
     "nuxt": "^3.0.0",
     "vue": "^3.5.0"
   }
 }
 ```
+
+Nuxt apps can import supported Solana primitives from `@vue-solana/nuxt/web3` and the Buffer helper from `@vue-solana/nuxt/buffer-polyfill` without installing `@vue-solana/core`, `@vue-solana/vue`, `@solana/web3-compat`, or `buffer` directly.
 
 Then install again from the repository root:
 
@@ -612,13 +590,13 @@ Desktop native wallet adapters are intentionally deferred from v1. On desktop, m
 
 Use a devnet wallet with enough devnet SOL for fees. The examples include recipient address and amount fields. Start with a tiny amount such as `0.000001` SOL.
 
-The transfer flow creates a normal legacy transaction. In browser apps, add the `buffer` package and initialize it from `buffer/` before transaction code that may touch `@solana/web3-compat` internals:
+The transfer flow creates a normal legacy transaction. In browser Vue apps, initialize the Buffer polyfill from the Vue package before transaction code that may touch `@solana/web3-compat` internals. In Nuxt apps, use the equivalent `@vue-solana/nuxt/*` subpaths.
 
 ```ts
-import { Buffer } from "buffer/";
-import { PublicKey, Transaction, TransactionInstruction } from "@solana/web3-compat";
+import { installSolanaBufferPolyfill } from "@vue-solana/vue/buffer-polyfill";
+import { PublicKey, Transaction, TransactionInstruction } from "@vue-solana/vue/web3";
 
-(globalThis as typeof globalThis & { Buffer: typeof Buffer }).Buffer = Buffer;
+installSolanaBufferPolyfill();
 
 const systemProgramId = new PublicKey("11111111111111111111111111111111");
 

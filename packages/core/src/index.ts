@@ -1,5 +1,6 @@
 export * from "./clusters";
 export * from "./address";
+export * from "./buffer-polyfill";
 export * from "./errors";
 export * from "./ios-wallet";
 export * from "./mobile-wallet";
@@ -9,3 +10,4 @@ export * from "./timeout";
 export * from "./types";
 export * from "./wallet";
 export * from "./wallet-standard";
+export * from "./web3";

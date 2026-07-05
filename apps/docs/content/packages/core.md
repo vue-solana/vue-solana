@@ -8,12 +8,12 @@ surroundOrder: 14
 
 Use this package directly when you want connection helpers, shared wallet types, Android Mobile Wallet Adapter registration helpers, iOS browser wallet helpers, and transaction helpers without installing the Vue plugin.
 
-`@vue-solana/core` does not replace `@solana/web3-compat`. Use `@solana/web3-compat` for raw Solana primitives like `Connection`, `PublicKey`, and transactions. Use `@vue-solana/core` for Vue Solana shared configuration, cluster endpoint defaults, wallet interfaces, and transaction helpers.
+`@vue-solana/core` wraps `@solana/web3-compat` and re-exports the Solana primitives most Vue Solana apps need, including `Connection`, `PublicKey`, `Transaction`, and `VersionedTransaction`.
 
 ## Install
 
 ```sh
-pnpm add @vue-solana/core @solana/web3-compat
+pnpm add @vue-solana/core
 ```
 
 ## Quick Start
@@ -34,12 +34,14 @@ The root export remains supported. Direct subpath exports are also available for
 
 ```ts
 import { createSolanaContext } from "@vue-solana/core/rpc";
+import { PublicKey, Transaction } from "@vue-solana/core/web3";
 import type { SolanaConfig } from "@vue-solana/core/types";
 ```
 
 Direct subpaths:
 
 - `@vue-solana/core/address`
+- `@vue-solana/core/buffer-polyfill`
 - `@vue-solana/core/types`
 - `@vue-solana/core/clusters`
 - `@vue-solana/core/errors`
@@ -50,6 +52,7 @@ Direct subpaths:
 - `@vue-solana/core/transaction`
 - `@vue-solana/core/wallet`
 - `@vue-solana/core/wallet-standard`
+- `@vue-solana/core/web3`
 
 ## Related Guides
 
@@ -292,4 +295,4 @@ Stable error codes are:
 
 ## Known TypeScript Issue
 
-See [Troubleshooting](/troubleshooting) for the `@solana/web3-compat@0.0.21` TypeScript metadata issue and consumer shim workaround.
+See [Troubleshooting](/troubleshooting) for the `@solana/web3-compat@0.0.21` TypeScript metadata issue. Current `@vue-solana/core` packages publish temporary declaration shims for the documented core import paths.

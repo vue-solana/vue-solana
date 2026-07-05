@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { Buffer } from "buffer/";
 import { computed, ref } from "vue";
-import { PublicKey, Transaction, TransactionInstruction } from "@solana/web3-compat";
+import { Buffer, installSolanaBufferPolyfill } from "@vue-solana/vue/buffer-polyfill";
+import { PublicKey, Transaction, TransactionInstruction } from "@vue-solana/vue/web3";
 import {
   useBalance,
   useConnection,
@@ -14,7 +14,7 @@ import {
   useWallets,
 } from "@vue-solana/vue";
 
-(globalThis as typeof globalThis & { Buffer: typeof Buffer }).Buffer = Buffer;
+installSolanaBufferPolyfill();
 
 const solana = useSolana();
 const rpc = useRpc();

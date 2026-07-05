@@ -3,6 +3,7 @@
 The root export remains supported. Direct subpath exports are also available when you want narrower imports:
 
 - `@vue-solana/core/address`
+- `@vue-solana/core/buffer-polyfill`
 - `@vue-solana/core/types`
 - `@vue-solana/core/clusters`
 - `@vue-solana/core/errors`
@@ -13,6 +14,7 @@ The root export remains supported. Direct subpath exports are also available whe
 - `@vue-solana/core/transaction`
 - `@vue-solana/core/wallet`
 - `@vue-solana/core/wallet-standard`
+- `@vue-solana/core/web3`
 
 ## Configuration
 
@@ -35,7 +37,15 @@ If `endpoint` is omitted, the default public endpoint for the selected cluster i
 
 ## `@solana/web3-compat` Compatibility
 
-The v1 package line uses `@solana/web3-compat` for Solana primitives so applications can interoperate with the modern Solana package family while Vue Solana keeps familiar `Connection`, `PublicKey`, and transaction types at its public boundary. The current `@solana/web3-compat@0.0.21` package has broken TypeScript root metadata, so this repository includes a temporary `types/web3-compat.d.ts` shim. Runtime imports still resolve to the published package. Re-check the upstream package metadata before v1 and remove the shim once the package publishes valid root declarations.
+The v1 package line uses `@solana/web3-compat` internally and re-exports supported Solana primitives from `@vue-solana/core` and `@vue-solana/core/web3`, including `Connection`, `PublicKey`, `SystemProgram`, `Transaction`, `TransactionInstruction`, and `VersionedTransaction`. The current `@solana/web3-compat@0.0.21` package has broken TypeScript root metadata, so `@vue-solana/core` publishes temporary declaration shims for its own public type surface. Runtime imports still resolve to the published package. Re-check the upstream package metadata before v1 and remove the package-owned shim once the package publishes valid root declarations.
+
+Browser apps that create or serialize legacy transactions can initialize the compatibility Buffer polyfill from core:
+
+```ts
+import { installSolanaBufferPolyfill } from "@vue-solana/core/buffer-polyfill";
+
+installSolanaBufferPolyfill();
+```
 
 Supported clusters:
 

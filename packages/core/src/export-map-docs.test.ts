@@ -19,6 +19,16 @@ describe("documented package subpaths", () => {
     expect([...getBuildEntries("../../vue/build.config.ts")].sort()).toEqual([...expected].sort());
   });
 
+  it("keeps Nuxt build entries aligned with the package export map", () => {
+    const expected = getExportedBuildEntries("../../nuxt/package.json", {
+      root: "src/module",
+      subpathPrefix: "src/runtime/",
+      extraEntries: ["src/runtime/plugin"],
+    });
+
+    expect([...getBuildEntries("../../nuxt/build.config.ts")].sort()).toEqual([...expected].sort());
+  });
+
   it("keeps core subpath docs aligned with the package export map", () => {
     const expected = getExportedSubpaths("../package.json");
 
@@ -33,16 +43,30 @@ describe("documented package subpaths", () => {
     ).toEqual(expected);
   });
 
-  it("keeps Vue composable docs aligned with the package export map", () => {
+  it("keeps Vue package docs aligned with the package export map", () => {
     const expected = getExportedSubpaths("../../vue/package.json");
 
     expect(
-      getBacktickedListAfter("../../../docs/api/vue.md", "Available composable subpaths:"),
+      getBacktickedListAfter("../../../docs/api/vue.md", "Available package subpaths:"),
     ).toEqual(expected);
     expect(
       getBacktickedListAfter(
         "../../../apps/docs/content/packages/vue.md",
-        "Direct composable subpaths:",
+        "Direct package subpaths:",
+      ),
+    ).toEqual(expected);
+  });
+
+  it("keeps Nuxt package docs aligned with the package export map", () => {
+    const expected = getExportedSubpaths("../../nuxt/package.json");
+
+    expect(
+      getBacktickedListAfter("../../../docs/api/nuxt.md", "Available package subpaths:"),
+    ).toEqual(expected);
+    expect(
+      getBacktickedListAfter(
+        "../../../apps/docs/content/packages/nuxt.md",
+        "Direct package subpaths:",
       ),
     ).toEqual(expected);
   });
@@ -56,12 +80,20 @@ function getExportedSubpaths(packageJsonPath: string) {
     .map((exportPath) => `${packageJson.name}${exportPath.slice(1)}`);
 }
 
-function getExportedBuildEntries(packageJsonPath: string) {
+function getExportedBuildEntries(
+  packageJsonPath: string,
+  options: { root?: string; subpathPrefix?: string; extraEntries?: string[] } = {},
+) {
   const packageJson = readJson<PackageJson>(packageJsonPath);
+  const root = options.root ?? "src/index";
+  const subpathPrefix = options.subpathPrefix ?? "src/";
 
-  return Object.keys(packageJson.exports).map((exportPath) =>
-    exportPath === "." ? "src/index" : `src/${exportPath.slice(2)}`,
-  );
+  return [
+    ...Object.keys(packageJson.exports).map((exportPath) =>
+      exportPath === "." ? root : `${subpathPrefix}${exportPath.slice(2)}`,
+    ),
+    ...(options.extraEntries ?? []),
+  ];
 }
 
 function getBuildEntries(buildConfigPath: string) {

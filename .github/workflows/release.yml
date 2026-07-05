@@ -53,6 +53,11 @@ jobs:
       - name: Build packages
         run: pnpm build:packages
 
+      - name: Smoke standalone package installs
+        run: pnpm smoke:standalone-installs
+        env:
+          SKIP_STANDALONE_SMOKE_BUILD: 1
+
       - name: Create release PR or publish packages
         uses: changesets/action@v1
         with:

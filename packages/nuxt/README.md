@@ -30,22 +30,20 @@ New to Solana? Start with the official docs and the project concepts guide:
 
 ## Compatibility
 
-| Requirement        | Supported                                       |
-| ------------------ | ----------------------------------------------- |
-| Nuxt               | `^3.0.0 \|\| ^4.0.0`                            |
-| TypeScript         | TypeScript 5.x recommended                      |
-| Solana client peer | `@solana/web3-compat@^0.0.21`                   |
-| Clusters           | `mainnet-beta`, `devnet`, `testnet`, `localnet` |
+| Requirement   | Supported                                       |
+| ------------- | ----------------------------------------------- |
+| Nuxt          | `^3.0.0 \|\| ^4.0.0`                            |
+| TypeScript    | TypeScript 5.x recommended                      |
+| Solana client | Provided through `@vue-solana/core`             |
+| Clusters      | `mainnet-beta`, `devnet`, `testnet`, `localnet` |
 
 ## Install
 
 ```sh
-pnpm add @vue-solana/nuxt @vue-solana/vue @vue-solana/core @solana/web3-compat buffer
+npx nuxt module add @vue-solana/nuxt
 ```
 
-```sh
-npm install @vue-solana/nuxt @vue-solana/vue @vue-solana/core @solana/web3-compat buffer
-```
+This installs the package and adds `@vue-solana/nuxt` to the `modules` array in `nuxt.config.ts`.
 
 ## Module Setup
 
@@ -127,6 +125,11 @@ The module auto-imports these composables from direct `@vue-solana/vue/*` subpat
 The runtime plugin is client-only. Auto-imported composables can be called during SSR and return inert state until hydration provides the real client context. Trigger RPC and wallet work from client lifecycle hooks or user actions.
 
 Android Mobile Wallet Adapter registration also runs only on the client. On Android Chrome and Chrome PWAs, `Mobile Wallet Adapter` can appear in the same `useSolanaWallets()` list as browser extension wallets. On iOS browsers, Phantom, Solflare, and Backpack can appear in the same list through wallet-specific universal links. Desktop native app wallet adapters are planned but not implemented yet.
+
+The package also exposes Solana helper subpaths for Nuxt apps that need transaction primitives or the browser Buffer polyfill without importing lower-level packages directly:
+
+- `@vue-solana/nuxt/web3`
+- `@vue-solana/nuxt/buffer-polyfill`
 
 ## Read RPC State
 
@@ -212,7 +215,7 @@ const { publicKey, connected, canSignMessage, connect, disconnect } = useSolanaW
 </template>
 ```
 
-Browser extension wallets are discovered through the Solana Wallet Standard. Android Mobile Wallet Adapter wallets are registered through `@solana-mobile/wallet-standard-mobile` on supported Android Chrome clients and exposed through the same wallet list. Wallet actions work after selecting a discovered wallet or configuring a custom `SolanaWallet`.
+Browser extension wallets are discovered through the Solana Wallet Standard. Android Mobile Wallet Adapter wallets are registered through `@solana-mobile/wallet-standard-mobile` on supported Android Chrome clients and exposed through the same wallet list. iOS Phantom, Solflare, and Backpack entries are exposed through wallet-specific universal links on iOS browsers. Wallet actions work after selecting a discovered wallet or configuring a custom `SolanaWallet`.
 
 Selected discovered wallets are persisted under `localStorage["vue-solana:selected-wallet"]` as non-sensitive identity metadata: `name`, and `platform`/`source` when available. On reload, Vue Solana restores the selected wallet if the same wallet is discovered again. Set `solana.autoConnect: true` to opt into calling `connect()` for that restored wallet; arbitrary installed wallets are never auto-connected. Calling `selectWallet(null)` or `setWallet(customWallet)` clears the stored selection.
 
@@ -272,7 +275,7 @@ Docs: [Vue Solana Agent Skill](https://vue-solana-docs.vercel.app/agent-skill)
 - Public Solana RPC endpoints are useful for development, but production apps should use dedicated RPC infrastructure.
 - Broad `useSolanaProgramAccounts()` scans can be expensive or blocked on public RPC nodes. Prefer narrow filters and `dataSlice`.
 - Use `mainnet-beta` for Solana mainnet. `mainnet` is intentionally not accepted as a cluster alias.
-- `@solana/web3-compat@0.0.21` currently has broken TypeScript package metadata. Runtime imports still use the real package, but TypeScript consumers may need a local declaration shim. See [Troubleshooting](https://vue-solana-docs.vercel.app/troubleshooting) for the workaround.
+- `@solana/web3-compat@0.0.21` currently has broken TypeScript package metadata. Runtime imports still use the real package, and current Vue Solana packages publish temporary declaration shims for documented imports. See [Troubleshooting](https://vue-solana-docs.vercel.app/troubleshooting) for details.
 - Desktop native app wallets are planned but not implemented yet.
 
 ## Status
