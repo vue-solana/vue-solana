@@ -152,6 +152,13 @@ Recommended next step:
 
 The `examples/vue-vite` and `examples/nuxt` directories contain runnable example apps wired to the workspace packages. They demonstrate plugin/module setup, RPC state, direct connection calls, balance reads, wallet state, and mock transaction flows.
 
+### Workspace App Dependency Policy
+
+- `apps/docs` is the live documentation/demo app for the published package. It intentionally depends on the published `@vue-solana/nuxt` version, not `workspace:*`, so it reflects what external users get from npm.
+- `examples/vue-vite` and `examples/nuxt` are the local development example apps. They should use workspace packages so they exercise unreleased package changes during development.
+- Do not treat `apps/docs/package.json` using a pinned published `@vue-solana/nuxt` version as a bug unless the release/demo policy changes.
+- When testing unreleased package changes, use the example apps and package tests, not `apps/docs`.
+
 ## Native Wallet Planning
 
 Use `docs/native-wallet-plan.md` as the source of truth for mobile native wallet and desktop native wallet implementation work.

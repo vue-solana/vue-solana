@@ -23,6 +23,15 @@ const VITE_OPTIMIZE_DEPS = [
   "tweetnacl/nacl-fast.js",
 ];
 
+const VITE_NEEDS_INTEROP = ["eventemitter3", "tweetnacl", "tweetnacl/nacl-fast.js"];
+
+interface ViteOptimizeDepsTarget {
+  optimizeDeps?: {
+    include?: string[];
+    needsInterop?: string[];
+  };
+}
+
 const module: DefinedNuxtModule = defineNuxtModule<ModuleOptions>({
   meta: {
     name: "@vue-solana/nuxt",
@@ -46,17 +55,18 @@ const module: DefinedNuxtModule = defineNuxtModule<ModuleOptions>({
       ...toPublicSolanaConfig(options),
     };
 
-    nuxt.options.vite.optimizeDeps ??= {};
-    nuxt.options.vite.optimizeDeps.include = Array.from(
-      new Set([...(nuxt.options.vite.optimizeDeps.include ?? []), ...VITE_OPTIMIZE_DEPS]),
-    );
-    nuxt.options.vite.optimizeDeps.needsInterop = Array.from(
-      new Set([
-        ...(nuxt.options.vite.optimizeDeps.needsInterop ?? []),
-        "tweetnacl",
-        "tweetnacl/nacl-fast.js",
-      ]),
-    );
+    mergeViteOptimizeDeps(nuxt.options.vite);
+
+    nuxt.hook("vite:extendConfig", (config, { isClient }) => {
+      if (!isClient) {
+        return;
+      }
+
+      mergeViteOptimizeDeps(config);
+      if (config.environments?.client) {
+        mergeViteOptimizeDeps(config.environments.client);
+      }
+    });
 
     addPlugin({
       src: resolver.resolve("./runtime/plugin"),
@@ -75,4 +85,14 @@ function toPublicSolanaConfig(options: ModuleOptions): ModuleOptions {
   delete runtimeOptions.wallet;
 
   return runtimeOptions;
+}
+
+function mergeViteOptimizeDeps(target: ViteOptimizeDepsTarget): void {
+  target.optimizeDeps ??= {};
+  target.optimizeDeps.include = Array.from(
+    new Set([...(target.optimizeDeps.include ?? []), ...VITE_OPTIMIZE_DEPS]),
+  );
+  target.optimizeDeps.needsInterop = Array.from(
+    new Set([...(target.optimizeDeps.needsInterop ?? []), ...VITE_NEEDS_INTEROP]),
+  );
 }

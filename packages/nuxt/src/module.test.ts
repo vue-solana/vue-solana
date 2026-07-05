@@ -24,6 +24,7 @@ interface ModuleUnderTest {
   setup: (
     options: Record<string, unknown>,
     nuxt: {
+      hook: (name: "vite:extendConfig", callback: ViteExtendConfigHook) => void;
       options: {
         runtimeConfig: {
           public: Record<string, unknown>;
@@ -38,6 +39,24 @@ interface ModuleUnderTest {
     },
   ) => void;
 }
+
+type ViteExtendConfigHook = (
+  config: {
+    optimizeDeps?: {
+      include?: string[];
+      needsInterop?: string[];
+    };
+    environments?: {
+      client?: {
+        optimizeDeps?: {
+          include?: string[];
+          needsInterop?: string[];
+        };
+      };
+    };
+  },
+  context: { isClient: boolean; isServer: boolean },
+) => void;
 
 type TestViteOptions = {
   optimizeDeps: {
@@ -56,8 +75,14 @@ function setupModule(
 ) {
   const publicConfig = context.publicConfig ?? {};
   const vite = context.vite ?? {};
+  const viteExtendConfigHooks: ViteExtendConfigHook[] = [];
 
   module.setup(options, {
+    hook: (name, callback) => {
+      if (name === "vite:extendConfig") {
+        viteExtendConfigHooks.push(callback);
+      }
+    },
     options: {
       runtimeConfig: {
         public: publicConfig,
@@ -66,7 +91,7 @@ function setupModule(
     },
   });
 
-  return { publicConfig, vite };
+  return { publicConfig, vite, viteExtendConfigHooks };
 }
 
 describe("Nuxt module", () => {
@@ -144,7 +169,62 @@ describe("Nuxt module", () => {
       "tweetnacl",
       "tweetnacl/nacl-fast.js",
     ]);
-    expect(vite.optimizeDeps.needsInterop).toEqual(["tweetnacl", "tweetnacl/nacl-fast.js"]);
+    expect(vite.optimizeDeps.needsInterop).toEqual([
+      "eventemitter3",
+      "tweetnacl",
+      "tweetnacl/nacl-fast.js",
+    ]);
+  });
+
+  it("forces Solana dependency optimization into the final Vite client config", async () => {
+    const module = (await import("./module")).default as unknown as ModuleUnderTest;
+    const { viteExtendConfigHooks } = setupModule(module);
+    const clientConfig: Parameters<ViteExtendConfigHook>[0] = {
+      optimizeDeps: {
+        include: ["existing-dependency"],
+      },
+      environments: {
+        client: {
+          optimizeDeps: {
+            include: ["client-only-dependency"],
+          },
+        },
+      },
+    };
+
+    for (const hook of viteExtendConfigHooks) {
+      hook(clientConfig, { isClient: true, isServer: false });
+    }
+
+    expect(clientConfig.optimizeDeps?.include).toContain("eventemitter3");
+    expect(clientConfig.optimizeDeps?.needsInterop).toEqual([
+      "eventemitter3",
+      "tweetnacl",
+      "tweetnacl/nacl-fast.js",
+    ]);
+    expect(clientConfig.environments?.client?.optimizeDeps?.include).toContain("eventemitter3");
+    expect(clientConfig.environments?.client?.optimizeDeps?.needsInterop).toEqual([
+      "eventemitter3",
+      "tweetnacl",
+      "tweetnacl/nacl-fast.js",
+    ]);
+  });
+
+  it("does not mutate the final Vite server config", async () => {
+    const module = (await import("./module")).default as unknown as ModuleUnderTest;
+    const { viteExtendConfigHooks } = setupModule(module);
+    const serverConfig: Parameters<ViteExtendConfigHook>[0] = {
+      optimizeDeps: {
+        include: ["existing-dependency"],
+      },
+    };
+
+    for (const hook of viteExtendConfigHooks) {
+      hook(serverConfig, { isClient: false, isServer: true });
+    }
+
+    expect(serverConfig.optimizeDeps?.include).toEqual(["existing-dependency"]);
+    expect(serverConfig.optimizeDeps?.needsInterop).toBeUndefined();
   });
 
   it("omits non-serializable wallet adapters from public runtime config", async () => {
