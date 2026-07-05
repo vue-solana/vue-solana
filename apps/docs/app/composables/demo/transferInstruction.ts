@@ -1,4 +1,4 @@
-import type { PublicKey, TransactionInstruction } from "@solana/web3-compat";
+import type { PublicKey, TransactionInstruction } from "@vue-solana/core/web3";
 import type { Web3Compat } from "./web3Compat";
 
 export function createTransferInstruction(

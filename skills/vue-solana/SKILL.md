@@ -1,6 +1,6 @@
 ---
 name: vue-solana
-description: Build, debug, review, and document Solana apps using @vue-solana/core, @vue-solana/vue, and @vue-solana/nuxt. Use when working with Vue Solana package setup, composables, Nuxt module config, wallet discovery, Android Mobile Wallet Adapter, iOS browser wallets, RPC, balances, transactions, or Solana web3-compat in Vue/Nuxt apps.
+description: Build, debug, review, and document Solana apps using @vue-solana/core, @vue-solana/vue, and @vue-solana/nuxt. Use when working with Vue Solana package setup, composables, Nuxt module config, wallet discovery, Android Mobile Wallet Adapter, iOS browser wallets, RPC, balances, transactions, or Solana primitives in Vue/Nuxt apps.
 license: MIT
 metadata:
   author: vue-solana
@@ -12,8 +12,8 @@ Use this skill when helping with apps or libraries that use the Vue Solana ecosy
 
 ## Package Selection
 
-- Use `@solana/web3-compat` for raw Solana primitives such as `Connection`, `PublicKey`, `Transaction`, `TransactionInstruction`, and `VersionedTransaction`.
-- Use `@vue-solana/core` for framework-agnostic config, cluster endpoint helpers, wallet types, Wallet Standard adapters, Android Mobile Wallet Adapter registration, iOS browser wallet helpers, and transaction helpers.
+- Use `@vue-solana/core/web3` for supported raw Solana primitives such as `Connection`, `PublicKey`, `Transaction`, `TransactionInstruction`, and `VersionedTransaction`.
+- Use `@vue-solana/core` for framework-agnostic config, cluster endpoint helpers, wallet types, Wallet Standard adapters, Android Mobile Wallet Adapter registration, iOS browser wallet helpers, transaction helpers, and core subpath exports.
 - Use `@vue-solana/vue` in Vue 3 apps for the plugin and composables.
 - Use `@vue-solana/nuxt` in Nuxt apps for module setup and auto-imported composables.
 - Prefer `devnet` for examples and tests. Use `mainnet-beta`, not `mainnet`, for Solana mainnet.
@@ -23,14 +23,18 @@ Use this skill when helping with apps or libraries that use the Vue Solana ecosy
 For Vue:
 
 ```sh
-pnpm add @vue-solana/vue @vue-solana/core @solana/web3-compat buffer
+pnpm add @vue-solana/vue
 ```
+
+Add `@vue-solana/core` too when app code imports core subpaths such as `@vue-solana/core/web3` or `@vue-solana/core/buffer-polyfill`.
 
 For Nuxt:
 
 ```sh
-pnpm add @vue-solana/nuxt @vue-solana/vue @vue-solana/core @solana/web3-compat buffer
+pnpm add @vue-solana/nuxt
 ```
+
+Add `@vue-solana/core` too when app code imports core subpaths such as `@vue-solana/core/web3` or `@vue-solana/core/buffer-polyfill`.
 
 Use equivalent `npm install` or `yarn add` commands when the project does not use pnpm.
 
@@ -181,19 +185,19 @@ The active wallet must support either `signAndSendTransaction` or `signTransacti
 
 Use `useTransactionConfirmation()` or `useSolanaTransactionConfirmation()` when an app already has a submitted signature and wants to wait for a requested commitment separately from signing and sending.
 
-When browser transaction code needs `Buffer`, install `buffer` and import from `buffer/`:
+When browser transaction code needs `Buffer`, use the core helper:
 
 ```ts
-import { Buffer } from "buffer/";
+import { installSolanaBufferPolyfill } from "@vue-solana/core/buffer-polyfill";
 
-(globalThis as typeof globalThis & { Buffer: typeof Buffer }).Buffer = Buffer;
+installSolanaBufferPolyfill();
 ```
 
-Use the trailing slash in `buffer/`. Importing from `buffer` can make Vite or Nuxt externalize the Node builtin and fail in the browser.
+Do not assign the Buffer global manually in public examples.
 
 ## Common Gotchas
 
-- Do not import Solana primitives from `@solana/web3.js` in new Vue Solana examples; use `@solana/web3-compat`.
+- Do not import Solana primitives from `@solana/web3.js` or direct `@solana/web3-compat` in new Vue Solana examples; use `@vue-solana/core/web3`.
 - `@solana/web3-compat@0.0.21` has broken TypeScript package metadata. If TypeScript cannot resolve it, add a local `types/web3-compat.d.ts` shim that re-exports the needed types and classes from `@solana/web3.js`.
 - Do not split browser, Android mobile, iOS browser, and future desktop native wallet sources into separate public flows. Keep them unified through `useWallets()` and `useWallet()`.
 - Do not mark a discovered wallet as connected just because accounts are visible. Connection state begins after `connect()` succeeds.

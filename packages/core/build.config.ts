@@ -4,6 +4,7 @@ export default defineBuildConfig({
   entries: [
     "src/index",
     "src/address",
+    "src/buffer-polyfill",
     "src/clusters",
     "src/errors",
     "src/ios-wallet",
@@ -14,6 +15,7 @@ export default defineBuildConfig({
     "src/types",
     "src/wallet",
     "src/wallet-standard",
+    "src/web3",
   ],
   declaration: true,
   clean: true,

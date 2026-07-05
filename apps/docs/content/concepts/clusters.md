@@ -29,7 +29,7 @@ Examples:
 - `https://api.mainnet-beta.solana.com`
 - `http://127.0.0.1:8899`
 
-The `Connection` object from `@solana/web3-compat` sends RPC requests to this endpoint. Public endpoints are useful for getting started, but production apps usually use a dedicated RPC provider for reliability and rate limits.
+The `Connection` object from `@vue-solana/core/web3` sends RPC requests to this endpoint. Public endpoints are useful for getting started, but production apps usually use a dedicated RPC provider for reliability and rate limits.
 
 Official reference: [Solana RPC](https://solana.com/docs/rpc)
 

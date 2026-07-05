@@ -5,8 +5,12 @@ export default defineConfig({
   resolve: {
     alias: {
       "#app": fileURLToPath(new URL("./test/stubs/nuxt-app.ts", import.meta.url)),
+      "buffer/": "node:buffer",
       "@vue-solana/core/address": fileURLToPath(
         new URL("./packages/core/src/address.ts", import.meta.url),
+      ),
+      "@vue-solana/core/buffer-polyfill": fileURLToPath(
+        new URL("./packages/core/src/buffer-polyfill.ts", import.meta.url),
       ),
       "@vue-solana/core/clusters": fileURLToPath(
         new URL("./packages/core/src/clusters.ts", import.meta.url),
@@ -35,6 +39,9 @@ export default defineConfig({
       ),
       "@vue-solana/core/wallet-standard": fileURLToPath(
         new URL("./packages/core/src/wallet-standard.ts", import.meta.url),
+      ),
+      "@vue-solana/core/web3": fileURLToPath(
+        new URL("./packages/core/src/web3.ts", import.meta.url),
       ),
       "@vue-solana/core": fileURLToPath(new URL("./packages/core/src/index.ts", import.meta.url)),
       "@vue-solana/vue/useBalance": fileURLToPath(

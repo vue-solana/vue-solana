@@ -82,6 +82,12 @@ Temporary workaround:
 
 This shim allows TypeScript to resolve `@solana/web3-compat`. Runtime imports still use the real package.
 
+Additional local type shim:
+
+- `types/buffer.d.ts`
+
+This shim allows TypeScript to resolve the browser `buffer/` subpath used by `@vue-solana/core/buffer-polyfill`. Runtime imports still use the real `buffer` package.
+
 Future agents should re-check new `@solana/web3-compat` versions and remove the shim once the package ships valid root declarations.
 
 ## Documentation Added

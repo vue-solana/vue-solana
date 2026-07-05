@@ -6,7 +6,7 @@ surroundOrder: 11
 
 Vue Solana provides wallet-aware helpers for submitting transactions and composables for reactive transaction state.
 
-This guide covers the Vue Solana boundary: wallet capability checks, signing, sending, confirmation, and errors. Build transaction instructions with `@solana/web3-compat` or your program client.
+This guide covers the Vue Solana boundary: wallet capability checks, signing, sending, confirmation, and errors. Build transaction instructions with `@vue-solana/core/web3` or your program client.
 
 ## Core Send Helper
 
@@ -43,18 +43,18 @@ Confirmation defaults to `confirmed` commitment and a 60 second timeout.
 
 ## Build A Real Devnet Transfer
 
-This example creates a tiny system transfer on devnet. It uses `@solana/web3-compat` for raw Solana primitives and Vue Solana for wallet state and submission.
+This example creates a tiny system transfer on devnet. It uses `@vue-solana/core` for Solana primitives and Vue Solana for wallet state and submission.
 
-Browser apps that create or serialize transactions should initialize the `buffer` polyfill once before transaction code runs:
+Browser apps that create or serialize transactions should initialize the core Buffer polyfill once before transaction code runs:
 
 ```ts
-import { Buffer } from "buffer/";
+import { installSolanaBufferPolyfill } from "@vue-solana/core/buffer-polyfill";
 
-(globalThis as typeof globalThis & { Buffer: typeof Buffer }).Buffer = Buffer;
+installSolanaBufferPolyfill();
 ```
 
 ```ts
-import { PublicKey, SystemProgram, Transaction } from "@solana/web3-compat";
+import { PublicKey, SystemProgram, Transaction } from "@vue-solana/core/web3";
 
 async function createTransferTransaction(params: {
   connection: Connection;

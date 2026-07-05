@@ -8,7 +8,7 @@ This guide covers installing the Vue Solana packages, configuring Vue or Nuxt, t
 
 ## Before You Start
 
-Use `@solana/web3-compat` directly if you only need raw Solana APIs. Use `@vue-solana/vue` or `@vue-solana/nuxt` when you want framework integration.
+Use `@vue-solana/core` directly if you need Solana primitives such as `Connection`, `PublicKey`, and transactions without Vue/Nuxt integration. Use `@vue-solana/vue` or `@vue-solana/nuxt` when you want framework integration.
 
 Supported clusters:
 
@@ -33,24 +33,28 @@ Planned but not supported yet:
 ## Install For Vue
 
 ```sh
-pnpm add @vue-solana/vue @vue-solana/core @solana/web3-compat buffer
+pnpm add @vue-solana/vue
 ```
 
 ```sh
-npm install @vue-solana/vue @vue-solana/core @solana/web3-compat buffer
+npm install @vue-solana/vue
 ```
 
 For local workspace development inside this monorepo, the examples use workspace links instead of published versions.
 
+Add `@vue-solana/core` too when app code imports core subpaths such as `@vue-solana/core/web3` or `@vue-solana/core/buffer-polyfill`.
+
 ## Install For Nuxt
 
 ```sh
-pnpm add @vue-solana/nuxt @vue-solana/vue @vue-solana/core @solana/web3-compat buffer
+pnpm add @vue-solana/nuxt
 ```
 
 ```sh
-npm install @vue-solana/nuxt @vue-solana/vue @vue-solana/core @solana/web3-compat buffer
+npm install @vue-solana/nuxt
 ```
+
+Add `@vue-solana/core` too when app code imports core subpaths such as `@vue-solana/core/web3` or `@vue-solana/core/buffer-polyfill`.
 
 ## Known TypeScript Issue
 
@@ -321,12 +325,12 @@ The Vue and Nuxt examples include recipient address and amount fields for a real
 
 Start with a tiny amount such as `0.000001` SOL while testing.
 
-Browser apps that create or serialize `@solana/web3-compat` transactions should initialize the `buffer` polyfill before transaction code:
+Browser apps that create or serialize transactions should initialize the core Buffer polyfill before transaction code:
 
 ```ts
-import { Buffer } from "buffer/";
+import { installSolanaBufferPolyfill } from "@vue-solana/core/buffer-polyfill";
 
-(globalThis as typeof globalThis & { Buffer: typeof Buffer }).Buffer = Buffer;
+installSolanaBufferPolyfill();
 ```
 
 The wallet will prompt you to approve the transaction. After approval, the example shows the transaction signature, confirmation state, and explorer link. On Android Mobile Wallet Adapter, Vue Solana prefers wallet signing plus app-side RPC submission when supported, which makes the returned signature more reliable after the wallet redirects back to the browser.

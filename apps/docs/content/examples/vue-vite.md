@@ -55,7 +55,7 @@ Open the Vite URL printed in the terminal, usually `http://localhost:5173`.
 - Watch the transaction move from submitted signature to confirmation status.
 - Open the explorer link and verify it includes `?cluster=devnet`.
 
-The transfer example initializes the `buffer` browser polyfill with `import { Buffer } from "buffer/"`. Restart the Vite dev server if Vite previously cached an externalized `buffer` import.
+The transfer example initializes the browser `Buffer` polyfill with `installSolanaBufferPolyfill()` from `@vue-solana/core/buffer-polyfill`. Restart the Vite dev server if Vite previously cached an externalized Buffer import.
 
 If confirmation times out after a signature appears, do not immediately submit a duplicate transfer. Use the example's signature status or explorer link to check whether the transaction later confirmed.
 

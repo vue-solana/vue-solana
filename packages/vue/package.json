@@ -113,11 +113,9 @@
     "bs58": "^6.0.0"
   },
   "peerDependencies": {
-    "@solana/web3-compat": "^0.0.21",
     "vue": "^3.5.0"
   },
   "devDependencies": {
-    "@solana/web3-compat": "^0.0.21",
     "typescript": "^5.8.3",
     "unbuild": "^3.5.0",
     "vue": "^3.5.16"

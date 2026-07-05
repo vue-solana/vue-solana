@@ -16,7 +16,7 @@ This example demonstrates:
 
 The app uses `devnet` by default. Devnet SOL has no real value.
 
-The real transfer example uses the `buffer` browser polyfill because some `@solana/web3-compat` transaction paths expect a Node-compatible `Buffer` global. If Vite reports that `buffer` was externalized, make sure imports use `buffer/` and restart the dev server.
+The real transfer example initializes the browser `Buffer` polyfill with `installSolanaBufferPolyfill()` from `@vue-solana/core/buffer-polyfill`. Restart the Nuxt dev server if Vite previously cached an externalized Buffer import.
 
 ## Run From The Repository Root
 

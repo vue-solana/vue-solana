@@ -3,7 +3,7 @@ import type {
   SignatureResult,
   SignatureStatus,
   TransactionSignature,
-} from "@solana/web3-compat";
+} from "@vue-solana/core/web3";
 import { createSolanaError, normalizeSolanaError, type SolanaError } from "@vue-solana/core/errors";
 import bs58 from "bs58";
 import { onMounted, onUnmounted, shallowRef, toValue, watch, type MaybeRefOrGetter } from "vue";

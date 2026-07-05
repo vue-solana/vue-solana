@@ -1,4 +1,4 @@
-import { PublicKey } from "@solana/web3-compat";
+import { PublicKey } from "@vue-solana/core/web3";
 import { flushPromises } from "@vue/test-utils";
 import { describe, expect, it, vi } from "vitest";
 import { ref } from "vue";

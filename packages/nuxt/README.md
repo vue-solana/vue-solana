@@ -30,21 +30,21 @@ New to Solana? Start with the official docs and the project concepts guide:
 
 ## Compatibility
 
-| Requirement        | Supported                                       |
-| ------------------ | ----------------------------------------------- |
-| Nuxt               | `^3.0.0 \|\| ^4.0.0`                            |
-| TypeScript         | TypeScript 5.x recommended                      |
-| Solana client peer | `@solana/web3-compat@^0.0.21`                   |
-| Clusters           | `mainnet-beta`, `devnet`, `testnet`, `localnet` |
+| Requirement   | Supported                                       |
+| ------------- | ----------------------------------------------- |
+| Nuxt          | `^3.0.0 \|\| ^4.0.0`                            |
+| TypeScript    | TypeScript 5.x recommended                      |
+| Solana client | Provided through `@vue-solana/core`             |
+| Clusters      | `mainnet-beta`, `devnet`, `testnet`, `localnet` |
 
 ## Install
 
 ```sh
-pnpm add @vue-solana/nuxt @vue-solana/vue @vue-solana/core @solana/web3-compat buffer
+pnpm add @vue-solana/nuxt
 ```
 
 ```sh
-npm install @vue-solana/nuxt @vue-solana/vue @vue-solana/core @solana/web3-compat buffer
+npm install @vue-solana/nuxt
 ```
 
 ## Module Setup

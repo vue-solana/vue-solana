@@ -146,23 +146,19 @@ Android Mobile Wallet Adapter wallets prefer wallet signing plus app-side RPC su
 
 ## `Buffer is not defined`
 
-Some `@solana/web3-compat` transaction paths still expect a Node-compatible `Buffer` global. In browser apps, install `buffer` and initialize the polyfill before creating or serializing transactions:
-
-```sh
-pnpm add buffer
-```
+Some `@solana/web3-compat` transaction paths still expect a Node-compatible `Buffer` global. In browser apps, initialize the core Buffer polyfill before creating or serializing transactions:
 
 ```ts
-import { Buffer } from "buffer/";
+import { installSolanaBufferPolyfill } from "@vue-solana/core/buffer-polyfill";
 
-(globalThis as typeof globalThis & { Buffer: typeof Buffer }).Buffer = Buffer;
+installSolanaBufferPolyfill();
 ```
 
-Use the trailing slash in `buffer/`. Importing from `buffer` can make Vite or Nuxt externalize the Node builtin and fail in the browser.
+The helper is provided by `@vue-solana/core`, so apps do not need to install or import `buffer` directly for Vue Solana transaction examples.
 
 ## Module `buffer` Has Been Externalized
 
-If the console says `Module "buffer" has been externalized for browser compatibility`, change imports from `buffer` to `buffer/`, then restart the dev server. Vite may cache the previously optimized dependency.
+If the console says `Module "buffer" has been externalized for browser compatibility`, replace direct app imports from `buffer` with `installSolanaBufferPolyfill()` from `@vue-solana/core/buffer-polyfill`, then restart the dev server. Vite may cache the previously optimized dependency.
 
 ## Balance Reads Fail
 

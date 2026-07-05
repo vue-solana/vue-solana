@@ -9,10 +9,10 @@ surroundOrder: 15
 ## Install
 
 ```sh
-pnpm add @vue-solana/vue @vue-solana/core @solana/web3-compat buffer
+pnpm add @vue-solana/vue
 ```
 
-The `buffer` package is needed for browser apps that create or serialize `@solana/web3-compat` transactions.
+Browser apps that create or serialize transactions can initialize the Buffer polyfill from `@vue-solana/core/buffer-polyfill`.
 
 ## Plugin Setup
 

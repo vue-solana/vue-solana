@@ -9,10 +9,12 @@ surroundOrder: 16
 ## Install
 
 ```sh
-pnpm add @vue-solana/nuxt @vue-solana/vue @vue-solana/core @solana/web3-compat buffer
+pnpm add @vue-solana/nuxt
 ```
 
-The `buffer` package is needed for browser apps that create or serialize `@solana/web3-compat` transactions.
+Browser apps that create or serialize transactions can initialize the Buffer polyfill from `@vue-solana/core/buffer-polyfill`.
+
+Install `@vue-solana/core` too when your Nuxt app imports core subpaths such as `@vue-solana/core/web3` or `@vue-solana/core/buffer-polyfill`.
 
 ## Module Setup
 
@@ -252,7 +254,7 @@ Use `useSolanaSignAndSendTransaction()` from a client-side user action when the 
 
 ```vue
 <script setup lang="ts">
-import { Transaction } from "@solana/web3-compat";
+import { Transaction } from "@vue-solana/core/web3";
 
 const { connected, canSignTransaction } = useSolanaWallet();
 const { signature, confirmation, status, loading, error, execute } =

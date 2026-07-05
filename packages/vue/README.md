@@ -32,21 +32,21 @@ New to Solana? Start with the official docs and the project concepts guide:
 
 ## Compatibility
 
-| Requirement        | Supported                                       |
-| ------------------ | ----------------------------------------------- |
-| Vue                | `^3.5.0`                                        |
-| TypeScript         | TypeScript 5.x recommended                      |
-| Solana client peer | `@solana/web3-compat@^0.0.21`                   |
-| Clusters           | `mainnet-beta`, `devnet`, `testnet`, `localnet` |
+| Requirement   | Supported                                       |
+| ------------- | ----------------------------------------------- |
+| Vue           | `^3.5.0`                                        |
+| TypeScript    | TypeScript 5.x recommended                      |
+| Solana client | Provided through `@vue-solana/core`             |
+| Clusters      | `mainnet-beta`, `devnet`, `testnet`, `localnet` |
 
 ## Install
 
 ```sh
-pnpm add @vue-solana/vue @vue-solana/core @solana/web3-compat buffer
+pnpm add @vue-solana/vue
 ```
 
 ```sh
-npm install @vue-solana/vue @vue-solana/core @solana/web3-compat buffer
+npm install @vue-solana/vue
 ```
 
 ## Plugin Setup
