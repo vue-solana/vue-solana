@@ -13,6 +13,7 @@ const VITE_OPTIMIZE_DEPS = [
   "@vue-solana/nuxt > @solana/web3-compat > @solana/web3.js",
   "@vue-solana/nuxt > @solana/web3-compat > @solana/web3.js > qrcode",
   "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > buffer",
+  "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > buffer/",
   "@vue-solana/nuxt > @solana/web3-compat > @solana/web3.js > bn.js",
   "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > bs58",
   "@vue-solana/nuxt > @solana/web3-compat > @solana/web3.js > borsh",
