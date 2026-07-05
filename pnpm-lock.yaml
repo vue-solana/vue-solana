@@ -209,6 +209,9 @@ importers:
 
   packages/nuxt:
     dependencies:
+      '@solana/web3-compat':
+        specifier: ^0.0.21
+        version: 0.0.21(@solana/sysvars@6.9.0(typescript@5.9.3))(bufferutil@4.1.0)(react@19.2.7)(typescript@5.9.3)(utf-8-validate@6.0.6)
       '@vue-solana/vue':
         specifier: workspace:*
         version: link:../vue
@@ -231,6 +234,9 @@ importers:
 
   packages/vue:
     dependencies:
+      '@solana/web3-compat':
+        specifier: ^0.0.21
+        version: 0.0.21(@solana/sysvars@6.9.0(typescript@5.9.3))(bufferutil@4.1.0)(react@19.2.7)(typescript@5.9.3)(utf-8-validate@6.0.6)
       '@vue-solana/core':
         specifier: workspace:*
         version: link:../core

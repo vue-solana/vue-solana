@@ -53,6 +53,9 @@ jobs:
       - name: Build packages
         run: pnpm build:packages
 
+      - name: Smoke standalone package installs
+        run: pnpm smoke:standalone-installs
+
       - name: Create release PR or publish packages
         uses: changesets/action@v1
         with:

@@ -9,6 +9,7 @@ export default defineBuildConfig({
   },
   externals: [
     "#app",
+    "@solana/web3-compat",
     "@nuxt/kit",
     /^@vue-solana\/core(?:\/.*)?$/,
     /^@vue-solana\/vue(?:\/.*)?$/,

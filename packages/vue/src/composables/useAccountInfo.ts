@@ -16,7 +16,7 @@ export function useAccountInfo(
 ) {
   const solana = tryUseSolana();
   const connection = solana?.connection ?? useConnection();
-  const accountInfo = shallowRef<AccountInfo<Buffer> | null>(null);
+  const accountInfo = shallowRef<AccountInfo<Uint8Array> | null>(null);
   const loading = shallowRef(false);
   const error = shallowRef<SolanaError | null>(null);
   let refreshId = 0;
@@ -111,7 +111,7 @@ export function useAccountInfo(
 
       const nextSubscriptionId = connection.onAccountChange(
         publicKey,
-        (nextAccountInfo: AccountInfo<Buffer>) => {
+        (nextAccountInfo: AccountInfo<Uint8Array>) => {
           if (requestId !== watchId) {
             return;
           }

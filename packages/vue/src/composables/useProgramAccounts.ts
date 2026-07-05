@@ -1,7 +1,6 @@
 import { parsePublicKey, type PublicKeyInput } from "@vue-solana/core/address";
 import { normalizeSolanaError, type SolanaError } from "@vue-solana/core/errors";
 import type { AccountInfo, Commitment, PublicKey } from "@vue-solana/core/web3";
-import type { Buffer } from "../buffer-polyfill";
 import { onMounted, onUnmounted, shallowRef, toValue, watch, type MaybeRefOrGetter } from "vue";
 import { useConnection } from "./useConnection";
 import { tryUseSolana } from "./useSolana";
@@ -33,7 +32,7 @@ export interface UseProgramAccountsOptions {
   filters?: ProgramAccountFilter[];
 }
 
-export interface ProgramAccount<TData extends Buffer = Buffer> {
+export interface ProgramAccount<TData extends Uint8Array = Uint8Array> {
   pubkey: PublicKey;
   account: AccountInfo<TData>;
 }

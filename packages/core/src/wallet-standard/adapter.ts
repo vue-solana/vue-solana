@@ -8,6 +8,7 @@ import {
 import { PublicKey } from "@solana/web3-compat";
 import bs58 from "bs58";
 import type { SolanaChain, SolanaTransaction, SolanaWallet, SolanaWalletInfo } from "../types";
+import { SolanaWalletError } from "../wallet";
 import { SOLANA_CHAINS } from "./chains";
 import {
   hasSignAndSendTransaction,
@@ -167,7 +168,16 @@ export function adaptSolanaStandardWallet(
               throw new Error("Solana wallet did not return a signed transaction");
             }
 
-            return deserializeTransaction(transactions[index], result.signedTransaction);
+            const transaction = transactions[index];
+            if (!transaction) {
+              throw new SolanaWalletError(
+                "WALLET_FEATURE_UNSUPPORTED",
+                "Solana wallet returned a signed transaction without a matching request",
+                { feature: "signTransaction" },
+              );
+            }
+
+            return deserializeTransaction(transaction, result.signedTransaction);
           }) as T[];
         }
       : undefined,

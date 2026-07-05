@@ -13,6 +13,7 @@ export default tseslint.config(
       "**/.vite/**",
       "**/coverage/**",
       "**/node_modules/**",
+      ".agents-dev/**",
       "**/*.d.ts",
     ],
   },

@@ -148,6 +148,40 @@ describe("Wallet Standard adapter", () => {
     expect(signTransaction).toHaveBeenCalledOnce();
   });
 
+  it("uses the standard wallet error shape when a signed transaction has no matching request", async () => {
+    const standardWallet = createStandardWallet();
+    const signedTransaction = createTestTransaction().serialize({
+      requireAllSignatures: false,
+      verifySignatures: false,
+    });
+    const signTransaction = vi.fn().mockResolvedValue([{ signedTransaction }]);
+    (standardWallet.features as Record<string, unknown>)[SolanaSignTransaction] = {
+      version: "1.0.0",
+      supportedTransactionVersions: ["legacy"],
+      signTransaction,
+    };
+    const walletInfo = {
+      name: standardWallet.name,
+      icon: standardWallet.icon,
+      chains: standardWallet.chains,
+      accounts: [],
+      wallet: standardWallet,
+    } satisfies SolanaWalletInfo;
+    const wallet = adaptSolanaStandardWallet(walletInfo, { chain: "solana:devnet" });
+
+    await wallet.connect();
+
+    const transactions = new Array(1) as ReturnType<typeof createTestTransaction>[];
+
+    await expect(wallet.signAllTransactions?.(transactions)).rejects.toMatchObject({
+      name: "SolanaWalletError",
+      code: "WALLET_FEATURE_UNSUPPORTED",
+      feature: "signTransaction",
+      message: "Solana wallet returned a signed transaction without a matching request",
+    });
+    expect(signTransaction).toHaveBeenCalledOnce();
+  });
+
   it("adapts message signing when the wallet supports it", async () => {
     const standardWallet = createStandardWallet();
     const message = new Uint8Array([1, 2, 3]);

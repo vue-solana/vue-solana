@@ -12,7 +12,7 @@ export function createMockSolanaContext(
     wsEndpoint: "wss://api.devnet.solana.com",
     connection: {
       getBalance: async () => 0,
-    } as VueSolanaContext["connection"],
+    } as unknown as VueSolanaContext["connection"],
     wallet: shallowRef<SolanaWallet | null>(null),
     wallets: shallowRef([]),
     selectedWallet: shallowRef(null),

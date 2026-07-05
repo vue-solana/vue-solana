@@ -12,7 +12,7 @@ describe("useRpc", () => {
       cluster: "localnet",
       endpoint: "http://127.0.0.1:8899",
       wsEndpoint: "ws://127.0.0.1:8900",
-      connection: connection as ReturnType<typeof createMockSolanaContext>["connection"],
+      connection: connection as unknown as ReturnType<typeof createMockSolanaContext>["connection"],
       status: ref("connected"),
       latestBlockhash: ref("blockhash"),
       checkConnection,

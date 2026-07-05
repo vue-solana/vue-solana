@@ -24,5 +24,5 @@ export default defineBuildConfig({
   rollup: {
     emitCJS: true,
   },
-  externals: ["vue", /^@vue-solana\/core(?:\/.*)?$/],
+  externals: ["@solana/web3-compat", "vue", /^@vue-solana\/core(?:\/.*)?$/],
 });

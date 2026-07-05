@@ -38,7 +38,14 @@ function fileDependency(tarballPath, consumerDir) {
   return `file:${relative(consumerDir, tarballPath)}`;
 }
 
-function writeConsumer({ name, dependencies, devDependencies, overrides, source }) {
+function writeConsumer({
+  name,
+  dependencies,
+  devDependencies,
+  overrides,
+  source,
+  tsconfigCompilerOptions = {},
+}) {
   const consumerDir = join(tempRoot, name);
   mkdirSync(join(consumerDir, "src"), { recursive: true });
 
@@ -70,8 +77,8 @@ function writeConsumer({ name, dependencies, devDependencies, overrides, source 
           moduleResolution: "Bundler",
           lib: ["ES2022", "DOM"],
           strict: true,
-          skipLibCheck: true,
           noEmit: true,
+          ...tsconfigCompilerOptions,
         },
         include: ["src/**/*.ts"],
       },
@@ -198,6 +205,11 @@ void maybeVersionedTransaction;
     overrides: {
       "@vue-solana/core": fileDependency(packages.core.tarball, join(tempRoot, "nuxt-consumer")),
       "@vue-solana/vue": fileDependency(packages.vue.tarball, join(tempRoot, "nuxt-consumer")),
+    },
+    // Nuxt/Nitro declarations currently reference many optional peer packages in raw tsc checks.
+    // Keep core/vue consumers strict and scope this exception to Nuxt's upstream declaration noise.
+    tsconfigCompilerOptions: {
+      skipLibCheck: true,
     },
     source: `import VueSolana from "@vue-solana/nuxt";
 import { installSolanaBufferPolyfill, Buffer } from "@vue-solana/nuxt/buffer-polyfill";
