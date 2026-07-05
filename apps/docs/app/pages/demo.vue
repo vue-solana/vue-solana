@@ -62,7 +62,7 @@ const {
 
 <template>
   <main
-    class="hide-scrollbar mx-auto grid w-full max-w-[1180px] flex-1 gap-4 px-4 py-6 sm:px-6 lg:min-h-0 lg:grid-cols-2 lg:overflow-y-auto lg:px-8 xl:grid-cols-3"
+    class="hide-scrollbar mx-auto grid w-full max-w-295 flex-1 gap-4 px-4 py-6 sm:px-6 lg:min-h-0 lg:grid-cols-2 lg:overflow-y-auto lg:px-8 xl:grid-cols-3"
   >
     <DemoHero :package-versions="packageVersions" />
 

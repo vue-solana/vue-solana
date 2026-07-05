@@ -25,8 +25,14 @@ export default defineNuxtConfig({
   },
   vite: {
     optimizeDeps: {
-      include: ["tweetnacl", "tweetnacl/nacl-fast.js"],
-      needsInterop: ["tweetnacl", "tweetnacl/nacl-fast.js"],
+      include: ["eventemitter3", "tweetnacl", "tweetnacl/nacl-fast.js"],
+      needsInterop: ["eventemitter3", "tweetnacl", "tweetnacl/nacl-fast.js"],
+    },
+    $client: {
+      optimizeDeps: {
+        include: ["eventemitter3", "tweetnacl", "tweetnacl/nacl-fast.js"],
+        needsInterop: ["eventemitter3", "tweetnacl", "tweetnacl/nacl-fast.js"],
+      },
     },
   },
 });
