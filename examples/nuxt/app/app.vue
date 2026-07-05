@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { Buffer, installSolanaBufferPolyfill } from "@vue-solana/core/buffer-polyfill";
-import { PublicKey, Transaction, TransactionInstruction } from "@vue-solana/core/web3";
-import { useTransaction } from "@vue-solana/vue";
+import { Buffer, installSolanaBufferPolyfill } from "@vue-solana/nuxt/buffer-polyfill";
+import { PublicKey, Transaction, TransactionInstruction } from "@vue-solana/nuxt/web3";
 
 installSolanaBufferPolyfill();
 
@@ -28,11 +27,6 @@ const walletNotice = ref<{ type: "success" | "error"; message: string } | null>(
 const systemProgramId = new PublicKey("11111111111111111111111111111111");
 
 const balance = useSolanaBalance(balanceAddress);
-
-const mockTransaction = useTransaction(async (label: string) => {
-  await new Promise((resolve) => window.setTimeout(resolve, 350));
-  return `mock-${label}-${Date.now()}`;
-});
 
 const pluginInstalled = computed(() => Boolean(solana.connection && solana.endpoint));
 const walletPublicKey = computed(() => wallet.publicKey.value?.toBase58() ?? "Not connected");
@@ -165,7 +159,6 @@ const balanceInSol = computed(() => {
   return `${balance.balance.value / 1_000_000_000} SOL`;
 });
 const balanceError = computed(() => formatError(balance.error.value));
-const mockTransactionError = computed(() => formatError(mockTransaction.error.value));
 const signMessageError = computed(() => formatError(signMessage.error.value));
 const sendTransactionError = computed(() =>
   formatError(devnetTransferError.value ?? sendTransaction.error.value),
@@ -258,10 +251,6 @@ async function copyWalletAddress() {
   }
 }
 
-async function runMockTransaction() {
-  await mockTransaction.execute("transaction");
-}
-
 async function signWalletMessage() {
   await signMessage.execute(new TextEncoder().encode(messageToSign.value.trim()));
 }
@@ -321,7 +310,7 @@ function createTransferInstruction(fromPubkey: PublicKey, toPubkey: PublicKey, l
       <p>
         This screen exercises the Nuxt module and auto-imported Solana composables: plugin
         injection, RPC status, direct connection calls, balance lookup, browser wallet discovery,
-        generic transaction state, and real devnet transfers.
+        message signing, and real devnet transfers.
       </p>
     </section>
 
@@ -552,29 +541,6 @@ function createTransferInstruction(fromPubkey: PublicKey, toPubkey: PublicKey, l
       <p v-if="walletNotice" :class="walletNotice.type === 'error' ? 'error' : 'result'">
         {{ walletNotice.message }}
       </p>
-    </section>
-
-    <section class="panel" data-testid="transaction-panel">
-      <div class="panel-heading">
-        <div>
-          <p class="eyebrow">useTransaction</p>
-          <h2>Generic Transaction State</h2>
-        </div>
-      </div>
-
-      <p>Runs a mock async handler to test loading, error, and signature state.</p>
-      <button
-        type="button"
-        data-testid="run-mock-transaction"
-        :disabled="mockTransaction.loading.value"
-        @click="runMockTransaction"
-      >
-        {{ mockTransaction.loading.value ? "Running..." : "Run Mock Transaction" }}
-      </button>
-      <p class="result" data-testid="mock-transaction-signature">
-        Signature: {{ mockTransaction.signature.value ?? "No signature yet" }}
-      </p>
-      <p v-if="mockTransactionError" class="error">{{ mockTransactionError }}</p>
     </section>
 
     <section class="panel" data-testid="message-signing-panel">

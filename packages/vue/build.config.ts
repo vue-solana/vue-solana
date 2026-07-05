@@ -2,6 +2,7 @@ import { defineBuildConfig } from "unbuild";
 
 export default defineBuildConfig({
   entries: [
+    "src/buffer-polyfill",
     "src/index",
     "src/useAccountInfo",
     "src/useBalance",
@@ -16,6 +17,7 @@ export default defineBuildConfig({
     "src/useTransactionConfirmation",
     "src/useWallet",
     "src/useWallets",
+    "src/web3",
   ],
   declaration: true,
   clean: true,

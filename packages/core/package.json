@@ -97,13 +97,14 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "types"
   ],
   "publishConfig": {
     "access": "public"
   },
   "scripts": {
-    "build": "unbuild",
+    "build": "unbuild && node scripts/prepare-declarations.mjs",
     "dev": "unbuild --stub",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist"

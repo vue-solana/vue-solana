@@ -44,7 +44,7 @@ pnpm add @vue-solana/vue
 For Nuxt:
 
 ```sh
-pnpm add @vue-solana/nuxt
+npx nuxt module add @vue-solana/nuxt
 ```
 
 ## Wallet Support
@@ -70,8 +70,8 @@ Root package exports remain supported for compatibility. New code can use direct
 ```ts
 import { createSolanaContext } from "@vue-solana/core/rpc";
 import type { SolanaConfig } from "@vue-solana/core/types";
-import { PublicKey, Transaction } from "@vue-solana/core/web3";
-import { installSolanaBufferPolyfill } from "@vue-solana/core/buffer-polyfill";
+import { PublicKey, Transaction } from "@vue-solana/vue/web3";
+import { installSolanaBufferPolyfill } from "@vue-solana/vue/buffer-polyfill";
 import { useAccountInfo } from "@vue-solana/vue/useAccountInfo";
 import { useProgramAccounts } from "@vue-solana/vue/useProgramAccounts";
 import { useRpc } from "@vue-solana/vue/useRpc";
@@ -80,7 +80,7 @@ import { useSignMessage } from "@vue-solana/vue/useSignMessage";
 import { useWallet } from "@vue-solana/vue/useWallet";
 ```
 
-Install `@vue-solana/core` directly when app code imports core subpaths such as `@vue-solana/core/web3` or `@vue-solana/core/buffer-polyfill`. You do not need to install `@solana/web3-compat` or `buffer` directly for those imports.
+Vue apps can import transaction primitives from `@vue-solana/vue/web3` and the Buffer helper from `@vue-solana/vue/buffer-polyfill` without installing `@vue-solana/core`, `@solana/web3-compat`, or `buffer` directly. Nuxt apps use the equivalent `@vue-solana/nuxt/web3` and `@vue-solana/nuxt/buffer-polyfill` subpaths. Direct `@vue-solana/core/*` imports remain supported for lower-level core usage.
 
 The Nuxt module auto-imports composables from these direct Vue subpaths and keeps its runtime plugin client-only. Auto-imported composables are SSR-safe, but real RPC and wallet work should run after hydration.
 
@@ -160,12 +160,15 @@ pnpm format
 pnpm test
 pnpm typecheck
 pnpm build:packages
+pnpm smoke:standalone-installs
 pnpm dev:docs
 ```
 
 `pnpm install` runs the root `prepare` script and installs the Husky Git hooks. If hooks are missing after changing package managers or reinstalling dependencies, run `pnpm prepare` from the repository root.
 
 Pre-commit checks run through lint-staged and only lint/format staged files. Run `pnpm lint`, `pnpm format`, `pnpm test`, `pnpm typecheck`, and `pnpm build:packages` before opening larger pull requests.
+
+Run `pnpm smoke:standalone-installs` before release-facing package changes. It builds and packs `@vue-solana/core`, `@vue-solana/vue`, and `@vue-solana/nuxt`, installs each tarball into a fresh temporary TypeScript consumer, and typechecks representative root, `web3`, and `buffer-polyfill` imports without workspace aliases or repo-local shims. Set `KEEP_STANDALONE_SMOKE=1` to keep the temporary projects for debugging.
 
 ## CI And Releases
 
@@ -246,11 +249,11 @@ pnpm dev:docs
 
 `@solana/web3-compat@0.0.21` currently has broken TypeScript metadata. Its package metadata points to `dist/types/index.d.ts`, but that file is not included in the published package.
 
-This repository includes `types/web3-compat.d.ts` as a temporary shim so TypeScript can resolve the package while runtime imports still use `@solana/web3-compat`.
+This repository includes temporary declaration shims so TypeScript can resolve Vue Solana's public type surface while runtime imports still use `@solana/web3-compat`. Current `@vue-solana/core` packages publish those shims for the documented `@vue-solana/core`, `@vue-solana/core/web3`, and `@vue-solana/core/buffer-polyfill` imports.
 
-Consumer workaround:
+Consumer workaround for older package versions or direct `@solana/web3-compat` imports:
 
-If your app reports that TypeScript cannot find declarations for `@solana/web3-compat`, add a local declaration file such as `types/web3-compat.d.ts`:
+If your app imports `@solana/web3-compat` directly and TypeScript cannot find declarations for it, add a local declaration file such as `types/web3-compat.d.ts`:
 
 ```ts
 declare module "@solana/web3-compat" {
@@ -280,5 +283,5 @@ Make sure the file is included by your `tsconfig.json`, for example by including
 TODO:
 
 - [ ] Re-check this after each new `@solana/web3-compat` release.
-- [ ] Remove `types/web3-compat.d.ts` once the package ships valid root declarations.
+- [ ] Remove the package-owned and repo-local shims once the package ships valid root declarations.
 - [ ] Re-run `pnpm typecheck` and `pnpm build` after removing the shim.

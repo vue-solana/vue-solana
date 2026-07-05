@@ -76,19 +76,27 @@ Current package dependency:
 
 Important detail: `@solana/web3-compat@0.0.21` currently has broken TypeScript package metadata. Its `package.json` points to `dist/types/index.d.ts`, but that file is not present in the published package.
 
-Temporary workaround:
+Development-time workaround:
 
 - `types/web3-compat.d.ts`
 
-This shim allows TypeScript to resolve `@solana/web3-compat`. Runtime imports still use the real package.
+This repo-local shim allows TypeScript to resolve `@solana/web3-compat` while developing inside the workspace. Runtime imports still use the real package.
 
-Additional local type shim:
+Additional development-time type shim:
 
 - `types/buffer.d.ts`
 
-This shim allows TypeScript to resolve the browser `buffer/` subpath used by `@vue-solana/core/buffer-polyfill`. Runtime imports still use the real `buffer` package.
+This repo-local shim allows TypeScript to resolve the browser `buffer/` subpath used by `@vue-solana/core/buffer-polyfill`. Runtime imports still use the real `buffer` package.
 
-Future agents should re-check new `@solana/web3-compat` versions and remove the shim once the package ships valid root declarations.
+Published package workaround:
+
+- `packages/core/types/web3-compat.d.ts`
+- `packages/core/types/buffer.d.ts`
+- `packages/core/scripts/prepare-declarations.mjs`
+
+`@vue-solana/core` publishes package-owned declaration shims for current documented imports. The core build runs `prepare-declarations.mjs` after `unbuild` to add triple-slash references from generated declarations that mention `@solana/web3-compat` or `buffer/`, so fresh consumers do not need local shims for `@vue-solana/core`, `@vue-solana/core/web3`, or `@vue-solana/core/buffer-polyfill`.
+
+Future agents should re-check new `@solana/web3-compat` versions and remove both the development-time and package-owned shims once the package ships valid root declarations.
 
 ## Documentation Added
 

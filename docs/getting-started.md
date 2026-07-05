@@ -63,8 +63,10 @@ pnpm add ../path-to/vue-solana/packages/vue
 For Nuxt:
 
 ```sh
-pnpm add @vue-solana/nuxt
+npx nuxt module add @vue-solana/nuxt
 ```
+
+This installs the package and adds `@vue-solana/nuxt` to the `modules` array in `nuxt.config.ts`.
 
 Again, for local development, use workspace linking instead:
 
@@ -84,30 +86,9 @@ pnpm add ../path-to/vue-solana/packages/nuxt
 
 `@solana/web3-compat@0.0.21` currently has broken TypeScript metadata. Its package metadata points to `dist/types/index.d.ts`, but that file is not included in the published package.
 
-Runtime imports still use the real `@solana/web3-compat` package. If TypeScript reports that it cannot find declarations for `@solana/web3-compat`, add this local declaration file to your app as `types/web3-compat.d.ts`:
+Runtime imports still use the real `@solana/web3-compat` package. Current Vue Solana packages publish temporary package-owned declaration shims, so apps following the documented `@vue-solana/core`, `@vue-solana/vue`, or `@vue-solana/nuxt` imports should not need their own local shim.
 
-```ts
-declare module "@solana/web3-compat" {
-  export type {
-    Commitment,
-    RpcResponseAndContext,
-    SendOptions,
-    SignatureResult,
-    TransactionSignature,
-  } from "@solana/web3.js";
-  export {
-    Connection,
-    Keypair,
-    PublicKey,
-    SystemProgram,
-    Transaction,
-    TransactionInstruction,
-    VersionedTransaction,
-  } from "@solana/web3.js";
-}
-```
-
-Make sure your `tsconfig.json` includes the file. Most Vue and Nuxt apps include `**/*.d.ts` by default. If yours does not, add an include pattern such as `types/**/*.d.ts`.
+Only add a local shim if you are using an older Vue Solana package version or importing `@solana/web3-compat` directly from app code. Re-check this note after each new `@solana/web3-compat` release; the package-owned shim should be removed once upstream ships valid root declarations.
 
 ## Vue
 
@@ -229,14 +210,13 @@ If you are wiring your own playground, use these dependencies:
 ```json
 {
   "dependencies": {
-    "@vue-solana/core": "workspace:*",
     "@vue-solana/vue": "workspace:*",
     "vue": "^3.5.0"
   }
 }
 ```
 
-Include `@vue-solana/core` when your app imports core subpaths such as `@vue-solana/core/web3` or `@vue-solana/core/buffer-polyfill`. A composable-only Vue app can install just `@vue-solana/vue` plus Vue.
+Vue apps can import supported Solana primitives from `@vue-solana/vue/web3` and the Buffer helper from `@vue-solana/vue/buffer-polyfill` without installing `@vue-solana/core`, `@solana/web3-compat`, or `buffer` directly.
 
 Then install again from the repository root:
 
@@ -354,7 +334,6 @@ If you are wiring your own Nuxt app, use these dependencies:
 ```json
 {
   "dependencies": {
-    "@vue-solana/core": "workspace:*",
     "@vue-solana/nuxt": "workspace:*",
     "nuxt": "^3.0.0",
     "vue": "^3.5.0"
@@ -362,7 +341,7 @@ If you are wiring your own Nuxt app, use these dependencies:
 }
 ```
 
-Include `@vue-solana/core` when your app imports core subpaths such as `@vue-solana/core/web3` or `@vue-solana/core/buffer-polyfill`. A composable-only Nuxt app can install just `@vue-solana/nuxt` plus Nuxt/Vue.
+Nuxt apps can import supported Solana primitives from `@vue-solana/nuxt/web3` and the Buffer helper from `@vue-solana/nuxt/buffer-polyfill` without installing `@vue-solana/core`, `@vue-solana/vue`, `@solana/web3-compat`, or `buffer` directly.
 
 Then install again from the repository root:
 
@@ -611,11 +590,11 @@ Desktop native wallet adapters are intentionally deferred from v1. On desktop, m
 
 Use a devnet wallet with enough devnet SOL for fees. The examples include recipient address and amount fields. Start with a tiny amount such as `0.000001` SOL.
 
-The transfer flow creates a normal legacy transaction. In browser apps, initialize the core Buffer polyfill before transaction code that may touch `@solana/web3-compat` internals:
+The transfer flow creates a normal legacy transaction. In browser Vue apps, initialize the Buffer polyfill from the Vue package before transaction code that may touch `@solana/web3-compat` internals. In Nuxt apps, use the equivalent `@vue-solana/nuxt/*` subpaths.
 
 ```ts
-import { installSolanaBufferPolyfill } from "@vue-solana/core/buffer-polyfill";
-import { PublicKey, Transaction, TransactionInstruction } from "@vue-solana/core/web3";
+import { installSolanaBufferPolyfill } from "@vue-solana/vue/buffer-polyfill";
+import { PublicKey, Transaction, TransactionInstruction } from "@vue-solana/vue/web3";
 
 installSolanaBufferPolyfill();
 

@@ -7,7 +7,7 @@ Use it when asking an agent to build, debug, review, or document apps that use:
 - `@vue-solana/core`
 - `@vue-solana/vue`
 - `@vue-solana/nuxt`
-- `@vue-solana/core/web3` primitives in Vue or Nuxt apps
+- `@vue-solana/vue/web3` and `@vue-solana/nuxt/web3` primitives in Vue or Nuxt apps
 
 ## Install
 
@@ -31,7 +31,7 @@ The CLI installs skills into `.claude/skills/` for the current project, or `~/.c
 
 ## What The Skill Covers
 
-- When to use `@vue-solana/core`, `@vue-solana/core/web3`, `@vue-solana/vue`, and `@vue-solana/nuxt`.
+- When to use `@vue-solana/core`, `@vue-solana/vue`, `@vue-solana/vue/web3`, `@vue-solana/nuxt`, and `@vue-solana/nuxt/web3`.
 - Vue plugin setup and preferred direct composable imports.
 - Nuxt module setup and auto-imported composables.
 - Unified wallet discovery and connection through `useWallets()` and `useWallet()`.

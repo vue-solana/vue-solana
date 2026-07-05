@@ -35,10 +35,10 @@ The previous work added `@vue-solana/core/web3`, `@vue-solana/core/buffer-polyfi
 - [x] Dependency metadata has been reviewed against the desired simplified consumer install commands.
 - [x] Docs, examples, and skill guidance still need to consistently use the simplified install/import pattern.
 - [x] Final typecheck, tests, and build still need to be run after edits.
-- [ ] Review found the standalone install goal is not complete: published declarations may still leak the broken `@solana/web3-compat` type metadata.
-- [ ] Review found Vue/Nuxt examples still import `@vue-solana/core` directly, so `@vue-solana/vue` and `@vue-solana/nuxt` are not demonstrated as standalone package installs for common transaction flows.
-- [ ] Review found no fresh pack/install/typecheck smoke test proving standalone installs work outside the monorepo workspace.
-- [ ] Review found `useProgramAccounts` still exposes a `Buffer` generic default without an imported or package-owned public Buffer type.
+- [x] Review found the standalone install goal is not complete: published declarations may still leak the broken `@solana/web3-compat` type metadata.
+- [x] Review found Vue/Nuxt examples still import `@vue-solana/core` directly, so `@vue-solana/vue` and `@vue-solana/nuxt` are not demonstrated as standalone package installs for common transaction flows.
+- [x] Review found no fresh pack/install/typecheck smoke test proving standalone installs work outside the monorepo workspace.
+- [x] Review found `useProgramAccounts` still exposes a `Buffer` generic default without an imported or package-owned public Buffer type.
 
 ## Phase 1: Validate Core Public API (complete)
 
@@ -197,48 +197,48 @@ The previous work added `@vue-solana/core/web3`, `@vue-solana/core/buffer-polyfi
 ## Final Checkpoint
 
 - [x] The original simplified Web3 import todo list is complete.
-- [ ] The revised standalone package install goal is complete for `@vue-solana/core`, `@vue-solana/vue`, and `@vue-solana/nuxt`.
-- [ ] Docs, examples, skill guidance, and package metadata all tell the same standalone installation/import story.
-- [ ] Vue and Nuxt primary examples use their own package subpaths for raw Solana primitives and Buffer helpers.
-- [ ] Package-owned declaration shims remove the need for consumer-local shims on current package versions.
-- [ ] Fresh published-consumer smoke tests pass without workspace aliases or repo-local shims.
-- [ ] A committed `pnpm smoke:standalone-installs` command validates core-only, Vue-only, and Nuxt-only installs.
-- [ ] Changesets exist for release-impacting public export, package metadata, or published declaration changes.
-- [ ] All required checks pass or any environmental blocker is clearly recorded.
-- [ ] `AGENTS.md` is updated only if the repository state or future-agent handoff materially changes.
+- [x] The revised standalone package install goal is complete for `@vue-solana/core`, `@vue-solana/vue`, and `@vue-solana/nuxt`.
+- [x] Docs, examples, skill guidance, and package metadata all tell the same standalone installation/import story.
+- [x] Vue and Nuxt primary examples use their own package subpaths for raw Solana primitives and Buffer helpers.
+- [x] Package-owned declaration shims remove the need for consumer-local shims on current package versions.
+- [x] Fresh published-consumer smoke tests pass without workspace aliases or repo-local shims.
+- [x] A committed `pnpm smoke:standalone-installs` command validates core-only, Vue-only, and Nuxt-only installs.
+- [x] Changesets exist for release-impacting public export, package metadata, or published declaration changes.
+- [x] All required checks pass or any environmental blocker is clearly recorded.
+- [x] `AGENTS.md` is updated only if the repository state or future-agent handoff materially changes.
 
 ## Review Findings To Fix In Later Sessions
 
 1. **Published declarations may still require extra consumer setup.** `packages/core/src/web3.ts` and existing public core types re-export/import from `@solana/web3-compat`. Because `@solana/web3-compat@0.0.21` has broken TypeScript metadata and the repo-local `types/web3-compat.d.ts` shim is not published, consumers may still hit TS resolution failures after installing only `@vue-solana/core`.
-2. **Vue/Nuxt standalone examples are incomplete.** The example app source imports `@vue-solana/core/web3` and `@vue-solana/core/buffer-polyfill`, and the example manifests still include direct `@vue-solana/core`. That may be valid for users intentionally using core, but it does not prove `npm i @vue-solana/vue` or `npm i @vue-solana/nuxt` is enough for common transaction examples.
-3. **Packaged-consumer verification is missing.** Existing tests run inside the workspace, with path aliases and local type shims available. They do not prove the published package tarballs work in a fresh project with only the standalone package installed.
-4. **A public Vue type still depends on ambient `Buffer`.** `packages/vue/src/composables/useProgramAccounts.ts` exposes `ProgramAccount<TData extends Buffer = Buffer>` without importing a stable public Buffer type from Vue Solana.
+2. ~~**Vue/Nuxt standalone examples are incomplete.** The example app source imports `@vue-solana/core/web3` and `@vue-solana/core/buffer-polyfill`, and the example manifests still include direct `@vue-solana/core`. That may be valid for users intentionally using core, but it does not prove `npm i @vue-solana/vue` or `npm i @vue-solana/nuxt` is enough for common transaction examples.~~ Fixed in Phase 6.
+3. ~~**Packaged-consumer verification is missing.** Existing tests run inside the workspace, with path aliases and local type shims available. They do not prove the published package tarballs work in a fresh project with only the standalone package installed.~~ Fixed in Phase 7.
+4. ~~**A public Vue type still depends on ambient `Buffer`.** `packages/vue/src/composables/useProgramAccounts.ts` exposes `ProgramAccount<TData extends Buffer = Buffer>` without importing a stable public Buffer type from Vue Solana.~~ Fixed in Phase 6.
 
-## Phase 5: Fix Published Type Declarations For Core
+## Phase 5: Fix Published Type Declarations For Core (complete)
 
 **Description:** Ensure a fresh consumer can install only `@vue-solana/core` and typecheck code that imports the package root, `@vue-solana/core/web3`, and `@vue-solana/core/buffer-polyfill` without adding local `@solana/web3-compat` or `buffer/` declaration shims.
 
 **Tasks:**
 
-- [ ] Inspect generated `packages/core/dist/**/*.d.ts` after build and identify every public declaration that references `@solana/web3-compat`, `buffer/`, or any dependency with broken published declarations.
-- [ ] Publish package-owned declaration shims for the broken `@solana/web3-compat` metadata and any required `buffer/` subpath declarations so consumers do not need repo-local shims.
-- [ ] Keep the shims internal to Vue Solana's published type surface and document them as temporary until upstream metadata is fixed.
-- [ ] Keep runtime behavior unchanged for existing imports from `@vue-solana/core`, `@vue-solana/core/web3`, and `@vue-solana/core/buffer-polyfill`.
-- [ ] Update troubleshooting docs to remove local-shim instructions when no longer needed, or clearly scope them to old package versions.
-- [ ] Add a changeset if the shim or package file/export metadata changes published package contents.
+- [x] Inspect generated `packages/core/dist/**/*.d.ts` after build and identify every public declaration that references `@solana/web3-compat`, `buffer/`, or any dependency with broken published declarations.
+- [x] Publish package-owned declaration shims for the broken `@solana/web3-compat` metadata and any required `buffer/` subpath declarations so consumers do not need repo-local shims.
+- [x] Keep the shims internal to Vue Solana's published type surface and document them as temporary until upstream metadata is fixed.
+- [x] Keep runtime behavior unchanged for existing imports from `@vue-solana/core`, `@vue-solana/core/web3`, and `@vue-solana/core/buffer-polyfill`.
+- [x] Update troubleshooting docs to remove local-shim instructions when no longer needed, or clearly scope them to old package versions.
+- [x] Add a changeset if the shim or package file/export metadata changes published package contents.
 
 **Acceptance Criteria:**
 
-- [ ] `@vue-solana/core` published declarations resolve in a fresh TypeScript project without repo-local `types/web3-compat.d.ts`.
-- [ ] Existing core public imports remain source-compatible.
-- [ ] Docs no longer instruct current-version users to add local shims for the default install path.
-- [ ] The plan for removing the shim after an upstream `@solana/web3-compat` fix is documented in troubleshooting or handoff docs.
+- [x] `@vue-solana/core` published declarations resolve in a fresh TypeScript project without repo-local `types/web3-compat.d.ts`.
+- [x] Existing core public imports remain source-compatible.
+- [x] Docs no longer instruct current-version users to add local shims for the default install path.
+- [x] The plan for removing the shim after an upstream `@solana/web3-compat` fix is documented in troubleshooting or handoff docs.
 
 **Verification:**
 
-- [ ] Run `pnpm build --filter @vue-solana/core` or the repository equivalent.
-- [ ] Run a fresh packed-package smoke test for `@vue-solana/core` outside the workspace.
-- [ ] Run `pnpm typecheck`.
+- [x] Run `pnpm build --filter @vue-solana/core` or the repository equivalent.
+- [x] Run a fresh packed-package smoke test for `@vue-solana/core` outside the workspace.
+- [x] Run `pnpm typecheck`.
 
 **Dependencies:** Phase 4.
 
@@ -258,40 +258,40 @@ The previous work added `@vue-solana/core/web3`, `@vue-solana/core/buffer-polyfi
 
 **Estimated Scope:** Medium.
 
-## Phase 6: Make Vue And Nuxt Standalone Usage Paths Complete
+## Phase 6: Make Vue And Nuxt Standalone Usage Paths Complete (complete)
 
 **Description:** Ensure users can follow primary Vue and Nuxt examples after installing only `@vue-solana/vue` or `@vue-solana/nuxt`, while preserving current behavior for users who already install and import `@vue-solana/core` directly.
 
 **Tasks:**
 
-- [ ] Add `@vue-solana/vue/web3` as a public subpath that re-exports the same raw Solana primitives already exposed by `@vue-solana/core/web3`, including `PublicKey`, `Transaction`, `TransactionInstruction`, `VersionedTransaction`, `SystemProgram`, and related documented primitives.
-- [ ] Add `@vue-solana/vue/buffer-polyfill` as a public subpath that re-exports `Buffer` and `installSolanaBufferPolyfill()` from the core Buffer helper.
-- [ ] Add `@vue-solana/nuxt/web3` as a public subpath that re-exports the same documented primitives through the Nuxt package.
-- [ ] Add `@vue-solana/nuxt/buffer-polyfill` as a public subpath that re-exports `Buffer` and `installSolanaBufferPolyfill()` through the Nuxt package.
-- [ ] Keep Nuxt auto-imports limited to composables; do not auto-import raw Solana primitives by default.
-- [ ] Confirm `@vue-solana/core` stays a dependency of `@vue-solana/vue`, and `@vue-solana/vue` stays a dependency of `@vue-solana/nuxt`; keep a direct Nuxt dependency on core only if Nuxt source imports core directly.
-- [ ] Keep existing `@vue-solana/core` subpath imports working as a supported lower-level option.
-- [ ] Fix `ProgramAccount<TData extends Buffer = Buffer>` to use an imported/package-owned type instead of an ambient `Buffer` type.
-- [ ] Update Vue/Nuxt examples and package manifests so at least one primary example for each package uses only that package as its Vue Solana dependency.
-- [ ] Update docs and the public skill so primary Vue examples import primitives from `@vue-solana/vue/web3` and Buffer helpers from `@vue-solana/vue/buffer-polyfill`.
-- [ ] Update docs and the public skill so primary Nuxt examples import primitives from `@vue-solana/nuxt/web3` and Buffer helpers from `@vue-solana/nuxt/buffer-polyfill`.
-- [ ] Add a changeset for the new public export subpaths and any package metadata changes.
+- [x] Add `@vue-solana/vue/web3` as a public subpath that re-exports the same raw Solana primitives already exposed by `@vue-solana/core/web3`, including `PublicKey`, `Transaction`, `TransactionInstruction`, `VersionedTransaction`, `SystemProgram`, and related documented primitives.
+- [x] Add `@vue-solana/vue/buffer-polyfill` as a public subpath that re-exports `Buffer` and `installSolanaBufferPolyfill()` from the core Buffer helper.
+- [x] Add `@vue-solana/nuxt/web3` as a public subpath that re-exports the same documented primitives through the Nuxt package.
+- [x] Add `@vue-solana/nuxt/buffer-polyfill` as a public subpath that re-exports `Buffer` and `installSolanaBufferPolyfill()` through the Nuxt package.
+- [x] Keep Nuxt auto-imports limited to composables; do not auto-import raw Solana primitives by default.
+- [x] Confirm `@vue-solana/core` stays a dependency of `@vue-solana/vue`, and `@vue-solana/vue` stays a dependency of `@vue-solana/nuxt`; keep a direct Nuxt dependency on core only if Nuxt source imports core directly.
+- [x] Keep existing `@vue-solana/core` subpath imports working as a supported lower-level option.
+- [x] Fix `ProgramAccount<TData extends Buffer = Buffer>` to use an imported/package-owned type instead of an ambient `Buffer` type.
+- [x] Update Vue/Nuxt examples and package manifests so at least one primary example for each package uses only that package as its Vue Solana dependency.
+- [x] Update docs and the public skill so primary Vue examples import primitives from `@vue-solana/vue/web3` and Buffer helpers from `@vue-solana/vue/buffer-polyfill`.
+- [x] Update docs and the public skill so primary Nuxt examples import primitives from `@vue-solana/nuxt/web3` and Buffer helpers from `@vue-solana/nuxt/buffer-polyfill`.
+- [x] Add a changeset for the new public export subpaths and any package metadata changes.
 
 **Acceptance Criteria:**
 
-- [ ] A Vue app can install `@vue-solana/vue` and use the documented primary Vue transaction/example flow without directly depending on `@vue-solana/core`, `@solana/web3-compat`, or `buffer`.
-- [ ] A Nuxt app can install `@vue-solana/nuxt` and use the documented primary Nuxt transaction/example flow without directly depending on `@vue-solana/core`, `@vue-solana/vue`, `@solana/web3-compat`, or `buffer`.
-- [ ] Existing direct core imports remain documented as optional advanced usage, not required for the primary path.
-- [ ] No public Vue declarations rely on ambient Node globals for browser-facing types.
-- [ ] Nuxt module behavior is unchanged except for the new documented explicit import subpaths.
-- [ ] Changeset coverage exists for all release-impacting package changes.
+- [x] A Vue app can install `@vue-solana/vue` and use the documented primary Vue transaction/example flow without directly depending on `@vue-solana/core`, `@solana/web3-compat`, or `buffer`.
+- [x] A Nuxt app can install `@vue-solana/nuxt` and use the documented primary Nuxt transaction/example flow without directly depending on `@vue-solana/core`, `@vue-solana/vue`, `@solana/web3-compat`, or `buffer`.
+- [x] Existing direct core imports remain documented as optional advanced usage, not required for the primary path.
+- [x] No public Vue declarations rely on ambient Node globals for browser-facing types.
+- [x] Nuxt module behavior is unchanged except for the new documented explicit import subpaths.
+- [x] Changeset coverage exists for all release-impacting package changes.
 
 **Verification:**
 
-- [ ] Run Vue package tests and typecheck.
-- [ ] Run Nuxt package tests and typecheck.
-- [ ] Run example app typechecks after removing unnecessary direct sibling or low-level dependencies from the primary example manifests.
-- [ ] Search docs, examples, and skill guidance for primary-path imports from `@vue-solana/core/web3` or `@vue-solana/core/buffer-polyfill` and confirm remaining occurrences are advanced/core-specific guidance.
+- [x] Run Vue package tests and typecheck.
+- [x] Run Nuxt package tests and typecheck.
+- [x] Run example app typechecks after removing unnecessary direct sibling or low-level dependencies from the primary example manifests.
+- [x] Search docs, examples, and skill guidance for primary-path imports from `@vue-solana/core/web3` or `@vue-solana/core/buffer-polyfill` and confirm remaining occurrences are advanced/core-specific guidance.
 
 **Dependencies:** Phase 5.
 
@@ -320,35 +320,35 @@ The previous work added `@vue-solana/core/web3`, `@vue-solana/core/buffer-polyfi
 
 **Estimated Scope:** Medium.
 
-## Phase 7: Add Fresh Standalone Install Smoke Tests
+## Phase 7: Add Fresh Standalone Install Smoke Tests (complete)
 
 **Description:** Add verification that builds or packs the packages, installs each package into a temporary consumer project, and typechecks representative usage without workspace aliases, local repo shims, or undeclared direct dependencies.
 
 **Tasks:**
 
-- [ ] Add `scripts/smoke-standalone-installs.mjs` to pack `@vue-solana/core`, `@vue-solana/vue`, and `@vue-solana/nuxt` from the current workspace.
-- [ ] Add a root package script such as `"smoke:standalone-installs": "node scripts/smoke-standalone-installs.mjs"`.
-- [ ] Create minimal temporary consumers for core-only, Vue-only, and Nuxt-only installs.
-- [ ] Typecheck imports from each package using only that package plus required framework peers.
-- [ ] Include a transaction/raw-primitive usage case for `@vue-solana/core/web3`, `@vue-solana/vue/web3`, and `@vue-solana/nuxt/web3`.
-- [ ] Include a Buffer helper usage case for `@vue-solana/core/buffer-polyfill`, `@vue-solana/vue/buffer-polyfill`, and `@vue-solana/nuxt/buffer-polyfill`.
-- [ ] Ensure the smoke test fails if a consumer accidentally relies on workspace aliases, repo-local shims, or undeclared sibling package installs.
-- [ ] Document the smoke command in `README.md` or `docs/getting-started.md` as the release-facing standalone install check.
+- [x] Add `scripts/smoke-standalone-installs.mjs` to pack `@vue-solana/core`, `@vue-solana/vue`, and `@vue-solana/nuxt` from the current workspace.
+- [x] Add a root package script such as `"smoke:standalone-installs": "node scripts/smoke-standalone-installs.mjs"`.
+- [x] Create minimal temporary consumers for core-only, Vue-only, and Nuxt-only installs.
+- [x] Typecheck imports from each package using only that package plus required framework peers.
+- [x] Include a transaction/raw-primitive usage case for `@vue-solana/core/web3`, `@vue-solana/vue/web3`, and `@vue-solana/nuxt/web3`.
+- [x] Include a Buffer helper usage case for `@vue-solana/core/buffer-polyfill`, `@vue-solana/vue/buffer-polyfill`, and `@vue-solana/nuxt/buffer-polyfill`.
+- [x] Ensure the smoke test fails if a consumer accidentally relies on workspace aliases, repo-local shims, or undeclared sibling package installs.
+- [x] Document the smoke command in `README.md` or `docs/getting-started.md` as the release-facing standalone install check.
 
 **Acceptance Criteria:**
 
-- [ ] Core smoke test passes with only `@vue-solana/core` installed as the Vue Solana dependency.
-- [ ] Vue smoke test passes with only `@vue-solana/vue` installed as the Vue Solana dependency.
-- [ ] Nuxt smoke test passes with only `@vue-solana/nuxt` installed as the Vue Solana dependency.
-- [ ] The smoke test is documented in the plan and easy for future agents to run before release.
-- [ ] The smoke test is executable outside Vitest and produces package-manager/typecheck output that is easy to debug.
+- [x] Core smoke test passes with only `@vue-solana/core` installed as the Vue Solana dependency.
+- [x] Vue smoke test passes with only `@vue-solana/vue` installed as the Vue Solana dependency.
+- [x] Nuxt smoke test passes with only `@vue-solana/nuxt` installed as the Vue Solana dependency.
+- [x] The smoke test is documented in the plan and easy for future agents to run before release.
+- [x] The smoke test is executable outside Vitest and produces package-manager/typecheck output that is easy to debug.
 
 **Verification:**
 
-- [ ] Run the standalone install smoke test.
-- [ ] Run `pnpm typecheck`.
-- [ ] Run `pnpm test`.
-- [ ] Run `pnpm build`.
+- [x] Run the standalone install smoke test.
+- [x] Run `pnpm typecheck`.
+- [x] Run `pnpm test`.
+- [x] Run `pnpm build`.
 
 **Dependencies:** Phase 6.
 

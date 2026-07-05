@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { Buffer, installSolanaBufferPolyfill } from "@vue-solana/core/buffer-polyfill";
-import { PublicKey, Transaction, TransactionInstruction } from "@vue-solana/core/web3";
+import { Buffer, installSolanaBufferPolyfill } from "@vue-solana/vue/buffer-polyfill";
+import { PublicKey, Transaction, TransactionInstruction } from "@vue-solana/vue/web3";
 import {
   useBalance,
   useConnection,

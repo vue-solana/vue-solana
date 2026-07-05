@@ -37,7 +37,7 @@ If `endpoint` is omitted, the default public endpoint for the selected cluster i
 
 ## `@solana/web3-compat` Compatibility
 
-The v1 package line uses `@solana/web3-compat` internally and re-exports supported Solana primitives from `@vue-solana/core` and `@vue-solana/core/web3`, including `Connection`, `PublicKey`, `SystemProgram`, `Transaction`, `TransactionInstruction`, and `VersionedTransaction`. The current `@solana/web3-compat@0.0.21` package has broken TypeScript root metadata, so this repository includes a temporary `types/web3-compat.d.ts` shim. Runtime imports still resolve to the published package. Re-check the upstream package metadata before v1 and remove the shim once the package publishes valid root declarations.
+The v1 package line uses `@solana/web3-compat` internally and re-exports supported Solana primitives from `@vue-solana/core` and `@vue-solana/core/web3`, including `Connection`, `PublicKey`, `SystemProgram`, `Transaction`, `TransactionInstruction`, and `VersionedTransaction`. The current `@solana/web3-compat@0.0.21` package has broken TypeScript root metadata, so `@vue-solana/core` publishes temporary declaration shims for its own public type surface. Runtime imports still resolve to the published package. Re-check the upstream package metadata before v1 and remove the package-owned shim once the package publishes valid root declarations.
 
 Browser apps that create or serialize legacy transactions can initialize the compatibility Buffer polyfill from core:
 

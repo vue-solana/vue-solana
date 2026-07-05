@@ -21,8 +21,8 @@ export default defineConfig({
     },
     {
       command:
-        "NITRO_HOST=127.0.0.1 NITRO_PORT=3000 pnpm --filter @vue-solana/example-nuxt preview",
-      url: "http://127.0.0.1:3000",
+        "NITRO_HOST=127.0.0.1 NITRO_PORT=4174 pnpm --filter @vue-solana/example-nuxt preview",
+      url: "http://127.0.0.1:4174",
       reuseExistingServer: !process.env.CI,
     },
   ],
@@ -38,7 +38,7 @@ export default defineConfig({
       name: "nuxt",
       use: {
         ...devices["Desktop Chrome"],
-        baseURL: "http://127.0.0.1:3000",
+        baseURL: "http://127.0.0.1:4174",
       },
     },
   ],

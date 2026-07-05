@@ -33,16 +33,16 @@ describe("documented package subpaths", () => {
     ).toEqual(expected);
   });
 
-  it("keeps Vue composable docs aligned with the package export map", () => {
+  it("keeps Vue package docs aligned with the package export map", () => {
     const expected = getExportedSubpaths("../../vue/package.json");
 
     expect(
-      getBacktickedListAfter("../../../docs/api/vue.md", "Available composable subpaths:"),
+      getBacktickedListAfter("../../../docs/api/vue.md", "Available package subpaths:"),
     ).toEqual(expected);
     expect(
       getBacktickedListAfter(
         "../../../apps/docs/content/packages/vue.md",
-        "Direct composable subpaths:",
+        "Direct package subpaths:",
       ),
     ).toEqual(expected);
   });

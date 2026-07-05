@@ -2,9 +2,9 @@
 
 ## TypeScript Cannot Resolve `@solana/web3-compat`
 
-`@solana/web3-compat@0.0.21` currently has broken TypeScript metadata. Runtime imports still use the real package, but TypeScript may report missing declarations.
+`@solana/web3-compat@0.0.21` currently has broken TypeScript metadata. Runtime imports still use the real package. Current Vue Solana packages publish temporary package-owned declaration shims, so the documented imports from `@vue-solana/core`, `@vue-solana/vue`, and `@vue-solana/nuxt` should typecheck without a consumer-local shim.
 
-Add `types/web3-compat.d.ts` to your app:
+If TypeScript still reports missing declarations, first confirm that you are using a current Vue Solana package version and are not importing `@solana/web3-compat` directly from app code. For older Vue Solana versions or direct `@solana/web3-compat` imports, add `types/web3-compat.d.ts` to your app:
 
 ```ts
 declare module "@solana/web3-compat" {
@@ -34,6 +34,8 @@ Make sure your `tsconfig.json` includes the file:
   "include": ["src/**/*.ts", "src/**/*.vue", "types/**/*.d.ts"]
 }
 ```
+
+Re-check new `@solana/web3-compat` versions before keeping this workaround. The package-owned shim should be removed once upstream ships valid root declarations.
 
 ## `Vue Solana plugin is not installed`
 
@@ -107,19 +109,19 @@ The selected wallet does not expose either `solana:signAndSendTransaction` or `s
 
 ## `Buffer is not defined`
 
-Some `@solana/web3-compat` transaction paths still expect a Node-compatible `Buffer` global. In browser apps, initialize the core Buffer polyfill before creating or serializing transactions:
+Some `@solana/web3-compat` transaction paths still expect a Node-compatible `Buffer` global. In browser Vue apps, initialize the Vue package Buffer polyfill before creating or serializing transactions. Use `@vue-solana/nuxt/buffer-polyfill` in Nuxt apps.
 
 ```ts
-import { installSolanaBufferPolyfill } from "@vue-solana/core/buffer-polyfill";
+import { installSolanaBufferPolyfill } from "@vue-solana/vue/buffer-polyfill";
 
 installSolanaBufferPolyfill();
 ```
 
-The helper is provided by `@vue-solana/core`, so apps do not need to install or import `buffer` directly for Vue Solana transaction examples.
+The helper is provided by the framework packages, so apps do not need to install or import `buffer` directly for Vue Solana transaction examples.
 
 ## Module `buffer` Has Been Externalized
 
-If the console says `Module "buffer" has been externalized for browser compatibility`, replace direct app imports from `buffer` with `installSolanaBufferPolyfill()` from `@vue-solana/core/buffer-polyfill`, then restart the dev server. Vite may cache the previously optimized dependency.
+If the console says `Module "buffer" has been externalized for browser compatibility`, replace direct app imports from `buffer` with `installSolanaBufferPolyfill()` from `@vue-solana/vue/buffer-polyfill` or `@vue-solana/nuxt/buffer-polyfill`, then restart the dev server. Vite may cache the previously optimized dependency.
 
 ## Balance Reads Fail
 

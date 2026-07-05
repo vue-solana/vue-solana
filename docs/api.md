@@ -2,7 +2,7 @@
 
 This section summarizes the public APIs exported by the Vue Solana packages.
 
-`@vue-solana/core` builds on top of `@solana/web3-compat` and re-exports supported Solana primitives from `@vue-solana/core/web3`. Use Vue Solana packages for Vue/Nuxt-friendly setup, config, wallet state, composables, and supported raw primitives; direct `@solana/web3-compat` imports are only needed for legacy boundaries or troubleshooting.
+`@vue-solana/core` builds on top of `@solana/web3-compat` and re-exports supported Solana primitives from `@vue-solana/core/web3`. Vue apps can use `@vue-solana/vue/web3`, and Nuxt apps can use `@vue-solana/nuxt/web3`, without installing core directly. Direct `@solana/web3-compat` imports are only needed for legacy boundaries or troubleshooting.
 
 Package references:
 

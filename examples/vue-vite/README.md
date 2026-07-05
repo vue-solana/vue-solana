@@ -15,7 +15,7 @@ This example demonstrates:
 
 The app uses `devnet` by default. Devnet SOL has no real value.
 
-The real transfer example initializes the browser `Buffer` polyfill with `installSolanaBufferPolyfill()` from `@vue-solana/core/buffer-polyfill`. Restart the Vite dev server if Vite previously cached an externalized Buffer import.
+The real transfer example initializes the browser `Buffer` polyfill with `installSolanaBufferPolyfill()` from `@vue-solana/vue/buffer-polyfill`. Restart the Vite dev server if Vite previously cached an externalized Buffer import.
 
 ## Run From The Repository Root
 

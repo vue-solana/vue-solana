@@ -30,6 +30,11 @@
       "import": "./dist/index.mjs",
       "require": "./dist/index.cjs"
     },
+    "./buffer-polyfill": {
+      "types": "./dist/buffer-polyfill.d.ts",
+      "import": "./dist/buffer-polyfill.mjs",
+      "require": "./dist/buffer-polyfill.cjs"
+    },
     "./useSolana": {
       "types": "./dist/useSolana.d.ts",
       "import": "./dist/useSolana.mjs",
@@ -94,6 +99,11 @@
       "types": "./dist/useSignAndSendTransaction.d.ts",
       "import": "./dist/useSignAndSendTransaction.mjs",
       "require": "./dist/useSignAndSendTransaction.cjs"
+    },
+    "./web3": {
+      "types": "./dist/web3.d.ts",
+      "import": "./dist/web3.mjs",
+      "require": "./dist/web3.cjs"
     }
   },
   "files": [

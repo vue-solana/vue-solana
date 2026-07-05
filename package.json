@@ -32,7 +32,8 @@
     "changeset": "changeset",
     "version-packages": "changeset version",
     "prepare": "husky",
-    "release": "pnpm build:packages && changeset publish"
+    "release": "pnpm build:packages && changeset publish",
+    "smoke:standalone-installs": "node scripts/smoke-standalone-installs.mjs"
   },
   "devDependencies": {
     "@changesets/cli": "^2.31.0",

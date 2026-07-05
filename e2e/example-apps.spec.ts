@@ -131,7 +131,12 @@ test("renders submitted-vs-confirmed transaction state", async ({ page }) => {
   await expect(page.getByTestId("transfer-explorer-link")).toHaveCount(0);
 });
 
-test("runs the mock transaction helper", async ({ page }) => {
+test("runs the mock transaction helper", async ({ page }, testInfo) => {
+  test.skip(
+    testInfo.project.name !== "vue-vite",
+    "Only the Vue example exposes useTransaction directly.",
+  );
+
   await page.goto("/");
 
   await expect(page.getByTestId("mock-transaction-signature")).toHaveText(
