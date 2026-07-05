@@ -155,24 +155,27 @@ describe("Nuxt module", () => {
     expect(vite.optimizeDeps.include).toEqual([
       "existing-dependency",
       "qrcode",
-      "@solana/web3-compat",
-      "@solana/web3.js",
-      "buffer",
-      "bn.js",
-      "bs58",
-      "borsh",
-      "@solana/buffer-layout",
-      "jayson/lib/client/browser",
-      "eventemitter3",
-      "rpc-websockets",
-      "@solana-mobile/wallet-standard-mobile",
-      "tweetnacl",
-      "tweetnacl/nacl-fast.js",
+      "@vue-solana/nuxt > @solana/web3-compat",
+      "@vue-solana/nuxt > @vue-solana/vue > @solana/web3-compat",
+      "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > @solana/web3-compat",
+      "@vue-solana/nuxt > @solana/web3-compat > @solana/web3.js",
+      "@vue-solana/nuxt > @solana/web3-compat > @solana/web3.js > qrcode",
+      "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > buffer",
+      "@vue-solana/nuxt > @solana/web3-compat > @solana/web3.js > bn.js",
+      "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > bs58",
+      "@vue-solana/nuxt > @solana/web3-compat > @solana/web3.js > borsh",
+      "@vue-solana/nuxt > @solana/web3-compat > @solana/web3.js > @solana/buffer-layout",
+      "@vue-solana/nuxt > @solana/web3-compat > @solana/web3.js > jayson/lib/client/browser",
+      "@vue-solana/nuxt > @solana/web3-compat > @solana/web3.js > eventemitter3",
+      "@vue-solana/nuxt > @solana/web3-compat > @solana/web3.js > rpc-websockets",
+      "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > @solana-mobile/wallet-standard-mobile",
+      "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl",
+      "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl/nacl-fast.js",
     ]);
     expect(vite.optimizeDeps.needsInterop).toEqual([
-      "eventemitter3",
-      "tweetnacl",
-      "tweetnacl/nacl-fast.js",
+      "@vue-solana/nuxt > @solana/web3-compat > @solana/web3.js > eventemitter3",
+      "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl",
+      "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl/nacl-fast.js",
     ]);
   });
 
@@ -196,17 +199,21 @@ describe("Nuxt module", () => {
       hook(clientConfig, { isClient: true, isServer: false });
     }
 
-    expect(clientConfig.optimizeDeps?.include).toContain("eventemitter3");
+    expect(clientConfig.optimizeDeps?.include).toContain(
+      "@vue-solana/nuxt > @solana/web3-compat > @solana/web3.js > eventemitter3",
+    );
     expect(clientConfig.optimizeDeps?.needsInterop).toEqual([
-      "eventemitter3",
-      "tweetnacl",
-      "tweetnacl/nacl-fast.js",
+      "@vue-solana/nuxt > @solana/web3-compat > @solana/web3.js > eventemitter3",
+      "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl",
+      "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl/nacl-fast.js",
     ]);
-    expect(clientConfig.environments?.client?.optimizeDeps?.include).toContain("eventemitter3");
+    expect(clientConfig.environments?.client?.optimizeDeps?.include).toContain(
+      "@vue-solana/nuxt > @solana/web3-compat > @solana/web3.js > eventemitter3",
+    );
     expect(clientConfig.environments?.client?.optimizeDeps?.needsInterop).toEqual([
-      "eventemitter3",
-      "tweetnacl",
-      "tweetnacl/nacl-fast.js",
+      "@vue-solana/nuxt > @solana/web3-compat > @solana/web3.js > eventemitter3",
+      "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl",
+      "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl/nacl-fast.js",
     ]);
   });
 
