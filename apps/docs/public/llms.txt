@@ -24,22 +24,40 @@ Install only the package needed by your app. Nuxt apps normally install @vue-sol
 ## Docs
 
 - [Vue Solana Documentation](https://vue-solana-docs.vercel.app/): Documentation for Vue and Nuxt libraries that help developers use Solana.
+- [Documentación de Vue Solana](https://vue-solana-docs.vercel.app/es): Documentación para bibliotecas Vue y Nuxt que ayudan a los desarrolladores a usar Solana.
+- [Primeros pasos](https://vue-solana-docs.vercel.app/es/getting-started): Instala los paquetes de Vue Solana, configura Vue o Nuxt y prueba lecturas RPC en devnet.
 - [Getting Started](https://vue-solana-docs.vercel.app/getting-started): Install Vue Solana packages, configure Vue or Nuxt, and test RPC reads on devnet.
 - [Agent Skill](https://vue-solana-docs.vercel.app/agent-skill): Install the Vue Solana Agent Skill for AI coding agents.
+- [Skill de agente](https://vue-solana-docs.vercel.app/es/agent-skill): Instala la skill de Vue Solana para agentes de programación con IA.
+- [Solución de problemas](https://vue-solana-docs.vercel.app/es/troubleshooting): Problemas comunes al instalar, compilar y usar Vue Solana.
 - [Troubleshooting](https://vue-solana-docs.vercel.app/troubleshooting): Common setup, TypeScript, wallet, RPC, and Nuxt issues.
 - [Solana For Vue Developers](https://vue-solana-docs.vercel.app/concepts/solana-for-vue-developers): Practical Solana concepts for Vue and Nuxt developers.
+- [Solana para desarrolladores Vue](https://vue-solana-docs.vercel.app/es/concepts/solana-for-vue-developers): Cómo pensar en Solana desde aplicaciones Vue y Nuxt.
 - [Clusters](https://vue-solana-docs.vercel.app/concepts/clusters): Solana cluster names, RPC endpoints, and faucet instructions.
+- [Clusters](https://vue-solana-docs.vercel.app/es/concepts/clusters): Nombres de clusters de Solana, endpoints RPC e instrucciones para faucets.
+- [RPC y clusters](https://vue-solana-docs.vercel.app/es/guides/rpc-and-clusters): Configura clusters de Solana, endpoints RPC, endpoints WebSocket y helpers de conexión.
 - [RPC and Clusters](https://vue-solana-docs.vercel.app/guides/rpc-and-clusters): Configure Solana clusters, RPC endpoints, WebSocket endpoints, and connection helpers.
+- [Wallets](https://vue-solana-docs.vercel.app/es/guides/wallets): Descubre wallets, selecciona una wallet activa, conecta, desconecta y comprueba capacidades.
 - [Wallets](https://vue-solana-docs.vercel.app/guides/wallets): Discover wallets, select an active wallet, connect, disconnect, and check capabilities.
+- [Lecturas de cuentas](https://vue-solana-docs.vercel.app/es/guides/account-reads): Lee balances, datos de cuenta, cuentas de programa y estado de firmas de forma segura desde Vue o Nuxt.
 - [Account Reads](https://vue-solana-docs.vercel.app/guides/account-reads): Read balances, account data, program accounts, and signature status safely from Vue or Nuxt.
+- [Transacciones](https://vue-solana-docs.vercel.app/es/guides/transactions): Firma, envía, confirma y maneja estado de transacciones con Vue Solana.
 - [Transactions](https://vue-solana-docs.vercel.app/guides/transactions): Sign, send, confirm, and handle transaction state with Vue Solana.
+- [Firma de mensajes](https://vue-solana-docs.vercel.app/es/guides/message-signing): Firma mensajes de autenticación o propiedad sin crear transacciones on-chain.
 - [Message Signing](https://vue-solana-docs.vercel.app/guides/message-signing): Sign authentication or ownership messages without creating on-chain transactions.
+- [Errores](https://vue-solana-docs.vercel.app/es/guides/errors): Maneja errores normalizados de Solana desde helpers core y composables Vue/Nuxt.
 - [Errors](https://vue-solana-docs.vercel.app/guides/errors): Handle normalized Solana errors from core helpers and Vue/Nuxt composables.
+- [@vue-solana/core](https://vue-solana-docs.vercel.app/es/packages/core): Configuración Solana independiente del framework, RPC, tipos de wallet y helpers de transacción.
 - [@vue-solana/core](https://vue-solana-docs.vercel.app/packages/core): Framework-agnostic Solana configuration, RPC, wallet types, and transaction helpers.
+- [@vue-solana/vue](https://vue-solana-docs.vercel.app/es/packages/vue): Plugin de Vue y composables para usar Solana en aplicaciones Vue.
 - [@vue-solana/vue](https://vue-solana-docs.vercel.app/packages/vue): Vue plugin and composables for Solana applications.
+- [@vue-solana/nuxt](https://vue-solana-docs.vercel.app/es/packages/nuxt): Módulo Nuxt para aplicaciones Solana.
 - [@vue-solana/nuxt](https://vue-solana-docs.vercel.app/packages/nuxt): Nuxt module for Solana applications.
+- [Ejemplo Vue Vite](https://vue-solana-docs.vercel.app/es/examples/vue-vite): Aplicación de ejemplo ejecutable para @vue-solana/vue con Vite.
 - [Vue Vite Example](https://vue-solana-docs.vercel.app/examples/vue-vite): Runnable Vue 3 and Vite example app for @vue-solana/vue.
+- [Ejemplo Nuxt](https://vue-solana-docs.vercel.app/es/examples/nuxt): Aplicación de ejemplo ejecutable para @vue-solana/nuxt.
 - [Nuxt Example](https://vue-solana-docs.vercel.app/examples/nuxt): Runnable Nuxt example app for @vue-solana/nuxt.
+- [Roadmap v1](https://vue-solana-docs.vercel.app/es/roadmap): Trabajo planificado antes de la primera versión estable de los paquetes Vue Solana.
 - [v1 Roadmap](https://vue-solana-docs.vercel.app/roadmap): Planned feature work before the first stable Vue Solana package release.
 
 ## Crawling Notes

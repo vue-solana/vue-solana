@@ -7,11 +7,16 @@ const props = defineProps<{
   activePath: string;
 }>();
 
-const navigationItems = computed(() => createSidebarNavigationItems(props.activePath));
+const localePath = useLocalePath();
+const { t } = useI18n();
+
+const navigationItems = computed(() =>
+  createSidebarNavigationItems(props.activePath, localePath, t),
+);
 </script>
 
 <template>
-  <UPageAside aria-label="Documentation navigation">
+  <UPageAside :aria-label="t('navigation.sidebar.ariaLabel')">
     <UNavigationMenu
       :items="navigationItems"
       orientation="vertical"

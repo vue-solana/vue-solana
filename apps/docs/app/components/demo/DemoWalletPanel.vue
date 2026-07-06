@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { SolanaWalletInfo } from "@vue-solana/core/types";
 
-defineProps<{
+const props = defineProps<{
   canConnect: boolean;
   canDisconnect: boolean;
   configured: boolean;
@@ -24,42 +24,52 @@ const emit = defineEmits<{
   loadWallets: [];
   selectWallet: [wallet: SolanaWalletInfo];
 }>();
+
+const { t } = useI18n();
+
+const items = computed(() => [
+  { label: t("demo.wallet.labels.discoveredWallets"), value: props.discoveredWalletCount },
+  {
+    label: t("demo.wallet.labels.selectedWallet"),
+    value: props.selectedWalletName ?? t("demo.fallback.none"),
+  },
+  {
+    label: t("demo.wallet.labels.configured"),
+    value: props.configured ? t("common.yes") : t("common.no"),
+  },
+  { label: t("demo.wallet.labels.publicKey"), value: props.publicKey },
+]);
 </script>
 
 <template>
   <DemoPanel
     eyebrow="useSolanaWallets + useSolanaWallet"
-    title="Wallets"
+    :title="$t('demo.wallet.title')"
     :status="statusText"
     :status-color="statusColor"
     wide
   >
     <p class="mb-4 text-sm leading-6 text-slate-600 dark:text-slate-300">
-      Click <strong>Load Wallets</strong> to discover Solana Wallet Standard browser wallets and
-      supported mobile wallets. Install Phantom, Solflare, Backpack, or another standard wallet and
-      switch it to devnet.
+      <i18n-t keypath="demo.wallet.description" tag="span">
+        <template #loadWallets>
+          <strong>{{ $t("demo.wallet.loadWallets") }}</strong>
+        </template>
+      </i18n-t>
     </p>
 
-    <DemoDataGrid
-      :items="[
-        { label: 'Discovered wallets', value: discoveredWalletCount },
-        { label: 'Selected wallet', value: selectedWalletName ?? 'None' },
-        { label: 'Wallet configured', value: configured ? 'Yes' : 'No' },
-        { label: 'Public key', value: publicKey },
-      ]"
-    />
+    <DemoDataGrid :items="items" />
 
     <UButton
-      v-if="publicKey !== 'Not connected'"
+      v-if="publicKey !== $t('demo.fallback.notConnected')"
       type="button"
       icon="i-mdi-content-copy"
       color="neutral"
       variant="ghost"
       size="sm"
-      aria-label="Copy wallet address"
+      :aria-label="$t('demo.wallet.copyAddressAria')"
       @click="emit('copyAddress')"
     >
-      Copy address
+      {{ $t("demo.wallet.copyAddress") }}
     </UButton>
 
     <div v-if="walletsLoaded && wallets.length" class="mt-4 grid gap-2 sm:grid-cols-2">
@@ -74,7 +84,7 @@ const emit = defineEmits<{
       >
         <img
           :src="discoveredWallet.icon"
-          :alt="`${discoveredWallet.name} icon`"
+          :alt="$t('demo.wallet.iconAlt', { name: discoveredWallet.name })"
           class="size-5 rounded"
         />
         <span>{{ discoveredWallet.name }}</span>
@@ -85,22 +95,22 @@ const emit = defineEmits<{
       class="mt-4"
       color="warning"
       variant="subtle"
-      description="Wallet discovery has not been loaded yet."
+      :description="$t('demo.wallet.notLoaded')"
     />
     <UAlert
       v-else
       class="mt-4"
       color="warning"
       variant="subtle"
-      description="No wallets detected. Install a Solana wallet extension or use a supported mobile wallet, then refresh wallets."
+      :description="$t('demo.wallet.noneDetected')"
     />
 
     <div class="mt-4 flex flex-wrap gap-2 max-sm:grid max-sm:grid-cols-1">
       <UButton type="button" color="primary" variant="soft" @click="emit('loadWallets')">
-        {{ walletsLoaded ? "Refresh Wallets" : "Load Wallets" }}
+        {{ walletsLoaded ? $t("demo.wallet.refreshWallets") : $t("demo.wallet.loadWallets") }}
       </UButton>
       <UButton type="button" :disabled="!canConnect" :loading="connecting" @click="emit('connect')">
-        Connect
+        {{ $t("demo.wallet.connect") }}
       </UButton>
       <UButton
         type="button"
@@ -108,7 +118,7 @@ const emit = defineEmits<{
         :loading="disconnecting"
         @click="emit('disconnect')"
       >
-        Disconnect
+        {{ $t("demo.wallet.disconnect") }}
       </UButton>
       <UButton
         type="button"
@@ -117,7 +127,7 @@ const emit = defineEmits<{
         :disabled="!configured"
         @click="emit('deselect')"
       >
-        Deselect Wallet
+        {{ $t("demo.wallet.deselect") }}
       </UButton>
     </div>
   </DemoPanel>

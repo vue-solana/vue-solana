@@ -1,8 +1,12 @@
+<script setup lang="ts">
+const localePath = useLocalePath();
+</script>
+
 <template>
   <NuxtLink
     aria-label="Vue Solana home"
     class="group inline-flex items-center gap-2.5 text-inherit no-underline"
-    to="/"
+    :to="localePath('/')"
   >
     <UColorModeImage
       light="/VueSolana.png"

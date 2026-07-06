@@ -1,7 +1,7 @@
 <script setup lang="ts">
 const message = defineModel<string>("message", { required: true });
 
-defineProps<{
+const props = defineProps<{
   canSignMessage: boolean;
   disabledReason?: string | null;
   error?: string | null;
@@ -17,54 +17,60 @@ defineProps<{
 const emit = defineEmits<{
   sign: [];
 }>();
+
+const { t } = useI18n();
+const translatedStatus = computed(() => t(`demo.status.${props.status}`, props.status));
 </script>
 
 <template>
   <DemoPanel
     eyebrow="useSolanaSignMessage"
-    title="Message Signing"
-    :status="status"
+    :title="$t('demo.messageSigning.title')"
+    :status="translatedStatus"
     :status-color="statusColor"
     data-testid="message-signing-panel"
   >
     <p class="mb-4 text-sm leading-6 text-slate-600 dark:text-slate-300">
-      Signs an arbitrary message with the connected wallet. This proves wallet ownership without
-      submitting a transaction or touching devnet balances.
+      {{ $t("demo.messageSigning.description") }}
     </p>
 
     <dl class="mb-4 grid gap-3 sm:grid-cols-2">
       <div
         class="min-w-0 rounded-2xl border border-slate-200 bg-slate-50/90 p-3 dark:border-slate-700 dark:bg-slate-950/45"
       >
-        <dt class="text-xs font-medium text-slate-500 dark:text-slate-400">Wallet ready</dt>
+        <dt class="text-xs font-medium text-slate-500 dark:text-slate-400">
+          {{ $t("demo.messageSigning.walletReady") }}
+        </dt>
         <dd
           class="mt-1 [overflow-wrap:anywhere] text-sm font-bold text-slate-950 dark:text-white"
           data-testid="message-wallet-ready"
         >
-          {{ walletReady ? "Yes" : "No" }}
+          {{ walletReady ? $t("common.yes") : $t("common.no") }}
         </dd>
       </div>
       <div
         class="min-w-0 rounded-2xl border border-slate-200 bg-slate-50/90 p-3 dark:border-slate-700 dark:bg-slate-950/45"
       >
-        <dt class="text-xs font-medium text-slate-500 dark:text-slate-400">Message signing</dt>
+        <dt class="text-xs font-medium text-slate-500 dark:text-slate-400">
+          {{ $t("demo.messageSigning.capability") }}
+        </dt>
         <dd
           class="mt-1 [overflow-wrap:anywhere] text-sm font-bold text-slate-950 dark:text-white"
           data-testid="message-capability"
         >
-          {{ canSignMessage ? "Yes" : "No" }}
+          {{ canSignMessage ? $t("common.yes") : $t("common.no") }}
         </dd>
       </div>
     </dl>
 
     <div class="grid gap-3">
-      <UFormField label="Message to sign">
+      <UFormField :label="$t('demo.messageSigning.messageLabel')">
         <UTextarea
           v-model="message"
           class="w-full"
           :rows="3"
           data-testid="message-to-sign"
-          placeholder="Enter a message for the wallet to sign"
+          :placeholder="$t('demo.messageSigning.messagePlaceholder')"
         />
       </UFormField>
     </div>
@@ -78,7 +84,7 @@ const emit = defineEmits<{
         data-testid="sign-message"
         @click="emit('sign')"
       >
-        Sign Message
+        {{ $t("demo.messageSigning.sign") }}
       </UButton>
     </div>
 
@@ -91,15 +97,21 @@ const emit = defineEmits<{
       data-testid="message-disabled-reason"
     />
     <p class="mt-4 [overflow-wrap:anywhere] text-sm text-slate-600 dark:text-slate-300">
-      <strong class="text-slate-950 dark:text-white">Signature:</strong>
-      <span data-testid="message-signature">{{ signature ?? "No signature yet" }}</span>
+      <strong class="text-slate-950 dark:text-white">{{
+        $t("demo.messageSigning.signature")
+      }}</strong>
+      <span data-testid="message-signature">{{
+        signature ?? $t("demo.fallback.noSignature")
+      }}</span>
     </p>
     <p
       v-if="signedMessage"
       class="mt-2 [overflow-wrap:anywhere] text-sm text-slate-600 dark:text-slate-300"
       data-testid="signed-message"
     >
-      <strong class="text-slate-950 dark:text-white">Signed message:</strong>
+      <strong class="text-slate-950 dark:text-white">{{
+        $t("demo.messageSigning.signedMessage")
+      }}</strong>
       {{ signedMessage }}
     </p>
     <UAlert v-if="error" class="mt-4" color="error" variant="subtle" :description="error" />

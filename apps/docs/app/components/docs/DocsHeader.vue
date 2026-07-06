@@ -8,12 +8,21 @@ import {
 } from "~/utils/docsNavigation";
 
 const route = useRoute();
+const localePath = useLocalePath();
+const switchLocalePath = useSwitchLocalePath();
+const { locale, locales, t } = useI18n();
 
-const primaryItems = computed(() => createPrimaryNavigationItems(route.path));
+const primaryItems = computed(() => createPrimaryNavigationItems(route.path, localePath, t));
 const mobileItems = computed(() => [
   primaryItems.value,
-  ...createSidebarNavigationItems(route.path),
+  ...createSidebarNavigationItems(route.path, localePath, t),
 ]);
+const translatedExternalLinks = computed(() =>
+  externalNavLinks.map((link) => ({
+    ...link,
+    label: t(link.labelKey) || link.label,
+  })),
+);
 </script>
 
 <template>
@@ -37,9 +46,22 @@ const mobileItems = computed(() => [
 
     <template #right>
       <UContentSearchButton class="hidden sm:inline-flex" />
-      <div class="hidden items-center gap-1 sm:flex" aria-label="External links">
+      <UButtonGroup size="sm" class="hidden sm:inline-flex">
         <UButton
-          v-for="link in externalNavLinks"
+          v-for="availableLocale in locales"
+          :key="availableLocale.code"
+          :to="switchLocalePath(availableLocale.code)"
+          :label="availableLocale.code.toUpperCase()"
+          :color="availableLocale.code === locale ? 'primary' : 'neutral'"
+          :variant="availableLocale.code === locale ? 'solid' : 'ghost'"
+        />
+      </UButtonGroup>
+      <div
+        class="hidden items-center gap-1 sm:flex"
+        :aria-label="t('navigation.external.ariaLabel')"
+      >
+        <UButton
+          v-for="link in translatedExternalLinks"
           :key="link.to"
           :to="link.to"
           :icon="link.icon"
@@ -57,6 +79,17 @@ const mobileItems = computed(() => [
     <template #body>
       <div class="grid gap-4 pb-4">
         <UContentSearchButton block />
+        <UButtonGroup size="sm" class="w-full">
+          <UButton
+            v-for="availableLocale in locales"
+            :key="availableLocale.code"
+            :to="switchLocalePath(availableLocale.code)"
+            :label="availableLocale.name ?? availableLocale.code.toUpperCase()"
+            :color="availableLocale.code === locale ? 'primary' : 'neutral'"
+            :variant="availableLocale.code === locale ? 'solid' : 'ghost'"
+            class="flex-1 justify-center"
+          />
+        </UButtonGroup>
         <UNavigationMenu
           :items="mobileItems"
           orientation="vertical"
@@ -67,10 +100,10 @@ const mobileItems = computed(() => [
         />
         <div
           class="flex items-center gap-1 border-t border-default pt-3"
-          aria-label="External links"
+          :aria-label="t('navigation.external.ariaLabel')"
         >
           <UButton
-            v-for="link in externalNavLinks"
+            v-for="link in translatedExternalLinks"
             :key="link.to"
             :to="link.to"
             :icon="link.icon"

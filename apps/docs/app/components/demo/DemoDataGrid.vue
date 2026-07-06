@@ -23,7 +23,7 @@ defineProps<{
         {{ item.label }}
       </dt>
       <dd class="mt-1 [overflow-wrap:anywhere] text-sm font-bold text-slate-950 dark:text-white">
-        {{ item.value ?? "Not loaded yet" }}
+        {{ item.value ?? $t("demo.fallback.notLoaded") }}
       </dd>
     </div>
   </dl>

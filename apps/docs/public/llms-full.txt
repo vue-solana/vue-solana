@@ -57,6 +57,179 @@ Official Solana references:
 
 ---
 
+# Documentación de Vue Solana
+
+Source: https://vue-solana-docs.vercel.app/es
+Description: Documentación para bibliotecas Vue y Nuxt que ayudan a los desarrolladores a usar Solana.
+
+Vue Solana es un conjunto de paquetes para crear aplicaciones Solana con Vue y Nuxt. El objetivo es ofrecer primitivas idiomáticas para Vue, manteniendo una base compatible con las APIs modernas de Solana.
+
+## Paquetes
+
+- `@vue-solana/core`: primitivas independientes del framework para configuración, RPC, wallets y transacciones.
+- `@vue-solana/vue`: plugin de Vue y composables para usar RPC, balances, wallets, firmas y transacciones.
+- `@vue-solana/nuxt`: módulo de Nuxt que instala el plugin de Vue y autoimporta composables.
+
+## Empieza Aquí
+
+- [Primeros pasos](/es/getting-started)
+- [RPC y clusters](/es/guides/rpc-and-clusters)
+- [Wallets](/es/guides/wallets)
+- [Transacciones](/es/guides/transactions)
+
+## Referencia de API
+
+- [`@vue-solana/core`](/es/packages/core)
+- [`@vue-solana/vue`](/es/packages/vue)
+- [`@vue-solana/nuxt`](/es/packages/nuxt)
+
+## Ejemplos
+
+- [Ejemplo Vue Vite](/es/examples/vue-vite)
+- [Ejemplo Nuxt](/es/examples/nuxt)
+
+La demo interactiva sigue en inglés por ahora. La localización inicial cubre las páginas Markdown de documentación.
+
+---
+
+# Primeros pasos
+
+Source: https://vue-solana-docs.vercel.app/es/getting-started
+Description: Instala los paquetes de Vue Solana, configura Vue o Nuxt y prueba lecturas RPC en devnet.
+
+Esta guía muestra la ruta mínima para instalar Vue Solana, configurar una aplicación Vue o Nuxt y comprobar que puedes leer datos de Solana en devnet.
+
+## Antes de empezar
+
+Necesitas Node.js, pnpm y una aplicación Vue o Nuxt. Para pruebas con wallet, instala una wallet compatible con Solana Wallet Standard y cambia la red a devnet.
+
+```sh
+pnpm install
+pnpm build
+pnpm typecheck
+```
+
+## Instalar para Vue
+
+```sh
+pnpm add @vue-solana/vue
+```
+
+El paquete de Vue trae el plugin y los composables. Si necesitas usar las primitivas sin Vue, instala también `@vue-solana/core` directamente.
+
+## Instalar para Nuxt
+
+```sh
+pnpm add @vue-solana/nuxt
+```
+
+El módulo de Nuxt instala el plugin de Vue y autoimporta composables como `useSolanaRpc()`, `useSolanaWallet()` y `useSolanaBalance()`.
+
+## Problema conocido de TypeScript
+
+`@solana/web3-compat@0.0.21` tiene metadatos de tipos incompletos en npm. Los paquetes publicados de Vue Solana incluyen shims de declaraciones para que los consumidores no tengan que añadirlos manualmente.
+
+## Configuración en Vue
+
+```ts
+import { createApp } from "vue";
+import { createSolanaPlugin } from "@vue-solana/vue";
+import App from "./App.vue";
+
+createApp(App)
+  .use(
+    createSolanaPlugin({
+      cluster: "devnet",
+    }),
+  )
+  .mount("#app");
+```
+
+Lee estado RPC desde un componente:
+
+```vue
+<script setup lang="ts">
+const { cluster, endpoint, connection } = useSolanaRpc();
+</script>
+
+<template>
+  <p>{{ cluster }}: {{ endpoint }}</p>
+</template>
+```
+
+## Configuración en Nuxt
+
+```ts
+export default defineNuxtConfig({
+  modules: ["@vue-solana/nuxt"],
+  solana: {
+    cluster: "devnet",
+  },
+});
+```
+
+Después puedes usar los composables autoimportados en páginas y componentes.
+
+## Probar RPC sin wallet
+
+```vue
+<script setup lang="ts">
+const { connection } = useSolanaConnection();
+const latestBlockhash = ref<string>();
+
+async function loadBlockhash() {
+  latestBlockhash.value = (await connection.getLatestBlockhash()).blockhash;
+}
+</script>
+```
+
+Esta prueba no requiere wallet porque solo lee datos públicos desde RPC.
+
+## Obtener SOL de devnet o testnet
+
+Usa un faucet de Solana o el comando `solana airdrop` con una dirección de devnet/testnet. No uses mainnet para pruebas iniciales.
+
+## Ejecutar los ejemplos
+
+Desde la raíz del repositorio:
+
+```sh
+pnpm dev:vue
+pnpm dev:nuxt
+pnpm dev:docs
+```
+
+## Conectar una wallet
+
+El flujo recomendado es unificado: descubre wallets, selecciona una, conecta, revisa capacidades y luego firma mensajes o transacciones solo con aprobación del usuario.
+
+## Firmar un mensaje
+
+Usa firma de mensajes para autenticación o prueba de propiedad. No la confundas con una transacción on-chain.
+
+```ts
+const { signMessage } = useSolanaWallet();
+```
+
+## Enviar una transferencia
+
+Construye la transacción, pide firma explícita al usuario y confirma la firma en devnet antes de mostrar éxito.
+
+## Verificación final
+
+```sh
+pnpm typecheck
+pnpm build
+```
+
+## Más lectura
+
+- [RPC y clusters](/es/guides/rpc-and-clusters)
+- [Wallets](/es/guides/wallets)
+- [Transacciones](/es/guides/transactions)
+
+---
+
 # Getting Started
 
 Source: https://vue-solana-docs.vercel.app/getting-started
@@ -469,6 +642,92 @@ The skill source is [`skills/vue-solana/SKILL.md`](https://github.com/vue-solana
 
 ---
 
+# Skill de agente
+
+Source: https://vue-solana-docs.vercel.app/es/agent-skill
+Description: Instala la skill de Vue Solana para agentes de programación con IA.
+
+La skill de Vue Solana ayuda a agentes de programación a seguir las convenciones de este repositorio y a trabajar con Vue, Nuxt y Solana de forma consistente.
+
+## Instalar
+
+```sh
+# Instalar todas las skills
+npx skills add vue-solana/vue-solana
+
+# Instalar la skill de Vue Solana
+npx skills add vue-solana/vue-solana/skills/vue-solana
+
+# Listar skills disponibles
+npx skills list
+
+# Instalar globalmente
+npx skills add --global vue-solana/vue-solana
+```
+
+## Qué cubre la skill
+
+- Arquitectura del monorepo.
+- Uso de `@vue-solana/core`, `@vue-solana/vue` y `@vue-solana/nuxt`.
+- Patrones de wallet y firma con límites de seguridad.
+- Reglas para ejemplos, documentación y pruebas.
+
+## Fuente
+
+La skill pública vive en `skills/vue-solana/`. Las skills locales de desarrollo viven en `.agents-dev/skills/` y no se publican como parte de la instalación pública.
+
+---
+
+# Solución de problemas
+
+Source: https://vue-solana-docs.vercel.app/es/troubleshooting
+Description: Problemas comunes al instalar, compilar y usar Vue Solana.
+
+Esta página reúne fallos comunes y pasos de diagnóstico para aplicaciones Vue Solana.
+
+## La compilación no encuentra tipos de Solana
+
+`@solana/web3-compat@0.0.21` tiene metadatos de tipos incompletos. Usa las versiones publicadas de Vue Solana y evita importar rutas internas no documentadas.
+
+## No aparece ninguna wallet
+
+- Comprueba que la wallet esté instalada y desbloqueada.
+- Cambia la red de la wallet a devnet para pruebas.
+- Usa el flujo de descubrimiento de wallets antes de llamar a `connect()`.
+
+## La conexión RPC falla
+
+- Revisa el cluster configurado.
+- Prueba con un endpoint RPC explícito si el endpoint público está limitado.
+- Trata todos los errores RPC como datos no confiables y muestra mensajes seguros al usuario.
+
+## El balance es `null`
+
+Puede significar que la dirección es inválida, que la cuenta no existe o que la lectura todavía está cargando. Valida la entrada antes de llamar a RPC.
+
+## La firma de mensajes no está disponible
+
+No todas las wallets soportan `signMessage`. Comprueba la capacidad antes de mostrar el botón de firma.
+
+## La transacción no confirma
+
+- Confirma que estás en devnet.
+- Revisa que la cuenta tenga SOL para fees.
+- Usa un blockhash reciente.
+- Muestra el enlace de explorer para que el usuario pueda inspeccionar la firma.
+
+## Pasos de verificación
+
+```sh
+pnpm install
+pnpm typecheck
+pnpm build
+```
+
+Si el problema ocurre solo en el navegador, ejecuta la app de ejemplo y revisa la consola y la pestaña Network.
+
+---
+
 # Troubleshooting
 
 Source: https://vue-solana-docs.vercel.app/troubleshooting
@@ -750,6 +1009,34 @@ Official reference: [Commitment Status](https://solana.com/docs/rpc#configuring-
 
 ---
 
+# Solana para desarrolladores Vue
+
+Source: https://vue-solana-docs.vercel.app/es/concepts/solana-for-vue-developers
+Description: Cómo pensar en Solana desde aplicaciones Vue y Nuxt.
+
+Las aplicaciones Solana combinan UI reactiva, lectura de datos RPC, conexión de wallets y operaciones de firma. Vue Solana separa esas responsabilidades en paquetes pequeños.
+
+## Modelo mental
+
+- RPC lee estado público de la red.
+- La wallet mantiene claves y pide aprobación al usuario.
+- Las transacciones se construyen en la app, pero se firman en la wallet.
+- La confirmación ocurre después de enviar la firma a la red.
+
+## Dónde encaja Vue
+
+Vue maneja estado, formularios, errores y feedback visual. Los composables de Vue Solana exponen ese estado como refs y funciones asíncronas.
+
+## Dónde encaja Nuxt
+
+Nuxt instala el plugin con un módulo, autoimporta composables y permite documentar o prerenderizar rutas sin cambiar el flujo de wallet en cliente.
+
+## Seguridad
+
+Nunca pidas claves privadas. Nunca firmes sin interacción clara del usuario. Trata respuestas RPC, direcciones y firmas como entradas no confiables.
+
+---
+
 # Clusters
 
 Source: https://vue-solana-docs.vercel.app/concepts/clusters
@@ -846,6 +1133,118 @@ solana airdrop 1 YOUR_WALLET_ADDRESS --url testnet
 ```
 
 Devnet and testnet SOL have no real value. Never use a wallet with real funds while testing.
+
+---
+
+# Clusters
+
+Source: https://vue-solana-docs.vercel.app/es/concepts/clusters
+Description: Nombres de clusters de Solana, endpoints RPC e instrucciones para faucets.
+
+Solana tiene varios clusters. Vue Solana acepta nombres de cluster y endpoints explícitos para que puedas empezar rápido y cambiar a infraestructura propia cuando lo necesites.
+
+## Clusters soportados
+
+- `mainnet-beta`: red principal con valor real.
+- `devnet`: red pública para desarrollo.
+- `testnet`: red pública para pruebas de validadores.
+- `localnet`: validador local.
+
+No firmes ni envíes transacciones en mainnet sin aprobación explícita del usuario.
+
+## Endpoints RPC
+
+Puedes usar el endpoint predeterminado del cluster o configurar uno propio:
+
+```ts
+createSolanaContext({
+  cluster: "devnet",
+  endpoint: "https://api.devnet.solana.com",
+});
+```
+
+## Endpoints WebSocket
+
+Si no pasas `wsEndpoint`, Vue Solana deriva un endpoint WebSocket compatible cuando es posible.
+
+## Configurar un cluster
+
+```ts
+export default defineNuxtConfig({
+  modules: ["@vue-solana/nuxt"],
+  solana: {
+    cluster: "devnet",
+  },
+});
+```
+
+En Vue usa `createSolanaPlugin({ cluster: "devnet" })`.
+
+## Obtener SOL de devnet o testnet
+
+Usa un faucet público o `solana airdrop` para financiar una cuenta de pruebas. No reutilices claves privadas de mainnet en entornos de desarrollo.
+
+---
+
+# RPC y clusters
+
+Source: https://vue-solana-docs.vercel.app/es/guides/rpc-and-clusters
+Description: Configura clusters de Solana, endpoints RPC, endpoints WebSocket y helpers de conexión.
+
+RPC es la forma principal de leer datos de Solana desde una aplicación. Vue Solana centraliza la configuración de cluster y conexión para que los componentes no repitan endpoints.
+
+## Nombres de cluster
+
+Usa `devnet` para desarrollo, `testnet` para pruebas de red, `localnet` para un validador local y `mainnet-beta` solo cuando estés listo para valor real.
+
+## Configuración core
+
+```ts
+import { createSolanaContext } from "@vue-solana/core";
+
+const solana = createSolanaContext({
+  cluster: "devnet",
+});
+```
+
+## Endpoints RPC personalizados
+
+```ts
+createSolanaContext({
+  cluster: "devnet",
+  endpoint: "https://api.devnet.solana.com",
+  wsEndpoint: "wss://api.devnet.solana.com",
+});
+```
+
+## Configuración Vue
+
+```ts
+app.use(createSolanaPlugin({ cluster: "devnet" }));
+```
+
+```ts
+const { cluster, endpoint, connection } = useSolanaRpc();
+```
+
+## Configuración Nuxt
+
+```ts
+export default defineNuxtConfig({
+  modules: ["@vue-solana/nuxt"],
+  solana: { cluster: "devnet" },
+});
+```
+
+## Helpers de endpoint
+
+`@vue-solana/core` resuelve endpoints predeterminados por cluster y permite reemplazarlos con infraestructura propia.
+
+## Notas de producción
+
+- Usa un proveedor RPC confiable para producción.
+- Implementa límites, reintentos prudentes y mensajes de error claros.
+- No dependas de faucets ni endpoints gratuitos para flujos críticos.
 
 ---
 
@@ -999,6 +1398,72 @@ const wsEndpoint = getClusterWebSocketEndpoint("devnet");
 - Avoid broad or frequent scans on public RPC endpoints.
 - Use WebSocket subscriptions intentionally; always clean them up when you no longer need them.
 - Treat RPC responses as untrusted input and handle missing, stale, or failed data.
+
+---
+
+# Wallets
+
+Source: https://vue-solana-docs.vercel.app/es/guides/wallets
+Description: Descubre wallets, selecciona una wallet activa, conecta, desconecta y comprueba capacidades.
+
+Vue Solana expone wallets de navegador, móviles y nativas mediante un flujo unificado. La aplicación no debe pedir claves privadas; la wallet firma después de aprobación del usuario.
+
+## Fuentes de wallet
+
+- Wallet Standard en navegadores.
+- Adaptadores móviles cuando están disponibles.
+- Interfaces manuales para integraciones controladas.
+
+## Matriz de soporte
+
+Comprueba capacidades antes de mostrar acciones. Una wallet puede conectar, pero no necesariamente firmar mensajes o soportar el mismo flujo de transacción.
+
+## Flujo de wallet en Vue
+
+```ts
+const wallet = useSolanaWallet();
+
+await wallet.connect();
+await wallet.disconnect();
+```
+
+## Flujo de wallet en Nuxt
+
+```ts
+const wallet = useSolanaWallet();
+```
+
+El módulo autoimporta el composable cuando `@vue-solana/nuxt` está instalado.
+
+## Comprobaciones de capacidad
+
+Antes de firmar, comprueba que la wallet esté conectada y que soporte la operación necesaria.
+
+## Auto connect
+
+Usa auto connect solo si la experiencia es clara y respeta el consentimiento del usuario. No dispares firmas automáticamente.
+
+## Firma de mensajes para auth
+
+Genera un challenge con nonce, dominio y expiración. Verifica la firma en tu backend si el flujo autentica usuarios.
+
+## Wallets móviles
+
+Las wallets móviles deben integrarse en el mismo flujo público de `useWallets()` y `useWallet()` para evitar APIs paralelas.
+
+## Interfaz manual de wallet
+
+Puedes pasar una implementación manual cuando controlas la integración, siempre respetando los límites de seguridad.
+
+## Helpers core directos
+
+`@vue-solana/core` contiene tipos y aserciones que también pueden usarse fuera de Vue.
+
+## Notas de seguridad
+
+- Nunca accedas a claves privadas.
+- No firmes en mainnet sin aprobación explícita.
+- Trata direcciones y respuestas RPC como entradas no confiables.
 
 ---
 
@@ -1269,6 +1734,59 @@ Official references:
 
 ---
 
+# Lecturas de cuentas
+
+Source: https://vue-solana-docs.vercel.app/es/guides/account-reads
+Description: Lee balances, datos de cuenta, cuentas de programa y estado de firmas de forma segura desde Vue o Nuxt.
+
+Las lecturas RPC son operaciones públicas. Aun así, valida entradas, maneja valores nulos y evita consultas costosas innecesarias.
+
+## Parsear direcciones
+
+Convierte strings a `PublicKey` dentro de un bloque seguro y muestra errores de validación al usuario.
+
+## Leer balance en Vue
+
+```ts
+const balance = useSolanaBalance(address);
+
+await balance.refresh();
+```
+
+## Leer información de cuenta
+
+```ts
+const { connection } = useSolanaConnection();
+const account = await connection.getAccountInfo(publicKey);
+```
+
+## Leer cuentas de programa
+
+`getProgramAccounts` puede ser costoso. Usa filtros y evita ejecutarlo en cada render.
+
+## Leer estado de firma
+
+```ts
+const status = await connection.getSignatureStatuses([signature]);
+```
+
+## Autoimports de Nuxt
+
+Con `@vue-solana/nuxt`, los composables de lectura están disponibles sin imports manuales.
+
+## Entradas nulas o inválidas
+
+No llames a RPC con direcciones vacías. Devuelve estado vacío hasta que la entrada sea válida.
+
+## Checklist de coste RPC
+
+- Debounce en inputs de usuario.
+- Cachea resultados cuando tenga sentido.
+- Evita consultas globales sin filtros.
+- Muestra estados de carga y error.
+
+---
+
 # Account Reads
 
 Source: https://vue-solana-docs.vercel.app/guides/account-reads
@@ -1416,6 +1934,68 @@ Invalid address strings clear stale data, set `error`, and do not call the RPC m
 - Avoid broad scans from landing pages or every route navigation.
 - Avoid aggressive polling intervals on public RPC endpoints.
 - Cache or index data that many users will request repeatedly.
+
+---
+
+# Transacciones
+
+Source: https://vue-solana-docs.vercel.app/es/guides/transactions
+Description: Firma, envía, confirma y maneja estado de transacciones con Vue Solana.
+
+Una transacción debe construirse, firmarse por la wallet, enviarse por RPC y confirmarse antes de mostrar éxito definitivo.
+
+## Helper core de envío
+
+```ts
+import { signAndSendTransaction } from "@vue-solana/core";
+
+const signature = await signAndSendTransaction({
+  connection,
+  wallet,
+  transaction,
+});
+```
+
+## Confirmar una firma
+
+```ts
+await connection.confirmTransaction(signature, "confirmed");
+```
+
+## Construir una transferencia real en devnet
+
+Usa un blockhash reciente, una cuenta financiada en devnet y una instrucción de transferencia. No pruebes transferencias iniciales en mainnet.
+
+## Flujo de firmar y enviar en Vue
+
+```ts
+const { signAndSendTransaction } = useSolanaSignAndSendTransaction();
+```
+
+Muestra estado de carga, firma, error y confirmación.
+
+## Enlaces de explorer
+
+Crea enlaces con el cluster correcto para que el usuario pueda verificar la firma.
+
+## Estado genérico de transacción
+
+`useSolanaTransaction()` ayuda a representar operaciones asíncronas con loading, error y resultado.
+
+## Autoimports de Nuxt
+
+`@vue-solana/nuxt` autoimporta los composables necesarios para transacciones.
+
+## Manejo de errores
+
+Normaliza errores antes de mostrarlos. No expongas mensajes crudos si pueden contener detalles internos.
+
+## Checklist de seguridad
+
+- Explica qué va a firmar el usuario.
+- Usa devnet para pruebas.
+- Confirma antes de mostrar éxito.
+- No reintentes firmas sin acción del usuario.
 
 ---
 
@@ -1652,6 +2232,47 @@ try {
 
 ---
 
+# Firma de mensajes
+
+Source: https://vue-solana-docs.vercel.app/es/guides/message-signing
+Description: Firma mensajes de autenticación o propiedad sin crear transacciones on-chain.
+
+La firma de mensajes sirve para demostrar control de una wallet sin enviar una transacción a Solana.
+
+## Firma de mensajes en Vue
+
+```ts
+const wallet = useSolanaWallet();
+
+const message = new TextEncoder().encode("Sign in to Vue Solana");
+const signature = await wallet.signMessage(message);
+```
+
+## Firma de mensajes en Nuxt
+
+El mismo composable está autoimportado cuando usas `@vue-solana/nuxt`.
+
+## Texto del challenge
+
+Incluye dominio, intención, dirección pública, nonce y expiración. Evita mensajes ambiguos que puedan reutilizarse en otro contexto.
+
+## Límite de verificación
+
+La firma prueba control de clave para ese mensaje. La autorización de la sesión debe verificarse y almacenarse en tu backend.
+
+## Manejo de errores
+
+El usuario puede rechazar la firma. Trata ese caso como una decisión normal, no como un fallo inesperado.
+
+## Checklist de seguridad
+
+- No firmes mensajes vacíos.
+- No reutilices nonces.
+- Muestra el texto completo al usuario.
+- Verifica la firma en el servidor cuando autentique una sesión.
+
+---
+
 # Message Signing
 
 Source: https://vue-solana-docs.vercel.app/guides/message-signing
@@ -1765,6 +2386,49 @@ const message = computed(() => {
 - Make signed text human-readable.
 - Never imply that message signing submits a transaction.
 - Never reuse a transaction-signing flow for authentication text.
+
+---
+
+# Errores
+
+Source: https://vue-solana-docs.vercel.app/es/guides/errors
+Description: Maneja errores normalizados de Solana desde helpers core y composables Vue/Nuxt.
+
+Las operaciones RPC, wallets y transacciones pueden fallar por red, entrada inválida, rechazo del usuario o limitaciones de la wallet.
+
+## Forma del error
+
+Los helpers de Vue Solana exponen errores en refs o resultados normalizados para que puedas renderizar mensajes de forma consistente.
+
+## Códigos de error estables
+
+Usa códigos para lógica de UI y mensajes localizados. Evita depender de texto crudo de proveedores RPC.
+
+## Manejo de errores core
+
+```ts
+try {
+  await signAndSendTransaction(input);
+} catch (error) {
+  // Normaliza y muestra un mensaje seguro.
+}
+```
+
+## Refs de error en Vue
+
+Los composables exponen `error`, `loading` y acciones como `refresh()` o `execute()`.
+
+## Refs de error en Nuxt
+
+El comportamiento es el mismo, con composables autoimportados por el módulo.
+
+## Mensajes para usuarios
+
+Explica qué pasó y qué puede hacer el usuario: revisar dirección, conectar wallet, cambiar red o intentar más tarde.
+
+## Guía de reintentos
+
+Reintenta lecturas RPC con cuidado. No reintentes firmas ni envíos de transacción sin una acción clara del usuario.
 
 ---
 
@@ -1919,6 +2583,74 @@ function getSolanaErrorMessage(code: string) {
 - Do not retry `USER_REJECTED` automatically.
 - Do not retry `INVALID_ADDRESS`; ask the user to correct input.
 - Hide or disable actions that produce `WALLET_FEATURE_UNSUPPORTED`.
+
+---
+
+# @vue-solana/core
+
+Source: https://vue-solana-docs.vercel.app/es/packages/core
+Description: Configuración Solana independiente del framework, RPC, tipos de wallet y helpers de transacción.
+
+`@vue-solana/core` contiene las primitivas compartidas por Vue y Nuxt. Úsalo directamente si necesitas lógica Solana fuera de componentes Vue.
+
+## Instalar
+
+```sh
+pnpm add @vue-solana/core
+```
+
+## Inicio rápido
+
+```ts
+import { createSolanaContext } from "@vue-solana/core";
+
+const solana = createSolanaContext({ cluster: "devnet" });
+```
+
+## Guías relacionadas
+
+- [RPC y clusters](/es/guides/rpc-and-clusters)
+- [Wallets](/es/guides/wallets)
+- [Transacciones](/es/guides/transactions)
+
+## Configuración
+
+La configuración acepta `cluster`, `endpoint` y `wsEndpoint`. Puedes empezar con un cluster y pasar endpoints propios cuando lo necesites.
+
+## Contexto
+
+El contexto combina configuración resuelta, conexión RPC y estado compartido usado por paquetes superiores.
+
+## Interfaz de wallet
+
+El core define tipos de wallet para conectar, desconectar, firmar mensajes y firmar transacciones según capacidades disponibles.
+
+## Metadatos de wallet
+
+Los metadatos incluyen nombre, icono, fuente y capacidades. Úsalos para mostrar opciones al usuario sin asumir una implementación concreta.
+
+## Helpers de Wallet Standard
+
+Los helpers adaptan wallets compatibles con Solana Wallet Standard al flujo unificado de Vue Solana.
+
+## Helpers de wallet móvil
+
+La compatibilidad móvil se expone sin crear composables públicos separados, para mantener un único flujo de wallets.
+
+## Helpers
+
+- `createSolanaConnection()`
+- `createSolanaContext()`
+- `signAndSendTransaction()`
+- Validaciones y aserciones de wallet conectada.
+
+## Modelo de error
+
+Los errores se normalizan para que Vue y Nuxt puedan mostrar estados consistentes.
+
+## Problema conocido de TypeScript
+
+El paquete incluye shims de declaraciones para el problema actual de `@solana/web3-compat`.
 
 ---
 
@@ -2223,6 +2955,73 @@ Stable error codes are:
 ## Known TypeScript Issue
 
 See [Troubleshooting](/troubleshooting) for the `@solana/web3-compat@0.0.21` TypeScript metadata issue. Current `@vue-solana/core` packages publish temporary declaration shims for the documented core import paths.
+
+---
+
+# @vue-solana/vue
+
+Source: https://vue-solana-docs.vercel.app/es/packages/vue
+Description: Plugin de Vue y composables para usar Solana en aplicaciones Vue.
+
+`@vue-solana/vue` instala el contexto Solana en Vue y expone composables idiomáticos para componentes.
+
+## Instalar
+
+```sh
+pnpm add @vue-solana/vue
+```
+
+## Configurar el plugin
+
+```ts
+import { createSolanaPlugin } from "@vue-solana/vue";
+
+app.use(createSolanaPlugin({ cluster: "devnet" }));
+```
+
+## Composables
+
+- `useSolana()`
+- `useSolanaRpc()`
+- `useSolanaConnection()`
+- `useSolanaBalance()`
+- `useSolanaWallet()`
+- `useSolanaSignAndSendTransaction()`
+
+## Estado RPC
+
+```ts
+const { cluster, endpoint, connection } = useSolanaRpc();
+```
+
+## Balance
+
+```ts
+const balance = useSolanaBalance(address);
+```
+
+## Wallet
+
+```ts
+const wallet = useSolanaWallet();
+await wallet.connect();
+```
+
+## Firma de mensajes
+
+Comprueba que la wallet soporte firma de mensajes antes de llamar a la acción.
+
+## Transacciones
+
+Usa el composable de firmar y enviar para mantener estado de carga, firma y error en la UI.
+
+## Errores
+
+Muestra mensajes seguros y accionables. No expongas datos internos de RPC o wallet sin filtrar.
+
+## Ejemplo
+
+El ejemplo Vue Vite usa este paquete directamente: [Ejemplo Vue Vite](/es/examples/vue-vite).
 
 ---
 
@@ -2617,6 +3416,97 @@ For a complete runnable Vue and Vite flow, see the [Vue Vite example](/examples/
 
 # @vue-solana/nuxt
 
+Source: https://vue-solana-docs.vercel.app/es/packages/nuxt
+Description: Módulo Nuxt para aplicaciones Solana.
+
+`@vue-solana/nuxt` instala el plugin de Vue Solana desde `nuxt.config.ts` y autoimporta composables.
+
+## Instalar
+
+```sh
+pnpm add @vue-solana/nuxt
+```
+
+## Configuración del módulo
+
+```ts
+export default defineNuxtConfig({
+  modules: ["@vue-solana/nuxt"],
+  solana: {
+    cluster: "devnet",
+  },
+});
+```
+
+## Composables autoimportados
+
+- `useSolana()`
+- `useSolanaRpc()`
+- `useSolanaConnection()`
+- `useSolanaBalance()`
+- `useSolanaWallet()`
+- `useSolanaSignAndSendTransaction()`
+
+## Guías relacionadas
+
+- [RPC y clusters](/es/guides/rpc-and-clusters)
+- [Wallets](/es/guides/wallets)
+- [Transacciones](/es/guides/transactions)
+
+## Leer estado RPC
+
+```vue
+<script setup lang="ts">
+const { cluster, endpoint } = useSolanaRpc();
+</script>
+```
+
+## Leer balance
+
+```ts
+const balance = useSolanaBalance(address);
+```
+
+## Manejo de errores
+
+Los composables exponen refs de error y carga para que la UI pueda reaccionar de forma declarativa.
+
+## Leer datos de cuenta
+
+Usa `useSolanaConnection()` para acceder a la conexión y llamar métodos RPC directamente.
+
+## Estado de wallet
+
+```ts
+const wallet = useSolanaWallet();
+```
+
+## Firma de mensajes
+
+La firma de mensajes debe usar challenges claros y verificables.
+
+## Firmar, enviar y confirmar una transacción
+
+Usa el composable de transacciones y muestra el resultado solo después de confirmar.
+
+## Confirmar una firma existente
+
+```ts
+await connection.confirmTransaction(signature, "confirmed");
+```
+
+## Seguir estado de firma
+
+Consulta `getSignatureStatuses()` para mostrar progreso cuando el usuario ya tiene una firma.
+
+## Aplicación de ejemplo
+
+Consulta [Ejemplo Nuxt](/es/examples/nuxt).
+
+---
+
+# @vue-solana/nuxt
+
 Source: https://vue-solana-docs.vercel.app/packages/nuxt
 Description: Nuxt module for Solana applications.
 
@@ -2990,6 +3880,45 @@ For a complete runnable Nuxt flow, see the [Nuxt example](/examples/nuxt).
 
 ---
 
+# Ejemplo Vue Vite
+
+Source: https://vue-solana-docs.vercel.app/es/examples/vue-vite
+Description: Aplicación de ejemplo ejecutable para @vue-solana/vue con Vite.
+
+El ejemplo Vue Vite muestra cómo instalar el plugin de Vue Solana en una aplicación Vue estándar.
+
+## Qué demuestra
+
+- Configuración de `createSolanaPlugin()`.
+- Lecturas RPC en devnet.
+- Lecturas de balance.
+- Descubrimiento y conexión de wallets.
+- Flujos de firma simulados o seguros para desarrollo.
+
+## Ejecutar desde la raíz del repositorio
+
+```sh
+pnpm install
+pnpm dev:vue
+```
+
+## Qué probar
+
+- Cargar el blockhash más reciente.
+- Introducir una dirección pública y leer su balance.
+- Conectar una wallet compatible.
+- Revisar mensajes de error con direcciones inválidas.
+
+## SOL de devnet
+
+Usa un faucet para obtener SOL de devnet antes de probar transferencias reales en la red de desarrollo.
+
+## Nota sobre wallets
+
+La wallet debe estar instalada, desbloqueada y configurada en devnet para que las pruebas sean consistentes.
+
+---
+
 # Vue Vite Example
 
 Source: https://vue-solana-docs.vercel.app/examples/vue-vite
@@ -3062,6 +3991,45 @@ https://faucet.solana.com
 The example uses unified wallet discovery. Install Phantom, Solflare, Backpack, or another standard wallet before testing browser extension wallet flows. On supported Android Chrome runtimes, `@solana-mobile/wallet-standard-mobile` can expose installed native mobile wallets through `Mobile Wallet Adapter` in the same wallet list. On iOS browsers, Phantom, Solflare, and Backpack can appear through wallet-specific universal links.
 
 Desktop native wallet protocol-link support is intentionally not part of the v1 example flow.
+
+---
+
+# Ejemplo Nuxt
+
+Source: https://vue-solana-docs.vercel.app/es/examples/nuxt
+Description: Aplicación de ejemplo ejecutable para @vue-solana/nuxt.
+
+El ejemplo Nuxt muestra el flujo con el módulo `@vue-solana/nuxt` y composables autoimportados.
+
+## Qué demuestra
+
+- Configuración del módulo en `nuxt.config.ts`.
+- Uso de `useSolanaRpc()` y `useSolanaConnection()`.
+- Lecturas de balance con `useSolanaBalance()`.
+- Estado de wallet con `useSolanaWallet()`.
+- Flujo de transacciones en cliente.
+
+## Ejecutar desde la raíz del repositorio
+
+```sh
+pnpm install
+pnpm dev:nuxt
+```
+
+## Qué probar
+
+- Confirmar que el módulo instala el plugin.
+- Leer estado RPC sin wallet.
+- Conectar una wallet en devnet.
+- Probar estados de error y carga.
+
+## SOL de devnet
+
+Usa un faucet de devnet para financiar una cuenta de pruebas si quieres enviar transacciones.
+
+## Nota sobre wallets
+
+Las wallets nativas y móviles se exponen a través del mismo flujo unificado cuando están disponibles.
 
 ---
 
@@ -3138,6 +4106,45 @@ https://faucet.solana.com
 The example uses unified wallet discovery. Install Phantom, Solflare, Backpack, or another standard wallet before testing browser extension wallet flows. On supported Android Chrome runtimes, `@solana-mobile/wallet-standard-mobile` can expose installed native mobile wallets through `Mobile Wallet Adapter` in the same wallet list. On iOS browsers, Phantom, Solflare, and Backpack can appear through wallet-specific universal links.
 
 Desktop native wallet protocol-link support is intentionally not part of the v1 example flow.
+
+---
+
+# Roadmap v1
+
+Source: https://vue-solana-docs.vercel.app/es/roadmap
+Description: Trabajo planificado antes de la primera versión estable de los paquetes Vue Solana.
+
+El objetivo de v1 es entregar una base estable para construir aplicaciones Solana con Vue y Nuxt.
+
+## Objetivos de la versión v1
+
+- API pública consistente entre Vue y Nuxt.
+- Flujo unificado de wallets para navegador, móvil y escritorio.
+- Helpers de RPC y transacciones seguros.
+- Documentación y ejemplos verificables.
+
+## Fases del roadmap
+
+1. Consolidar paquetes core, Vue y Nuxt.
+2. Ampliar cobertura de wallets nativas y móviles.
+3. Añadir pruebas unitarias y E2E para flujos críticos.
+4. Mejorar documentación, ejemplos y guías de migración.
+
+## Candidatos post-v1
+
+- Integraciones más profundas con proveedores RPC.
+- Patrones avanzados para tokens y programas.
+- Plantillas de aplicaciones completas.
+
+## Verificación antes de v1
+
+```sh
+pnpm typecheck
+pnpm build
+pnpm test
+```
+
+También deben verificarse manualmente los flujos de wallet y transacción en devnet.
 
 ---
 
