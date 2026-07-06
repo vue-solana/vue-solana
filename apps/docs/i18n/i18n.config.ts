@@ -1,5 +1,6 @@
 import en from "./locales/en";
 import es from "./locales/es";
+import ko from "./locales/ko";
 import zh from "./locales/zh";
 
 export default defineI18nConfig(() => ({
@@ -7,6 +8,7 @@ export default defineI18nConfig(() => ({
   messages: {
     en,
     es,
+    ko,
     zh,
   },
 }));

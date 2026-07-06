@@ -93,6 +93,59 @@ La demo interactiva sigue en inglés por ahora. La localización inicial cubre l
 
 ---
 
+# Vue Solana 문서
+
+Source: https://vue-solana-docs.vercel.app/ko
+Description: 개발자가 Vue와 Nuxt 애플리케이션에서 Solana를 사용할 수 있도록 돕는 라이브러리 문서입니다.
+
+Vue Solana는 Solana 애플리케이션을 만들기 위한 작고 실용적인 Vue/Nuxt 패키지 모음입니다.
+
+RPC 설정, 반응형 계정 읽기, 잔액 조회, 브라우저 확장 지갑 검색, Android Mobile Wallet Adapter 검색, iOS 브라우저 지갑 링크, 지갑 연결/해제, 트랜잭션 전송 흐름을 Vue와 Nuxt 컴포저블로 제공합니다. 예제는 안전한 테스트를 위해 기본적으로 devnet을 사용합니다.
+
+## 패키지
+
+- [`@vue-solana/core`](/ko/packages/core): 프레임워크에 독립적인 Solana 설정, 엔드포인트 헬퍼, 지갑 타입, 트랜잭션 헬퍼.
+- [`@vue-solana/vue`](/ko/packages/vue): Vue 플러그인과 컴포저블.
+- [`@vue-solana/nuxt`](/ko/packages/nuxt): Vue 플러그인을 설치하고 컴포저블을 자동 import하는 Nuxt 모듈.
+
+`@vue-solana/core`는 `@solana/web3-compat` 위에 구성되며 `@vue-solana/core/web3`에서 지원되는 Solana primitive를 다시 export합니다. Vue 앱은 `@vue-solana/vue/web3`, Nuxt 앱은 `@vue-solana/nuxt/web3`를 사용할 수 있습니다.
+
+## 먼저 읽기
+
+- [시작하기](/ko/getting-started)
+- [지갑 가이드](/ko/guides/wallets)
+- [트랜잭션 가이드](/ko/guides/transactions)
+- [Vue 개발자를 위한 Solana](/ko/concepts/solana-for-vue-developers)
+- [클러스터](/ko/concepts/clusters)
+- [v1 로드맵](/ko/roadmap)
+- [Agent Skill](/ko/agent-skill)
+- [문제 해결](/ko/troubleshooting)
+
+## API 레퍼런스
+
+- [`@vue-solana/core`](/ko/packages/core): 설정, 엔드포인트, 지갑 인터페이스, Wallet Standard 헬퍼, 모바일/iOS 헬퍼, 트랜잭션 헬퍼, 정규화된 오류.
+- [`@vue-solana/vue`](/ko/packages/vue): RPC, 계정 읽기, 지갑, 메시지, 서명, 트랜잭션을 위한 Vue 플러그인과 컴포저블.
+- [`@vue-solana/nuxt`](/ko/packages/nuxt): Nuxt 모듈 옵션, 런타임 동작, 자동 import 컴포저블.
+
+## 예제
+
+- [라이브 데모](/ko/demo)
+- [Vue Vite 예제](/ko/examples/vue-vite)
+- [Nuxt 예제](/ko/examples/nuxt)
+
+## 패키지 사용자에게
+
+자신의 앱에 Vue 또는 Nuxt 패키지를 설치하려면 [시작하기](/ko/getting-started)부터 읽으세요. 컴포저블을 프로젝트에 연결하기 전에 [라이브 데모](/ko/demo)에서 devnet RPC 읽기, 지갑 연결, 메시지 서명, 전송 흐름을 시험할 수 있습니다.
+
+공식 Solana 참고 자료:
+
+- [Solana Documentation](https://solana.com/docs)
+- [Solana RPC Methods](https://solana.com/docs/rpc)
+- [Solana Clusters](https://solana.com/docs/references/clusters)
+- [Solana Faucet](https://faucet.solana.com)
+
+---
+
 # Vue Solana 文档
 
 Source: https://vue-solana-docs.vercel.app/zh
@@ -644,6 +697,236 @@ Before relying on an app flow, verify these behaviors on devnet:
 
 ---
 
+# 시작하기
+
+Source: https://vue-solana-docs.vercel.app/ko/getting-started
+Description: Vue Solana 패키지를 설치하고 Vue 또는 Nuxt를 설정한 뒤 devnet에서 RPC 읽기를 테스트합니다.
+
+이 가이드는 Vue Solana 패키지 설치, Vue/Nuxt 설정, Solana RPC 읽기 테스트, 지원 지갑 연결, 메시지 서명, 실제 devnet 전송, 결과 확인까지 다룹니다. 예제는 안전한 테스트를 위해 기본적으로 devnet을 사용합니다.
+
+## 시작 전 확인
+
+Vue/Nuxt 통합 없이 `Connection`, `PublicKey`, 트랜잭션 같은 Solana primitive가 필요하면 `@vue-solana/core`를 직접 사용하세요. 프레임워크 통합이 필요하면 `@vue-solana/vue` 또는 `@vue-solana/nuxt`를 사용합니다.
+
+지원 클러스터:
+
+- `mainnet-beta`: Solana 메인넷. Solana의 공식 메인넷 클러스터 이름입니다.
+- `devnet`: 앱 개발에 가장 적합한 기본값입니다.
+- `testnet`: validator와 프로토콜 테스트 네트워크입니다.
+- `localnet`: 로컬 validator입니다.
+
+학습과 테스트 중에는 `devnet`을 사용하세요. 실제 SOL과 상호작용할 준비가 되었을 때만 `mainnet-beta`를 사용합니다.
+
+현재 지갑 지원:
+
+- Solana Wallet Standard 패키지를 통한 브라우저 확장 지갑.
+- Android Chrome 및 Chrome PWA에서 `@solana-mobile/wallet-standard-mobile`을 통한 Android 네이티브 모바일 지갑.
+- Phantom, Solflare, Backpack용 iOS 브라우저 지갑 universal link.
+- `SolanaWallet`을 구현한 수동/커스텀 지갑 객체.
+
+아직 지원하지 않는 항목:
+
+- 지갑별 protocol link 또는 미래의 네이티브 Wallet Standard 등록을 통한 데스크톱 네이티브 앱 지갑.
+
+## Vue 설치
+
+```sh
+pnpm add @vue-solana/vue
+```
+
+```sh
+npm install @vue-solana/vue
+```
+
+Vue 앱은 low-level Solana 또는 Buffer 패키지를 직접 설치하지 않고 `@vue-solana/vue/web3`와 `@vue-solana/vue/buffer-polyfill`을 사용할 수 있습니다.
+
+## Nuxt 설치
+
+```sh
+npx nuxt module add @vue-solana/nuxt
+```
+
+이 명령은 패키지를 설치하고 `nuxt.config.ts`의 `modules` 배열에 `@vue-solana/nuxt`를 추가합니다.
+
+Nuxt 앱은 `@vue-solana/core`, `@vue-solana/vue`, low-level Solana/Buffer 패키지를 직접 설치하지 않고 `@vue-solana/nuxt/web3`와 `@vue-solana/nuxt/buffer-polyfill`을 사용할 수 있습니다.
+
+## 알려진 TypeScript 이슈
+
+`@solana/web3-compat@0.0.21`은 현재 TypeScript 패키지 메타데이터가 깨져 있습니다. 패키지 메타데이터는 `dist/types/index.d.ts`를 가리키지만, 배포된 패키지에 해당 파일이 포함되어 있지 않습니다.
+
+런타임 import는 여전히 실제 `@solana/web3-compat` 패키지를 사용합니다. 현재 Vue Solana 패키지는 임시 패키지 소유 declaration shim을 함께 배포하므로, 문서화된 `@vue-solana/core`, `@vue-solana/vue`, `@vue-solana/nuxt` import를 따르면 앱에서 별도 shim이 필요하지 않습니다.
+
+오래된 Vue Solana 패키지 버전을 쓰거나 앱 코드에서 `@solana/web3-compat`를 직접 import할 때만 로컬 shim을 추가하세요. `@solana/web3-compat` 새 릴리스마다 이 메모를 다시 확인하세요.
+
+## Vue 설정
+
+```ts
+import { createApp } from "vue";
+import { createSolanaPlugin } from "@vue-solana/vue";
+import App from "./App.vue";
+
+createApp(App)
+  .use(
+    createSolanaPlugin({
+      cluster: "devnet",
+      mobileWallet: {
+        appIdentity: {
+          name: "My Vue Solana App",
+        },
+      },
+      iosWallet: {
+        appIdentity: {
+          name: "My Vue Solana App",
+        },
+      },
+    }),
+  )
+  .mount("#app");
+```
+
+`mobileWallet`과 `iosWallet`은 선택 사항입니다. 브라우저 런타임이 지원하면 Android Mobile Wallet Adapter 등록과 iOS Phantom, Solflare, Backpack 링크가 기본 활성화됩니다. 특정 소스를 끄려면 `mobileWallet: false` 또는 `iosWallet: false`를 전달하세요.
+
+새 코드에서는 Vue 컴포저블을 직접 subpath에서 import하는 것을 권장합니다.
+
+```ts
+import { useRpc } from "@vue-solana/vue/useRpc";
+import { useBalance } from "@vue-solana/vue/useBalance";
+```
+
+## Nuxt 설정
+
+```ts
+export default defineNuxtConfig({
+  modules: ["@vue-solana/nuxt"],
+  solana: {
+    cluster: "devnet",
+    mobileWallet: {
+      appIdentity: {
+        name: "My Nuxt Solana App",
+      },
+    },
+    iosWallet: {
+      appIdentity: {
+        name: "My Nuxt Solana App",
+      },
+    },
+  },
+});
+```
+
+Nuxt 모듈은 런타임 플러그인을 클라이언트 전용으로 설치하고 `@vue-solana/vue/*` direct subpath에서 컴포저블을 자동 import합니다. 컴포저블은 SSR 중 호출해도 안전하지만 실제 RPC와 지갑 작업은 `onMounted()` 또는 사용자 액션처럼 hydration 이후 실행하세요. Nuxt `solana` 옵션은 public runtime config에 저장되므로 JSON 직렬화가 가능해야 합니다.
+
+## 지갑 없이 RPC 테스트
+
+RPC 읽기는 브라우저 지갑 없이 동작합니다.
+
+Vue에서는 `useRpc()`를 사용합니다.
+
+```vue
+<script setup lang="ts">
+import { onMounted, ref } from "vue";
+import { useRpc } from "@vue-solana/vue/useRpc";
+
+const { cluster, endpoint, connection } = useRpc();
+const latestBlockhash = ref<string | null>(null);
+
+onMounted(async () => {
+  const result = await connection.getLatestBlockhash();
+  latestBlockhash.value = result.blockhash;
+});
+</script>
+
+<template>
+  <main>
+    <p>Cluster: {{ cluster }}</p>
+    <p>Endpoint: {{ endpoint }}</p>
+    <p>Latest blockhash: {{ latestBlockhash }}</p>
+  </main>
+</template>
+```
+
+Nuxt에서는 자동 import된 `useSolanaRpc()`를 사용합니다.
+
+```vue
+<script setup lang="ts">
+const { cluster, endpoint, checkConnection, latestBlockhash } = useSolanaRpc();
+</script>
+
+<template>
+  <main>
+    <p>Cluster: {{ cluster }}</p>
+    <p>Endpoint: {{ endpoint }}</p>
+    <p>Latest blockhash: {{ latestBlockhash }}</p>
+    <button @click="checkConnection">Check RPC</button>
+  </main>
+</template>
+```
+
+## 잔액 읽기
+
+Solana 주소 또는 `PublicKey`를 넘겨 lamport 잔액을 읽습니다.
+
+```vue
+<script setup lang="ts">
+import { ref } from "vue";
+import { useBalance } from "@vue-solana/vue/useBalance";
+
+const address = ref("");
+const { balance, sol, refresh, error, loading } = useBalance(address);
+</script>
+```
+
+## 지갑 연결
+
+지원 지갑은 unified wallet flow로 검색됩니다. 브라우저 확장, Android MWA, iOS 링크, 커스텀 지갑이 모두 같은 `useWallets()`와 `useWallet()` API를 통해 노출됩니다.
+
+```vue
+<script setup lang="ts">
+import { onMounted } from "vue";
+import { useWallet, useWallets } from "@vue-solana/vue";
+
+const { wallets, refresh } = useWallets();
+const { wallet, publicKey, connected, setWallet, connect, disconnect } = useWallet();
+
+onMounted(refresh);
+</script>
+```
+
+지갑은 직접 선택하고 `connect()`가 성공할 때까지 연결된 것으로 간주하지 마세요. 개인 키나 seed phrase를 절대 앱에 요청하지 마세요.
+
+## 메시지 서명
+
+메시지 서명은 트랜잭션을 보내지 않고 지갑 소유권을 증명하는 데 적합합니다.
+
+```ts
+const { signMessage, signature, error } = useSolanaSignMessage();
+
+await signMessage("Sign in to Vue Solana on devnet");
+```
+
+서명 검증은 서버 또는 신뢰할 수 있는 경계에서 nonce, 도메인, 만료 시간과 함께 수행해야 합니다.
+
+## 실제 devnet 전송 테스트
+
+전송 테스트에는 devnet SOL이 필요합니다. 지갑을 devnet으로 전환하고 [Solana Faucet](https://faucet.solana.com)에서 테스트 SOL을 받으세요.
+
+메인넷에서 사용하기 전에 항상 다음을 확인하세요.
+
+- 클러스터가 의도한 값인지 확인합니다.
+- 수신자 주소를 표시하고 사용자에게 확인받습니다.
+- 아주 작은 금액으로 테스트합니다.
+- 오류 메시지에 raw RPC 응답이나 민감한 세부 정보를 그대로 노출하지 않습니다.
+
+## 다음 단계
+
+- [RPC와 클러스터](/ko/guides/rpc-and-clusters)
+- [지갑](/ko/guides/wallets)
+- [계정 읽기](/ko/guides/account-reads)
+- [트랜잭션](/ko/guides/transactions)
+- [문제 해결](/ko/troubleshooting)
+
+---
+
 # 开始使用
 
 Source: https://vue-solana-docs.vercel.app/zh/getting-started
@@ -897,12 +1180,12 @@ iOS 浏览器钱包支持使用钱包专用 universal links，因为 Mobile Wall
 
 预期钱包来源：
 
-| 平台                         | 预期来源                | 说明                                                                               |
-| ---------------------------- | ----------------------- | ---------------------------------------------------------------------------------- |
-| 桌面浏览器扩展               | `wallet-standard`       | 安装后 Phantom、Solflare、Backpack 和其他标准钱包可能出现。                         |
-| Android Chrome 或 Chrome PWA | `mobile-wallet-adapter` | 需要兼容的原生钱包和 Android MWA 浏览器支持。                                      |
-| iOS 浏览器                   | `deep-link`             | Phantom、Solflare 和 Backpack 条目使用钱包专用 universal links。                    |
-| 桌面原生应用                 | v1 未实现               | 桌面原生协议链接已明确推迟到 v1 之后。                                             |
+| 平台                         | 预期来源                | 说明                                                             |
+| ---------------------------- | ----------------------- | ---------------------------------------------------------------- |
+| 桌面浏览器扩展               | `wallet-standard`       | 安装后 Phantom、Solflare、Backpack 和其他标准钱包可能出现。      |
+| Android Chrome 或 Chrome PWA | `mobile-wallet-adapter` | 需要兼容的原生钱包和 Android MWA 浏览器支持。                    |
+| iOS 浏览器                   | `deep-link`             | Phantom、Solflare 和 Backpack 条目使用钱包专用 universal links。 |
+| 桌面原生应用                 | v1 未实现               | 桌面原生协议链接已明确推迟到 v1 之后。                           |
 
 ## 签署消息
 
@@ -1094,6 +1377,53 @@ La skill pública vive en `skills/vue-solana/`. Las skills locales de desarrollo
 
 # Agent Skill
 
+Source: https://vue-solana-docs.vercel.app/ko/agent-skill
+Description: Vue Solana 프로젝트와 패키지 사용자를 돕는 installable Agent Skill입니다.
+
+Vue Solana는 에이전트가 이 저장소와 패키지를 올바르게 다루도록 돕는 installable Agent Skill을 제공합니다.
+
+이 skill은 Vue Solana 아키텍처, 패키지 경계, 권장 import, Solana 지갑 흐름, 문서 정책을 에이전트에게 알려 줍니다. 프로젝트에 설치하면 에이전트가 `@vue-solana/core`, `@vue-solana/vue`, `@vue-solana/nuxt` 사용법을 더 일관되게 따를 수 있습니다.
+
+## 설치
+
+```sh
+npx skills add vue-solana/vue-solana
+```
+
+이미 설치된 skill을 갱신하려면 같은 명령을 다시 실행하세요.
+
+## 포함 내용
+
+- 패키지별 책임과 public API 경계.
+- Nuxt 모듈과 Vue 플러그인 설정 지침.
+- Wallet Standard, Android Mobile Wallet Adapter, iOS deep-link 지갑 흐름.
+- `@solana/web3-compat` TypeScript 메타데이터 이슈와 shim 정책.
+- devnet 우선 테스트와 mainnet 안전 규칙.
+
+## 사용 예
+
+에이전트에게 다음처럼 요청할 수 있습니다.
+
+```txt
+Add a wallet connect button using @vue-solana/vue.
+```
+
+```txt
+Build a Nuxt page that reads a devnet account balance with @vue-solana/nuxt.
+```
+
+```txt
+Review this Vue Solana transaction flow for safety issues.
+```
+
+## 소스
+
+공개 installable skill은 저장소의 `skills/vue-solana/` 아래에 있습니다. 개발 전용 skill은 `.agents-dev/skills/`에 있으며 공개 설치 대상이 아닙니다.
+
+---
+
+# Agent Skill
+
 Source: https://vue-solana-docs.vercel.app/zh/agent-skill
 Description: 为 AI 编码代理安装 Vue Solana Agent Skill。
 
@@ -1191,6 +1521,90 @@ pnpm build
 ```
 
 Si el problema ocurre solo en el navegador, ejecuta la app de ejemplo y revisa la consola y la pestaña Network.
+
+---
+
+# 문제 해결
+
+Source: https://vue-solana-docs.vercel.app/ko/troubleshooting
+Description: Vue Solana 설치, TypeScript, 지갑, RPC, Nuxt 자동 import 문제를 해결합니다.
+
+이 페이지는 Vue Solana를 사용할 때 자주 만나는 문제와 해결 방법을 정리합니다.
+
+## TypeScript가 `@solana/web3-compat` 타입을 찾지 못함
+
+`@solana/web3-compat@0.0.21`은 현재 package metadata가 누락된 declaration 파일을 가리킵니다. 최신 Vue Solana 패키지는 자체 declaration shim을 포함하므로 문서화된 `@vue-solana/*` import를 사용할 때는 보통 추가 설정이 필요하지 않습니다.
+
+앱 코드에서 `@solana/web3-compat`를 직접 import하거나 오래된 Vue Solana 버전을 사용한다면 임시 shim을 추가할 수 있습니다.
+
+```ts
+declare module "@solana/web3-compat" {
+  export * from "@solana/web3.js";
+}
+```
+
+새 `@solana/web3-compat` 릴리스가 나오면 이 workaround가 여전히 필요한지 확인하세요.
+
+## `useSolana()`가 플러그인을 찾지 못함
+
+Vue 앱에서는 앱 생성 시 `createSolanaPlugin()`을 설치해야 합니다.
+
+```ts
+createApp(App).use(createSolanaPlugin({ cluster: "devnet" })).mount("#app");
+```
+
+Nuxt 앱에서는 `nuxt.config.ts`에 모듈을 추가해야 합니다.
+
+```ts
+export default defineNuxtConfig({
+  modules: ["@vue-solana/nuxt"],
+});
+```
+
+## 지갑이 감지되지 않음
+
+- 브라우저 확장 지갑을 설치했는지 확인하세요.
+- 지갑이 Solana Wallet Standard를 지원하는지 확인하세요.
+- 앱을 HTTPS 또는 localhost에서 실행하세요.
+- `refresh()` 또는 "Load Wallets" 동작을 다시 실행하세요.
+- 모바일에서는 지원 브라우저와 플랫폼 조건을 확인하세요.
+
+## iOS에서 지갑이 다르게 보임
+
+iOS 브라우저는 확장 지갑을 주입하지 않는 경우가 많습니다. Vue Solana는 Phantom, Solflare, Backpack용 browser wallet link를 노출합니다. 이 항목은 연결 가능한 deep link로 표시될 수 있으며, 실제 승인 흐름은 지갑 앱에서 처리됩니다.
+
+## Android 모바일 지갑이 표시되지 않음
+
+Android Mobile Wallet Adapter 웹 등록은 Android Chrome 또는 Chrome PWA 같은 지원 환경에서만 동작합니다. 데스크톱 브라우저나 지원되지 않는 모바일 브라우저에서는 등록이 생략됩니다.
+
+## Buffer 관련 오류
+
+브라우저 번들에서 Buffer polyfill이 필요한 경우 문서화된 subpath를 사용하세요.
+
+```ts
+import "@vue-solana/vue/buffer-polyfill";
+```
+
+Nuxt에서는 다음을 사용할 수 있습니다.
+
+```ts
+import "@vue-solana/nuxt/buffer-polyfill";
+```
+
+## 잔액이 `null`임
+
+`useBalance()`는 입력 주소가 비어 있거나 잘못되었을 때 `null`을 반환할 수 있습니다. 주소를 `PublicKey`로 파싱할 수 있는지 확인하고, devnet/mainnet 클러스터가 지갑 주소와 맞는지 확인하세요.
+
+## Nuxt 자동 import가 동작하지 않음
+
+- Nuxt 서버를 재시작하세요.
+- `.nuxt` 디렉터리를 지우고 다시 실행하세요.
+- `@vue-solana/nuxt`가 `modules` 배열에 있는지 확인하세요.
+- 직접 import가 필요하면 `@vue-solana/vue/*` subpath를 사용할 수 있습니다.
+
+## RPC 오류가 반복됨
+
+공개 RPC 엔드포인트는 rate limit이 있을 수 있습니다. 프로덕션에서는 전용 RPC 제공자를 사용하고 `endpoint` 및 `wsEndpoint`를 명시적으로 설정하세요. 사용자에게는 정규화된 오류 메시지를 보여 주고 raw RPC 응답은 로깅 경계에서만 다루세요.
 
 ---
 
@@ -1688,6 +2102,59 @@ Nunca pidas claves privadas. Nunca firmes sin interacción clara del usuario. Tr
 
 ---
 
+# Vue 개발자를 위한 Solana
+
+Source: https://vue-solana-docs.vercel.app/ko/concepts/solana-for-vue-developers
+Description: Vue와 Nuxt 개발자가 Solana 앱을 만들 때 알아야 할 핵심 개념입니다.
+
+Solana 앱은 일반 웹 앱과 비슷하게 UI 상태를 관리하지만, 데이터 읽기와 쓰기는 RPC, 공개 키, 지갑 서명, 트랜잭션 확인 같은 블록체인 개념을 통해 이루어집니다.
+
+## RPC
+
+Solana RPC는 앱이 클러스터와 통신하는 HTTP/WebSocket API입니다. 계정 읽기, 잔액 조회, blockhash 조회, 트랜잭션 제출과 확인에 사용됩니다.
+
+Vue Solana는 설정된 클러스터에서 `Connection`을 만들고 Vue/Nuxt 컴포저블로 노출합니다.
+
+## 공개 키
+
+Solana 주소는 `PublicKey`입니다. UI에서는 문자열로 입력받는 경우가 많지만 RPC 호출 전에는 `PublicKey`로 파싱해야 합니다. 잘못된 주소는 사용자 입력 오류로 처리하세요.
+
+## Lamports와 SOL
+
+SOL의 최소 단위는 lamports입니다.
+
+```ts
+const lamportsPerSol = 1_000_000_000;
+```
+
+잔액은 보통 lamports로 읽고, UI에서 SOL로 변환해 표시합니다.
+
+## 지갑
+
+지갑은 개인 키를 보관하고 사용자의 승인으로 메시지 또는 트랜잭션에 서명합니다. 앱은 개인 키를 직접 다루지 않아야 합니다.
+
+Vue Solana의 지갑 흐름은 브라우저 확장, Android 모바일 지갑, iOS 지갑 링크, 커스텀 지갑을 같은 API로 노출합니다.
+
+## 트랜잭션과 서명
+
+Solana에서 상태를 변경하려면 트랜잭션이 필요합니다. 앱은 트랜잭션을 만들고 지갑은 사용자가 승인한 뒤 서명합니다. 그 다음 앱은 트랜잭션을 RPC로 제출하고 confirmation을 기다립니다.
+
+메시지 서명은 트랜잭션을 제출하지 않습니다. 로그인 또는 지갑 소유권 증명에 사용할 수 있지만, 서버에서 nonce와 만료 시간을 검증해야 합니다.
+
+## Commitment
+
+Commitment는 RPC 응답과 confirmation이 어느 정도 확정된 상태를 요구하는지 나타냅니다. 개발 중에는 기본값을 사용해도 되지만, 프로덕션에서는 UX와 안전 요구사항에 맞게 명시적으로 선택하세요.
+
+## 안전 원칙
+
+- 학습과 테스트에는 `devnet`을 사용하세요.
+- `mainnet-beta`에서는 실제 자산이 이동합니다.
+- 앱에서 seed phrase 또는 개인 키를 요구하지 마세요.
+- 사용자가 서명할 메시지와 트랜잭션 목적을 명확히 보여 주세요.
+- RPC 응답은 신뢰할 수 없는 외부 입력으로 취급하세요.
+
+---
+
 # 面向 Vue 开发者的 Solana
 
 Source: https://vue-solana-docs.vercel.app/zh/concepts/solana-for-vue-developers
@@ -1930,6 +2397,61 @@ En Vue usa `createSolanaPlugin({ cluster: "devnet" })`.
 ## Obtener SOL de devnet o testnet
 
 Usa un faucet público o `solana airdrop` para financiar una cuenta de pruebas. No reutilices claves privadas de mainnet en entornos de desarrollo.
+
+---
+
+# 클러스터
+
+Source: https://vue-solana-docs.vercel.app/ko/concepts/clusters
+Description: Solana 클러스터 이름, RPC 엔드포인트, 개발 환경 선택 방법입니다.
+
+Solana 클러스터는 앱이 연결할 네트워크입니다. Vue Solana는 Solana의 공식 클러스터 이름을 사용합니다.
+
+## 지원 클러스터
+
+- `mainnet-beta`: 실제 SOL과 토큰이 있는 메인넷입니다.
+- `devnet`: 앱 개발과 테스트에 권장되는 네트워크입니다.
+- `testnet`: validator와 프로토콜 테스트용 네트워크입니다.
+- `localnet`: 로컬 validator입니다.
+
+`mainnet` 대신 `mainnet-beta`를 사용하세요. Solana의 공식 메인넷 클러스터 이름입니다.
+
+## 기본 설정
+
+```ts
+createSolanaPlugin({
+  cluster: "devnet",
+});
+```
+
+Nuxt에서는 다음처럼 설정합니다.
+
+```ts
+export default defineNuxtConfig({
+  modules: ["@vue-solana/nuxt"],
+  solana: {
+    cluster: "devnet",
+  },
+});
+```
+
+## 커스텀 RPC 엔드포인트
+
+프로덕션에서는 공개 RPC 대신 전용 RPC 제공자를 사용하는 것이 좋습니다.
+
+```ts
+createSolanaPlugin({
+  cluster: "mainnet-beta",
+  endpoint: "https://your-rpc-provider.example",
+  wsEndpoint: "wss://your-rpc-provider.example",
+});
+```
+
+`wsEndpoint`를 생략하면 HTTP 엔드포인트에서 파생됩니다.
+
+## Faucet
+
+devnet SOL은 [Solana Faucet](https://faucet.solana.com)에서 받을 수 있습니다. 지갑이 devnet으로 전환되어 있는지 확인하세요.
 
 ---
 
@@ -2244,6 +2766,89 @@ const wsEndpoint = getClusterWebSocketEndpoint("devnet");
 - Avoid broad or frequent scans on public RPC endpoints.
 - Use WebSocket subscriptions intentionally; always clean them up when you no longer need them.
 - Treat RPC responses as untrusted input and handle missing, stale, or failed data.
+
+---
+
+# RPC와 클러스터
+
+Source: https://vue-solana-docs.vercel.app/ko/guides/rpc-and-clusters
+Description: Vue Solana에서 클러스터, RPC 엔드포인트, connection helper를 설정합니다.
+
+RPC는 앱이 Solana 클러스터와 통신하는 경로입니다. Vue Solana는 클러스터 이름, HTTP RPC 엔드포인트, WebSocket 엔드포인트를 일관되게 설정하도록 돕습니다.
+
+## 클러스터 이름
+
+지원 값은 `mainnet-beta`, `devnet`, `testnet`, `localnet`입니다. 개발 중에는 `devnet`을 사용하고, 실제 자산을 다룰 준비가 되었을 때만 `mainnet-beta`를 사용하세요.
+
+## Core에서 설정
+
+```ts
+import { createSolanaContext } from "@vue-solana/core/rpc";
+
+const solana = createSolanaContext({
+  cluster: "devnet",
+});
+
+const slot = await solana.connection.getSlot();
+```
+
+## 커스텀 엔드포인트
+
+```ts
+const solana = createSolanaContext({
+  cluster: "mainnet-beta",
+  endpoint: "https://your-rpc.example",
+  wsEndpoint: "wss://your-rpc.example",
+});
+```
+
+전용 RPC를 사용하면 rate limit, 안정성, observability를 더 잘 제어할 수 있습니다.
+
+## Vue 설정
+
+```ts
+createApp(App)
+  .use(createSolanaPlugin({ cluster: "devnet" }))
+  .mount("#app");
+```
+
+컴포넌트에서는 `useRpc()`를 사용합니다.
+
+```ts
+const { cluster, endpoint, wsEndpoint, connection } = useRpc();
+```
+
+## Nuxt 설정
+
+```ts
+export default defineNuxtConfig({
+  modules: ["@vue-solana/nuxt"],
+  solana: {
+    cluster: "devnet",
+  },
+});
+```
+
+컴포넌트에서는 자동 import된 `useSolanaRpc()`를 사용할 수 있습니다.
+
+```ts
+const { cluster, endpoint, checkConnection, latestBlockhash } = useSolanaRpc();
+```
+
+## 엔드포인트 헬퍼
+
+- `getClusterEndpoint(cluster?)`: 클러스터의 HTTP RPC 엔드포인트를 반환합니다.
+- `getClusterWebSocketEndpoint(cluster?)`: 클러스터의 WebSocket 엔드포인트를 반환합니다.
+- `getWebSocketEndpoint(endpoint)`: HTTP URL을 WebSocket URL로 변환합니다.
+- `createSolanaConnection(config?)`: 설정된 `Connection`을 만듭니다.
+- `createSolanaContext(config?)`: `{ cluster, endpoint, wsEndpoint, connection }`을 만듭니다.
+
+## 프로덕션 메모
+
+- 공개 RPC는 rate limit이 있을 수 있습니다.
+- 사용자에게 cluster와 네트워크 상태를 명확히 표시하세요.
+- mainnet 작업 전에는 endpoint가 의도한 네트워크인지 검증하세요.
+- RPC 응답은 외부 입력이므로 UI에 그대로 노출하지 마세요.
 
 ---
 
@@ -2733,6 +3338,83 @@ Official references:
 
 ---
 
+# 지갑
+
+Source: https://vue-solana-docs.vercel.app/ko/guides/wallets
+Description: Vue Solana의 unified wallet flow로 브라우저, 모바일, 커스텀 지갑을 다룹니다.
+
+Vue Solana는 여러 지갑 소스를 하나의 API로 노출합니다. UI는 브라우저 확장, Android Mobile Wallet Adapter, iOS browser wallet link, 수동 지갑을 같은 흐름으로 다룰 수 있습니다.
+
+## 지갑 소스
+
+- 브라우저 확장 지갑: Solana Wallet Standard를 통해 검색됩니다.
+- Android 모바일 지갑: 지원 환경에서 `@solana-mobile/wallet-standard-mobile`로 등록됩니다.
+- iOS 브라우저 지갑: Phantom, Solflare, Backpack 링크로 노출됩니다.
+- 커스텀 지갑: `SolanaWallet` 인터페이스를 구현하면 직접 제공할 수 있습니다.
+
+## 지원 행렬
+
+| 소스 | 플랫폼 | 연결 방식 |
+| --- | --- | --- |
+| Wallet Standard | 브라우저 | 확장 프로그램 또는 주입 지갑 |
+| Mobile Wallet Adapter | Android | 모바일 지갑 앱 |
+| iOS wallet links | iOS | universal/deep link |
+| Custom wallet | 앱 정의 | `SolanaWallet` 구현 |
+
+## Vue 흐름
+
+```vue
+<script setup lang="ts">
+import { onMounted } from "vue";
+import { useWallet, useWallets } from "@vue-solana/vue";
+
+const { wallets, refresh } = useWallets();
+const { wallet, publicKey, connected, setWallet, connect, disconnect } = useWallet();
+
+onMounted(refresh);
+</script>
+```
+
+사용자가 지갑을 선택하면 `setWallet(walletInfo)`를 호출하고, 사용자가 명시적으로 연결을 요청할 때 `connect()`를 호출하세요.
+
+## Nuxt 흐름
+
+Nuxt에서는 자동 import된 `useSolanaWallet()`을 사용할 수 있습니다.
+
+```ts
+const { wallets, wallet, publicKey, connected, refresh, setWallet, connect, disconnect } = useSolanaWallet();
+```
+
+실제 지갑 검색과 연결은 클라이언트 액션에서 실행하세요.
+
+## Capability 확인
+
+지갑마다 기능이 다릅니다. 호출 전 capability를 확인하세요.
+
+- `signMessage`
+- `signTransaction`
+- `signAllTransactions`
+- `signAndSendTransaction`
+
+지원하지 않는 기능을 호출하면 사용자에게 해당 지갑이 기능을 지원하지 않는다고 안내하세요.
+
+## autoConnect
+
+`autoConnect`는 사용자가 이전에 선택한 지갑 identity만 다시 연결하려고 시도합니다. Vue Solana는 `localStorage["vue-solana:selected-wallet"]`에 `name`, `platform`, `source` 같은 identity metadata만 저장합니다. 개인 키, 세션 데이터, 트랜잭션 데이터는 저장하지 않습니다.
+
+## 메시지 서명 인증
+
+메시지 서명으로 로그인하려면 서버가 nonce, 도메인, 만료 시간, 공개 키, 서명을 검증해야 합니다. 같은 메시지를 재사용하지 마세요.
+
+## 보안 메모
+
+- seed phrase나 개인 키를 요청하지 마세요.
+- 지갑이 연결되었다는 사실만으로 사용자를 인증하지 마세요.
+- 사용자가 서명할 내용과 네트워크를 명확히 표시하세요.
+- mainnet 전송에는 별도 확인 UI를 두세요.
+
+---
+
 # 钱包
 
 Source: https://vue-solana-docs.vercel.app/zh/guides/wallets
@@ -2761,13 +3443,13 @@ Vue Solana 通过一个统一的钱包流程暴露浏览器扩展钱包、Androi
 
 ## 支持矩阵
 
-| 钱包路径                    | v1 状态                            | 显示方式                                                | 说明                                                                 |
-| --------------------------- | ---------------------------------- | ------------------------------------------------------- | -------------------------------------------------------------------- |
-| 浏览器扩展钱包              | 支持                               | `platform: "browser"`, `source: "wallet-standard"`   | 使用 Solana Wallet Standard 注册。                                    |
-| Android 原生移动钱包        | Android Chrome 和 Chrome PWA 支持  | `platform: "mobile"`, `source: "mobile-wallet-adapter"` | 通过 `@solana-mobile/wallet-standard-mobile` 注册。                    |
-| iOS 浏览器钱包              | 支持已配置的钱包链接               | `platform: "mobile"`, `source: "deep-link"`          | Phantom、Solflare 和 Backpack 通过 universal links 暴露。             |
-| 手动/自定义钱包对象         | 支持                               | 应用提供的钱包                                          | 必须实现 `SolanaWallet` 接口。                                        |
-| 桌面原生应用钱包            | v1 推迟                            | 默认不暴露                                              | 保留 `protocol-link` 元数据用于未来 adapter。                         |
+| 钱包路径             | v1 状态                           | 显示方式                                                | 说明                                                      |
+| -------------------- | --------------------------------- | ------------------------------------------------------- | --------------------------------------------------------- |
+| 浏览器扩展钱包       | 支持                              | `platform: "browser"`, `source: "wallet-standard"`      | 使用 Solana Wallet Standard 注册。                        |
+| Android 原生移动钱包 | Android Chrome 和 Chrome PWA 支持 | `platform: "mobile"`, `source: "mobile-wallet-adapter"` | 通过 `@solana-mobile/wallet-standard-mobile` 注册。       |
+| iOS 浏览器钱包       | 支持已配置的钱包链接              | `platform: "mobile"`, `source: "deep-link"`             | Phantom、Solflare 和 Backpack 通过 universal links 暴露。 |
+| 手动/自定义钱包对象  | 支持                              | 应用提供的钱包                                          | 必须实现 `SolanaWallet` 接口。                            |
+| 桌面原生应用钱包     | v1 推迟                           | 默认不暴露                                              | 保留 `protocol-link` 元数据用于未来 adapter。             |
 
 今天可用的能力：
 
@@ -2933,13 +3615,13 @@ Android 注意事项：
 
 iOS 注意事项：
 
-| 能力                      | v1 行为                                                                                |
-| ------------------------- | -------------------------------------------------------------------------------------- |
-| 发现                      | Phantom、Solflare 和 Backpack 条目可以出现在 iOS 浏览器上。                            |
-| 连接                      | 使用钱包专用 universal links 和 redirect callbacks。                                   |
-| 会话处理                  | 应用应先处理 callback 状态，再假设 redirect 后钱包已连接。                             |
-| 交易                      | 能力取决于钱包链接和返回的会话数据。                                                   |
-| Desktop Safari 原生应用   | 不作为 v1 桌面原生路径实现。                                                           |
+| 能力                    | v1 行为                                                     |
+| ----------------------- | ----------------------------------------------------------- |
+| 发现                    | Phantom、Solflare 和 Backpack 条目可以出现在 iOS 浏览器上。 |
+| 连接                    | 使用钱包专用 universal links 和 redirect callbacks。        |
+| 会话处理                | 应用应先处理 callback 状态，再假设 redirect 后钱包已连接。  |
+| 交易                    | 能力取决于钱包链接和返回的会话数据。                        |
+| Desktop Safari 原生应用 | 不作为 v1 桌面原生路径实现。                                |
 
 如果直接使用 iOS core helpers，请在客户端启动早期调用 `handleSolanaIosWalletCallback()`，让 redirect 数据在应用读取钱包状态前完成验证和解密。
 
@@ -3200,6 +3882,72 @@ Invalid address strings clear stale data, set `error`, and do not call the RPC m
 - Avoid broad scans from landing pages or every route navigation.
 - Avoid aggressive polling intervals on public RPC endpoints.
 - Cache or index data that many users will request repeatedly.
+
+---
+
+# 계정 읽기
+
+Source: https://vue-solana-docs.vercel.app/ko/guides/account-reads
+Description: Vue Solana에서 주소를 파싱하고 잔액, 계정 정보, 프로그램 계정을 읽습니다.
+
+Solana 계정 읽기는 지갑 연결 없이도 가능합니다. 필요한 것은 올바른 클러스터와 RPC connection, 그리고 유효한 공개 키입니다.
+
+## 주소 파싱
+
+```ts
+import { parsePublicKey } from "@vue-solana/core/address";
+
+const publicKey = parsePublicKey(address);
+```
+
+입력이 비어 있거나 잘못된 주소면 `null`을 반환합니다. 사용자 입력은 RPC 호출 전에 검증하세요.
+
+## 잔액 읽기
+
+Vue에서는 `useBalance()`를 사용합니다.
+
+```ts
+const address = ref("");
+const { balance, sol, refresh, loading, error } = useBalance(address);
+```
+
+Nuxt에서는 자동 import된 `useSolanaBalance()`를 사용할 수 있습니다.
+
+```ts
+const { balance, sol, refresh } = useSolanaBalance(address);
+```
+
+## 직접 계정 정보 읽기
+
+```ts
+const { connection } = useRpc();
+const accountInfo = await connection.getAccountInfo(publicKey);
+```
+
+`null`은 계정이 없거나 해당 클러스터에 존재하지 않음을 의미할 수 있습니다.
+
+## 프로그램 계정 읽기
+
+```ts
+const accounts = await connection.getProgramAccounts(programId);
+```
+
+큰 프로그램에서는 필터와 data slicing을 사용하고, 공개 RPC rate limit을 고려하세요.
+
+## 서명 상태 읽기
+
+```ts
+const status = await connection.getSignatureStatus(signature);
+```
+
+트랜잭션 제출 후 상태 확인 또는 사용자에게 진행 상황을 표시할 때 유용합니다.
+
+## RPC 비용 체크리스트
+
+- 입력 주소가 바뀔 때만 요청하세요.
+- 반복 polling에는 지수 backoff 또는 명시적 refresh 버튼을 고려하세요.
+- 공개 RPC에서 큰 `getProgramAccounts` 호출을 남발하지 마세요.
+- 사용자에게 raw RPC 오류 대신 정규화된 메시지를 표시하세요.
 
 ---
 
@@ -3648,6 +4396,90 @@ try {
 
 ---
 
+# 트랜잭션
+
+Source: https://vue-solana-docs.vercel.app/ko/guides/transactions
+Description: Vue Solana에서 트랜잭션을 서명, 전송, 확인하고 오류를 처리합니다.
+
+트랜잭션은 Solana 상태를 변경합니다. 앱은 트랜잭션을 만들고, 지갑은 사용자의 승인을 받은 뒤 서명하며, 앱은 RPC로 제출하고 confirmation을 기다립니다.
+
+## Core helper
+
+```ts
+import { signAndSendTransaction } from "@vue-solana/core/transaction";
+
+const signature = await signAndSendTransaction(wallet, transaction, connection);
+```
+
+지갑이 연결되어 있고 필요한 signing capability를 지원하는지 먼저 확인하세요.
+
+## Devnet 전송 예
+
+```ts
+import { PublicKey, SystemProgram, Transaction, LAMPORTS_PER_SOL } from "@vue-solana/vue/web3";
+
+const transaction = new Transaction().add(
+  SystemProgram.transfer({
+    fromPubkey: wallet.publicKey,
+    toPubkey: new PublicKey(recipient),
+    lamports: 0.001 * LAMPORTS_PER_SOL,
+  }),
+);
+```
+
+devnet에서 먼저 테스트하고, 아주 작은 금액으로 시작하세요.
+
+## Vue에서 전송
+
+```ts
+const { send, signature, loading, error } = useSignAndSendTransaction();
+
+await send(transaction);
+```
+
+## Nuxt에서 전송
+
+```ts
+const { send, signature, loading, error } = useSolanaSignAndSendTransaction();
+```
+
+## 확인과 Explorer
+
+서명이 제출되면 confirmation을 기다리고 Explorer 링크를 제공할 수 있습니다.
+
+```ts
+const explorerUrl = `https://explorer.solana.com/tx/${signature}?cluster=devnet`;
+```
+
+## 일반 트랜잭션 상태
+
+`useTransaction()`은 임의의 async handler에 대해 loading, error, signature 상태를 관리하는 데 사용할 수 있습니다.
+
+```ts
+const { execute, loading, error, signature } = useTransaction(async () => {
+  return await runTransaction();
+});
+```
+
+## 오류 처리
+
+- 사용자가 승인을 거절할 수 있습니다.
+- 지갑이 기능을 지원하지 않을 수 있습니다.
+- RPC가 rate limit 또는 네트워크 오류를 반환할 수 있습니다.
+- confirmation timeout이 발생할 수 있습니다.
+
+사용자에게는 안전하고 이해 가능한 메시지를 보여 주고, 디버깅 세부 정보는 로깅 경계에서 다루세요.
+
+## 안전 체크리스트
+
+- 클러스터를 명확히 표시합니다.
+- 수신자 주소와 금액을 확인시킵니다.
+- mainnet 전송 전에 별도 확인 단계를 둡니다.
+- private key를 앱에서 절대 다루지 않습니다.
+- 테스트와 문서 예제는 devnet을 기본값으로 둡니다.
+
+---
+
 # 交易
 
 Source: https://vue-solana-docs.vercel.app/zh/guides/transactions
@@ -4038,6 +4870,62 @@ const message = computed(() => {
 
 ---
 
+# 메시지 서명
+
+Source: https://vue-solana-docs.vercel.app/ko/guides/message-signing
+Description: 트랜잭션을 보내지 않고 지갑 소유권을 증명하는 메시지 서명 흐름입니다.
+
+메시지 서명은 지갑이 특정 공개 키를 제어한다는 것을 증명하는 데 사용할 수 있습니다. 트랜잭션을 제출하지 않으며 SOL 잔액을 변경하지 않습니다.
+
+## Vue에서 사용
+
+```ts
+const { signMessage, signature, signedMessage, loading, error } = useSignMessage();
+
+await signMessage("Sign in to Vue Solana on devnet");
+```
+
+## Nuxt에서 사용
+
+```ts
+const { signMessage, signature, signedMessage } = useSolanaSignMessage();
+```
+
+## 좋은 challenge 메시지
+
+서버 인증에 사용할 메시지는 다음을 포함해야 합니다.
+
+- 앱 또는 도메인 이름.
+- nonce.
+- 만료 시간.
+- 공개 키.
+- 의도 설명.
+
+예:
+
+```txt
+Sign in to example.com
+Wallet: <public-key>
+Nonce: <random-nonce>
+Expires: <timestamp>
+```
+
+## 검증 경계
+
+클라이언트에서 서명을 받는 것만으로 인증이 끝나지 않습니다. 서버 또는 신뢰할 수 있는 경계에서 메시지, 공개 키, 서명, nonce, 만료 시간을 검증해야 합니다.
+
+## 오류와 unsupported 지갑
+
+모든 지갑이 메시지 서명을 지원하는 것은 아닙니다. `signMessage` capability가 없는 경우 UI에서 기능을 비활성화하고 사용자에게 안내하세요.
+
+## 안전 메모
+
+- 사용자가 이해할 수 없는 임의 bytes에 서명하게 하지 마세요.
+- 재사용 가능한 메시지를 인증에 사용하지 마세요.
+- 트랜잭션 서명과 메시지 서명을 혼동하지 마세요.
+
+---
+
 # 消息签名
 
 Source: https://vue-solana-docs.vercel.app/zh/guides/message-signing
@@ -4351,6 +5239,62 @@ function getSolanaErrorMessage(code: string) {
 
 ---
 
+# 오류
+
+Source: https://vue-solana-docs.vercel.app/ko/guides/errors
+Description: Vue Solana의 정규화된 SolanaError 코드와 사용자 친화적인 오류 처리 방법입니다.
+
+Vue Solana는 지갑, RPC, 주소, 트랜잭션, timeout, storage 실패를 안정적인 오류 코드로 정규화합니다. UI는 raw error 문자열 대신 안정적인 코드에 따라 분기하는 것이 좋습니다.
+
+## SolanaError 형태
+
+```ts
+interface SolanaError extends Error {
+  code: string;
+  cause?: unknown;
+}
+```
+
+`cause`는 디버깅에 유용하지만 사용자에게 그대로 보여 주지 마세요.
+
+## Core에서 처리
+
+```ts
+import { isSolanaError } from "@vue-solana/core/errors";
+
+try {
+  await send();
+} catch (error) {
+  if (isSolanaError(error)) {
+    console.info(error.code);
+  }
+}
+```
+
+## Vue/Nuxt 상태
+
+컴포저블은 일반적으로 `error` ref를 제공합니다.
+
+```ts
+const { error, loading } = useSolanaBalance(address);
+```
+
+오류 ref를 UI 메시지로 매핑하세요.
+
+## 사용자 메시지
+
+- 주소 오류: "유효한 Solana 주소를 입력하세요."
+- 지갑 미연결: "먼저 지갑을 연결하세요."
+- 기능 미지원: "선택한 지갑은 이 기능을 지원하지 않습니다."
+- 사용자 거절: "지갑에서 요청이 취소되었습니다."
+- 네트워크 오류: "RPC 요청에 실패했습니다. 잠시 후 다시 시도하세요."
+
+## 재시도 지침
+
+읽기 요청은 재시도할 수 있지만, 쓰기 작업은 중복 제출 위험이 있습니다. 트랜잭션 제출 후에는 signature 상태를 확인하고, 사용자가 명확히 요청할 때만 다시 제출하세요.
+
+---
+
 # 错误
 
 Source: https://vue-solana-docs.vercel.app/zh/guides/errors
@@ -4570,6 +5514,140 @@ Los errores se normalizan para que Vue y Nuxt puedan mostrar estados consistente
 ## Problema conocido de TypeScript
 
 El paquete incluye shims de declaraciones para el problema actual de `@solana/web3-compat`.
+
+---
+
+# @vue-solana/core
+
+Source: https://vue-solana-docs.vercel.app/ko/packages/core
+Description: 프레임워크에 독립적인 Solana 설정, RPC, 지갑 타입, 트랜잭션 헬퍼입니다.
+
+[`@vue-solana/core`](https://www.npmjs.com/package/@vue-solana/core)는 Vue Solana 패키지가 사용하는 프레임워크 독립 Solana primitive를 제공합니다.
+
+Vue 플러그인을 설치하지 않고 connection helper, 공유 지갑 타입, Android Mobile Wallet Adapter 등록 helper, iOS browser wallet helper, 트랜잭션 helper가 필요할 때 직접 사용하세요.
+
+`@vue-solana/core`는 `@solana/web3-compat`를 감싸며 `Connection`, `PublicKey`, `Transaction`, `VersionedTransaction` 같은 Solana primitive를 다시 export합니다.
+
+## 설치
+
+```sh
+pnpm add @vue-solana/core
+```
+
+## 빠른 시작
+
+```ts
+import { createSolanaContext } from "@vue-solana/core";
+
+const solana = createSolanaContext({
+  cluster: "devnet",
+});
+
+const { blockhash } = await solana.connection.getLatestBlockhash();
+
+console.log(solana.endpoint, blockhash);
+```
+
+root export는 계속 지원됩니다. 더 좁은 import를 위해 direct subpath도 사용할 수 있습니다.
+
+```ts
+import { createSolanaContext } from "@vue-solana/core/rpc";
+import { PublicKey, Transaction } from "@vue-solana/core/web3";
+import type { SolanaConfig } from "@vue-solana/core/types";
+```
+
+## 주요 subpath
+
+- `@vue-solana/core/address`
+- `@vue-solana/core/buffer-polyfill`
+- `@vue-solana/core/types`
+- `@vue-solana/core/clusters`
+- `@vue-solana/core/errors`
+- `@vue-solana/core/ios-wallet`
+- `@vue-solana/core/mobile-wallet`
+- `@vue-solana/core/rpc`
+- `@vue-solana/core/timeout`
+- `@vue-solana/core/transaction`
+- `@vue-solana/core/wallet`
+- `@vue-solana/core/wallet-standard`
+- `@vue-solana/core/web3`
+
+## 관련 가이드
+
+- [RPC와 클러스터](/ko/guides/rpc-and-clusters)
+- [지갑](/ko/guides/wallets)
+- [트랜잭션](/ko/guides/transactions)
+- [오류](/ko/guides/errors)
+
+## 설정
+
+```ts
+type SolanaCluster = "mainnet-beta" | "testnet" | "devnet" | "localnet";
+
+interface SolanaConfig {
+  cluster?: SolanaCluster;
+  endpoint?: string;
+  wsEndpoint?: string;
+  commitment?: Commitment;
+  autoConnect?: boolean;
+}
+```
+
+`endpoint`를 생략하면 선택한 클러스터의 공개 Solana RPC endpoint를 사용합니다. `wsEndpoint`를 생략하면 RPC endpoint에서 파생됩니다. `autoConnect`는 기본값이 `false`이며, 이전에 사용자가 선택한 지갑 identity metadata만 저장합니다.
+
+## Context
+
+```ts
+interface SolanaContext {
+  cluster: SolanaCluster;
+  endpoint: string;
+  wsEndpoint: string;
+  connection: Connection;
+}
+```
+
+## Wallet interface
+
+```ts
+interface SolanaWallet {
+  publicKey: PublicKey | null;
+  connected: boolean;
+  connecting?: boolean;
+  disconnecting?: boolean;
+  connect: () => Promise<void>;
+  disconnect: () => Promise<void>;
+  signMessage?: (message: Uint8Array) => Promise<SolanaSignMessageResult>;
+  signTransaction?: <T extends SolanaTransaction>(transaction: T) => Promise<T>;
+  signAllTransactions?: <T extends SolanaTransaction>(transactions: T[]) => Promise<T[]>;
+  signAndSendTransaction?: (
+    transaction: SolanaTransaction,
+    options?: SendOptions,
+  ) => Promise<{ signature: TransactionSignature }>;
+}
+```
+
+Browser Wallet Standard 지갑, 지원 iOS wallet link, Android Mobile Wallet Adapter 지갑은 이 인터페이스로 adapt됩니다. 직접 `SolanaWallet` 객체를 제공할 수도 있습니다.
+
+## Wallet metadata
+
+브라우저 확장 지갑은 `platform: "browser"`, Android MWA는 `platform: "mobile"`과 `source: "mobile-wallet-adapter"`, iOS 링크는 `platform: "mobile"`과 `source: "deep-link"`를 사용합니다. `protocol-link`는 향후 desktop native wallet adapter를 위해 예약되어 있습니다.
+
+## Helper 요약
+
+- `parsePublicKey(value)`: 주소 문자열, `PublicKey`, ref-like 값, getter를 파싱합니다.
+- `getClusterEndpoint(cluster?)`: HTTP RPC endpoint를 반환합니다.
+- `getClusterWebSocketEndpoint(cluster?)`: WebSocket endpoint를 반환합니다.
+- `createSolanaConnection(config?)`: `Connection`을 만듭니다.
+- `createSolanaContext(config?)`: `SolanaContext`를 만듭니다.
+- `getSolanaChain(cluster)`: Wallet Standard chain id를 반환합니다.
+- `getRegisteredSolanaWallets()`: 등록된 Solana Wallet Standard 지갑을 반환합니다.
+- `registerSolanaMobileWallet(options?)`: 지원 Android 환경에서 MWA를 등록합니다.
+- `getSolanaIosWallets(options?)`: iOS browser wallet entry를 반환합니다.
+- `signAndSendTransaction(wallet, transaction, connection)`: 지갑을 사용해 트랜잭션을 서명하고 전송합니다.
+
+## 알려진 TypeScript 이슈
+
+현재 `@solana/web3-compat@0.0.21`에는 root declaration metadata 문제가 있습니다. Vue Solana 패키지는 문서화된 import 경로에 필요한 임시 shim을 포함합니다. 앱에서 `@solana/web3-compat`를 직접 import하지 않는 한 보통 별도 shim이 필요하지 않습니다.
 
 ---
 
@@ -5058,19 +6136,19 @@ type SolanaChain = "solana:mainnet" | "solana:testnet" | "solana:devnet" | "sola
 
 根 `@vue-solana/core` 导出会重新导出下面的公共 helper。需要更窄导入或更清晰模块边界时，请使用直接 subpath。
 
-| Import path                        | 包含内容                                                                      | 何时使用                                                                                                            |
-| ---------------------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `@vue-solana/core/address`         | `parsePublicKey()` 和 public-key 输入类型。                                   | 你接受字符串、`PublicKey`、类似 ref 的对象或 getter 形式的 Solana 地址，并需要规范化为 `PublicKey`。                |
-| `@vue-solana/core/clusters`        | 默认 cluster 和 endpoint helper。                                             | 你需要包内置的 `mainnet-beta`、`testnet`、`devnet` 或 `localnet` RPC/WebSocket endpoint。                           |
-| `@vue-solana/core/errors`          | `SolanaError`、错误工厂和错误 guard。                                         | 你需要稳定错误 code 来处理面向用户的钱包、RPC、地址、交易、超时或存储失败。                                        |
-| `@vue-solana/core/ios-wallet`      | iOS 浏览器钱包发现、deep-link adapter 和回调处理。                            | 你在不使用 Vue 插件统一钱包流程的情况下接入 iOS 钱包链接。                                                         |
-| `@vue-solana/core/mobile-wallet`   | Android Mobile Wallet Adapter 注册 helper。                                   | 你需要在读取 Wallet Standard 钱包前注册 Android MWA。                                                              |
-| `@vue-solana/core/rpc`             | `createSolanaConnection()` 和 `createSolanaContext()`。                       | 你想在不安装 Vue 插件的情况下获得已配置的 `Connection` 和解析后的 cluster endpoint。                               |
-| `@vue-solana/core/timeout`         | 生成 Solana 超时错误的 Promise timeout helper。                               | 你需要与交易确认 helper 一致的超时行为。                                                                            |
-| `@vue-solana/core/transaction`     | 交易发送和确认 helper。                                                       | 你需要感知钱包的发送路径，或需要为现有签名获取确认结果。                                                            |
-| `@vue-solana/core/types`           | 共享 TypeScript 类型。                                                        | 你需要 `SolanaConfig`、`SolanaContext`、`SolanaWallet`、钱包元数据或交易选项类型。                                  |
-| `@vue-solana/core/wallet`          | 钱包状态断言和钱包能力错误。                                                  | 你需要在调用钱包方法前验证所选钱包已连接或支持签名。                                                                |
-| `@vue-solana/core/wallet-standard` | Wallet Standard chain 映射、发现、订阅和 adapter helper。                    | 你正在 Solana Wallet Standard 之上构建自己的钱包发现层。                                                           |
+| Import path                        | 包含内容                                                  | 何时使用                                                                                             |
+| ---------------------------------- | --------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `@vue-solana/core/address`         | `parsePublicKey()` 和 public-key 输入类型。               | 你接受字符串、`PublicKey`、类似 ref 的对象或 getter 形式的 Solana 地址，并需要规范化为 `PublicKey`。 |
+| `@vue-solana/core/clusters`        | 默认 cluster 和 endpoint helper。                         | 你需要包内置的 `mainnet-beta`、`testnet`、`devnet` 或 `localnet` RPC/WebSocket endpoint。            |
+| `@vue-solana/core/errors`          | `SolanaError`、错误工厂和错误 guard。                     | 你需要稳定错误 code 来处理面向用户的钱包、RPC、地址、交易、超时或存储失败。                          |
+| `@vue-solana/core/ios-wallet`      | iOS 浏览器钱包发现、deep-link adapter 和回调处理。        | 你在不使用 Vue 插件统一钱包流程的情况下接入 iOS 钱包链接。                                           |
+| `@vue-solana/core/mobile-wallet`   | Android Mobile Wallet Adapter 注册 helper。               | 你需要在读取 Wallet Standard 钱包前注册 Android MWA。                                                |
+| `@vue-solana/core/rpc`             | `createSolanaConnection()` 和 `createSolanaContext()`。   | 你想在不安装 Vue 插件的情况下获得已配置的 `Connection` 和解析后的 cluster endpoint。                 |
+| `@vue-solana/core/timeout`         | 生成 Solana 超时错误的 Promise timeout helper。           | 你需要与交易确认 helper 一致的超时行为。                                                             |
+| `@vue-solana/core/transaction`     | 交易发送和确认 helper。                                   | 你需要感知钱包的发送路径，或需要为现有签名获取确认结果。                                             |
+| `@vue-solana/core/types`           | 共享 TypeScript 类型。                                    | 你需要 `SolanaConfig`、`SolanaContext`、`SolanaWallet`、钱包元数据或交易选项类型。                   |
+| `@vue-solana/core/wallet`          | 钱包状态断言和钱包能力错误。                              | 你需要在调用钱包方法前验证所选钱包已连接或支持签名。                                                 |
+| `@vue-solana/core/wallet-standard` | Wallet Standard chain 映射、发现、订阅和 adapter helper。 | 你正在 Solana Wallet Standard 之上构建自己的钱包发现层。                                             |
 
 ### Clusters 和 RPC
 
@@ -5245,6 +6323,112 @@ Muestra mensajes seguros y accionables. No expongas datos internos de RPC o wall
 ## Ejemplo
 
 El ejemplo Vue Vite usa este paquete directamente: [Ejemplo Vue Vite](/es/examples/vue-vite).
+
+---
+
+# @vue-solana/vue
+
+Source: https://vue-solana-docs.vercel.app/ko/packages/vue
+Description: Vue 앱을 위한 Solana 플러그인과 컴포저블입니다.
+
+[`@vue-solana/vue`](https://www.npmjs.com/package/@vue-solana/vue)는 Vue 3 앱에 Solana context를 제공하고 RPC, 계정 읽기, 지갑, 메시지 서명, 트랜잭션 흐름을 컴포저블로 노출합니다.
+
+## 설치
+
+```sh
+pnpm add @vue-solana/vue
+```
+
+## 플러그인 설정
+
+```ts
+import { createApp } from "vue";
+import { createSolanaPlugin } from "@vue-solana/vue";
+import App from "./App.vue";
+
+createApp(App)
+  .use(createSolanaPlugin({ cluster: "devnet" }))
+  .mount("#app");
+```
+
+## Direct subpath import
+
+```ts
+import { useRpc } from "@vue-solana/vue/useRpc";
+import { useBalance } from "@vue-solana/vue/useBalance";
+import { useWallet } from "@vue-solana/vue/useWallet";
+```
+
+Solana primitive는 `@vue-solana/vue/web3`에서 import할 수 있습니다.
+
+```ts
+import { PublicKey, Transaction } from "@vue-solana/vue/web3";
+```
+
+## 관련 가이드
+
+- [시작하기](/ko/getting-started)
+- [RPC와 클러스터](/ko/guides/rpc-and-clusters)
+- [지갑](/ko/guides/wallets)
+- [계정 읽기](/ko/guides/account-reads)
+- [트랜잭션](/ko/guides/transactions)
+
+## RPC
+
+```ts
+const { cluster, endpoint, wsEndpoint, connection } = useRpc();
+```
+
+## 잔액
+
+```ts
+const address = ref("");
+const { balance, sol, refresh, loading, error } = useBalance(address);
+```
+
+## 계정 정보
+
+```ts
+const { connection } = useRpc();
+const accountInfo = await connection.getAccountInfo(publicKey);
+```
+
+## 지갑 상태
+
+```ts
+const { wallets, refresh } = useWallets();
+const { wallet, publicKey, connected, setWallet, connect, disconnect } = useWallet();
+```
+
+검색된 지갑을 선택한 뒤 사용자가 명시적으로 연결을 요청할 때 `connect()`를 호출하세요.
+
+## 메시지 서명
+
+```ts
+const { signMessage, signature, signedMessage, loading, error } = useSignMessage();
+
+await signMessage("Sign in to Vue Solana on devnet");
+```
+
+## 전송
+
+```ts
+const { send, signature, loading, error } = useSignAndSendTransaction();
+
+await send(transaction);
+```
+
+## 일반 async 트랜잭션 상태
+
+```ts
+const { execute, loading, error, signature } = useTransaction(async () => {
+  return await runTransaction();
+});
+```
+
+## SSR 메모
+
+Vue 패키지는 일반 Vue 앱을 대상으로 합니다. SSR 환경에서는 실제 지갑 작업을 클라이언트에서만 실행하고, Nuxt 앱에서는 `@vue-solana/nuxt`를 사용하는 것이 좋습니다.
 
 ---
 
@@ -6119,6 +7303,99 @@ Consulta [Ejemplo Nuxt](/es/examples/nuxt).
 
 # @vue-solana/nuxt
 
+Source: https://vue-solana-docs.vercel.app/ko/packages/nuxt
+Description: Nuxt 앱을 위한 Vue Solana 모듈과 자동 import 컴포저블입니다.
+
+[`@vue-solana/nuxt`](https://www.npmjs.com/package/@vue-solana/nuxt)는 Nuxt 앱에 Vue Solana 플러그인을 설치하고 Solana 컴포저블을 자동 import합니다.
+
+## 설치
+
+```sh
+npx nuxt module add @vue-solana/nuxt
+```
+
+## 모듈 설정
+
+```ts
+export default defineNuxtConfig({
+  modules: ["@vue-solana/nuxt"],
+  solana: {
+    cluster: "devnet",
+    mobileWallet: {
+      appIdentity: {
+        name: "My Nuxt Solana App",
+      },
+    },
+    iosWallet: {
+      appIdentity: {
+        name: "My Nuxt Solana App",
+      },
+    },
+  },
+});
+```
+
+## 옵션
+
+- `cluster`: `mainnet-beta`, `devnet`, `testnet`, `localnet`.
+- `endpoint`: 커스텀 HTTP RPC endpoint.
+- `wsEndpoint`: 커스텀 WebSocket endpoint.
+- `commitment`: Solana commitment.
+- `autoConnect`: 이전에 선택한 지갑 identity를 클라이언트에서 다시 연결 시도합니다.
+- `mobileWallet`: Android Mobile Wallet Adapter 설정 또는 `false`.
+- `iosWallet`: iOS browser wallet link 설정 또는 `false`.
+
+Nuxt `solana` 옵션은 public runtime config에 저장되므로 JSON 직렬화가 가능해야 합니다.
+
+## 자동 import 컴포저블
+
+- `useSolana()`
+- `useSolanaRpc()`
+- `useSolanaConnection()`
+- `useSolanaBalance()`
+- `useSolanaWallet()`
+- `useSolanaSignAndSendTransaction()`
+
+## Direct imports
+
+```ts
+import { PublicKey } from "@vue-solana/nuxt/web3";
+import "@vue-solana/nuxt/buffer-polyfill";
+```
+
+## SSR와 클라이언트 작업
+
+컴포저블 호출은 SSR 중에도 안전해야 하지만 실제 RPC와 지갑 작업은 hydration 이후 실행하세요. 지갑 검색, 연결, 메시지 서명, 트랜잭션 전송은 사용자 액션 또는 `onMounted()`에서 실행하는 것이 좋습니다.
+
+## 예제
+
+```vue
+<script setup lang="ts">
+const { cluster, endpoint, checkConnection, latestBlockhash } = useSolanaRpc();
+</script>
+
+<template>
+  <section>
+    <p>{{ cluster }}</p>
+    <p>{{ endpoint }}</p>
+    <p>{{ latestBlockhash }}</p>
+    <button @click="checkConnection">Check RPC</button>
+  </section>
+</template>
+```
+
+## 관련 가이드
+
+- [시작하기](/ko/getting-started)
+- [RPC와 클러스터](/ko/guides/rpc-and-clusters)
+- [지갑](/ko/guides/wallets)
+- [트랜잭션](/ko/guides/transactions)
+- [Nuxt 예제](/ko/examples/nuxt)
+
+---
+
+# @vue-solana/nuxt
+
 Source: https://vue-solana-docs.vercel.app/packages/nuxt
 Description: Nuxt module for Solana applications.
 
@@ -6981,6 +8258,40 @@ Desktop native wallet protocol-link support is intentionally not part of the v1 
 
 ---
 
+# Vue Vite 예제
+
+Source: https://vue-solana-docs.vercel.app/ko/examples/vue-vite
+Description: Vue Solana의 Vue 3 Vite 예제 앱을 실행하고 테스트합니다.
+
+Vue Vite 예제는 로컬 개발 중 `@vue-solana/vue` 패키지를 확인하기 위한 앱입니다. RPC 상태, 직접 connection 호출, 잔액 읽기, 지갑 상태, 메시지 서명, 목업 트랜잭션 흐름을 보여 줍니다.
+
+## 소스
+
+- 저장소: `examples/vue-vite`
+- 라이브 데모: [데모](/ko/demo)
+
+## 실행
+
+```sh
+pnpm install
+pnpm --filter vue-vite dev
+```
+
+## 확인할 것
+
+- 앱이 devnet cluster와 RPC endpoint를 표시하는지 확인합니다.
+- 최신 blockhash를 불러옵니다.
+- Solana 공개 키를 입력하고 잔액을 읽습니다.
+- Phantom, Solflare, Backpack 같은 지갑 확장을 설치하고 devnet으로 전환합니다.
+- 지갑을 검색하고 연결/해제합니다.
+- 지원 지갑에서 메시지 서명을 테스트합니다.
+
+## Devnet SOL
+
+전송 흐름을 테스트하려면 [Solana Faucet](https://faucet.solana.com)에서 devnet SOL을 받으세요. 실제 mainnet 자산으로 테스트하지 마세요.
+
+---
+
 # Vue Vite 示例
 
 Source: https://vue-solana-docs.vercel.app/zh/examples/vue-vite
@@ -7172,6 +8483,40 @@ Desktop native wallet protocol-link support is intentionally not part of the v1 
 
 ---
 
+# Nuxt 예제
+
+Source: https://vue-solana-docs.vercel.app/ko/examples/nuxt
+Description: Vue Solana의 Nuxt 예제 앱을 실행하고 테스트합니다.
+
+Nuxt 예제는 로컬 개발 중 `@vue-solana/nuxt` 모듈을 확인하기 위한 앱입니다. 모듈 설정, 자동 import 컴포저블, RPC 상태, 잔액 읽기, 지갑 상태, 메시지 서명, 트랜잭션 흐름을 보여 줍니다.
+
+## 소스
+
+- 저장소: `examples/nuxt`
+- 라이브 데모: [데모](/ko/demo)
+
+## 실행
+
+```sh
+pnpm install
+pnpm --filter nuxt-example dev
+```
+
+## 확인할 것
+
+- `@vue-solana/nuxt` 모듈이 앱에 설치되는지 확인합니다.
+- `useSolanaRpc()`로 devnet RPC 상태를 확인합니다.
+- `useSolanaBalance()`로 공개 키 잔액을 읽습니다.
+- `useSolanaWallet()`로 지갑 검색, 선택, 연결/해제를 테스트합니다.
+- 지원 지갑에서 메시지 서명을 테스트합니다.
+- devnet에서 아주 작은 전송만 테스트합니다.
+
+## 지갑 메모
+
+브라우저 확장 지갑은 devnet으로 전환해야 합니다. 모바일 지갑 흐름은 플랫폼과 브라우저 지원 여부에 따라 다르게 표시될 수 있습니다.
+
+---
+
 # Nuxt 示例
 
 Source: https://vue-solana-docs.vercel.app/zh/examples/nuxt
@@ -7285,6 +8630,56 @@ pnpm test
 ```
 
 También deben verificarse manualmente los flujos de wallet y transacción en devnet.
+
+---
+
+# v1 로드맵
+
+Source: https://vue-solana-docs.vercel.app/ko/roadmap
+Description: Vue Solana v1까지의 완료된 작업과 향후 후보 작업입니다.
+
+이 로드맵은 Vue Solana 패키지가 v1에 가까워지기 위해 완료한 작업과 이후 후보 작업을 정리합니다.
+
+## 완료된 기반 작업
+
+- pnpm workspace 기반 monorepo 구성.
+- `@vue-solana/core`, `@vue-solana/vue`, `@vue-solana/nuxt` 초기 패키지 구현.
+- `@solana/web3-compat` 기반 runtime import와 package-owned declaration shim.
+- Vue 플러그인과 Nuxt 모듈.
+- RPC, connection, balance, wallet, message signing, transaction 컴포저블.
+- Wallet Standard 기반 브라우저 지갑 검색.
+- Android Mobile Wallet Adapter와 iOS browser wallet link 지원.
+- Vue Vite 및 Nuxt 예제 앱.
+- 영어, 스페인어, 중국어, 한국어 문서.
+
+## v1 전 후보 작업
+
+- core helper와 Vue/Nuxt 컴포저블 테스트 보강.
+- 에러 코드와 사용자 메시지 표면 안정화.
+- public API export surface 최종 검토.
+- 실제 지갑 UX와 모바일 환경 수동 테스트.
+- 릴리스 전 문서와 예제 동기화.
+
+## v1 이후 후보
+
+- desktop native wallet protocol link 지원.
+- 더 많은 wallet capability와 signing flow 예제.
+- SPL Token 및 Token-2022 helper.
+- Anchor 또는 Codama client 통합 예제.
+- 더 많은 접근성 및 E2E 테스트.
+
+## 검증 명령
+
+```sh
+pnpm typecheck
+pnpm build
+```
+
+문서 앱은 다음 명령으로 확인할 수 있습니다.
+
+```sh
+pnpm --filter docs build
+```
 
 ---
 
