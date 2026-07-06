@@ -45,11 +45,8 @@ Vue Solana provides RPC setup, reactive account reads, balance reads, browser ex
 - [Vue Vite example](/examples/vue-vite)
 - [Nuxt example](/examples/nuxt)
 
-Run the docs site locally:
+## For Package Users
 
-```sh
-pnpm dev:docs
-```
 
 Official Solana references:
 
@@ -100,8 +97,6 @@ pnpm add @vue-solana/vue
 ```sh
 npm install @vue-solana/vue
 ```
-
-For local workspace development inside this monorepo, the examples use workspace links instead of published versions.
 
 Vue apps can use `@vue-solana/vue/web3` and `@vue-solana/vue/buffer-polyfill` without installing low-level Solana or Buffer packages directly.
 
@@ -253,19 +248,22 @@ Never use a wallet with real funds while testing.
 
 ## Run The Examples
 
-From the repository root:
+To run the example apps locally, clone the Vue Solana repository first:
 
 ```sh
+git clone https://github.com/vue-solana/vue-solana.git
+cd vue-solana
 pnpm install
 pnpm build:packages
-pnpm dev:vue
 ```
 
-For Nuxt:
+Start the Vue Vite example:
 
-```sh
-pnpm dev:nuxt
-```
+`pnpm dev:vue`
+
+Start the Nuxt example:
+
+`pnpm dev:nuxt`
 
 The examples demonstrate plugin/module setup, RPC state, direct connection calls, balance reads, unified wallet discovery, persisted wallet selection, wallet state, message signing, generic transaction state, transaction transfer flows, confirmation status, explorer links, and unsupported capability UI. They use devnet by default for safe testing.
 
@@ -451,7 +449,7 @@ npx skills add vue-solana/vue-solana --list
 npx skills add vue-solana/vue-solana --global
 ```
 
-The CLI installs skills into `.claude/skills/` for the current project, or `~/.claude/skills/` when `--global` is used.
+The CLI installs skills into the skill directory for the agent you choose during installation. For Claude, that is `.claude/skills/` in the current project, or `~/.claude/skills/` when `--global` is used.
 
 ## What The Skill Covers
 
@@ -475,6 +473,8 @@ The skill source is [`skills/vue-solana/SKILL.md`](https://github.com/vue-solana
 
 Source: https://vue-solana-docs.vercel.app/troubleshooting
 Description: Common setup, TypeScript, wallet, RPC, and Nuxt issues.
+
+Use this guide to diagnose the most common Vue Solana setup issues across Vue, Nuxt, TypeScript, wallet discovery, RPC calls, and transactions. Start with the error message or behavior that matches your app, then follow the checks in order before opening an issue.
 
 ## TypeScript Cannot Resolve `@solana/web3-compat`
 
@@ -1364,7 +1364,7 @@ const { accounts, loading, error, refresh } = useProgramAccounts(programId, {
 </script>
 ```
 
-Program account scans can be expensive. Use narrow filters, `dataSlice`, caching, pagination, indexing, or dedicated RPC infrastructure for production reads.
+> Warning: Program account scans can be expensive. Use narrow filters, `dataSlice`, caching, pagination, indexing, or dedicated RPC infrastructure for production reads.
 
 ## Read Signature Status
 
@@ -1989,8 +1989,6 @@ Direct subpaths:
 ```ts
 type SolanaCluster = "mainnet-beta" | "testnet" | "devnet" | "localnet";
 
-type SolanaChain = "solana:mainnet" | "solana:devnet" | "solana:testnet" | "solana:localnet";
-
 interface SolanaConfig {
   cluster?: SolanaCluster;
   endpoint?: string;
@@ -2000,7 +1998,7 @@ interface SolanaConfig {
 }
 ```
 
-Supported clusters are `mainnet-beta`, `testnet`, `devnet`, and `localnet`. `SolanaChain` is the Wallet Standard chain identifier derived from a cluster by `getSolanaChain()`. If `endpoint` is omitted, the package uses the public Solana RPC endpoint for the selected cluster. If `wsEndpoint` is omitted, it is derived from the RPC endpoint.
+Supported clusters are `mainnet-beta`, `testnet`, `devnet`, and `localnet`. Wallet helpers use Wallet Standard chain identifiers such as `solana:devnet`, which are derived from clusters by `getSolanaChain()`. If `endpoint` is omitted, the package uses the public Solana RPC endpoint for the selected cluster. If `wsEndpoint` is omitted, it is derived from the RPC endpoint.
 
 `autoConnect` defaults to `false`. When enabled through the Vue plugin or Nuxt module, Vue Solana reconnects only a wallet identity that the user previously selected and that is discovered again on the client. It stores only wallet identity metadata under `localStorage["vue-solana:selected-wallet"]`: `name`, and `platform`/`source` when available. It never stores private keys, session data, or transaction data, and it never connects an arbitrary installed wallet.
 
@@ -2076,6 +2074,12 @@ Current metadata values:
 - `protocol-link` is reserved for possible post-v1 desktop native wallet adapters.
 
 ## Wallet Standard Helpers
+
+```ts
+type SolanaChain = "solana:mainnet" | "solana:testnet" | "solana:devnet" | "solana:localnet";
+```
+
+`SolanaChain` is the Wallet Standard chain identifier used by wallet discovery, mobile wallet registration, iOS wallet links, and wallet adapter signing options. Use `getSolanaChain(cluster)` when you need to derive one from a configured Solana cluster.
 
 - `getSolanaChain(cluster)`: maps `mainnet-beta`, `devnet`, `testnet`, or `localnet` to a Solana Wallet Standard chain ID.
 - `isSolanaStandardWallet(wallet)`: checks whether a Wallet Standard wallet supports Solana.
@@ -2699,7 +2703,15 @@ The module auto-imports these composables from direct `@vue-solana/vue/*` subpat
 - `useSolanaSignMessage()`: signs off-chain authentication or ownership challenge messages.
 - `useSolanaSignAndSendTransaction()`: signs, sends, and optionally confirms transactions.
 
-These are Nuxt aliases for the Vue composables. Use the Nuxt names inside Nuxt apps so auto-imports work without explicit imports.
+These are Nuxt aliases for the Vue composables.
+
+The Vue package uses short names such as `useRpc()` because callers import them explicitly from `@vue-solana/vue/useRpc`.
+
+The Nuxt module exposes prefixed names such as `useSolanaRpc()` because auto-imported composables share the app-wide Nuxt namespace and should avoid collisions with app code or other modules.
+
+`useSolana()` is the exception because it is already namespaced and acts as the canonical context accessor in both Vue and Nuxt.
+
+Use the `useSolana*` names inside Nuxt apps so auto-imports work without explicit imports.
 
 Raw Solana primitives and the browser Buffer helper are explicit imports, not auto-imports:
 
