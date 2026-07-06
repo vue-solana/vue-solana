@@ -49,7 +49,6 @@ export const docsNavSections: DocsNavSection[] = [
     links: [
       { label: "Solana For Vue Developers", to: "/concepts/solana-for-vue-developers" },
       { label: "Clusters", to: "/concepts/clusters" },
-      { label: "Wallets", to: "/concepts/wallets" },
     ],
   },
   {

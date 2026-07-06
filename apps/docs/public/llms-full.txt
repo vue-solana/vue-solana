@@ -1,0 +1,3219 @@
+# Vue Solana Full Documentation
+
+Official docs: https://vue-solana-docs.vercel.app
+Generated from apps/docs/content Markdown files.
+The /demo route is intentionally excluded because it is an interactive, non-canonical demo page.
+
+---
+
+# Vue Solana Documentation
+
+Source: https://vue-solana-docs.vercel.app/
+Description: Documentation for Vue and Nuxt libraries that help developers use Solana.
+
+Vue Solana is a small ecosystem of Vue and Nuxt packages for building Solana applications.
+
+Vue Solana provides RPC setup, reactive account reads, balance reads, browser extension wallet discovery, Android Mobile Wallet Adapter discovery, iOS browser wallet links, wallet connect/disconnect, and transaction transfer flows through Vue and Nuxt composables. The examples use devnet by default for safe testing.
+
+## Packages
+
+- [`@vue-solana/core`](/packages/core): framework-agnostic Solana config, endpoint helpers, wallet types, and transaction helpers.
+- [`@vue-solana/vue`](/packages/vue): Vue plugin and composables.
+- [`@vue-solana/nuxt`](/packages/nuxt): Nuxt module that installs the Vue plugin and auto-imports composables.
+
+`@vue-solana/core` builds on top of `@solana/web3-compat` and re-exports supported Solana primitives from `@vue-solana/core/web3`. Vue apps can use `@vue-solana/vue/web3`, and Nuxt apps can use `@vue-solana/nuxt/web3`, without installing core directly.
+
+## Start Here
+
+- [Getting Started](/getting-started)
+- [Wallet Guide](/guides/wallets)
+- [Transaction Guide](/guides/transactions)
+- [Solana For Vue Developers](/concepts/solana-for-vue-developers)
+- [Clusters](/concepts/clusters)
+- [v1 Roadmap](/roadmap)
+- [Agent Skill](/agent-skill)
+- [Troubleshooting](/troubleshooting)
+
+## API Reference
+
+- [`@vue-solana/core`](/packages/core): config, endpoints, wallet interfaces, Wallet Standard helpers, mobile/iOS helpers, transaction helpers, and normalized errors.
+- [`@vue-solana/vue`](/packages/vue): Vue plugin and composables for RPC, account reads, wallets, messages, signatures, and transactions.
+- [`@vue-solana/nuxt`](/packages/nuxt): Nuxt module options, runtime behavior, and auto-imported composables.
+
+## Examples
+
+- [Vue Vite example](/examples/vue-vite)
+- [Nuxt example](/examples/nuxt)
+
+Run the docs site locally:
+
+```sh
+pnpm dev:docs
+```
+
+Official Solana references:
+
+- [Solana Documentation](https://solana.com/docs)
+- [Solana RPC Methods](https://solana.com/docs/rpc)
+- [Solana Clusters](https://solana.com/docs/references/clusters)
+- [Solana Faucet](https://faucet.solana.com)
+
+---
+
+# Getting Started
+
+Source: https://vue-solana-docs.vercel.app/getting-started
+Description: Install Vue Solana packages, configure Vue or Nuxt, and test RPC reads on devnet.
+
+This guide covers installing the Vue Solana packages, configuring Vue or Nuxt, testing Solana RPC reads, connecting supported wallets, signing messages, sending a real devnet transfer, and verifying the result. The examples use devnet by default for safe testing.
+
+## Before You Start
+
+Use `@vue-solana/core` directly if you need Solana primitives such as `Connection`, `PublicKey`, and transactions without Vue/Nuxt integration. Use `@vue-solana/vue` or `@vue-solana/nuxt` when you want framework integration.
+
+Supported clusters:
+
+- `mainnet-beta`: Solana mainnet. This is Solana's official mainnet cluster name.
+- `devnet`: best default for app development.
+- `testnet`: validator and protocol testing network.
+- `localnet`: local validator.
+
+Use `devnet` while learning and testing. Use `mainnet-beta` only when you are ready to interact with real SOL.
+
+Current wallet support:
+
+- Browser extension wallets through Solana Wallet Standard packages.
+- Android native mobile wallets through `@solana-mobile/wallet-standard-mobile` on Android Chrome and Chrome PWAs.
+- iOS browser wallets for Phantom, Solflare, and Backpack through wallet-specific universal links.
+- Manual/custom wallet objects that implement `SolanaWallet`.
+
+Planned but not supported yet:
+
+- Desktop native app wallets through wallet-specific protocol links or future native Wallet Standard registration.
+
+## Install For Vue
+
+```sh
+pnpm add @vue-solana/vue
+```
+
+```sh
+npm install @vue-solana/vue
+```
+
+For local workspace development inside this monorepo, the examples use workspace links instead of published versions.
+
+Vue apps can use `@vue-solana/vue/web3` and `@vue-solana/vue/buffer-polyfill` without installing low-level Solana or Buffer packages directly.
+
+## Install For Nuxt
+
+```sh
+npx nuxt module add @vue-solana/nuxt
+```
+
+This installs the package and adds `@vue-solana/nuxt` to the `modules` array in `nuxt.config.ts`.
+
+Nuxt apps can use `@vue-solana/nuxt/web3` and `@vue-solana/nuxt/buffer-polyfill` without installing `@vue-solana/core`, `@vue-solana/vue`, or low-level Solana and Buffer packages directly.
+
+## Known TypeScript Issue
+
+`@solana/web3-compat@0.0.21` currently has broken TypeScript package metadata. Its package metadata points to `dist/types/index.d.ts`, but that file is not included in the published package.
+
+Runtime imports still use the real `@solana/web3-compat` package. Current Vue Solana packages publish temporary package-owned declaration shims, so apps following the documented `@vue-solana/core`, `@vue-solana/vue`, or `@vue-solana/nuxt` imports should not need their own local shim.
+
+Only add a local shim if you are using an older Vue Solana package version or importing `@solana/web3-compat` directly from app code. Re-check this note after each new `@solana/web3-compat` release; the package-owned shim should be removed once upstream ships valid root declarations.
+
+## Vue Setup
+
+```ts
+import { createApp } from "vue";
+import { createSolanaPlugin } from "@vue-solana/vue";
+import App from "./App.vue";
+
+createApp(App)
+  .use(
+    createSolanaPlugin({
+      cluster: "devnet",
+      mobileWallet: {
+        appIdentity: {
+          name: "My Vue Solana App",
+        },
+      },
+      iosWallet: {
+        appIdentity: {
+          name: "My Vue Solana App",
+        },
+      },
+    }),
+  )
+  .mount("#app");
+```
+
+`mobileWallet` and `iosWallet` are optional. Android Mobile Wallet Adapter registration and iOS Phantom, Solflare, and Backpack links are enabled by default when the browser runtime supports them. Pass `mobileWallet: false` or `iosWallet: false` to disable either source.
+
+For Vue composables, prefer direct subpath imports in new code:
+
+```ts
+import { useRpc } from "@vue-solana/vue/useRpc";
+import { useBalance } from "@vue-solana/vue/useBalance";
+```
+
+## Nuxt Setup
+
+```ts
+export default defineNuxtConfig({
+  modules: ["@vue-solana/nuxt"],
+  solana: {
+    cluster: "devnet",
+    mobileWallet: {
+      appIdentity: {
+        name: "My Nuxt Solana App",
+      },
+    },
+    iosWallet: {
+      appIdentity: {
+        name: "My Nuxt Solana App",
+      },
+    },
+  },
+});
+```
+
+The Nuxt module installs the runtime plugin on the client only and auto-imports composables from direct `@vue-solana/vue/*` subpaths. Composables are safe to call during SSR, but real RPC and wallet operations should run after hydration, such as from `onMounted()` or user actions. Nuxt `solana` options live in public runtime config, so keep them JSON-serializable.
+
+## Test RPC Without A Wallet
+
+RPC reads work without a browser wallet.
+
+In Vue, use `useRpc()`:
+
+```vue
+<script setup lang="ts">
+import { onMounted, ref } from "vue";
+import { useRpc } from "@vue-solana/vue/useRpc";
+
+const { cluster, endpoint, connection } = useRpc();
+const latestBlockhash = ref<string | null>(null);
+
+onMounted(async () => {
+  const result = await connection.getLatestBlockhash();
+  latestBlockhash.value = result.blockhash;
+});
+</script>
+
+<template>
+  <main>
+    <p>Cluster: {{ cluster }}</p>
+    <p>Endpoint: {{ endpoint }}</p>
+    <p>Latest blockhash: {{ latestBlockhash }}</p>
+  </main>
+</template>
+```
+
+In Nuxt, use the auto-imported `useSolanaRpc()`:
+
+```vue
+<script setup lang="ts">
+const { cluster, endpoint, checkConnection, latestBlockhash } = useSolanaRpc();
+</script>
+
+<template>
+  <main>
+    <p>Cluster: {{ cluster }}</p>
+    <p>Endpoint: {{ endpoint }}</p>
+    <p>Latest blockhash: {{ latestBlockhash }}</p>
+    <button type="button" @click="checkConnection">Check RPC</button>
+  </main>
+</template>
+```
+
+## Get Devnet Or Testnet SOL
+
+Devnet and testnet SOL are testing tokens with no real value.
+
+Use the official faucet:
+
+```txt
+https://faucet.solana.com
+```
+
+Choose `Devnet` while following this guide. Choose `Testnet` only if you are testing against the testnet cluster.
+
+If you have the Solana CLI installed, you can also run:
+
+```sh
+solana airdrop 1 YOUR_WALLET_ADDRESS --url devnet
+```
+
+```sh
+solana airdrop 1 YOUR_WALLET_ADDRESS --url testnet
+```
+
+Never use a wallet with real funds while testing.
+
+## Run The Examples
+
+From the repository root:
+
+```sh
+pnpm install
+pnpm build:packages
+pnpm dev:vue
+```
+
+For Nuxt:
+
+```sh
+pnpm dev:nuxt
+```
+
+The examples demonstrate plugin/module setup, RPC state, direct connection calls, balance reads, unified wallet discovery, persisted wallet selection, wallet state, message signing, generic transaction state, transaction transfer flows, confirmation status, explorer links, and unsupported capability UI. They use devnet by default for safe testing.
+
+## Connect A Wallet
+
+Install Phantom, Solflare, Backpack, or another Solana Wallet Standard browser wallet. Switch the wallet to devnet before testing.
+
+On Android Chrome or an Android Chrome PWA, install a compatible Solana mobile wallet such as Phantom, Solflare, or Seed Vault Wallet. `Mobile Wallet Adapter` can appear in the same wallet list after `refreshWallets()`.
+
+In Vue:
+
+```ts
+const { wallets, selectedWallet, refreshWallets, selectWallet } = useWallets();
+const { publicKey, connected, connect, disconnect } = useWallet();
+```
+
+In Nuxt:
+
+```ts
+const { wallets, selectedWallet, refreshWallets, selectWallet } = useSolanaWallets();
+const { publicKey, connected, connect, disconnect } = useSolanaWallet();
+```
+
+Select a wallet from `wallets`, then call `connect()`. Selecting a wallet only configures the active wallet; it does not connect it. Some extensions expose previously authorized accounts after a page refresh, but Vue Solana still keeps `connected` false until `connect()` succeeds.
+
+When `autoConnect` is enabled, Vue Solana restores only the wallet identity the user selected previously and only after that wallet is discovered again on the client. It stores `name`, `platform`, and `source` metadata in `localStorage`, not private keys, sessions, or transactions.
+
+iOS browser wallet support uses wallet-specific universal links because Mobile Wallet Adapter web support is Android Chrome-only. Phantom, Solflare, and Backpack appear in the same `useWallets()` list on iOS browsers.
+
+## Manual Wallet Testing
+
+Use this checklist when validating a browser extension, Android MWA wallet, or iOS browser wallet by hand.
+
+1. Configure the app for `devnet` and verify the UI shows the devnet endpoint.
+2. Install a supported wallet and switch the wallet itself to devnet.
+3. Fund the wallet with devnet SOL from `https://faucet.solana.com`.
+4. Open the example app and click the wallet refresh action.
+5. Confirm the wallet appears in the unified wallet list with the expected source.
+6. Select the wallet and verify selection alone does not connect it.
+7. Click connect and approve the wallet prompt.
+8. Confirm the public key and `connected` state update after `connect()` resolves.
+9. Reload the page and confirm the previously selected wallet identity can be restored without arbitrary wallet selection.
+10. Disconnect and verify public key and connected state clear.
+
+Expected wallet sources:
+
+| Platform                     | Expected source         | Notes                                                                              |
+| ---------------------------- | ----------------------- | ---------------------------------------------------------------------------------- |
+| Desktop browser extension    | `wallet-standard`       | Phantom, Solflare, Backpack, and other standard wallets can appear when installed. |
+| Android Chrome or Chrome PWA | `mobile-wallet-adapter` | Requires a compatible native wallet and Android MWA browser support.               |
+| iOS browser                  | `deep-link`             | Phantom, Solflare, and Backpack entries use wallet-specific universal links.       |
+| Desktop native app           | Not implemented in v1   | Desktop native protocol links are explicitly deferred from v1.                     |
+
+## Sign A Message
+
+Use message signing for wallet ownership checks or authentication challenges. It does not submit a transaction and does not authorize on-chain state changes.
+
+In Vue:
+
+```ts
+const { connected, canSignMessage } = useWallet();
+const signMessage = useSignMessage();
+
+if (connected.value && canSignMessage.value) {
+  await signMessage.execute(new TextEncoder().encode("Sign in to example.com"));
+}
+```
+
+In Nuxt:
+
+```ts
+const { connected, canSignMessage } = useSolanaWallet();
+const signMessage = useSolanaSignMessage();
+
+if (connected.value && canSignMessage.value) {
+  await signMessage.execute(new TextEncoder().encode("Sign in to example.com"));
+}
+```
+
+Render a disabled auth button when `canSignMessage` is false. Some wallets can connect and sign transactions without supporting arbitrary message signing.
+
+For manual testing, use a clear challenge string that includes your domain, a nonce, and an expiration time. Never ask users to sign blank or ambiguous messages.
+
+```ts
+const challenge = new TextEncoder().encode(
+  "Sign in to example.com\nNonce: 8f1a2c\nExpires: 2026-07-03T12:00:00Z",
+);
+```
+
+After signing, verify that the UI shows the returned signature bytes and does not treat the message signature as an on-chain transaction.
+
+## Send A Transfer
+
+The Vue and Nuxt examples include recipient address and amount fields for a real transfer. They use devnet by default so you can test with SOL that has no real value. For mainnet, configure `mainnet-beta` or a mainnet RPC endpoint and use a wallet with real SOL for fees.
+
+Start with a tiny amount such as `0.000001` SOL while testing.
+
+Browser apps that create or serialize transactions should initialize the framework package Buffer polyfill before transaction code:
+
+```ts
+import { installSolanaBufferPolyfill } from "@vue-solana/vue/buffer-polyfill";
+
+installSolanaBufferPolyfill();
+```
+
+The wallet will prompt you to approve the transaction. After approval, the example shows the transaction signature, confirmation state, and explorer link. On Android Mobile Wallet Adapter, Vue Solana prefers wallet signing plus app-side RPC submission when supported, which makes the returned signature more reliable after the wallet redirects back to the browser.
+
+For manual transfer testing:
+
+1. Keep both the app and wallet on devnet.
+2. Use a recipient address you control or a newly generated devnet wallet.
+3. Start with `0.000001` SOL.
+4. Review the wallet prompt before approval.
+5. After submission, wait for the example to show confirmation status.
+6. Open the explorer link and confirm it uses the devnet cluster query.
+7. Refresh the sender and recipient balances.
+
+Explorer URLs should be cluster-aware:
+
+```ts
+function explorerUrl(signature: string, cluster: string) {
+  const suffix = cluster === "mainnet-beta" ? "" : `?cluster=${cluster}`;
+  return `https://explorer.solana.com/tx/${signature}${suffix}`;
+}
+```
+
+If confirmation times out after a signature is returned, do not immediately resubmit. Check the signature status or explorer first; the transaction may still confirm.
+
+## Final Verification
+
+Before relying on an app flow, verify these behaviors on devnet:
+
+- RPC reads work without a wallet.
+- Wallet discovery shows only supported wallet sources for the current platform.
+- Wallet selection and connection are separate user actions.
+- Optional `autoConnect` restores only the previously selected wallet identity.
+- Unsupported message signing or transaction signing capabilities are disabled in the UI.
+- Message signing returns a signature without submitting an on-chain transaction.
+- Transfer submission returns a signature and confirmation status.
+- Explorer links point to the same cluster as the app.
+- `mainnet-beta` is used only when you intentionally configure mainnet and understand that real SOL is at risk.
+
+## More Reading
+
+- [Solana For Vue Developers](/concepts/solana-for-vue-developers)
+- [Clusters](/concepts/clusters)
+- [Wallets](/guides/wallets)
+- [Transaction Guide](/guides/transactions)
+- [Troubleshooting](/troubleshooting)
+- [Solana Documentation](https://solana.com/docs)
+
+---
+
+# Agent Skill
+
+Source: https://vue-solana-docs.vercel.app/agent-skill
+Description: Install the Vue Solana Agent Skill for AI coding agents.
+
+Vue Solana ships an installable Agent Skill for AI coding agents that support the Agent Skills format. The skill gives agents Vue Solana setup patterns, package selection rules, wallet flow guidance, Nuxt SSR caveats, transaction gotchas, and verification commands.
+
+Use it when asking an agent to build, debug, review, or document apps that use:
+
+- `@vue-solana/core`
+- `@vue-solana/vue`
+- `@vue-solana/nuxt`
+- `@vue-solana/vue/web3` and `@vue-solana/nuxt/web3` primitives in Vue or Nuxt apps
+
+## Install
+
+Install from the GitHub repository with the Skills CLI:
+
+```sh
+# Install all skills
+npx skills add vue-solana/vue-solana
+
+# Install the Vue Solana skill
+npx skills add vue-solana/vue-solana --skill vue-solana
+
+# List available skills
+npx skills add vue-solana/vue-solana --list
+
+# Install globally
+npx skills add vue-solana/vue-solana --global
+```
+
+The CLI installs skills into `.claude/skills/` for the current project, or `~/.claude/skills/` when `--global` is used.
+
+## What The Skill Covers
+
+- When to use `@vue-solana/core`, `@vue-solana/vue`, `@vue-solana/vue/web3`, `@vue-solana/nuxt`, and `@vue-solana/nuxt/web3`.
+- Vue plugin setup and preferred direct composable imports.
+- Nuxt module setup and auto-imported composables.
+- Unified wallet discovery and connection through `useWallets()` and `useWallet()`.
+- Browser extension wallets, Android Mobile Wallet Adapter support, iOS browser wallet support, and current desktop native wallet limits.
+- RPC, balance, and transaction helper usage.
+- `installSolanaBufferPolyfill()` browser polyfill guidance for transaction code.
+- The current `@solana/web3-compat@0.0.21` TypeScript metadata workaround.
+- Repository verification commands for changes to Vue Solana itself.
+
+## Source
+
+The skill source is [`skills/vue-solana/SKILL.md`](https://github.com/vue-solana/vue-solana/blob/main/skills/vue-solana/SKILL.md).
+
+---
+
+# Troubleshooting
+
+Source: https://vue-solana-docs.vercel.app/troubleshooting
+Description: Common setup, TypeScript, wallet, RPC, and Nuxt issues.
+
+## TypeScript Cannot Resolve `@solana/web3-compat`
+
+`@solana/web3-compat@0.0.21` currently has broken TypeScript metadata. Runtime imports still use the real package. Current Vue Solana packages publish temporary package-owned declaration shims, so the documented imports from `@vue-solana/core`, `@vue-solana/vue`, and `@vue-solana/nuxt` should typecheck without a consumer-local shim.
+
+If TypeScript still reports missing declarations, first confirm that you are using a current Vue Solana package version and are not importing `@solana/web3-compat` directly from app code. For older Vue Solana versions or direct `@solana/web3-compat` imports, add `types/web3-compat.d.ts` to your app:
+
+```ts
+declare module "@solana/web3-compat" {
+  export type {
+    Commitment,
+    RpcResponseAndContext,
+    SendOptions,
+    SignatureResult,
+    TransactionSignature,
+  } from "@solana/web3.js";
+  export {
+    Connection,
+    Keypair,
+    PublicKey,
+    SystemProgram,
+    Transaction,
+    TransactionInstruction,
+    VersionedTransaction,
+  } from "@solana/web3.js";
+}
+```
+
+Make sure your `tsconfig.json` includes the file:
+
+```json
+{
+  "include": ["src/**/*.ts", "src/**/*.vue", "types/**/*.d.ts"]
+}
+```
+
+Re-check new `@solana/web3-compat` versions before keeping this workaround. The package-owned shim should be removed once upstream ships valid root declarations.
+
+## `Vue Solana plugin is not installed`
+
+This means client-side code tried to use the Solana connection or wallet actions without installing the plugin. Current composables return inert SSR-safe state when Nuxt renders on the server, but real RPC and wallet operations still require the client plugin context.
+
+For Vue:
+
+```ts
+createApp(App).use(
+  createSolanaPlugin({
+    cluster: "devnet",
+  }),
+);
+```
+
+For Nuxt, register the module:
+
+```ts
+export default defineNuxtConfig({
+  modules: ["@vue-solana/nuxt"],
+});
+```
+
+The Nuxt module keeps the Vue Solana plugin client-only. Auto-imported composables can be called during SSR, but avoid doing direct RPC or wallet work on the server. Trigger RPC reads from client lifecycle hooks or user actions when you need the real Solana connection.
+
+## `No Solana wallet is configured`
+
+No wallet has been selected or manually configured. Use `useWallets()` or `useSolanaWallets()` to select a discovered wallet before calling `connect()` or sending a transaction.
+
+```ts
+const { wallets, selectWallet } = useSolanaWallets();
+
+selectWallet(wallets.value[0]);
+```
+
+RPC reads and balance reads work without a wallet.
+
+## No Browser Wallets Are Detected
+
+Common causes:
+
+- No Solana wallet extension is installed.
+- The wallet extension is disabled for the current browser profile.
+- The app is running in SSR or a non-browser environment.
+- The wallet does not implement the Wallet Standard.
+
+Install a wallet such as Phantom, Solflare, or Backpack, then call `refreshWallets()` after the page loads.
+
+## Mobile Wallet Adapter Is Not Detected
+
+Android Mobile Wallet Adapter web registration works only on supported Android Chrome mobile web and Chrome PWA runtimes.
+
+Common causes:
+
+- The app is running on desktop, iOS, Firefox Android, Brave Android, Opera Android, or another unsupported browser.
+- No compatible Solana mobile wallet is installed.
+- `mobileWallet: false` was passed to the Vue plugin or Nuxt module.
+- Wallet discovery ran before hydration or before the page could access `window`.
+
+Open the app in Android Chrome, install a compatible wallet, then call `refreshWallets()` after the page loads.
+
+## iOS Wallet Link Does Not Complete
+
+iOS wallet support uses Phantom, Solflare, and Backpack universal links. The wallet app redirects back to your app URL after approval.
+
+Common causes:
+
+- The app is not running in an iOS browser.
+- Phantom, Solflare, or Backpack is not installed on the device.
+- `iosWallet: false` was passed to the Vue plugin or Nuxt module.
+- The configured `redirectUrl` does not return to the same app page that refreshes wallet state.
+- Wallet refresh or callback handling is only running during SSR instead of on the client.
+
+Keep iOS wallet work client-side, make sure the redirect URL loads the app again, and call `refreshWallets()` after the redirected page loads. The Vue plugin handles iOS callbacks during wallet refresh; apps using core helpers directly should call `handleSolanaIosWalletCallback()` before relying on the returned connection.
+
+## `Solana wallet is not connected`
+
+The transaction helper was called before the wallet reported `connected: true` and a non-null `publicKey`.
+
+Call `connect()` first, or check `connected.value` before sending.
+
+## Wallet Appears Connected After Refresh During Local Development
+
+Selecting a discovered wallet should not mark it connected. `connected` should become true only after `connect()` succeeds, even if the browser extension exposes previously authorized accounts.
+
+If local Vue or Nuxt examples still appear connected immediately after refresh, rebuild the workspace packages and fully restart the dev server so Vite/Nuxt drop stale package output:
+
+```sh
+pnpm build:packages
+pnpm dev:vue
+```
+
+For Nuxt, use `pnpm dev:nuxt` after rebuilding packages.
+
+## `Solana wallet does not support signTransaction`
+
+The configured wallet does not expose either `signAndSendTransaction` or `signTransaction`. Use a wallet that supports transaction signing for the selected Solana chain.
+
+## Wallet Transaction Did Not Return A Result
+
+This can happen when a wallet adapter starts a mobile handoff but never settles its browser promise. Vue Solana clears `loading` and sets `error` instead of leaving the app stuck in a sending state. The transaction may still have succeeded if the wallet submitted it before the response was lost, so check the wallet activity or a Solana explorer before retrying.
+
+Android Mobile Wallet Adapter wallets prefer wallet signing plus app-side RPC submission when `signTransaction` is available. That path avoids the common case where the wallet sends successfully but the browser page never receives the adapter's returned signature.
+
+## `Buffer is not defined`
+
+Some `@solana/web3-compat` transaction paths still expect a Node-compatible `Buffer` global. In browser Vue apps, initialize the Vue package Buffer polyfill before creating or serializing transactions. Use `@vue-solana/nuxt/buffer-polyfill` in Nuxt apps.
+
+```ts
+import { installSolanaBufferPolyfill } from "@vue-solana/vue/buffer-polyfill";
+
+installSolanaBufferPolyfill();
+```
+
+The helper is provided by the framework packages, so apps do not need to install or import `buffer` directly for Vue Solana transaction examples.
+
+## Module `buffer` Has Been Externalized
+
+If the console says `Module "buffer" has been externalized for browser compatibility`, replace direct app imports from `buffer` with `installSolanaBufferPolyfill()` from `@vue-solana/vue/buffer-polyfill` or `@vue-solana/nuxt/buffer-polyfill`, then restart the dev server. Vite may cache the previously optimized dependency.
+
+## Balance Reads Fail
+
+Common causes:
+
+- The address string is not a valid Solana public key.
+- The RPC endpoint is unavailable or rate-limited.
+- The wallet address is on a different cluster than the configured RPC endpoint.
+
+Check the configured cluster and endpoint with `useRpc()` or `useSolanaRpc()`.
+
+## Nuxt Auto-Imports Are Missing
+
+Make sure `@vue-solana/nuxt` is listed in `modules` and restart the Nuxt dev server after installing the package.
+
+If TypeScript still does not recognize auto-imports, regenerate Nuxt types:
+
+```sh
+npx nuxi prepare
+```
+
+---
+
+# Solana For Vue Developers
+
+Source: https://vue-solana-docs.vercel.app/concepts/solana-for-vue-developers
+Description: Practical Solana concepts for Vue and Nuxt developers.
+
+This page explains the Solana terms you will see when using the Vue Solana packages. It is practical rather than exhaustive.
+
+Official references:
+
+- [Solana Documentation](https://solana.com/docs)
+- [Solana RPC Methods](https://solana.com/docs/rpc)
+- [Solana Clusters](https://solana.com/docs/references/clusters)
+- [Solana Transactions](https://solana.com/docs/core/transactions)
+
+## Connections And RPC
+
+Frontend apps read Solana data through an RPC endpoint. `@vue-solana/vue/web3` and `@vue-solana/nuxt/web3` expose the supported `Connection` class that sends requests to that endpoint.
+
+Vue Solana packages create and provide that connection for Vue and Nuxt code so composables can share the same cluster, endpoint, commitment, and wallet state.
+
+```ts
+createSolanaPlugin({
+  cluster: "devnet",
+  commitment: "confirmed",
+});
+```
+
+## Public Keys And Addresses
+
+A public key is a Solana account address. You can safely show public keys in a frontend app.
+
+```ts
+import { PublicKey } from "@vue-solana/vue/web3";
+
+const publicKey = new PublicKey("PASTE_A_SOLANA_ADDRESS");
+```
+
+Never expose private keys, seed phrases, or secret key arrays in frontend code.
+
+## Lamports And SOL
+
+SOL is the native token on Solana. Lamports are the smallest unit of SOL.
+
+```txt
+1 SOL = 1,000,000,000 lamports
+```
+
+RPC balance methods return lamports. Convert lamports to SOL only for display.
+
+```ts
+const lamports = await connection.getBalance(publicKey);
+const sol = lamports / 1_000_000_000;
+```
+
+## Wallets
+
+A wallet stores keys and signs transactions. Browser extension wallets include Phantom, Solflare, and Backpack. Android native mobile wallets can connect through Solana Mobile Wallet Adapter on supported Android Chrome runtimes. Phantom, Solflare, and Backpack can also connect from iOS browsers through wallet-specific universal links.
+
+Vue Solana discovers Solana Wallet Standard browser extension wallets, Android Mobile Wallet Adapter wallets, and supported iOS browser wallet links through the unified `useWallets()` flow. RPC reads and balance reads work without a wallet. Connecting, signing, and sending transactions require a discovered wallet or custom object that implements the `SolanaWallet` interface.
+
+See [Wallets](/guides/wallets) for current support and the desktop native wallet post-v1 status.
+
+## Transactions And Signing
+
+A transaction is a set of instructions that changes Solana state. Examples include transferring SOL, creating an account, or interacting with a program.
+
+Signing proves that the wallet owner approves the transaction. Frontend apps should ask the user's wallet to sign. They should not hold private keys.
+
+## Commitment Levels
+
+Commitment controls how finalized returned data should be.
+
+- `processed`: fastest, least final.
+- `confirmed`: good default for most app UI reads.
+- `finalized`: slowest, most final.
+
+Example:
+
+```ts
+createSolanaPlugin({
+  cluster: "devnet",
+  commitment: "confirmed",
+});
+```
+
+Official reference: [Commitment Status](https://solana.com/docs/rpc#configuring-state-commitment)
+
+## Safety Notes
+
+- Use `devnet` while building and testing.
+- Do not use a wallet with real funds for development.
+- Do not hardcode private keys in frontend apps.
+- Use `mainnet-beta` only when you are ready to interact with real SOL and production programs.
+
+---
+
+# Clusters
+
+Source: https://vue-solana-docs.vercel.app/concepts/clusters
+Description: Solana cluster names, RPC endpoints, and faucet instructions.
+
+A Solana cluster is a network of validators. Apps choose which cluster to connect to.
+
+## Supported Clusters
+
+Vue Solana supports these cluster names:
+
+- `mainnet-beta`: Solana mainnet. This is Solana's official mainnet cluster name. Use this for production apps and real SOL.
+- `devnet`: developer network. Use this while building apps. Devnet SOL has no real value.
+- `testnet`: validator and protocol testing network. It is less common for app development than devnet.
+- `localnet`: a local validator running on your machine, usually at `http://127.0.0.1:8899`.
+
+Use `mainnet-beta` rather than `mainnet`. Vue Solana intentionally does not add a `mainnet` alias.
+
+Official reference: [Solana Clusters](https://solana.com/docs/references/clusters)
+
+## RPC Endpoints
+
+An RPC endpoint is the HTTP URL your app uses to read from or write to Solana.
+
+Examples:
+
+- `https://api.devnet.solana.com`
+- `https://api.mainnet-beta.solana.com`
+- `http://127.0.0.1:8899`
+
+The `Connection` object from `@vue-solana/vue/web3`, `@vue-solana/nuxt/web3`, or `@vue-solana/core/web3` sends RPC requests to this endpoint. Public endpoints are useful for getting started, but production apps usually use a dedicated RPC provider for reliability and rate limits.
+
+Official reference: [Solana RPC](https://solana.com/docs/rpc)
+
+## WebSocket Endpoints
+
+WebSocket endpoints are used for subscriptions and real-time updates. Vue Solana derives a WebSocket endpoint from your RPC endpoint unless you pass `wsEndpoint` explicitly.
+
+Examples:
+
+- `wss://api.devnet.solana.com`
+- `wss://api.mainnet-beta.solana.com`
+- `ws://127.0.0.1:8900`
+
+## Configure A Cluster
+
+For Vue:
+
+```ts
+createSolanaPlugin({
+  cluster: "devnet",
+});
+```
+
+For Nuxt:
+
+```ts
+export default defineNuxtConfig({
+  modules: ["@vue-solana/nuxt"],
+  solana: {
+    cluster: "devnet",
+  },
+});
+```
+
+You can also pass a custom endpoint:
+
+```ts
+createSolanaPlugin({
+  cluster: "mainnet-beta",
+  endpoint: "https://your-rpc.example.com",
+  commitment: "confirmed",
+});
+```
+
+## Get Devnet Or Testnet SOL
+
+Use the official faucet:
+
+```txt
+https://faucet.solana.com
+```
+
+Choose `Devnet` or `Testnet`, paste your wallet address, and request SOL.
+
+If you have the Solana CLI installed, you can also request an airdrop:
+
+```sh
+solana airdrop 1 YOUR_WALLET_ADDRESS --url devnet
+```
+
+```sh
+solana airdrop 1 YOUR_WALLET_ADDRESS --url testnet
+```
+
+Devnet and testnet SOL have no real value. Never use a wallet with real funds while testing.
+
+---
+
+# RPC and Clusters
+
+Source: https://vue-solana-docs.vercel.app/guides/rpc-and-clusters
+Description: Configure Solana clusters, RPC endpoints, WebSocket endpoints, and connection helpers.
+
+Vue Solana keeps cluster and endpoint configuration shared across `@vue-solana/core`, `@vue-solana/vue`, and `@vue-solana/nuxt`.
+
+Use this guide when you need to choose a cluster, provide a custom RPC endpoint, or understand what the RPC composables expose.
+
+## Cluster Names
+
+Supported cluster names are:
+
+- `devnet`
+- `testnet`
+- `mainnet-beta`
+- `localnet`
+
+Use `mainnet-beta` for Solana mainnet. Vue Solana intentionally follows Solana's official cluster name and does not use `mainnet` as an alias.
+
+`devnet` is the default because it is the safest cluster for examples and development.
+
+## Core Setup
+
+Use `@vue-solana/core/rpc` when you want framework-agnostic connection setup.
+
+```ts
+import { createSolanaContext } from "@vue-solana/core/rpc";
+
+const solana = createSolanaContext({
+  cluster: "devnet",
+  commitment: "confirmed",
+});
+
+const { blockhash } = await solana.connection.getLatestBlockhash();
+
+console.log(solana.endpoint, blockhash);
+```
+
+`createSolanaContext()` returns the resolved `cluster`, HTTP `endpoint`, WebSocket `wsEndpoint`, and `connection`.
+
+## Custom RPC Endpoints
+
+Production apps should usually use a dedicated RPC provider instead of public cluster endpoints.
+
+```ts
+import { createSolanaContext } from "@vue-solana/core/rpc";
+
+const solana = createSolanaContext({
+  cluster: "mainnet-beta",
+  endpoint: "https://your-rpc.example.com",
+  commitment: "confirmed",
+});
+```
+
+If `wsEndpoint` is omitted, Vue Solana derives it from the HTTP endpoint by converting `https` to `wss` and `http` to `ws`.
+
+```ts
+import { getWebSocketEndpoint } from "@vue-solana/core/clusters";
+
+const wsEndpoint = getWebSocketEndpoint("https://api.devnet.solana.com");
+```
+
+## Vue Setup
+
+Install the Vue plugin once near app startup.
+
+```ts
+import { createApp } from "vue";
+import { createSolanaPlugin } from "@vue-solana/vue";
+import App from "./App.vue";
+
+createApp(App)
+  .use(
+    createSolanaPlugin({
+      cluster: "devnet",
+      commitment: "confirmed",
+    }),
+  )
+  .mount("#app");
+```
+
+Then read RPC state from components with `useRpc()`.
+
+```vue
+<script setup lang="ts">
+import { useRpc } from "@vue-solana/vue/useRpc";
+
+const { cluster, endpoint, status, latestBlockhash, error, checkConnection } = useRpc();
+</script>
+
+<template>
+  <section>
+    <p>Cluster: {{ cluster }}</p>
+    <p>Endpoint: {{ endpoint }}</p>
+    <p>Status: {{ status }}</p>
+    <p>Latest blockhash: {{ latestBlockhash }}</p>
+    <p v-if="error">Unable to reach RPC.</p>
+    <button type="button" @click="checkConnection">Check RPC</button>
+  </section>
+</template>
+```
+
+## Nuxt Setup
+
+Configure the module in `nuxt.config.ts`.
+
+```ts
+export default defineNuxtConfig({
+  modules: ["@vue-solana/nuxt"],
+  solana: {
+    cluster: "devnet",
+    commitment: "confirmed",
+  },
+});
+```
+
+Nuxt stores module options in public runtime config, so options must be JSON-serializable.
+
+Use the auto-imported `useSolanaRpc()` composable in Nuxt pages and components.
+
+```vue
+<script setup lang="ts">
+const { cluster, endpoint, status, checkConnection } = useSolanaRpc();
+</script>
+```
+
+The Nuxt runtime plugin is client-only. Composables can be called during SSR, but wallet and RPC work should be triggered from client lifecycle hooks or user actions.
+
+## Endpoint Helpers
+
+Use `@vue-solana/core/clusters` when you need the built-in endpoint values without creating a `Connection`.
+
+```ts
+import {
+  DEFAULT_CLUSTER,
+  getClusterEndpoint,
+  getClusterWebSocketEndpoint,
+} from "@vue-solana/core/clusters";
+
+const endpoint = getClusterEndpoint(DEFAULT_CLUSTER);
+const wsEndpoint = getClusterWebSocketEndpoint("devnet");
+```
+
+## Production Notes
+
+- Prefer a dedicated RPC provider for production traffic.
+- Avoid broad or frequent scans on public RPC endpoints.
+- Use WebSocket subscriptions intentionally; always clean them up when you no longer need them.
+- Treat RPC responses as untrusted input and handle missing, stale, or failed data.
+
+---
+
+# Wallets
+
+Source: https://vue-solana-docs.vercel.app/guides/wallets
+Description: Discover wallets, select an active wallet, connect, disconnect, and check capabilities.
+
+Vue Solana exposes browser extension wallets, Android Mobile Wallet Adapter wallets, and supported iOS browser wallet links through one wallet flow.
+
+Use `useWallets()` to discover and select a wallet. Use `useWallet()` to connect, disconnect, read the active public key, and check wallet capabilities.
+
+Current wallet support is built on these libraries:
+
+- Browser extension wallets: `@wallet-standard/app`, `@wallet-standard/base`, `@wallet-standard/features`, and `@solana/wallet-standard-features`.
+- Android mobile native wallets: `@solana-mobile/wallet-standard-mobile`, which registers Solana Mobile Wallet Adapter as a Wallet Standard wallet on supported Android Chrome mobile web and PWA runtimes.
+- iOS browser wallets: wallet-specific universal links for Phantom, Solflare, and Backpack.
+- Solana primitives and transaction types: `@vue-solana/vue/web3` for Vue apps, `@vue-solana/nuxt/web3` for Nuxt apps, and `@vue-solana/core/web3` for framework-agnostic core usage.
+
+## Wallet Sources
+
+Current wallet sources are:
+
+- Browser extension wallets through Solana Wallet Standard.
+- Android Mobile Wallet Adapter through Wallet Standard registration on supported Android Chrome clients.
+- iOS browser wallet links for supported wallets such as Phantom, Solflare, and Backpack.
+
+All sources appear in the same discovered wallet list. Apps should not build separate public flows for browser, Android, and iOS wallets unless they need platform-specific UI copy.
+
+## Support Matrix
+
+| Wallet path                   | v1 status                                   | How it appears                                          | Notes                                                                |
+| ----------------------------- | ------------------------------------------- | ------------------------------------------------------- | -------------------------------------------------------------------- |
+| Browser extension wallets     | Supported                                   | `platform: "browser"`, `source: "wallet-standard"`      | Uses Solana Wallet Standard registration.                            |
+| Android native mobile wallets | Supported on Android Chrome and Chrome PWAs | `platform: "mobile"`, `source: "mobile-wallet-adapter"` | Registered through `@solana-mobile/wallet-standard-mobile`.          |
+| iOS browser wallets           | Supported for configured wallet links       | `platform: "mobile"`, `source: "deep-link"`             | Phantom, Solflare, and Backpack are exposed through universal links. |
+| Manual/custom wallet objects  | Supported                                   | App-provided wallet                                     | Must implement the `SolanaWallet` interface.                         |
+| Desktop native app wallets    | Deferred from v1                            | Not exposed by default                                  | Reserved `protocol-link` metadata is available for future adapters.  |
+
+What works today:
+
+- Discovering wallets from all supported sources in one `wallets` list.
+- Selecting one active wallet without immediately connecting it.
+- Persisting selected wallet identity metadata for optional reconnect flows.
+- Connecting, disconnecting, signing messages, signing transactions, and signing/sending transactions when the selected wallet supports those capabilities.
+- Rendering unsupported-capability UI from `canSignMessage`, `canSignTransaction`, `canSignAllTransactions`, and `canSignAndSendTransaction`.
+
+What is not included in v1:
+
+- A built-in wallet modal or UI package.
+- Desktop native protocol-link adapters.
+- Server-side wallet prompts.
+- Private-key or seed-phrase handling.
+
+## Vue Wallet Flow
+
+```vue
+<script setup lang="ts">
+import { useWallet } from "@vue-solana/vue/useWallet";
+import { useWallets } from "@vue-solana/vue/useWallets";
+
+const { wallets, selectedWallet, refreshWallets, selectWallet } = useWallets();
+const { publicKey, connected, connecting, connect, disconnect } = useWallet();
+</script>
+
+<template>
+  <section>
+    <button type="button" @click="refreshWallets">Refresh wallets</button>
+
+    <button
+      v-for="wallet in wallets"
+      :key="`${wallet.source ?? 'unknown'}:${wallet.name}`"
+      type="button"
+      @click="selectWallet(wallet)"
+    >
+      {{ wallet.name }}
+    </button>
+
+    <p>Selected: {{ selectedWallet?.name ?? "None" }}</p>
+    <p>Connected: {{ connected }}</p>
+    <p>Public key: {{ publicKey?.toBase58() ?? "None" }}</p>
+
+    <button type="button" :disabled="!selectedWallet || connected || connecting" @click="connect">
+      Connect
+    </button>
+    <button type="button" :disabled="!connected" @click="disconnect">Disconnect</button>
+  </section>
+</template>
+```
+
+Selecting a wallet does not connect it. The wallet remains disconnected until `connect()` resolves successfully.
+
+## Nuxt Wallet Flow
+
+Nuxt auto-imports the same wallet flow with `useSolanaWallets()` and `useSolanaWallet()`.
+
+```vue
+<script setup lang="ts">
+const { wallets, selectedWallet, selectWallet, refreshWallets } = useSolanaWallets();
+const { publicKey, connected, connect, disconnect } = useSolanaWallet();
+</script>
+```
+
+Trigger wallet work on the client from user actions. Wallet prompts should not run during SSR.
+
+## Capability Checks
+
+Wallets may support different features. Check capabilities before rendering actions.
+
+```vue
+<script setup lang="ts">
+import { useWallet } from "@vue-solana/vue/useWallet";
+
+const { connected, canSignMessage, canSignTransaction, connect } = useWallet();
+</script>
+
+<template>
+  <button type="button" :disabled="connected" @click="connect">Connect</button>
+  <button type="button" :disabled="!connected || !canSignMessage">Sign message</button>
+  <button type="button" :disabled="!connected || !canSignTransaction">Sign transaction</button>
+</template>
+```
+
+For framework-agnostic code, use wallet assertions from `@vue-solana/core/wallet`.
+
+```ts
+import { assertWalletCanSign, assertWalletConnected } from "@vue-solana/core/wallet";
+
+assertWalletConnected(wallet);
+console.log(wallet.publicKey.toBase58());
+
+assertWalletCanSign(wallet);
+const signed = await wallet.signTransaction(transaction);
+```
+
+## Auto Connect
+
+`autoConnect` reconnects only a wallet identity that the user previously selected and that is discovered again on the client.
+
+Vue Solana stores only wallet identity metadata under `localStorage["vue-solana:selected-wallet"]`: `name`, and `platform`/`source` when available. It never stores private keys, session data, or transaction data.
+
+Call `selectWallet(null)` when users explicitly clear wallet selection. Call `setWallet(customWallet)` from `useWallet()` only when your app owns a custom wallet object; normal app UI should select from `useWallets()`.
+
+If local storage is unavailable, wallet selection still works for the current page session but persisted restore can fail with a normalized `STORAGE_FAILURE` error.
+
+## Message Signing For Auth
+
+Message signing proves wallet control for off-chain auth. It does not authorize an on-chain transaction. Use clear challenge text and verify it on your backend.
+
+```ts
+const { connected, canSignMessage } = useWallet();
+const { execute, signature } = useSignMessage();
+
+async function signIn() {
+  if (!connected.value || !canSignMessage.value) return;
+
+  const message = new TextEncoder().encode(
+    "Sign in to example.com\nNonce: 8f1a2c\nExpires: 2026-07-03T12:00:00Z",
+  );
+
+  await execute(message);
+  await fetch("/api/verify-wallet", {
+    method: "POST",
+    body: JSON.stringify({ signature: Array.from(signature.value ?? []) }),
+  });
+}
+```
+
+Keep nonces single-use and short-lived. Do not use raw wallet or RPC error messages as user-facing auth errors.
+
+## Mobile Wallets
+
+Android Mobile Wallet Adapter registration is enabled by default in the Vue plugin and Nuxt module on supported Android Chrome clients.
+
+```ts
+createSolanaPlugin({
+  cluster: "devnet",
+  mobileWallet: {
+    appIdentity: {
+      name: "My Vue Solana App",
+      uri: "https://example.com",
+      icon: "favicon.ico",
+    },
+  },
+});
+```
+
+Pass `mobileWallet: false` to disable Android Mobile Wallet Adapter registration.
+
+iOS wallet links are enabled by default on iOS browsers. Pass `iosWallet` options to customize app identity, redirect URL, chains, or cluster. Pass `iosWallet: false` to disable iOS wallet link discovery.
+
+Android notes:
+
+- Android MWA registration is client-only and no-ops during SSR.
+- It is expected to work only in Android Chrome or Chrome PWA runtimes that support the mobile wallet adapter bridge.
+- The wallet handoff can leave the browser and return to the app; preserve UI state so users can see the submitted signature after redirect.
+- Vue Solana adapts MWA wallets into the same `SolanaWallet` interface as extension wallets.
+- The mobile wallet package handles installed-wallet fallback UI through its default wallet-not-found handler.
+- Browsers may show a one-time Local Network Access prompt before MWA can connect to an installed wallet app.
+- For Android MWA transaction sends, Vue Solana asks the mobile wallet to sign and then submits the signed transaction through the app's RPC connection when the wallet supports `signTransaction`. This keeps the returned signature under app control and avoids a mobile handoff edge case where the wallet sends successfully but the browser page does not receive the wallet adapter response.
+
+iOS notes:
+
+| Capability                 | v1 behavior                                                                             |
+| -------------------------- | --------------------------------------------------------------------------------------- |
+| Discovery                  | Phantom, Solflare, and Backpack entries can appear on iOS browsers.                     |
+| Connection                 | Uses wallet-specific universal links and redirect callbacks.                            |
+| Session handling           | Apps should handle callback state before assuming a wallet is connected after redirect. |
+| Transactions               | Capability depends on the wallet link and returned session data.                        |
+| Desktop Safari native apps | Not implemented as a v1 desktop-native path.                                            |
+
+If you use iOS core helpers directly, call `handleSolanaIosWalletCallback()` early in client startup so redirect data is validated and decrypted before the app reads wallet state.
+
+## Manual Wallet Interface
+
+Custom wallet integrations can provide a `SolanaWallet` object directly through the Vue plugin or `setWallet()`.
+
+```ts
+import type { SolanaWallet } from "@vue-solana/core/types";
+
+const customWallet: SolanaWallet = {
+  publicKey: null,
+  connected: false,
+  async connect() {
+    // Open your wallet UI and assign publicKey after approval.
+  },
+  async disconnect() {
+    // Clear local wallet state.
+  },
+  async signTransaction(transaction) {
+    // Return the signed transaction.
+    return transaction;
+  },
+};
+```
+
+Manual wallet objects should never expose private keys to Vue Solana. Keep key custody inside the wallet provider.
+
+## Direct Core Helpers
+
+Use direct core helpers only when you are building your own wallet integration layer.
+
+```ts
+import { registerSolanaMobileWallet } from "@vue-solana/core/mobile-wallet";
+import { getRegisteredSolanaWallets } from "@vue-solana/core/wallet-standard";
+
+registerSolanaMobileWallet();
+
+const wallets = getRegisteredSolanaWallets();
+```
+
+If you use iOS core helpers directly, call `handleSolanaIosWalletCallback()` before relying on a returned iOS wallet connection after redirect.
+
+## Security Notes
+
+- Never request private keys from users.
+- Never store wallet sessions or transaction data in local storage.
+- Treat wallet names, icons, and metadata as untrusted display data.
+- Ask for explicit user action before signing messages or transactions.
+- Show disabled or explanatory UI for unsupported capabilities instead of attempting wallet calls blindly.
+- Keep devnet as the default for examples and tutorials; use `mainnet-beta` only when real funds are intended.
+
+Official references:
+
+- <a href="https://github.com/wallet-standard/wallet-standard" target="_blank" rel="noopener noreferrer">Wallet Standard</a>
+- <a href="https://github.com/anza-xyz/wallet-adapter/tree/master/packages/wallets/wallet-standard" target="_blank" rel="noopener noreferrer">Solana Wallet Standard</a>
+- [Solana Documentation](https://solana.com/docs)
+
+---
+
+# Account Reads
+
+Source: https://vue-solana-docs.vercel.app/guides/account-reads
+Description: Read balances, account data, program accounts, and signature status safely from Vue or Nuxt.
+
+Vue Solana includes composables for common Solana read paths: balances, account info, program accounts, and signature status.
+
+Use this guide when your app needs to read chain state without signing a transaction.
+
+## Parse Addresses
+
+Framework-agnostic code can normalize a Solana address with `parsePublicKey()`.
+
+```ts
+import { parsePublicKey } from "@vue-solana/core/address";
+
+const publicKey = parsePublicKey("11111111111111111111111111111111");
+
+if (publicKey) {
+  const balance = await connection.getBalance(publicKey);
+}
+```
+
+`parsePublicKey()` accepts a `PublicKey`, address string, ref-like object, getter, `null`, or `undefined`. Invalid address strings throw `INVALID_ADDRESS`.
+
+## Read Balance in Vue
+
+```vue
+<script setup lang="ts">
+import { computed, ref } from "vue";
+import { useBalance } from "@vue-solana/vue/useBalance";
+
+const address = ref("PASTE_A_SOLANA_ADDRESS");
+const { balance, loading, error, refresh } = useBalance(address);
+
+const errorMessage = computed(() => {
+  switch (error.value?.code) {
+    case "INVALID_ADDRESS":
+      return "Enter a valid Solana address.";
+    case "RPC_FAILURE":
+      return "Unable to load the balance.";
+    default:
+      return null;
+  }
+});
+</script>
+
+<template>
+  <section>
+    <p>Lamports: {{ balance ?? "Unknown" }}</p>
+    <p v-if="loading">Loading...</p>
+    <p v-if="errorMessage">{{ errorMessage }}</p>
+    <button type="button" @click="refresh">Refresh</button>
+  </section>
+</template>
+```
+
+## Read Account Info
+
+Use `useAccountInfo()` for a single account. Enable `watch` when you need live account updates.
+
+```vue
+<script setup lang="ts">
+import { ref } from "vue";
+import { useAccountInfo } from "@vue-solana/vue/useAccountInfo";
+
+const address = ref("PASTE_A_SOLANA_ADDRESS");
+const { accountInfo, loading, error, refresh, stopWatching } = useAccountInfo(address, {
+  commitment: "confirmed",
+  watch: true,
+});
+</script>
+```
+
+When `watch: true` is enabled, Vue Solana removes the WebSocket listener automatically on component unmount. Call `stopWatching()` to remove the current listener earlier and prevent automatic restarts for that composable instance.
+
+## Read Program Accounts
+
+Use `useProgramAccounts()` for accounts owned by a program id.
+
+```vue
+<script setup lang="ts">
+import { ref } from "vue";
+import { useProgramAccounts } from "@vue-solana/vue/useProgramAccounts";
+
+const programId = ref("PASTE_A_SOLANA_PROGRAM_ID");
+
+const { accounts, loading, error, refresh } = useProgramAccounts(programId, {
+  commitment: "confirmed",
+  filters: [{ dataSize: 165 }],
+  dataSlice: { offset: 0, length: 32 },
+});
+</script>
+```
+
+Program account scans can be expensive. Use narrow filters, `dataSlice`, caching, pagination, indexing, or dedicated RPC infrastructure for production reads.
+
+## Read Signature Status
+
+Use `useSignatureStatus()` to track a known transaction signature.
+
+```vue
+<script setup lang="ts">
+import { ref } from "vue";
+import { useSignatureStatus } from "@vue-solana/vue/useSignatureStatus";
+
+const signature = ref("PASTE_A_TRANSACTION_SIGNATURE");
+const { status, confirmationStatus, error, refresh } = useSignatureStatus(signature, {
+  pollIntervalMs: 2_000,
+});
+</script>
+```
+
+Use polling for short-lived progress UI. Avoid indefinite polling from high-traffic pages.
+
+## Nuxt Auto-Imports
+
+Nuxt exposes the same read helpers as auto-imported composables:
+
+- `useSolanaBalance()`
+- `useSolanaAccountInfo()`
+- `useSolanaProgramAccounts()`
+- `useSolanaSignatureStatus()`
+
+```vue
+<script setup lang="ts">
+const address = ref("PASTE_A_SOLANA_ADDRESS");
+const { balance, loading, error, refresh } = useSolanaBalance(address);
+</script>
+```
+
+Nuxt composables can be called during SSR and return inert state until hydration provides the real client context. Trigger network refreshes from client lifecycle hooks or user actions when the data depends on browser-only context.
+
+## Null and Invalid Inputs
+
+Read composables clear state without calling RPC when the address, program id, or signature is `null`.
+
+Invalid address strings clear stale data, set `error`, and do not call the RPC method. Branch on `error.value.code` for user-facing messages.
+
+## RPC Cost Checklist
+
+- Prefer direct single-account reads when possible.
+- Use filters for program account scans.
+- Use `dataSlice` when you only need part of account data.
+- Avoid broad scans from landing pages or every route navigation.
+- Avoid aggressive polling intervals on public RPC endpoints.
+- Cache or index data that many users will request repeatedly.
+
+---
+
+# Transactions
+
+Source: https://vue-solana-docs.vercel.app/guides/transactions
+Description: Sign, send, confirm, and handle transaction state with Vue Solana.
+
+Vue Solana provides wallet-aware helpers for submitting transactions and composables for reactive transaction state.
+
+This guide covers the Vue Solana boundary: wallet capability checks, signing, sending, confirmation, and errors. Build transaction instructions with `@vue-solana/vue/web3`, `@vue-solana/nuxt/web3`, or your program client.
+
+## Core Send Helper
+
+Use `signAndSendTransaction()` from `@vue-solana/core/transaction` when you already have a `Connection`, wallet, and transaction.
+
+```ts
+import { signAndSendTransaction } from "@vue-solana/core/transaction";
+
+const signature = await signAndSendTransaction(connection, wallet, transaction, {
+  skipPreflight: false,
+});
+```
+
+The helper returns the RPC signature string.
+
+For Android Mobile Wallet Adapter wallets, Vue Solana prefers `signTransaction` plus `connection.sendRawTransaction()` when available so the app owns submission and can reliably return the RPC signature after the wallet handoff.
+
+## Confirm a Signature
+
+Use `confirmTransactionSignature()` when you need to wait until a submitted signature reaches a commitment level.
+
+```ts
+import { confirmTransactionSignature } from "@vue-solana/core/transaction";
+
+const confirmation = await confirmTransactionSignature(connection, signature, {
+  commitment: "confirmed",
+  timeoutMs: 60_000,
+});
+
+console.log(confirmation.signature, confirmation.commitment);
+```
+
+Confirmation defaults to `confirmed` commitment and a 60 second timeout.
+
+## Build A Real Devnet Transfer
+
+This example creates a tiny system transfer on devnet. It uses the Vue package web3 subpath for Solana primitives and Vue Solana for wallet state and submission.
+
+Browser apps that create or serialize transactions should initialize the Vue package Buffer polyfill once before transaction code runs:
+
+```ts
+import { installSolanaBufferPolyfill } from "@vue-solana/vue/buffer-polyfill";
+
+installSolanaBufferPolyfill();
+```
+
+```ts
+import { PublicKey, SystemProgram, Transaction } from "@vue-solana/vue/web3";
+
+async function createTransferTransaction(params: {
+  connection: Connection;
+  from: PublicKey;
+  to: string;
+  lamports: number;
+}) {
+  const recipient = new PublicKey(params.to);
+  const { blockhash, lastValidBlockHeight } = await params.connection.getLatestBlockhash();
+
+  const transaction = new Transaction({
+    feePayer: params.from,
+    blockhash,
+    lastValidBlockHeight,
+  });
+
+  transaction.add(
+    SystemProgram.transfer({
+      fromPubkey: params.from,
+      toPubkey: recipient,
+      lamports: params.lamports,
+    }),
+  );
+
+  return transaction;
+}
+```
+
+Use devnet SOL while testing. Start with a tiny value such as `1_000` lamports (`0.000001` SOL). Never use a wallet with real funds while validating a tutorial or example flow.
+
+## Vue Sign and Send Flow
+
+Use `useSignAndSendTransaction()` when a Vue component needs reactive status, errors, and optional confirmation.
+
+```vue
+<script setup lang="ts">
+import { computed } from "vue";
+import { useSignAndSendTransaction } from "@vue-solana/vue/useSignAndSendTransaction";
+import { useConnection } from "@vue-solana/vue/useConnection";
+import { useWallet } from "@vue-solana/vue/useWallet";
+
+const recipient = ref("PASTE_DEVNET_RECIPIENT_ADDRESS");
+const lamports = ref(1_000);
+const connection = useConnection();
+const { publicKey, connected, canSignTransaction } = useWallet();
+const { signature, confirmation, status, error, execute } = useSignAndSendTransaction();
+
+const canSubmit = computed(() => connected.value && canSignTransaction.value);
+
+async function submitTransaction() {
+  if (!publicKey.value) return;
+
+  const transaction = await createTransferTransaction({
+    connection,
+    from: publicKey.value,
+    to: recipient.value,
+    lamports: lamports.value,
+  });
+
+  await execute(transaction, {
+    confirm: true,
+    confirmation: { commitment: "confirmed" },
+  });
+}
+</script>
+
+<template>
+  <section>
+    <button type="button" :disabled="!canSubmit" @click="submitTransaction">
+      Send transaction
+    </button>
+    <p>Status: {{ status }}</p>
+    <p v-if="signature">Signature: {{ signature }}</p>
+    <p v-if="confirmation">Confirmed at {{ confirmation.commitment }}</p>
+    <p v-if="error">Unable to send transaction.</p>
+  </section>
+</template>
+```
+
+`status` distinguishes submission from confirmation. A returned `signature` means the transaction was submitted to RPC. `confirmation` means the submitted signature reached the requested commitment. If confirmation times out after submission, keep showing the signature and check its status before retrying.
+
+## Explorer Links
+
+Explorer links should match the cluster your app is using.
+
+```ts
+function explorerUrl(signature: string, cluster: string) {
+  const suffix = cluster === "mainnet-beta" ? "" : `?cluster=${cluster}`;
+  return `https://explorer.solana.com/tx/${signature}${suffix}`;
+}
+```
+
+For devnet, links should look like `https://explorer.solana.com/tx/SIGNATURE?cluster=devnet`. Mainnet links intentionally omit the cluster query.
+
+## Generic Transaction State
+
+Use `useTransaction()` when your async transaction-like operation does not fit the built-in sign/send helper.
+
+```ts
+import { useTransaction } from "@vue-solana/vue/useTransaction";
+
+const { status, error, execute } = useTransaction(async () => {
+  return await submitCustomFlow();
+});
+```
+
+`useTransaction()` centralizes loading, success, error, and timeout state for custom flows.
+
+## Nuxt Auto-Imports
+
+Nuxt exposes:
+
+- `useSolanaSignAndSendTransaction()`
+- `useSolanaTransactionConfirmation()`
+- `useSolanaSignatureStatus()`
+
+```vue
+<script setup lang="ts">
+const { signature, status, error, execute } = useSolanaSignAndSendTransaction();
+
+async function submit(transaction: Transaction) {
+  await execute(transaction, { confirm: true });
+}
+</script>
+```
+
+Call transaction methods from user actions on the client. Do not trigger wallet signing during SSR.
+
+Use `useSolanaTransactionConfirmation({ commitment: "confirmed" })` and call `confirm(signature)` when you need to confirm a signature returned by another flow. Use `useSolanaSignatureStatus(signature, { pollIntervalMs: 2_000 })` when you want to keep checking status after a timeout or redirect.
+
+## Error Handling
+
+Transaction helpers normalize failures into `SolanaError`.
+
+```ts
+import { isSolanaError } from "@vue-solana/core/errors";
+
+try {
+  await signAndSendTransaction(connection, wallet, transaction);
+} catch (error) {
+  if (isSolanaError(error)) {
+    switch (error.code) {
+      case "NO_WALLET_SELECTED":
+      case "WALLET_NOT_CONNECTED":
+        // Ask the user to connect a wallet.
+        break;
+      case "WALLET_FEATURE_UNSUPPORTED":
+        // Hide or disable unsupported transaction actions.
+        break;
+      case "USER_REJECTED":
+        // The user declined the wallet prompt.
+        break;
+      case "TRANSACTION_TIMEOUT":
+        // Check signature status before retrying.
+        break;
+      case "RPC_FAILURE":
+        // RPC send or confirmation failed.
+        console.error(error.cause);
+        break;
+    }
+  }
+}
+```
+
+## Safety Checklist
+
+- Show users what they are about to sign before opening a wallet prompt.
+- Never sign or send transactions without explicit user action.
+- Never request or handle private keys.
+- Check wallet capabilities before showing signing actions.
+- Treat RPC and wallet errors as untrusted data; map them to safe UI messages.
+- After a timeout, check signature status before retrying to avoid duplicate submissions.
+- Preserve the submitted signature in the UI even when confirmation fails or times out.
+- Link to the correct Solana Explorer cluster so users do not mistake devnet and mainnet transactions.
+
+---
+
+# Message Signing
+
+Source: https://vue-solana-docs.vercel.app/guides/message-signing
+Description: Sign authentication or ownership messages without creating on-chain transactions.
+
+Message signing proves wallet control for an off-chain message. It does not authorize on-chain state changes and it is not a transaction signature.
+
+Use message signing for authentication challenges, account ownership checks, or consent text that your app verifies off chain.
+
+## Vue Message Signing
+
+```vue
+<script setup lang="ts">
+import { computed } from "vue";
+import { useSignMessage } from "@vue-solana/vue/useSignMessage";
+import { useWallet } from "@vue-solana/vue/useWallet";
+
+const { connected, canSignMessage } = useWallet();
+const { signature, status, error, execute } = useSignMessage();
+
+const canSign = computed(() => connected.value && canSignMessage.value);
+
+async function signIn() {
+  const message = new TextEncoder().encode("Sign in to example.com");
+  await execute(message);
+}
+</script>
+
+<template>
+  <section>
+    <button type="button" :disabled="!canSign" @click="signIn">Sign message</button>
+    <p>Status: {{ status }}</p>
+    <p v-if="signature">Signature bytes: {{ signature.length }}</p>
+    <p v-if="error">Unable to sign message.</p>
+  </section>
+</template>
+```
+
+Wallets that do not expose message signing report `canSignMessage` as false. Calling `execute()` without support rejects with `WALLET_FEATURE_UNSUPPORTED`.
+
+## Nuxt Message Signing
+
+Nuxt auto-imports `useSolanaSignMessage()` and `useSolanaWallet()`.
+
+```vue
+<script setup lang="ts">
+const { connected, canSignMessage } = useSolanaWallet();
+const { signature, status, error, execute } = useSolanaSignMessage();
+
+async function signChallenge() {
+  await execute(new TextEncoder().encode("Sign in to my Nuxt app"));
+}
+</script>
+```
+
+Only call message signing from user actions on the client.
+
+## Challenge Text
+
+Use clear, app-specific challenge text. Users should understand what they are signing.
+
+Good challenge text usually includes:
+
+- App or domain name.
+- Purpose of the signature.
+- Nonce or one-time challenge value.
+- Issued-at time and expiration time.
+
+Example:
+
+```txt
+Sign in to example.com
+Wallet: 8Y...abc
+Nonce: 7f4b3c
+Issued At: 2026-07-02T12:00:00Z
+Expires At: 2026-07-02T12:10:00Z
+```
+
+## Verification Boundary
+
+Vue Solana helps request the wallet signature. Your app is responsible for server-side verification, nonce storage, expiration checks, and session creation.
+
+Do not treat a signature over generic text as permission to transfer tokens or change on-chain state.
+
+## Error Handling
+
+Message signing errors use the same normalized `SolanaError` model as wallet and transaction helpers.
+
+```ts
+const message = computed(() => {
+  switch (error.value?.code) {
+    case "NO_WALLET_SELECTED":
+      return "Choose a wallet first.";
+    case "WALLET_NOT_CONNECTED":
+      return "Connect your wallet first.";
+    case "WALLET_FEATURE_UNSUPPORTED":
+      return "This wallet does not support message signing.";
+    case "USER_REJECTED":
+      return "The message signature was rejected.";
+    default:
+      return null;
+  }
+});
+```
+
+## Safety Checklist
+
+- Use one-time nonces for authentication challenges.
+- Expire challenges quickly.
+- Verify signatures on the server before creating a session.
+- Make signed text human-readable.
+- Never imply that message signing submits a transaction.
+- Never reuse a transaction-signing flow for authentication text.
+
+---
+
+# Errors
+
+Source: https://vue-solana-docs.vercel.app/guides/errors
+Description: Handle normalized Solana errors from core helpers and Vue/Nuxt composables.
+
+Vue Solana normalizes common wallet, RPC, address, transaction, timeout, and storage failures into `SolanaError`.
+
+Use stable `error.code` values for UI decisions. Keep `error.cause` for debugging and logs.
+
+## Error Shape
+
+```ts
+import { SolanaError } from "@vue-solana/core/errors";
+
+const error = new SolanaError("RPC_FAILURE", "Unable to reach RPC");
+```
+
+`SolanaError` includes:
+
+- `code`: stable machine-readable error code.
+- `message`: human-readable developer message.
+- `cause`: optional original error from a wallet, RPC call, parser, timeout, or storage operation.
+- `feature`: optional wallet feature name for unsupported capability errors.
+
+## Stable Error Codes
+
+- `NO_WALLET_SELECTED`: no active wallet is selected.
+- `WALLET_NOT_CONNECTED`: the active wallet is not connected or has no public key.
+- `WALLET_FEATURE_UNSUPPORTED`: the active wallet does not support the requested feature.
+- `USER_REJECTED`: the user rejected a wallet request.
+- `INVALID_ADDRESS`: an address string could not be parsed as a Solana public key.
+- `TRANSACTION_TIMEOUT`: a transaction-related operation timed out.
+- `RPC_FAILURE`: an RPC send, read, or confirmation failed.
+- `STORAGE_FAILURE`: browser storage could not be read or written.
+
+## Core Error Handling
+
+Use `isSolanaError()` when catching unknown failures.
+
+```ts
+import { isSolanaError } from "@vue-solana/core/errors";
+
+try {
+  await signAndSendTransaction(connection, wallet, transaction);
+} catch (error) {
+  if (isSolanaError(error)) {
+    console.log(error.code);
+    console.debug(error.cause);
+  }
+}
+```
+
+Use `normalizeSolanaError()` when writing your own framework-agnostic helper that should follow Vue Solana's error model.
+
+```ts
+import { normalizeSolanaError } from "@vue-solana/core/errors";
+
+async function loadData() {
+  try {
+    return await connection.getLatestBlockhash();
+  } catch (cause) {
+    throw normalizeSolanaError(cause, "RPC_FAILURE", "Unable to load blockhash");
+  }
+}
+```
+
+`normalizeSolanaError()` maps common wallet rejection shapes to `USER_REJECTED`.
+
+## Vue Error Refs
+
+Vue composables expose `error` refs.
+
+```vue
+<script setup lang="ts">
+import { computed, watchEffect } from "vue";
+import { useBalance } from "@vue-solana/vue/useBalance";
+
+const { error } = useBalance("PASTE_A_SOLANA_ADDRESS");
+
+const message = computed(() => {
+  switch (error.value?.code) {
+    case "INVALID_ADDRESS":
+      return "Enter a valid Solana address.";
+    case "RPC_FAILURE":
+      return "Unable to load data from RPC.";
+    default:
+      return null;
+  }
+});
+
+watchEffect(() => {
+  if (error.value?.cause) {
+    console.debug("Original Solana error", error.value.cause);
+  }
+});
+</script>
+```
+
+## Nuxt Error Refs
+
+Nuxt auto-imported composables expose the same error model.
+
+```vue
+<script setup lang="ts">
+const { error, execute } = useSolanaSignAndSendTransaction();
+
+const message = computed(() => {
+  switch (error.value?.code) {
+    case "NO_WALLET_SELECTED":
+      return "Choose a wallet first.";
+    case "USER_REJECTED":
+      return "The wallet request was rejected.";
+    case "TRANSACTION_TIMEOUT":
+      return "The transaction is taking longer than expected.";
+    case "RPC_FAILURE":
+      return "The Solana RPC request failed.";
+    default:
+      return null;
+  }
+});
+</script>
+```
+
+## User-Facing Messages
+
+Do not show raw `cause` details directly to end users unless your app explicitly trusts that source. Wallet and RPC error messages may contain provider-specific text that is confusing or unsafe for UI.
+
+Map stable error codes to short app-specific messages instead.
+
+```ts
+function getSolanaErrorMessage(code: string) {
+  switch (code) {
+    case "USER_REJECTED":
+      return "Request canceled.";
+    case "WALLET_FEATURE_UNSUPPORTED":
+      return "This wallet does not support that action.";
+    case "RPC_FAILURE":
+      return "Network request failed. Try again.";
+    default:
+      return "Something went wrong.";
+  }
+}
+```
+
+## Retry Guidance
+
+- Retry `RPC_FAILURE` only when the operation is safe to repeat.
+- After `TRANSACTION_TIMEOUT`, check signature status before retrying.
+- Do not retry `USER_REJECTED` automatically.
+- Do not retry `INVALID_ADDRESS`; ask the user to correct input.
+- Hide or disable actions that produce `WALLET_FEATURE_UNSUPPORTED`.
+
+---
+
+# @vue-solana/core
+
+Source: https://vue-solana-docs.vercel.app/packages/core
+Description: Framework-agnostic Solana configuration, RPC, wallet types, and transaction helpers.
+
+[`@vue-solana/core`](https://www.npmjs.com/package/@vue-solana/core) contains framework-agnostic Solana primitives used by the Vue Solana packages.
+
+Use this package directly when you want connection helpers, shared wallet types, Android Mobile Wallet Adapter registration helpers, iOS browser wallet helpers, and transaction helpers without installing the Vue plugin.
+
+`@vue-solana/core` wraps `@solana/web3-compat` and re-exports the Solana primitives most Vue Solana apps need, including `Connection`, `PublicKey`, `Transaction`, and `VersionedTransaction`.
+
+## Install
+
+```sh
+pnpm add @vue-solana/core
+```
+
+## Quick Start
+
+```ts
+import { createSolanaContext } from "@vue-solana/core";
+
+const solana = createSolanaContext({
+  cluster: "devnet",
+});
+
+const { blockhash } = await solana.connection.getLatestBlockhash();
+
+console.log(solana.endpoint, blockhash);
+```
+
+The root export remains supported. Direct subpath exports are also available for narrower imports:
+
+```ts
+import { createSolanaContext } from "@vue-solana/core/rpc";
+import { PublicKey, Transaction } from "@vue-solana/core/web3";
+import type { SolanaConfig } from "@vue-solana/core/types";
+```
+
+Direct subpaths:
+
+- `@vue-solana/core/address`
+- `@vue-solana/core/buffer-polyfill`
+- `@vue-solana/core/types`
+- `@vue-solana/core/clusters`
+- `@vue-solana/core/errors`
+- `@vue-solana/core/ios-wallet`
+- `@vue-solana/core/mobile-wallet`
+- `@vue-solana/core/rpc`
+- `@vue-solana/core/timeout`
+- `@vue-solana/core/transaction`
+- `@vue-solana/core/wallet`
+- `@vue-solana/core/wallet-standard`
+- `@vue-solana/core/web3`
+
+## Related Guides
+
+- [RPC and Clusters](/guides/rpc-and-clusters): configure cluster names, custom RPC endpoints, WebSocket endpoints, and connection helpers.
+- [Wallets](/guides/wallets): discover Wallet Standard wallets, register mobile wallet sources, and check wallet capabilities.
+- [Transactions](/guides/transactions): sign, send, confirm, and handle transaction timeouts safely.
+- [Errors](/guides/errors): branch on stable `SolanaError` codes and keep raw causes out of user-facing UI.
+
+## Configuration
+
+```ts
+type SolanaCluster = "mainnet-beta" | "testnet" | "devnet" | "localnet";
+
+type SolanaChain = "solana:mainnet" | "solana:devnet" | "solana:testnet" | "solana:localnet";
+
+interface SolanaConfig {
+  cluster?: SolanaCluster;
+  endpoint?: string;
+  wsEndpoint?: string;
+  commitment?: Commitment;
+  autoConnect?: boolean;
+}
+```
+
+Supported clusters are `mainnet-beta`, `testnet`, `devnet`, and `localnet`. `SolanaChain` is the Wallet Standard chain identifier derived from a cluster by `getSolanaChain()`. If `endpoint` is omitted, the package uses the public Solana RPC endpoint for the selected cluster. If `wsEndpoint` is omitted, it is derived from the RPC endpoint.
+
+`autoConnect` defaults to `false`. When enabled through the Vue plugin or Nuxt module, Vue Solana reconnects only a wallet identity that the user previously selected and that is discovered again on the client. It stores only wallet identity metadata under `localStorage["vue-solana:selected-wallet"]`: `name`, and `platform`/`source` when available. It never stores private keys, session data, or transaction data, and it never connects an arbitrary installed wallet.
+
+Use `mainnet-beta` for Solana mainnet. This is Solana's official cluster name; the package intentionally does not use `mainnet` as an alias.
+
+## Context
+
+```ts
+interface SolanaContext {
+  cluster: SolanaCluster;
+  endpoint: string;
+  wsEndpoint: string;
+  connection: Connection;
+}
+```
+
+## Wallet Interface
+
+```ts
+interface SolanaWallet {
+  publicKey: PublicKey | null;
+  connected: boolean;
+  connecting?: boolean;
+  disconnecting?: boolean;
+  platform?: SolanaWalletInfo["platform"];
+  source?: SolanaWalletInfo["source"];
+  connect: () => Promise<void>;
+  disconnect: () => Promise<void>;
+  signMessage?: (message: Uint8Array) => Promise<SolanaSignMessageResult>;
+  signTransaction?: <T extends SolanaTransaction>(transaction: T) => Promise<T>;
+  signAllTransactions?: <T extends SolanaTransaction>(transactions: T[]) => Promise<T[]>;
+  signAndSendTransaction?: (
+    transaction: SolanaTransaction,
+    options?: SendOptions,
+  ) => Promise<{ signature: TransactionSignature }>;
+}
+```
+
+Browser wallets discovered through the Solana Wallet Standard and supported iOS browser wallet links are adapted into this interface. You can also provide a custom object that implements `SolanaWallet`. A discovered wallet remains disconnected until `connect()` resolves successfully, even if the browser extension exposes previously authorized accounts.
+
+Android Mobile Wallet Adapter is registered through `@solana-mobile/wallet-standard-mobile` and then adapted through the same Wallet Standard adapter.
+
+## Wallet Metadata
+
+```ts
+interface SolanaWalletInfo {
+  name: string;
+  icon: string;
+  chains: readonly string[];
+  platform?: "browser" | "mobile" | "desktop";
+  source?: "wallet-standard" | "mobile-wallet-adapter" | "deep-link" | "protocol-link";
+  appUrl?: string;
+  installUrl?: string;
+  callbackUrl?: string;
+  capabilities?: {
+    connect?: boolean;
+    disconnect?: boolean;
+    signMessage?: boolean;
+    signTransaction?: boolean;
+    signAllTransactions?: boolean;
+    signAndSendTransaction?: boolean;
+  };
+  accounts: readonly SolanaWalletAccountInfo[];
+  wallet: unknown;
+}
+```
+
+Current metadata values:
+
+- Browser extension wallets use `platform: "browser"` and `source: "wallet-standard"`.
+- Android Mobile Wallet Adapter uses `platform: "mobile"` and `source: "mobile-wallet-adapter"`.
+- iOS browser wallets use `platform: "mobile"` and `source: "deep-link"`.
+- `protocol-link` is reserved for possible post-v1 desktop native wallet adapters.
+
+## Wallet Standard Helpers
+
+- `getSolanaChain(cluster)`: maps `mainnet-beta`, `devnet`, `testnet`, or `localnet` to a Solana Wallet Standard chain ID.
+- `isSolanaStandardWallet(wallet)`: checks whether a Wallet Standard wallet supports Solana.
+- `getRegisteredSolanaWallets()`: returns discovered Solana Wallet Standard wallets in browser environments, including Android Mobile Wallet Adapter after it is registered on supported clients.
+- `subscribeSolanaWallets(listener)`: subscribes to Wallet Standard register/unregister events.
+- `adaptSolanaStandardWallet(walletInfo, options?)`: adapts a discovered Wallet Standard wallet into `SolanaWallet`.
+
+## Mobile Wallet Helpers
+
+- `registerSolanaMobileWallet(options?)`: registers Android Mobile Wallet Adapter through Wallet Standard on supported Android Chrome clients.
+- `isSolanaMobileWalletSupported()`: returns whether the current runtime supports Android MWA web registration.
+- `getDefaultMobileWalletAppIdentity()`: derives a default Mobile Wallet Adapter app identity from the current document.
+- `getSolanaIosWallets(options?)`: returns Phantom, Solflare, and Backpack iOS browser wallet entries on iOS browsers.
+- `adaptSolanaIosWallet(walletInfo, options?)`: adapts an iOS deep-link wallet entry into `SolanaWallet`.
+- `handleSolanaIosWalletCallback(options?)`: validates and decrypts iOS wallet redirect callbacks.
+- `isSolanaIosBrowserWalletSupported()`: returns whether the current runtime should expose iOS browser wallet links.
+
+These helpers are SSR-safe. Android registration returns without registering when `window` is unavailable or when the browser is not an Android Chrome mobile web/PWA runtime. iOS wallet discovery returns an empty list when the browser is not an iOS browser runtime.
+
+## Helpers
+
+The root `@vue-solana/core` export re-exports the public helpers below. Use direct subpaths when you want narrower imports or clearer module boundaries.
+
+| Import path                        | What it contains                                                              | Use it when                                                                                                         |
+| ---------------------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `@vue-solana/core/address`         | `parsePublicKey()` and public-key input types.                                | You accept a Solana address as a string, `PublicKey`, ref-like object, or getter and need a normalized `PublicKey`. |
+| `@vue-solana/core/clusters`        | Default cluster and endpoint helpers.                                         | You need the package's built-in RPC or WebSocket endpoint for `mainnet-beta`, `testnet`, `devnet`, or `localnet`.   |
+| `@vue-solana/core/errors`          | `SolanaError`, error factories, and error guards.                             | You need stable error codes for user-facing wallet, RPC, address, transaction, timeout, or storage failures.        |
+| `@vue-solana/core/ios-wallet`      | iOS browser wallet discovery, deep-link adapters, and callback handling.      | You are wiring iOS wallet links without the Vue plugin's unified wallet flow.                                       |
+| `@vue-solana/core/mobile-wallet`   | Android Mobile Wallet Adapter registration helpers.                           | You need to register Android MWA before reading Wallet Standard wallets.                                            |
+| `@vue-solana/core/rpc`             | `createSolanaConnection()` and `createSolanaContext()`.                       | You want a configured `Connection` and resolved cluster endpoints without installing the Vue plugin.                |
+| `@vue-solana/core/timeout`         | Promise timeout helpers that produce Solana timeout errors.                   | You need timeout behavior consistent with transaction confirmation helpers.                                         |
+| `@vue-solana/core/transaction`     | Transaction send and confirmation helpers.                                    | You need a wallet-aware send path or a confirmation result for an existing signature.                               |
+| `@vue-solana/core/types`           | Shared TypeScript types.                                                      | You need `SolanaConfig`, `SolanaContext`, `SolanaWallet`, wallet metadata, or transaction option types.             |
+| `@vue-solana/core/wallet`          | Wallet state assertions and wallet capability errors.                         | You need to validate that a selected wallet is connected or supports signing before calling wallet methods.         |
+| `@vue-solana/core/wallet-standard` | Wallet Standard chain mapping, discovery, subscriptions, and adapter helpers. | You are building your own wallet discovery layer on top of Solana Wallet Standard.                                  |
+
+### Clusters and RPC
+
+- `DEFAULT_CLUSTER`: default cluster, currently `devnet`.
+- `getClusterEndpoint(cluster?)`: returns the HTTP RPC endpoint for a cluster.
+- `getClusterWebSocketEndpoint(cluster?)`: returns the WebSocket endpoint for a cluster.
+- `getWebSocketEndpoint(endpoint)`: converts `http`/`https` RPC URLs to `ws`/`wss` URLs.
+- `createSolanaConnection(config?)`: creates a `Connection` using the resolved endpoint and commitment.
+- `createSolanaContext(config?)`: creates `{ cluster, endpoint, wsEndpoint, connection }` for framework-agnostic app setup.
+
+```ts
+import { createSolanaContext } from "@vue-solana/core/rpc";
+
+const solana = createSolanaContext({ cluster: "devnet" });
+
+const slot = await solana.connection.getSlot();
+```
+
+### Addresses
+
+- `parsePublicKey(value)`: parses a `PublicKey`, address string, ref-like value, or getter and returns `null` for nullish input.
+
+```ts
+import { parsePublicKey } from "@vue-solana/core/address";
+
+const publicKey = parsePublicKey("11111111111111111111111111111111");
+const balance = publicKey ? await connection.getBalance(publicKey) : null;
+```
+
+### Wallets
+
+- `isWalletConnected(wallet)`: checks whether a wallet is connected and has a public key.
+- `assertWalletConnected(wallet)`: throws `WALLET_NOT_CONNECTED` if the wallet is not connected.
+- `assertWalletCanSign(wallet)`: throws if the wallet is disconnected or does not support `signTransaction`.
+- `assertWalletCanSignMessage(wallet)`: throws if the wallet is disconnected or does not support `signMessage`.
+
+```ts
+import { assertWalletCanSign } from "@vue-solana/core/wallet";
+
+assertWalletCanSign(wallet);
+const signedTransaction = await wallet.signTransaction(transaction);
+```
+
+### Transactions
+
+- `signAndSendTransaction(connection, wallet, transaction, options?)`: signs and sends a transaction using a configured wallet and returns the RPC signature. Android Mobile Wallet Adapter wallets use `signTransaction` plus `connection.sendRawTransaction()` when available so the app owns submission and can reliably return the RPC signature after the wallet handoff.
+- `confirmTransactionSignature(connection, signature, options?)`: waits for a submitted signature to reach a requested commitment. Defaults to `confirmed` commitment and a 60 second timeout.
+
+```ts
+import { confirmTransactionSignature, signAndSendTransaction } from "@vue-solana/core/transaction";
+
+const signature = await signAndSendTransaction(connection, wallet, transaction);
+await confirmTransactionSignature(connection, signature, { commitment: "confirmed" });
+```
+
+### Errors and Timeouts
+
+- `SolanaError`: normalized error class with a stable `code` and optional original `cause`.
+- `createSolanaError(code, message, options?)`: creates a normalized Solana error.
+- `isSolanaError(error)`: narrows unknown errors to `SolanaError`.
+- `normalizeSolanaError(cause, fallbackCode, fallbackMessage?, options?)`: converts unknown failures into `SolanaError` and maps common wallet rejections to `USER_REJECTED`.
+- `withTimeout(promise, timeoutMs, createError)`: races a promise against a caller-provided timeout error.
+- `withSolanaTimeout(promise, timeoutMs, message)`: races a promise against a `TRANSACTION_TIMEOUT` error.
+
+## Error Model
+
+Vue Solana normalizes common wallet, RPC, address, transaction, and storage failures into `SolanaError`. Apps should branch on the stable `error.code` value instead of parsing adapter or RPC messages.
+
+```ts
+import { isSolanaError } from "@vue-solana/core/errors";
+
+try {
+  await signAndSendTransaction(connection, wallet, transaction);
+} catch (error) {
+  if (isSolanaError(error)) {
+    switch (error.code) {
+      case "USER_REJECTED":
+        // The user declined a wallet prompt.
+        break;
+      case "TRANSACTION_TIMEOUT":
+        // The operation timed out; check signature state before retrying.
+        break;
+      case "RPC_FAILURE":
+        // RPC or confirmation failed.
+        console.error(error.cause);
+        break;
+    }
+  }
+}
+```
+
+Stable error codes are:
+
+- `NO_WALLET_SELECTED`
+- `WALLET_NOT_CONNECTED`
+- `WALLET_FEATURE_UNSUPPORTED`
+- `USER_REJECTED`
+- `INVALID_ADDRESS`
+- `TRANSACTION_TIMEOUT`
+- `RPC_FAILURE`
+- `STORAGE_FAILURE`
+
+`SolanaError.cause` preserves the original wallet adapter, RPC, parsing, or storage error for debugging. Do not show raw `cause` details to end users unless the app explicitly trusts that source.
+
+## Known TypeScript Issue
+
+See [Troubleshooting](/troubleshooting) for the `@solana/web3-compat@0.0.21` TypeScript metadata issue. Current `@vue-solana/core` packages publish temporary declaration shims for the documented core import paths.
+
+---
+
+# @vue-solana/vue
+
+Source: https://vue-solana-docs.vercel.app/packages/vue
+Description: Vue plugin and composables for Solana applications.
+
+[`@vue-solana/vue`](https://www.npmjs.com/package/@vue-solana/vue) provides a Vue plugin and composables for Solana RPC access, balance reads, wallet state, and transaction helper state.
+
+## Install
+
+```sh
+pnpm add @vue-solana/vue
+```
+
+Browser apps that create or serialize transactions can initialize the Buffer polyfill from `@vue-solana/vue/buffer-polyfill`.
+
+## Plugin Setup
+
+```ts
+import { createApp } from "vue";
+import { createSolanaPlugin } from "@vue-solana/vue";
+import App from "./App.vue";
+
+createApp(App)
+  .use(
+    createSolanaPlugin({
+      cluster: "devnet",
+      mobileWallet: {
+        appIdentity: {
+          name: "My Vue Solana App",
+          uri: "https://example.com",
+          icon: "favicon.ico",
+        },
+      },
+    }),
+  )
+  .mount("#app");
+```
+
+Android Mobile Wallet Adapter registration is enabled by default on supported Android Chrome clients. Pass `mobileWallet` options to customize the MWA app identity, or pass `mobileWallet: false` to disable Android mobile wallet registration.
+
+iOS browser wallet links are enabled by default on iOS browsers for Phantom, Solflare, and Backpack. Pass `iosWallet` options to customize app identity, redirect URL, chains, or cluster, or pass `iosWallet: false` to disable iOS wallet link discovery.
+
+You can also pass a custom RPC endpoint:
+
+```ts
+createApp(App).use(
+  createSolanaPlugin({
+    cluster: "mainnet-beta",
+    endpoint: "https://your-rpc.example.com",
+    commitment: "confirmed",
+  }),
+);
+```
+
+## Composables
+
+The root export remains supported. For composables, prefer direct subpath imports in new code so bundlers can avoid evaluating unrelated package entry code:
+
+```ts
+import { useRpc } from "@vue-solana/vue/useRpc";
+import { useWallet } from "@vue-solana/vue/useWallet";
+```
+
+Direct package subpaths:
+
+- `@vue-solana/vue/buffer-polyfill`
+- `@vue-solana/vue/useSolana`
+- `@vue-solana/vue/useRpc`
+- `@vue-solana/vue/useConnection`
+- `@vue-solana/vue/useAccountInfo`
+- `@vue-solana/vue/useBalance`
+- `@vue-solana/vue/useProgramAccounts`
+- `@vue-solana/vue/useWallet`
+- `@vue-solana/vue/useWallets`
+- `@vue-solana/vue/useTransaction`
+- `@vue-solana/vue/useTransactionConfirmation`
+- `@vue-solana/vue/useSignatureStatus`
+- `@vue-solana/vue/useSignMessage`
+- `@vue-solana/vue/useSignAndSendTransaction`
+- `@vue-solana/vue/web3`
+
+Use `@vue-solana/vue/web3` for supported raw Solana primitives such as `PublicKey`, `Transaction`, and `TransactionInstruction`. Use `@vue-solana/vue/buffer-polyfill` for browser transaction code that needs the Buffer polyfill. Direct `@vue-solana/core/*` imports remain supported for lower-level core usage.
+
+- `useSolana()`: returns the full injected Solana context.
+- `useRpc()`: returns cluster, endpoint, connection status, latest blockhash, and `checkConnection()`.
+- `useConnection()`: returns the Solana `Connection`.
+- `useAccountInfo(address, options?)`: loads account data and can subscribe to account changes.
+- `useProgramAccounts(programId, options?)`: loads accounts owned by a program id with optional filters and data slicing.
+- `useWallet()`: returns active wallet refs, computed connection state, and wallet actions.
+- `useWallets()`: returns discovered browser extension wallets, Android Mobile Wallet Adapter wallets, supported iOS browser wallet entries, and wallet selection actions.
+- `useBalance(address, commitment?)`: loads lamport balance for a `PublicKey` or address string.
+- `useTransaction(handler, options?)`: generic async transaction state helper with optional timeout settings.
+- `useTransactionConfirmation(options?)`: confirms a submitted signature with reactive status and timeout/error state.
+- `useSignatureStatus(signature, options?)`: reads, polls, or subscribes to signature status updates.
+- `useSignMessage()`: signs arbitrary authentication messages through the configured wallet when supported.
+- `useSignAndSendTransaction()`: signs and sends a transaction through the configured wallet, with optional confirmation waiting.
+
+## Related Guides
+
+- [RPC and Clusters](/guides/rpc-and-clusters): read connection state and configure endpoints.
+- [Wallets](/guides/wallets): discover, select, connect, disconnect, and check wallet capabilities.
+- [Account Reads](/guides/account-reads): read balances, account info, program accounts, and signature status.
+- [Transactions](/guides/transactions): sign, send, confirm, and show transaction progress.
+- [Message Signing](/guides/message-signing): sign off-chain authentication or ownership challenges.
+- [Errors](/guides/errors): map composable `error` refs to safe UI messages.
+
+## Read RPC State
+
+```vue
+<script setup lang="ts">
+import { computed } from "vue";
+import { useRpc } from "@vue-solana/vue/useRpc";
+
+const { cluster, endpoint, status, error, latestBlockhash, checkConnection } = useRpc();
+
+const rpcErrorMessage = computed(() => {
+  if (!error.value) return null;
+  return error.value.code === "RPC_FAILURE"
+    ? "Unable to reach the configured Solana RPC endpoint."
+    : "Unable to check the Solana connection.";
+});
+</script>
+
+<template>
+  <section>
+    <p>Cluster: {{ cluster }}</p>
+    <p>Endpoint: {{ endpoint }}</p>
+    <p>Status: {{ status }}</p>
+    <p>Latest blockhash: {{ latestBlockhash }}</p>
+    <p v-if="rpcErrorMessage">{{ rpcErrorMessage }}</p>
+    <button type="button" @click="checkConnection">Check RPC</button>
+  </section>
+</template>
+```
+
+## Read Balance
+
+```vue
+<script setup lang="ts">
+import { computed, ref } from "vue";
+import { useBalance } from "@vue-solana/vue/useBalance";
+
+const address = ref("PASTE_A_SOLANA_ADDRESS");
+const { balance, loading, error, refresh } = useBalance(address);
+
+const balanceErrorMessage = computed(() => {
+  switch (error.value?.code) {
+    case "INVALID_ADDRESS":
+      return "Enter a valid Solana address.";
+    case "RPC_FAILURE":
+      return "Unable to load the balance from RPC.";
+    default:
+      return null;
+  }
+});
+</script>
+
+<template>
+  <section>
+    <p>Lamports: {{ balance }}</p>
+    <p v-if="loading">Loading...</p>
+    <p v-if="balanceErrorMessage">{{ balanceErrorMessage }}</p>
+    <button type="button" @click="refresh">Refresh</button>
+  </section>
+</template>
+```
+
+## Error Handling
+
+Composable `error` refs use `SolanaError | null` from `@vue-solana/core/errors`. Branch on `error.value.code` for user-facing UI and keep `error.value.cause` for debugging original wallet, RPC, address parsing, timeout, or storage failures.
+
+```ts
+const message = computed(() => {
+  switch (error.value?.code) {
+    case "NO_WALLET_SELECTED":
+      return "Choose a wallet first.";
+    case "USER_REJECTED":
+      return "The wallet request was rejected.";
+    case "TRANSACTION_TIMEOUT":
+      return "The transaction is taking longer than expected.";
+    case "RPC_FAILURE":
+      return "The Solana RPC request failed.";
+    default:
+      return null;
+  }
+});
+
+watchEffect(() => {
+  if (error.value?.cause) {
+    console.debug("Original Solana error", error.value.cause);
+  }
+});
+```
+
+## Read Account Info
+
+```vue
+<script setup lang="ts">
+import { computed, ref } from "vue";
+import { useAccountInfo } from "@vue-solana/vue/useAccountInfo";
+
+const address = ref("PASTE_A_SOLANA_ADDRESS");
+const { accountInfo, loading, error, refresh, stopWatching } = useAccountInfo(address, {
+  commitment: "confirmed",
+  watch: true,
+});
+
+const accountInfoErrorMessage = computed(() => {
+  switch (error.value?.code) {
+    case "INVALID_ADDRESS":
+      return "Enter a valid Solana address.";
+    case "RPC_FAILURE":
+      return "Unable to load account data from RPC.";
+    default:
+      return null;
+  }
+});
+</script>
+
+<template>
+  <section>
+    <p>Lamports: {{ accountInfo?.lamports ?? "Unknown" }}</p>
+    <p v-if="loading">Loading...</p>
+    <p v-if="accountInfoErrorMessage">{{ accountInfoErrorMessage }}</p>
+    <button type="button" @click="refresh">Refresh</button>
+    <button type="button" @click="stopWatching">Stop watching</button>
+  </section>
+</template>
+```
+
+`useAccountInfo()` clears state without calling RPC when the address is null. Invalid address strings clear stale `accountInfo`, set `error`, and do not call `getAccountInfo()`. When `watch: true` is enabled, the websocket listener is removed automatically on component unmount. Calling `stopWatching()` removes the current listener and prevents automatic restarts for that composable instance.
+
+## Read Program Accounts
+
+```vue
+<script setup lang="ts">
+import { computed, ref } from "vue";
+import { useProgramAccounts } from "@vue-solana/vue/useProgramAccounts";
+
+const programId = ref("PASTE_A_SOLANA_PROGRAM_ID");
+const { accounts, loading, error, refresh } = useProgramAccounts(programId, {
+  commitment: "confirmed",
+  filters: [{ dataSize: 165 }],
+  dataSlice: { offset: 0, length: 32 },
+});
+
+const programAccountsErrorMessage = computed(() => {
+  switch (error.value?.code) {
+    case "INVALID_ADDRESS":
+      return "Enter a valid Solana program id.";
+    case "RPC_FAILURE":
+      return "Unable to load program accounts from RPC.";
+    default:
+      return null;
+  }
+});
+</script>
+
+<template>
+  <section>
+    <p>Accounts: {{ accounts.length }}</p>
+    <p v-if="loading">Loading...</p>
+    <p v-if="programAccountsErrorMessage">{{ programAccountsErrorMessage }}</p>
+    <button type="button" @click="refresh">Refresh</button>
+  </section>
+</template>
+```
+
+`useProgramAccounts()` clears state without calling RPC when the program id is null. Invalid program id strings clear stale `accounts`, set `error`, and do not call `getProgramAccounts()`.
+
+> Warning: `useProgramAccounts()` can be expensive. Each refresh may scan a large program-owned account set, consume significant RPC credits, hit provider rate limits, or time out. Do not run broad scans from high-traffic UI paths. Use narrow filters, `dataSlice`, caching, indexing, pagination strategies, or dedicated RPC infrastructure for production reads.
+
+## Wallet State
+
+```vue
+<script setup lang="ts">
+import { useWallet } from "@vue-solana/vue/useWallet";
+import { useWallets } from "@vue-solana/vue/useWallets";
+
+const { wallets, selectedWallet, refreshWallets, selectWallet } = useWallets();
+const { publicKey, connected, connecting, connect, disconnect } = useWallet();
+</script>
+
+<template>
+  <section>
+    <button type="button" @click="refreshWallets">Refresh Wallets</button>
+
+    <button
+      v-for="wallet in wallets"
+      :key="wallet.name"
+      type="button"
+      @click="selectWallet(wallet)"
+    >
+      {{ wallet.name }}
+    </button>
+
+    <p>Selected: {{ selectedWallet?.name ?? "None" }}</p>
+    <p>Connected: {{ connected }}</p>
+    <p>Public key: {{ publicKey?.toBase58() }}</p>
+    <p v-if="connecting">Connecting...</p>
+    <button type="button" :disabled="!selectedWallet || connected || connecting" @click="connect">
+      Connect
+    </button>
+    <button type="button" :disabled="!connected" @click="disconnect">Disconnect</button>
+  </section>
+</template>
+```
+
+Browser extension wallets are discovered through the Solana Wallet Standard. Android Mobile Wallet Adapter wallets are registered through `@solana-mobile/wallet-standard-mobile` and exposed through the same `useWallets()` list on supported Android Chrome clients. iOS Phantom, Solflare, and Backpack entries are exposed through wallet-specific universal links on iOS browsers. `refreshWallets()` only updates the discovered wallet list, and `selectWallet()` only configures the active wallet. `connected` remains false until `connect()` succeeds, even if the extension exposes previously authorized accounts after a page refresh.
+
+Desktop native app wallet adapters are not implemented yet. Desktop native support requires wallet-specific protocol links or future native Wallet Standard registration.
+
+Composables return inert SSR-safe state when no plugin context is available. Real RPC and wallet operations still require the plugin-provided client context.
+
+## Message Signing
+
+```ts
+import { useSignMessage } from "@vue-solana/vue/useSignMessage";
+import { useWallet } from "@vue-solana/vue/useWallet";
+
+const { connected, canSignMessage } = useWallet();
+const { signature, status, error, execute } = useSignMessage();
+
+if (connected.value && canSignMessage.value) {
+  await execute(new TextEncoder().encode("Sign in to example.com"));
+}
+```
+
+Message signing is for wallet ownership or authentication challenges. It is not transaction signing and does not authorize on-chain state changes. Wallets that do not expose message signing report `canSignMessage` as false and `execute()` rejects with an unsupported-wallet error.
+
+## Transaction State
+
+```ts
+import { useSignAndSendTransaction } from "@vue-solana/vue/useSignAndSendTransaction";
+
+const { signature, confirmation, status, loading, error, execute } = useSignAndSendTransaction();
+
+await execute(transaction, {
+  confirm: true,
+  confirmation: { commitment: "confirmed" },
+  skipPreflight: false,
+});
+```
+
+The current wallet must be connected and support either `signAndSendTransaction` or `signTransaction`. Android Mobile Wallet Adapter wallets prefer `signTransaction` plus app-side RPC submission when available. This avoids a mobile handoff edge case where the wallet sends successfully but the browser page does not receive the wallet adapter's returned signature.
+
+Without `confirm: true`, `execute()` returns after submission and sets `status` to `sent`. With confirmation enabled, status moves through `sending`, `confirming`, and then `processed`, `confirmed`, or `finalized` to match the requested commitment. If confirmation times out or fails, the submitted `signature` remains available so the app can link to an explorer.
+
+`useSignAndSendTransaction()` also clears `loading` if a wallet adapter never returns a result. In that stale case, `error` is set and the chain status may be unknown, so check the connected wallet or an explorer before retrying.
+
+## Confirm an Existing Signature
+
+Use `useTransactionConfirmation()` when your app already has a submitted signature and wants to wait for a specific commitment separately from signing and sending:
+
+```ts
+import { useTransactionConfirmation } from "@vue-solana/vue/useTransactionConfirmation";
+
+const { signature, confirmation, status, loading, error, confirm, reset } =
+  useTransactionConfirmation({ commitment: "confirmed", timeoutMs: 60_000 });
+
+await confirm("PASTE_SUBMITTED_SIGNATURE", { commitment: "finalized" });
+```
+
+The composable preserves the submitted `signature` when confirmation times out or the RPC call fails, so apps can still show an explorer link while surfacing `error` to the user.
+
+## Track Signature Status
+
+```ts
+import { useSignatureStatus } from "@vue-solana/vue/useSignatureStatus";
+
+const { status, loading, error, refresh, stopPolling, stopSubscription } = useSignatureStatus(
+  "PASTE_SUBMITTED_SIGNATURE",
+  {
+    pollIntervalMs: 5_000,
+    searchTransactionHistory: true,
+    subscribe: true,
+    commitment: "confirmed",
+  },
+);
+```
+
+Polling uses `getSignatureStatuses()` on every interval, so stop polling when the UI no longer needs updates. Calling `stopPolling()` clears the current interval and prevents automatic polling restarts for that composable instance. Invalid signatures clear stale `status`, set `error`, and do not call RPC or start polling. Invalid `pollIntervalMs` values less than or equal to `0` set a `RangeError` and do not start polling. `subscribe: true` uses `onSignature()` and removes the listener on component unmount. Calling `stopSubscription()` removes the current signature listener and prevents automatic restarts for that composable instance.
+
+## Example App
+
+For a complete runnable Vue and Vite flow, see the [Vue Vite example](/examples/vue-vite).
+
+---
+
+# @vue-solana/nuxt
+
+Source: https://vue-solana-docs.vercel.app/packages/nuxt
+Description: Nuxt module for Solana applications.
+
+[`@vue-solana/nuxt`](https://www.npmjs.com/package/@vue-solana/nuxt) installs the Vue Solana plugin in Nuxt apps and auto-imports composables.
+
+## Install
+
+```sh
+npx nuxt module add @vue-solana/nuxt
+```
+
+This installs the package and adds `@vue-solana/nuxt` to the `modules` array in `nuxt.config.ts`.
+
+Browser apps that create or serialize transactions can initialize the Buffer polyfill from `@vue-solana/nuxt/buffer-polyfill` and import supported Solana primitives from `@vue-solana/nuxt/web3`.
+
+## Module Setup
+
+```ts
+export default defineNuxtConfig({
+  modules: ["@vue-solana/nuxt"],
+  solana: {
+    cluster: "devnet",
+  },
+});
+```
+
+You can also configure a custom RPC endpoint:
+
+```ts
+export default defineNuxtConfig({
+  modules: ["@vue-solana/nuxt"],
+  solana: {
+    cluster: "mainnet-beta",
+    endpoint: "https://your-rpc.example.com",
+    commitment: "confirmed",
+  },
+});
+```
+
+Supported clusters are `mainnet-beta`, `devnet`, `testnet`, and `localnet`. Use `mainnet-beta` for Solana mainnet; this is Solana's official cluster name.
+
+Nuxt module options are stored in public runtime config, so they must be JSON-serializable. Custom `wallet` adapter objects are intentionally excluded from Nuxt config; use the Vue plugin directly in client-only Vue code if you need to inject a custom wallet object.
+
+Mobile wallet options are safe to configure in `nuxt.config.ts` when they contain only JSON-serializable app identity and redirect settings:
+
+```ts
+export default defineNuxtConfig({
+  modules: ["@vue-solana/nuxt"],
+  solana: {
+    cluster: "devnet",
+    mobileWallet: {
+      appIdentity: {
+        name: "My Nuxt Solana App",
+        uri: "https://example.com",
+        icon: "favicon.ico",
+      },
+    },
+    iosWallet: {
+      appIdentity: {
+        name: "My Nuxt Solana App",
+      },
+      redirectUrl: "https://example.com",
+    },
+  },
+});
+```
+
+Pass `mobileWallet: false` or `iosWallet: false` to disable either mobile wallet source. The module also pre-optimizes common Solana, Wallet Adapter, and mobile wallet dependencies so Vite can bundle browser transaction and wallet code correctly.
+
+## Auto-Imported Composables
+
+The module auto-imports these composables from direct `@vue-solana/vue/*` subpaths rather than the root Vue package barrel. This keeps Nuxt SSR bundles from pulling in unrelated Solana runtime code just because a page uses one composable.
+
+- `useSolana()`: returns the full injected Solana context.
+- `useSolanaRpc()`: returns cluster, endpoint, RPC status, latest blockhash, and `checkConnection()`.
+- `useSolanaConnection()`: returns the Solana `Connection` instance.
+- `useSolanaAccountInfo(address, options?)`: reads account info and can subscribe to account changes.
+- `useSolanaWallet()`: returns selected wallet state, connection state, capabilities, and wallet actions.
+- `useSolanaWallets()`: returns discovered wallets and wallet selection/refresh actions.
+- `useSolanaBalance(address, commitment?)`: reads lamport balance for a public key or address.
+- `useSolanaProgramAccounts(programId, options?)`: reads program-owned accounts with filters and data slicing.
+- `useSolanaTransactionConfirmation(options?)`: confirms an existing transaction signature.
+- `useSolanaSignatureStatus(signature, options?)`: reads, polls, or subscribes to signature status.
+- `useSolanaSignMessage()`: signs off-chain authentication or ownership challenge messages.
+- `useSolanaSignAndSendTransaction()`: signs, sends, and optionally confirms transactions.
+
+These are Nuxt aliases for the Vue composables. Use the Nuxt names inside Nuxt apps so auto-imports work without explicit imports.
+
+Raw Solana primitives and the browser Buffer helper are explicit imports, not auto-imports:
+
+```ts
+import { installSolanaBufferPolyfill } from "@vue-solana/nuxt/buffer-polyfill";
+import { PublicKey, Transaction } from "@vue-solana/nuxt/web3";
+```
+
+Use direct `@vue-solana/core/*` imports only for lower-level core usage.
+
+Direct package subpaths:
+
+- `@vue-solana/nuxt/buffer-polyfill`
+- `@vue-solana/nuxt/web3`
+
+The runtime plugin is client-only. Auto-imported composables can be called during SSR and return inert state until hydration provides the real client context. Trigger RPC and wallet work from client lifecycle hooks or user actions.
+
+Android Mobile Wallet Adapter registration also runs only on the client. On Android Chrome and Chrome PWAs, `Mobile Wallet Adapter` can appear in the same `useSolanaWallets()` list as browser extension wallets. On iOS browsers, Phantom, Solflare, and Backpack can appear in the same list through wallet-specific universal links. Desktop native app wallet adapters are planned but not implemented yet.
+
+## Related Guides
+
+- [RPC and Clusters](/guides/rpc-and-clusters): configure the Nuxt module and read RPC state.
+- [Wallets](/guides/wallets): use `useSolanaWallets()` and `useSolanaWallet()` safely in client flows.
+- [Account Reads](/guides/account-reads): read balances, account data, program accounts, and signature status.
+- [Transactions](/guides/transactions): sign, send, confirm, and handle transaction status from Nuxt.
+- [Message Signing](/guides/message-signing): request wallet signatures for off-chain messages.
+- [Errors](/guides/errors): map auto-imported composable errors to safe UI messages.
+
+## Read RPC State
+
+```vue
+<script setup lang="ts">
+const { cluster, endpoint, status, error, latestBlockhash, checkConnection } = useSolanaRpc();
+
+const rpcErrorMessage = computed(() => {
+  if (!error.value) return null;
+  return error.value.code === "RPC_FAILURE"
+    ? "Unable to reach the configured Solana RPC endpoint."
+    : "Unable to check the Solana connection.";
+});
+</script>
+
+<template>
+  <section>
+    <p>Cluster: {{ cluster }}</p>
+    <p>Endpoint: {{ endpoint }}</p>
+    <p>Status: {{ status }}</p>
+    <p>Latest blockhash: {{ latestBlockhash }}</p>
+    <p v-if="rpcErrorMessage">{{ rpcErrorMessage }}</p>
+    <button type="button" @click="checkConnection">Check RPC</button>
+  </section>
+</template>
+```
+
+## Read Balance
+
+```vue
+<script setup lang="ts">
+const address = ref("PASTE_A_SOLANA_ADDRESS");
+const { balance, loading, error, refresh } = useSolanaBalance(address);
+
+const balanceErrorMessage = computed(() => {
+  switch (error.value?.code) {
+    case "INVALID_ADDRESS":
+      return "Enter a valid Solana address.";
+    case "RPC_FAILURE":
+      return "Unable to load the balance from RPC.";
+    default:
+      return null;
+  }
+});
+</script>
+
+<template>
+  <section>
+    <p>Lamports: {{ balance }}</p>
+    <p v-if="loading">Loading...</p>
+    <p v-if="balanceErrorMessage">{{ balanceErrorMessage }}</p>
+    <button type="button" @click="refresh">Refresh</button>
+  </section>
+</template>
+```
+
+## Error Handling
+
+Nuxt auto-imported composables expose the same normalized `SolanaError | null` refs as `@vue-solana/vue`. Use stable `error.value.code` values for UI branches and keep `error.value.cause` for logging original wallet, RPC, parsing, timeout, or storage failures.
+
+```vue
+<script setup lang="ts">
+const { error, execute } = useSolanaSignAndSendTransaction();
+
+const message = computed(() => {
+  switch (error.value?.code) {
+    case "NO_WALLET_SELECTED":
+      return "Choose a wallet first.";
+    case "USER_REJECTED":
+      return "The wallet request was rejected.";
+    case "TRANSACTION_TIMEOUT":
+      return "The transaction is taking longer than expected.";
+    case "RPC_FAILURE":
+      return "The Solana RPC request failed.";
+    default:
+      return null;
+  }
+});
+</script>
+```
+
+## Read Account Data
+
+```vue
+<script setup lang="ts">
+const address = ref("PASTE_A_SOLANA_ADDRESS");
+const programId = ref("PASTE_A_SOLANA_PROGRAM_ID");
+const signature = ref("PASTE_A_TRANSACTION_SIGNATURE");
+
+const account = useSolanaAccountInfo(address, { watch: true });
+const programAccounts = useSolanaProgramAccounts(programId, {
+  dataSlice: { offset: 0, length: 32 },
+  filters: [{ dataSize: 165 }],
+});
+const signatureStatus = useSolanaSignatureStatus(signature, { pollIntervalMs: 2_000 });
+</script>
+```
+
+Use `useSolanaProgramAccounts()` carefully on public RPC nodes. Prefer narrow filters, use `dataSlice` for partial reads, and avoid polling broad scans.
+
+## Wallet State
+
+```vue
+<script setup lang="ts">
+const { wallets, selectedWallet, refreshWallets, selectWallet } = useSolanaWallets();
+const { publicKey, connected, connect, disconnect } = useSolanaWallet();
+</script>
+
+<template>
+  <section>
+    <button type="button" @click="refreshWallets">Refresh Wallets</button>
+
+    <button
+      v-for="wallet in wallets"
+      :key="wallet.name"
+      type="button"
+      @click="selectWallet(wallet)"
+    >
+      {{ wallet.name }}
+    </button>
+
+    <p>Selected: {{ selectedWallet?.name ?? "None" }}</p>
+    <p>Connected: {{ connected }}</p>
+    <p>Public key: {{ publicKey?.toBase58() }}</p>
+    <button type="button" :disabled="!selectedWallet || connected" @click="connect">Connect</button>
+    <button type="button" :disabled="!connected" @click="disconnect">Disconnect</button>
+  </section>
+</template>
+```
+
+Browser extension wallets are discovered through the Solana Wallet Standard. Android Mobile Wallet Adapter wallets are registered through `@solana-mobile/wallet-standard-mobile` on supported Android Chrome clients and exposed through the same wallet list. iOS Phantom, Solflare, and Backpack entries are exposed through wallet-specific universal links on iOS browsers. `refreshWallets()` only updates the discovered wallet list, and `selectWallet()` only configures the active wallet. `connected` remains false until `connect()` succeeds, even if the extension exposes previously authorized accounts after a page refresh.
+
+## Message Signing
+
+```vue
+<script setup lang="ts">
+const { connected, canSignMessage } = useSolanaWallet();
+const { signature, status, error, execute } = useSolanaSignMessage();
+
+if (connected.value && canSignMessage.value) {
+  await execute(new TextEncoder().encode("Sign in to example.com"));
+}
+</script>
+```
+
+Message signing is for wallet ownership or authentication challenges. It is not transaction signing and does not authorize on-chain state changes. Wallets that do not expose message signing report `canSignMessage` as false and `execute()` rejects with an unsupported-wallet error.
+
+## Sign, Send, And Confirm A Transaction
+
+Use `useSolanaSignAndSendTransaction()` from a client-side user action when the connected wallet should sign and submit a transaction. Pass `confirm: true` when the UI should wait for confirmation instead of stopping after signature submission.
+
+```vue
+<script setup lang="ts">
+import { Transaction } from "@vue-solana/nuxt/web3";
+
+const { connected, canSignTransaction } = useSolanaWallet();
+const { signature, confirmation, status, loading, error, execute } =
+  useSolanaSignAndSendTransaction();
+
+const canSubmit = computed(() => connected.value && canSignTransaction.value && !loading.value);
+
+async function submitTransaction() {
+  const transaction = new Transaction();
+  // Add instructions, recent blockhash, and fee payer before requesting a wallet signature.
+  await execute(transaction, {
+    confirm: true,
+    confirmation: { commitment: "confirmed", timeoutMs: 120_000 },
+  });
+}
+</script>
+
+<template>
+  <section>
+    <button type="button" :disabled="!canSubmit" @click="submitTransaction">
+      Send transaction
+    </button>
+    <p>Status: {{ status }}</p>
+    <p v-if="signature">Submitted: {{ signature }}</p>
+    <p v-if="confirmation">Confirmed at {{ confirmation.commitment }}</p>
+    <p v-if="error">Unable to complete the transaction.</p>
+  </section>
+</template>
+```
+
+Status moves from `sending` to `sent` after RPC submission. When confirmation is enabled it then moves through `confirming` and ends at the reached commitment, such as `confirmed` or `finalized`. If confirmation times out after submission, `signature` remains available so the app can show an explorer link or poll signature status before retrying.
+
+Wallet prompts must be triggered by user interaction after hydration. Do not call `execute()` during SSR, in server routes, or automatically on page load.
+
+## Confirm An Existing Signature
+
+Use `useSolanaTransactionConfirmation()` when you already have a signature and want reactive confirmation state.
+
+```vue
+<script setup lang="ts">
+const signature = ref("PASTE_TRANSACTION_SIGNATURE");
+const { confirmation, status, error, confirm } = useSolanaTransactionConfirmation({
+  commitment: "confirmed",
+  timeoutMs: 60_000,
+});
+
+async function confirmCurrentSignature() {
+  await confirm(signature.value);
+}
+</script>
+
+<template>
+  <section>
+    <button type="button" @click="confirmCurrentSignature">Confirm signature</button>
+    <p>Status: {{ status }}</p>
+    <p v-if="confirmation">Reached {{ confirmation.commitment }}</p>
+    <p v-if="error">Unable to confirm the signature.</p>
+  </section>
+</template>
+```
+
+## Track Signature Status
+
+Use `useSolanaSignatureStatus()` when you need ongoing status checks for a submitted signature. This is useful after a timeout because a transaction might still land after the UI stopped waiting.
+
+```vue
+<script setup lang="ts">
+const signature = ref("PASTE_TRANSACTION_SIGNATURE");
+const { status, loading, error, refresh, stopPolling, stopSubscription } = useSolanaSignatureStatus(
+  signature,
+  {
+    pollIntervalMs: 2_000,
+  },
+);
+
+onBeforeUnmount(() => {
+  stopPolling();
+  void stopSubscription();
+});
+</script>
+```
+
+For explorer links, use the configured cluster. Devnet links should include `?cluster=devnet`; mainnet links should not include a cluster query.
+
+```ts
+function explorerUrl(signature: string, cluster: string) {
+  const suffix = cluster === "mainnet-beta" ? "" : `?cluster=${cluster}`;
+  return `https://explorer.solana.com/tx/${signature}${suffix}`;
+}
+```
+
+## Example App
+
+For a complete runnable Nuxt flow, see the [Nuxt example](/examples/nuxt).
+
+---
+
+# Vue Vite Example
+
+Source: https://vue-solana-docs.vercel.app/examples/vue-vite
+Description: Runnable Vue 3 and Vite example app for @vue-solana/vue.
+
+The Vue Vite example is a runnable Vue 3 app for `@vue-solana/vue`.
+
+Source: <a href="https://github.com/vue-solana/vue-solana/tree/main/examples/vue-vite" target="_blank" rel="noopener noreferrer"><code>examples/vue-vite</code></a>
+
+
+## What It Demonstrates
+
+- Installing the Vue Solana plugin with `createSolanaPlugin()`.
+- Reading RPC status with `useRpc()`.
+- Using the injected `Connection` with `useConnection()`.
+- Reading lamport balances with `useBalance()`.
+- Discovering browser extension wallets, Android Mobile Wallet Adapter wallets, and supported iOS browser wallet entries with `useWallets()`.
+- Managing active wallet state with `useWallet()`.
+- Persisting wallet selection metadata and restoring the previously selected wallet identity on reload.
+- Optional `autoConnect` behavior that reconnects only the previously selected wallet when it is discovered again.
+- Rendering unsupported-capability states for wallets that cannot sign messages or transactions.
+- Tracking async transaction state with `useTransaction()`.
+- Signing an authentication message with `useSignMessage()` when the connected wallet supports it.
+- Sending a real transfer with `useSignAndSendTransaction()` and showing submitted vs confirmed transaction status. The example uses devnet by default for safe testing.
+- Building cluster-aware Solana Explorer links for submitted signatures.
+
+The app uses `devnet` by default. Devnet SOL has no real value.
+
+## Run From The Repository Root
+
+```sh
+pnpm install
+pnpm build:packages
+pnpm dev:vue
+```
+
+Open the Vite URL printed in the terminal, usually `http://localhost:5173`.
+
+## What To Try
+
+- Check the initial RPC status and latest blockhash.
+- Click `Load Blockhash` to call `connection.getLatestBlockhash()` directly.
+- Paste a devnet wallet address and refresh the balance.
+- Install a Solana browser wallet and switch it to devnet.
+- On Android Chrome, install a compatible Solana mobile wallet and look for `Mobile Wallet Adapter`.
+- On iOS browsers, install Phantom, Solflare, or Backpack and look for the wallet entry in the same list.
+- Select and connect a discovered wallet.
+- Reload the page and verify the same selected wallet identity is restored without selecting an arbitrary installed wallet.
+- Sign the sample auth message if the wallet reports message-signing support.
+- Confirm the message-signing button is disabled or explained when the selected wallet does not support `signMessage`.
+- Run the generic mock transaction.
+- Enter a recipient address and amount, then send a real transfer. Keep the example on devnet while testing.
+- Watch the transaction move from submitted signature to confirmation status.
+- Open the explorer link and verify it includes `?cluster=devnet`.
+
+The transfer example initializes the browser `Buffer` polyfill with `installSolanaBufferPolyfill()` from `@vue-solana/vue/buffer-polyfill`. Restart the Vite dev server if Vite previously cached an externalized Buffer import.
+
+If confirmation times out after a signature appears, do not immediately submit a duplicate transfer. Use the example's signature status or explorer link to check whether the transaction later confirmed.
+
+## Devnet SOL
+
+Request free devnet SOL from the official faucet:
+
+```txt
+https://faucet.solana.com
+```
+
+## Wallet Note
+
+The example uses unified wallet discovery. Install Phantom, Solflare, Backpack, or another standard wallet before testing browser extension wallet flows. On supported Android Chrome runtimes, `@solana-mobile/wallet-standard-mobile` can expose installed native mobile wallets through `Mobile Wallet Adapter` in the same wallet list. On iOS browsers, Phantom, Solflare, and Backpack can appear through wallet-specific universal links.
+
+Desktop native wallet protocol-link support is intentionally not part of the v1 example flow.
+
+---
+
+# Nuxt Example
+
+Source: https://vue-solana-docs.vercel.app/examples/nuxt
+Description: Runnable Nuxt example app for @vue-solana/nuxt.
+
+The Nuxt example is a runnable Nuxt app for `@vue-solana/nuxt`.
+
+Source: <a href="https://github.com/vue-solana/vue-solana/tree/main/examples/nuxt" target="_blank" rel="noopener noreferrer"><code>examples/nuxt</code></a>
+
+
+## What It Demonstrates
+
+- Installing the Nuxt module with `modules: ['@vue-solana/nuxt']`.
+- Configuring the module with `solana: { cluster: 'devnet' }`.
+- Reading RPC status with auto-imported `useSolanaRpc()`.
+- Using the injected connection with `useSolanaConnection()`.
+- Reading lamport balances with `useSolanaBalance()`.
+- Discovering browser extension wallets, Android Mobile Wallet Adapter wallets, and supported iOS browser wallet entries with `useSolanaWallets()`.
+- Managing active wallet state with `useSolanaWallet()`.
+- Persisting wallet selection metadata and restoring the previously selected wallet identity on reload.
+- Optional `autoConnect` behavior that reconnects only the previously selected wallet when it is discovered again.
+- Rendering unsupported-capability states for wallets that cannot sign messages or transactions.
+- Signing an authentication message with auto-imported `useSolanaSignMessage()` when the connected wallet supports it.
+- Sending a real transfer with `useSolanaSignAndSendTransaction()` and showing submitted vs confirmed transaction status. The example uses devnet by default for safe testing.
+- Building cluster-aware Solana Explorer links for submitted signatures.
+- Using `useTransaction()` from `@vue-solana/vue/useTransaction` for generic async transaction state.
+
+The app uses `devnet` by default. Devnet SOL has no real value.
+
+## Run From The Repository Root
+
+```sh
+pnpm install
+pnpm build:packages
+pnpm dev:nuxt
+```
+
+Open the Nuxt URL printed in the terminal, usually `http://localhost:3000`.
+
+## What To Try
+
+- Check the initial module/RPC status and latest blockhash.
+- Click `Load Blockhash` to call `connection.getLatestBlockhash()` directly.
+- Paste a devnet wallet address and refresh the balance.
+- Install a Solana browser wallet and switch it to devnet.
+- On Android Chrome, install a compatible Solana mobile wallet and look for `Mobile Wallet Adapter`.
+- On iOS browsers, install Phantom, Solflare, or Backpack and look for the wallet entry in the same list.
+- Select and connect a discovered wallet.
+- Reload the page and verify the same selected wallet identity is restored without selecting an arbitrary installed wallet.
+- Sign the sample auth message if the wallet reports message-signing support.
+- Confirm the message-signing button is disabled or explained when the selected wallet does not support `signMessage`.
+- Run the generic mock transaction.
+- Enter a recipient address and amount, then send a real transfer. Keep the example on devnet while testing.
+- Watch the transaction move from submitted signature to confirmation status.
+- Open the explorer link and verify it includes `?cluster=devnet`.
+
+The transfer example initializes the browser `Buffer` polyfill with `installSolanaBufferPolyfill()` from `@vue-solana/nuxt/buffer-polyfill`. Restart the Nuxt dev server if Vite previously cached an externalized Buffer import.
+
+If confirmation times out after a signature appears, do not immediately submit a duplicate transfer. Use the example's signature status or explorer link to check whether the transaction later confirmed.
+
+## Devnet SOL
+
+Request free devnet SOL from the official faucet:
+
+```txt
+https://faucet.solana.com
+```
+
+## Wallet Note
+
+The example uses unified wallet discovery. Install Phantom, Solflare, Backpack, or another standard wallet before testing browser extension wallet flows. On supported Android Chrome runtimes, `@solana-mobile/wallet-standard-mobile` can expose installed native mobile wallets through `Mobile Wallet Adapter` in the same wallet list. On iOS browsers, Phantom, Solflare, and Backpack can appear through wallet-specific universal links.
+
+Desktop native wallet protocol-link support is intentionally not part of the v1 example flow.
+
+---
+
+# v1 Roadmap
+
+Source: https://vue-solana-docs.vercel.app/roadmap
+Description: Planned feature work before the first stable Vue Solana package release.
+
+Vue Solana is currently pre-v1. The packages are already usable for RPC setup, wallet discovery, wallet connection, balance reads, and devnet transaction flows, but a stable v1 release needs a few more production-oriented APIs.
+
+The detailed implementation tracker lives in [`docs/plans/v1-roadmap.md`](https://github.com/vue-solana/vue-solana/blob/main/docs/plans/v1-roadmap.md). This page summarizes completed and remaining roadmap work for application developers.
+
+## v1 Release Goals
+
+- Stable public package exports and composable names.
+- Real behavior for every documented public configuration option.
+- Predictable wallet selection, reconnect, disconnect, and unsupported-feature handling.
+- Transaction confirmation helpers in addition to signature submission.
+- Reactive account and signature status composables.
+- Message signing support for wallet-auth flows.
+- Normalized wallet, transaction, RPC, timeout, and invalid-input errors.
+- Clear desktop native wallet support status.
+- Updated examples, package docs, tests, and E2E coverage.
+
+## Roadmap Phases
+
+### 1. Public API Stabilization
+
+Status: complete. Every public option is either implemented or removed before v1. `autoConnect` is included in v1 as opt-in reconnect behavior for a previously selected wallet identity.
+
+### 2. Wallet UX Foundations
+
+Status: complete. Wallet selection survives reloads without connecting arbitrary installed wallets. v1 restores only the wallet the user selected previously, and auto-connects only when explicitly enabled.
+
+### 3. Transaction Lifecycle
+
+Status: complete. v1 includes confirmation helpers and reactive transaction status so apps can show progress from signing through confirmation or timeout.
+
+### 4. Reactive Account Data
+
+Status: complete. v1 includes account and signature status composables such as `useAccountInfo()` and `useSignatureStatus()`, with safe cleanup for subscriptions.
+
+### 5. Message Signing And Capabilities
+
+Status: complete. v1 includes wallet message signing with `signMessage`, `useSignMessage()`, and the Nuxt `useSolanaSignMessage()` auto-import. Active-wallet and discovered-wallet capability helpers let apps render the right UI for connect, disconnect, message signing, and transaction signing support.
+
+### 6. Error Model
+
+Status: complete. v1 normalizes common failures such as no selected wallet, unsupported feature, user rejection, invalid address, timeout, storage failure, and RPC failure into stable `SolanaError` codes for user-facing UI.
+
+### 7. Desktop Native Wallet Decision
+
+Status: complete. Desktop native wallet support is explicitly deferred from v1 and remains a post-v1 candidate. v1 keeps wallet selection unified through `useWallets()` and `useWallet()` without adding a desktop-native-specific public flow.
+
+### 8. Documentation, Examples, And Tests
+
+Status: complete. The docs app is the primary source of truth for v1 usage. Start with [Getting Started](/getting-started), then use the package references for [`@vue-solana/core`](/packages/core), [`@vue-solana/vue`](/packages/vue), and [`@vue-solana/nuxt`](/packages/nuxt) for public APIs. The [Wallets](/guides/wallets), [Transactions](/guides/transactions), [Account Reads](/guides/account-reads), [Message Signing](/guides/message-signing), and [Errors](/guides/errors) guides cover the stable v1 workflows without requiring source-code inspection.
+
+The [Vue Vite example](/examples/vue-vite) and [Nuxt example](/examples/nuxt) demonstrate devnet-first usage, persisted wallet selection, wallet capability checks, message signing, transaction submission, confirmation status, explorer links, and unsupported-capability UI paths. Unit tests and Wallet Standard E2E coverage live in the repository test suite; run the verification commands below before tagging v1.
+
+## Post-v1 Candidates
+
+These are useful but should not block the first stable release:
+
+- SPL token helpers.
+- Anchor provider and program helpers.
+- A wallet modal or UI package.
+- Nuxt server RPC utilities.
+- Desktop native wallet support.
+- Additional iOS wallet providers.
+- Advanced program account indexing patterns.
+- RPC provider failover and rate-limit handling.
+
+## Verification Before v1
+
+Before tagging a stable release, run the full local verification suite:
+
+```sh
+pnpm lint
+pnpm format
+pnpm test
+pnpm typecheck
+pnpm build:packages
+pnpm test:e2e
+```
+
+Real-network E2E can also be run manually when needed:
+
+```sh
+pnpm test:e2e:integration
+```

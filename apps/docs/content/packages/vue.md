@@ -1,6 +1,7 @@
 ---
 title: "@vue-solana/vue"
 description: Vue plugin and composables for Solana applications.
+ogSection: Packages
 surroundOrder: 15
 ---
 

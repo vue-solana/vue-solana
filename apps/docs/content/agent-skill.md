@@ -1,6 +1,7 @@
 ---
 title: Agent Skill
 description: Install the Vue Solana Agent Skill for AI coding agents.
+ogSection: Tooling
 surroundOrder: 3
 ---
 

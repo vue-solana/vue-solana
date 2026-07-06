@@ -1,6 +1,7 @@
 ---
 title: "Message Signing"
 description: Sign authentication or ownership messages without creating on-chain transactions.
+ogSection: Guides
 surroundOrder: 12
 ---
 

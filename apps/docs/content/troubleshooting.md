@@ -1,6 +1,7 @@
 ---
 title: Troubleshooting
 description: Common setup, TypeScript, wallet, RPC, and Nuxt issues.
+ogSection: Support
 surroundOrder: 4
 ---
 

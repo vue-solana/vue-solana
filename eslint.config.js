@@ -32,11 +32,15 @@ export default tseslint.config(
     files: ["**/*.vue"],
     languageOptions: {
       globals: {
+        computed: "readonly",
+        defineOgImage: "readonly",
         createError: "readonly",
         queryCollection: "readonly",
+        queryCollectionItemSurroundings: "readonly",
         useAsyncData: "readonly",
         useHead: "readonly",
         useRoute: "readonly",
+        useSeoMeta: "readonly",
         useToast: "readonly",
         useSolana: "readonly",
         useSolanaAccountInfo: "readonly",

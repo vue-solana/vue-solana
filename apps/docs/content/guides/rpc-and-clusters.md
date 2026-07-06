@@ -1,6 +1,7 @@
 ---
 title: "RPC and Clusters"
 description: Configure Solana clusters, RPC endpoints, WebSocket endpoints, and connection helpers.
+ogSection: Guides
 surroundOrder: 8
 ---
 

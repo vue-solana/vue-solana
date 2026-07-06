@@ -1,6 +1,7 @@
 ---
 title: "@vue-solana/nuxt"
 description: Nuxt module for Solana applications.
+ogSection: Packages
 surroundOrder: 16
 ---
 

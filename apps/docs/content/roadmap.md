@@ -1,6 +1,7 @@
 ---
 title: v1 Roadmap
 description: Planned feature work before the first stable Vue Solana package release.
+ogSection: Roadmap
 surroundOrder: 19
 ---
 

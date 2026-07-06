@@ -1,6 +1,7 @@
 ---
 title: Nuxt Example
 description: Runnable Nuxt example app for @vue-solana/nuxt.
+ogSection: Examples
 surroundOrder: 18
 ---
 
@@ -8,7 +9,7 @@ The Nuxt example is a runnable Nuxt app for `@vue-solana/nuxt`.
 
 Source: <a href="https://github.com/vue-solana/vue-solana/tree/main/examples/nuxt" target="_blank" rel="noopener noreferrer"><code>examples/nuxt</code></a>
 
-Live demo: [vue-solana-docs.vercel.app/demo](https://vue-solana-docs.vercel.app/demo)
+Live demo: [vue-solana-docs.vercel.app/demo](/demo)
 
 ## What It Demonstrates
 

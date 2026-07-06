@@ -1,6 +1,7 @@
 ---
 title: Clusters
 description: Solana cluster names, RPC endpoints, and faucet instructions.
+ogSection: Concepts
 surroundOrder: 6
 ---
 

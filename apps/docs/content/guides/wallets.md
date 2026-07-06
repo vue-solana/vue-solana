@@ -1,12 +1,20 @@
 ---
 title: "Wallets"
 description: Discover wallets, select an active wallet, connect, disconnect, and check capabilities.
+ogSection: Guides
 surroundOrder: 9
 ---
 
 Vue Solana exposes browser extension wallets, Android Mobile Wallet Adapter wallets, and supported iOS browser wallet links through one wallet flow.
 
 Use `useWallets()` to discover and select a wallet. Use `useWallet()` to connect, disconnect, read the active public key, and check wallet capabilities.
+
+Current wallet support is built on these libraries:
+
+- Browser extension wallets: `@wallet-standard/app`, `@wallet-standard/base`, `@wallet-standard/features`, and `@solana/wallet-standard-features`.
+- Android mobile native wallets: `@solana-mobile/wallet-standard-mobile`, which registers Solana Mobile Wallet Adapter as a Wallet Standard wallet on supported Android Chrome mobile web and PWA runtimes.
+- iOS browser wallets: wallet-specific universal links for Phantom, Solflare, and Backpack.
+- Solana primitives and transaction types: `@vue-solana/vue/web3` for Vue apps, `@vue-solana/nuxt/web3` for Nuxt apps, and `@vue-solana/core/web3` for framework-agnostic core usage.
 
 ## Wallet Sources
 
@@ -186,6 +194,9 @@ Android notes:
 - It is expected to work only in Android Chrome or Chrome PWA runtimes that support the mobile wallet adapter bridge.
 - The wallet handoff can leave the browser and return to the app; preserve UI state so users can see the submitted signature after redirect.
 - Vue Solana adapts MWA wallets into the same `SolanaWallet` interface as extension wallets.
+- The mobile wallet package handles installed-wallet fallback UI through its default wallet-not-found handler.
+- Browsers may show a one-time Local Network Access prompt before MWA can connect to an installed wallet app.
+- For Android MWA transaction sends, Vue Solana asks the mobile wallet to sign and then submits the signed transaction through the app's RPC connection when the wallet supports `signTransaction`. This keeps the returned signature under app control and avoids a mobile handoff edge case where the wallet sends successfully but the browser page does not receive the wallet adapter response.
 
 iOS notes:
 
@@ -247,3 +258,9 @@ If you use iOS core helpers directly, call `handleSolanaIosWalletCallback()` bef
 - Ask for explicit user action before signing messages or transactions.
 - Show disabled or explanatory UI for unsupported capabilities instead of attempting wallet calls blindly.
 - Keep devnet as the default for examples and tutorials; use `mainnet-beta` only when real funds are intended.
+
+Official references:
+
+- <a href="https://github.com/wallet-standard/wallet-standard" target="_blank" rel="noopener noreferrer">Wallet Standard</a>
+- <a href="https://github.com/anza-xyz/wallet-adapter/tree/master/packages/wallets/wallet-standard" target="_blank" rel="noopener noreferrer">Solana Wallet Standard</a>
+- [Solana Documentation](https://solana.com/docs)

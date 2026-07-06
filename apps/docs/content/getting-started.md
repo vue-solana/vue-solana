@@ -1,6 +1,7 @@
 ---
 title: Getting Started
 description: Install Vue Solana packages, configure Vue or Nuxt, and test RPC reads on devnet.
+ogSection: Start Here
 surroundOrder: 2
 ---
 
@@ -351,8 +352,7 @@ Before relying on an app flow, verify these behaviors on devnet:
 
 - [Solana For Vue Developers](/concepts/solana-for-vue-developers)
 - [Clusters](/concepts/clusters)
-- [Wallets](/concepts/wallets)
-- [Wallet Guide](/guides/wallets)
+- [Wallets](/guides/wallets)
 - [Transaction Guide](/guides/transactions)
 - [Troubleshooting](/troubleshooting)
 - [Solana Documentation](https://solana.com/docs)

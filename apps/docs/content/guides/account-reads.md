@@ -1,6 +1,7 @@
 ---
 title: "Account Reads"
 description: Read balances, account data, program accounts, and signature status safely from Vue or Nuxt.
+ogSection: Guides
 surroundOrder: 10
 ---
 

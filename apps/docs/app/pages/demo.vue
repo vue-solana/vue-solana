@@ -1,8 +1,19 @@
 <script setup lang="ts">
 import { useDemoPage } from "~/composables/useDemoPage";
 
-useHead({
+const description =
+  "Explore Vue Solana composables for devnet RPC, wallet discovery, message signing, and transactions.";
+
+useSeoMeta({
   title: "Live Demo - Vue Solana",
+  description,
+  ogTitle: "Live Demo - Vue Solana",
+  ogDescription: description,
+  ogSiteName: "Vue Solana",
+  ogType: "website",
+  twitterCard: "summary_large_image",
+  twitterTitle: "Live Demo - Vue Solana",
+  twitterDescription: description,
 });
 
 const {

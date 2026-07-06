@@ -1,6 +1,7 @@
 ---
 title: "@vue-solana/core"
 description: Framework-agnostic Solana configuration, RPC, wallet types, and transaction helpers.
+ogSection: Packages
 surroundOrder: 14
 ---
 
