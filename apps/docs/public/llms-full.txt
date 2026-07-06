@@ -93,6 +93,59 @@ La demo interactiva sigue en inglés por ahora. La localización inicial cubre l
 
 ---
 
+# Vue Solana 文档
+
+Source: https://vue-solana-docs.vercel.app/zh
+Description: 帮助开发者在 Vue 和 Nuxt 中使用 Solana 的库文档。
+
+Vue Solana 是一组用于构建 Solana 应用的小型 Vue 和 Nuxt 包。
+
+Vue Solana 通过 Vue 和 Nuxt composables 提供 RPC 设置、响应式账户读取、余额读取、浏览器扩展钱包发现、Android Mobile Wallet Adapter 发现、iOS 浏览器钱包链接、钱包连接/断开，以及交易转账流程。示例默认使用 devnet，便于安全测试。
+
+## 包
+
+- [`@vue-solana/core`](/zh/packages/core): 与框架无关的 Solana 配置、端点工具、钱包类型和交易工具。
+- [`@vue-solana/vue`](/zh/packages/vue): Vue 插件和 composables。
+- [`@vue-solana/nuxt`](/zh/packages/nuxt): 安装 Vue 插件并自动导入 composables 的 Nuxt 模块。
+
+`@vue-solana/core` 基于 `@solana/web3-compat`，并从 `@vue-solana/core/web3` 重新导出受支持的 Solana primitives。Vue 应用可以使用 `@vue-solana/vue/web3`，Nuxt 应用可以使用 `@vue-solana/nuxt/web3`，无需直接安装 core。
+
+## 从这里开始
+
+- [开始使用](/zh/getting-started)
+- [钱包指南](/zh/guides/wallets)
+- [交易指南](/zh/guides/transactions)
+- [面向 Vue 开发者的 Solana](/zh/concepts/solana-for-vue-developers)
+- [集群](/zh/concepts/clusters)
+- [v1 路线图](/zh/roadmap)
+- [Agent Skill](/zh/agent-skill)
+- [故障排查](/zh/troubleshooting)
+
+## API 参考
+
+- [`@vue-solana/core`](/zh/packages/core): 配置、端点、钱包接口、Wallet Standard 工具、移动/iOS 工具、交易工具和标准化错误。
+- [`@vue-solana/vue`](/zh/packages/vue): 用于 RPC、账户读取、钱包、消息、签名和交易的 Vue 插件与 composables。
+- [`@vue-solana/nuxt`](/zh/packages/nuxt): Nuxt 模块选项、运行时行为和自动导入的 composables。
+
+## 示例
+
+- [实时演示](/zh/demo)
+- [Vue Vite 示例](/zh/examples/vue-vite)
+- [Nuxt 示例](/zh/examples/nuxt)
+
+## 面向包用户
+
+先阅读[开始使用](/zh/getting-started)，在你自己的应用中安装 Vue 或 Nuxt 包。使用[实时演示](/zh/demo)先体验 devnet RPC 读取、钱包连接、消息签名和转账流程，再把 composables 接入项目。
+
+官方 Solana 参考：
+
+- [Solana Documentation](https://solana.com/docs)
+- [Solana RPC Methods](https://solana.com/docs/rpc)
+- [Solana Clusters](https://solana.com/docs/references/clusters)
+- [Solana Faucet](https://faucet.solana.com)
+
+---
+
 # Primeros pasos
 
 Source: https://vue-solana-docs.vercel.app/es/getting-started
@@ -591,6 +644,366 @@ Before relying on an app flow, verify these behaviors on devnet:
 
 ---
 
+# 开始使用
+
+Source: https://vue-solana-docs.vercel.app/zh/getting-started
+Description: 安装 Vue Solana 包、配置 Vue 或 Nuxt，并在 devnet 上测试 RPC 读取。
+
+本指南涵盖安装 Vue Solana 包、配置 Vue 或 Nuxt、测试 Solana RPC 读取、连接受支持的钱包、签署消息、发送真实 devnet 转账，以及验证结果。示例默认使用 devnet，便于安全测试。
+
+## 开始之前
+
+如果你只需要 `Connection`、`PublicKey` 和交易等 Solana primitives，而不需要 Vue/Nuxt 集成，请直接使用 `@vue-solana/core`。如果你需要框架集成，请使用 `@vue-solana/vue` 或 `@vue-solana/nuxt`。
+
+支持的集群：
+
+- `mainnet-beta`: Solana 主网。这是 Solana 官方主网集群名称。
+- `devnet`: 应用开发的最佳默认值。
+- `testnet`: 验证者和协议测试网络。
+- `localnet`: 本地验证者。
+
+学习和测试时使用 `devnet`。只有准备好与真实 SOL 交互时才使用 `mainnet-beta`。
+
+当前钱包支持：
+
+- 通过 Solana Wallet Standard 包支持浏览器扩展钱包。
+- 在 Android Chrome 和 Chrome PWA 上通过 `@solana-mobile/wallet-standard-mobile` 支持 Android 原生移动钱包。
+- 通过钱包专用 universal links 支持 Phantom、Solflare 和 Backpack 的 iOS 浏览器钱包。
+- 实现 `SolanaWallet` 的手动/自定义钱包对象。
+
+计划中但尚未支持：
+
+- 通过钱包专用协议链接或未来原生 Wallet Standard 注册支持桌面原生应用钱包。
+
+## 为 Vue 安装
+
+```sh
+pnpm add @vue-solana/vue
+```
+
+```sh
+npm install @vue-solana/vue
+```
+
+Vue 应用可以使用 `@vue-solana/vue/web3` 和 `@vue-solana/vue/buffer-polyfill`，无需直接安装低层 Solana 或 Buffer 包。
+
+## 为 Nuxt 安装
+
+```sh
+npx nuxt module add @vue-solana/nuxt
+```
+
+这会安装包，并把 `@vue-solana/nuxt` 添加到 `nuxt.config.ts` 的 `modules` 数组。
+
+Nuxt 应用可以使用 `@vue-solana/nuxt/web3` 和 `@vue-solana/nuxt/buffer-polyfill`，无需直接安装 `@vue-solana/core`、`@vue-solana/vue` 或低层 Solana 与 Buffer 包。
+
+## 已知 TypeScript 问题
+
+`@solana/web3-compat@0.0.21` 当前的 TypeScript 包元数据有问题。它的 package metadata 指向 `dist/types/index.d.ts`，但发布包中没有包含该文件。
+
+运行时导入仍然使用真实的 `@solana/web3-compat` 包。当前 Vue Solana 包会发布临时的包内声明 shim，因此按文档使用 `@vue-solana/core`、`@vue-solana/vue` 或 `@vue-solana/nuxt` 导入的应用通常不需要自己的本地 shim。
+
+只有在使用旧版 Vue Solana 包，或从应用代码直接导入 `@solana/web3-compat` 时，才需要添加本地 shim。每次新的 `@solana/web3-compat` 发布后都应重新检查此说明；上游发布有效根声明后应移除包内 shim。
+
+## Vue 设置
+
+```ts
+import { createApp } from "vue";
+import { createSolanaPlugin } from "@vue-solana/vue";
+import App from "./App.vue";
+
+createApp(App)
+  .use(
+    createSolanaPlugin({
+      cluster: "devnet",
+      mobileWallet: {
+        appIdentity: {
+          name: "My Vue Solana App",
+        },
+      },
+      iosWallet: {
+        appIdentity: {
+          name: "My Vue Solana App",
+        },
+      },
+    }),
+  )
+  .mount("#app");
+```
+
+`mobileWallet` 和 `iosWallet` 是可选的。当浏览器运行时支持时，Android Mobile Wallet Adapter 注册以及 iOS Phantom、Solflare 和 Backpack 链接默认启用。传入 `mobileWallet: false` 或 `iosWallet: false` 可以禁用对应来源。
+
+对于 Vue composables，新代码优先使用直接子路径导入：
+
+```ts
+import { useRpc } from "@vue-solana/vue/useRpc";
+import { useBalance } from "@vue-solana/vue/useBalance";
+```
+
+## Nuxt 设置
+
+```ts
+export default defineNuxtConfig({
+  modules: ["@vue-solana/nuxt"],
+  solana: {
+    cluster: "devnet",
+    mobileWallet: {
+      appIdentity: {
+        name: "My Nuxt Solana App",
+      },
+    },
+    iosWallet: {
+      appIdentity: {
+        name: "My Nuxt Solana App",
+      },
+    },
+  },
+});
+```
+
+Nuxt 模块只在客户端安装运行时插件，并从直接的 `@vue-solana/vue/*` 子路径自动导入 composables。Composables 可以在 SSR 期间安全调用，但真实 RPC 和钱包操作应在 hydration 后运行，例如在 `onMounted()` 或用户操作中。Nuxt `solana` 选项位于 public runtime config 中，因此应保持 JSON 可序列化。
+
+## 无钱包测试 RPC
+
+RPC 读取不需要浏览器钱包。
+
+Vue 中使用 `useRpc()`：
+
+```vue
+<script setup lang="ts">
+import { onMounted, ref } from "vue";
+import { useRpc } from "@vue-solana/vue/useRpc";
+
+const { cluster, endpoint, connection } = useRpc();
+const latestBlockhash = ref<string | null>(null);
+
+onMounted(async () => {
+  const result = await connection.getLatestBlockhash();
+  latestBlockhash.value = result.blockhash;
+});
+</script>
+
+<template>
+  <main>
+    <p>Cluster: {{ cluster }}</p>
+    <p>Endpoint: {{ endpoint }}</p>
+    <p>Latest blockhash: {{ latestBlockhash }}</p>
+  </main>
+</template>
+```
+
+Nuxt 中使用自动导入的 `useSolanaRpc()`：
+
+```vue
+<script setup lang="ts">
+const { cluster, endpoint, checkConnection, latestBlockhash } = useSolanaRpc();
+</script>
+
+<template>
+  <main>
+    <p>Cluster: {{ cluster }}</p>
+    <p>Endpoint: {{ endpoint }}</p>
+    <p>Latest blockhash: {{ latestBlockhash }}</p>
+    <button type="button" @click="checkConnection">Check RPC</button>
+  </main>
+</template>
+```
+
+## 获取 Devnet 或 Testnet SOL
+
+Devnet 和 testnet SOL 是没有真实价值的测试代币。
+
+使用官方 faucet：
+
+```txt
+https://faucet.solana.com
+```
+
+跟随本指南时选择 `Devnet`。只有在测试 testnet 集群时才选择 `Testnet`。
+
+如果你安装了 Solana CLI，也可以运行：
+
+```sh
+solana airdrop 1 YOUR_WALLET_ADDRESS --url devnet
+```
+
+```sh
+solana airdrop 1 YOUR_WALLET_ADDRESS --url testnet
+```
+
+测试时绝不要使用包含真实资金的钱包。
+
+## 运行示例
+
+要在本地运行示例应用，先克隆 Vue Solana 仓库：
+
+```sh
+git clone https://github.com/vue-solana/vue-solana.git
+cd vue-solana
+pnpm install
+pnpm build:packages
+```
+
+启动 Vue Vite 示例：
+
+`pnpm dev:vue`
+
+启动 Nuxt 示例：
+
+`pnpm dev:nuxt`
+
+示例演示插件/模块设置、RPC 状态、直接 connection 调用、余额读取、统一钱包发现、持久化钱包选择、钱包状态、消息签名、通用交易状态、交易转账流程、确认状态、explorer 链接，以及不支持能力的 UI。它们默认使用 devnet，便于安全测试。
+
+## 连接钱包
+
+安装 Phantom、Solflare、Backpack 或其他 Solana Wallet Standard 浏览器钱包。测试前把钱包切换到 devnet。
+
+在 Android Chrome 或 Android Chrome PWA 上，安装兼容的 Solana 移动钱包，例如 Phantom、Solflare 或 Seed Vault Wallet。`Mobile Wallet Adapter` 可以在 `refreshWallets()` 后出现在同一钱包列表中。
+
+Vue：
+
+```ts
+const { wallets, selectedWallet, refreshWallets, selectWallet } = useWallets();
+const { publicKey, connected, connect, disconnect } = useWallet();
+```
+
+Nuxt：
+
+```ts
+const { wallets, selectedWallet, refreshWallets, selectWallet } = useSolanaWallets();
+const { publicKey, connected, connect, disconnect } = useSolanaWallet();
+```
+
+从 `wallets` 中选择钱包，然后调用 `connect()`。选择钱包只会配置活动钱包，不会连接它。有些扩展会在页面刷新后暴露之前授权的账户，但 Vue Solana 仍会保持 `connected` 为 false，直到 `connect()` 成功。
+
+启用 `autoConnect` 时，Vue Solana 只会恢复用户之前选择的钱包身份，并且只在该钱包再次在客户端被发现后恢复。它在 `localStorage` 中存储 `name`、`platform` 和 `source` 元数据，不存储私钥、会话或交易。
+
+iOS 浏览器钱包支持使用钱包专用 universal links，因为 Mobile Wallet Adapter web 支持仅限 Android Chrome。Phantom、Solflare 和 Backpack 会在 iOS 浏览器的同一 `useWallets()` 列表中出现。
+
+## 手动钱包测试
+
+手动验证浏览器扩展、Android MWA 钱包或 iOS 浏览器钱包时使用此清单。
+
+1. 将应用配置为 `devnet`，并确认 UI 显示 devnet 端点。
+2. 安装受支持的钱包，并把钱包本身切换到 devnet。
+3. 从 `https://faucet.solana.com` 给钱包充值 devnet SOL。
+4. 打开示例应用并点击钱包刷新操作。
+5. 确认钱包以预期来源显示在统一钱包列表中。
+6. 选择钱包，并验证仅选择不会连接。
+7. 点击连接并批准钱包提示。
+8. 确认 `connect()` 解析后公钥和 `connected` 状态更新。
+9. 重新加载页面，确认之前选择的钱包身份可以恢复，而不是任意选择钱包。
+10. 断开连接，确认公钥和连接状态被清除。
+
+预期钱包来源：
+
+| 平台                         | 预期来源                | 说明                                                                               |
+| ---------------------------- | ----------------------- | ---------------------------------------------------------------------------------- |
+| 桌面浏览器扩展               | `wallet-standard`       | 安装后 Phantom、Solflare、Backpack 和其他标准钱包可能出现。                         |
+| Android Chrome 或 Chrome PWA | `mobile-wallet-adapter` | 需要兼容的原生钱包和 Android MWA 浏览器支持。                                      |
+| iOS 浏览器                   | `deep-link`             | Phantom、Solflare 和 Backpack 条目使用钱包专用 universal links。                    |
+| 桌面原生应用                 | v1 未实现               | 桌面原生协议链接已明确推迟到 v1 之后。                                             |
+
+## 签署消息
+
+使用消息签名做钱包所有权检查或认证挑战。它不会提交交易，也不会授权链上状态变更。
+
+Vue：
+
+```ts
+const { connected, canSignMessage } = useWallet();
+const signMessage = useSignMessage();
+
+if (connected.value && canSignMessage.value) {
+  await signMessage.execute(new TextEncoder().encode("Sign in to example.com"));
+}
+```
+
+Nuxt：
+
+```ts
+const { connected, canSignMessage } = useSolanaWallet();
+const signMessage = useSolanaSignMessage();
+
+if (connected.value && canSignMessage.value) {
+  await signMessage.execute(new TextEncoder().encode("Sign in to example.com"));
+}
+```
+
+当 `canSignMessage` 为 false 时渲染禁用的认证按钮。有些钱包可以连接和签署交易，但不支持任意消息签名。
+
+手动测试时，使用包含域名、nonce 和过期时间的清晰挑战字符串。不要要求用户签署空白或含糊的消息。
+
+```ts
+const challenge = new TextEncoder().encode(
+  "Sign in to example.com\nNonce: 8f1a2c\nExpires: 2026-07-03T12:00:00Z",
+);
+```
+
+签名后，验证 UI 显示返回的签名字节，并且不会把消息签名当作链上交易。
+
+## 发送转账
+
+Vue 和 Nuxt 示例包含用于真实转账的收款地址和金额字段。它们默认使用 devnet，因此你可以用没有真实价值的 SOL 测试。对于 mainnet，请配置 `mainnet-beta` 或 mainnet RPC 端点，并使用有真实 SOL 支付费用的钱包。
+
+测试时从 `0.000001` SOL 这样的小金额开始。
+
+创建或序列化交易的浏览器应用应在交易代码前初始化框架包的 Buffer polyfill：
+
+```ts
+import { installSolanaBufferPolyfill } from "@vue-solana/vue/buffer-polyfill";
+
+installSolanaBufferPolyfill();
+```
+
+钱包会提示你批准交易。批准后，示例会显示交易签名、确认状态和 explorer 链接。在 Android Mobile Wallet Adapter 上，Vue Solana 会优先使用钱包签名加应用侧 RPC 提交（如果支持），这样钱包跳转回浏览器后返回签名更可靠。
+
+手动转账测试：
+
+1. 让应用和钱包都保持在 devnet。
+2. 使用你控制的收款地址，或新生成的 devnet 钱包。
+3. 从 `0.000001` SOL 开始。
+4. 批准前检查钱包提示。
+5. 提交后等待示例显示确认状态。
+6. 打开 explorer 链接并确认它使用 devnet 集群查询。
+7. 刷新发送方和接收方余额。
+
+Explorer URL 应感知集群：
+
+```ts
+function explorerUrl(signature: string, cluster: string) {
+  const suffix = cluster === "mainnet-beta" ? "" : `?cluster=${cluster}`;
+  return `https://explorer.solana.com/tx/${signature}${suffix}`;
+}
+```
+
+如果返回签名后确认超时，不要立即重新提交。先检查签名状态或 explorer；交易可能仍会确认。
+
+## 最终验证
+
+在依赖某个应用流程前，在 devnet 上验证这些行为：
+
+- RPC 读取不需要钱包。
+- 钱包发现只显示当前平台支持的钱包来源。
+- 钱包选择和连接是两个独立的用户操作。
+- 可选 `autoConnect` 只恢复之前选择的钱包身份。
+- UI 中禁用不支持的消息签名或交易签名能力。
+- 消息签名返回签名而不提交链上交易。
+- 转账提交返回签名和确认状态。
+- Explorer 链接指向和应用相同的集群。
+- 只有在你明确配置 mainnet 并理解真实 SOL 风险时才使用 `mainnet-beta`。
+
+## 更多阅读
+
+- [面向 Vue 开发者的 Solana](/zh/concepts/solana-for-vue-developers)
+- [集群](/zh/concepts/clusters)
+- [钱包](/zh/guides/wallets)
+- [交易指南](/zh/guides/transactions)
+- [故障排查](/zh/troubleshooting)
+- [Solana Documentation](https://solana.com/docs)
+
+---
+
 # Agent Skill
 
 Source: https://vue-solana-docs.vercel.app/agent-skill
@@ -676,6 +1089,58 @@ npx skills add --global vue-solana/vue-solana
 ## Fuente
 
 La skill pública vive en `skills/vue-solana/`. Las skills locales de desarrollo viven en `.agents-dev/skills/` y no se publican como parte de la instalación pública.
+
+---
+
+# Agent Skill
+
+Source: https://vue-solana-docs.vercel.app/zh/agent-skill
+Description: 为 AI 编码代理安装 Vue Solana Agent Skill。
+
+Vue Solana 提供一个可安装的 Agent Skill，适用于支持 Agent Skills 格式的 AI 编码代理。该 skill 为代理提供 Vue Solana 设置模式、包选择规则、钱包流程指导、Nuxt SSR 注意事项、交易常见问题和验证命令。
+
+当你要求代理构建、调试、审查或记录使用以下包的应用时，可以使用它：
+
+- `@vue-solana/core`
+- `@vue-solana/vue`
+- `@vue-solana/nuxt`
+- Vue 或 Nuxt 应用中的 `@vue-solana/vue/web3` 和 `@vue-solana/nuxt/web3` primitives
+
+## 安装
+
+使用 Skills CLI 从 GitHub 仓库安装：
+
+```sh
+# Install all skills
+npx skills add vue-solana/vue-solana
+
+# Install the Vue Solana skill
+npx skills add vue-solana/vue-solana --skill vue-solana
+
+# List available skills
+npx skills add vue-solana/vue-solana --list
+
+# Install globally
+npx skills add vue-solana/vue-solana --global
+```
+
+CLI 会把 skills 安装到你在安装期间选择的代理 skill 目录。对 Claude 来说，当前项目中是 `.claude/skills/`，使用 `--global` 时是 `~/.claude/skills/`。
+
+## Skill 覆盖内容
+
+- 什么时候使用 `@vue-solana/core`、`@vue-solana/vue`、`@vue-solana/vue/web3`、`@vue-solana/nuxt` 和 `@vue-solana/nuxt/web3`。
+- Vue 插件设置和推荐的直接 composable 导入方式。
+- Nuxt 模块设置和自动导入的 composables。
+- 通过 `useWallets()` 和 `useWallet()` 统一发现和连接钱包。
+- 浏览器扩展钱包、Android Mobile Wallet Adapter 支持、iOS 浏览器钱包支持，以及当前桌面原生钱包限制。
+- RPC、余额和交易工具用法。
+- 交易代码中 `installSolanaBufferPolyfill()` 浏览器 polyfill 指导。
+- 当前 `@solana/web3-compat@0.0.21` TypeScript 元数据临时方案。
+- 修改 Vue Solana 自身时的仓库验证命令。
+
+## 源码
+
+Skill 源码位于 [`skills/vue-solana/SKILL.md`](https://github.com/vue-solana/vue-solana/blob/main/skills/vue-solana/SKILL.md)。
 
 ---
 
@@ -914,6 +1379,191 @@ npx nuxi prepare
 
 ---
 
+# 故障排查
+
+Source: https://vue-solana-docs.vercel.app/zh/troubleshooting
+Description: 常见的安装、TypeScript、钱包、RPC 和 Nuxt 问题。
+
+使用本指南诊断 Vue Solana 在 Vue、Nuxt、TypeScript、钱包发现、RPC 调用和交易中的常见问题。先找到与你的应用匹配的错误消息或行为，再按顺序完成检查，之后再考虑提交 issue。
+
+## TypeScript 无法解析 `@solana/web3-compat`
+
+`@solana/web3-compat@0.0.21` 当前的 TypeScript 元数据有问题。运行时导入仍然使用真实包。当前 Vue Solana 包会发布临时的包内声明 shim，因此文档中的 `@vue-solana/core`、`@vue-solana/vue` 和 `@vue-solana/nuxt` 导入应当不需要消费端本地 shim 就能通过类型检查。
+
+如果 TypeScript 仍然报告缺少声明，请先确认你正在使用当前版本的 Vue Solana 包，并且没有在应用代码中直接导入 `@solana/web3-compat`。对于较旧的 Vue Solana 版本或直接 `@solana/web3-compat` 导入，请在应用中添加 `types/web3-compat.d.ts`：
+
+```ts
+declare module "@solana/web3-compat" {
+  export type {
+    Commitment,
+    RpcResponseAndContext,
+    SendOptions,
+    SignatureResult,
+    TransactionSignature,
+  } from "@solana/web3.js";
+  export {
+    Connection,
+    Keypair,
+    PublicKey,
+    SystemProgram,
+    Transaction,
+    TransactionInstruction,
+    VersionedTransaction,
+  } from "@solana/web3.js";
+}
+```
+
+确保你的 `tsconfig.json` 包含该文件：
+
+```json
+{
+  "include": ["src/**/*.ts", "src/**/*.vue", "types/**/*.d.ts"]
+}
+```
+
+在保留这个 workaround 前，请重新检查新的 `@solana/web3-compat` 版本。一旦上游发布有效的根声明，就应移除包内 shim。
+
+## `Vue Solana plugin is not installed`
+
+这表示客户端代码在没有安装插件的情况下尝试使用 Solana 连接或钱包操作。当前 composable 在 Nuxt 服务端渲染期间会返回惰性的 SSR 安全状态，但真实 RPC 和钱包操作仍然需要客户端插件上下文。
+
+Vue 中：
+
+```ts
+createApp(App).use(
+  createSolanaPlugin({
+    cluster: "devnet",
+  }),
+);
+```
+
+Nuxt 中，注册模块：
+
+```ts
+export default defineNuxtConfig({
+  modules: ["@vue-solana/nuxt"],
+});
+```
+
+Nuxt 模块会让 Vue Solana 插件仅在客户端运行。自动导入的 composable 可以在 SSR 期间调用，但请避免在服务端直接执行 RPC 或钱包工作。需要真实 Solana 连接时，请从客户端生命周期钩子或用户操作触发 RPC 读取。
+
+## `No Solana wallet is configured`
+
+尚未选择或手动配置钱包。调用 `connect()` 或发送交易前，请使用 `useWallets()` 或 `useSolanaWallets()` 选择一个已发现的钱包。
+
+```ts
+const { wallets, selectWallet } = useSolanaWallets();
+
+selectWallet(wallets.value[0]);
+```
+
+RPC 读取和余额读取不需要钱包。
+
+## 未检测到浏览器钱包
+
+常见原因：
+
+- 未安装 Solana 钱包扩展。
+- 钱包扩展在当前浏览器配置中被禁用。
+- 应用正在 SSR 或非浏览器环境中运行。
+- 钱包未实现 Wallet Standard。
+
+安装 Phantom、Solflare 或 Backpack 等钱包，然后在页面加载后调用 `refreshWallets()`。
+
+## 未检测到 Mobile Wallet Adapter
+
+Android Mobile Wallet Adapter Web 注册只在支持的 Android Chrome 移动 Web 和 Chrome PWA 运行时中可用。
+
+常见原因：
+
+- 应用运行在桌面、iOS、Firefox Android、Brave Android、Opera Android 或其他不支持的浏览器中。
+- 未安装兼容的 Solana 移动钱包。
+- Vue 插件或 Nuxt 模块传入了 `mobileWallet: false`。
+- 钱包发现发生在 hydration 之前，或页面还不能访问 `window`。
+
+请在 Android Chrome 中打开应用，安装兼容钱包，然后在页面加载后调用 `refreshWallets()`。
+
+## iOS 钱包链接没有完成
+
+iOS 钱包支持使用 Phantom、Solflare 和 Backpack universal link。批准后，钱包应用会重定向回你的应用 URL。
+
+常见原因：
+
+- 应用没有运行在 iOS 浏览器中。
+- 设备上没有安装 Phantom、Solflare 或 Backpack。
+- Vue 插件或 Nuxt 模块传入了 `iosWallet: false`。
+- 配置的 `redirectUrl` 没有返回到会刷新钱包状态的同一个应用页面。
+- 钱包刷新或回调处理只在 SSR 期间运行，而不是在客户端运行。
+
+请把 iOS 钱包工作保持在客户端，确保重定向 URL 会再次加载应用，并在重定向页面加载后调用 `refreshWallets()`。Vue 插件会在钱包刷新期间处理 iOS 回调；直接使用 core helper 的应用应先调用 `handleSolanaIosWalletCallback()`，再依赖返回的连接。
+
+## `Solana wallet is not connected`
+
+交易 helper 在钱包报告 `connected: true` 且 `publicKey` 非空之前被调用了。
+
+请先调用 `connect()`，或在发送前检查 `connected.value`。
+
+## 本地开发中刷新后钱包看起来已连接
+
+选择已发现的钱包不应把它标记为已连接。即使浏览器扩展暴露了之前授权的账户，`connected` 也只应在 `connect()` 成功后变为 true。
+
+如果本地 Vue 或 Nuxt 示例在刷新后仍然立即显示已连接，请重新构建工作区包并完全重启开发服务器，让 Vite/Nuxt 丢弃过期的包输出：
+
+```sh
+pnpm build:packages
+pnpm dev:vue
+```
+
+Nuxt 请在重新构建包后使用 `pnpm dev:nuxt`。
+
+## `Solana wallet does not support signTransaction`
+
+配置的钱包没有暴露 `signAndSendTransaction` 或 `signTransaction`。请使用支持所选 Solana chain 交易签名的钱包。
+
+## 钱包交易没有返回结果
+
+当钱包适配器开始移动端 handoff 但浏览器 promise 从未 settle 时，可能会出现这种情况。Vue Solana 会清除 `loading` 并设置 `error`，而不是让应用卡在发送状态。如果钱包在响应丢失前已经提交交易，交易仍可能成功，因此重试前请检查钱包活动或 Solana explorer。
+
+当 Android Mobile Wallet Adapter 钱包支持 `signTransaction` 时，Vue Solana 优先使用钱包签名加应用侧 RPC 提交。这可以避免钱包发送成功但浏览器页面没有收到适配器返回签名的常见情况。
+
+## `Buffer is not defined`
+
+某些 `@solana/web3-compat` 交易路径仍然期望 Node 兼容的 `Buffer` 全局变量。在浏览器 Vue 应用中，请在创建或序列化交易前初始化 Vue 包的 Buffer polyfill。Nuxt 应用使用 `@vue-solana/nuxt/buffer-polyfill`。
+
+```ts
+import { installSolanaBufferPolyfill } from "@vue-solana/vue/buffer-polyfill";
+
+installSolanaBufferPolyfill();
+```
+
+该 helper 由框架包提供，因此应用不需要为了 Vue Solana 交易示例直接安装或导入 `buffer`。
+
+## Module `buffer` Has Been Externalized
+
+如果控制台显示 `Module "buffer" has been externalized for browser compatibility`，请把应用中直接从 `buffer` 的导入替换为来自 `@vue-solana/vue/buffer-polyfill` 或 `@vue-solana/nuxt/buffer-polyfill` 的 `installSolanaBufferPolyfill()`，然后重启开发服务器。Vite 可能缓存了之前优化过的依赖。
+
+## 余额读取失败
+
+常见原因：
+
+- 地址字符串不是有效的 Solana public key。
+- RPC endpoint 不可用或被限流。
+- 钱包地址所在 cluster 与配置的 RPC endpoint 不一致。
+
+请使用 `useRpc()` 或 `useSolanaRpc()` 检查配置的 cluster 和 endpoint。
+
+## Nuxt 自动导入缺失
+
+确保 `@vue-solana/nuxt` 已列在 `modules` 中，并在安装包后重启 Nuxt 开发服务器。
+
+如果 TypeScript 仍然无法识别自动导入，请重新生成 Nuxt 类型：
+
+```sh
+npx nuxi prepare
+```
+
+---
+
 # Solana For Vue Developers
 
 Source: https://vue-solana-docs.vercel.app/concepts/solana-for-vue-developers
@@ -1035,6 +1685,102 @@ Nuxt instala el plugin con un módulo, autoimporta composables y permite documen
 ## Seguridad
 
 Nunca pidas claves privadas. Nunca firmes sin interacción clara del usuario. Trata respuestas RPC, direcciones y firmas como entradas no confiables.
+
+---
+
+# 面向 Vue 开发者的 Solana
+
+Source: https://vue-solana-docs.vercel.app/zh/concepts/solana-for-vue-developers
+Description: 面向 Vue 和 Nuxt 开发者的实用 Solana 概念。
+
+本页解释你在使用 Vue Solana 包时会遇到的 Solana 术语。内容偏实用，不追求穷尽。
+
+官方参考：
+
+- [Solana Documentation](https://solana.com/docs)
+- [Solana RPC Methods](https://solana.com/docs/rpc)
+- [Solana Clusters](https://solana.com/docs/references/clusters)
+- [Solana Transactions](https://solana.com/docs/core/transactions)
+
+## Connections 和 RPC
+
+前端应用通过 RPC 端点读取 Solana 数据。`@vue-solana/vue/web3` 和 `@vue-solana/nuxt/web3` 暴露受支持的 `Connection` 类，用于向该端点发送请求。
+
+Vue Solana 包会为 Vue 和 Nuxt 代码创建并提供这个 connection，让 composables 共享同一个集群、端点、commitment 和钱包状态。
+
+```ts
+createSolanaPlugin({
+  cluster: "devnet",
+  commitment: "confirmed",
+});
+```
+
+## 公钥和地址
+
+公钥就是 Solana 账户地址。你可以在前端应用中安全地展示公钥。
+
+```ts
+import { PublicKey } from "@vue-solana/vue/web3";
+
+const publicKey = new PublicKey("PASTE_A_SOLANA_ADDRESS");
+```
+
+不要在前端代码中暴露私钥、助记词或 secret key 数组。
+
+## Lamports 和 SOL
+
+SOL 是 Solana 的原生代币。Lamports 是 SOL 的最小单位。
+
+```txt
+1 SOL = 1,000,000,000 lamports
+```
+
+RPC 余额方法返回 lamports。只在展示时把 lamports 转换为 SOL。
+
+```ts
+const lamports = await connection.getBalance(publicKey);
+const sol = lamports / 1_000_000_000;
+```
+
+## 钱包
+
+钱包保存密钥并签署交易。浏览器扩展钱包包括 Phantom、Solflare 和 Backpack。Android 原生移动钱包可以在受支持的 Android Chrome 运行时通过 Solana Mobile Wallet Adapter 连接。Phantom、Solflare 和 Backpack 也可以在 iOS 浏览器中通过钱包专用 universal links 连接。
+
+Vue Solana 通过统一的 `useWallets()` 流程发现 Solana Wallet Standard 浏览器扩展钱包、Android Mobile Wallet Adapter 钱包和受支持的 iOS 浏览器钱包链接。RPC 读取和余额读取不需要钱包。连接、签名和发送交易需要已发现的钱包，或实现 `SolanaWallet` 接口的自定义对象。
+
+查看[钱包](/zh/guides/wallets)了解当前支持范围和桌面原生钱包的 post-v1 状态。
+
+## 交易和签名
+
+交易是一组会改变 Solana 状态的指令。示例包括转账 SOL、创建账户或与程序交互。
+
+签名证明钱包所有者批准该交易。前端应用应请求用户的钱包签名，不应持有私钥。
+
+## Commitment 级别
+
+Commitment 控制返回数据应达到的最终性。
+
+- `processed`: 最快，最终性最低。
+- `confirmed`: 大多数应用 UI 读取的良好默认值。
+- `finalized`: 最慢，最终性最高。
+
+示例：
+
+```ts
+createSolanaPlugin({
+  cluster: "devnet",
+  commitment: "confirmed",
+});
+```
+
+官方参考：[Commitment Status](https://solana.com/docs/rpc#configuring-state-commitment)
+
+## 安全提示
+
+- 构建和测试时使用 `devnet`。
+- 开发时不要使用包含真实资金的钱包。
+- 不要在前端应用中硬编码私钥。
+- 只有准备好与真实 SOL 和生产程序交互时才使用 `mainnet-beta`。
 
 ---
 
@@ -1184,6 +1930,105 @@ En Vue usa `createSolanaPlugin({ cluster: "devnet" })`.
 ## Obtener SOL de devnet o testnet
 
 Usa un faucet público o `solana airdrop` para financiar una cuenta de pruebas. No reutilices claves privadas de mainnet en entornos de desarrollo.
+
+---
+
+# 集群
+
+Source: https://vue-solana-docs.vercel.app/zh/concepts/clusters
+Description: Solana 集群名称、RPC 端点和 faucet 使用说明。
+
+Solana 集群是一组验证者网络。应用需要选择要连接的集群。
+
+## 支持的集群
+
+Vue Solana 支持这些集群名称：
+
+- `mainnet-beta`: Solana 主网。这是 Solana 官方主网集群名称。生产应用和真实 SOL 使用它。
+- `devnet`: 开发者网络。构建应用时使用。Devnet SOL 没有真实价值。
+- `testnet`: 验证者和协议测试网络。应用开发中不如 devnet 常用。
+- `localnet`: 运行在本机的本地验证者，通常是 `http://127.0.0.1:8899`。
+
+请使用 `mainnet-beta`，而不是 `mainnet`。Vue Solana 有意不添加 `mainnet` 别名。
+
+官方参考：[Solana Clusters](https://solana.com/docs/references/clusters)
+
+## RPC 端点
+
+RPC 端点是应用用于从 Solana 读取或写入的 HTTP URL。
+
+示例：
+
+- `https://api.devnet.solana.com`
+- `https://api.mainnet-beta.solana.com`
+- `http://127.0.0.1:8899`
+
+来自 `@vue-solana/vue/web3`、`@vue-solana/nuxt/web3` 或 `@vue-solana/core/web3` 的 `Connection` 对象会向该端点发送 RPC 请求。公共端点适合入门，但生产应用通常应使用专用 RPC provider 以获得可靠性和速率限制。
+
+官方参考：[Solana RPC](https://solana.com/docs/rpc)
+
+## WebSocket 端点
+
+WebSocket 端点用于订阅和实时更新。除非显式传入 `wsEndpoint`，Vue Solana 会从 RPC 端点推导 WebSocket 端点。
+
+示例：
+
+- `wss://api.devnet.solana.com`
+- `wss://api.mainnet-beta.solana.com`
+- `ws://127.0.0.1:8900`
+
+## 配置集群
+
+Vue：
+
+```ts
+createSolanaPlugin({
+  cluster: "devnet",
+});
+```
+
+Nuxt：
+
+```ts
+export default defineNuxtConfig({
+  modules: ["@vue-solana/nuxt"],
+  solana: {
+    cluster: "devnet",
+  },
+});
+```
+
+也可以传入自定义端点：
+
+```ts
+createSolanaPlugin({
+  cluster: "mainnet-beta",
+  endpoint: "https://your-rpc.example.com",
+  commitment: "confirmed",
+});
+```
+
+## 获取 Devnet 或 Testnet SOL
+
+使用官方 faucet：
+
+```txt
+https://faucet.solana.com
+```
+
+选择 `Devnet` 或 `Testnet`，粘贴钱包地址并请求 SOL。
+
+如果你已安装 Solana CLI，也可以请求空投：
+
+```sh
+solana airdrop 1 YOUR_WALLET_ADDRESS --url devnet
+```
+
+```sh
+solana airdrop 1 YOUR_WALLET_ADDRESS --url testnet
+```
+
+Devnet 和 testnet SOL 没有真实价值。测试时不要使用包含真实资金的钱包。
 
 ---
 
@@ -1399,6 +2244,159 @@ const wsEndpoint = getClusterWebSocketEndpoint("devnet");
 - Avoid broad or frequent scans on public RPC endpoints.
 - Use WebSocket subscriptions intentionally; always clean them up when you no longer need them.
 - Treat RPC responses as untrusted input and handle missing, stale, or failed data.
+
+---
+
+# RPC 和集群
+
+Source: https://vue-solana-docs.vercel.app/zh/guides/rpc-and-clusters
+Description: 配置 Solana 集群、RPC 端点、WebSocket 端点和 connection 工具。
+
+Vue Solana 在 `@vue-solana/core`、`@vue-solana/vue` 和 `@vue-solana/nuxt` 之间共享集群和端点配置。
+
+当你需要选择集群、提供自定义 RPC 端点，或理解 RPC composables 暴露的内容时，请使用本指南。
+
+## 集群名称
+
+支持的集群名称：
+
+- `devnet`
+- `testnet`
+- `mainnet-beta`
+- `localnet`
+
+Solana 主网使用 `mainnet-beta`。Vue Solana 遵循 Solana 官方集群名称，并且有意不把 `mainnet` 作为别名。
+
+`devnet` 是默认值，因为它是示例和开发最安全的集群。
+
+## Core 设置
+
+需要与框架无关的 connection 设置时，使用 `@vue-solana/core/rpc`。
+
+```ts
+import { createSolanaContext } from "@vue-solana/core/rpc";
+
+const solana = createSolanaContext({
+  cluster: "devnet",
+  commitment: "confirmed",
+});
+
+const { blockhash } = await solana.connection.getLatestBlockhash();
+
+console.log(solana.endpoint, blockhash);
+```
+
+`createSolanaContext()` 返回解析后的 `cluster`、HTTP `endpoint`、WebSocket `wsEndpoint` 和 `connection`。
+
+## 自定义 RPC 端点
+
+生产应用通常应使用专用 RPC provider，而不是公共集群端点。
+
+```ts
+import { createSolanaContext } from "@vue-solana/core/rpc";
+
+const solana = createSolanaContext({
+  cluster: "mainnet-beta",
+  endpoint: "https://your-rpc.example.com",
+  commitment: "confirmed",
+});
+```
+
+如果省略 `wsEndpoint`，Vue Solana 会从 HTTP 端点推导：把 `https` 转为 `wss`，把 `http` 转为 `ws`。
+
+```ts
+import { getWebSocketEndpoint } from "@vue-solana/core/clusters";
+
+const wsEndpoint = getWebSocketEndpoint("https://api.devnet.solana.com");
+```
+
+## Vue 设置
+
+在应用启动附近安装一次 Vue 插件。
+
+```ts
+import { createApp } from "vue";
+import { createSolanaPlugin } from "@vue-solana/vue";
+import App from "./App.vue";
+
+createApp(App)
+  .use(
+    createSolanaPlugin({
+      cluster: "devnet",
+      commitment: "confirmed",
+    }),
+  )
+  .mount("#app");
+```
+
+然后在组件中用 `useRpc()` 读取 RPC 状态。
+
+```vue
+<script setup lang="ts">
+import { useRpc } from "@vue-solana/vue/useRpc";
+
+const { cluster, endpoint, status, latestBlockhash, error, checkConnection } = useRpc();
+</script>
+
+<template>
+  <section>
+    <p>Cluster: {{ cluster }}</p>
+    <p>Endpoint: {{ endpoint }}</p>
+    <p>Status: {{ status }}</p>
+    <p>Latest blockhash: {{ latestBlockhash }}</p>
+    <p v-if="error">Unable to reach RPC.</p>
+    <button type="button" @click="checkConnection">Check RPC</button>
+  </section>
+</template>
+```
+
+## Nuxt 设置
+
+在 `nuxt.config.ts` 中配置模块。
+
+```ts
+export default defineNuxtConfig({
+  modules: ["@vue-solana/nuxt"],
+  solana: {
+    cluster: "devnet",
+    commitment: "confirmed",
+  },
+});
+```
+
+Nuxt 会把模块选项存储在 public runtime config 中，因此选项必须可 JSON 序列化。
+
+在 Nuxt 页面和组件中使用自动导入的 `useSolanaRpc()` composable。
+
+```vue
+<script setup lang="ts">
+const { cluster, endpoint, status, checkConnection } = useSolanaRpc();
+</script>
+```
+
+Nuxt runtime plugin 仅在客户端运行。Composables 可以在 SSR 中调用，但钱包和 RPC 工作应由客户端生命周期或用户操作触发。
+
+## 端点工具
+
+当你只需要内置端点值而不创建 `Connection` 时，使用 `@vue-solana/core/clusters`。
+
+```ts
+import {
+  DEFAULT_CLUSTER,
+  getClusterEndpoint,
+  getClusterWebSocketEndpoint,
+} from "@vue-solana/core/clusters";
+
+const endpoint = getClusterEndpoint(DEFAULT_CLUSTER);
+const wsEndpoint = getClusterWebSocketEndpoint("devnet");
+```
+
+## 生产注意事项
+
+- 生产流量优先使用专用 RPC provider。
+- 避免在公共 RPC 端点上进行宽泛或频繁扫描。
+- 有意识地使用 WebSocket 订阅；不再需要时务必清理。
+- 将 RPC 响应视为不可信输入，并处理缺失、过期或失败的数据。
 
 ---
 
@@ -1735,6 +2733,273 @@ Official references:
 
 ---
 
+# 钱包
+
+Source: https://vue-solana-docs.vercel.app/zh/guides/wallets
+Description: 发现钱包、选择活动钱包、连接、断开连接并检查能力。
+
+Vue Solana 通过一个统一的钱包流程暴露浏览器扩展钱包、Android Mobile Wallet Adapter 钱包和受支持的 iOS 浏览器钱包链接。
+
+使用 `useWallets()` 发现和选择钱包。使用 `useWallet()` 连接、断开、读取活动公钥并检查钱包能力。
+
+当前钱包支持基于这些库：
+
+- 浏览器扩展钱包：`@wallet-standard/app`、`@wallet-standard/base`、`@wallet-standard/features` 和 `@solana/wallet-standard-features`。
+- Android 移动原生钱包：`@solana-mobile/wallet-standard-mobile`，它会在受支持的 Android Chrome 移动 Web 和 PWA 运行时把 Solana Mobile Wallet Adapter 注册为 Wallet Standard 钱包。
+- iOS 浏览器钱包：Phantom、Solflare 和 Backpack 的钱包专用 universal links。
+- Solana primitives 和交易类型：Vue 应用使用 `@vue-solana/vue/web3`，Nuxt 应用使用 `@vue-solana/nuxt/web3`，与框架无关的 core 使用 `@vue-solana/core/web3`。
+
+## 钱包来源
+
+当前钱包来源：
+
+- 通过 Solana Wallet Standard 暴露的浏览器扩展钱包。
+- 在受支持的 Android Chrome 客户端上通过 Wallet Standard 注册的 Android Mobile Wallet Adapter。
+- 受支持钱包（如 Phantom、Solflare 和 Backpack）的 iOS 浏览器钱包链接。
+
+所有来源都会出现在同一个已发现钱包列表中。除非需要平台特定 UI 文案，应用不应为浏览器、Android 和 iOS 钱包构建分离的公开流程。
+
+## 支持矩阵
+
+| 钱包路径                    | v1 状态                            | 显示方式                                                | 说明                                                                 |
+| --------------------------- | ---------------------------------- | ------------------------------------------------------- | -------------------------------------------------------------------- |
+| 浏览器扩展钱包              | 支持                               | `platform: "browser"`, `source: "wallet-standard"`   | 使用 Solana Wallet Standard 注册。                                    |
+| Android 原生移动钱包        | Android Chrome 和 Chrome PWA 支持  | `platform: "mobile"`, `source: "mobile-wallet-adapter"` | 通过 `@solana-mobile/wallet-standard-mobile` 注册。                    |
+| iOS 浏览器钱包              | 支持已配置的钱包链接               | `platform: "mobile"`, `source: "deep-link"`          | Phantom、Solflare 和 Backpack 通过 universal links 暴露。             |
+| 手动/自定义钱包对象         | 支持                               | 应用提供的钱包                                          | 必须实现 `SolanaWallet` 接口。                                        |
+| 桌面原生应用钱包            | v1 推迟                            | 默认不暴露                                              | 保留 `protocol-link` 元数据用于未来 adapter。                         |
+
+今天可用的能力：
+
+- 从所有受支持来源发现钱包，并放入同一个 `wallets` 列表。
+- 选择一个活动钱包，但不会立即连接。
+- 持久化所选钱包身份元数据，用于可选重连流程。
+- 当所选钱包支持时，可以连接、断开、签署消息、签署交易以及签署并发送交易。
+- 通过 `canSignMessage`、`canSignTransaction`、`canSignAllTransactions` 和 `canSignAndSendTransaction` 渲染不支持能力的 UI。
+
+v1 不包含：
+
+- 内置钱包弹窗或 UI 包。
+- 桌面原生 protocol-link adapters。
+- 服务端钱包提示。
+- 私钥或助记词处理。
+
+## Vue 钱包流程
+
+```vue
+<script setup lang="ts">
+import { useWallet } from "@vue-solana/vue/useWallet";
+import { useWallets } from "@vue-solana/vue/useWallets";
+
+const { wallets, selectedWallet, refreshWallets, selectWallet } = useWallets();
+const { publicKey, connected, connecting, connect, disconnect } = useWallet();
+</script>
+
+<template>
+  <section>
+    <button type="button" @click="refreshWallets">Refresh wallets</button>
+
+    <button
+      v-for="wallet in wallets"
+      :key="`${wallet.source ?? 'unknown'}:${wallet.name}`"
+      type="button"
+      @click="selectWallet(wallet)"
+    >
+      {{ wallet.name }}
+    </button>
+
+    <p>Selected: {{ selectedWallet?.name ?? "None" }}</p>
+    <p>Connected: {{ connected }}</p>
+    <p>Public key: {{ publicKey?.toBase58() ?? "None" }}</p>
+
+    <button type="button" :disabled="!selectedWallet || connected || connecting" @click="connect">
+      Connect
+    </button>
+    <button type="button" :disabled="!connected" @click="disconnect">Disconnect</button>
+  </section>
+</template>
+```
+
+选择钱包不会连接它。钱包会保持断开，直到 `connect()` 成功解析。
+
+## Nuxt 钱包流程
+
+Nuxt 使用 `useSolanaWallets()` 和 `useSolanaWallet()` 自动导入同一钱包流程。
+
+```vue
+<script setup lang="ts">
+const { wallets, selectedWallet, selectWallet, refreshWallets } = useSolanaWallets();
+const { publicKey, connected, connect, disconnect } = useSolanaWallet();
+</script>
+```
+
+从用户操作在客户端触发钱包工作。钱包提示不应在 SSR 期间运行。
+
+## 能力检查
+
+钱包可能支持不同功能。渲染操作前先检查能力。
+
+```vue
+<script setup lang="ts">
+import { useWallet } from "@vue-solana/vue/useWallet";
+
+const { connected, canSignMessage, canSignTransaction, connect } = useWallet();
+</script>
+
+<template>
+  <button type="button" :disabled="connected" @click="connect">Connect</button>
+  <button type="button" :disabled="!connected || !canSignMessage">Sign message</button>
+  <button type="button" :disabled="!connected || !canSignTransaction">Sign transaction</button>
+</template>
+```
+
+与框架无关的代码可使用 `@vue-solana/core/wallet` 中的钱包断言。
+
+```ts
+import { assertWalletCanSign, assertWalletConnected } from "@vue-solana/core/wallet";
+
+assertWalletConnected(wallet);
+console.log(wallet.publicKey.toBase58());
+
+assertWalletCanSign(wallet);
+const signed = await wallet.signTransaction(transaction);
+```
+
+## Auto Connect
+
+`autoConnect` 只会重连用户之前选择、且再次在客户端被发现的钱包身份。
+
+Vue Solana 只在 `localStorage["vue-solana:selected-wallet"]` 下存储钱包身份元数据：`name`，以及可用时的 `platform`/`source`。它从不存储私钥、会话数据或交易数据。
+
+当用户明确清除钱包选择时调用 `selectWallet(null)`。只有在应用拥有自定义钱包对象时，才从 `useWallet()` 调用 `setWallet(customWallet)`；普通应用 UI 应从 `useWallets()` 中选择。
+
+如果 local storage 不可用，当前页面会话仍可选择钱包，但持久化恢复可能失败并返回标准化的 `STORAGE_FAILURE` 错误。
+
+## 用于认证的消息签名
+
+消息签名证明钱包控制权，用于链下认证。它不授权链上交易。请使用清晰的挑战文本，并在后端验证。
+
+```ts
+const { connected, canSignMessage } = useWallet();
+const { execute, signature } = useSignMessage();
+
+async function signIn() {
+  if (!connected.value || !canSignMessage.value) return;
+
+  const message = new TextEncoder().encode(
+    "Sign in to example.com\nNonce: 8f1a2c\nExpires: 2026-07-03T12:00:00Z",
+  );
+
+  await execute(message);
+  await fetch("/api/verify-wallet", {
+    method: "POST",
+    body: JSON.stringify({ signature: Array.from(signature.value ?? []) }),
+  });
+}
+```
+
+保持 nonce 一次性且短期有效。不要把原始钱包或 RPC 错误消息直接作为面向用户的认证错误。
+
+## 移动钱包
+
+在受支持的 Android Chrome 客户端上，Vue 插件和 Nuxt 模块默认启用 Android Mobile Wallet Adapter 注册。
+
+```ts
+createSolanaPlugin({
+  cluster: "devnet",
+  mobileWallet: {
+    appIdentity: {
+      name: "My Vue Solana App",
+      uri: "https://example.com",
+      icon: "favicon.ico",
+    },
+  },
+});
+```
+
+传入 `mobileWallet: false` 可禁用 Android Mobile Wallet Adapter 注册。
+
+iOS 钱包链接默认在 iOS 浏览器上启用。传入 `iosWallet` 选项可自定义 app identity、redirect URL、chains 或 cluster。传入 `iosWallet: false` 可禁用 iOS 钱包链接发现。
+
+Android 注意事项：
+
+- Android MWA 注册仅在客户端运行，SSR 期间无操作。
+- 预期仅在支持 mobile wallet adapter bridge 的 Android Chrome 或 Chrome PWA 运行时工作。
+- 钱包 handoff 可能离开浏览器并返回应用；保留 UI 状态，让用户回到页面后能看到已提交签名。
+- Vue Solana 会把 MWA 钱包适配到与扩展钱包相同的 `SolanaWallet` 接口。
+- 移动钱包包通过默认 wallet-not-found handler 处理已安装钱包缺失时的 fallback UI。
+- 浏览器可能会在 MWA 连接已安装钱包应用前显示一次性 Local Network Access 提示。
+- Android MWA 交易发送时，如果钱包支持 `signTransaction`，Vue Solana 会请求移动钱包签名，然后通过应用 RPC connection 提交签名交易。这样签名由应用掌控，避免钱包发送成功但浏览器页面收不到 wallet adapter 响应的边缘情况。
+
+iOS 注意事项：
+
+| 能力                      | v1 行为                                                                                |
+| ------------------------- | -------------------------------------------------------------------------------------- |
+| 发现                      | Phantom、Solflare 和 Backpack 条目可以出现在 iOS 浏览器上。                            |
+| 连接                      | 使用钱包专用 universal links 和 redirect callbacks。                                   |
+| 会话处理                  | 应用应先处理 callback 状态，再假设 redirect 后钱包已连接。                             |
+| 交易                      | 能力取决于钱包链接和返回的会话数据。                                                   |
+| Desktop Safari 原生应用   | 不作为 v1 桌面原生路径实现。                                                           |
+
+如果直接使用 iOS core helpers，请在客户端启动早期调用 `handleSolanaIosWalletCallback()`，让 redirect 数据在应用读取钱包状态前完成验证和解密。
+
+## 手动钱包接口
+
+自定义钱包集成可以通过 Vue 插件或 `setWallet()` 直接提供 `SolanaWallet` 对象。
+
+```ts
+import type { SolanaWallet } from "@vue-solana/core/types";
+
+const customWallet: SolanaWallet = {
+  publicKey: null,
+  connected: false,
+  async connect() {
+    // Open your wallet UI and assign publicKey after approval.
+  },
+  async disconnect() {
+    // Clear local wallet state.
+  },
+  async signTransaction(transaction) {
+    // Return the signed transaction.
+    return transaction;
+  },
+};
+```
+
+手动钱包对象绝不应向 Vue Solana 暴露私钥。密钥托管应保留在钱包 provider 内部。
+
+## 直接 Core 工具
+
+只有在构建自己的钱包集成层时才直接使用 core helpers。
+
+```ts
+import { registerSolanaMobileWallet } from "@vue-solana/core/mobile-wallet";
+import { getRegisteredSolanaWallets } from "@vue-solana/core/wallet-standard";
+
+registerSolanaMobileWallet();
+
+const wallets = getRegisteredSolanaWallets();
+```
+
+如果直接使用 iOS core helpers，请在 redirect 后依赖返回的 iOS 钱包连接前调用 `handleSolanaIosWalletCallback()`。
+
+## 安全注意事项
+
+- 绝不要向用户请求私钥。
+- 绝不要在 local storage 中存储钱包会话或交易数据。
+- 将钱包名称、图标和元数据视为不可信展示数据。
+- 签署消息或交易前要求明确的用户操作。
+- 对不支持的能力展示禁用或解释性 UI，而不是盲目调用钱包方法。
+- 示例和教程默认使用 devnet；只有在确实打算使用真实资金时才使用 `mainnet-beta`。
+
+官方参考：
+
+- <a href="https://github.com/wallet-standard/wallet-standard" target="_blank" rel="noopener noreferrer">Wallet Standard</a>
+- <a href="https://github.com/anza-xyz/wallet-adapter/tree/master/packages/wallets/wallet-standard" target="_blank" rel="noopener noreferrer">Solana Wallet Standard</a>
+- [Solana Documentation](https://solana.com/docs)
+
+---
+
 # Lecturas de cuentas
 
 Source: https://vue-solana-docs.vercel.app/es/guides/account-reads
@@ -1935,6 +3200,156 @@ Invalid address strings clear stale data, set `error`, and do not call the RPC m
 - Avoid broad scans from landing pages or every route navigation.
 - Avoid aggressive polling intervals on public RPC endpoints.
 - Cache or index data that many users will request repeatedly.
+
+---
+
+# 账户读取
+
+Source: https://vue-solana-docs.vercel.app/zh/guides/account-reads
+Description: 从 Vue 或 Nuxt 安全读取余额、账户数据、program accounts 和签名状态。
+
+Vue Solana 为常见的 Solana 读取路径提供 composable：余额、账户信息、program accounts 和签名状态。
+
+当你的应用需要在不签署交易的情况下读取链上状态时，请使用本指南。
+
+## 解析地址
+
+框架无关代码可以使用 `parsePublicKey()` 规范化 Solana 地址。
+
+```ts
+import { parsePublicKey } from "@vue-solana/core/address";
+
+const publicKey = parsePublicKey("11111111111111111111111111111111");
+
+if (publicKey) {
+  const balance = await connection.getBalance(publicKey);
+}
+```
+
+`parsePublicKey()` 接受 `PublicKey`、地址字符串、类似 ref 的对象、getter、`null` 或 `undefined`。无效地址字符串会抛出 `INVALID_ADDRESS`。
+
+## 在 Vue 中读取余额
+
+```vue
+<script setup lang="ts">
+import { computed, ref } from "vue";
+import { useBalance } from "@vue-solana/vue/useBalance";
+
+const address = ref("PASTE_A_SOLANA_ADDRESS");
+const { balance, loading, error, refresh } = useBalance(address);
+
+const errorMessage = computed(() => {
+  switch (error.value?.code) {
+    case "INVALID_ADDRESS":
+      return "Enter a valid Solana address.";
+    case "RPC_FAILURE":
+      return "Unable to load the balance.";
+    default:
+      return null;
+  }
+});
+</script>
+
+<template>
+  <section>
+    <p>Lamports: {{ balance ?? "Unknown" }}</p>
+    <p v-if="loading">Loading...</p>
+    <p v-if="errorMessage">{{ errorMessage }}</p>
+    <button type="button" @click="refresh">Refresh</button>
+  </section>
+</template>
+```
+
+## 读取账户信息
+
+对单个账户使用 `useAccountInfo()`。需要实时账户更新时启用 `watch`。
+
+```vue
+<script setup lang="ts">
+import { ref } from "vue";
+import { useAccountInfo } from "@vue-solana/vue/useAccountInfo";
+
+const address = ref("PASTE_A_SOLANA_ADDRESS");
+const { accountInfo, loading, error, refresh, stopWatching } = useAccountInfo(address, {
+  commitment: "confirmed",
+  watch: true,
+});
+</script>
+```
+
+启用 `watch: true` 时，Vue Solana 会在组件卸载时自动移除 WebSocket listener。调用 `stopWatching()` 可以更早移除当前 listener，并阻止该 composable 实例自动重启。
+
+## 读取 Program Accounts
+
+对某个 program id 拥有的账户使用 `useProgramAccounts()`。
+
+```vue
+<script setup lang="ts">
+import { ref } from "vue";
+import { useProgramAccounts } from "@vue-solana/vue/useProgramAccounts";
+
+const programId = ref("PASTE_A_SOLANA_PROGRAM_ID");
+
+const { accounts, loading, error, refresh } = useProgramAccounts(programId, {
+  commitment: "confirmed",
+  filters: [{ dataSize: 165 }],
+  dataSlice: { offset: 0, length: 32 },
+});
+</script>
+```
+
+> 警告：Program account 扫描可能成本很高。生产读取请使用窄过滤器、`dataSlice`、缓存、分页、索引或专用 RPC 基础设施。
+
+## 读取签名状态
+
+使用 `useSignatureStatus()` 跟踪已知交易签名。
+
+```vue
+<script setup lang="ts">
+import { ref } from "vue";
+import { useSignatureStatus } from "@vue-solana/vue/useSignatureStatus";
+
+const signature = ref("PASTE_A_TRANSACTION_SIGNATURE");
+const { status, confirmationStatus, error, refresh } = useSignatureStatus(signature, {
+  pollIntervalMs: 2_000,
+});
+</script>
+```
+
+短暂的进度 UI 可以使用轮询。避免在高流量页面上无限期轮询。
+
+## Nuxt 自动导入
+
+Nuxt 以自动导入 composable 的形式暴露相同读取 helper：
+
+- `useSolanaBalance()`
+- `useSolanaAccountInfo()`
+- `useSolanaProgramAccounts()`
+- `useSolanaSignatureStatus()`
+
+```vue
+<script setup lang="ts">
+const address = ref("PASTE_A_SOLANA_ADDRESS");
+const { balance, loading, error, refresh } = useSolanaBalance(address);
+</script>
+```
+
+Nuxt composable 可以在 SSR 期间调用，并在 hydration 提供真实客户端上下文前返回惰性状态。当数据依赖浏览器专用上下文时，请从客户端生命周期钩子或用户操作触发网络刷新。
+
+## Null 和无效输入
+
+当地址、program id 或签名为 `null` 时，读取 composable 会清除状态且不调用 RPC。
+
+无效地址字符串会清除过期数据，设置 `error`，并且不调用 RPC 方法。使用 `error.value.code` 为用户展示消息。
+
+## RPC 成本检查清单
+
+- 尽量优先使用直接的单账户读取。
+- 对 program account 扫描使用过滤器。
+- 只需要部分账户数据时使用 `dataSlice`。
+- 避免从 landing page 或每次路由导航触发宽泛扫描。
+- 避免在公共 RPC endpoint 上使用激进的轮询间隔。
+- 对大量用户会重复请求的数据进行缓存或索引。
 
 ---
 
@@ -2233,6 +3648,239 @@ try {
 
 ---
 
+# 交易
+
+Source: https://vue-solana-docs.vercel.app/zh/guides/transactions
+Description: 使用 Vue Solana 签名、发送、确认并处理交易状态。
+
+Vue Solana 提供感知钱包的交易提交 helper，以及用于响应式交易状态的 composable。
+
+本指南覆盖 Vue Solana 边界：钱包能力检查、签名、发送、确认和错误。请使用 `@vue-solana/vue/web3`、`@vue-solana/nuxt/web3` 或你的 program client 构建交易指令。
+
+## Core 发送 Helper
+
+当你已经有 `Connection`、wallet 和 transaction 时，请使用 `@vue-solana/core/transaction` 中的 `signAndSendTransaction()`。
+
+```ts
+import { signAndSendTransaction } from "@vue-solana/core/transaction";
+
+const signature = await signAndSendTransaction(connection, wallet, transaction, {
+  skipPreflight: false,
+});
+```
+
+该 helper 返回 RPC signature 字符串。
+
+对于 Android Mobile Wallet Adapter 钱包，当 `signTransaction` 可用时，Vue Solana 会优先使用 `signTransaction` 加 `connection.sendRawTransaction()`，这样应用拥有提交过程，并能在钱包 handoff 后可靠返回 RPC signature。
+
+## 确认签名
+
+需要等待已提交签名达到某个 commitment level 时，使用 `confirmTransactionSignature()`。
+
+```ts
+import { confirmTransactionSignature } from "@vue-solana/core/transaction";
+
+const confirmation = await confirmTransactionSignature(connection, signature, {
+  commitment: "confirmed",
+  timeoutMs: 60_000,
+});
+
+console.log(confirmation.signature, confirmation.commitment);
+```
+
+确认默认使用 `confirmed` commitment 和 60 秒超时。
+
+## 构建真实 Devnet 转账
+
+此示例在 devnet 上创建一个很小的 system transfer。它使用 Vue 包的 web3 subpath 获取 Solana primitive，并使用 Vue Solana 处理钱包状态和提交。
+
+创建或序列化交易的浏览器应用应在交易代码运行前初始化一次 Vue 包的 Buffer polyfill：
+
+```ts
+import { installSolanaBufferPolyfill } from "@vue-solana/vue/buffer-polyfill";
+
+installSolanaBufferPolyfill();
+```
+
+```ts
+import { PublicKey, SystemProgram, Transaction } from "@vue-solana/vue/web3";
+
+async function createTransferTransaction(params: {
+  connection: Connection;
+  from: PublicKey;
+  to: string;
+  lamports: number;
+}) {
+  const recipient = new PublicKey(params.to);
+  const { blockhash, lastValidBlockHeight } = await params.connection.getLatestBlockhash();
+
+  const transaction = new Transaction({
+    feePayer: params.from,
+    blockhash,
+    lastValidBlockHeight,
+  });
+
+  transaction.add(
+    SystemProgram.transfer({
+      fromPubkey: params.from,
+      toPubkey: recipient,
+      lamports: params.lamports,
+    }),
+  );
+
+  return transaction;
+}
+```
+
+测试时请使用 devnet SOL。从很小的值开始，例如 `1_000` lamports（`0.000001` SOL）。验证教程或示例流程时，永远不要使用有真实资金的钱包。
+
+## Vue 签名和发送流程
+
+当 Vue 组件需要响应式状态、错误和可选确认时，请使用 `useSignAndSendTransaction()`。
+
+```vue
+<script setup lang="ts">
+import { computed } from "vue";
+import { useSignAndSendTransaction } from "@vue-solana/vue/useSignAndSendTransaction";
+import { useConnection } from "@vue-solana/vue/useConnection";
+import { useWallet } from "@vue-solana/vue/useWallet";
+
+const recipient = ref("PASTE_DEVNET_RECIPIENT_ADDRESS");
+const lamports = ref(1_000);
+const connection = useConnection();
+const { publicKey, connected, canSignTransaction } = useWallet();
+const { signature, confirmation, status, error, execute } = useSignAndSendTransaction();
+
+const canSubmit = computed(() => connected.value && canSignTransaction.value);
+
+async function submitTransaction() {
+  if (!publicKey.value) return;
+
+  const transaction = await createTransferTransaction({
+    connection,
+    from: publicKey.value,
+    to: recipient.value,
+    lamports: lamports.value,
+  });
+
+  await execute(transaction, {
+    confirm: true,
+    confirmation: { commitment: "confirmed" },
+  });
+}
+</script>
+
+<template>
+  <section>
+    <button type="button" :disabled="!canSubmit" @click="submitTransaction">
+      Send transaction
+    </button>
+    <p>Status: {{ status }}</p>
+    <p v-if="signature">Signature: {{ signature }}</p>
+    <p v-if="confirmation">Confirmed at {{ confirmation.commitment }}</p>
+    <p v-if="error">Unable to send transaction.</p>
+  </section>
+</template>
+```
+
+`status` 区分提交和确认。返回 `signature` 表示交易已提交到 RPC。`confirmation` 表示已提交签名达到请求的 commitment。如果提交后确认超时，请继续显示 signature，并在重试前检查其状态。
+
+## Explorer 链接
+
+Explorer 链接应匹配应用正在使用的 cluster。
+
+```ts
+function explorerUrl(signature: string, cluster: string) {
+  const suffix = cluster === "mainnet-beta" ? "" : `?cluster=${cluster}`;
+  return `https://explorer.solana.com/tx/${signature}${suffix}`;
+}
+```
+
+devnet 链接应类似 `https://explorer.solana.com/tx/SIGNATURE?cluster=devnet`。Mainnet 链接有意省略 cluster query。
+
+## 通用交易状态
+
+当你的异步交易类操作不适合内置签名/发送 helper 时，请使用 `useTransaction()`。
+
+```ts
+import { useTransaction } from "@vue-solana/vue/useTransaction";
+
+const { status, error, execute } = useTransaction(async () => {
+  return await submitCustomFlow();
+});
+```
+
+`useTransaction()` 为自定义流程集中处理 loading、success、error 和 timeout 状态。
+
+## Nuxt 自动导入
+
+Nuxt 暴露：
+
+- `useSolanaSignAndSendTransaction()`
+- `useSolanaTransactionConfirmation()`
+- `useSolanaSignatureStatus()`
+
+```vue
+<script setup lang="ts">
+const { signature, status, error, execute } = useSolanaSignAndSendTransaction();
+
+async function submit(transaction: Transaction) {
+  await execute(transaction, { confirm: true });
+}
+</script>
+```
+
+请从客户端用户操作调用交易方法。不要在 SSR 期间触发钱包签名。
+
+当你需要确认另一个流程返回的签名时，请使用 `useSolanaTransactionConfirmation({ commitment: "confirmed" })` 并调用 `confirm(signature)`。当你想在超时或重定向后继续检查状态时，请使用 `useSolanaSignatureStatus(signature, { pollIntervalMs: 2_000 })`。
+
+## 错误处理
+
+交易 helper 会把失败规范化为 `SolanaError`。
+
+```ts
+import { isSolanaError } from "@vue-solana/core/errors";
+
+try {
+  await signAndSendTransaction(connection, wallet, transaction);
+} catch (error) {
+  if (isSolanaError(error)) {
+    switch (error.code) {
+      case "NO_WALLET_SELECTED":
+      case "WALLET_NOT_CONNECTED":
+        // Ask the user to connect a wallet.
+        break;
+      case "WALLET_FEATURE_UNSUPPORTED":
+        // Hide or disable unsupported transaction actions.
+        break;
+      case "USER_REJECTED":
+        // The user declined the wallet prompt.
+        break;
+      case "TRANSACTION_TIMEOUT":
+        // Check signature status before retrying.
+        break;
+      case "RPC_FAILURE":
+        // RPC send or confirmation failed.
+        console.error(error.cause);
+        break;
+    }
+  }
+}
+```
+
+## 安全检查清单
+
+- 打开钱包提示前，向用户展示他们将要签署的内容。
+- 没有明确用户操作时，永远不要签名或发送交易。
+- 永远不要请求或处理私钥。
+- 展示签名操作前检查钱包能力。
+- 把 RPC 和钱包错误视为不可信数据；将它们映射为安全的 UI 消息。
+- 超时后，重试前检查签名状态，避免重复提交。
+- 即使确认失败或超时，也在 UI 中保留已提交签名。
+- 链接到正确的 Solana Explorer cluster，避免用户混淆 devnet 和 mainnet 交易。
+
+---
+
 # Firma de mensajes
 
 Source: https://vue-solana-docs.vercel.app/es/guides/message-signing
@@ -2387,6 +4035,122 @@ const message = computed(() => {
 - Make signed text human-readable.
 - Never imply that message signing submits a transaction.
 - Never reuse a transaction-signing flow for authentication text.
+
+---
+
+# 消息签名
+
+Source: https://vue-solana-docs.vercel.app/zh/guides/message-signing
+Description: 签署认证或所有权消息，而不创建链上交易。
+
+消息签名可以证明钱包控制了某条链下消息。它不会授权链上状态变更，也不是交易签名。
+
+请将消息签名用于认证 challenge、账户所有权检查，或由你的应用在链下验证的同意文本。
+
+## Vue 消息签名
+
+```vue
+<script setup lang="ts">
+import { computed } from "vue";
+import { useSignMessage } from "@vue-solana/vue/useSignMessage";
+import { useWallet } from "@vue-solana/vue/useWallet";
+
+const { connected, canSignMessage } = useWallet();
+const { signature, status, error, execute } = useSignMessage();
+
+const canSign = computed(() => connected.value && canSignMessage.value);
+
+async function signIn() {
+  const message = new TextEncoder().encode("Sign in to example.com");
+  await execute(message);
+}
+</script>
+
+<template>
+  <section>
+    <button type="button" :disabled="!canSign" @click="signIn">Sign message</button>
+    <p>Status: {{ status }}</p>
+    <p v-if="signature">Signature bytes: {{ signature.length }}</p>
+    <p v-if="error">Unable to sign message.</p>
+  </section>
+</template>
+```
+
+不暴露消息签名的钱包会让 `canSignMessage` 为 false。不支持时调用 `execute()` 会以 `WALLET_FEATURE_UNSUPPORTED` 拒绝。
+
+## Nuxt 消息签名
+
+Nuxt 自动导入 `useSolanaSignMessage()` 和 `useSolanaWallet()`。
+
+```vue
+<script setup lang="ts">
+const { connected, canSignMessage } = useSolanaWallet();
+const { signature, status, error, execute } = useSolanaSignMessage();
+
+async function signChallenge() {
+  await execute(new TextEncoder().encode("Sign in to my Nuxt app"));
+}
+</script>
+```
+
+只能从客户端用户操作调用消息签名。
+
+## Challenge 文本
+
+使用清晰、特定于应用的 challenge 文本。用户应能理解他们正在签署什么。
+
+好的 challenge 文本通常包含：
+
+- 应用或域名。
+- 签名目的。
+- Nonce 或一次性 challenge 值。
+- 签发时间和过期时间。
+
+示例：
+
+```txt
+Sign in to example.com
+Wallet: 8Y...abc
+Nonce: 7f4b3c
+Issued At: 2026-07-02T12:00:00Z
+Expires At: 2026-07-02T12:10:00Z
+```
+
+## 验证边界
+
+Vue Solana 帮助请求钱包签名。你的应用负责服务端验证、nonce 存储、过期检查和 session 创建。
+
+不要把通用文本上的签名当作转移 token 或更改链上状态的许可。
+
+## 错误处理
+
+消息签名错误使用与钱包和交易 helper 相同的规范化 `SolanaError` 模型。
+
+```ts
+const message = computed(() => {
+  switch (error.value?.code) {
+    case "NO_WALLET_SELECTED":
+      return "Choose a wallet first.";
+    case "WALLET_NOT_CONNECTED":
+      return "Connect your wallet first.";
+    case "WALLET_FEATURE_UNSUPPORTED":
+      return "This wallet does not support message signing.";
+    case "USER_REJECTED":
+      return "The message signature was rejected.";
+    default:
+      return null;
+  }
+});
+```
+
+## 安全检查清单
+
+- 对认证 challenge 使用一次性 nonce。
+- 让 challenge 快速过期。
+- 创建 session 前在服务端验证签名。
+- 让签名文本可被人类阅读。
+- 不要暗示消息签名会提交交易。
+- 不要把交易签名流程复用于认证文本。
 
 ---
 
@@ -2584,6 +4348,160 @@ function getSolanaErrorMessage(code: string) {
 - Do not retry `USER_REJECTED` automatically.
 - Do not retry `INVALID_ADDRESS`; ask the user to correct input.
 - Hide or disable actions that produce `WALLET_FEATURE_UNSUPPORTED`.
+
+---
+
+# 错误
+
+Source: https://vue-solana-docs.vercel.app/zh/guides/errors
+Description: 处理 core helper 和 Vue/Nuxt composable 返回的规范化 Solana 错误。
+
+Vue Solana 会把常见的钱包、RPC、地址、交易、超时和存储失败规范化为 `SolanaError`。
+
+使用稳定的 `error.code` 值做 UI 决策。保留 `error.cause` 用于调试和日志。
+
+## 错误形状
+
+```ts
+import { SolanaError } from "@vue-solana/core/errors";
+
+const error = new SolanaError("RPC_FAILURE", "Unable to reach RPC");
+```
+
+`SolanaError` 包含：
+
+- `code`：稳定的机器可读错误 code。
+- `message`：人类可读的开发者消息。
+- `cause`：可选的原始错误，可能来自钱包、RPC 调用、解析器、超时或存储操作。
+- `feature`：不支持能力错误中可选的钱包功能名称。
+
+## 稳定错误 Code
+
+- `NO_WALLET_SELECTED`：没有选择活跃钱包。
+- `WALLET_NOT_CONNECTED`：活跃钱包未连接，或没有 public key。
+- `WALLET_FEATURE_UNSUPPORTED`：活跃钱包不支持请求的功能。
+- `USER_REJECTED`：用户拒绝了钱包请求。
+- `INVALID_ADDRESS`：地址字符串无法解析为 Solana public key。
+- `TRANSACTION_TIMEOUT`：交易相关操作超时。
+- `RPC_FAILURE`：RPC 发送、读取或确认失败。
+- `STORAGE_FAILURE`：浏览器存储无法读取或写入。
+
+## Core 错误处理
+
+捕获未知失败时使用 `isSolanaError()`。
+
+```ts
+import { isSolanaError } from "@vue-solana/core/errors";
+
+try {
+  await signAndSendTransaction(connection, wallet, transaction);
+} catch (error) {
+  if (isSolanaError(error)) {
+    console.log(error.code);
+    console.debug(error.cause);
+  }
+}
+```
+
+编写自己的框架无关 helper，并且希望遵循 Vue Solana 错误模型时，请使用 `normalizeSolanaError()`。
+
+```ts
+import { normalizeSolanaError } from "@vue-solana/core/errors";
+
+async function loadData() {
+  try {
+    return await connection.getLatestBlockhash();
+  } catch (cause) {
+    throw normalizeSolanaError(cause, "RPC_FAILURE", "Unable to load blockhash");
+  }
+}
+```
+
+`normalizeSolanaError()` 会把常见的钱包拒绝形状映射为 `USER_REJECTED`。
+
+## Vue Error Refs
+
+Vue composable 暴露 `error` ref。
+
+```vue
+<script setup lang="ts">
+import { computed, watchEffect } from "vue";
+import { useBalance } from "@vue-solana/vue/useBalance";
+
+const { error } = useBalance("PASTE_A_SOLANA_ADDRESS");
+
+const message = computed(() => {
+  switch (error.value?.code) {
+    case "INVALID_ADDRESS":
+      return "Enter a valid Solana address.";
+    case "RPC_FAILURE":
+      return "Unable to load data from RPC.";
+    default:
+      return null;
+  }
+});
+
+watchEffect(() => {
+  if (error.value?.cause) {
+    console.debug("Original Solana error", error.value.cause);
+  }
+});
+</script>
+```
+
+## Nuxt Error Refs
+
+Nuxt 自动导入 composable 暴露相同错误模型。
+
+```vue
+<script setup lang="ts">
+const { error, execute } = useSolanaSignAndSendTransaction();
+
+const message = computed(() => {
+  switch (error.value?.code) {
+    case "NO_WALLET_SELECTED":
+      return "Choose a wallet first.";
+    case "USER_REJECTED":
+      return "The wallet request was rejected.";
+    case "TRANSACTION_TIMEOUT":
+      return "The transaction is taking longer than expected.";
+    case "RPC_FAILURE":
+      return "The Solana RPC request failed.";
+    default:
+      return null;
+  }
+});
+</script>
+```
+
+## 面向用户的消息
+
+除非你的应用明确信任该来源，否则不要直接向最终用户展示原始 `cause` 详情。钱包和 RPC 错误消息可能包含 provider 特定文本，对 UI 来说可能令人困惑或不安全。
+
+请把稳定错误 code 映射为简短、特定于应用的消息。
+
+```ts
+function getSolanaErrorMessage(code: string) {
+  switch (code) {
+    case "USER_REJECTED":
+      return "Request canceled.";
+    case "WALLET_FEATURE_UNSUPPORTED":
+      return "This wallet does not support that action.";
+    case "RPC_FAILURE":
+      return "Network request failed. Try again.";
+    default:
+      return "Something went wrong.";
+  }
+}
+```
+
+## 重试指导
+
+- 只在操作可安全重复时重试 `RPC_FAILURE`。
+- `TRANSACTION_TIMEOUT` 后，重试前检查签名状态。
+- 不要自动重试 `USER_REJECTED`。
+- 不要重试 `INVALID_ADDRESS`；请让用户修正输入。
+- 隐藏或禁用会产生 `WALLET_FEATURE_UNSUPPORTED` 的操作。
 
 ---
 
@@ -2956,6 +4874,310 @@ Stable error codes are:
 ## Known TypeScript Issue
 
 See [Troubleshooting](/troubleshooting) for the `@solana/web3-compat@0.0.21` TypeScript metadata issue. Current `@vue-solana/core` packages publish temporary declaration shims for the documented core import paths.
+
+---
+
+# @vue-solana/core
+
+Source: https://vue-solana-docs.vercel.app/zh/packages/core
+Description: 框架无关的 Solana 配置、RPC、钱包类型和交易 helper。
+
+[`@vue-solana/core`](https://www.npmjs.com/package/@vue-solana/core) 包含 Vue Solana 包使用的框架无关 Solana primitive。
+
+当你想要连接 helper、共享钱包类型、Android Mobile Wallet Adapter 注册 helper、iOS 浏览器钱包 helper 和交易 helper，但不想安装 Vue 插件时，可以直接使用此包。
+
+`@vue-solana/core` 包装 `@solana/web3-compat`，并重新导出大多数 Vue Solana 应用需要的 Solana primitive，包括 `Connection`、`PublicKey`、`Transaction` 和 `VersionedTransaction`。
+
+## 安装
+
+```sh
+pnpm add @vue-solana/core
+```
+
+## 快速开始
+
+```ts
+import { createSolanaContext } from "@vue-solana/core";
+
+const solana = createSolanaContext({
+  cluster: "devnet",
+});
+
+const { blockhash } = await solana.connection.getLatestBlockhash();
+
+console.log(solana.endpoint, blockhash);
+```
+
+根导出仍然受支持。也可以使用直接 subpath 导出进行更窄的导入：
+
+```ts
+import { createSolanaContext } from "@vue-solana/core/rpc";
+import { PublicKey, Transaction } from "@vue-solana/core/web3";
+import type { SolanaConfig } from "@vue-solana/core/types";
+```
+
+直接 subpath：
+
+- `@vue-solana/core/address`
+- `@vue-solana/core/buffer-polyfill`
+- `@vue-solana/core/types`
+- `@vue-solana/core/clusters`
+- `@vue-solana/core/errors`
+- `@vue-solana/core/ios-wallet`
+- `@vue-solana/core/mobile-wallet`
+- `@vue-solana/core/rpc`
+- `@vue-solana/core/timeout`
+- `@vue-solana/core/transaction`
+- `@vue-solana/core/wallet`
+- `@vue-solana/core/wallet-standard`
+- `@vue-solana/core/web3`
+
+## 相关指南
+
+- [RPC 和 Clusters](/zh/guides/rpc-and-clusters)：配置 cluster 名称、自定义 RPC endpoint、WebSocket endpoint 和连接 helper。
+- [钱包](/zh/guides/wallets)：发现 Wallet Standard 钱包、注册移动钱包来源并检查钱包能力。
+- [交易](/zh/guides/transactions)：安全地签名、发送、确认并处理交易超时。
+- [错误](/zh/guides/errors)：基于稳定 `SolanaError` code 分支，并避免把原始 cause 暴露给用户 UI。
+
+## 配置
+
+```ts
+type SolanaCluster = "mainnet-beta" | "testnet" | "devnet" | "localnet";
+
+interface SolanaConfig {
+  cluster?: SolanaCluster;
+  endpoint?: string;
+  wsEndpoint?: string;
+  commitment?: Commitment;
+  autoConnect?: boolean;
+}
+```
+
+支持的 cluster 是 `mainnet-beta`、`testnet`、`devnet` 和 `localnet`。钱包 helper 使用 Wallet Standard chain identifier，例如 `solana:devnet`，这些 identifier 由 `getSolanaChain()` 从 cluster 派生。如果省略 `endpoint`，包会使用所选 cluster 的公共 Solana RPC endpoint。如果省略 `wsEndpoint`，它会从 RPC endpoint 派生。
+
+`autoConnect` 默认为 `false`。通过 Vue 插件或 Nuxt 模块启用后，Vue Solana 只会重新连接用户之前选择、并且在客户端再次发现的钱包身份。它只在 `localStorage["vue-solana:selected-wallet"]` 下存储钱包身份元数据：`name`，以及可用时的 `platform`/`source`。它永远不会存储私钥、session 数据或交易数据，也不会连接任意已安装钱包。
+
+Solana mainnet 请使用 `mainnet-beta`。这是 Solana 的官方 cluster 名称；该包有意不把 `mainnet` 作为 alias。
+
+## Context
+
+```ts
+interface SolanaContext {
+  cluster: SolanaCluster;
+  endpoint: string;
+  wsEndpoint: string;
+  connection: Connection;
+}
+```
+
+## 钱包接口
+
+```ts
+interface SolanaWallet {
+  publicKey: PublicKey | null;
+  connected: boolean;
+  connecting?: boolean;
+  disconnecting?: boolean;
+  platform?: SolanaWalletInfo["platform"];
+  source?: SolanaWalletInfo["source"];
+  connect: () => Promise<void>;
+  disconnect: () => Promise<void>;
+  signMessage?: (message: Uint8Array) => Promise<SolanaSignMessageResult>;
+  signTransaction?: <T extends SolanaTransaction>(transaction: T) => Promise<T>;
+  signAllTransactions?: <T extends SolanaTransaction>(transactions: T[]) => Promise<T[]>;
+  signAndSendTransaction?: (
+    transaction: SolanaTransaction,
+    options?: SendOptions,
+  ) => Promise<{ signature: TransactionSignature }>;
+}
+```
+
+通过 Solana Wallet Standard 发现的浏览器钱包和受支持的 iOS 浏览器钱包链接会适配到此接口。你也可以提供一个实现 `SolanaWallet` 的自定义对象。即使浏览器扩展暴露了之前授权的账户，已发现钱包在 `connect()` 成功解析前仍保持断开状态。
+
+Android Mobile Wallet Adapter 通过 `@solana-mobile/wallet-standard-mobile` 注册，然后通过相同的 Wallet Standard adapter 适配。
+
+## 钱包元数据
+
+```ts
+interface SolanaWalletInfo {
+  name: string;
+  icon: string;
+  chains: readonly string[];
+  platform?: "browser" | "mobile" | "desktop";
+  source?: "wallet-standard" | "mobile-wallet-adapter" | "deep-link" | "protocol-link";
+  appUrl?: string;
+  installUrl?: string;
+  callbackUrl?: string;
+  capabilities?: {
+    connect?: boolean;
+    disconnect?: boolean;
+    signMessage?: boolean;
+    signTransaction?: boolean;
+    signAllTransactions?: boolean;
+    signAndSendTransaction?: boolean;
+  };
+  accounts: readonly SolanaWalletAccountInfo[];
+  wallet: unknown;
+}
+```
+
+当前元数据值：
+
+- 浏览器扩展钱包使用 `platform: "browser"` 和 `source: "wallet-standard"`。
+- Android Mobile Wallet Adapter 使用 `platform: "mobile"` 和 `source: "mobile-wallet-adapter"`。
+- iOS 浏览器钱包使用 `platform: "mobile"` 和 `source: "deep-link"`。
+- `protocol-link` 为可能的 post-v1 桌面原生钱包 adapter 保留。
+
+## Wallet Standard Helper
+
+```ts
+type SolanaChain = "solana:mainnet" | "solana:testnet" | "solana:devnet" | "solana:localnet";
+```
+
+`SolanaChain` 是钱包发现、移动钱包注册、iOS 钱包链接和钱包 adapter 签名选项使用的 Wallet Standard chain identifier。需要从配置的 Solana cluster 派生时，请使用 `getSolanaChain(cluster)`。
+
+- `getSolanaChain(cluster)`：把 `mainnet-beta`、`devnet`、`testnet` 或 `localnet` 映射为 Solana Wallet Standard chain ID。
+- `isSolanaStandardWallet(wallet)`：检查 Wallet Standard 钱包是否支持 Solana。
+- `getRegisteredSolanaWallets()`：在浏览器环境返回已发现的 Solana Wallet Standard 钱包，包括在支持客户端注册后的 Android Mobile Wallet Adapter。
+- `subscribeSolanaWallets(listener)`：订阅 Wallet Standard register/unregister 事件。
+- `adaptSolanaStandardWallet(walletInfo, options?)`：把已发现的 Wallet Standard 钱包适配为 `SolanaWallet`。
+
+## 移动钱包 Helper
+
+- `registerSolanaMobileWallet(options?)`：在支持的 Android Chrome 客户端上通过 Wallet Standard 注册 Android Mobile Wallet Adapter。
+- `isSolanaMobileWalletSupported()`：返回当前运行时是否支持 Android MWA Web 注册。
+- `getDefaultMobileWalletAppIdentity()`：从当前 document 派生默认 Mobile Wallet Adapter 应用身份。
+- `getSolanaIosWallets(options?)`：在 iOS 浏览器上返回 Phantom、Solflare 和 Backpack iOS 浏览器钱包条目。
+- `adaptSolanaIosWallet(walletInfo, options?)`：把 iOS deep-link 钱包条目适配为 `SolanaWallet`。
+- `handleSolanaIosWalletCallback(options?)`：验证并解密 iOS 钱包重定向回调。
+- `isSolanaIosBrowserWalletSupported()`：返回当前运行时是否应暴露 iOS 浏览器钱包链接。
+
+这些 helper 都是 SSR 安全的。当 `window` 不可用，或浏览器不是 Android Chrome 移动 Web/PWA 运行时时，Android 注册会直接返回且不注册。浏览器不是 iOS 浏览器运行时时，iOS 钱包发现返回空列表。
+
+## Helper
+
+根 `@vue-solana/core` 导出会重新导出下面的公共 helper。需要更窄导入或更清晰模块边界时，请使用直接 subpath。
+
+| Import path                        | 包含内容                                                                      | 何时使用                                                                                                            |
+| ---------------------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `@vue-solana/core/address`         | `parsePublicKey()` 和 public-key 输入类型。                                   | 你接受字符串、`PublicKey`、类似 ref 的对象或 getter 形式的 Solana 地址，并需要规范化为 `PublicKey`。                |
+| `@vue-solana/core/clusters`        | 默认 cluster 和 endpoint helper。                                             | 你需要包内置的 `mainnet-beta`、`testnet`、`devnet` 或 `localnet` RPC/WebSocket endpoint。                           |
+| `@vue-solana/core/errors`          | `SolanaError`、错误工厂和错误 guard。                                         | 你需要稳定错误 code 来处理面向用户的钱包、RPC、地址、交易、超时或存储失败。                                        |
+| `@vue-solana/core/ios-wallet`      | iOS 浏览器钱包发现、deep-link adapter 和回调处理。                            | 你在不使用 Vue 插件统一钱包流程的情况下接入 iOS 钱包链接。                                                         |
+| `@vue-solana/core/mobile-wallet`   | Android Mobile Wallet Adapter 注册 helper。                                   | 你需要在读取 Wallet Standard 钱包前注册 Android MWA。                                                              |
+| `@vue-solana/core/rpc`             | `createSolanaConnection()` 和 `createSolanaContext()`。                       | 你想在不安装 Vue 插件的情况下获得已配置的 `Connection` 和解析后的 cluster endpoint。                               |
+| `@vue-solana/core/timeout`         | 生成 Solana 超时错误的 Promise timeout helper。                               | 你需要与交易确认 helper 一致的超时行为。                                                                            |
+| `@vue-solana/core/transaction`     | 交易发送和确认 helper。                                                       | 你需要感知钱包的发送路径，或需要为现有签名获取确认结果。                                                            |
+| `@vue-solana/core/types`           | 共享 TypeScript 类型。                                                        | 你需要 `SolanaConfig`、`SolanaContext`、`SolanaWallet`、钱包元数据或交易选项类型。                                  |
+| `@vue-solana/core/wallet`          | 钱包状态断言和钱包能力错误。                                                  | 你需要在调用钱包方法前验证所选钱包已连接或支持签名。                                                                |
+| `@vue-solana/core/wallet-standard` | Wallet Standard chain 映射、发现、订阅和 adapter helper。                    | 你正在 Solana Wallet Standard 之上构建自己的钱包发现层。                                                           |
+
+### Clusters 和 RPC
+
+- `DEFAULT_CLUSTER`：默认 cluster，当前为 `devnet`。
+- `getClusterEndpoint(cluster?)`：返回 cluster 的 HTTP RPC endpoint。
+- `getClusterWebSocketEndpoint(cluster?)`：返回 cluster 的 WebSocket endpoint。
+- `getWebSocketEndpoint(endpoint)`：把 `http`/`https` RPC URL 转换为 `ws`/`wss` URL。
+- `createSolanaConnection(config?)`：使用解析后的 endpoint 和 commitment 创建 `Connection`。
+- `createSolanaContext(config?)`：为框架无关应用设置创建 `{ cluster, endpoint, wsEndpoint, connection }`。
+
+```ts
+import { createSolanaContext } from "@vue-solana/core/rpc";
+
+const solana = createSolanaContext({ cluster: "devnet" });
+
+const slot = await solana.connection.getSlot();
+```
+
+### 地址
+
+- `parsePublicKey(value)`：解析 `PublicKey`、地址字符串、类似 ref 的值或 getter，并在输入为空时返回 `null`。
+
+```ts
+import { parsePublicKey } from "@vue-solana/core/address";
+
+const publicKey = parsePublicKey("11111111111111111111111111111111");
+const balance = publicKey ? await connection.getBalance(publicKey) : null;
+```
+
+### 钱包
+
+- `isWalletConnected(wallet)`：检查钱包是否已连接且有 public key。
+- `assertWalletConnected(wallet)`：如果钱包未连接则抛出 `WALLET_NOT_CONNECTED`。
+- `assertWalletCanSign(wallet)`：如果钱包未连接或不支持 `signTransaction` 则抛出错误。
+- `assertWalletCanSignMessage(wallet)`：如果钱包未连接或不支持 `signMessage` 则抛出错误。
+
+```ts
+import { assertWalletCanSign } from "@vue-solana/core/wallet";
+
+assertWalletCanSign(wallet);
+const signedTransaction = await wallet.signTransaction(transaction);
+```
+
+### 交易
+
+- `signAndSendTransaction(connection, wallet, transaction, options?)`：使用配置的钱包签名并发送交易，返回 RPC signature。当 Android Mobile Wallet Adapter 钱包支持 `signTransaction` 时，会使用 `signTransaction` 加 `connection.sendRawTransaction()`，让应用拥有提交过程，并能在钱包 handoff 后可靠返回 RPC signature。
+- `confirmTransactionSignature(connection, signature, options?)`：等待已提交签名达到请求的 commitment。默认使用 `confirmed` commitment 和 60 秒超时。
+
+```ts
+import { confirmTransactionSignature, signAndSendTransaction } from "@vue-solana/core/transaction";
+
+const signature = await signAndSendTransaction(connection, wallet, transaction);
+await confirmTransactionSignature(connection, signature, { commitment: "confirmed" });
+```
+
+### 错误和超时
+
+- `SolanaError`：规范化错误类，带稳定 `code` 和可选原始 `cause`。
+- `createSolanaError(code, message, options?)`：创建规范化 Solana 错误。
+- `isSolanaError(error)`：把 unknown error 收窄为 `SolanaError`。
+- `normalizeSolanaError(cause, fallbackCode, fallbackMessage?, options?)`：把未知失败转换为 `SolanaError`，并把常见钱包拒绝映射到 `USER_REJECTED`。
+- `withTimeout(promise, timeoutMs, createError)`：用调用方提供的超时错误与 promise 竞争。
+- `withSolanaTimeout(promise, timeoutMs, message)`：用 `TRANSACTION_TIMEOUT` 错误与 promise 竞争。
+
+## 错误模型
+
+Vue Solana 会把常见的钱包、RPC、地址、交易和存储失败规范化为 `SolanaError`。应用应基于稳定的 `error.code` 值分支，而不是解析 adapter 或 RPC 消息。
+
+```ts
+import { isSolanaError } from "@vue-solana/core/errors";
+
+try {
+  await signAndSendTransaction(connection, wallet, transaction);
+} catch (error) {
+  if (isSolanaError(error)) {
+    switch (error.code) {
+      case "USER_REJECTED":
+        // The user declined a wallet prompt.
+        break;
+      case "TRANSACTION_TIMEOUT":
+        // The operation timed out; check signature state before retrying.
+        break;
+      case "RPC_FAILURE":
+        // RPC or confirmation failed.
+        console.error(error.cause);
+        break;
+    }
+  }
+}
+```
+
+稳定错误 code 包括：
+
+- `NO_WALLET_SELECTED`
+- `WALLET_NOT_CONNECTED`
+- `WALLET_FEATURE_UNSUPPORTED`
+- `USER_REJECTED`
+- `INVALID_ADDRESS`
+- `TRANSACTION_TIMEOUT`
+- `RPC_FAILURE`
+- `STORAGE_FAILURE`
+
+`SolanaError.cause` 保留原始钱包 adapter、RPC、解析或存储错误用于调试。除非应用明确信任该来源，否则不要向最终用户展示原始 `cause` 详情。
+
+## 已知 TypeScript 问题
+
+有关 `@solana/web3-compat@0.0.21` TypeScript 元数据问题，请参阅[故障排查](/zh/troubleshooting)。当前 `@vue-solana/core` 包会为文档中的 core 导入路径发布临时声明 shim。
 
 ---
 
@@ -3412,6 +5634,395 @@ Polling uses `getSignatureStatuses()` on every interval, so stop polling when th
 ## Example App
 
 For a complete runnable Vue and Vite flow, see the [Vue Vite example](/examples/vue-vite).
+
+---
+
+# @vue-solana/vue
+
+Source: https://vue-solana-docs.vercel.app/zh/packages/vue
+Description: 用于 Solana 应用的 Vue 插件和 composable。
+
+[`@vue-solana/vue`](https://www.npmjs.com/package/@vue-solana/vue) 提供用于 Solana RPC 访问、余额读取、钱包状态和交易 helper 状态的 Vue 插件与 composable。
+
+## 安装
+
+```sh
+pnpm add @vue-solana/vue
+```
+
+创建或序列化交易的浏览器应用可以从 `@vue-solana/vue/buffer-polyfill` 初始化 Buffer polyfill。
+
+## 插件设置
+
+```ts
+import { createApp } from "vue";
+import { createSolanaPlugin } from "@vue-solana/vue";
+import App from "./App.vue";
+
+createApp(App)
+  .use(
+    createSolanaPlugin({
+      cluster: "devnet",
+      mobileWallet: {
+        appIdentity: {
+          name: "My Vue Solana App",
+          uri: "https://example.com",
+          icon: "favicon.ico",
+        },
+      },
+    }),
+  )
+  .mount("#app");
+```
+
+Android Mobile Wallet Adapter 注册会在支持的 Android Chrome 客户端上默认启用。传入 `mobileWallet` 选项可以自定义 MWA 应用身份，或传入 `mobileWallet: false` 禁用 Android 移动钱包注册。
+
+iOS 浏览器钱包链接会在 iOS 浏览器上为 Phantom、Solflare 和 Backpack 默认启用。传入 `iosWallet` 选项可以自定义应用身份、重定向 URL、chains 或 cluster，或传入 `iosWallet: false` 禁用 iOS 钱包链接发现。
+
+也可以传入自定义 RPC endpoint：
+
+```ts
+createApp(App).use(
+  createSolanaPlugin({
+    cluster: "mainnet-beta",
+    endpoint: "https://your-rpc.example.com",
+    commitment: "confirmed",
+  }),
+);
+```
+
+## Composables
+
+根导出仍然受支持。对于 composable，新代码优先使用直接 subpath 导入，这样 bundler 可以避免执行无关的包入口代码：
+
+```ts
+import { useRpc } from "@vue-solana/vue/useRpc";
+import { useWallet } from "@vue-solana/vue/useWallet";
+```
+
+直接包 subpath：
+
+- `@vue-solana/vue/buffer-polyfill`
+- `@vue-solana/vue/useSolana`
+- `@vue-solana/vue/useRpc`
+- `@vue-solana/vue/useConnection`
+- `@vue-solana/vue/useAccountInfo`
+- `@vue-solana/vue/useBalance`
+- `@vue-solana/vue/useProgramAccounts`
+- `@vue-solana/vue/useWallet`
+- `@vue-solana/vue/useWallets`
+- `@vue-solana/vue/useTransaction`
+- `@vue-solana/vue/useTransactionConfirmation`
+- `@vue-solana/vue/useSignatureStatus`
+- `@vue-solana/vue/useSignMessage`
+- `@vue-solana/vue/useSignAndSendTransaction`
+- `@vue-solana/vue/web3`
+
+使用 `@vue-solana/vue/web3` 获取受支持的原始 Solana primitive，例如 `PublicKey`、`Transaction` 和 `TransactionInstruction`。浏览器交易代码需要 Buffer polyfill 时，使用 `@vue-solana/vue/buffer-polyfill`。较底层 core 用法仍然支持直接 `@vue-solana/core/*` 导入。
+
+- `useSolana()`：返回完整注入的 Solana context。
+- `useRpc()`：返回 cluster、endpoint、连接状态、latest blockhash 和 `checkConnection()`。
+- `useConnection()`：返回 Solana `Connection`。
+- `useAccountInfo(address, options?)`：加载账户数据，并可订阅账户变化。
+- `useProgramAccounts(programId, options?)`：使用可选过滤器和数据切片加载 program id 拥有的账户。
+- `useWallet()`：返回活跃钱包 ref、计算出的连接状态和钱包操作。
+- `useWallets()`：返回已发现的浏览器扩展钱包、Android Mobile Wallet Adapter 钱包、受支持的 iOS 浏览器钱包条目和钱包选择操作。
+- `useBalance(address, commitment?)`：加载 `PublicKey` 或地址字符串的 lamport 余额。
+- `useTransaction(handler, options?)`：通用异步交易状态 helper，带可选超时设置。
+- `useTransactionConfirmation(options?)`：用响应式状态和超时/错误状态确认已提交签名。
+- `useSignatureStatus(signature, options?)`：读取、轮询或订阅签名状态更新。
+- `useSignMessage()`：在配置的钱包支持时签署任意认证消息。
+- `useSignAndSendTransaction()`：通过配置的钱包签名并发送交易，可选等待确认。
+
+## 相关指南
+
+- [RPC 和 Clusters](/zh/guides/rpc-and-clusters)：读取连接状态并配置 endpoint。
+- [钱包](/zh/guides/wallets)：发现、选择、连接、断开连接并检查钱包能力。
+- [账户读取](/zh/guides/account-reads)：读取余额、账户信息、program accounts 和签名状态。
+- [交易](/zh/guides/transactions)：签名、发送、确认并展示交易进度。
+- [消息签名](/zh/guides/message-signing)：签署链下认证或所有权 challenge。
+- [错误](/zh/guides/errors)：把 composable `error` ref 映射为安全 UI 消息。
+
+## 读取 RPC 状态
+
+```vue
+<script setup lang="ts">
+import { computed } from "vue";
+import { useRpc } from "@vue-solana/vue/useRpc";
+
+const { cluster, endpoint, status, error, latestBlockhash, checkConnection } = useRpc();
+
+const rpcErrorMessage = computed(() => {
+  if (!error.value) return null;
+  return error.value.code === "RPC_FAILURE"
+    ? "Unable to reach the configured Solana RPC endpoint."
+    : "Unable to check the Solana connection.";
+});
+</script>
+
+<template>
+  <section>
+    <p>Cluster: {{ cluster }}</p>
+    <p>Endpoint: {{ endpoint }}</p>
+    <p>Status: {{ status }}</p>
+    <p>Latest blockhash: {{ latestBlockhash }}</p>
+    <p v-if="rpcErrorMessage">{{ rpcErrorMessage }}</p>
+    <button type="button" @click="checkConnection">Check RPC</button>
+  </section>
+</template>
+```
+
+## 读取余额
+
+```vue
+<script setup lang="ts">
+import { computed, ref } from "vue";
+import { useBalance } from "@vue-solana/vue/useBalance";
+
+const address = ref("PASTE_A_SOLANA_ADDRESS");
+const { balance, loading, error, refresh } = useBalance(address);
+
+const balanceErrorMessage = computed(() => {
+  switch (error.value?.code) {
+    case "INVALID_ADDRESS":
+      return "Enter a valid Solana address.";
+    case "RPC_FAILURE":
+      return "Unable to load the balance from RPC.";
+    default:
+      return null;
+  }
+});
+</script>
+
+<template>
+  <section>
+    <p>Lamports: {{ balance }}</p>
+    <p v-if="loading">Loading...</p>
+    <p v-if="balanceErrorMessage">{{ balanceErrorMessage }}</p>
+    <button type="button" @click="refresh">Refresh</button>
+  </section>
+</template>
+```
+
+## 错误处理
+
+Composable `error` ref 使用来自 `@vue-solana/core/errors` 的 `SolanaError | null`。面向用户的 UI 请基于 `error.value.code` 分支，并保留 `error.value.cause` 用于调试原始钱包、RPC、地址解析、超时或存储失败。
+
+```ts
+const message = computed(() => {
+  switch (error.value?.code) {
+    case "NO_WALLET_SELECTED":
+      return "Choose a wallet first.";
+    case "USER_REJECTED":
+      return "The wallet request was rejected.";
+    case "TRANSACTION_TIMEOUT":
+      return "The transaction is taking longer than expected.";
+    case "RPC_FAILURE":
+      return "The Solana RPC request failed.";
+    default:
+      return null;
+  }
+});
+
+watchEffect(() => {
+  if (error.value?.cause) {
+    console.debug("Original Solana error", error.value.cause);
+  }
+});
+```
+
+## 读取账户信息
+
+```vue
+<script setup lang="ts">
+import { computed, ref } from "vue";
+import { useAccountInfo } from "@vue-solana/vue/useAccountInfo";
+
+const address = ref("PASTE_A_SOLANA_ADDRESS");
+const { accountInfo, loading, error, refresh, stopWatching } = useAccountInfo(address, {
+  commitment: "confirmed",
+  watch: true,
+});
+
+const accountInfoErrorMessage = computed(() => {
+  switch (error.value?.code) {
+    case "INVALID_ADDRESS":
+      return "Enter a valid Solana address.";
+    case "RPC_FAILURE":
+      return "Unable to load account data from RPC.";
+    default:
+      return null;
+  }
+});
+</script>
+
+<template>
+  <section>
+    <p>Lamports: {{ accountInfo?.lamports ?? "Unknown" }}</p>
+    <p v-if="loading">Loading...</p>
+    <p v-if="accountInfoErrorMessage">{{ accountInfoErrorMessage }}</p>
+    <button type="button" @click="refresh">Refresh</button>
+    <button type="button" @click="stopWatching">Stop watching</button>
+  </section>
+</template>
+```
+
+`useAccountInfo()` 会在地址为 null 时清除状态且不调用 RPC。无效地址字符串会清除过期 `accountInfo`、设置 `error`，并且不调用 `getAccountInfo()`。启用 `watch: true` 时，websocket listener 会在组件卸载时自动移除。调用 `stopWatching()` 会移除当前 listener，并阻止该 composable 实例自动重启。
+
+## 读取 Program Accounts
+
+```vue
+<script setup lang="ts">
+import { computed, ref } from "vue";
+import { useProgramAccounts } from "@vue-solana/vue/useProgramAccounts";
+
+const programId = ref("PASTE_A_SOLANA_PROGRAM_ID");
+const { accounts, loading, error, refresh } = useProgramAccounts(programId, {
+  commitment: "confirmed",
+  filters: [{ dataSize: 165 }],
+  dataSlice: { offset: 0, length: 32 },
+});
+
+const programAccountsErrorMessage = computed(() => {
+  switch (error.value?.code) {
+    case "INVALID_ADDRESS":
+      return "Enter a valid Solana program id.";
+    case "RPC_FAILURE":
+      return "Unable to load program accounts from RPC.";
+    default:
+      return null;
+  }
+});
+</script>
+
+<template>
+  <section>
+    <p>Accounts: {{ accounts.length }}</p>
+    <p v-if="loading">Loading...</p>
+    <p v-if="programAccountsErrorMessage">{{ programAccountsErrorMessage }}</p>
+    <button type="button" @click="refresh">Refresh</button>
+  </section>
+</template>
+```
+
+`useProgramAccounts()` 会在 program id 为 null 时清除状态且不调用 RPC。无效 program id 字符串会清除过期 `accounts`、设置 `error`，并且不调用 `getProgramAccounts()`。
+
+> 警告：`useProgramAccounts()` 可能成本很高。每次刷新都可能扫描大量 program-owned account、消耗大量 RPC credits、触发 provider 限流或超时。不要从高流量 UI 路径运行宽泛扫描。生产读取请使用窄过滤器、`dataSlice`、缓存、索引、分页策略或专用 RPC 基础设施。
+
+## 钱包状态
+
+```vue
+<script setup lang="ts">
+import { useWallet } from "@vue-solana/vue/useWallet";
+import { useWallets } from "@vue-solana/vue/useWallets";
+
+const { wallets, selectedWallet, refreshWallets, selectWallet } = useWallets();
+const { publicKey, connected, connecting, connect, disconnect } = useWallet();
+</script>
+
+<template>
+  <section>
+    <button type="button" @click="refreshWallets">Refresh Wallets</button>
+
+    <button
+      v-for="wallet in wallets"
+      :key="wallet.name"
+      type="button"
+      @click="selectWallet(wallet)"
+    >
+      {{ wallet.name }}
+    </button>
+
+    <p>Selected: {{ selectedWallet?.name ?? "None" }}</p>
+    <p>Connected: {{ connected }}</p>
+    <p>Public key: {{ publicKey?.toBase58() }}</p>
+    <p v-if="connecting">Connecting...</p>
+    <button type="button" :disabled="!selectedWallet || connected || connecting" @click="connect">
+      Connect
+    </button>
+    <button type="button" :disabled="!connected" @click="disconnect">Disconnect</button>
+  </section>
+</template>
+```
+
+浏览器扩展钱包通过 Solana Wallet Standard 发现。Android Mobile Wallet Adapter 钱包通过 `@solana-mobile/wallet-standard-mobile` 注册，并在支持的 Android Chrome 客户端上暴露到同一个 `useWallets()` 列表中。iOS Phantom、Solflare 和 Backpack 条目通过 iOS 浏览器上的钱包专用 universal link 暴露。`refreshWallets()` 只更新已发现钱包列表，`selectWallet()` 只配置活跃钱包。即使扩展在页面刷新后暴露之前授权的账户，`connected` 也会在 `connect()` 成功前保持 false。
+
+尚未实现桌面原生应用钱包 adapter。桌面原生支持需要钱包专用 protocol link 或未来的原生 Wallet Standard 注册。
+
+没有插件上下文时，composable 会返回惰性的 SSR 安全状态。真实 RPC 和钱包操作仍然需要插件提供的客户端上下文。
+
+## 消息签名
+
+```ts
+import { useSignMessage } from "@vue-solana/vue/useSignMessage";
+import { useWallet } from "@vue-solana/vue/useWallet";
+
+const { connected, canSignMessage } = useWallet();
+const { signature, status, error, execute } = useSignMessage();
+
+if (connected.value && canSignMessage.value) {
+  await execute(new TextEncoder().encode("Sign in to example.com"));
+}
+```
+
+消息签名用于钱包所有权或认证 challenge。它不是交易签名，也不授权链上状态变更。不暴露消息签名的钱包会让 `canSignMessage` 为 false，`execute()` 会以不支持钱包错误拒绝。
+
+## 交易状态
+
+```ts
+import { useSignAndSendTransaction } from "@vue-solana/vue/useSignAndSendTransaction";
+
+const { signature, confirmation, status, loading, error, execute } = useSignAndSendTransaction();
+
+await execute(transaction, {
+  confirm: true,
+  confirmation: { commitment: "confirmed" },
+  skipPreflight: false,
+});
+```
+
+当前钱包必须已连接，并且支持 `signAndSendTransaction` 或 `signTransaction`。Android Mobile Wallet Adapter 钱包在可用时优先使用 `signTransaction` 加应用侧 RPC 提交。这避免了钱包发送成功但浏览器页面没有收到钱包 adapter 返回签名的移动端 handoff 边缘情况。
+
+没有 `confirm: true` 时，`execute()` 会在提交后返回，并把 `status` 设置为 `sent`。启用确认后，状态会经过 `sending`、`confirming`，然后变为 `processed`、`confirmed` 或 `finalized`，以匹配请求的 commitment。如果确认超时或失败，已提交的 `signature` 仍然可用，因此应用可以链接到 explorer。
+
+如果钱包 adapter 从不返回结果，`useSignAndSendTransaction()` 也会清除 `loading`。这种 stale 情况下会设置 `error`，链上状态可能未知，因此重试前请检查连接的钱包或 explorer。
+
+## 确认现有签名
+
+当应用已有已提交签名，并希望独立于签名和发送流程等待特定 commitment 时，请使用 `useTransactionConfirmation()`：
+
+```ts
+import { useTransactionConfirmation } from "@vue-solana/vue/useTransactionConfirmation";
+
+const { signature, confirmation, status, loading, error, confirm, reset } =
+  useTransactionConfirmation({ commitment: "confirmed", timeoutMs: 60_000 });
+
+await confirm("PASTE_SUBMITTED_SIGNATURE", { commitment: "finalized" });
+```
+
+当确认超时或 RPC 调用失败时，该 composable 会保留已提交的 `signature`，因此应用仍然可以展示 explorer 链接，同时向用户展示 `error`。
+
+## 跟踪签名状态
+
+```ts
+import { useSignatureStatus } from "@vue-solana/vue/useSignatureStatus";
+
+const { status, loading, error, refresh, stopPolling, stopSubscription } = useSignatureStatus(
+  "PASTE_SUBMITTED_SIGNATURE",
+  {
+    pollIntervalMs: 5_000,
+    searchTransactionHistory: true,
+    subscribe: true,
+    commitment: "confirmed",
+  },
+);
+```
+
+轮询会在每个间隔调用 `getSignatureStatuses()`，因此 UI 不再需要更新时应停止轮询。调用 `stopPolling()` 会清除当前 interval，并阻止该 composable 实例自动重启轮询。无效签名会清除过期 `status`、设置 `error`，且不调用 RPC 或启动轮询。小于或等于 `0` 的无效 `pollIntervalMs` 会设置 `RangeError` 且不启动轮询。`subscribe: true` 使用 `onSignature()`，并在组件卸载时移除 listener。调用 `stopSubscription()` 会移除当前签名 listener，并阻止该 composable 实例自动重启。
+
+## 示例应用
+
+完整可运行的 Vue 和 Vite 流程，请参阅 [Vue Vite 示例](/zh/examples/vue-vite)。
 
 ---
 
@@ -3881,6 +6492,381 @@ For a complete runnable Nuxt flow, see the [Nuxt example](/examples/nuxt).
 
 ---
 
+# @vue-solana/nuxt
+
+Source: https://vue-solana-docs.vercel.app/zh/packages/nuxt
+Description: 用于 Solana 应用的 Nuxt 模块。
+
+[`@vue-solana/nuxt`](https://www.npmjs.com/package/@vue-solana/nuxt) 会在 Nuxt 应用中安装 Vue Solana 插件并自动导入 composable。
+
+## 安装
+
+```sh
+npx nuxt module add @vue-solana/nuxt
+```
+
+这会安装包，并把 `@vue-solana/nuxt` 添加到 `nuxt.config.ts` 的 `modules` 数组中。
+
+创建或序列化交易的浏览器应用可以从 `@vue-solana/nuxt/buffer-polyfill` 初始化 Buffer polyfill，并从 `@vue-solana/nuxt/web3` 导入受支持的 Solana primitive。
+
+## 模块设置
+
+```ts
+export default defineNuxtConfig({
+  modules: ["@vue-solana/nuxt"],
+  solana: {
+    cluster: "devnet",
+  },
+});
+```
+
+也可以配置自定义 RPC endpoint：
+
+```ts
+export default defineNuxtConfig({
+  modules: ["@vue-solana/nuxt"],
+  solana: {
+    cluster: "mainnet-beta",
+    endpoint: "https://your-rpc.example.com",
+    commitment: "confirmed",
+  },
+});
+```
+
+支持的 cluster 是 `mainnet-beta`、`devnet`、`testnet` 和 `localnet`。Solana mainnet 请使用 `mainnet-beta`；这是 Solana 的官方 cluster 名称。
+
+Nuxt 模块选项存储在 public runtime config 中，因此必须可 JSON 序列化。自定义 `wallet` adapter 对象有意不包含在 Nuxt 配置中；如果需要注入自定义钱包对象，请在 client-only Vue 代码中直接使用 Vue 插件。
+
+移动钱包选项只包含可 JSON 序列化的应用身份和重定向设置时，可以安全地配置在 `nuxt.config.ts` 中：
+
+```ts
+export default defineNuxtConfig({
+  modules: ["@vue-solana/nuxt"],
+  solana: {
+    cluster: "devnet",
+    mobileWallet: {
+      appIdentity: {
+        name: "My Nuxt Solana App",
+        uri: "https://example.com",
+        icon: "favicon.ico",
+      },
+    },
+    iosWallet: {
+      appIdentity: {
+        name: "My Nuxt Solana App",
+      },
+      redirectUrl: "https://example.com",
+    },
+  },
+});
+```
+
+传入 `mobileWallet: false` 或 `iosWallet: false` 可以禁用对应的移动钱包来源。模块还会预优化常见的 Solana、Wallet Adapter 和移动钱包依赖，让 Vite 能正确打包浏览器交易和钱包代码。
+
+## 自动导入的 Composable
+
+模块从直接 `@vue-solana/vue/*` subpath 自动导入这些 composable，而不是从 Vue 包根 barrel 导入。这样即使页面只使用一个 composable，Nuxt SSR bundle 也不会拉入无关的 Solana 运行时代码。
+
+- `useSolana()`：返回完整注入的 Solana context。
+- `useSolanaRpc()`：返回 cluster、endpoint、RPC 状态、latest blockhash 和 `checkConnection()`。
+- `useSolanaConnection()`：返回 Solana `Connection` 实例。
+- `useSolanaAccountInfo(address, options?)`：读取账户信息，并可订阅账户变化。
+- `useSolanaWallet()`：返回所选钱包状态、连接状态、能力和钱包操作。
+- `useSolanaWallets()`：返回已发现钱包和钱包选择/刷新操作。
+- `useSolanaBalance(address, commitment?)`：读取 public key 或地址的 lamport 余额。
+- `useSolanaProgramAccounts(programId, options?)`：使用过滤器和数据切片读取 program-owned accounts。
+- `useSolanaTransactionConfirmation(options?)`：确认现有交易签名。
+- `useSolanaSignatureStatus(signature, options?)`：读取、轮询或订阅签名状态。
+- `useSolanaSignMessage()`：签署链下认证或所有权 challenge 消息。
+- `useSolanaSignAndSendTransaction()`：签名、发送并可选确认交易。
+
+这些是 Vue composable 的 Nuxt alias。
+
+Vue 包使用 `useRpc()` 这样的短名称，因为调用方会从 `@vue-solana/vue/useRpc` 显式导入。
+
+Nuxt 模块暴露 `useSolanaRpc()` 这样的前缀名称，因为自动导入的 composable 共享整个 Nuxt 应用命名空间，应避免与应用代码或其他模块冲突。
+
+`useSolana()` 是例外，因为它已经带命名空间，并且在 Vue 和 Nuxt 中都是规范的 context accessor。
+
+在 Nuxt 应用中使用 `useSolana*` 名称，这样自动导入无需显式 import 即可工作。
+
+原始 Solana primitive 和浏览器 Buffer helper 是显式导入，不是自动导入：
+
+```ts
+import { installSolanaBufferPolyfill } from "@vue-solana/nuxt/buffer-polyfill";
+import { PublicKey, Transaction } from "@vue-solana/nuxt/web3";
+```
+
+只有较底层 core 用法才直接使用 `@vue-solana/core/*` 导入。
+
+直接包 subpath：
+
+- `@vue-solana/nuxt/buffer-polyfill`
+- `@vue-solana/nuxt/web3`
+
+运行时插件仅在客户端运行。自动导入的 composable 可以在 SSR 期间调用，并在 hydration 提供真实客户端上下文前返回惰性状态。请从客户端生命周期钩子或用户操作触发 RPC 和钱包工作。
+
+Android Mobile Wallet Adapter 注册也只在客户端运行。在 Android Chrome 和 Chrome PWA 中，`Mobile Wallet Adapter` 可以与浏览器扩展钱包出现在同一个 `useSolanaWallets()` 列表中。在 iOS 浏览器中，Phantom、Solflare 和 Backpack 可以通过钱包专用 universal link 出现在同一个列表中。桌面原生应用钱包 adapter 已计划但尚未实现。
+
+## 相关指南
+
+- [RPC 和 Clusters](/zh/guides/rpc-and-clusters)：配置 Nuxt 模块并读取 RPC 状态。
+- [钱包](/zh/guides/wallets)：在客户端流程中安全使用 `useSolanaWallets()` 和 `useSolanaWallet()`。
+- [账户读取](/zh/guides/account-reads)：读取余额、账户数据、program accounts 和签名状态。
+- [交易](/zh/guides/transactions)：从 Nuxt 签名、发送、确认并处理交易状态。
+- [消息签名](/zh/guides/message-signing)：为链下消息请求钱包签名。
+- [错误](/zh/guides/errors)：把自动导入 composable 的错误映射为安全 UI 消息。
+
+## 读取 RPC 状态
+
+```vue
+<script setup lang="ts">
+const { cluster, endpoint, status, error, latestBlockhash, checkConnection } = useSolanaRpc();
+
+const rpcErrorMessage = computed(() => {
+  if (!error.value) return null;
+  return error.value.code === "RPC_FAILURE"
+    ? "Unable to reach the configured Solana RPC endpoint."
+    : "Unable to check the Solana connection.";
+});
+</script>
+
+<template>
+  <section>
+    <p>Cluster: {{ cluster }}</p>
+    <p>Endpoint: {{ endpoint }}</p>
+    <p>Status: {{ status }}</p>
+    <p>Latest blockhash: {{ latestBlockhash }}</p>
+    <p v-if="rpcErrorMessage">{{ rpcErrorMessage }}</p>
+    <button type="button" @click="checkConnection">Check RPC</button>
+  </section>
+</template>
+```
+
+## 读取余额
+
+```vue
+<script setup lang="ts">
+const address = ref("PASTE_A_SOLANA_ADDRESS");
+const { balance, loading, error, refresh } = useSolanaBalance(address);
+
+const balanceErrorMessage = computed(() => {
+  switch (error.value?.code) {
+    case "INVALID_ADDRESS":
+      return "Enter a valid Solana address.";
+    case "RPC_FAILURE":
+      return "Unable to load the balance from RPC.";
+    default:
+      return null;
+  }
+});
+</script>
+
+<template>
+  <section>
+    <p>Lamports: {{ balance }}</p>
+    <p v-if="loading">Loading...</p>
+    <p v-if="balanceErrorMessage">{{ balanceErrorMessage }}</p>
+    <button type="button" @click="refresh">Refresh</button>
+  </section>
+</template>
+```
+
+## 错误处理
+
+Nuxt 自动导入的 composable 暴露与 `@vue-solana/vue` 相同的规范化 `SolanaError | null` ref。请使用稳定的 `error.value.code` 值进行 UI 分支，并保留 `error.value.cause` 用于记录原始钱包、RPC、解析、超时或存储失败。
+
+```vue
+<script setup lang="ts">
+const { error, execute } = useSolanaSignAndSendTransaction();
+
+const message = computed(() => {
+  switch (error.value?.code) {
+    case "NO_WALLET_SELECTED":
+      return "Choose a wallet first.";
+    case "USER_REJECTED":
+      return "The wallet request was rejected.";
+    case "TRANSACTION_TIMEOUT":
+      return "The transaction is taking longer than expected.";
+    case "RPC_FAILURE":
+      return "The Solana RPC request failed.";
+    default:
+      return null;
+  }
+});
+</script>
+```
+
+## 读取账户数据
+
+```vue
+<script setup lang="ts">
+const address = ref("PASTE_A_SOLANA_ADDRESS");
+const programId = ref("PASTE_A_SOLANA_PROGRAM_ID");
+const signature = ref("PASTE_A_TRANSACTION_SIGNATURE");
+
+const account = useSolanaAccountInfo(address, { watch: true });
+const programAccounts = useSolanaProgramAccounts(programId, {
+  dataSlice: { offset: 0, length: 32 },
+  filters: [{ dataSize: 165 }],
+});
+const signatureStatus = useSolanaSignatureStatus(signature, { pollIntervalMs: 2_000 });
+</script>
+```
+
+在公共 RPC node 上谨慎使用 `useSolanaProgramAccounts()`。优先使用窄过滤器，使用 `dataSlice` 进行部分读取，并避免轮询宽泛扫描。
+
+## 钱包状态
+
+```vue
+<script setup lang="ts">
+const { wallets, selectedWallet, refreshWallets, selectWallet } = useSolanaWallets();
+const { publicKey, connected, connect, disconnect } = useSolanaWallet();
+</script>
+
+<template>
+  <section>
+    <button type="button" @click="refreshWallets">Refresh Wallets</button>
+
+    <button
+      v-for="wallet in wallets"
+      :key="wallet.name"
+      type="button"
+      @click="selectWallet(wallet)"
+    >
+      {{ wallet.name }}
+    </button>
+
+    <p>Selected: {{ selectedWallet?.name ?? "None" }}</p>
+    <p>Connected: {{ connected }}</p>
+    <p>Public key: {{ publicKey?.toBase58() }}</p>
+    <button type="button" :disabled="!selectedWallet || connected" @click="connect">Connect</button>
+    <button type="button" :disabled="!connected" @click="disconnect">Disconnect</button>
+  </section>
+</template>
+```
+
+浏览器扩展钱包通过 Solana Wallet Standard 发现。Android Mobile Wallet Adapter 钱包在支持的 Android Chrome 客户端上通过 `@solana-mobile/wallet-standard-mobile` 注册，并暴露到同一个钱包列表中。iOS Phantom、Solflare 和 Backpack 条目通过 iOS 浏览器上的钱包专用 universal link 暴露。`refreshWallets()` 只更新已发现钱包列表，`selectWallet()` 只配置活跃钱包。即使扩展在页面刷新后暴露之前授权的账户，`connected` 也会在 `connect()` 成功前保持 false。
+
+## 消息签名
+
+```vue
+<script setup lang="ts">
+const { connected, canSignMessage } = useSolanaWallet();
+const { signature, status, error, execute } = useSolanaSignMessage();
+
+if (connected.value && canSignMessage.value) {
+  await execute(new TextEncoder().encode("Sign in to example.com"));
+}
+</script>
+```
+
+消息签名用于钱包所有权或认证 challenge。它不是交易签名，也不授权链上状态变更。不暴露消息签名的钱包会让 `canSignMessage` 为 false，`execute()` 会以不支持钱包错误拒绝。
+
+## 签名、发送并确认交易
+
+当连接的钱包应签名并提交交易时，请从客户端用户操作使用 `useSolanaSignAndSendTransaction()`。当 UI 应等待确认而不是在提交签名后停止时，传入 `confirm: true`。
+
+```vue
+<script setup lang="ts">
+import { Transaction } from "@vue-solana/nuxt/web3";
+
+const { connected, canSignTransaction } = useSolanaWallet();
+const { signature, confirmation, status, loading, error, execute } =
+  useSolanaSignAndSendTransaction();
+
+const canSubmit = computed(() => connected.value && canSignTransaction.value && !loading.value);
+
+async function submitTransaction() {
+  const transaction = new Transaction();
+  // Add instructions, recent blockhash, and fee payer before requesting a wallet signature.
+  await execute(transaction, {
+    confirm: true,
+    confirmation: { commitment: "confirmed", timeoutMs: 120_000 },
+  });
+}
+</script>
+
+<template>
+  <section>
+    <button type="button" :disabled="!canSubmit" @click="submitTransaction">
+      Send transaction
+    </button>
+    <p>Status: {{ status }}</p>
+    <p v-if="signature">Submitted: {{ signature }}</p>
+    <p v-if="confirmation">Confirmed at {{ confirmation.commitment }}</p>
+    <p v-if="error">Unable to complete the transaction.</p>
+  </section>
+</template>
+```
+
+状态会在 RPC 提交后从 `sending` 变为 `sent`。启用确认后，状态会继续经过 `confirming`，并最终到达获得的 commitment，例如 `confirmed` 或 `finalized`。如果提交后确认超时，`signature` 仍然可用，因此应用可以展示 explorer 链接或在重试前轮询签名状态。
+
+钱包提示必须由 hydration 后的用户交互触发。不要在 SSR、server route 或页面加载时自动调用 `execute()`。
+
+## 确认现有签名
+
+当你已经有签名，并希望响应式确认状态时，请使用 `useSolanaTransactionConfirmation()`。
+
+```vue
+<script setup lang="ts">
+const signature = ref("PASTE_TRANSACTION_SIGNATURE");
+const { confirmation, status, error, confirm } = useSolanaTransactionConfirmation({
+  commitment: "confirmed",
+  timeoutMs: 60_000,
+});
+
+async function confirmCurrentSignature() {
+  await confirm(signature.value);
+}
+</script>
+
+<template>
+  <section>
+    <button type="button" @click="confirmCurrentSignature">Confirm signature</button>
+    <p>Status: {{ status }}</p>
+    <p v-if="confirmation">Reached {{ confirmation.commitment }}</p>
+    <p v-if="error">Unable to confirm the signature.</p>
+  </section>
+</template>
+```
+
+## 跟踪签名状态
+
+当你需要持续检查已提交签名的状态时，请使用 `useSolanaSignatureStatus()`。这在超时后很有用，因为交易可能在 UI 停止等待后仍然落地。
+
+```vue
+<script setup lang="ts">
+const signature = ref("PASTE_TRANSACTION_SIGNATURE");
+const { status, loading, error, refresh, stopPolling, stopSubscription } = useSolanaSignatureStatus(
+  signature,
+  {
+    pollIntervalMs: 2_000,
+  },
+);
+
+onBeforeUnmount(() => {
+  stopPolling();
+  void stopSubscription();
+});
+</script>
+```
+
+Explorer 链接请使用配置的 cluster。Devnet 链接应包含 `?cluster=devnet`；mainnet 链接不应包含 cluster query。
+
+```ts
+function explorerUrl(signature: string, cluster: string) {
+  const suffix = cluster === "mainnet-beta" ? "" : `?cluster=${cluster}`;
+  return `https://explorer.solana.com/tx/${signature}${suffix}`;
+}
+```
+
+## 示例应用
+
+完整可运行的 Nuxt 流程，请参阅 [Nuxt 示例](/zh/examples/nuxt)。
+
+---
+
 # Ejemplo Vue Vite
 
 Source: https://vue-solana-docs.vercel.app/es/examples/vue-vite
@@ -3992,6 +6978,82 @@ https://faucet.solana.com
 The example uses unified wallet discovery. Install Phantom, Solflare, Backpack, or another standard wallet before testing browser extension wallet flows. On supported Android Chrome runtimes, `@solana-mobile/wallet-standard-mobile` can expose installed native mobile wallets through `Mobile Wallet Adapter` in the same wallet list. On iOS browsers, Phantom, Solflare, and Backpack can appear through wallet-specific universal links.
 
 Desktop native wallet protocol-link support is intentionally not part of the v1 example flow.
+
+---
+
+# Vue Vite 示例
+
+Source: https://vue-solana-docs.vercel.app/zh/examples/vue-vite
+Description: 用于 @vue-solana/vue 的可运行 Vue 3 和 Vite 示例应用。
+
+Vue Vite 示例是一个用于 `@vue-solana/vue` 的可运行 Vue 3 应用。
+
+源码：<a href="https://github.com/vue-solana/vue-solana/tree/main/examples/vue-vite" target="_blank" rel="noopener noreferrer"><code>examples/vue-vite</code></a>
+
+实时演示：[vue-solana-docs.vercel.app/demo](/zh/demo)
+
+## 演示内容
+
+- 使用 `createSolanaPlugin()` 安装 Vue Solana 插件。
+- 使用 `useRpc()` 读取 RPC 状态。
+- 使用 `useConnection()` 访问注入的 `Connection`。
+- 使用 `useBalance()` 读取 lamport 余额。
+- 使用 `useWallets()` 发现浏览器扩展钱包、Android Mobile Wallet Adapter 钱包和受支持的 iOS 浏览器钱包条目。
+- 使用 `useWallet()` 管理活动钱包状态。
+- 持久化钱包选择元数据，并在重新加载时恢复之前选择的钱包身份。
+- 可选的 `autoConnect` 行为：只在之前选择的钱包再次被发现时重新连接它。
+- 为无法签署消息或交易的钱包渲染不支持能力的状态。
+- 使用 `useTransaction()` 跟踪异步交易状态。
+- 当已连接钱包支持时，使用 `useSignMessage()` 签署认证消息。
+- 使用 `useSignAndSendTransaction()` 发送真实转账，并展示已提交与已确认的交易状态。示例默认使用 devnet，便于安全测试。
+- 为已提交签名构建感知集群的 Solana Explorer 链接。
+
+应用默认使用 `devnet`。Devnet SOL 没有真实价值。
+
+## 从仓库根目录运行
+
+```sh
+pnpm install
+pnpm build:packages
+pnpm dev:vue
+```
+
+打开终端输出的 Vite URL，通常是 `http://localhost:5173`。
+
+## 可以尝试什么
+
+- 检查初始 RPC 状态和最新 blockhash。
+- 点击 `Load Blockhash` 直接调用 `connection.getLatestBlockhash()`。
+- 粘贴 devnet 钱包地址并刷新余额。
+- 安装 Solana 浏览器钱包并切换到 devnet。
+- 在 Android Chrome 上安装兼容的 Solana 移动钱包，并查找 `Mobile Wallet Adapter`。
+- 在 iOS 浏览器上安装 Phantom、Solflare 或 Backpack，并在同一列表中查找钱包条目。
+- 选择并连接一个已发现的钱包。
+- 重新加载页面，验证相同的钱包身份会恢复，而不是任意选择已安装钱包。
+- 如果钱包报告支持消息签名，签署示例认证消息。
+- 当所选钱包不支持 `signMessage` 时，确认消息签名按钮被禁用或有说明。
+- 运行通用模拟交易。
+- 输入收款地址和金额，然后发送真实转账。测试时保持示例在 devnet。
+- 观察交易从已提交签名移动到确认状态。
+- 打开 explorer 链接并确认它包含 `?cluster=devnet`。
+
+转账示例会使用来自 `@vue-solana/vue/buffer-polyfill` 的 `installSolanaBufferPolyfill()` 初始化浏览器 `Buffer` polyfill。如果 Vite 之前缓存了 externalized Buffer import，请重启 Vite dev server。
+
+如果签名出现后确认超时，不要立即提交重复转账。使用示例的签名状态或 explorer 链接检查交易是否稍后确认。
+
+## Devnet SOL
+
+从官方 faucet 请求免费 devnet SOL：
+
+```txt
+https://faucet.solana.com
+```
+
+## 钱包说明
+
+示例使用统一的钱包发现。测试浏览器扩展钱包流程前，请安装 Phantom、Solflare、Backpack 或其他标准钱包。在受支持的 Android Chrome 运行时，`@solana-mobile/wallet-standard-mobile` 可以通过同一钱包列表中的 `Mobile Wallet Adapter` 暴露已安装的原生移动钱包。在 iOS 浏览器上，Phantom、Solflare 和 Backpack 可以通过钱包专用 universal links 出现。
+
+桌面原生钱包 protocol-link 支持有意不属于 v1 示例流程。
 
 ---
 
@@ -4107,6 +7169,83 @@ https://faucet.solana.com
 The example uses unified wallet discovery. Install Phantom, Solflare, Backpack, or another standard wallet before testing browser extension wallet flows. On supported Android Chrome runtimes, `@solana-mobile/wallet-standard-mobile` can expose installed native mobile wallets through `Mobile Wallet Adapter` in the same wallet list. On iOS browsers, Phantom, Solflare, and Backpack can appear through wallet-specific universal links.
 
 Desktop native wallet protocol-link support is intentionally not part of the v1 example flow.
+
+---
+
+# Nuxt 示例
+
+Source: https://vue-solana-docs.vercel.app/zh/examples/nuxt
+Description: 用于 @vue-solana/nuxt 的可运行 Nuxt 示例应用。
+
+Nuxt 示例是一个用于 `@vue-solana/nuxt` 的可运行 Nuxt 应用。
+
+源码：<a href="https://github.com/vue-solana/vue-solana/tree/main/examples/nuxt" target="_blank" rel="noopener noreferrer"><code>examples/nuxt</code></a>
+
+实时演示：[vue-solana-docs.vercel.app/demo](/zh/demo)
+
+## 演示内容
+
+- 使用 `modules: ['@vue-solana/nuxt']` 安装 Nuxt 模块。
+- 使用 `solana: { cluster: 'devnet' }` 配置模块。
+- 使用自动导入的 `useSolanaRpc()` 读取 RPC 状态。
+- 使用 `useSolanaConnection()` 访问注入的 connection。
+- 使用 `useSolanaBalance()` 读取 lamport 余额。
+- 使用 `useSolanaWallets()` 发现浏览器扩展钱包、Android Mobile Wallet Adapter 钱包和受支持的 iOS 浏览器钱包条目。
+- 使用 `useSolanaWallet()` 管理活动钱包状态。
+- 持久化钱包选择元数据，并在重新加载时恢复之前选择的钱包身份。
+- 可选的 `autoConnect` 行为：只在之前选择的钱包再次被发现时重新连接它。
+- 为无法签署消息或交易的钱包渲染不支持能力的状态。
+- 当已连接钱包支持时，使用自动导入的 `useSolanaSignMessage()` 签署认证消息。
+- 使用 `useSolanaSignAndSendTransaction()` 发送真实转账，并展示已提交与已确认的交易状态。示例默认使用 devnet，便于安全测试。
+- 为已提交签名构建感知集群的 Solana Explorer 链接。
+- 使用来自 `@vue-solana/vue/useTransaction` 的 `useTransaction()` 处理通用异步交易状态。
+
+应用默认使用 `devnet`。Devnet SOL 没有真实价值。
+
+## 从仓库根目录运行
+
+```sh
+pnpm install
+pnpm build:packages
+pnpm dev:nuxt
+```
+
+打开终端输出的 Nuxt URL，通常是 `http://localhost:3000`。
+
+## 可以尝试什么
+
+- 检查初始模块/RPC 状态和最新 blockhash。
+- 点击 `Load Blockhash` 直接调用 `connection.getLatestBlockhash()`。
+- 粘贴 devnet 钱包地址并刷新余额。
+- 安装 Solana 浏览器钱包并切换到 devnet。
+- 在 Android Chrome 上安装兼容的 Solana 移动钱包，并查找 `Mobile Wallet Adapter`。
+- 在 iOS 浏览器上安装 Phantom、Solflare 或 Backpack，并在同一列表中查找钱包条目。
+- 选择并连接一个已发现的钱包。
+- 重新加载页面，验证相同的钱包身份会恢复，而不是任意选择已安装钱包。
+- 如果钱包报告支持消息签名，签署示例认证消息。
+- 当所选钱包不支持 `signMessage` 时，确认消息签名按钮被禁用或有说明。
+- 运行通用模拟交易。
+- 输入收款地址和金额，然后发送真实转账。测试时保持示例在 devnet。
+- 观察交易从已提交签名移动到确认状态。
+- 打开 explorer 链接并确认它包含 `?cluster=devnet`。
+
+转账示例会使用来自 `@vue-solana/nuxt/buffer-polyfill` 的 `installSolanaBufferPolyfill()` 初始化浏览器 `Buffer` polyfill。如果 Vite 之前缓存了 externalized Buffer import，请重启 Nuxt dev server。
+
+如果签名出现后确认超时，不要立即提交重复转账。使用示例的签名状态或 explorer 链接检查交易是否稍后确认。
+
+## Devnet SOL
+
+从官方 faucet 请求免费 devnet SOL：
+
+```txt
+https://faucet.solana.com
+```
+
+## 钱包说明
+
+示例使用统一的钱包发现。测试浏览器扩展钱包流程前，请安装 Phantom、Solflare、Backpack 或其他标准钱包。在受支持的 Android Chrome 运行时，`@solana-mobile/wallet-standard-mobile` 可以通过同一钱包列表中的 `Mobile Wallet Adapter` 暴露已安装的原生移动钱包。在 iOS 浏览器上，Phantom、Solflare 和 Backpack 可以通过钱包专用 universal links 出现。
+
+桌面原生钱包 protocol-link 支持有意不属于 v1 示例流程。
 
 ---
 
@@ -4233,6 +7372,97 @@ pnpm test:e2e
 ```
 
 Real-network E2E can also be run manually when needed:
+
+```sh
+pnpm test:e2e:integration
+```
+
+---
+
+# v1 路线图
+
+Source: https://vue-solana-docs.vercel.app/zh/roadmap
+Description: 第一个稳定 Vue Solana 包发布前计划完成的功能工作。
+
+Vue Solana 目前仍处于 pre-v1 阶段。这些包已经可用于 RPC 设置、钱包发现、钱包连接、余额读取和 devnet 交易流程，但稳定的 v1 版本还需要一些更面向生产的 API。
+
+详细实现跟踪位于 [`docs/plans/v1-roadmap.md`](https://github.com/vue-solana/vue-solana/blob/main/docs/plans/v1-roadmap.md)。本页面为应用开发者总结已完成和剩余的路线图工作。
+
+## v1 发布目标
+
+- 稳定的公共包导出和 composable 名称。
+- 每个文档化公共配置选项都有真实行为。
+- 可预测的钱包选择、重连、断开连接和不支持功能处理。
+- 除签名提交外的交易确认 helper。
+- 响应式账户和签名状态 composable。
+- 用于钱包认证流程的消息签名支持。
+- 规范化的钱包、交易、RPC、超时和无效输入错误。
+- 明确的桌面原生钱包支持状态。
+- 更新后的示例、包文档、测试和 E2E 覆盖。
+
+## 路线图阶段
+
+### 1. 公共 API 稳定化
+
+状态：完成。每个公共选项都在 v1 前实现或移除。`autoConnect` 作为对先前选择的钱包身份进行可选重连的行为包含在 v1 中。
+
+### 2. 钱包 UX 基础
+
+状态：完成。钱包选择会在重新加载后保留，但不会连接任意已安装的钱包。v1 只恢复用户之前选择的钱包，并且只在明确启用时自动连接。
+
+### 3. 交易生命周期
+
+状态：完成。v1 包含确认 helper 和响应式交易状态，因此应用可以从签名到确认或超时展示进度。
+
+### 4. 响应式账户数据
+
+状态：完成。v1 包含账户和签名状态 composable，例如 `useAccountInfo()` 和 `useSignatureStatus()`，并安全清理订阅。
+
+### 5. 消息签名和能力
+
+状态：完成。v1 包含使用 `signMessage`、`useSignMessage()` 和 Nuxt `useSolanaSignMessage()` 自动导入的钱包消息签名。活跃钱包和已发现钱包的能力 helper 让应用可以为连接、断开连接、消息签名和交易签名支持渲染正确 UI。
+
+### 6. 错误模型
+
+状态：完成。v1 会把常见失败（例如未选择钱包、不支持功能、用户拒绝、无效地址、超时、存储失败和 RPC 失败）规范化为稳定的 `SolanaError` code，便于面向用户的 UI 使用。
+
+### 7. 桌面原生钱包决策
+
+状态：完成。桌面原生钱包支持明确推迟到 v1 之后，并保留为 post-v1 候选项。v1 通过 `useWallets()` 和 `useWallet()` 保持统一的钱包选择，不新增桌面原生专用公共流程。
+
+### 8. 文档、示例和测试
+
+状态：完成。文档应用是 v1 用法的主要事实来源。先阅读[开始使用](/zh/getting-started)，再使用 [`@vue-solana/core`](/zh/packages/core)、[`@vue-solana/vue`](/zh/packages/vue) 和 [`@vue-solana/nuxt`](/zh/packages/nuxt) 的包参考查看公共 API。[钱包](/zh/guides/wallets)、[交易](/zh/guides/transactions)、[账户读取](/zh/guides/account-reads)、[消息签名](/zh/guides/message-signing) 和[错误](/zh/guides/errors)指南覆盖稳定 v1 工作流，不需要查看源代码。
+
+[Vue Vite 示例](/zh/examples/vue-vite)和 [Nuxt 示例](/zh/examples/nuxt)演示 devnet 优先用法、持久化钱包选择、钱包能力检查、消息签名、交易提交、确认状态、explorer 链接和不支持能力的 UI 路径。单元测试和 Wallet Standard E2E 覆盖位于仓库测试套件中；标记 v1 前请运行下面的验证命令。
+
+## Post-v1 候选项
+
+这些功能有价值，但不应阻塞第一个稳定版本：
+
+- SPL token helper。
+- Anchor provider 和 program helper。
+- 钱包 modal 或 UI 包。
+- Nuxt 服务端 RPC 工具。
+- 桌面原生钱包支持。
+- 额外的 iOS 钱包 provider。
+- 高级 program account 索引模式。
+- RPC provider failover 和限流处理。
+
+## v1 前验证
+
+标记稳定版本前，请运行完整本地验证套件：
+
+```sh
+pnpm lint
+pnpm format
+pnpm test
+pnpm typecheck
+pnpm build:packages
+pnpm test:e2e
+```
+
+需要时也可以手动运行真实网络 E2E：
 
 ```sh
 pnpm test:e2e:integration
