@@ -1,6 +1,7 @@
 ---
 title: "Account Reads"
 description: Read balances, account data, program accounts, and signature status safely from Vue or Nuxt.
+ogSection: Guides
 surroundOrder: 10
 ---
 
@@ -94,7 +95,7 @@ const { accounts, loading, error, refresh } = useProgramAccounts(programId, {
 </script>
 ```
 
-Program account scans can be expensive. Use narrow filters, `dataSlice`, caching, pagination, indexing, or dedicated RPC infrastructure for production reads.
+> Warning: Program account scans can be expensive. Use narrow filters, `dataSlice`, caching, pagination, indexing, or dedicated RPC infrastructure for production reads.
 
 ## Read Signature Status
 

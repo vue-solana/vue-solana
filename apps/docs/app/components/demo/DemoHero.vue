@@ -11,20 +11,18 @@ defineProps<{
     <p
       class="mb-2 text-xs font-black uppercase tracking-[0.18em] text-violet-700 dark:text-violet-300"
     >
-      Live Devnet Demo
+      {{ $t("demo.hero.eyebrow") }}
     </p>
     <h1
       class="max-w-[13ch] text-5xl font-black tracking-[-0.06em] text-slate-950 sm:text-7xl dark:text-white"
     >
-      Vue Solana in a real Nuxt app
+      {{ $t("demo.hero.title") }}
     </h1>
     <p class="mt-4 max-w-3xl text-base leading-7 text-slate-600 dark:text-slate-300">
-      This page runs against the published Vue Solana packages. Try RPC reads, balance lookup,
-      Wallet Standard discovery, connect/disconnect, message signing, and a tiny real devnet
-      transfer.
+      {{ $t("demo.hero.description") }}
     </p>
 
-    <dl class="mt-5 flex flex-wrap gap-3" aria-label="Vue Solana package versions">
+    <dl class="mt-5 flex flex-wrap gap-3" :aria-label="$t('demo.hero.versionsLabel')">
       <div
         v-for="pkg in packageVersions"
         :key="pkg.name"

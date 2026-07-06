@@ -1,6 +1,7 @@
 ---
 title: Getting Started
 description: Install Vue Solana packages, configure Vue or Nuxt, and test RPC reads on devnet.
+ogSection: Start Here
 surroundOrder: 2
 ---
 
@@ -39,8 +40,6 @@ pnpm add @vue-solana/vue
 ```sh
 npm install @vue-solana/vue
 ```
-
-For local workspace development inside this monorepo, the examples use workspace links instead of published versions.
 
 Vue apps can use `@vue-solana/vue/web3` and `@vue-solana/vue/buffer-polyfill` without installing low-level Solana or Buffer packages directly.
 
@@ -192,19 +191,22 @@ Never use a wallet with real funds while testing.
 
 ## Run The Examples
 
-From the repository root:
+To run the example apps locally, clone the Vue Solana repository first:
 
 ```sh
+git clone https://github.com/vue-solana/vue-solana.git
+cd vue-solana
 pnpm install
 pnpm build:packages
-pnpm dev:vue
 ```
 
-For Nuxt:
+Start the Vue Vite example:
 
-```sh
-pnpm dev:nuxt
-```
+`pnpm dev:vue`
+
+Start the Nuxt example:
+
+`pnpm dev:nuxt`
 
 The examples demonstrate plugin/module setup, RPC state, direct connection calls, balance reads, unified wallet discovery, persisted wallet selection, wallet state, message signing, generic transaction state, transaction transfer flows, confirmation status, explorer links, and unsupported capability UI. They use devnet by default for safe testing.
 
@@ -351,8 +353,7 @@ Before relying on an app flow, verify these behaviors on devnet:
 
 - [Solana For Vue Developers](/concepts/solana-for-vue-developers)
 - [Clusters](/concepts/clusters)
-- [Wallets](/concepts/wallets)
-- [Wallet Guide](/guides/wallets)
+- [Wallets](/guides/wallets)
 - [Transaction Guide](/guides/transactions)
 - [Troubleshooting](/troubleshooting)
 - [Solana Documentation](https://solana.com/docs)

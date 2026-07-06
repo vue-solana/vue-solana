@@ -1,0 +1,102 @@
+# Vue Solana
+
+> Vue and Nuxt libraries that help developers use Solana from Vue applications.
+
+Official docs: https://vue-solana-docs.vercel.app
+Repository: https://github.com/vue-solana/vue-solana
+
+## Packages
+
+- @vue-solana/core: Framework-agnostic Solana config, endpoint helpers, wallet types, and transaction helpers.
+- @vue-solana/vue: Vue plugin and composables for RPC, wallets, balances, messages, signatures, and transactions.
+- @vue-solana/nuxt: Nuxt module that installs the Vue plugin and auto-imports composables.
+
+## Install
+
+```sh
+pnpm add @vue-solana/nuxt
+pnpm add @vue-solana/vue
+pnpm add @vue-solana/core
+```
+
+Install only the package needed by your app. Nuxt apps normally install @vue-solana/nuxt. Vue apps normally install @vue-solana/vue.
+
+## Docs
+
+- [Vue Solana Documentation](https://vue-solana-docs.vercel.app/): Documentation for Vue and Nuxt libraries that help developers use Solana.
+- [Documentación de Vue Solana](https://vue-solana-docs.vercel.app/es): Documentación para bibliotecas Vue y Nuxt que ayudan a los desarrolladores a usar Solana.
+- [Vue Solana 문서](https://vue-solana-docs.vercel.app/ko): 개발자가 Vue와 Nuxt 애플리케이션에서 Solana를 사용할 수 있도록 돕는 라이브러리 문서입니다.
+- [Vue Solana 文档](https://vue-solana-docs.vercel.app/zh): 帮助开发者在 Vue 和 Nuxt 中使用 Solana 的库文档。
+- [Primeros pasos](https://vue-solana-docs.vercel.app/es/getting-started): Instala los paquetes de Vue Solana, configura Vue o Nuxt y prueba lecturas RPC en devnet.
+- [Getting Started](https://vue-solana-docs.vercel.app/getting-started): Install Vue Solana packages, configure Vue or Nuxt, and test RPC reads on devnet.
+- [시작하기](https://vue-solana-docs.vercel.app/ko/getting-started): Vue Solana 패키지를 설치하고 Vue 또는 Nuxt를 설정한 뒤 devnet에서 RPC 읽기를 테스트합니다.
+- [开始使用](https://vue-solana-docs.vercel.app/zh/getting-started): 安装 Vue Solana 包、配置 Vue 或 Nuxt，并在 devnet 上测试 RPC 读取。
+- [Agent Skill](https://vue-solana-docs.vercel.app/agent-skill): Install the Vue Solana Agent Skill for AI coding agents.
+- [Skill de agente](https://vue-solana-docs.vercel.app/es/agent-skill): Instala la skill de Vue Solana para agentes de programación con IA.
+- [Agent Skill](https://vue-solana-docs.vercel.app/ko/agent-skill): Vue Solana 프로젝트와 패키지 사용자를 돕는 installable Agent Skill입니다.
+- [Agent Skill](https://vue-solana-docs.vercel.app/zh/agent-skill): 为 AI 编码代理安装 Vue Solana Agent Skill。
+- [Solución de problemas](https://vue-solana-docs.vercel.app/es/troubleshooting): Problemas comunes al instalar, compilar y usar Vue Solana.
+- [문제 해결](https://vue-solana-docs.vercel.app/ko/troubleshooting): Vue Solana 설치, TypeScript, 지갑, RPC, Nuxt 자동 import 문제를 해결합니다.
+- [Troubleshooting](https://vue-solana-docs.vercel.app/troubleshooting): Common setup, TypeScript, wallet, RPC, and Nuxt issues.
+- [故障排查](https://vue-solana-docs.vercel.app/zh/troubleshooting): 常见的安装、TypeScript、钱包、RPC 和 Nuxt 问题。
+- [Solana For Vue Developers](https://vue-solana-docs.vercel.app/concepts/solana-for-vue-developers): Practical Solana concepts for Vue and Nuxt developers.
+- [Solana para desarrolladores Vue](https://vue-solana-docs.vercel.app/es/concepts/solana-for-vue-developers): Cómo pensar en Solana desde aplicaciones Vue y Nuxt.
+- [Vue 개발자를 위한 Solana](https://vue-solana-docs.vercel.app/ko/concepts/solana-for-vue-developers): Vue와 Nuxt 개발자가 Solana 앱을 만들 때 알아야 할 핵심 개념입니다.
+- [面向 Vue 开发者的 Solana](https://vue-solana-docs.vercel.app/zh/concepts/solana-for-vue-developers): 面向 Vue 和 Nuxt 开发者的实用 Solana 概念。
+- [Clusters](https://vue-solana-docs.vercel.app/concepts/clusters): Solana cluster names, RPC endpoints, and faucet instructions.
+- [Clusters](https://vue-solana-docs.vercel.app/es/concepts/clusters): Nombres de clusters de Solana, endpoints RPC e instrucciones para faucets.
+- [클러스터](https://vue-solana-docs.vercel.app/ko/concepts/clusters): Solana 클러스터 이름, RPC 엔드포인트, 개발 환경 선택 방법입니다.
+- [集群](https://vue-solana-docs.vercel.app/zh/concepts/clusters): Solana 集群名称、RPC 端点和 faucet 使用说明。
+- [RPC y clusters](https://vue-solana-docs.vercel.app/es/guides/rpc-and-clusters): Configura clusters de Solana, endpoints RPC, endpoints WebSocket y helpers de conexión.
+- [RPC and Clusters](https://vue-solana-docs.vercel.app/guides/rpc-and-clusters): Configure Solana clusters, RPC endpoints, WebSocket endpoints, and connection helpers.
+- [RPC와 클러스터](https://vue-solana-docs.vercel.app/ko/guides/rpc-and-clusters): Vue Solana에서 클러스터, RPC 엔드포인트, connection helper를 설정합니다.
+- [RPC 和集群](https://vue-solana-docs.vercel.app/zh/guides/rpc-and-clusters): 配置 Solana 集群、RPC 端点、WebSocket 端点和 connection 工具。
+- [Wallets](https://vue-solana-docs.vercel.app/es/guides/wallets): Descubre wallets, selecciona una wallet activa, conecta, desconecta y comprueba capacidades.
+- [Wallets](https://vue-solana-docs.vercel.app/guides/wallets): Discover wallets, select an active wallet, connect, disconnect, and check capabilities.
+- [지갑](https://vue-solana-docs.vercel.app/ko/guides/wallets): Vue Solana의 unified wallet flow로 브라우저, 모바일, 커스텀 지갑을 다룹니다.
+- [钱包](https://vue-solana-docs.vercel.app/zh/guides/wallets): 发现钱包、选择活动钱包、连接、断开连接并检查能力。
+- [Lecturas de cuentas](https://vue-solana-docs.vercel.app/es/guides/account-reads): Lee balances, datos de cuenta, cuentas de programa y estado de firmas de forma segura desde Vue o Nuxt.
+- [Account Reads](https://vue-solana-docs.vercel.app/guides/account-reads): Read balances, account data, program accounts, and signature status safely from Vue or Nuxt.
+- [계정 읽기](https://vue-solana-docs.vercel.app/ko/guides/account-reads): Vue Solana에서 주소를 파싱하고 잔액, 계정 정보, 프로그램 계정을 읽습니다.
+- [账户读取](https://vue-solana-docs.vercel.app/zh/guides/account-reads): 从 Vue 或 Nuxt 安全读取余额、账户数据、program accounts 和签名状态。
+- [Transacciones](https://vue-solana-docs.vercel.app/es/guides/transactions): Firma, envía, confirma y maneja estado de transacciones con Vue Solana.
+- [Transactions](https://vue-solana-docs.vercel.app/guides/transactions): Sign, send, confirm, and handle transaction state with Vue Solana.
+- [트랜잭션](https://vue-solana-docs.vercel.app/ko/guides/transactions): Vue Solana에서 트랜잭션을 서명, 전송, 확인하고 오류를 처리합니다.
+- [交易](https://vue-solana-docs.vercel.app/zh/guides/transactions): 使用 Vue Solana 签名、发送、确认并处理交易状态。
+- [Firma de mensajes](https://vue-solana-docs.vercel.app/es/guides/message-signing): Firma mensajes de autenticación o propiedad sin crear transacciones on-chain.
+- [Message Signing](https://vue-solana-docs.vercel.app/guides/message-signing): Sign authentication or ownership messages without creating on-chain transactions.
+- [메시지 서명](https://vue-solana-docs.vercel.app/ko/guides/message-signing): 트랜잭션을 보내지 않고 지갑 소유권을 증명하는 메시지 서명 흐름입니다.
+- [消息签名](https://vue-solana-docs.vercel.app/zh/guides/message-signing): 签署认证或所有权消息，而不创建链上交易。
+- [Errores](https://vue-solana-docs.vercel.app/es/guides/errors): Maneja errores normalizados de Solana desde helpers core y composables Vue/Nuxt.
+- [Errors](https://vue-solana-docs.vercel.app/guides/errors): Handle normalized Solana errors from core helpers and Vue/Nuxt composables.
+- [오류](https://vue-solana-docs.vercel.app/ko/guides/errors): Vue Solana의 정규화된 SolanaError 코드와 사용자 친화적인 오류 처리 방법입니다.
+- [错误](https://vue-solana-docs.vercel.app/zh/guides/errors): 处理 core helper 和 Vue/Nuxt composable 返回的规范化 Solana 错误。
+- [@vue-solana/core](https://vue-solana-docs.vercel.app/es/packages/core): Configuración Solana independiente del framework, RPC, tipos de wallet y helpers de transacción.
+- [@vue-solana/core](https://vue-solana-docs.vercel.app/ko/packages/core): 프레임워크에 독립적인 Solana 설정, RPC, 지갑 타입, 트랜잭션 헬퍼입니다.
+- [@vue-solana/core](https://vue-solana-docs.vercel.app/packages/core): Framework-agnostic Solana configuration, RPC, wallet types, and transaction helpers.
+- [@vue-solana/core](https://vue-solana-docs.vercel.app/zh/packages/core): 框架无关的 Solana 配置、RPC、钱包类型和交易 helper。
+- [@vue-solana/vue](https://vue-solana-docs.vercel.app/es/packages/vue): Plugin de Vue y composables para usar Solana en aplicaciones Vue.
+- [@vue-solana/vue](https://vue-solana-docs.vercel.app/ko/packages/vue): Vue 앱을 위한 Solana 플러그인과 컴포저블입니다.
+- [@vue-solana/vue](https://vue-solana-docs.vercel.app/packages/vue): Vue plugin and composables for Solana applications.
+- [@vue-solana/vue](https://vue-solana-docs.vercel.app/zh/packages/vue): 用于 Solana 应用的 Vue 插件和 composable。
+- [@vue-solana/nuxt](https://vue-solana-docs.vercel.app/es/packages/nuxt): Módulo Nuxt para aplicaciones Solana.
+- [@vue-solana/nuxt](https://vue-solana-docs.vercel.app/ko/packages/nuxt): Nuxt 앱을 위한 Vue Solana 모듈과 자동 import 컴포저블입니다.
+- [@vue-solana/nuxt](https://vue-solana-docs.vercel.app/packages/nuxt): Nuxt module for Solana applications.
+- [@vue-solana/nuxt](https://vue-solana-docs.vercel.app/zh/packages/nuxt): 用于 Solana 应用的 Nuxt 模块。
+- [Ejemplo Vue Vite](https://vue-solana-docs.vercel.app/es/examples/vue-vite): Aplicación de ejemplo ejecutable para @vue-solana/vue con Vite.
+- [Vue Vite Example](https://vue-solana-docs.vercel.app/examples/vue-vite): Runnable Vue 3 and Vite example app for @vue-solana/vue.
+- [Vue Vite 예제](https://vue-solana-docs.vercel.app/ko/examples/vue-vite): Vue Solana의 Vue 3 Vite 예제 앱을 실행하고 테스트합니다.
+- [Vue Vite 示例](https://vue-solana-docs.vercel.app/zh/examples/vue-vite): 用于 @vue-solana/vue 的可运行 Vue 3 和 Vite 示例应用。
+- [Ejemplo Nuxt](https://vue-solana-docs.vercel.app/es/examples/nuxt): Aplicación de ejemplo ejecutable para @vue-solana/nuxt.
+- [Nuxt Example](https://vue-solana-docs.vercel.app/examples/nuxt): Runnable Nuxt example app for @vue-solana/nuxt.
+- [Nuxt 예제](https://vue-solana-docs.vercel.app/ko/examples/nuxt): Vue Solana의 Nuxt 예제 앱을 실행하고 테스트합니다.
+- [Nuxt 示例](https://vue-solana-docs.vercel.app/zh/examples/nuxt): 用于 @vue-solana/nuxt 的可运行 Nuxt 示例应用。
+- [Roadmap v1](https://vue-solana-docs.vercel.app/es/roadmap): Trabajo planificado antes de la primera versión estable de los paquetes Vue Solana.
+- [v1 로드맵](https://vue-solana-docs.vercel.app/ko/roadmap): Vue Solana v1까지의 완료된 작업과 향후 후보 작업입니다.
+- [v1 Roadmap](https://vue-solana-docs.vercel.app/roadmap): Planned feature work before the first stable Vue Solana package release.
+- [v1 路线图](https://vue-solana-docs.vercel.app/zh/roadmap): 第一个稳定 Vue Solana 包发布前计划完成的功能工作。
+
+## Crawling Notes
+
+- /demo is an interactive demo route and is intentionally excluded from robots.txt and sitemap.xml.
+- For full plain-text documentation, read https://vue-solana-docs.vercel.app/llms-full.txt.

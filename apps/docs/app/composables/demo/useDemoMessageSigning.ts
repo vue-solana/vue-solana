@@ -2,9 +2,10 @@ import { computed, shallowRef } from "vue";
 import { formatError } from "./errors";
 
 export function useDemoMessageSigning() {
+  const { t } = useI18n();
   const wallet = useSolanaWallet();
   const signMessage = useSolanaSignMessage();
-  const messageToSign = shallowRef("Sign in to Vue Solana on devnet");
+  const messageToSign = shallowRef(t("demo.messageSigning.defaultMessage"));
   const messageSigningError = shallowRef<unknown>(null);
 
   const canSignMessage = computed(() => wallet.canSignMessage.value);
@@ -13,19 +14,19 @@ export function useDemoMessageSigning() {
   );
   const messageSigningDisabledReason = computed(() => {
     if (!wallet.wallet.value) {
-      return "Select a discovered wallet first.";
+      return t("demo.messageSigning.disabled.selectWallet");
     }
 
     if (!wallet.connected.value) {
-      return "Connect the selected wallet to enable message signing.";
+      return t("demo.messageSigning.disabled.connectWallet");
     }
 
     if (!canSignMessage.value) {
-      return "Selected wallet does not support message signing.";
+      return t("demo.messageSigning.disabled.unsupported");
     }
 
     if (!messageToSign.value.trim()) {
-      return "Enter a message to sign.";
+      return t("demo.messageSigning.disabled.enterMessage");
     }
 
     return null;

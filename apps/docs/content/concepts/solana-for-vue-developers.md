@@ -1,6 +1,7 @@
 ---
 title: Solana For Vue Developers
 description: Practical Solana concepts for Vue and Nuxt developers.
+ogSection: Concepts
 surroundOrder: 5
 ---
 
@@ -59,7 +60,7 @@ A wallet stores keys and signs transactions. Browser extension wallets include P
 
 Vue Solana discovers Solana Wallet Standard browser extension wallets, Android Mobile Wallet Adapter wallets, and supported iOS browser wallet links through the unified `useWallets()` flow. RPC reads and balance reads work without a wallet. Connecting, signing, and sending transactions require a discovered wallet or custom object that implements the `SolanaWallet` interface.
 
-See [Wallets](/concepts/wallets) for current support and the desktop native wallet post-v1 status.
+See [Wallets](/guides/wallets) for current support and the desktop native wallet post-v1 status.
 
 ## Transactions And Signing
 

@@ -106,24 +106,40 @@ watch(() => flatLinkIds.value.join("\u0000"), refreshActiveHeading);
 <template>
   <UContentToc v-if="links.length" :links="links">
     <template #content>
-      <ul class="space-y-1">
-        <li v-for="{ link, level } in flatLinks" :key="link.id">
-          <a
-            :href="`#${encodeURIComponent(link.id)}`"
-            :aria-current="activeHeadingId === link.id ? 'location' : undefined"
-            class="block truncate rounded-md py-1 text-sm transition-colors"
-            :class="[
-              activeHeadingId === link.id
-                ? 'font-medium text-primary'
-                : 'text-muted hover:text-default',
-              level > 0 ? 'ps-4' : '',
-            ]"
-            @click="activeHeadingId = link.id"
-          >
-            {{ link.text }}
-          </a>
-        </li>
-      </ul>
+      <div class="relative min-w-0">
+        <div
+          data-slot="indicator"
+          class="absolute inset-s-0 top-0 ms-2.5 grid w-px overflow-hidden rounded-full"
+          :style="{ gridTemplateRows: `repeat(${flatLinks.length}, 1.75rem)` }"
+        >
+          <div
+            v-for="{ link } in flatLinks"
+            :key="link.id"
+            data-slot="indicatorSegment"
+            class="h-7 w-full"
+            :class="activeHeadingId === link.id ? 'bg-primary' : 'bg-border'"
+          />
+        </div>
+
+        <ul class="ms-2.5 min-w-0 ps-4">
+          <li v-for="{ link, level } in flatLinks" :key="link.id" class="-ms-px h-7 min-w-0">
+            <a
+              :href="`#${encodeURIComponent(link.id)}`"
+              :aria-current="activeHeadingId === link.id ? 'location' : undefined"
+              class="block h-7 min-w-0 max-w-full truncate rounded-md text-sm leading-7 transition-colors"
+              :class="[
+                activeHeadingId === link.id
+                  ? 'font-medium text-primary'
+                  : 'text-muted hover:text-default',
+                level > 0 ? 'ps-4' : '',
+              ]"
+              @click="activeHeadingId = link.id"
+            >
+              {{ link.text }}
+            </a>
+          </li>
+        </ul>
+      </div>
     </template>
   </UContentToc>
 </template>

@@ -1,8 +1,11 @@
 ---
 title: Troubleshooting
 description: Common setup, TypeScript, wallet, RPC, and Nuxt issues.
+ogSection: Support
 surroundOrder: 4
 ---
+
+Use this guide to diagnose the most common Vue Solana setup issues across Vue, Nuxt, TypeScript, wallet discovery, RPC calls, and transactions. Start with the error message or behavior that matches your app, then follow the checks in order before opening an issue.
 
 ## TypeScript Cannot Resolve `@solana/web3-compat`
 

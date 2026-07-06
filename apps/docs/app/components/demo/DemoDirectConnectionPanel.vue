@@ -11,18 +11,25 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <DemoPanel eyebrow="useSolanaConnection" title="Direct Connection Call">
+  <DemoPanel eyebrow="useSolanaConnection" :title="$t('demo.directConnection.title')">
     <p class="mb-4 text-sm leading-6 text-slate-600 dark:text-slate-300">
-      Calls <code>connection.getLatestBlockhash()</code> directly from the injected connection.
+      <i18n-t keypath="demo.directConnection.description" tag="span">
+        <template #method>
+          <code>connection.getLatestBlockhash()</code>
+        </template>
+      </i18n-t>
     </p>
     <UButton type="button" :loading="loading" color="primary" variant="soft" @click="emit('load')">
-      Load Blockhash
+      {{ $t("demo.directConnection.load") }}
     </UButton>
     <p
       v-if="blockhash"
       class="mt-4 [overflow-wrap:anywhere] text-sm text-slate-600 dark:text-slate-300"
     >
-      <strong class="text-slate-950 dark:text-white">Blockhash:</strong> {{ blockhash }}
+      <strong class="text-slate-950 dark:text-white">{{
+        $t("demo.directConnection.blockhash")
+      }}</strong>
+      {{ blockhash }}
     </p>
     <UAlert v-if="error" class="mt-4" color="error" variant="subtle" :description="error" />
   </DemoPanel>

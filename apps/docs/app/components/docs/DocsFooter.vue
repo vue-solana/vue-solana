@@ -10,14 +10,14 @@ const copyrightYear = 2026;
       class="mx-auto flex w-full max-w-[1180px] flex-wrap items-center justify-between gap-2 px-4 py-3 text-xs text-muted sm:px-6 lg:px-8"
     >
       <p>
-        &copy; {{ copyrightYear }} Vue Solana. Released under the
+        &copy; {{ copyrightYear }} Vue Solana. {{ $t("footer.releasedUnder") }}
         <NuxtLink
           to="https://github.com/vue-solana/vue-solana/blob/main/LICENSE"
           target="_blank"
           rel="noopener noreferrer"
           class="inline-flex items-center gap-1"
         >
-          MIT License. <UIcon name="i-ph-arrow-up-right" class="w-4 h-4" />
+          {{ $t("footer.mitLicense") }} <UIcon name="i-ph-arrow-up-right" class="w-4 h-4" />
         </NuxtLink>
       </p>
 

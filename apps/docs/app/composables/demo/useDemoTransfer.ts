@@ -4,6 +4,7 @@ import { formatError } from "./errors";
 import { loadWeb3Compat, type Web3Compat } from "./web3Compat";
 
 export function useDemoTransfer() {
+  const { t } = useI18n();
   const connection = useSolanaConnection();
   const rpc = useSolanaRpc();
   const wallet = useSolanaWallet();
@@ -79,19 +80,19 @@ export function useDemoTransfer() {
   });
   const signAndSendDisabledReason = computed(() => {
     if (!wallet.wallet.value) {
-      return "Select a discovered wallet first.";
+      return t("demo.transfer.disabled.selectWallet");
     }
 
     if (!wallet.connected.value) {
-      return "Connect the selected wallet to enable transfers.";
+      return t("demo.transfer.disabled.connectWallet");
     }
 
     if (!recipientAddressValid.value) {
-      return "Enter a valid Solana recipient address.";
+      return t("demo.transfer.disabled.recipient");
     }
 
     if (!transferLamports.value) {
-      return "Enter an amount greater than 0 SOL.";
+      return t("demo.transfer.disabled.amount");
     }
 
     return null;

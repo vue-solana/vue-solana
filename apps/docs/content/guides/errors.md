@@ -1,6 +1,7 @@
 ---
 title: "Errors"
 description: Handle normalized Solana errors from core helpers and Vue/Nuxt composables.
+ogSection: Guides
 surroundOrder: 13
 ---
 

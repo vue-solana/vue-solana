@@ -1,8 +1,20 @@
 <script setup lang="ts">
 import { useDemoPage } from "~/composables/useDemoPage";
 
-useHead({
-  title: "Live Demo - Vue Solana",
+const { t } = useI18n();
+const title = computed(() => t("demo.seo.title"));
+const description = computed(() => t("demo.seo.description"));
+
+useSeoMeta({
+  title,
+  description,
+  ogTitle: title,
+  ogDescription: description,
+  ogSiteName: "Vue Solana",
+  ogType: "website",
+  twitterCard: "summary_large_image",
+  twitterTitle: title,
+  twitterDescription: description,
 });
 
 const {

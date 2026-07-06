@@ -1,6 +1,7 @@
 ---
 title: Agent Skill
 description: Install the Vue Solana Agent Skill for AI coding agents.
+ogSection: Tooling
 surroundOrder: 3
 ---
 
@@ -31,7 +32,7 @@ npx skills add vue-solana/vue-solana --list
 npx skills add vue-solana/vue-solana --global
 ```
 
-The CLI installs skills into `.claude/skills/` for the current project, or `~/.claude/skills/` when `--global` is used.
+The CLI installs skills into the skill directory for the agent you choose during installation. For Claude, that is `.claude/skills/` in the current project, or `~/.claude/skills/` when `--global` is used.
 
 ## What The Skill Covers
 

@@ -1,6 +1,7 @@
 ---
 title: "Transactions"
 description: Sign, send, confirm, and handle transaction state with Vue Solana.
+ogSection: Guides
 surroundOrder: 11
 ---
 
