@@ -87,6 +87,7 @@ Vue Solana es un conjunto de paquetes para crear aplicaciones Solana con Vue y N
 
 - [Ejemplo Vue Vite](/es/examples/vue-vite)
 - [Ejemplo Nuxt](/es/examples/nuxt)
+- [Demo interactiva](/es/demo)
 
 La demo interactiva sigue en inglés por ahora. La localización inicial cubre las páginas Markdown de documentación.
 

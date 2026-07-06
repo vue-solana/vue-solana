@@ -42,6 +42,10 @@ export default {
       github: "GitHub",
       npm: "npm",
     },
+    language: {
+      label: "Idioma",
+      change: "Cambiar idioma, el idioma actual es {language}",
+    },
   },
   search: {
     placeholder: "Buscar en la documentación...",
