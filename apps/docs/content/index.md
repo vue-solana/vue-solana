@@ -40,11 +40,9 @@ Vue Solana provides RPC setup, reactive account reads, balance reads, browser ex
 - [Vue Vite example](/examples/vue-vite)
 - [Nuxt example](/examples/nuxt)
 
-Run the docs site locally:
+## For Package Users
 
-```sh
-pnpm dev:docs
-```
+Start with [Getting Started](/getting-started) to install the Vue or Nuxt package in your own app. Use the [Live Demo](/demo) to try devnet RPC reads, wallet connection, message signing, and transfer flows before wiring the composables into your project.
 
 Official Solana references:
 

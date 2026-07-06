@@ -67,8 +67,6 @@ Direct subpaths:
 ```ts
 type SolanaCluster = "mainnet-beta" | "testnet" | "devnet" | "localnet";
 
-type SolanaChain = "solana:mainnet" | "solana:devnet" | "solana:testnet" | "solana:localnet";
-
 interface SolanaConfig {
   cluster?: SolanaCluster;
   endpoint?: string;
@@ -78,7 +76,7 @@ interface SolanaConfig {
 }
 ```
 
-Supported clusters are `mainnet-beta`, `testnet`, `devnet`, and `localnet`. `SolanaChain` is the Wallet Standard chain identifier derived from a cluster by `getSolanaChain()`. If `endpoint` is omitted, the package uses the public Solana RPC endpoint for the selected cluster. If `wsEndpoint` is omitted, it is derived from the RPC endpoint.
+Supported clusters are `mainnet-beta`, `testnet`, `devnet`, and `localnet`. Wallet helpers use Wallet Standard chain identifiers such as `solana:devnet`, which are derived from clusters by `getSolanaChain()`. If `endpoint` is omitted, the package uses the public Solana RPC endpoint for the selected cluster. If `wsEndpoint` is omitted, it is derived from the RPC endpoint.
 
 `autoConnect` defaults to `false`. When enabled through the Vue plugin or Nuxt module, Vue Solana reconnects only a wallet identity that the user previously selected and that is discovered again on the client. It stores only wallet identity metadata under `localStorage["vue-solana:selected-wallet"]`: `name`, and `platform`/`source` when available. It never stores private keys, session data, or transaction data, and it never connects an arbitrary installed wallet.
 
@@ -154,6 +152,12 @@ Current metadata values:
 - `protocol-link` is reserved for possible post-v1 desktop native wallet adapters.
 
 ## Wallet Standard Helpers
+
+```ts
+type SolanaChain = "solana:mainnet" | "solana:testnet" | "solana:devnet" | "solana:localnet";
+```
+
+`SolanaChain` is the Wallet Standard chain identifier used by wallet discovery, mobile wallet registration, iOS wallet links, and wallet adapter signing options. Use `getSolanaChain(cluster)` when you need to derive one from a configured Solana cluster.
 
 - `getSolanaChain(cluster)`: maps `mainnet-beta`, `devnet`, `testnet`, or `localnet` to a Solana Wallet Standard chain ID.
 - `isSolanaStandardWallet(wallet)`: checks whether a Wallet Standard wallet supports Solana.

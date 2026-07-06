@@ -5,6 +5,8 @@ ogSection: Support
 surroundOrder: 4
 ---
 
+Use this guide to diagnose the most common Vue Solana setup issues across Vue, Nuxt, TypeScript, wallet discovery, RPC calls, and transactions. Start with the error message or behavior that matches your app, then follow the checks in order before opening an issue.
+
 ## TypeScript Cannot Resolve `@solana/web3-compat`
 
 `@solana/web3-compat@0.0.21` currently has broken TypeScript metadata. Runtime imports still use the real package. Current Vue Solana packages publish temporary package-owned declaration shims, so the documented imports from `@vue-solana/core`, `@vue-solana/vue`, and `@vue-solana/nuxt` should typecheck without a consumer-local shim.

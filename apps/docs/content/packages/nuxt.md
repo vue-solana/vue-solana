@@ -88,7 +88,15 @@ The module auto-imports these composables from direct `@vue-solana/vue/*` subpat
 - `useSolanaSignMessage()`: signs off-chain authentication or ownership challenge messages.
 - `useSolanaSignAndSendTransaction()`: signs, sends, and optionally confirms transactions.
 
-These are Nuxt aliases for the Vue composables. Use the Nuxt names inside Nuxt apps so auto-imports work without explicit imports.
+These are Nuxt aliases for the Vue composables.
+
+The Vue package uses short names such as `useRpc()` because callers import them explicitly from `@vue-solana/vue/useRpc`.
+
+The Nuxt module exposes prefixed names such as `useSolanaRpc()` because auto-imported composables share the app-wide Nuxt namespace and should avoid collisions with app code or other modules.
+
+`useSolana()` is the exception because it is already namespaced and acts as the canonical context accessor in both Vue and Nuxt.
+
+Use the `useSolana*` names inside Nuxt apps so auto-imports work without explicit imports.
 
 Raw Solana primitives and the browser Buffer helper are explicit imports, not auto-imports:
 
