@@ -4,7 +4,22 @@ import { watchEffect } from "vue";
 
 import { createDocsPageStructuredData, serializeJsonLd } from "~/utils/structuredData";
 
+type LocaleOption = string | { code?: string };
+
+const getLocaleCode = (localeOption: LocaleOption) => {
+  return typeof localeOption === "string" ? localeOption : localeOption.code;
+};
+
+const getRouteLocaleCode = (path: string, localeCodes: string[]) => {
+  return localeCodes.find((code) => path === `/${code}` || path.startsWith(`/${code}/`));
+};
+
 const route = useRoute();
+const { locales } = useI18n();
+
+const localeCodes = computed(() =>
+  locales.value.map(getLocaleCode).filter((code): code is string => !!code),
+);
 
 const { data: page, status } = await useAsyncData(
   "page-" + route.path,
@@ -17,7 +32,26 @@ const { data: page, status } = await useAsyncData(
 
 const { data: surround } = useLazyAsyncData(
   "surround-" + route.path,
-  () => queryCollectionItemSurroundings("content", route.path).order("surroundOrder", "ASC"),
+  () => {
+    const routeLocaleCode = getRouteLocaleCode(route.path, localeCodes.value);
+    let query = queryCollectionItemSurroundings("content", route.path);
+
+    if (routeLocaleCode) {
+      const localeRoot = `/${routeLocaleCode}`;
+
+      query = query.orWhere((group) =>
+        group.where("path", "=", localeRoot).where("path", "LIKE", `${localeRoot}/%`),
+      );
+    } else {
+      for (const code of localeCodes.value) {
+        const localeRoot = `/${code}`;
+
+        query = query.where("path", "<>", localeRoot).where("path", "NOT LIKE", `${localeRoot}/%`);
+      }
+    }
+
+    return query.order("surroundOrder", "ASC");
+  },
   {
     watch: [() => route.path],
   },
