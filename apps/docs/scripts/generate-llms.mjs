@@ -53,7 +53,11 @@ function readFrontmatterValue(frontmatter, key) {
 }
 
 function routeFromFile(filePath) {
-  const path = relative(contentDir, filePath).split(sep).join("/").replace(/\.md$/, "");
+  const path = relative(contentDir, filePath)
+    .split(sep)
+    .join("/")
+    .replace(/\.md$/, "")
+    .replace(/^locales\//, "");
 
   if (path === "index") {
     return "/";
