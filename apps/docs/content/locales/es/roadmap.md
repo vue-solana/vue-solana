@@ -1,0 +1,90 @@
+---
+title: Roadmap v1
+description: Trabajo de funcionalidades planificado antes del primer lanzamiento estable de los paquetes Vue Solana.
+ogSection: Roadmap
+surroundOrder: 19
+---
+
+Vue Solana está actualmente en etapa pre-v1. Los paquetes ya son utilizables para configuración RPC, descubrimiento de wallets, conexión de wallet, lecturas de balance y flujos de transacciones en devnet, pero una versión v1 estable necesita algunas APIs más orientadas a producción.
+
+El tracker detallado de implementación está en [`docs/plans/v1-roadmap.md`](https://github.com/vue-solana/vue-solana/blob/main/docs/plans/v1-roadmap.md). Esta página resume el trabajo completado y restante del roadmap para desarrolladores de aplicaciones.
+
+## Objetivos de la versión v1
+
+- Exports públicos de paquetes y nombres de composables estables.
+- Comportamiento real para cada opción pública de configuración documentada.
+- Selección, reconexión, desconexión y manejo de funciones no soportadas de wallets de forma predecible.
+- Helpers de confirmación de transacciones además del envío de firmas.
+- Composables reactivos para cuentas y estado de firmas.
+- Soporte de firma de mensajes para flujos de wallet-auth.
+- Errores normalizados de wallet, transacción, RPC, timeout e input inválido.
+- Estado claro del soporte de wallets nativas de escritorio.
+- Ejemplos, docs de paquetes, tests y cobertura E2E actualizados.
+
+## Fases del roadmap
+
+### 1. Estabilización de API pública
+
+Estado: completo. Cada opción pública está implementada o eliminada antes de v1. `autoConnect` se incluye en v1 como comportamiento opt-in de reconexión para una identidad de wallet previamente seleccionada.
+
+### 2. Fundamentos de UX de wallet
+
+Estado: completo. La selección de wallet sobrevive recargas sin conectar wallets instaladas arbitrarias. v1 restaura solo la wallet que el usuario seleccionó previamente, y auto-conecta solo cuando está habilitado explícitamente.
+
+### 3. Ciclo de vida de transacciones
+
+Estado: completo. v1 incluye helpers de confirmación y estado reactivo de transacción para que las apps puedan mostrar progreso desde la firma hasta la confirmación o timeout.
+
+### 4. Datos reactivos de cuentas
+
+Estado: completo. v1 incluye composables de cuentas y estado de firmas como `useAccountInfo()` y `useSignatureStatus()`, con limpieza segura de suscripciones.
+
+### 5. Firma de mensajes y capacidades
+
+Estado: completo. v1 incluye firma de mensajes de wallet con `signMessage`, `useSignMessage()` y el autoimport de Nuxt `useSolanaSignMessage()`. Los helpers de capacidades para wallet activa y wallets descubiertas permiten que las apps rendericen la UI correcta para soporte de conexión, desconexión, firma de mensajes y firma de transacciones.
+
+### 6. Modelo de errores
+
+Estado: completo. v1 normaliza fallos comunes como ausencia de wallet seleccionada, función no soportada, rechazo del usuario, dirección inválida, timeout, fallo de storage y fallo RPC en códigos `SolanaError` estables para UI orientada al usuario.
+
+### 7. Decisión sobre wallets nativas de escritorio
+
+Estado: completo. El soporte de wallets nativas de escritorio queda explícitamente diferido de v1 y sigue siendo candidato post-v1. v1 mantiene la selección de wallets unificada mediante `useWallets()` y `useWallet()` sin agregar un flujo público específico para escritorio nativo.
+
+### 8. Documentación, ejemplos y tests
+
+Estado: completo. La app de docs es la fuente principal de verdad para el uso de v1. Empieza con [Primeros pasos](/getting-started), luego usa las referencias de paquetes para [`@vue-solana/core`](/packages/core), [`@vue-solana/vue`](/packages/vue) y [`@vue-solana/nuxt`](/packages/nuxt) para APIs públicas. Las guías [Wallets](/guides/wallets), [Transacciones](/guides/transactions), [Lecturas de cuentas](/guides/account-reads), [Firma de mensajes](/guides/message-signing) y [Errores](/guides/errors) cubren los flujos estables de v1 sin requerir inspección del código fuente.
+
+El [ejemplo Vue Vite](/examples/vue-vite) y el [ejemplo Nuxt](/examples/nuxt) demuestran uso devnet-first, selección persistida de wallet, checks de capacidades de wallet, firma de mensajes, envío de transacciones, estado de confirmación, links al explorador y rutas de UI para capacidades no soportadas. Los tests unitarios y la cobertura E2E de Wallet Standard viven en la suite de tests del repositorio; ejecuta los comandos de verificación siguientes antes de etiquetar v1.
+
+## Candidatos post-v1
+
+Estos son útiles, pero no deberían bloquear el primer lanzamiento estable:
+
+- Helpers de SPL token.
+- Helpers de Anchor provider y programas.
+- Un modal de wallet o paquete de UI.
+- Utilidades RPC de servidor para Nuxt.
+- Soporte de wallets nativas de escritorio.
+- Proveedores adicionales de wallets iOS.
+- Patrones avanzados de indexación de cuentas de programa.
+- Failover de proveedores RPC y manejo de límites de tasa.
+
+## Verificación antes de v1
+
+Antes de etiquetar una versión estable, ejecuta la suite completa de verificación local:
+
+```sh
+pnpm lint
+pnpm format
+pnpm test
+pnpm typecheck
+pnpm build:packages
+pnpm test:e2e
+```
+
+E2E de red real también puede ejecutarse manualmente cuando haga falta:
+
+```sh
+pnpm test:e2e:integration
+```

@@ -4,7 +4,24 @@ export default defineContentConfig({
   collections: {
     content: defineCollection({
       type: "page",
-      source: "**",
+      source: [
+        {
+          include: "**",
+          exclude: ["locales/**"],
+        },
+        {
+          include: "locales/es/**",
+          prefix: "/es",
+        },
+        {
+          include: "locales/ko/**",
+          prefix: "/ko",
+        },
+        {
+          include: "locales/zh/**",
+          prefix: "/zh",
+        },
+      ],
       schema: z.object({
         description: z.string().optional(),
         ogDescription: z.string().optional(),

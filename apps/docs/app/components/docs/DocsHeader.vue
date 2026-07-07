@@ -70,13 +70,21 @@ const languageDropdownItems = computed<LanguageDropdownItem[]>(() =>
 <template>
   <UHeader
     v-model:open="isMobileMenuOpen"
+    :to="localePath('/')"
     :ui="{
       root: 'sticky top-0 z-50 h-(--ui-header-height) border-default/70 bg-default/85 backdrop-blur supports-[backdrop-filter]:bg-default/75',
       container: 'mx-auto max-w-[1180px] px-4 sm:px-6 lg:px-8',
     }"
   >
     <template #title>
-      <DocsBrandLink />
+      <UColorModeImage
+        light="/VueSolana.png"
+        dark="/VueSolana-dark.png"
+        alt="Vue Solana Logo"
+        class="w-40 relative -left-2"
+        :width="160"
+        :height="42"
+      />
     </template>
 
     <UNavigationMenu
