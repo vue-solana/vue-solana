@@ -1,5 +1,16 @@
 # @vue-solana/vue
 
+## 1.0.0
+
+### Major Changes
+
+- 5564b3c: Release v1.0.0 of the vue-solana monorepo. Stabilized public API, wallet UX foundations, transaction lifecycle, reactive account data, message signing, and comprehensive error handling for Vue and Nuxt Solana integrations.
+
+### Patch Changes
+
+- Updated dependencies [5564b3c]
+  - @vue-solana/core@1.0.0
+
 ## 0.8.3
 
 ### Patch Changes
