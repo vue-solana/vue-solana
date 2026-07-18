@@ -120,10 +120,10 @@ The previous work added `@vue-solana/core/web3`, `@vue-solana/core/buffer-polyfi
 **Tasks:**
 
 - [x] Update `README.md` install guidance to remove unnecessary direct `@solana/web3-compat` and `buffer` installs when they are no longer required.
-- [x] Update `docs/getting-started.md`, API docs, troubleshooting docs, and wallet docs to prefer `@vue-solana/core/web3` for Solana primitives.
+- [x] Update `knowledge-bundle/guides/getting-started.md`, package docs, troubleshooting docs, and wallet docs to prefer `@vue-solana/core/web3` for Solana primitives.
 - [x] Replace manual `buffer/` snippets with `installSolanaBufferPolyfill()` where browser polyfill setup is needed.
 - [x] Update example app README files and source imports to match the new guidance.
-- [x] Update `docs/agent-skill.md` and `skills/vue-solana/SKILL.md` so install/import recommendations match the package docs.
+- [x] Update `knowledge-bundle/agent-skill.md` and `skills/vue-solana/SKILL.md` so install/import recommendations match the package docs.
 - [x] Keep direct `@solana/web3-compat` references only where explaining internals, legacy boundaries, or troubleshooting the upstream metadata issue.
 
 **Acceptance Criteria:**
@@ -145,14 +145,14 @@ The previous work added `@vue-solana/core/web3`, `@vue-solana/core/buffer-polyfi
 **Files Likely Touched:**
 
 - `README.md`
-- `docs/getting-started.md`
-- `docs/api.md`
-- `docs/api/core.md`
-- `docs/api/vue.md`
-- `docs/api/nuxt.md`
-- `docs/wallets.md`
-- `docs/troubleshooting.md`
-- `docs/agent-skill.md`
+- `knowledge-bundle/guides/getting-started.md`
+- `knowledge-bundle/packages/index.md`
+- `knowledge-bundle/packages/core.md`
+- `knowledge-bundle/packages/vue.md`
+- `knowledge-bundle/packages/nuxt.md`
+- `knowledge-bundle/guides/wallets.md`
+- `knowledge-bundle/guides/troubleshooting.md`
+- `knowledge-bundle/agent-skill.md`
 - `examples/vue-vite/README.md`
 - `examples/nuxt/README.md`
 - `examples/vue-vite/src/**/*.ts`
@@ -253,8 +253,8 @@ The previous work added `@vue-solana/core/web3`, `@vue-solana/core/buffer-polyfi
 - `types/web3-compat.d.ts`
 - `types/buffer.d.ts`
 - `README.md`
-- `docs/getting-started.md`
-- `docs/troubleshooting.md`
+- `knowledge-bundle/guides/getting-started.md`
+- `knowledge-bundle/guides/troubleshooting.md`
 
 **Estimated Scope:** Medium.
 
@@ -312,9 +312,9 @@ The previous work added `@vue-solana/core/web3`, `@vue-solana/core/buffer-polyfi
 - `examples/nuxt/package.json`
 - `examples/nuxt/app/app.vue`
 - `README.md`
-- `docs/getting-started.md`
-- `docs/api/vue.md`
-- `docs/api/nuxt.md`
+- `knowledge-bundle/guides/getting-started.md`
+- `knowledge-bundle/packages/vue.md`
+- `knowledge-bundle/packages/nuxt.md`
 - `skills/vue-solana/SKILL.md`
 - `.changeset/*.md`
 
@@ -333,7 +333,7 @@ The previous work added `@vue-solana/core/web3`, `@vue-solana/core/buffer-polyfi
 - [x] Include a transaction/raw-primitive usage case for `@vue-solana/core/web3`, `@vue-solana/vue/web3`, and `@vue-solana/nuxt/web3`.
 - [x] Include a Buffer helper usage case for `@vue-solana/core/buffer-polyfill`, `@vue-solana/vue/buffer-polyfill`, and `@vue-solana/nuxt/buffer-polyfill`.
 - [x] Ensure the smoke test fails if a consumer accidentally relies on workspace aliases, repo-local shims, or undeclared sibling package installs.
-- [x] Document the smoke command in `README.md` or `docs/getting-started.md` as the release-facing standalone install check.
+- [x] Document the smoke command in `README.md` or `knowledge-bundle/guides/getting-started.md` as the release-facing standalone install check.
 
 **Acceptance Criteria:**
 
@@ -357,7 +357,7 @@ The previous work added `@vue-solana/core/web3`, `@vue-solana/core/buffer-polyfi
 - `package.json`
 - `scripts/smoke-standalone-installs.mjs`
 - `test/**/*`
-- `docs/getting-started.md`
+- `knowledge-bundle/guides/getting-started.md`
 - `README.md`
 
 **Estimated Scope:** Medium.

@@ -1,15 +1,15 @@
 ---
-title: v1 路线图
-description: 第一个稳定 Vue Solana 包发布前计划完成的功能工作。
+title: 路线图
+description: Vue Solana 发布历史和计划中的 post-v1 工作。
 ogSection: 路线图
 surroundOrder: 19
 ---
 
-Vue Solana 目前仍处于 pre-v1 阶段。这些包已经可用于 RPC 设置、钱包发现、钱包连接、余额读取和 devnet 交易流程，但稳定的 v1 版本还需要一些更面向生产的 API。
+**v1.0.0 已发布。** 路线图的八个阶段全部完成。这些包已稳定可用于生产，包括 RPC 设置、钱包发现、钱包连接、余额读取、交易确认、账户读取、消息签名和规范化错误处理。
 
-详细实现跟踪位于 [`docs/plans/v1-roadmap.md`](https://github.com/vue-solana/vue-solana/blob/main/docs/plans/v1-roadmap.md)。本页面为应用开发者总结已完成和剩余的路线图工作。
+详细实现跟踪位于 [`plans/v1-roadmap.md`](https://github.com/vue-solana/vue-solana/blob/main/plans/v1-roadmap.md)。本页面为应用开发者总结已完成的 v1 工作和计划中的 post-v1 功能。
 
-## v1 发布目标
+## v1 功能（已发布）
 
 - 稳定的公共包导出和 composable 名称。
 - 每个文档化公共配置选项都有真实行为。
@@ -57,22 +57,30 @@ Vue Solana 目前仍处于 pre-v1 阶段。这些包已经可用于 RPC 设置�
 
 [Vue Vite 示例](/zh/examples/vue-vite)和 [Nuxt 示例](/zh/examples/nuxt)演示 devnet 优先用法、持久化钱包选择、钱包能力检查、消息签名、交易提交、确认状态、explorer 链接和不支持能力的 UI 路径。单元测试和 Wallet Standard E2E 覆盖位于仓库测试套件中；标记 v1 前请运行下面的验证命令。
 
-## Post-v1 候选项
+## Post-v1 计划
 
-这些功能有价值，但不应阻塞第一个稳定版本：
+### 第一层级：高价值生态系统集成
 
-- SPL token helper。
-- Anchor provider 和 program helper。
-- 钱包 modal 或 UI 包。
-- Nuxt 服务端 RPC 工具。
-- 桌面原生钱包支持。
+- SPL token 账户 helper 和 token 余额 composable。
+- 通过协议链接实现桌面原生钱包支持。
 - 额外的 iOS 钱包 provider。
-- 高级 program account 索引模式。
+
+### 第二层级：开发者体验改进
+
+- Anchor provider 和 program helper。
+- 专用的钱包 modal 或 UI 包。
+- Nuxt 服务端 RPC 工具用于服务端读取。
+
+### 第三层级：弹性和高级模式
+
 - RPC provider failover 和限流处理。
+- 高级 program account 索引模式和缓存。
+- 交易模拟 helper。
+- 用于实时链上数据的事件订阅抽象。
 
-## v1 前验证
+## 验证
 
-标记稳定版本前，请运行完整本地验证套件：
+标记版本前，请运行完整本地验证套件：
 
 ```sh
 pnpm lint
@@ -80,7 +88,7 @@ pnpm format
 pnpm test
 pnpm typecheck
 pnpm build:packages
-pnpm test:e2e
+pnpm smoke:standalone-installs
 ```
 
 需要时也可以手动运行真实网络 E2E：

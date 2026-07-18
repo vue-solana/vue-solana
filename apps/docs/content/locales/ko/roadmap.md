@@ -1,15 +1,15 @@
 ---
-title: v1 로드맵
-description: 첫 안정 Vue Solana 패키지 릴리스 전 계획된 기능 작업입니다.
+title: 로드맵
+description: Vue Solana 릴리스 이력과 계획된 post-v1 작업입니다.
 ogSection: 로드맵
 surroundOrder: 19
 ---
 
-Vue Solana는 현재 pre-v1입니다. 패키지는 이미 RPC 설정, 지갑 검색, 지갑 연결, 잔액 읽기, devnet 트랜잭션 플로에 사용할 수 있지만, 안정적인 v1 릴리스에는 몇 가지 프로덕션 지향 API가 더 필요합니다.
+**v1.0.0이 릴리스되었습니다.** 로드맵의 8단계가 모두 완료되었습니다. 패키지는 RPC 설정, 지갑 검색, 지갑 연결, 잔액 읽기, 트랜잭션 확인, 계정 읽기, 메시지 서명, 정규화된 오류 처리와 함께 프로덕션 사용이 안정적입니다.
 
-자세한 구현 트래커는 [`docs/plans/v1-roadmap.md`](https://github.com/vue-solana/vue-solana/blob/main/docs/plans/v1-roadmap.md)에 있습니다. 이 페이지는 애플리케이션 개발자를 위해 완료된 작업과 남은 로드맵 작업을 요약합니다.
+자세한 구현 트래커는 [`plans/v1-roadmap.md`](https://github.com/vue-solana/vue-solana/blob/main/plans/v1-roadmap.md)에 있습니다. 이 페이지는 애플리케이션 개발자를 위해 완료된 v1 작업과 계획된 post-v1 기능을 요약합니다.
 
-## v1 릴리스 목표
+## v1 기능 (릴리스됨)
 
 - 안정적인 public package export와 컴포저블 이름입니다.
 - 문서화된 모든 public 설정 옵션의 실제 동작 또는 v1 전 제거입니다.
@@ -57,22 +57,30 @@ Vue Solana는 현재 pre-v1입니다. 패키지는 이미 RPC 설정, 지갑 검
 
 [Vue Vite 예제](/examples/vue-vite)와 [Nuxt 예제](/examples/nuxt)는 devnet-first 사용, 지갑 선택 persistence, 지갑 capability 확인, 메시지 서명, 트랜잭션 제출, confirmation status, explorer 링크, unsupported-capability UI path를 보여 줍니다. Unit test와 Wallet Standard E2E coverage는 저장소 test suite에 있습니다. v1 태그 전 아래 검증 명령을 실행하세요.
 
-## v1 이후 후보
+## Post-v1 계획
 
-첫 안정 릴리스를 막지 않아야 하지만 유용한 후보입니다.
+### 티어 1: 높은 가치의 생태계 통합
 
-- SPL token 헬퍼입니다.
-- Anchor provider 및 program 헬퍼입니다.
-- 지갑 modal 또는 UI 패키지입니다.
-- Nuxt server RPC utility입니다.
-- Desktop native wallet 지원입니다.
-- 추가 iOS wallet provider입니다.
-- 고급 program account indexing 패턴입니다.
-- RPC provider failover와 rate-limit 처리입니다.
+- SPL token 계정 헬퍼와 토큰 잔액 컴포저블.
+- 프로토콜 링크를 통한 desktop native wallet 지원.
+- 추가 iOS wallet provider.
 
-## v1 전 검증
+### 티어 2: 개발자 경험 개선
 
-안정 릴리스 태그 전 전체 로컬 검증 suite를 실행하세요.
+- Anchor provider 및 program 헬퍼.
+- 전용 지갑 modal 또는 UI 패키지.
+- 서버 측 읽기를 위한 Nuxt server RPC 유틸리티.
+
+### 티어 3: 복원력과 고급 패턴
+
+- RPC provider failover와 rate-limit 처리.
+- 고급 program account indexing 패턴과 캐싱.
+- 트랜잭션 시뮬레이션 헬퍼.
+- 실시간 온체인 데이터를 위한 이벤트 구독 추상화.
+
+## 검증
+
+전체 로컬 검증 suite를 릴리스 태그 전에 실행하세요.
 
 ```sh
 pnpm lint
@@ -80,7 +88,7 @@ pnpm format
 pnpm test
 pnpm typecheck
 pnpm build:packages
-pnpm test:e2e
+pnpm smoke:standalone-installs
 ```
 
 필요하면 real-network E2E도 수동으로 실행할 수 있습니다.

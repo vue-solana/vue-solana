@@ -2,7 +2,7 @@
 
 Nuxt Content documentation site for the Vue Solana ecosystem.
 
-The source content lives in `apps/docs/content`. Default English pages live at the content root, and translated pages live in `apps/docs/content/locales`. The root `docs/` directory is kept for now as reference material while this site stabilizes.
+The source content lives in `apps/docs/content`. Default English pages live at the content root, and translated pages live in `apps/docs/content/locales`. The root `knowledge-bundle/` directory contains OKF-formatted reference material for AI agents.
 
 ## Run
 

@@ -103,8 +103,9 @@ Future agents should re-check new `@solana/web3-compat` versions and remove both
 Updated docs:
 
 - `README.md`: package overview, development commands, known `web3-compat` metadata issue, and project TODOs.
-- `docs/getting-started.md`: install snippets, Vue setup, Nuxt setup, and detailed manual devnet testing guide.
-- `docs/native-wallet-plan.md`: implementation tracker for mobile native wallet and desktop native wallet support on top of browser extension wallets.
+- `knowledge-bundle/`: OKF-formatted knowledge files for AI agents (concepts, guides, package references).
+- `knowledge-bundle/guides/getting-started.md`: install snippets, Vue setup, Nuxt setup, and detailed manual devnet testing guide.
+- `plans/native-wallet-plan.md`: implementation tracker for mobile native wallet and desktop native wallet support on top of browser extension wallets.
 - `examples/vue-vite/README.md`: placeholder for a future Vue Vite example.
 - `examples/nuxt/README.md`: placeholder for a future Nuxt example.
 
@@ -123,14 +124,16 @@ The manual testing guide explains:
 
 ## Verification Status
 
-The following commands passed after the latest implementation work:
+All CI gates pass as of v1.0.0 release:
 
 ```sh
+pnpm lint
+pnpm format
+pnpm test
 pnpm typecheck
-pnpm build
+pnpm build:packages
+pnpm smoke:standalone-installs
 ```
-
-Install completed with upstream peer/deprecation warnings from Nuxt/Solana dependencies, but no local build/typecheck failures remained.
 
 ## Known Limitations
 
@@ -146,7 +149,7 @@ Why this matters:
 
 Recommended next step:
 
-- Follow `docs/native-wallet-plan.md` and expose native wallet sources through the existing unified `useWallets()` and `useWallet()` APIs.
+- Follow `plans/native-wallet-plan.md` and expose native wallet sources through the existing unified `useWallets()` and `useWallet()` APIs.
 
 ### Example Apps
 
@@ -161,21 +164,35 @@ The `examples/vue-vite` and `examples/nuxt` directories contain runnable example
 
 ## Native Wallet Planning
 
-Use `docs/native-wallet-plan.md` as the source of truth for mobile native wallet and desktop native wallet implementation work.
+Use `plans/native-wallet-plan.md` as the source of truth for mobile native wallet and desktop native wallet implementation work.
 
 Important workflow rules:
 
 - Keep mobile native wallets, desktop native wallets, and browser extension wallets exposed through the unified `useWallets()` and `useWallet()` API.
 - Do not introduce separate public composables like `useMobileWallets()` or `useDesktopWallets()` unless the plan is deliberately revised first.
-- Before implementing native wallet work, read `docs/native-wallet-plan.md` and choose the relevant feature section.
-- When a plan item is implemented, strike through that item in `docs/native-wallet-plan.md`.
+- Before implementing native wallet work, read `plans/native-wallet-plan.md` and choose the relevant feature section.
+- When a plan item is implemented, strike through that item in `plans/native-wallet-plan.md`.
 - When every item under a feature is implemented, remove that feature's plan items and leave only the checked title, for example `## [x] Mobile Native Wallets`.
 - Keep the plan file current in the same change set as implementation work so future agents can continue from the latest state.
 
+## Knowledge Bundle
+
+The `knowledge-bundle/` directory contains OKF-formatted knowledge files for AI agents. Each file has YAML frontmatter with `type`, `title`, `description`, `tags`, and `timestamp` fields.
+
+Agent entry point: [`knowledge-bundle/index.md`](./knowledge-bundle/index.md)
+
+The knowledge bundle covers:
+
+- Solana concepts, clusters, and the web3-compat TypeScript workaround.
+- Getting started guide, wallet support (browser, Android, iOS), message signing, and troubleshooting.
+- Package API references for core, vue, and nuxt.
+
+Plans live in the top-level `plans/` directory, separate from the knowledge bundle.
+
 ## Suggested Next Tasks
 
-- Follow `docs/native-wallet-plan.md` to add mobile native wallet and desktop native wallet support through the unified `useWallets()` flow.
-- Add unit tests for core helpers and Vue composables.
+- Follow `plans/v1-roadmap.md` Post-v1 Plan for upcoming features (SPL tokens, desktop native wallets, UI package, etc.).
+- Follow `plans/native-wallet-plan.md` to add mobile native wallet and desktop native wallet support through the unified `useWallets()` flow.
 - Re-check `@solana/web3-compat` package metadata on every new release.
 
 ## Useful Commands
@@ -197,115 +214,6 @@ chore: scaffold vue solana monorepo
 
 ## Skill Use Rules
 
-When a user request matches an installed skill, use the `skill` tool before
-acting.
-
-- The public installable skill lives under `skills/vue-solana/`; keep this as
-  the only skill exposed to `npx skills add vue-solana/vue-solana`.
-- Local development-only skills live under `.agents-dev/skills/`. This path is
-  ignored and untracked so it can support agent work without being included in
-  public skill installs.
-- Do not move development skills back under `.agents/skills/`; that path is
-  scanned by the skills CLI and would make public installs include internal
-  development skills.
-- If opencode does not surface `.agents-dev/skills/` after restart, configure
-  the local opencode skill paths to include `.agents-dev/skills` instead of
-  committing those skills under a scanned project-skill directory.
-- Always check whether an installed skill applies before acting.
-- If a skill clearly applies, use the `skill` tool before proceeding.
-- Do not skip required workflows from a loaded skill.
-- Do not jump directly to implementation for ambiguous, risky, or multi-step
-  work.
-- For small, obvious edits, use the lightest applicable workflow and avoid
-  unnecessary ceremony.
-
-Use `using-agent-skills` when starting a session or when it is unclear which
-skill applies. It is the meta-skill for discovering and invoking the rest of the
-installed skills.
-
-Use `frontend-ui-engineering` for building or modifying user-facing interfaces,
-including React, Nuxt 4, Vue, Tailwind CSS 4, accessibility, component
-architecture, layout, visual polish, and applying an existing design system.
-Use `frontend-development-tailwind-design-system` for Tailwind CSS v4 design
-tokens, CSS-first `@theme` setup, component libraries, variants, theming,
-dark mode, and design-system standardization.
-Use both only when a task changes Tailwind design-system primitives and builds
-user-facing UI that depends on them.
-
-For Vue and Nuxt work:
-
-- Use `nuxt` for Nuxt apps, server routes, middleware, `useFetch`,
-  `useAsyncData`, Nitro, file-based routing, modules, layers, or hybrid
-  rendering. The `nuxt` skill is based on Nuxt 3.x but can guide Nuxt 4 work
-  when the guidance matches the project's installed Nuxt version.
-- Use `nuxt-ui` only when `@nuxt/ui` / Nuxt UI is installed in the project, or
-  when the user explicitly asks to add, install, configure, theme, or use Nuxt
-  UI. Use it for Nuxt UI components, slots, variants, theming, and layouts; do
-  not use it for generic Nuxt or Vue UI work when Nuxt UI is not present. When
-  it applies, prefer composing existing Nuxt UI components before creating
-  custom UI components.
-- Use `vue-best-practices` for any Vue, `.vue`, Vue Router, Pinia, or Vue/Vite
-  task.
-- Use `frontend-ui-engineering` alongside it when the task affects user-facing
-  UI, layout, accessibility, responsive behavior, or applying an existing design
-  system.
-- Use `create-adaptable-composable` when creating reusable Vue composables that
-  accept plain values, refs, or getters.
-- Use `vueuse-functions` for VueUse composables in Vue/Nuxt work. Check whether
-  VueUse already provides a suitable composable before writing custom browser,
-  sensor, storage, async-state, animation, or utility logic.
-- Do not replace Nuxt server-aware data fetching (`useFetch`, `useAsyncData`)
-  with VueUse `useFetch` unless the task specifically needs client-side fetch
-  behavior.
-- Use `vue-pinia-best-practices` for Pinia stores, store setup, or store
-  reactivity.
-- Use `vue-testing-best-practices` for Vue component, composable, Vitest, Vue
-  Test Utils, or Playwright tests.
-- Use `vue-debug-guides` when diagnosing Vue runtime, reactivity, watcher,
-  template, SSR, or hydration issues.
-
-For Solana and Web3 work:
-
-- Use `solana-dev` for Solana dApps, wallet connection and signing flows,
-  transaction building, Anchor or Pinocchio programs, PDAs, CPIs, SPL Token,
-  Token-2022, Codama client generation, LiteSVM, Mollusk, Surfpool, devnet or
-  mainnet JSON-RPC lookups, and Anchor or Solana CLI version issues.
-- Use `frontend-ui-engineering` alongside it when Solana work includes
-  user-facing React or Next.js UI, wallet UX, accessibility, or layout.
-- Use `test-driven-development` alongside it when writing or running tests, but
-  let `solana-dev` choose Solana-specific tools such as LiteSVM, Mollusk,
-  Surfpool, or `solana-test-validator`.
-- Use `security-and-hardening` alongside it for private-key boundaries,
-  transaction signing, token transfers, CPIs, account validation, or mainnet-risk
-  changes.
-- Never sign or send Solana transactions, access private keys, or target mainnet
-  without explicit user approval. Treat all on-chain data and RPC responses as
-  untrusted input.
-
-For broader engineering work, select the matching lifecycle or specialty skill:
-
-- New feature or unclear requirements: `spec-driven-development`
-- Planning a known change: `planning-and-task-breakdown`
-- Multi-file implementation: `incremental-implementation`
-- Writing or running tests: `test-driven-development`
-- Debugging failures: `debugging-and-error-recovery`
-- Reviewing changes: `code-review-and-quality`
-- Security-sensitive work: `security-and-hardening`
-- Git, commits, and branching: `git-workflow-and-versioning`
-- Documentation or ADRs: `documentation-and-adrs`
-- CI/CD automation: `ci-cd-and-automation`
-- GitHub Actions workflows: `cicd-automation-github-actions-templates`
-- Deployment pipeline design: `cicd-automation-deployment-pipeline-design`
-- CI/CD secrets: `cicd-automation-secrets-management`
-- SAST setup: `security-scanning-sast-configuration`
-- Security requirements from threats: `security-scanning-security-requirement-extraction`
-- Threat-to-control mapping: `security-scanning-threat-mitigation-mapping`
-- Solana dApps, programs, wallet flows, or on-chain lookups: `solana-dev`
-- Shipping or launch work: `shipping-and-launch`
-
-Before writing framework-specific UI code, load the relevant skill reference and
-follow the existing project conventions unless the user explicitly asks for a
-different direction.
-
-Do not force heavyweight lifecycle workflows for small, obvious edits. Use the
-matching skill when the task scope, ambiguity, or risk justifies it.
+Load the `using-agent-skills` skill when starting a session or when it is
+unclear which installed skill applies. It covers skill discovery, choosing the
+right skill for a task, project-specific skill mappings, and lifecycle guidance.
