@@ -33,12 +33,6 @@ describe("documented package subpaths", () => {
     const expected = getExportedSubpaths("../package.json");
 
     expect(
-      getBacktickedListAfter(
-        "../../../docs/api/core.md",
-        "The root export remains supported. Direct subpath exports",
-      ),
-    ).toEqual(expected);
-    expect(
       getBacktickedListAfter("../../../apps/docs/content/packages/core.md", "Direct subpaths:"),
     ).toEqual(expected);
   });
@@ -46,9 +40,6 @@ describe("documented package subpaths", () => {
   it("keeps Vue package docs aligned with the package export map", () => {
     const expected = getExportedSubpaths("../../vue/package.json");
 
-    expect(
-      getBacktickedListAfter("../../../docs/api/vue.md", "Available package subpaths:"),
-    ).toEqual(expected);
     expect(
       getBacktickedListAfter(
         "../../../apps/docs/content/packages/vue.md",
@@ -60,9 +51,6 @@ describe("documented package subpaths", () => {
   it("keeps Nuxt package docs aligned with the package export map", () => {
     const expected = getExportedSubpaths("../../nuxt/package.json");
 
-    expect(
-      getBacktickedListAfter("../../../docs/api/nuxt.md", "Available package subpaths:"),
-    ).toEqual(expected);
     expect(
       getBacktickedListAfter(
         "../../../apps/docs/content/packages/nuxt.md",

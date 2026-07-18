@@ -1,6 +1,6 @@
 # Solana Pay QR Implementation Plan
 
-This document tracks the implementation plan for QR code scanning and Solana Pay support. It is separate from `docs/plans/v1-roadmap.md` because Solana Pay can ship independently from the v1 stabilization work.
+This document tracks the implementation plan for QR code scanning and Solana Pay support. It is separate from `plans/v1-roadmap.md` because Solana Pay can ship independently from the v1 stabilization work.
 
 The goal is to support Solana Pay payment QR flows in `@vue-solana/core`, `@vue-solana/vue`, and `@vue-solana/nuxt` without splitting the existing wallet API. Payment sending should continue to use the unified `useWallets()`, `useWallet()`, and `useSignAndSendTransaction()` flow.
 

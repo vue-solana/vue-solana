@@ -1,15 +1,15 @@
 ---
-title: Roadmap v1
-description: Trabajo de funcionalidades planificado antes del primer lanzamiento estable de los paquetes Vue Solana.
+title: Roadmap
+description: Historial de lanzamientos y trabajo post-v1 planificado de Vue Solana.
 ogSection: Roadmap
 surroundOrder: 19
 ---
 
-Vue Solana está actualmente en etapa pre-v1. Los paquetes ya son utilizables para configuración RPC, descubrimiento de wallets, conexión de wallet, lecturas de balance y flujos de transacciones en devnet, pero una versión v1 estable necesita algunas APIs más orientadas a producción.
+**La v1.0.0 ha sido lanzada.** Las ocho fases del roadmap están completas. Los paquetes son estables para producción con configuración RPC, descubrimiento de wallets, conexión de wallet, lecturas de balance, confirmación de transacciones, lecturas de cuentas, firma de mensajes y errores normalizados.
 
-El tracker detallado de implementación está en [`docs/plans/v1-roadmap.md`](https://github.com/vue-solana/vue-solana/blob/main/docs/plans/v1-roadmap.md). Esta página resume el trabajo completado y restante del roadmap para desarrolladores de aplicaciones.
+El tracker detallado de implementación está en [`plans/v1-roadmap.md`](https://github.com/vue-solana/vue-solana/blob/main/plans/v1-roadmap.md). Esta página resume el trabajo completado de v1 y las funcionalidades post-v1 planificadas para desarrolladores de aplicaciones.
 
-## Objetivos de la versión v1
+## Funcionalidades v1 (lanzadas)
 
 - Exports públicos de paquetes y nombres de composables estables.
 - Comportamiento real para cada opción pública de configuración documentada.
@@ -57,22 +57,30 @@ Estado: completo. La app de docs es la fuente principal de verdad para el uso de
 
 El [ejemplo Vue Vite](/examples/vue-vite) y el [ejemplo Nuxt](/examples/nuxt) demuestran uso devnet-first, selección persistida de wallet, checks de capacidades de wallet, firma de mensajes, envío de transacciones, estado de confirmación, links al explorador y rutas de UI para capacidades no soportadas. Los tests unitarios y la cobertura E2E de Wallet Standard viven en la suite de tests del repositorio; ejecuta los comandos de verificación siguientes antes de etiquetar v1.
 
-## Candidatos post-v1
+## Plan post-v1
 
-Estos son útiles, pero no deberían bloquear el primer lanzamiento estable:
+### Nivel 1: Integraciones de alto valor en el ecosistema
 
-- Helpers de SPL token.
-- Helpers de Anchor provider y programas.
-- Un modal de wallet o paquete de UI.
-- Utilidades RPC de servidor para Nuxt.
-- Soporte de wallets nativas de escritorio.
+- Helpers de cuentas SPL token y composables de balance de tokens.
+- Soporte de wallets nativas de escritorio mediante enlaces de protocolo.
 - Proveedores adicionales de wallets iOS.
-- Patrones avanzados de indexación de cuentas de programa.
+
+### Nivel 2: Mejoras en la experiencia de desarrollo
+
+- Helpers de Anchor provider y programas.
+- Un modal de wallet o paquete de UI dedicado.
+- Utilidades RPC de servidor para Nuxt para lecturas del lado del servidor.
+
+### Nivel 3: Resiliencia y patrones avanzados
+
 - Failover de proveedores RPC y manejo de límites de tasa.
+- Patrones avanzados de indexación de cuentas de programa y caché.
+- Helpers de simulación de transacciones.
+- Abstracciones de suscripción de eventos para datos on-chain en tiempo real.
 
-## Verificación antes de v1
+## Verificación
 
-Antes de etiquetar una versión estable, ejecuta la suite completa de verificación local:
+Ejecuta la suite completa de verificación local antes de etiquetar una versión:
 
 ```sh
 pnpm lint
@@ -80,7 +88,7 @@ pnpm format
 pnpm test
 pnpm typecheck
 pnpm build:packages
-pnpm test:e2e
+pnpm smoke:standalone-installs
 ```
 
 E2E de red real también puede ejecutarse manualmente cuando haga falta:

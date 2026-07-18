@@ -1,12 +1,24 @@
 # Vue Solana v1 Roadmap
 
-This document tracks the remaining feature work and release criteria for the first stable `@vue-solana/*` package release.
+This document tracked the feature work and release criteria for the first stable `@vue-solana/*` package release.
 
-The v1 goal is not to cover every Solana use case. The goal is to make the current core, Vue, and Nuxt packages stable enough that application developers can build production dapps without immediately outgrowing the public API.
+The v1 goal was not to cover every Solana use case. The goal was to make the current core, Vue, and Nuxt packages stable enough that application developers can build production dapps without immediately outgrowing the public API.
 
-## Release Criteria
+## Release Status
 
-Vue Solana is ready for v1 when these conditions are met:
+**v1.0.0 has been released.** All eight phases are complete and the changeset has been merged.
+
+Package versions at v1.0.0:
+
+| Package            | Version |
+| ------------------ | ------- |
+| `@vue-solana/core` | 1.0.0   |
+| `@vue-solana/vue`  | 1.0.0   |
+| `@vue-solana/nuxt` | 1.0.0   |
+
+## Release Criteria (historical)
+
+Vue Solana was ready for v1 when these conditions were met:
 
 - Public configuration options either work as documented or are removed before the stable release.
 - Wallet selection, reconnect behavior, signing, disconnecting, and unsupported-wallet paths are predictable and tested.
@@ -47,7 +59,7 @@ Tasks:
 Acceptance criteria:
 
 - No documented v1 option is described as reserved, planned, or unused.
-- Package README files, the `docs/api.md` index, and `docs/api/*` package pages agree on the public API surface.
+- Package README files, the `knowledge-bundle/packages/index.md` index, and `knowledge-bundle/packages/*` package pages agree on the public API surface.
 - Existing consumers can identify any breaking changes from changesets and changelogs.
 
 ## Phase 2: Wallet UX Foundations
@@ -176,7 +188,7 @@ Tasks:
 - [x] Research supported desktop native Solana wallet options and protocol-link behavior. Deferred from v1 because a minimal cross-wallet desktop native adapter is not required for the first stable release.
 - [x] Decide whether minimal desktop native wallet support is a v1 requirement. Decision: not required for v1.
 - [x] If included in v1, implement the smallest supported adapter through the existing `useWallets()` and `useWallet()` flow. Not applicable because desktop native support is deferred.
-- [x] If deferred, update README, package docs, docs app, and `docs/native-wallet-plan.md` to mark it as post-v1.
+- [x] If deferred, update README, package docs, docs app, and `plans/native-wallet-plan.md` to mark it as post-v1.
 - [x] Avoid adding separate public composables for desktop wallets unless the architecture is deliberately revised.
 - [x] Add tests or manual testing notes for whichever decision is made. No v1 adapter tests are required because no desktop native adapter ships in v1; manual v1 testing should verify that desktop native wallets are documented as unsupported/post-v1.
 
@@ -193,7 +205,7 @@ Every v1 feature should ship with docs and verification coverage.
 
 Tasks:
 
-- [x] Update `docs/api.md`, `docs/api/*`, and docs app package pages for every new public API.
+- [x] Update `knowledge-bundle/packages/index.md`, `knowledge-bundle/packages/*`, and docs app package pages for every new public API.
 - [x] Update the Vue Vite example with persisted wallet selection, transaction confirmation, and message signing examples.
 - [x] Update the Nuxt example with the same v1 flows using Nuxt auto-imports.
 - [x] Add mocked Wallet Standard E2E coverage for discovery, selection, connect, disconnect, and unsupported capabilities.
@@ -220,22 +232,33 @@ Acceptance criteria:
 
 The error model is listed after wallet persistence because implementation will reveal the most important wallet failure cases, but it should be completed before transaction and account composables are finalized.
 
-## Post-v1 Candidates
+## Post-v1 Plan
 
-These features are useful, but they should not block v1 unless product scope changes:
+These are the planned follow-up areas after v1. They are grouped into priority tiers. Each tier should be tackled sequentially, with smaller items within a tier able to proceed in parallel.
 
-- SPL token account helpers and token balance composables.
-- Anchor provider and program helpers.
-- A dedicated wallet modal or UI package.
-- Nuxt server RPC utilities for server-side reads.
-- Desktop native wallet support.
-- Additional iOS wallet providers such as Trust Wallet.
-- Advanced program account indexing patterns.
+### Tier 1: High-value ecosystem integrations
+
+- SPL token account helpers and token balance composables (`useTokenAccounts`, `useTokenBalance`).
+- Desktop native wallet support via protocol links (Phantom, Solflare deep links on desktop).
+- Additional iOS wallet providers (Trust Wallet, Backpack mobile).
+
+### Tier 2: Developer experience improvements
+
+- Anchor provider and program helpers for common on-chain program interactions.
+- A dedicated wallet modal or UI package (`@vue-solana/ui`) for drop-in wallet selection UI.
+- Nuxt server RPC utilities for server-side reads and SSR-safe data fetching.
+
+### Tier 3: Resilience and advanced patterns
+
 - RPC provider failover and rate-limit handling.
+- Advanced program account indexing patterns and caching strategies.
+- Transaction simulation helpers before signing.
+- Event subscription abstractions for real-time on-chain data.
 
 ## Tracking Rules
 
 - Keep this roadmap current when implementing v1 feature work.
 - Mark tasks complete in the same change set as the implementation.
-- Move deliberately deferred work to the Post-v1 Candidates section instead of leaving it ambiguous.
+- Move deliberately deferred work to the Post-v1 Plan section instead of leaving it ambiguous.
 - Add changesets for public package changes, but not for roadmap-only edits.
+- For post-v1 work, create separate plan files under `plans/` and link them from the Post-v1 Plan tier descriptions.

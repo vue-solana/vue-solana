@@ -1,3 +1,17 @@
+---
+type: Package Reference
+title: "@vue-solana/core API Reference"
+description: Framework-agnostic Solana primitives, config types, RPC connection helpers, wallet types, and transaction helpers.
+tags:
+  - core
+  - API
+  - configuration
+  - wallet
+  - transaction
+resource: https://github.com/vue-solana/vue-solana
+timestamp: 2025-07-17T00:00:00Z
+---
+
 # `@vue-solana/core` API Reference
 
 The root export remains supported. Direct subpath exports are also available when you want narrower imports:
@@ -132,7 +146,7 @@ Current metadata values:
 - iOS browser wallets use `platform: "mobile"` and `source: "deep-link"`.
 - `protocol-link` is reserved for possible post-v1 desktop native wallet adapters.
 
-For wallet behavior and platform support, see [Wallet Support](../wallets.md).
+For wallet behavior and platform support, see [Wallet Support](../guides/wallets.md).
 
 ## Helpers
 

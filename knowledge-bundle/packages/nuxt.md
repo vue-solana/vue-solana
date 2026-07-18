@@ -1,3 +1,16 @@
+---
+type: Package Reference
+title: "@vue-solana/nuxt API Reference"
+description: Nuxt module configuration, auto-imported composables, and explicit imports for Solana integration.
+tags:
+  - nuxt
+  - API
+  - module
+  - auto-imports
+resource: https://github.com/vue-solana/vue-solana
+timestamp: 2025-07-17T00:00:00Z
+---
+
 # `@vue-solana/nuxt` API Reference
 
 ## Module Config

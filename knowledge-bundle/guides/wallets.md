@@ -1,3 +1,17 @@
+---
+type: Guide
+title: Wallet Support
+description: Unified wallet discovery, selection, and connection through useWallets and useWallet in Vue Solana applications.
+tags:
+  - wallets
+  - browser-extension
+  - mobile
+  - useWallets
+  - useWallet
+resource: https://solana.com/docs
+timestamp: 2025-07-17T00:00:00Z
+---
+
 # Wallet Support
 
 Vue Solana exposes supported wallet sources through one flow: `useWallets()` for discovery and selection, then `useWallet()` for active wallet state and actions.
@@ -9,7 +23,7 @@ Current wallet support is built on these libraries:
 - iOS browser wallets: exposed as wallet-specific universal link entries for Phantom, Solflare, and Backpack on iOS browsers.
 - Solana primitives and transaction types: provided through `@vue-solana/vue/web3` for Vue apps, `@vue-solana/nuxt/web3` for Nuxt apps, and `@vue-solana/core/web3` for framework-agnostic core usage.
 
-Wallets such as Phantom, Solflare, Backpack, and other Solana Wallet Standard-compatible wallets can be discovered at runtime when they register with Wallet Standard. Android users can also see `Mobile Wallet Adapter` when browsing on supported Android Chrome runtimes with compatible native wallet apps. iOS browser users can see Phantom, Solflare, and Backpack universal-link entries even though Mobile Wallet Adapter web flows are not available on iOS.
+Wallets such as Phantom, Solflare, Backpack, and other Solana Wallet Standard-compatible wallets can be discovered at runtime when they register with Wallet Standard. Android users can also see `Mobile Wallet Adapter` when browsing on supported Android Chrome mobile web and PWA runtimes. iOS browser users can see Phantom, Solflare, and Backpack universal-link entries even though Mobile Wallet Adapter web flows are not available on iOS.
 
 ## Support Matrix
 
@@ -78,135 +92,6 @@ const { publicKey, connected, connecting, disconnecting, canSignMessage, connect
   </section>
 </template>
 ```
-
-## Message Signing For Authentication
-
-Use message signing for wallet-auth challenges only after a wallet is selected and connected, and only when `useWallet().canSignMessage` is true. Message signing proves that the connected wallet can sign a specific byte message; it does not sign or authorize a Solana transaction.
-
-```ts
-import { useSignMessage } from "@vue-solana/vue/useSignMessage";
-import { useWallet } from "@vue-solana/vue/useWallet";
-
-const wallet = useWallet();
-const signMessage = useSignMessage();
-
-async function signIn(nonce: string) {
-  if (!wallet.connected.value) {
-    throw new Error("Connect a wallet first");
-  }
-
-  if (!wallet.canSignMessage.value) {
-    throw new Error("Selected wallet does not support message signing");
-  }
-
-  const message = new TextEncoder().encode(`Sign in to example.com: ${nonce}`);
-  const result = await signMessage.execute(message);
-
-  return {
-    publicKey: wallet.publicKey.value?.toBase58(),
-    message: result.signedMessage,
-    signature: result.signature,
-  };
-}
-```
-
-Server-side auth flows should generate a fresh nonce, verify the returned signature against the exact signed message bytes and wallet public key, expire used nonces, and bind the challenge to your origin and intended action.
-
-## Android Mobile Wallets
-
-Android mobile wallet support uses `@solana-mobile/wallet-standard-mobile`. The Vue plugin registers Mobile Wallet Adapter during wallet refresh on supported Android Chrome clients. The registered adapter then appears as a standard wallet and is adapted through the same Wallet Standard adapter as browser extension wallets.
-
-Configure app identity when installing the Vue plugin:
-
-```ts
-createApp(App).use(
-  createSolanaPlugin({
-    cluster: "devnet",
-    mobileWallet: {
-      appIdentity: {
-        name: "My Vue Solana App",
-        uri: "https://example.com",
-        icon: "favicon.ico",
-      },
-    },
-  }),
-);
-```
-
-Disable Android mobile wallet registration if your app does not want it:
-
-```ts
-createApp(App).use(
-  createSolanaPlugin({
-    cluster: "devnet",
-    mobileWallet: false,
-  }),
-);
-```
-
-Platform notes:
-
-- Supported: Android Chrome and Android Chrome PWAs.
-- Not supported by MWA web: iOS Safari, iOS Chrome, Firefox Android, Brave Android, Opera Android, and desktop browsers.
-- The registration helper is SSR-safe and returns without registering when `window` is unavailable.
-- The mobile wallet package handles installed-wallet fallback UI through its default wallet-not-found handler.
-- Browsers may show a one-time Local Network Access prompt before MWA can connect to an installed wallet app.
-
-`SolanaWalletInfo.platform` is `"mobile"` and `SolanaWalletInfo.source` is `"mobile-wallet-adapter"` for the Android MWA wallet. Browser extension wallets use `platform: "browser"` and `source: "wallet-standard"`. iOS browser wallet entries use `platform: "mobile"` and `source: "deep-link"`.
-
-## iOS Browser Wallets
-
-iOS browser wallet support uses wallet-specific universal links because iOS browsers do not support Solana Mobile Wallet Adapter web flows. Vue Solana exposes Phantom, Solflare, and Backpack entries through the same `useWallets()` list on iOS browsers.
-
-Supported iOS wallet capabilities:
-
-| Wallet   | Connect | Sign message | Sign transaction | Sign all transactions | Sign and send transaction |
-| -------- | ------- | ------------ | ---------------- | --------------------- | ------------------------- |
-| Phantom  | Yes     | No           | Yes              | Yes                   | No                        |
-| Solflare | Yes     | No           | Yes              | Yes                   | Yes                       |
-| Backpack | Yes     | No           | Yes              | Yes                   | Yes                       |
-
-Phantom's `signAndSendTransaction` deeplink is deprecated by Phantom, so Vue Solana does not expose that capability for Phantom iOS entries.
-
-Configure app identity and callback URL when installing the Vue plugin:
-
-```ts
-createApp(App).use(
-  createSolanaPlugin({
-    cluster: "devnet",
-    iosWallet: {
-      appIdentity: {
-        name: "My Vue Solana App",
-        uri: "https://example.com",
-        icon: "https://example.com/favicon.ico",
-      },
-      redirectUrl: "https://example.com/wallet-callback",
-    },
-  }),
-);
-```
-
-Disable iOS browser wallet entries if your app does not want them:
-
-```ts
-createApp(App).use(
-  createSolanaPlugin({
-    cluster: "devnet",
-    iosWallet: false,
-  }),
-);
-```
-
-Callback notes:
-
-- Wallet apps redirect back to `redirectUrl` with encrypted callback data.
-- The Vue plugin handles callbacks during `refreshWallets()` and stores iOS wallet sessions in `sessionStorage`.
-- Apps with custom callback routes can also call `handleSolanaIosWalletCallback()` from `@vue-solana/core/ios-wallet`.
-- Pending iOS callback state expires after 10 minutes and is cleared after success, wallet errors, incomplete callbacks, decrypt failures, or invalid public keys.
-- iOS `connect()` opens a wallet app and waits for a redirect; the original promise does not resolve if the user cancels or never returns to the browser. Reflect that possibility in app UI.
-- Use an HTTPS callback URL for browser apps. Custom schemes are mainly for native apps.
-
-For Android MWA transaction sends, Vue Solana asks the mobile wallet to sign and then submits the signed transaction through the app's RPC connection when the wallet supports `signTransaction`. This keeps the returned signature under app control and avoids a mobile handoff edge case where the wallet sends successfully but the browser page does not receive the wallet adapter response.
 
 ## Real Transfer Flow
 
@@ -319,4 +204,10 @@ setWallet(wallet);
 - iOS browser wallet support is available for Phantom, Solflare, and Backpack through universal links. Capability support differs by wallet.
 - Desktop native app wallet support is not implemented yet. It requires wallet-specific protocol links or future native Wallet Standard registration.
 
-Planned wallet work is tracked in [`docs/native-wallet-plan.md`](./native-wallet-plan.md).
+Planned wallet work is tracked in [`plans/native-wallet-plan.md`](../../plans/native-wallet-plan.md).
+
+## Related
+
+- [Android Mobile Wallets](./wallet-android.md)
+- [iOS Browser Wallets](./wallet-ios.md)
+- [Message Signing For Authentication](./message-signing.md)

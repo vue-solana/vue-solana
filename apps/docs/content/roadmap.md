@@ -1,15 +1,15 @@
 ---
-title: v1 Roadmap
-description: Planned feature work before the first stable Vue Solana package release.
+title: Roadmap
+description: Vue Solana release history and planned post-v1 work.
 ogSection: Roadmap
 surroundOrder: 19
 ---
 
-Vue Solana is currently pre-v1. The packages are already usable for RPC setup, wallet discovery, wallet connection, balance reads, and devnet transaction flows, but a stable v1 release needs a few more production-oriented APIs.
+**v1.0.0 has been released.** All eight roadmap phases are complete. The packages are stable for production use with RPC setup, wallet discovery, wallet connection, balance reads, transaction confirmation, account reads, message signing, and normalized error handling.
 
-The detailed implementation tracker lives in [`docs/plans/v1-roadmap.md`](https://github.com/vue-solana/vue-solana/blob/main/docs/plans/v1-roadmap.md). This page summarizes completed and remaining roadmap work for application developers.
+The detailed implementation tracker lives in [`plans/v1-roadmap.md`](https://github.com/vue-solana/vue-solana/blob/main/plans/v1-roadmap.md). This page summarizes completed v1 work and planned post-v1 features for application developers.
 
-## v1 Release Goals
+## v1 Features (shipped)
 
 - Stable public package exports and composable names.
 - Real behavior for every documented public configuration option.
@@ -57,22 +57,30 @@ Status: complete. The docs app is the primary source of truth for v1 usage. Star
 
 The [Vue Vite example](/examples/vue-vite) and [Nuxt example](/examples/nuxt) demonstrate devnet-first usage, persisted wallet selection, wallet capability checks, message signing, transaction submission, confirmation status, explorer links, and unsupported-capability UI paths. Unit tests and Wallet Standard E2E coverage live in the repository test suite; run the verification commands below before tagging v1.
 
-## Post-v1 Candidates
+## Post-v1 Plan
 
-These are useful but should not block the first stable release:
+### Tier 1: High-value ecosystem integrations
 
-- SPL token helpers.
-- Anchor provider and program helpers.
-- A wallet modal or UI package.
-- Nuxt server RPC utilities.
-- Desktop native wallet support.
+- SPL token account helpers and token balance composables.
+- Desktop native wallet support via protocol links.
 - Additional iOS wallet providers.
-- Advanced program account indexing patterns.
+
+### Tier 2: Developer experience improvements
+
+- Anchor provider and program helpers.
+- A dedicated wallet modal or UI package.
+- Nuxt server RPC utilities for server-side reads.
+
+### Tier 3: Resilience and advanced patterns
+
 - RPC provider failover and rate-limit handling.
+- Advanced program account indexing patterns and caching.
+- Transaction simulation helpers.
+- Event subscription abstractions for real-time on-chain data.
 
-## Verification Before v1
+## Verification
 
-Before tagging a stable release, run the full local verification suite:
+Run the full local verification suite before tagging a release:
 
 ```sh
 pnpm lint
@@ -80,7 +88,7 @@ pnpm format
 pnpm test
 pnpm typecheck
 pnpm build:packages
-pnpm test:e2e
+pnpm smoke:standalone-installs
 ```
 
 Real-network E2E can also be run manually when needed:

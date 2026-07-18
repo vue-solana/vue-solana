@@ -31,7 +31,7 @@ Supported clusters:
 - `testnet`: validator and protocol testing network.
 - `localnet`: local validator, usually `http://127.0.0.1:8899`.
 
-Use `mainnet-beta` rather than `mainnet`. See [Solana Concepts For Vue Developers](./docs/solana-concepts.md) for more background.
+Use `mainnet-beta` rather than `mainnet`. See [Solana Concepts For Vue Developers](./knowledge-bundle/concepts/solana-for-vue-developers.md) for more background.
 
 ## Install
 
@@ -88,7 +88,7 @@ Use `useProgramAccounts()` carefully on public RPC nodes. Prefer narrow filters,
 
 ## Documentation
 
-The dedicated Nuxt Content docs app lives at [`apps/docs`](./apps/docs). It adapts the current root `docs/` material into a navigable documentation site for the full Vue Solana ecosystem.
+The dedicated Nuxt Content docs app lives at [`apps/docs`](./apps/docs). It adapts the current knowledge bundle material into a navigable documentation site for the full Vue Solana ecosystem.
 
 Live demo: [vue-solana-docs.vercel.app/demo](https://vue-solana-docs.vercel.app/demo)
 
@@ -113,21 +113,26 @@ Docs app pages:
 - [Nuxt example docs](./apps/docs/content/examples/nuxt.md)
 - [Troubleshooting](./apps/docs/content/troubleshooting.md)
 
-Root `docs/` is kept for now as reference material:
+Root `knowledge-bundle/` is kept as OKF-formatted reference material for AI agents:
 
-- [Getting Started](./docs/getting-started.md)
-- [Solana Concepts For Vue Developers](./docs/solana-concepts.md)
-- [API Reference](./docs/api.md)
-- [`@vue-solana/core` API](./docs/api/core.md)
-- [`@vue-solana/vue` API](./docs/api/vue.md)
-- [`@vue-solana/nuxt` API](./docs/api/nuxt.md)
-- [Wallet Support](./docs/wallets.md)
-- [v1 Roadmap](./docs/plans/v1-roadmap.md)
-- [Agent Skill](./docs/agent-skill.md)
-- [Troubleshooting](./docs/troubleshooting.md)
+- [Knowledge Bundle Index](./knowledge-bundle/index.md)
+- [Getting Started](./knowledge-bundle/guides/getting-started.md)
+- [Solana Concepts For Vue Developers](./knowledge-bundle/concepts/solana-for-vue-developers.md)
+- [API Reference](./knowledge-bundle/packages/index.md)
+- [`@vue-solana/core` API](./knowledge-bundle/packages/core.md)
+- [`@vue-solana/vue` API](./knowledge-bundle/packages/vue.md)
+- [`@vue-solana/nuxt` API](./knowledge-bundle/packages/nuxt.md)
+- [Wallet Support](./knowledge-bundle/guides/wallets.md)
+- [Troubleshooting](./knowledge-bundle/guides/troubleshooting.md)
+- [Agent Skill](./knowledge-bundle/agent-skill.md)
 - [`@vue-solana/core` README](./packages/core/README.md)
 - [`@vue-solana/vue` README](./packages/vue/README.md)
 - [`@vue-solana/nuxt` README](./packages/nuxt/README.md)
+
+Plans live in the top-level `plans/` directory:
+
+- [v1 Roadmap](./plans/v1-roadmap.md)
+- [Native Wallet Plan](./plans/native-wallet-plan.md)
 
 ## Agent Skill
 
@@ -149,7 +154,7 @@ npx skills add vue-solana/vue-solana --global
 
 Skill source: [`skills/vue-solana/SKILL.md`](./skills/vue-solana/SKILL.md)
 
-More details: [Agent Skill docs](./docs/agent-skill.md)
+More details: [Agent Skill docs](./knowledge-bundle/agent-skill.md)
 
 ## Development
 

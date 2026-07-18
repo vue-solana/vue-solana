@@ -1,3 +1,17 @@
+---
+type: Concept
+title: Solana Concepts For Vue Developers
+description: Practical overview of Solana terms, RPC, transactions, and commitment levels for Vue Solana application developers.
+tags:
+  - solana
+  - concepts
+  - RPC
+  - transactions
+  - commitment
+resource: https://solana.com/docs
+timestamp: 2025-07-17T00:00:00Z
+---
+
 # Solana Concepts For Vue Developers
 
 This page explains the Solana terms you will see when using the Vue Solana packages. It is intentionally practical rather than exhaustive.
@@ -8,19 +22,6 @@ Official references:
 - [Solana RPC Methods](https://solana.com/docs/rpc)
 - [Solana Clusters](https://solana.com/docs/references/clusters)
 - [Solana Wallet Adapter](https://github.com/anza-xyz/wallet-adapter)
-
-## Clusters
-
-A Solana cluster is a network of validators. Apps choose which cluster to connect to.
-
-Supported clusters in Vue Solana:
-
-- `mainnet-beta`: Solana mainnet. This is the official Solana cluster name. Use this for production apps and real SOL.
-- `devnet`: developer network. Use this while building apps. SOL on devnet has no real value.
-- `testnet`: validator and protocol testing network. It is less common for app development than devnet.
-- `localnet`: a local validator running on your machine, usually at `http://127.0.0.1:8899`.
-
-Use `mainnet-beta` rather than `mainnet`. Solana's canonical mainnet cluster name is `mainnet-beta`.
 
 ## RPC Endpoints
 
@@ -81,7 +82,7 @@ A wallet stores keys and signs transactions. Browser extension wallets include P
 
 Vue Solana discovers Solana Wallet Standard browser extension wallets and Android Mobile Wallet Adapter wallets through the unified `useWallets()` flow. RPC reads and balance reads work without a wallet. Connecting, signing, and sending transactions require a discovered wallet or custom object that implements the `SolanaWallet` interface.
 
-See [Wallet Support](./wallets.md) for current support, iOS browser wallet entries, and desktop native wallet limits.
+See [Wallet Support](../guides/wallets.md) for current support, iOS browser wallet entries, and desktop native wallet limits.
 
 ## Transactions And Signing
 

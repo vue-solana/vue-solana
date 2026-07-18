@@ -1,3 +1,17 @@
+---
+type: Package Reference
+title: "@vue-solana/vue API Reference"
+description: Vue plugin, provide/inject context, and composables for Solana wallet and RPC integration.
+tags:
+  - vue
+  - API
+  - plugin
+  - composables
+  - wallet
+resource: https://github.com/vue-solana/vue-solana
+timestamp: 2025-07-17T00:00:00Z
+---
+
 # `@vue-solana/vue` API Reference
 
 The root export remains supported for existing apps. For composables, prefer direct subpath imports in new code so bundlers do not need to evaluate the full Vue package barrel:
@@ -111,7 +125,7 @@ Returns discovered wallet metadata and selection actions. Browser extension wall
 
 `refreshWallets()` only updates discovered wallet metadata, and `selectWallet(wallet)` only chooses the active wallet. Call `connect()` from `useWallet()` to enter the connected state.
 
-For wallet behavior and platform support, see [Wallet Support](../wallets.md).
+For wallet behavior and platform support, see [Wallet Support](../guides/wallets.md).
 
 ## `useBalance(address, commitment?)`
 

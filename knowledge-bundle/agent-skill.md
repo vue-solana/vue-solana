@@ -1,3 +1,16 @@
+---
+type: Reference
+title: Agent Skill
+description: Installable Agent Skill for AI coding agents that provides Vue Solana setup patterns, wallet flow guidance, and verification commands.
+tags:
+  - agent-skill
+  - AI
+  - claude
+  - setup
+resource: https://github.com/vue-solana/vue-solana
+timestamp: 2025-07-17T00:00:00Z
+---
+
 # Agent Skill
 
 Vue Solana ships an installable Agent Skill for AI coding agents that support the Agent Skills format. The skill gives agents Vue Solana setup patterns, package selection rules, wallet flow guidance, Nuxt SSR caveats, transaction gotchas, and verification commands.
@@ -43,4 +56,4 @@ The CLI installs skills into `.claude/skills/` for the current project, or `~/.c
 
 ## Source
 
-The skill source is [`skills/vue-solana/SKILL.md`](../skills/vue-solana/SKILL.md).
+The skill source is [`skills/vue-solana/SKILL.md`](../../skills/vue-solana/SKILL.md).
