@@ -45,6 +45,7 @@ export function useTokenAccounts(
 
       if (!publicKey) {
         tokenAccounts.value = [];
+        loading.value = false;
         return [];
       }
 

@@ -193,6 +193,8 @@ The root `@vue-solana/core` export re-exports the public helpers below. Use dire
 | `@vue-solana/core/rpc`             | `createSolanaConnection()` and `createSolanaContext()`.                       | You want a configured `Connection` and resolved cluster endpoints without installing the Vue plugin.                |
 | `@vue-solana/core/timeout`         | Promise timeout helpers that produce Solana timeout errors.                   | You need timeout behavior consistent with transaction confirmation helpers.                                         |
 | `@vue-solana/core/transaction`     | Transaction send and confirmation helpers.                                    | You need a wallet-aware send path or a confirmation result for an existing signature.                               |
+| `@vue-solana/core/spl-token`       | SPL Token type re-exports (`TokenAccount`, `Mint`, program IDs).              | You need SPL Token types and constants without importing `@solana/spl-token` directly.                              |
+| `@vue-solana/core/token-accounts`  | Stateless SPL Token account helpers (`getTokenAccountsByOwner`, etc.).        | You need to fetch or unpack token accounts, or derive balances from associated token addresses.                     |
 | `@vue-solana/core/types`           | Shared TypeScript types.                                                      | You need `SolanaConfig`, `SolanaContext`, `SolanaWallet`, wallet metadata, or transaction option types.             |
 | `@vue-solana/core/wallet`          | Wallet state assertions and wallet capability errors.                         | You need to validate that a selected wallet is connected or supports signing before calling wallet methods.         |
 | `@vue-solana/core/wallet-standard` | Wallet Standard chain mapping, discovery, subscriptions, and adapter helpers. | You are building your own wallet discovery layer on top of Solana Wallet Standard.                                  |
@@ -249,6 +251,27 @@ import { confirmTransactionSignature, signAndSendTransaction } from "@vue-solana
 
 const signature = await signAndSendTransaction(connection, wallet, transaction);
 await confirmTransactionSignature(connection, signature, { commitment: "confirmed" });
+```
+
+### SPL Token
+
+- `TOKEN_PROGRAM_ID` and `TOKEN_2022_PROGRAM_ID`: program IDs for the original SPL Token and Token-2022 extensions.
+- `TokenAccount` (re-export of `Account`): unpacked token account state including `mint`, `owner`, `amount`, and delegation fields.
+- `Mint`: unpacked mint account state including `decimals`, `supply`, and authority fields.
+- `AccountState`: enum for token account state (`Uninitialized`, `Initialized`, `Frozen`).
+- `getTokenAccountsByOwner(connection, owner, options?)`: fetches and unpacks all token accounts for an owner, querying both Token and Token-2022 programs by default. Pass `programId` to limit to a single program.
+- `getTokenAccount(connection, address)`: fetches and unpacks a single token account. Returns `null` when the account does not exist.
+- `getTokenBalance(connection, mint, owner)`: derives the associated token address, fetches the token account and mint, and returns `{ amount, decimals }`. Returns `null` when the ATA or mint account does not exist.
+- `getAssociatedTokenAddressSync(mint, owner, allowOwnerOffCurve?)`: derives the associated token account address deterministically.
+- `unpackAccount(address, accountData)` and `unpackMint(address, accountData)`: unpack raw account data into typed objects.
+
+```ts
+import { getTokenBalance, TOKEN_PROGRAM_ID } from "@vue-solana/core/token-accounts";
+
+const balance = await getTokenBalance(connection, mint, owner);
+if (balance) {
+  console.log(`${balance.amount} (${balance.decimals} decimals)`);
+}
 ```
 
 ### Errors and Timeouts

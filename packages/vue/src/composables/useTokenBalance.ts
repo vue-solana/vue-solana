@@ -1,14 +1,10 @@
-import type { Commitment, PublicKey } from "@vue-solana/core/web3";
+import type { PublicKey } from "@vue-solana/core/web3";
 import { parsePublicKey } from "@vue-solana/core/address";
 import { normalizeSolanaError, type SolanaError } from "@vue-solana/core/errors";
 import { getTokenBalance } from "@vue-solana/core/token-accounts";
 import { onMounted, shallowRef, toValue, watch, type MaybeRefOrGetter } from "vue";
 import { useConnection } from "./useConnection";
 import { tryUseSolana } from "./useSolana";
-
-export interface UseTokenBalanceOptions {
-  commitment?: Commitment;
-}
 
 export function useTokenBalance(
   mint: MaybeRefOrGetter<PublicKey | string | null | undefined>,
@@ -45,6 +41,7 @@ export function useTokenBalance(
       if (!mintKey || !ownerKey) {
         balance.value = null;
         decimals.value = null;
+        loading.value = false;
         return null;
       }
 

@@ -56,11 +56,11 @@ export async function getTokenAccountsByOwner(
 export async function getTokenAccount(
   connection: Connection,
   address: PublicKey,
-): Promise<TokenAccount> {
+): Promise<TokenAccount | null> {
   try {
     const accountInfo = await connection.getAccountInfo(address);
     if (!accountInfo) {
-      return null as unknown as TokenAccount;
+      return null;
     }
     return unpackAccount(address as never, accountInfo as never);
   } catch (cause) {
@@ -88,6 +88,10 @@ export async function getTokenBalance(
 
     const tokenAccount = unpackAccount(ata as never, accountInfo as never);
     const mintAccountInfo = await connection.getAccountInfo(mint);
+
+    if (!mintAccountInfo) {
+      return null;
+    }
 
     const mintAccount = unpackMint(mint as never, mintAccountInfo as never);
     return { amount: tokenAccount.amount, decimals: mintAccount.decimals };

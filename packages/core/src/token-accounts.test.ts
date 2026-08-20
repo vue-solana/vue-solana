@@ -163,6 +163,19 @@ describe("getTokenBalance", () => {
     expect(result).toBeNull();
   });
 
+  it("returns null when mint account does not exist", async () => {
+    const connection = mockConnection({
+      getAccountInfo: vi
+        .fn()
+        .mockResolvedValueOnce({ data: Buffer.alloc(165) })
+        .mockResolvedValueOnce(null),
+    });
+
+    const result = await getTokenBalance(connection, mockMint(), mockOwner());
+
+    expect(result).toBeNull();
+  });
+
   it("wraps RPC errors", async () => {
     const connection = mockConnection({
       getAccountInfo: vi.fn().mockRejectedValue(new Error("RPC down")),

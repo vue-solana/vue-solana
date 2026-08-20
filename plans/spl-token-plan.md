@@ -2,7 +2,7 @@
 
 This plan adds SPL token support to `@vue-solana/core` and `@vue-solana/vue`, with Nuxt auto-imports. It follows the existing composable patterns (reactive addresses, `shallowRef` state, stale-response protection, `normalizeSolanaError`) and adds `@solana/spl-token` as a new dependency.
 
-## [ ] Core: Add `@solana/spl-token` dependency and type re-exports
+## [x] Core: Add `@solana/spl-token` dependency and type re-exports
 
 - Add `@solana/spl-token@^0.4.15` to `packages/core/package.json` dependencies.
 - Create `packages/core/src/spl-token.ts`:
@@ -13,7 +13,7 @@ This plan adds SPL token support to `@vue-solana/core` and `@vue-solana/vue`, wi
 - Add `./spl-token` subpath export to `packages/core/package.json` exports map.
 - Export from `packages/core/src/index.ts`.
 
-## [ ] Core: Add SPL token helper functions
+## [x] Core: Add SPL token helper functions
 
 Create `packages/core/src/token-accounts.ts` with stateless helpers:
 
@@ -25,7 +25,7 @@ Create `packages/core/src/token-accounts.ts` with stateless helpers:
 
 Add `./token-accounts` subpath export to `packages/core/package.json`.
 
-## [ ] Vue: Add `useTokenAccounts` composable
+## [x] Vue: Add `useTokenAccounts` composable
 
 Create `packages/vue/src/composables/useTokenAccounts.ts`:
 
@@ -36,7 +36,7 @@ Create `packages/vue/src/composables/useTokenAccounts.ts`:
 - Add subpath export `./useTokenAccounts` to `packages/vue/package.json`.
 - Export from `packages/vue/src/index.ts`.
 
-## [ ] Vue: Add `useTokenBalance` composable
+## [x] Vue: Add `useTokenBalance` composable
 
 Create `packages/vue/src/composables/useTokenBalance.ts`:
 
@@ -47,7 +47,7 @@ Create `packages/vue/src/composables/useTokenBalance.ts`:
 - Add subpath export `./useTokenBalance` to `packages/vue/package.json`.
 - Export from `packages/vue/src/index.ts`.
 
-## [ ] Nuxt: Add auto-imports
+## [x] Nuxt: Add auto-imports
 
 Add to `packages/nuxt/src/imports.ts`:
 
@@ -56,7 +56,7 @@ Add to `packages/nuxt/src/imports.ts`:
 ["useTokenBalance", "useSolanaTokenBalance"],
 ```
 
-## [ ] Tests: Core token account helpers
+## [x] Tests: Core token account helpers
 
 Create `packages/core/src/token-accounts.test.ts`:
 
@@ -66,7 +66,7 @@ Create `packages/core/src/token-accounts.test.ts`:
 - Test `getMint` with valid address, RPC failure.
 - Test `getTokenBalance` with existing ATA, missing ATA (returns null), RPC failure.
 
-## [ ] Tests: Vue composables
+## [x] Tests: Vue composables
 
 Create `packages/vue/src/composables/useTokenAccounts.test.ts`:
 
@@ -77,7 +77,7 @@ Create `packages/vue/src/composables/useTokenBalance.test.ts`:
 
 - Test: loads balance for mint+owner, returns null for missing ATA, stores and rethrows errors, stale response protection, reactive mint/owner changes.
 
-## [ ] Documentation
+## [x] Documentation
 
 - Update `knowledge-bundle/packages/core.md` or create `knowledge-bundle/packages/spl-token.md` with API reference for core helpers.
 - Update `knowledge-bundle/packages/vue.md` with composable docs.
