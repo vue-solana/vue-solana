@@ -13,6 +13,8 @@ export default defineBuildConfig({
     "src/useSignMessage",
     "src/useSignatureStatus",
     "src/useSolana",
+    "src/useTokenAccounts",
+    "src/useTokenBalance",
     "src/useTransaction",
     "src/useTransactionConfirmation",
     "src/useWallet",

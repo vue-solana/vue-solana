@@ -54,6 +54,8 @@ Direct subpaths:
 - `@vue-solana/core/wallet`
 - `@vue-solana/core/wallet-standard`
 - `@vue-solana/core/web3`
+- `@vue-solana/core/spl-token`
+- `@vue-solana/core/token-accounts`
 
 ## Related Guides
 

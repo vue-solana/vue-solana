@@ -5,6 +5,8 @@ export * from "./errors";
 export * from "./ios-wallet";
 export * from "./mobile-wallet";
 export * from "./rpc";
+export * from "./spl-token";
+export * from "./token-accounts";
 export * from "./transaction";
 export * from "./timeout";
 export * from "./types";
