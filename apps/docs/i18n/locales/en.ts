@@ -186,6 +186,19 @@ export default {
         waiting: "waiting",
       },
     },
+    tokenAccounts: {
+      title: "SPL Token Accounts",
+      description:
+        "Loads SPL token accounts for the connected wallet and checks a specific token balance by mint address. Requires a connected wallet for the account list.",
+      refresh: "Refresh Accounts",
+      mintLabel: "Mint address",
+      mintPlaceholder: "Enter a token mint public key",
+      refreshBalance: "Check Balance",
+      labels: {
+        accounts: "Token accounts:",
+        balance: "Balance:",
+      },
+    },
     transfer: {
       title: "Real Devnet Transfer",
       description:

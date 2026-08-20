@@ -48,6 +48,8 @@ The Nuxt module installs the runtime plugin on the client only and auto-imports 
 - `useSolanaSignAndSendTransaction()`
 - `useSolanaTransactionConfirmation()`
 - `useSolanaSignatureStatus()`
+- `useSolanaTokenAccounts()`
+- `useSolanaTokenBalance()`
 
 ## Explicit Solana Imports
 

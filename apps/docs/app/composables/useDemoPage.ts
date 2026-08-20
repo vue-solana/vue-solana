@@ -3,6 +3,7 @@ import { formatError } from "./demo/errors";
 import { packageVersions } from "./demo/packageVersions";
 import { useDemoMessageSigning } from "./demo/useDemoMessageSigning";
 import { useDemoTransfer } from "./demo/useDemoTransfer";
+import { useDemoTokenAccounts } from "./demo/useDemoTokenAccounts";
 import { useDemoWallet } from "./demo/useDemoWallet";
 import { useDirectBlockhash } from "./demo/useDirectBlockhash";
 import { useMockTransactionDemo } from "./demo/useMockTransactionDemo";
@@ -18,6 +19,7 @@ export function useDemoPage() {
   const messageSigning = useDemoMessageSigning();
   const transfer = useDemoTransfer();
   const demoWallet = useDemoWallet();
+  const tokenAccounts = useDemoTokenAccounts();
 
   const pluginInstalled = computed(() => Boolean(solana.connection && solana.endpoint));
   const balanceInSol = computed(() => {
@@ -41,6 +43,7 @@ export function useDemoPage() {
     packageVersions,
     pluginInstalled,
     rpc,
+    ...tokenAccounts,
     ...transfer,
   };
 }
