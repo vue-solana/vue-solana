@@ -1,5 +1,11 @@
 # @vue-solana/core
 
+## 1.1.0
+
+### Minor Changes
+
+- e04ae33: Add SPL token account helpers and composables: `useTokenAccounts`, `useTokenBalance`, token account query functions, and `@solana/spl-token` re-exports.
+
 ## 1.0.0
 
 ### Major Changes
