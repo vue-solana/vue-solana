@@ -1,5 +1,16 @@
 # @vue-solana/nuxt
 
+## 1.1.0
+
+### Minor Changes
+
+- e04ae33: Add SPL token account helpers and composables: `useTokenAccounts`, `useTokenBalance`, token account query functions, and `@solana/spl-token` re-exports.
+
+### Patch Changes
+
+- Updated dependencies [e04ae33]
+  - @vue-solana/vue@1.1.0
+
 ## 1.0.0
 
 ### Major Changes
