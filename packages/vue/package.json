@@ -100,6 +100,16 @@
       "import": "./dist/useSignAndSendTransaction.mjs",
       "require": "./dist/useSignAndSendTransaction.cjs"
     },
+    "./useTokenBalance": {
+      "types": "./dist/useTokenBalance.d.ts",
+      "import": "./dist/useTokenBalance.mjs",
+      "require": "./dist/useTokenBalance.cjs"
+    },
+    "./useTokenAccounts": {
+      "types": "./dist/useTokenAccounts.d.ts",
+      "import": "./dist/useTokenAccounts.mjs",
+      "require": "./dist/useTokenAccounts.cjs"
+    },
     "./web3": {
       "types": "./dist/web3.d.ts",
       "import": "./dist/web3.mjs",

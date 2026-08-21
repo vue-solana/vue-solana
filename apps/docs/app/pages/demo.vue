@@ -59,6 +59,14 @@ const {
   signMessage,
   signedMessageText,
   signWalletMessage,
+  balanceDisplay,
+  mintAddress,
+  mintReady,
+  tokenAccountCount,
+  tokenAccounts,
+  tokenAccountsError,
+  tokenBalance,
+  tokenBalanceError,
   transferAmount,
   transferExplorerUrl,
   transferRecipient,
@@ -103,6 +111,19 @@ const {
       :sol-balance="balanceInSol"
       :error="balanceError"
       @refresh="balance.refresh"
+    />
+
+    <DemoTokenPanel
+      v-model:mint-address="mintAddress"
+      :account-count="tokenAccountCount"
+      :loading="tokenAccounts.loading.value"
+      :error="tokenAccountsError"
+      :mint-ready="mintReady"
+      :balance-loading="tokenBalance.loading.value"
+      :balance-display="balanceDisplay"
+      :balance-error="tokenBalanceError"
+      @refresh-accounts="tokenAccounts.refresh"
+      @refresh-balance="tokenBalance.refresh"
     />
 
     <DemoWalletPanel

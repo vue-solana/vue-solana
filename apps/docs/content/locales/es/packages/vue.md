@@ -79,6 +79,8 @@ Subrutas directas del paquete:
 - `@vue-solana/vue/useSignatureStatus`
 - `@vue-solana/vue/useSignMessage`
 - `@vue-solana/vue/useSignAndSendTransaction`
+- `@vue-solana/vue/useTokenBalance`
+- `@vue-solana/vue/useTokenAccounts`
 - `@vue-solana/vue/web3`
 
 Usa `@vue-solana/vue/web3` para primitivas Solana sin procesar soportadas como `PublicKey`, `Transaction` y `TransactionInstruction`. Usa `@vue-solana/vue/buffer-polyfill` para codigo de transacciones en navegador que necesita el polyfill de Buffer. Los imports directos `@vue-solana/core/*` siguen soportados para uso core de menor nivel.
@@ -91,6 +93,8 @@ Usa `@vue-solana/vue/web3` para primitivas Solana sin procesar soportadas como `
 - `useWallet()`: devuelve refs de wallet activa, estado de conexion computado y acciones de wallet.
 - `useWallets()`: devuelve wallets de extension de navegador descubiertas, wallets Android Mobile Wallet Adapter, entradas soportadas de wallet de navegador iOS y acciones de seleccion de wallet.
 - `useBalance(address, commitment?)`: carga el balance en lamports para un `PublicKey` o string de direccion.
+- `useTokenAccounts(owner, options?)`: carga todas las cuentas de token SPL para un propietario, consultando ambos programas Token y Token-2022 por defecto.
+- `useTokenBalance(mint, owner)`: carga el balance y decimales del token SPL para un par mint/propietario via la cuenta de token asociada.
 - `useTransaction(handler, options?)`: helper generico de estado de transaccion async con configuracion opcional de timeout.
 - `useTransactionConfirmation(options?)`: confirma una firma enviada con estado reactivo y estado de timeout/error.
 - `useSignatureStatus(signature, options?)`: lee, sondea o se suscribe a actualizaciones de estado de firma.
@@ -166,6 +170,81 @@ const balanceErrorMessage = computed(() => {
   </section>
 </template>
 ```
+
+## Leer cuentas de token
+
+```vue
+<script setup lang="ts">
+import { computed, ref } from "vue";
+import { useTokenAccounts } from "@vue-solana/vue/useTokenAccounts";
+
+const owner = ref("PASTE_A_SOLANA_ADDRESS");
+const { tokenAccounts, loading, error, refresh } = useTokenAccounts(owner);
+
+const tokenErrorMessage = computed(() => {
+  switch (error.value?.code) {
+    case "INVALID_ADDRESS":
+      return "Introduce una direccion Solana valida.";
+    case "RPC_FAILURE":
+      return "No se pueden cargar las cuentas de token desde RPC.";
+    default:
+      return null;
+  }
+});
+</script>
+
+<template>
+  <section>
+    <p>Cuentas de token: {{ tokenAccounts.length }}</p>
+    <ul>
+      <li v-for="(account, i) in tokenAccounts" :key="i">
+        {{ account.mint }} — {{ account.amount }}
+      </li>
+    </ul>
+    <p v-if="loading">Cargando...</p>
+    <p v-if="tokenErrorMessage">{{ tokenErrorMessage }}</p>
+    <button type="button" @click="refresh">Actualizar</button>
+  </section>
+</template>
+```
+
+`useTokenAccounts()` limpia el estado sin llamar a RPC cuando el propietario es null. Pasa `programId` en las opciones para limitar los resultados a un solo programa de token.
+
+## Leer balance de token
+
+```vue
+<script setup lang="ts">
+import { computed, ref } from "vue";
+import { useTokenBalance } from "@vue-solana/vue/useTokenBalance";
+
+const mint = ref("PASTE_A_MINT_ADDRESS");
+const owner = ref("PASTE_A_SOLANA_ADDRESS");
+const { balance, decimals, loading, error, refresh } = useTokenBalance(mint, owner);
+
+const tokenBalanceErrorMessage = computed(() => {
+  switch (error.value?.code) {
+    case "INVALID_ADDRESS":
+      return "Introduce direcciones de mint y propietario validas.";
+    case "RPC_FAILURE":
+      return "No se puede cargar el balance del token desde RPC.";
+    default:
+      return null;
+  }
+});
+</script>
+
+<template>
+  <section>
+    <p v-if="balance !== null">Balance: {{ balance }} ({{ decimals }} decimales)</p>
+    <p v-else>No se encontro cuenta de token.</p>
+    <p v-if="loading">Cargando...</p>
+    <p v-if="tokenBalanceErrorMessage">{{ tokenBalanceErrorMessage }}</p>
+    <button type="button" @click="refresh">Actualizar</button>
+  </section>
+</template>
+```
+
+`useTokenBalance()` devuelve balance y decimales null cuando la cuenta de token asociada no existe, sin tratarlo como un error.
 
 ## Manejo de errores
 

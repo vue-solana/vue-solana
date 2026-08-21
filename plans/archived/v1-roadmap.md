@@ -1,4 +1,4 @@
-# Vue Solana v1 Roadmap
+# Vue Solana v1 Roadmap (Completed)
 
 This document tracked the feature work and release criteria for the first stable `@vue-solana/*` package release.
 

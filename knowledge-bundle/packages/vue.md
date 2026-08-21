@@ -37,6 +37,8 @@ Available package subpaths:
 - `@vue-solana/vue/useSignatureStatus`
 - `@vue-solana/vue/useSignMessage`
 - `@vue-solana/vue/useSignAndSendTransaction`
+- `@vue-solana/vue/useTokenAccounts`
+- `@vue-solana/vue/useTokenBalance`
 - `@vue-solana/vue/web3`
 
 Use `@vue-solana/vue/web3` for supported raw Solana primitives such as `PublicKey`, `Transaction`, and `TransactionInstruction`. Use `@vue-solana/vue/buffer-polyfill` when browser transaction code needs the Buffer polyfill. Direct `@vue-solana/core/*` imports remain supported for lower-level core usage.
@@ -139,6 +141,38 @@ Returns:
 - `loading`
 - `error`
 - `refresh()`
+
+## `useTokenAccounts(owner, options?)`
+
+Loads all SPL token accounts for a wallet owner address.
+
+Options:
+
+- `commitment`: RPC commitment for the read.
+- `programId`: filter by a single token program (`TOKEN_PROGRAM_ID` or `TOKEN_2022_PROGRAM_ID`). By default queries both.
+
+Returns:
+
+- `tokenAccounts`
+- `loading`
+- `error`
+- `refresh()`
+
+Null input clears state without calling RPC. Invalid address strings set `error` before any RPC call.
+
+## `useTokenBalance(mint, owner)`
+
+Loads the SPL token balance for a specific mint and owner, deriving the associated token account (ATA) automatically.
+
+Returns:
+
+- `balance`: `bigint | null` (the raw token amount, or `null` if the ATA does not exist)
+- `decimals`: `number | null`
+- `loading`
+- `error`
+- `refresh()`
+
+Null `mint` or `owner` clears state without calling RPC. Missing ATA returns `null` balance and decimals (not an error).
 
 ## Error Handling
 

@@ -7,6 +7,8 @@ export * from "./composables/useSignMessage";
 export * from "./composables/useSignAndSendTransaction";
 export * from "./composables/useSignatureStatus";
 export * from "./composables/useSolana";
+export * from "./composables/useTokenAccounts";
+export * from "./composables/useTokenBalance";
 export * from "./composables/useTransaction";
 export * from "./composables/useTransactionConfirmation";
 export * from "./composables/useWallet";

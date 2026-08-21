@@ -82,6 +82,8 @@ export default defineNuxtConfig({
 - `useSolanaWallet()`：返回所选钱包状态、连接状态、能力和钱包操作。
 - `useSolanaWallets()`：返回已发现钱包和钱包选择/刷新操作。
 - `useSolanaBalance(address, commitment?)`：读取 public key 或地址的 lamport 余额。
+- `useSolanaTokenAccounts(owner, options?)`：加载某个所有者的所有 SPL token 账户，默认同时查询 Token 和 Token-2022 program。
+- `useSolanaTokenBalance(mint, owner)`：通过关联 token 账户加载 mint/owner 对的 SPL token 余额和小数位数。
 - `useSolanaProgramAccounts(programId, options?)`：使用过滤器和数据切片读取 program-owned accounts。
 - `useSolanaTransactionConfirmation(options?)`：确认现有交易签名。
 - `useSolanaSignatureStatus(signature, options?)`：读取、轮询或订阅签名状态。
@@ -179,6 +181,75 @@ const balanceErrorMessage = computed(() => {
   </section>
 </template>
 ```
+
+## 读取 Token 账户
+
+```vue
+<script setup lang="ts">
+const owner = ref("PASTE_A_SOLANA_ADDRESS");
+const { tokenAccounts, loading, error, refresh } = useSolanaTokenAccounts(owner);
+
+const tokenErrorMessage = computed(() => {
+  switch (error.value?.code) {
+    case "INVALID_ADDRESS":
+      return "Enter a valid Solana address.";
+    case "RPC_FAILURE":
+      return "Unable to load token accounts from RPC.";
+    default:
+      return null;
+  }
+});
+</script>
+
+<template>
+  <section>
+    <p>Token accounts: {{ tokenAccounts.length }}</p>
+    <ul>
+      <li v-for="(account, i) in tokenAccounts" :key="i">
+        {{ account.mint }} — {{ account.amount }}
+      </li>
+    </ul>
+    <p v-if="loading">Loading...</p>
+    <p v-if="tokenErrorMessage">{{ tokenErrorMessage }}</p>
+    <button type="button" @click="refresh">Refresh</button>
+  </section>
+</template>
+```
+
+`useSolanaTokenAccounts()` 在 owner 为 null 时清除状态且不调用 RPC。在选项中传入 `programId` 可将结果限制为单个 token program。
+
+## 读取 Token 余额
+
+```vue
+<script setup lang="ts">
+const mint = ref("PASTE_A_MINT_ADDRESS");
+const owner = ref("PASTE_A_SOLANA_ADDRESS");
+const { balance, decimals, loading, error, refresh } = useSolanaTokenBalance(mint, owner);
+
+const tokenBalanceErrorMessage = computed(() => {
+  switch (error.value?.code) {
+    case "INVALID_ADDRESS":
+      return "Enter valid mint and owner addresses.";
+    case "RPC_FAILURE":
+      return "Unable to load token balance from RPC.";
+    default:
+      return null;
+  }
+});
+</script>
+
+<template>
+  <section>
+    <p v-if="balance !== null">Balance: {{ balance }} ({{ decimals }} decimals)</p>
+    <p v-else>No token account found.</p>
+    <p v-if="loading">Loading...</p>
+    <p v-if="tokenBalanceErrorMessage">{{ tokenBalanceErrorMessage }}</p>
+    <button type="button" @click="refresh">Refresh</button>
+  </section>
+</template>
+```
+
+`useSolanaTokenBalance()` 在关联 token 账户不存在时返回 null balance 和 decimals，不会将其视为错误。
 
 ## 错误处理
 

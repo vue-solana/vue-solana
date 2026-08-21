@@ -82,6 +82,8 @@ export default defineNuxtConfig({
 - `useSolanaWallet()`: selected wallet state, connection state, capabilities, wallet actions를 반환합니다.
 - `useSolanaWallets()`: discovered wallets와 wallet selection/refresh actions를 반환합니다.
 - `useSolanaBalance(address, commitment?)`: public key 또는 address의 lamport balance를 읽습니다.
+- `useSolanaTokenAccounts(owner, options?)`: 기본적으로 Token과 Token-2022 program 모두를 쿼리하여 owner의 모든 SPL token account를 로드합니다.
+- `useSolanaTokenBalance(mint, owner)`: associated token account를 통해 mint/owner 쌍의 SPL token balance와 decimals를 로드합니다.
 - `useSolanaProgramAccounts(programId, options?)`: filters와 data slicing으로 program-owned accounts를 읽습니다.
 - `useSolanaTransactionConfirmation(options?)`: 기존 transaction signature를 confirm합니다.
 - `useSolanaSignatureStatus(signature, options?)`: signature status를 읽거나 polling하거나 subscribe합니다.
@@ -179,6 +181,75 @@ const balanceErrorMessage = computed(() => {
   </section>
 </template>
 ```
+
+## Token Account 읽기
+
+```vue
+<script setup lang="ts">
+const owner = ref("PASTE_A_SOLANA_ADDRESS");
+const { tokenAccounts, loading, error, refresh } = useSolanaTokenAccounts(owner);
+
+const tokenErrorMessage = computed(() => {
+  switch (error.value?.code) {
+    case "INVALID_ADDRESS":
+      return "Enter a valid Solana address.";
+    case "RPC_FAILURE":
+      return "Unable to load token accounts from RPC.";
+    default:
+      return null;
+  }
+});
+</script>
+
+<template>
+  <section>
+    <p>Token accounts: {{ tokenAccounts.length }}</p>
+    <ul>
+      <li v-for="(account, i) in tokenAccounts" :key="i">
+        {{ account.mint }} — {{ account.amount }}
+      </li>
+    </ul>
+    <p v-if="loading">Loading...</p>
+    <p v-if="tokenErrorMessage">{{ tokenErrorMessage }}</p>
+    <button type="button" @click="refresh">Refresh</button>
+  </section>
+</template>
+```
+
+`useSolanaTokenAccounts()`는 owner가 null이면 RPC를 호출하지 않고 state를 clear합니다. 옵션에 `programId`를 전달하면 단일 token program으로 결과를 제한할 수 있습니다.
+
+## Token Balance 읽기
+
+```vue
+<script setup lang="ts">
+const mint = ref("PASTE_A_MINT_ADDRESS");
+const owner = ref("PASTE_A_SOLANA_ADDRESS");
+const { balance, decimals, loading, error, refresh } = useSolanaTokenBalance(mint, owner);
+
+const tokenBalanceErrorMessage = computed(() => {
+  switch (error.value?.code) {
+    case "INVALID_ADDRESS":
+      return "Enter valid mint and owner addresses.";
+    case "RPC_FAILURE":
+      return "Unable to load token balance from RPC.";
+    default:
+      return null;
+  }
+});
+</script>
+
+<template>
+  <section>
+    <p v-if="balance !== null">Balance: {{ balance }} ({{ decimals }} decimals)</p>
+    <p v-else>No token account found.</p>
+    <p v-if="loading">Loading...</p>
+    <p v-if="tokenBalanceErrorMessage">{{ tokenBalanceErrorMessage }}</p>
+    <button type="button" @click="refresh">Refresh</button>
+  </section>
+</template>
+```
+
+`useSolanaTokenBalance()`는 associated token account가 없으면 error로 처리하지 않고 null balance와 decimals를 반환합니다.
 
 ## 오류 처리
 

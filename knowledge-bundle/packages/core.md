@@ -27,6 +27,8 @@ The root export remains supported. Direct subpath exports are also available whe
 - `@vue-solana/core/timeout`
 - `@vue-solana/core/transaction`
 - `@vue-solana/core/wallet`
+- `@vue-solana/core/spl-token`
+- `@vue-solana/core/token-accounts`
 - `@vue-solana/core/wallet-standard`
 - `@vue-solana/core/web3`
 
@@ -214,3 +216,18 @@ interface TransactionConfirmation {
 - `adaptSolanaIosWallet(walletInfo, options?)`: adapts an iOS deep-link wallet entry into `SolanaWallet`.
 - `handleSolanaIosWalletCallback(options?)`: validates and decrypts iOS wallet redirect callbacks.
 - `isSolanaIosBrowserWalletSupported()`: returns whether the current runtime should expose iOS browser wallet links.
+
+## SPL Token
+
+Re-exports from `@vue-solana/core/spl-token`:
+
+- `TOKEN_PROGRAM_ID`, `TOKEN_2022_PROGRAM_ID`: SPL Token and Token-2022 program IDs.
+- `TokenAccount` (alias for `Account`), `Mint`, `AccountState`: SPL account types.
+- `getAssociatedTokenAddressSync`, `unpackAccount`, `unpackMint`: SPL helpers.
+
+### Token Account Helpers (`@vue-solana/core/token-accounts`)
+
+- `getTokenAccountsByOwner(connection, owner, options?)`: fetches all token accounts for an owner. Queries both `TOKEN_PROGRAM_ID` and `TOKEN_2022_PROGRAM_ID` by default, or a single `programId` via options. Returns `TokenAccount[]`.
+- `getTokenAccount(connection, address)`: fetches and unpacks a single token account. Returns `TokenAccount | null` if the account does not exist.
+- `getMint(connection, address)`: fetches mint metadata. Returns `Mint | null` if the account does not exist.
+- `getTokenBalance(connection, mint, owner)`: derives the associated token account, fetches it with mint decimals, returns `{ amount: bigint, decimals: number } | null`. Returns `null` if the ATA or mint does not exist.

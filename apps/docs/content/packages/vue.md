@@ -79,6 +79,8 @@ Direct package subpaths:
 - `@vue-solana/vue/useSignatureStatus`
 - `@vue-solana/vue/useSignMessage`
 - `@vue-solana/vue/useSignAndSendTransaction`
+- `@vue-solana/vue/useTokenBalance`
+- `@vue-solana/vue/useTokenAccounts`
 - `@vue-solana/vue/web3`
 
 Use `@vue-solana/vue/web3` for supported raw Solana primitives such as `PublicKey`, `Transaction`, and `TransactionInstruction`. Use `@vue-solana/vue/buffer-polyfill` for browser transaction code that needs the Buffer polyfill. Direct `@vue-solana/core/*` imports remain supported for lower-level core usage.
@@ -91,6 +93,8 @@ Use `@vue-solana/vue/web3` for supported raw Solana primitives such as `PublicKe
 - `useWallet()`: returns active wallet refs, computed connection state, and wallet actions.
 - `useWallets()`: returns discovered browser extension wallets, Android Mobile Wallet Adapter wallets, supported iOS browser wallet entries, and wallet selection actions.
 - `useBalance(address, commitment?)`: loads lamport balance for a `PublicKey` or address string.
+- `useTokenAccounts(owner, options?)`: loads all SPL token accounts for an owner, querying both Token and Token-2022 programs by default.
+- `useTokenBalance(mint, owner)`: loads the SPL token balance and decimals for a mint/owner pair via the associated token account.
 - `useTransaction(handler, options?)`: generic async transaction state helper with optional timeout settings.
 - `useTransactionConfirmation(options?)`: confirms a submitted signature with reactive status and timeout/error state.
 - `useSignatureStatus(signature, options?)`: reads, polls, or subscribes to signature status updates.
@@ -166,6 +170,81 @@ const balanceErrorMessage = computed(() => {
   </section>
 </template>
 ```
+
+## Read Token Accounts
+
+```vue
+<script setup lang="ts">
+import { computed, ref } from "vue";
+import { useTokenAccounts } from "@vue-solana/vue/useTokenAccounts";
+
+const owner = ref("PASTE_A_SOLANA_ADDRESS");
+const { tokenAccounts, loading, error, refresh } = useTokenAccounts(owner);
+
+const tokenErrorMessage = computed(() => {
+  switch (error.value?.code) {
+    case "INVALID_ADDRESS":
+      return "Enter a valid Solana address.";
+    case "RPC_FAILURE":
+      return "Unable to load token accounts from RPC.";
+    default:
+      return null;
+  }
+});
+</script>
+
+<template>
+  <section>
+    <p>Token accounts: {{ tokenAccounts.length }}</p>
+    <ul>
+      <li v-for="(account, i) in tokenAccounts" :key="i">
+        {{ account.mint }} — {{ account.amount }}
+      </li>
+    </ul>
+    <p v-if="loading">Loading...</p>
+    <p v-if="tokenErrorMessage">{{ tokenErrorMessage }}</p>
+    <button type="button" @click="refresh">Refresh</button>
+  </section>
+</template>
+```
+
+`useTokenAccounts()` clears state without calling RPC when the owner is null. Pass `programId` in the options to limit results to a single token program.
+
+## Read Token Balance
+
+```vue
+<script setup lang="ts">
+import { computed, ref } from "vue";
+import { useTokenBalance } from "@vue-solana/vue/useTokenBalance";
+
+const mint = ref("PASTE_A_MINT_ADDRESS");
+const owner = ref("PASTE_A_SOLANA_ADDRESS");
+const { balance, decimals, loading, error, refresh } = useTokenBalance(mint, owner);
+
+const tokenBalanceErrorMessage = computed(() => {
+  switch (error.value?.code) {
+    case "INVALID_ADDRESS":
+      return "Enter valid mint and owner addresses.";
+    case "RPC_FAILURE":
+      return "Unable to load token balance from RPC.";
+    default:
+      return null;
+  }
+});
+</script>
+
+<template>
+  <section>
+    <p v-if="balance !== null">Balance: {{ balance }} ({{ decimals }} decimals)</p>
+    <p v-else>No token account found.</p>
+    <p v-if="loading">Loading...</p>
+    <p v-if="tokenBalanceErrorMessage">{{ tokenBalanceErrorMessage }}</p>
+    <button type="button" @click="refresh">Refresh</button>
+  </section>
+</template>
+```
+
+`useTokenBalance()` returns `null` balance and decimals when the associated token account does not exist, without treating it as an error.
 
 ## Error Handling
 

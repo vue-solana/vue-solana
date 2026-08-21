@@ -184,6 +184,19 @@ export default {
         waiting: "等待中",
       },
     },
+    tokenAccounts: {
+      title: "SPL 代币账户",
+      description:
+        "加载已连接钱包的 SPL 代币账户，并通过 mint 地址查询特定代币余额。账户列表需要已连接的钱包。",
+      refresh: "刷新账户",
+      mintLabel: "Mint 地址",
+      mintPlaceholder: "输入代币 mint 公钥",
+      refreshBalance: "查询余额",
+      labels: {
+        accounts: "代币账户：",
+        balance: "余额：",
+      },
+    },
     transfer: {
       title: "真实 Devnet 转账",
       description:
