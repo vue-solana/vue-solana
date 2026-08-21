@@ -79,6 +79,9 @@ function writeConsumer({
           lib: ["ES2022", "DOM"],
           strict: true,
           noEmit: true,
+          // Third-party Solana declarations reference Node globals (e.g. Buffer);
+          // consumers should not need @types/node to use browser-first packages.
+          skipLibCheck: true,
           ...tsconfigCompilerOptions,
         },
         include: ["src/**/*.ts"],
@@ -210,10 +213,8 @@ void maybeVersionedTransaction;
       "@vue-solana/vue": fileDependency(packages.vue.tarball, join(tempRoot, "nuxt-consumer")),
     },
     // Nuxt/Nitro declarations currently reference many optional peer packages in raw tsc checks.
-    // Keep core/vue consumers strict and scope this exception to Nuxt's upstream declaration noise.
-    tsconfigCompilerOptions: {
-      skipLibCheck: true,
-    },
+    // skipLibCheck (set for all consumers above) covers this upstream declaration noise.
+    tsconfigCompilerOptions: {},
     source: `import VueSolana from "@vue-solana/nuxt";
 import { installSolanaBufferPolyfill, Buffer } from "@vue-solana/nuxt/buffer-polyfill";
 import { PublicKey, SystemProgram, Transaction, TransactionInstruction, type VersionedTransaction } from "@vue-solana/nuxt/web3";
