@@ -54,6 +54,8 @@ Direct subpath:
 - `@vue-solana/core/wallet`
 - `@vue-solana/core/wallet-standard`
 - `@vue-solana/core/web3`
+- `@vue-solana/core/spl-token`
+- `@vue-solana/core/token-accounts`
 
 ## 관련 가이드
 
@@ -191,6 +193,8 @@ Root `@vue-solana/core` export는 아래 public helper를 다시 export합니다
 | `@vue-solana/core/rpc`             | `createSolanaConnection()`과 `createSolanaContext()`.                   | Vue plugin 없이 configured `Connection`과 resolved cluster endpoint가 필요할 때.                       |
 | `@vue-solana/core/timeout`         | Solana timeout error를 만드는 Promise timeout helper.                   | transaction confirmation helper와 일관된 timeout behavior가 필요할 때.                                 |
 | `@vue-solana/core/transaction`     | Transaction send 및 confirmation helper.                                | Wallet-aware send path 또는 기존 signature의 confirmation result가 필요할 때.                          |
+| `@vue-solana/core/spl-token`       | SPL Token type reexport (`TokenAccount`, `Mint`, program ID).           | `@solana/spl-token`을 직접 import하지 않고 SPL Token type과 constant가 필요할 때.                      |
+| `@vue-solana/core/token-accounts`  | 무상태 SPL Token account helper (`getTokenAccountsByOwner` 등).         | token account를 fetch하거나 unpack하거나, associated token address에서 balance를 파생해야 할 때.       |
 | `@vue-solana/core/types`           | 공유 TypeScript type.                                                   | `SolanaConfig`, `SolanaContext`, `SolanaWallet`, wallet metadata, transaction option type이 필요할 때. |
 | `@vue-solana/core/wallet`          | Wallet state assertion 및 wallet capability error.                      | 선택된 wallet이 연결되어 있거나 signing을 지원하는지 wallet method 호출 전에 검증해야 할 때.           |
 | `@vue-solana/core/wallet-standard` | Wallet Standard chain mapping, discovery, subscription, adapter helper. | Solana Wallet Standard 위에 자체 wallet discovery layer를 만들 때.                                     |
@@ -247,6 +251,27 @@ import { confirmTransactionSignature, signAndSendTransaction } from "@vue-solana
 
 const signature = await signAndSendTransaction(connection, wallet, transaction);
 await confirmTransactionSignature(connection, signature, { commitment: "confirmed" });
+```
+
+### SPL Token
+
+- `TOKEN_PROGRAM_ID`와 `TOKEN_2022_PROGRAM_ID`: 원본 SPL Token과 Token-2022 extension의 program ID입니다.
+- `TokenAccount` (`Account`의 reexport): `mint`, `owner`, `amount` 및 delegation 필드를 포함한 unpack된 token account state.
+- `Mint`: `decimals`, `supply` 및 authority 필드를 포함한 unpack된 mint account state.
+- `AccountState`: token account state enum (`Uninitialized`, `Initialized`, `Frozen`).
+- `getTokenAccountsByOwner(connection, owner, options?)`: owner의 모든 token account를 fetch 및 unpack합니다. 기본적으로 Token과 Token-2022 program 모두를 쿼리합니다. `programId`를 전달하면 단일 program으로 제한합니다.
+- `getTokenAccount(connection, address)`: 단일 token account를 fetch 및 unpack합니다. 계정이 없으면 `null`을 반환합니다.
+- `getTokenBalance(connection, mint, owner)`: associated token address를 파생하고, token account와 mint를 fetch한 뒤 `{ amount, decimals }`를 반환합니다. ATA나 mint 계정이 없으면 `null`을 반환합니다.
+- `getAssociatedTokenAddressSync(mint, owner, allowOwnerOffCurve?)`: associated token account address를 결정적으로 파생합니다.
+- `unpackAccount(address, accountData)`와 `unpackMint(address, accountData)`: 원시 account data를 typed object로 unpack합니다.
+
+```ts
+import { getTokenBalance, TOKEN_PROGRAM_ID } from "@vue-solana/core/token-accounts";
+
+const balance = await getTokenBalance(connection, mint, owner);
+if (balance) {
+  console.log(`${balance.amount} (${balance.decimals} decimals)`);
+}
 ```
 
 ### 오류와 Timeout

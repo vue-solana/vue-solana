@@ -82,6 +82,8 @@ El modulo autoimporta estos composables desde subrutas directas `@vue-solana/vue
 - `useSolanaWallet()`: devuelve estado de wallet seleccionada, estado de conexion, capacidades y acciones de wallet.
 - `useSolanaWallets()`: devuelve wallets descubiertas y acciones de seleccion/actualizacion de wallet.
 - `useSolanaBalance(address, commitment?)`: lee el balance en lamports para una clave publica o direccion.
+- `useSolanaTokenAccounts(owner, options?)`: carga todas las cuentas de token SPL para un propietario, consultando ambos programas Token y Token-2022 por defecto.
+- `useSolanaTokenBalance(mint, owner)`: carga el balance y decimales del token SPL para un par mint/propietario via la cuenta de token asociada.
 - `useSolanaProgramAccounts(programId, options?)`: lee cuentas propiedad de programa con filtros y recorte de datos.
 - `useSolanaTransactionConfirmation(options?)`: confirma una firma de transaccion existente.
 - `useSolanaSignatureStatus(signature, options?)`: lee, sondea o se suscribe a estado de firma.
@@ -179,6 +181,75 @@ const balanceErrorMessage = computed(() => {
   </section>
 </template>
 ```
+
+## Leer cuentas de token
+
+```vue
+<script setup lang="ts">
+const owner = ref("PASTE_A_SOLANA_ADDRESS");
+const { tokenAccounts, loading, error, refresh } = useSolanaTokenAccounts(owner);
+
+const tokenErrorMessage = computed(() => {
+  switch (error.value?.code) {
+    case "INVALID_ADDRESS":
+      return "Introduce una direccion Solana valida.";
+    case "RPC_FAILURE":
+      return "No se pueden cargar las cuentas de token desde RPC.";
+    default:
+      return null;
+  }
+});
+</script>
+
+<template>
+  <section>
+    <p>Cuentas de token: {{ tokenAccounts.length }}</p>
+    <ul>
+      <li v-for="(account, i) in tokenAccounts" :key="i">
+        {{ account.mint }} — {{ account.amount }}
+      </li>
+    </ul>
+    <p v-if="loading">Cargando...</p>
+    <p v-if="tokenErrorMessage">{{ tokenErrorMessage }}</p>
+    <button type="button" @click="refresh">Actualizar</button>
+  </section>
+</template>
+```
+
+`useSolanaTokenAccounts()` limpia el estado sin llamar a RPC cuando el propietario es null. Pasa `programId` en las opciones para limitar los resultados a un solo programa de token.
+
+## Leer balance de token
+
+```vue
+<script setup lang="ts">
+const mint = ref("PASTE_A_MINT_ADDRESS");
+const owner = ref("PASTE_A_SOLANA_ADDRESS");
+const { balance, decimals, loading, error, refresh } = useSolanaTokenBalance(mint, owner);
+
+const tokenBalanceErrorMessage = computed(() => {
+  switch (error.value?.code) {
+    case "INVALID_ADDRESS":
+      return "Introduce direcciones de mint y propietario validas.";
+    case "RPC_FAILURE":
+      return "No se puede cargar el balance del token desde RPC.";
+    default:
+      return null;
+  }
+});
+</script>
+
+<template>
+  <section>
+    <p v-if="balance !== null">Balance: {{ balance }} ({{ decimals }} decimales)</p>
+    <p v-else>No se encontro cuenta de token.</p>
+    <p v-if="loading">Cargando...</p>
+    <p v-if="tokenBalanceErrorMessage">{{ tokenBalanceErrorMessage }}</p>
+    <button type="button" @click="refresh">Actualizar</button>
+  </section>
+</template>
+```
+
+`useSolanaTokenBalance()` devuelve balance y decimales null cuando la cuenta de token asociada no existe, sin tratarlo como un error.
 
 ## Manejo de errores
 

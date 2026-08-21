@@ -79,6 +79,8 @@ Direct package subpath:
 - `@vue-solana/vue/useSignatureStatus`
 - `@vue-solana/vue/useSignMessage`
 - `@vue-solana/vue/useSignAndSendTransaction`
+- `@vue-solana/vue/useTokenBalance`
+- `@vue-solana/vue/useTokenAccounts`
 - `@vue-solana/vue/web3`
 
 `PublicKey`, `Transaction`, `TransactionInstruction` 같은 지원되는 raw Solana primitive에는 `@vue-solana/vue/web3`를 사용하세요. Buffer polyfill이 필요한 브라우저 트랜잭션 코드에는 `@vue-solana/vue/buffer-polyfill`을 사용하세요. 더 낮은 수준의 core 사용에는 direct `@vue-solana/core/*` import도 계속 지원됩니다.
@@ -91,6 +93,8 @@ Direct package subpath:
 - `useWallet()`: active wallet ref, computed connection state, wallet action을 반환합니다.
 - `useWallets()`: 발견된 browser extension wallet, Android Mobile Wallet Adapter wallet, 지원되는 iOS browser wallet entry, wallet 선택 action을 반환합니다.
 - `useBalance(address, commitment?)`: `PublicKey` 또는 address string의 lamport balance를 로드합니다.
+- `useTokenAccounts(owner, options?)`: 기본적으로 Token과 Token-2022 program 모두를 쿼리하여 owner의 모든 SPL token account를 로드합니다.
+- `useTokenBalance(mint, owner)`: associated token account를 통해 mint/owner 쌍의 SPL token balance와 decimals를 로드합니다.
 - `useTransaction(handler, options?)`: optional timeout 설정을 지원하는 generic async transaction state helper입니다.
 - `useTransactionConfirmation(options?)`: 제출된 signature를 reactive status 및 timeout/error state와 함께 confirm합니다.
 - `useSignatureStatus(signature, options?)`: signature status update를 읽거나 polling하거나 subscribe합니다.
@@ -166,6 +170,81 @@ const balanceErrorMessage = computed(() => {
   </section>
 </template>
 ```
+
+## Token Account 읽기
+
+```vue
+<script setup lang="ts">
+import { computed, ref } from "vue";
+import { useTokenAccounts } from "@vue-solana/vue/useTokenAccounts";
+
+const owner = ref("PASTE_A_SOLANA_ADDRESS");
+const { tokenAccounts, loading, error, refresh } = useTokenAccounts(owner);
+
+const tokenErrorMessage = computed(() => {
+  switch (error.value?.code) {
+    case "INVALID_ADDRESS":
+      return "Enter a valid Solana address.";
+    case "RPC_FAILURE":
+      return "Unable to load token accounts from RPC.";
+    default:
+      return null;
+  }
+});
+</script>
+
+<template>
+  <section>
+    <p>Token accounts: {{ tokenAccounts.length }}</p>
+    <ul>
+      <li v-for="(account, i) in tokenAccounts" :key="i">
+        {{ account.mint }} — {{ account.amount }}
+      </li>
+    </ul>
+    <p v-if="loading">Loading...</p>
+    <p v-if="tokenErrorMessage">{{ tokenErrorMessage }}</p>
+    <button type="button" @click="refresh">Refresh</button>
+  </section>
+</template>
+```
+
+`useTokenAccounts()`는 owner가 null이면 RPC를 호출하지 않고 state를 clear합니다. 옵션에 `programId`를 전달하면 단일 token program으로 결과를 제한할 수 있습니다.
+
+## Token Balance 읽기
+
+```vue
+<script setup lang="ts">
+import { computed, ref } from "vue";
+import { useTokenBalance } from "@vue-solana/vue/useTokenBalance";
+
+const mint = ref("PASTE_A_MINT_ADDRESS");
+const owner = ref("PASTE_A_SOLANA_ADDRESS");
+const { balance, decimals, loading, error, refresh } = useTokenBalance(mint, owner);
+
+const tokenBalanceErrorMessage = computed(() => {
+  switch (error.value?.code) {
+    case "INVALID_ADDRESS":
+      return "Enter valid mint and owner addresses.";
+    case "RPC_FAILURE":
+      return "Unable to load token balance from RPC.";
+    default:
+      return null;
+  }
+});
+</script>
+
+<template>
+  <section>
+    <p v-if="balance !== null">Balance: {{ balance }} ({{ decimals }} decimals)</p>
+    <p v-else>No token account found.</p>
+    <p v-if="loading">Loading...</p>
+    <p v-if="tokenBalanceErrorMessage">{{ tokenBalanceErrorMessage }}</p>
+    <button type="button" @click="refresh">Refresh</button>
+  </section>
+</template>
+```
+
+`useTokenBalance()`는 associated token account가 없으면 error로 처리하지 않고 null balance와 decimals를 반환합니다.
 
 ## 오류 처리
 

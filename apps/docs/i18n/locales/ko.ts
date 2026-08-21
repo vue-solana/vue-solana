@@ -186,6 +186,19 @@ export default {
         waiting: "대기 중",
       },
     },
+    tokenAccounts: {
+      title: "SPL 토큰 계정",
+      description:
+        "연결된 지갑의 SPL 토큰 계정을 불러오고 특정 토큰의 mint 주소로 잔액을 확인합니다. 계정 목록을 보려면 연결된 지갑이 필요합니다.",
+      refresh: "계정 새로고침",
+      mintLabel: "Mint 주소",
+      mintPlaceholder: "토큰 mint 공개 키 입력",
+      refreshBalance: "잔액 확인",
+      labels: {
+        accounts: "토큰 계정:",
+        balance: "잔액:",
+      },
+    },
     transfer: {
       title: "실제 Devnet 전송",
       description:

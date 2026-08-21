@@ -54,6 +54,8 @@ Subrutas directas:
 - `@vue-solana/core/wallet`
 - `@vue-solana/core/wallet-standard`
 - `@vue-solana/core/web3`
+- `@vue-solana/core/spl-token`
+- `@vue-solana/core/token-accounts`
 
 ## Guias relacionadas
 
@@ -191,6 +193,8 @@ La exportacion raiz `@vue-solana/core` reexporta los helpers publicos siguientes
 | `@vue-solana/core/rpc`             | `createSolanaConnection()` y `createSolanaContext()`.                          | Quieres una `Connection` configurada y endpoints de cluster resueltos sin instalar el plugin de Vue.                        |
 | `@vue-solana/core/timeout`         | Helpers de timeout de Promise que producen errores de timeout Solana.          | Necesitas comportamiento de timeout coherente con los helpers de confirmacion de transaccion.                               |
 | `@vue-solana/core/transaction`     | Helpers de envio y confirmacion de transacciones.                              | Necesitas una ruta de envio consciente de wallet o un resultado de confirmacion para una firma existente.                   |
+| `@vue-solana/core/spl-token`       | Reexportaciones de tipos SPL Token (`TokenAccount`, `Mint`, program IDs).      | Necesitas tipos y constantes SPL Token sin importar `@solana/spl-token` directamente.                                       |
+| `@vue-solana/core/token-accounts`  | Helpers de cuenta SPL Token sin estado (`getTokenAccountsByOwner`, etc.).      | Necesitas obtener o desempaquetar cuentas de token, o derivar balances desde direcciones de token asociadas.                |
 | `@vue-solana/core/types`           | Tipos TypeScript compartidos.                                                  | Necesitas `SolanaConfig`, `SolanaContext`, `SolanaWallet`, metadatos de wallet o tipos de opciones de transaccion.          |
 | `@vue-solana/core/wallet`          | Aserciones de estado de wallet y errores de capacidad de wallet.               | Necesitas validar que una wallet seleccionada esta conectada o soporta firma antes de llamar metodos de wallet.             |
 | `@vue-solana/core/wallet-standard` | Mapeo de cadenas Wallet Standard, descubrimiento, suscripciones y adaptadores. | Estas creando tu propia capa de descubrimiento de wallets sobre Solana Wallet Standard.                                     |
@@ -247,6 +251,27 @@ import { confirmTransactionSignature, signAndSendTransaction } from "@vue-solana
 
 const signature = await signAndSendTransaction(connection, wallet, transaction);
 await confirmTransactionSignature(connection, signature, { commitment: "confirmed" });
+```
+
+### SPL Token
+
+- `TOKEN_PROGRAM_ID` y `TOKEN_2022_PROGRAM_ID`: IDs de programa para el SPL Token original y las extensiones Token-2022.
+- `TokenAccount` (reexportacion de `Account`): estado de cuenta de token desempaquetado incluyendo `mint`, `owner`, `amount` y campos de delegacion.
+- `Mint`: estado de cuenta mint desempaquetado incluyendo `decimals`, `supply` y campos de autoridad.
+- `AccountState`: enum para el estado de cuenta de token (`Uninitialized`, `Initialized`, `Frozen`).
+- `getTokenAccountsByOwner(connection, owner, options?)`: obtiene y desempaqueta todas las cuentas de token para un propietario, consultando ambos programas Token y Token-2022 por defecto. Pasa `programId` para limitar a un solo programa.
+- `getTokenAccount(connection, address)`: obtiene y desempaqueta una sola cuenta de token. Devuelve `null` cuando la cuenta no existe.
+- `getTokenBalance(connection, mint, owner)`: deriva la direccion de token asociada, obtiene la cuenta de token y mint, y devuelve `{ amount, decimals }`. Devuelve `null` cuando la ATA o la cuenta mint no existe.
+- `getAssociatedTokenAddressSync(mint, owner, allowOwnerOffCurve?)`: deriva la direccion de cuenta de token asociada de forma determinista.
+- `unpackAccount(address, accountData)` y `unpackMint(address, accountData)`: desempaquetan datos de cuenta sin procesar en objetos tipados.
+
+```ts
+import { getTokenBalance, TOKEN_PROGRAM_ID } from "@vue-solana/core/token-accounts";
+
+const balance = await getTokenBalance(connection, mint, owner);
+if (balance) {
+  console.log(`${balance.amount} (${balance.decimals} decimals)`);
+}
 ```
 
 ### Errores y timeouts

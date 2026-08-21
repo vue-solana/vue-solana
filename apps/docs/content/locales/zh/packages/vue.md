@@ -79,6 +79,8 @@ import { useWallet } from "@vue-solana/vue/useWallet";
 - `@vue-solana/vue/useSignatureStatus`
 - `@vue-solana/vue/useSignMessage`
 - `@vue-solana/vue/useSignAndSendTransaction`
+- `@vue-solana/vue/useTokenBalance`
+- `@vue-solana/vue/useTokenAccounts`
 - `@vue-solana/vue/web3`
 
 使用 `@vue-solana/vue/web3` 获取受支持的原始 Solana primitive，例如 `PublicKey`、`Transaction` 和 `TransactionInstruction`。浏览器交易代码需要 Buffer polyfill 时，使用 `@vue-solana/vue/buffer-polyfill`。较底层 core 用法仍然支持直接 `@vue-solana/core/*` 导入。
@@ -91,6 +93,8 @@ import { useWallet } from "@vue-solana/vue/useWallet";
 - `useWallet()`：返回活跃钱包 ref、计算出的连接状态和钱包操作。
 - `useWallets()`：返回已发现的浏览器扩展钱包、Android Mobile Wallet Adapter 钱包、受支持的 iOS 浏览器钱包条目和钱包选择操作。
 - `useBalance(address, commitment?)`：加载 `PublicKey` 或地址字符串的 lamport 余额。
+- `useTokenAccounts(owner, options?)`：加载某个所有者的所有 SPL token 账户，默认同时查询 Token 和 Token-2022 program。
+- `useTokenBalance(mint, owner)`：通过关联 token 账户加载 mint/owner 对的 SPL token 余额和小数位数。
 - `useTransaction(handler, options?)`：通用异步交易状态 helper，带可选超时设置。
 - `useTransactionConfirmation(options?)`：用响应式状态和超时/错误状态确认已提交签名。
 - `useSignatureStatus(signature, options?)`：读取、轮询或订阅签名状态更新。
@@ -166,6 +170,81 @@ const balanceErrorMessage = computed(() => {
   </section>
 </template>
 ```
+
+## 读取 Token 账户
+
+```vue
+<script setup lang="ts">
+import { computed, ref } from "vue";
+import { useTokenAccounts } from "@vue-solana/vue/useTokenAccounts";
+
+const owner = ref("PASTE_A_SOLANA_ADDRESS");
+const { tokenAccounts, loading, error, refresh } = useTokenAccounts(owner);
+
+const tokenErrorMessage = computed(() => {
+  switch (error.value?.code) {
+    case "INVALID_ADDRESS":
+      return "Enter a valid Solana address.";
+    case "RPC_FAILURE":
+      return "Unable to load token accounts from RPC.";
+    default:
+      return null;
+  }
+});
+</script>
+
+<template>
+  <section>
+    <p>Token accounts: {{ tokenAccounts.length }}</p>
+    <ul>
+      <li v-for="(account, i) in tokenAccounts" :key="i">
+        {{ account.mint }} — {{ account.amount }}
+      </li>
+    </ul>
+    <p v-if="loading">Loading...</p>
+    <p v-if="tokenErrorMessage">{{ tokenErrorMessage }}</p>
+    <button type="button" @click="refresh">Refresh</button>
+  </section>
+</template>
+```
+
+`useTokenAccounts()` 在 owner 为 null 时清除状态且不调用 RPC。在选项中传入 `programId` 可将结果限制为单个 token program。
+
+## 读取 Token 余额
+
+```vue
+<script setup lang="ts">
+import { computed, ref } from "vue";
+import { useTokenBalance } from "@vue-solana/vue/useTokenBalance";
+
+const mint = ref("PASTE_A_MINT_ADDRESS");
+const owner = ref("PASTE_A_SOLANA_ADDRESS");
+const { balance, decimals, loading, error, refresh } = useTokenBalance(mint, owner);
+
+const tokenBalanceErrorMessage = computed(() => {
+  switch (error.value?.code) {
+    case "INVALID_ADDRESS":
+      return "Enter valid mint and owner addresses.";
+    case "RPC_FAILURE":
+      return "Unable to load token balance from RPC.";
+    default:
+      return null;
+  }
+});
+</script>
+
+<template>
+  <section>
+    <p v-if="balance !== null">Balance: {{ balance }} ({{ decimals }} decimals)</p>
+    <p v-else>No token account found.</p>
+    <p v-if="loading">Loading...</p>
+    <p v-if="tokenBalanceErrorMessage">{{ tokenBalanceErrorMessage }}</p>
+    <button type="button" @click="refresh">Refresh</button>
+  </section>
+</template>
+```
+
+`useTokenBalance()` 在关联 token 账户不存在时返回 null balance 和 decimals，不会将其视为错误。
 
 ## 错误处理
 

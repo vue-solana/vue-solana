@@ -187,6 +187,19 @@ export default {
         waiting: "esperando",
       },
     },
+    tokenAccounts: {
+      title: "Cuentas de tokens SPL",
+      description:
+        "Carga las cuentas de tokens SPL de la wallet conectada y verifica el balance de un token específico por dirección de mint. Requiere una wallet conectada para la lista de cuentas.",
+      refresh: "Actualizar cuentas",
+      mintLabel: "Dirección del mint",
+      mintPlaceholder: "Introduce una clave pública del mint de token",
+      refreshBalance: "Comprobar balance",
+      labels: {
+        accounts: "Cuentas de tokens:",
+        balance: "Balance:",
+      },
+    },
     transfer: {
       title: "Transferencia real en devnet",
       description:
