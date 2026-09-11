@@ -153,6 +153,7 @@ Kit REST RPC methods return native JavaScript types:
 
 - Lamports, slots, and block heights are `bigint`. `JSON.stringify` on `bigint` throws; convert with `Number(...)` or `toString()`.
 - Account data is `Uint8Array`, not `Buffer`. The `@solana/buffer/` shim you may be using is only needed for legacy transaction paths.
+- The Kit `client.rpc` does not apply the `commitment` from your `SolanaConfig`; it uses Kit's per-call defaults. If you rely on a custom commitment, pass it per call (e.g. `rpc.getBalance(account, { commitment: "confirmed" }).send()`) or keep using the legacy `connection`, which still honors it, during v1.x.
 
 ## Bridge Note (Optional)
 

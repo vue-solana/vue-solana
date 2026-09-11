@@ -153,6 +153,7 @@ Kit REST RPC 메서드는 네이티브 JavaScript 타입을 반환합니다:
 
 - Lamports, 슬롯, 블록 높이는 `bigint`입니다. `bigint`에 대한 `JSON.stringify`는 예외를 던집니다. `Number(...)` 또는 `toString()`으로 변환하세요.
 - 계정 데이터는 `Buffer`가 아닌 `Uint8Array`입니다. 사용 중인 `@solana/buffer/` 심은 레거시 트랜잭션 경로에만 필요합니다.
+- Kit `client.rpc`는 `SolanaConfig`의 `commitment`를 적용하지 않으며 Kit의 호출별 기본값을 사용합니다. 커스텀 commitment에 의존한다면 각 호출에 전달하거나(예: `rpc.getBalance(account, { commitment: "confirmed" }).send()`) v1.x 동안에는 이를 존중하는 레거시 `connection`을 계속 사용하세요.
 
 ## 브리지 참고 사항 (선택)
 

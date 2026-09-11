@@ -153,6 +153,7 @@ Kit REST RPC 方法返回原生 JavaScript 类型：
 
 - Lamports、slot 和区块高度是 `bigint`。对 `bigint` 执行 `JSON.stringify` 会抛出异常；请用 `Number(...)` 或 `toString()` 转换。
 - 账户数据是 `Uint8Array`，不是 `Buffer`。你可能在用的 `@solana/buffer/` shim 只对旧版交易路径需要。
+- Kit 的 `client.rpc` 不会应用 `SolanaConfig` 中的 `commitment`，而是使用 Kit 每次调用的默认值。如果你的应用依赖自定义 commitment，请在每次调用时传入（例如 `rpc.getBalance(account, { commitment: "confirmed" }).send()`），或在 v1.x 期间继续使用会尊重它的旧版 `connection`。
 
 ## 桥接说明（可选）
 
