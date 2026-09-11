@@ -20,6 +20,7 @@ export default {
       solanaForVueDevelopers: "Vue 개발자를 위한 Solana",
       clusters: "클러스터",
       guides: "가이드",
+      kitMigration: "Kit 마이그레이션",
       rpcAndClusters: "RPC와 클러스터",
       wallets: "지갑",
       accountReads: "계정 읽기",

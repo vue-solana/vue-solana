@@ -82,6 +82,11 @@ export const docsNavSections: DocsNavSection[] = [
     titleKey: "navigation.sidebar.guides",
     links: [
       {
+        label: "Kit Migration",
+        labelKey: "navigation.sidebar.kitMigration",
+        to: "/guides/kit-migration",
+      },
+      {
         label: "RPC and Clusters",
         labelKey: "navigation.sidebar.rpcAndClusters",
         to: "/guides/rpc-and-clusters",

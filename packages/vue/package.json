@@ -40,6 +40,11 @@
       "import": "./dist/useSolana.mjs",
       "require": "./dist/useSolana.cjs"
     },
+    "./useSolanaClient": {
+      "types": "./dist/useSolanaClient.d.ts",
+      "import": "./dist/useSolanaClient.mjs",
+      "require": "./dist/useSolanaClient.cjs"
+    },
     "./useRpc": {
       "types": "./dist/useRpc.d.ts",
       "import": "./dist/useRpc.mjs",
@@ -114,6 +119,11 @@
       "types": "./dist/web3.d.ts",
       "import": "./dist/web3.mjs",
       "require": "./dist/web3.cjs"
+    },
+    "./kit": {
+      "types": "./dist/kit.d.ts",
+      "import": "./dist/kit.mjs",
+      "require": "./dist/kit.cjs"
     }
   },
   "files": [

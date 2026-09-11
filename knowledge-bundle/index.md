@@ -11,6 +11,7 @@ This directory contains OKF-formatted knowledge files for AI agents working with
 ## Guides
 
 - [Getting Started](./guides/getting-started.md) — install, configure, and test the Vue Solana packages
+- [Kit Migration](./guides/kit-migration.md) — migrate from the legacy web3-compat Connection API to @solana/kit
 - [Wallet Support](./guides/wallets.md) — unified wallet discovery, selection, and connection
 - [Android Mobile Wallets](./guides/wallet-android.md) — Solana Mobile Wallet Adapter on Android
 - [iOS Browser Wallets](./guides/wallet-ios.md) — Phantom, Solflare, and Backpack universal links on iOS
@@ -34,6 +35,7 @@ This directory contains OKF-formatted knowledge files for AI agents working with
 Plans live in the top-level [`plans/`](../plans/) directory:
 
 - [v1 Roadmap](../plans/v1-roadmap.md)
+- [Kit Migration Plan](../plans/kit-migration-plan.md)
 - [Native Wallet Plan](../plans/native-wallet-plan.md)
 - [Solana Pay QR Plan](../plans/solana-pay-qr-plan.md)
 - [Standalone Package Install Plan](../plans/stand-alone-package-install-plan.md)

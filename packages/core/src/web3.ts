@@ -1,3 +1,9 @@
+/**
+ * Legacy `@solana/web3-compat` re-exports kept for backward compatibility.
+ *
+ * @deprecated Prefer `@vue-solana/core/kit` (`Address`, `client.rpc`, and the
+ * Kit transaction/signer helpers) for new code.
+ */
 export type {
   AccountInfo,
   Commitment,

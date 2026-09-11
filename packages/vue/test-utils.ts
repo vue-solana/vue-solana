@@ -13,6 +13,9 @@ export function createMockSolanaContext(
     connection: {
       getBalance: async () => 0,
     } as unknown as VueSolanaContext["connection"],
+    client: {
+      rpc: {},
+    } as unknown as VueSolanaContext["client"],
     wallet: shallowRef<SolanaWallet | null>(null),
     wallets: shallowRef([]),
     selectedWallet: shallowRef(null),

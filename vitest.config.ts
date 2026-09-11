@@ -43,6 +43,7 @@ export default defineConfig({
       "@vue-solana/core/web3": fileURLToPath(
         new URL("./packages/core/src/web3.ts", import.meta.url),
       ),
+      "@vue-solana/core/kit": fileURLToPath(new URL("./packages/core/src/kit.ts", import.meta.url)),
       "@vue-solana/core/spl-token": fileURLToPath(
         new URL("./packages/core/src/spl-token.ts", import.meta.url),
       ),

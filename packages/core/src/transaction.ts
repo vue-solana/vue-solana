@@ -13,6 +13,13 @@ import type {
 const DEFAULT_CONFIRMATION_COMMITMENT = "confirmed";
 const DEFAULT_CONFIRMATION_TIMEOUT_MS = 60_000;
 
+/**
+ * Sign and send a transaction through a connected wallet using the legacy
+ * web3-compat `Connection` API.
+ *
+ * @deprecated Kit transactions are sent with `client.sendTransaction([...])`
+ * once the client has a payer; see `@vue-solana/core/kit`.
+ */
 export async function signAndSendTransaction(
   connection: Connection,
   wallet: SolanaWallet,
@@ -40,6 +47,12 @@ export async function signAndSendTransaction(
   }
 }
 
+/**
+ * Confirm a transaction signature using the legacy `Connection` API.
+ *
+ * @deprecated Use `client.rpc.getSignatureStatuses([...]).send()` from
+ * `@vue-solana/core/kit` instead.
+ */
 export async function confirmTransactionSignature(
   connection: Connection,
   signature: TransactionSignature,

@@ -15,7 +15,7 @@ npx nuxt module add @vue-solana/nuxt
 
 This installs the package and adds `@vue-solana/nuxt` to the `modules` array in `nuxt.config.ts`.
 
-Browser apps that create or serialize transactions can initialize the Buffer polyfill from `@vue-solana/nuxt/buffer-polyfill` and import supported Solana primitives from `@vue-solana/nuxt/web3`.
+Browser apps that create or serialize transactions can initialize the Buffer polyfill from `@vue-solana/nuxt/buffer-polyfill` and import supported Solana primitives from `@vue-solana/nuxt/web3`. For the modern Kit API, use `@vue-solana/nuxt/kit` (`createSolanaClient`, `address`, `lamports`, and types) and the auto-imported `useSolanaClient()`.
 
 ## Module Setup
 
@@ -76,8 +76,9 @@ Pass `mobileWallet: false` or `iosWallet: false` to disable either mobile wallet
 The module auto-imports these composables from direct `@vue-solana/vue/*` subpaths rather than the root Vue package barrel. This keeps Nuxt SSR bundles from pulling in unrelated Solana runtime code just because a page uses one composable.
 
 - `useSolana()`: returns the full injected Solana context.
-- `useSolanaRpc()`: returns cluster, endpoint, RPC status, latest blockhash, and `checkConnection()`.
-- `useSolanaConnection()`: returns the Solana `Connection` instance.
+- `useSolanaClient()`: returns the Kit `{ client, rpc }` from the context. Recommended for new code.
+- `useSolanaRpc()`: returns cluster, endpoint, RPC status, latest blockhash, and `checkConnection()`. RPC reads here use the legacy connection; prefer `useSolanaClient().rpc` in new code.
+- `useSolanaConnection()`: returns the legacy Solana `Connection` instance (deprecated in favor of `useSolanaClient()`).
 - `useSolanaAccountInfo(address, options?)`: reads account info and can subscribe to account changes.
 - `useSolanaWallet()`: returns selected wallet state, connection state, capabilities, and wallet actions.
 - `useSolanaWallets()`: returns discovered wallets and wallet selection/refresh actions.
@@ -107,12 +108,23 @@ import { installSolanaBufferPolyfill } from "@vue-solana/nuxt/buffer-polyfill";
 import { PublicKey, Transaction } from "@vue-solana/nuxt/web3";
 ```
 
+The Kit API is available both as an auto-import and as an explicit import:
+
+```ts
+import { address, lamports } from "@vue-solana/nuxt/kit";
+
+const { client, rpc } = useSolanaClient();
+const slot = await rpc.getSlot().send(); // bigint
+const owner = address("PASTE_A_SOLANA_ADDRESS");
+```
+
 Use direct `@vue-solana/core/*` imports only for lower-level core usage.
 
 Direct package subpaths:
 
 - `@vue-solana/nuxt/buffer-polyfill`
 - `@vue-solana/nuxt/web3`
+- `@vue-solana/nuxt/kit`
 
 The runtime plugin is client-only. Auto-imported composables can be called during SSR and return inert state until hydration provides the real client context. Trigger RPC and wallet work from client lifecycle hooks or user actions.
 

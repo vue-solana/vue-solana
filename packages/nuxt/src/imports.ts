@@ -8,6 +8,7 @@ const SOLANA_COMPOSABLE_IMPORTS = [
   ["useSignAndSendTransaction", "useSolanaSignAndSendTransaction"],
   ["useSignatureStatus", "useSolanaSignatureStatus"],
   ["useSolana", "useSolana"],
+  ["useSolanaClient", "useSolanaClient"],
   ["useTokenAccounts", "useSolanaTokenAccounts"],
   ["useTokenBalance", "useSolanaTokenBalance"],
   ["useTransactionConfirmation", "useSolanaTransactionConfirmation"],

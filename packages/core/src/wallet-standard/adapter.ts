@@ -7,6 +7,7 @@ import {
 } from "@solana/wallet-standard-features";
 import { PublicKey } from "@solana/web3-compat";
 import bs58 from "bs58";
+import type { Address } from "../kit";
 import type { SolanaChain, SolanaTransaction, SolanaWallet, SolanaWalletInfo } from "../types";
 import { SolanaWalletError } from "../wallet";
 import { SOLANA_CHAINS } from "./chains";
@@ -57,6 +58,9 @@ export function adaptSolanaStandardWallet(
     source: walletInfo.source,
     get publicKey() {
       return account ? new PublicKey(account.publicKey) : null;
+    },
+    get address() {
+      return account ? (account.address as Address) : undefined;
     },
     get connected() {
       return Boolean(account);

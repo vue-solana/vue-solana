@@ -20,6 +20,7 @@ export default {
       solanaForVueDevelopers: "面向 Vue 开发者的 Solana",
       clusters: "集群",
       guides: "指南",
+      kitMigration: "Kit 迁移",
       rpcAndClusters: "RPC 和集群",
       wallets: "钱包",
       accountReads: "账户读取",

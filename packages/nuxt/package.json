@@ -39,6 +39,11 @@
       "types": "./dist/runtime/web3.d.ts",
       "import": "./dist/runtime/web3.mjs",
       "require": "./dist/runtime/web3.cjs"
+    },
+    "./kit": {
+      "types": "./dist/runtime/kit.d.ts",
+      "import": "./dist/runtime/kit.mjs",
+      "require": "./dist/runtime/kit.cjs"
     }
   },
   "files": [

@@ -8,6 +8,7 @@ export default defineBuildConfig({
     "src/clusters",
     "src/errors",
     "src/ios-wallet",
+    "src/kit",
     "src/mobile-wallet",
     "src/rpc",
     "src/spl-token",

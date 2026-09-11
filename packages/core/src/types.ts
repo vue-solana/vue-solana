@@ -9,6 +9,7 @@ import type {
   TransactionSignature,
   VersionedTransaction,
 } from "@solana/web3-compat";
+import type { Address, SolanaClient } from "./kit";
 
 export type SolanaCluster = "mainnet-beta" | "testnet" | "devnet" | "localnet";
 
@@ -27,6 +28,7 @@ export interface SolanaContext {
   endpoint: string;
   wsEndpoint: string;
   connection: Connection;
+  client: SolanaClient;
 }
 
 export type SolanaTransaction = Transaction | VersionedTransaction;
@@ -38,6 +40,7 @@ export interface SolanaSignMessageResult {
 
 export interface SolanaWallet {
   publicKey: PublicKey | null;
+  address?: Address;
   connected: boolean;
   connecting?: boolean;
   disconnecting?: boolean;
