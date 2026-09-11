@@ -67,6 +67,7 @@ Direct package subpaths:
 
 - `@vue-solana/vue/buffer-polyfill`
 - `@vue-solana/vue/useSolana`
+- `@vue-solana/vue/useSolanaClient`
 - `@vue-solana/vue/useRpc`
 - `@vue-solana/vue/useConnection`
 - `@vue-solana/vue/useAccountInfo`
@@ -82,12 +83,14 @@ Direct package subpaths:
 - `@vue-solana/vue/useTokenBalance`
 - `@vue-solana/vue/useTokenAccounts`
 - `@vue-solana/vue/web3`
+- `@vue-solana/vue/kit`
 
-Use `@vue-solana/vue/web3` for supported raw Solana primitives such as `PublicKey`, `Transaction`, and `TransactionInstruction`. Use `@vue-solana/vue/buffer-polyfill` for browser transaction code that needs the Buffer polyfill. Direct `@vue-solana/core/*` imports remain supported for lower-level core usage.
+Use `@vue-solana/vue/web3` for supported raw Solana primitives such as `PublicKey`, `Transaction`, and `TransactionInstruction`. Use `@vue-solana/vue/buffer-polyfill` for browser transaction code that needs the Buffer polyfill. Use `@vue-solana/vue/kit` for the modern Kit API (`createSolanaClient`, `address`, `lamports`, and types). Direct `@vue-solana/core/*` imports remain supported for lower-level core usage.
 
 - `useSolana()`: returns the full injected Solana context.
-- `useRpc()`: returns cluster, endpoint, connection status, latest blockhash, and `checkConnection()`.
-- `useConnection()`: returns the Solana `Connection`.
+- `useSolanaClient()`: returns the Kit `{ client, rpc }` from the context. Recommended for new code.
+- `useRpc()`: returns cluster, endpoint, connection status, latest blockhash, and `checkConnection()`. RPC reads here use the legacy connection; prefer `useSolanaClient().rpc` in new code.
+- `useConnection()`: returns the legacy Solana `Connection` (deprecated in favor of `useSolanaClient()`).
 - `useAccountInfo(address, options?)`: loads account data and can subscribe to account changes.
 - `useProgramAccounts(programId, options?)`: loads accounts owned by a program id with optional filters and data slicing.
 - `useWallet()`: returns active wallet refs, computed connection state, and wallet actions.
@@ -138,6 +141,33 @@ const rpcErrorMessage = computed(() => {
   </section>
 </template>
 ```
+
+## Use The Kit Client
+
+```vue
+<script setup lang="ts">
+import { onMounted, ref } from "vue";
+import { useSolanaClient } from "@vue-solana/vue/useSolanaClient";
+
+const { client, rpc } = useSolanaClient();
+const slot = ref<bigint>();
+
+async function checkSlot() {
+  slot.value = await rpc.getSlot().send();
+}
+
+onMounted(checkSlot);
+</script>
+
+<template>
+  <section>
+    <p>Slot: {{ slot }}</p>
+    <button type="button" @click="checkSlot">Check Slot</button>
+  </section>
+</template>
+```
+
+`useSolanaClient()` returns the same context as `useSolana()` but shapes it for Kit reads: `client` is the full `@solana/kit` client and `rpc` is its read API. RPC results are `bigint` and account data is `Uint8Array`. See [Kit Migration](/guides/kit-migration).
 
 ## Read Balance
 

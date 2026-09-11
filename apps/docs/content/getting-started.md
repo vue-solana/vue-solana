@@ -9,7 +9,7 @@ This guide covers installing the Vue Solana packages, configuring Vue or Nuxt, t
 
 ## Before You Start
 
-Use `@vue-solana/core` directly if you need Solana primitives such as `Connection`, `PublicKey`, and transactions without Vue/Nuxt integration. Use `@vue-solana/vue` or `@vue-solana/nuxt` when you want framework integration.
+Use `@vue-solana/core` directly if you need Solana primitives such as `Connection`, `PublicKey`, and transactions without Vue/Nuxt integration. Use `@vue-solana/vue` or `@vue-solana/nuxt` when you want framework integration. For Kit-based primitives, use `createSolanaClient()` from `@vue-solana/core/kit` and `Address`/`address()`/`lamports()` re-exported there.
 
 Supported clusters:
 
@@ -41,7 +41,7 @@ pnpm add @vue-solana/vue
 npm install @vue-solana/vue
 ```
 
-Vue apps can use `@vue-solana/vue/web3` and `@vue-solana/vue/buffer-polyfill` without installing low-level Solana or Buffer packages directly.
+Vue apps can use `@vue-solana/vue/web3` and `@vue-solana/vue/buffer-polyfill` without installing low-level Solana or Buffer packages directly. For the modern Kit API, use `@vue-solana/vue/kit` (`createSolanaClient`, `address`, `lamports`, and types) and `useSolanaClient()` from `@vue-solana/vue/useSolanaClient`.
 
 ## Install For Nuxt
 
@@ -51,7 +51,7 @@ npx nuxt module add @vue-solana/nuxt
 
 This installs the package and adds `@vue-solana/nuxt` to the `modules` array in `nuxt.config.ts`.
 
-Nuxt apps can use `@vue-solana/nuxt/web3` and `@vue-solana/nuxt/buffer-polyfill` without installing `@vue-solana/core`, `@vue-solana/vue`, or low-level Solana and Buffer packages directly.
+Nuxt apps can use `@vue-solana/nuxt/web3` and `@vue-solana/nuxt/buffer-polyfill` without installing `@vue-solana/core`, `@vue-solana/vue`, or low-level Solana and Buffer packages directly. For the modern Kit API, use `@vue-solana/nuxt/kit` and the auto-imported `useSolanaClient()`.
 
 ## Known TypeScript Issue
 
@@ -60,6 +60,8 @@ Nuxt apps can use `@vue-solana/nuxt/web3` and `@vue-solana/nuxt/buffer-polyfill`
 Runtime imports still use the real `@solana/web3-compat` package. Current Vue Solana packages publish temporary package-owned declaration shims, so apps following the documented `@vue-solana/core`, `@vue-solana/vue`, or `@vue-solana/nuxt` imports should not need their own local shim.
 
 Only add a local shim if you are using an older Vue Solana package version or importing `@solana/web3-compat` directly from app code. Re-check this note after each new `@solana/web3-compat` release; the package-owned shim should be removed once upstream ships valid root declarations.
+
+This issue only affects the legacy `web3` path. The Kit path (`@vue-solana/*/kit` and `useSolanaClient()`) depends on `@solana/kit`, which ships valid declarations — plan to move to it via the [Kit Migration guide](/guides/kit-migration) before `@solana/web3-compat` is removed in v2.
 
 ## Vue Setup
 
@@ -94,7 +96,10 @@ For Vue composables, prefer direct subpath imports in new code:
 ```ts
 import { useRpc } from "@vue-solana/vue/useRpc";
 import { useBalance } from "@vue-solana/vue/useBalance";
+import { useSolanaClient } from "@vue-solana/vue/useSolanaClient";
 ```
+
+`useRpc()` and `useBalance()` use the legacy connection. New code should prefer `useSolanaClient()`, which returns the Kit `client` and its read-only `rpc`, plus `address()`/`lamports()` from `@vue-solana/vue/kit`. See the [Kit Migration guide](/guides/kit-migration) for the full before/after map.
 
 ## Nuxt Setup
 
@@ -148,6 +153,28 @@ onMounted(async () => {
 </template>
 ```
 
+New code can use the Kit client instead. `useSolanaClient()` needs no wallet and returns the same info typed for the Kit RPC API (read calls return `bigint`):
+
+```vue
+<script setup lang="ts">
+import { onMounted, ref } from "vue";
+import { useSolanaClient } from "@vue-solana/vue/useSolanaClient";
+
+const { rpc } = useSolanaClient();
+const slot = ref<bigint | null>(null);
+
+onMounted(async () => {
+  slot.value = await rpc.getSlot().send();
+});
+</script>
+
+<template>
+  <main>
+    <p>Slot: {{ slot }}</p>
+  </main>
+</template>
+```
+
 In Nuxt, use the auto-imported `useSolanaRpc()`:
 
 ```vue
@@ -163,6 +190,19 @@ const { cluster, endpoint, checkConnection, latestBlockhash } = useSolanaRpc();
     <button type="button" @click="checkConnection">Check RPC</button>
   </main>
 </template>
+```
+
+In Nuxt, the same Kit reads come from the auto-imported `useSolanaClient()`:
+
+```vue
+<script setup lang="ts">
+const { rpc } = useSolanaClient();
+const slot = ref<bigint | null>(null);
+
+onMounted(async () => {
+  slot.value = await rpc.getSlot().send();
+});
+</script>
 ```
 
 ## Get Devnet Or Testnet SOL
@@ -355,5 +395,6 @@ Before relying on an app flow, verify these behaviors on devnet:
 - [Clusters](/concepts/clusters)
 - [Wallets](/guides/wallets)
 - [Transaction Guide](/guides/transactions)
+- [Kit Migration](/guides/kit-migration)
 - [Troubleshooting](/troubleshooting)
 - [Solana Documentation](https://solana.com/docs)

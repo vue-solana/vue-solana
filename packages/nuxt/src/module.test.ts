@@ -172,6 +172,10 @@ describe("Nuxt module", () => {
       "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > @solana-mobile/wallet-standard-mobile",
       "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl",
       "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl/nacl-fast.js",
+      "@solana/kit",
+      "@solana/kit-plugin-rpc",
+      "@solana/kit-plugin-instruction-plan",
+      "@solana-program/system",
     ]);
     expect(vite.optimizeDeps.needsInterop).toEqual([
       "@vue-solana/nuxt > @solana/web3-compat > @solana/web3.js > eventemitter3",

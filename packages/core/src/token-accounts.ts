@@ -17,6 +17,12 @@ export interface TokenAccountsByOwnerOptions {
   programId?: PublicKey;
 }
 
+/**
+ * Get all SPL token accounts for an owner using the legacy `Connection` API.
+ *
+ * @deprecated Prefer `@solana-program/token` reads against `client.rpc` from
+ * `@vue-solana/core/kit`.
+ */
 export async function getTokenAccountsByOwner(
   connection: Connection,
   owner: PublicKey,
@@ -53,6 +59,12 @@ export async function getTokenAccountsByOwner(
   }
 }
 
+/**
+ * Get a single token account using the legacy `Connection` API.
+ *
+ * @deprecated Prefer `@solana-program/token` reads against `client.rpc` from
+ * `@vue-solana/core/kit`.
+ */
 export async function getTokenAccount(
   connection: Connection,
   address: PublicKey,
@@ -73,6 +85,12 @@ export interface TokenBalanceResult {
   decimals: number;
 }
 
+/**
+ * Read the token balance of the associated token account for an owner.
+ *
+ * @deprecated Prefer `@solana-program/token` reads against `client.rpc` from
+ * `@vue-solana/core/kit`.
+ */
 export async function getTokenBalance(
   connection: Connection,
   mint: PublicKey,

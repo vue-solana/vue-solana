@@ -20,6 +20,7 @@ export default {
       solanaForVueDevelopers: "Solana para desarrolladores Vue",
       clusters: "Clústeres",
       guides: "Guías",
+      kitMigration: "Migración a Kit",
       rpcAndClusters: "RPC y clústeres",
       wallets: "Wallets",
       accountReads: "Lecturas de cuentas",

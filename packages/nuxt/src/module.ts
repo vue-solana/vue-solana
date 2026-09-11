@@ -24,6 +24,10 @@ const VITE_OPTIMIZE_DEPS = [
   "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > @solana-mobile/wallet-standard-mobile",
   "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl",
   "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl/nacl-fast.js",
+  "@solana/kit",
+  "@solana/kit-plugin-rpc",
+  "@solana/kit-plugin-instruction-plan",
+  "@solana-program/system",
 ];
 
 const VITE_NEEDS_INTEROP = [

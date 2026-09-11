@@ -7,6 +7,12 @@ export type MaybePublicKeyInput =
   | { value: PublicKeyInput }
   | (() => PublicKeyInput);
 
+/**
+ * Parse a public key from a `PublicKey` instance, string, ref, or getter.
+ *
+ * @deprecated Use `address()` from `@vue-solana/core/kit` for strings; a base58
+ * string is already `Address`-shaped.
+ */
 export function parsePublicKey(value: MaybePublicKeyInput): PublicKey | null {
   const publicKeyInput = toPublicKeyInput(value);
 

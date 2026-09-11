@@ -5,8 +5,14 @@ import {
   getClusterWebSocketEndpoint,
   getWebSocketEndpoint,
 } from "./clusters";
+import { createSolanaClient } from "./kit";
 import type { SolanaConfig, SolanaContext } from "./types";
 
+/**
+ * Create a legacy web3-compat `Connection`.
+ *
+ * @deprecated Use `createSolanaClient()` from `@vue-solana/core/kit` instead.
+ */
 export function createSolanaConnection(config: SolanaConfig = {}): Connection {
   const cluster = config.cluster ?? DEFAULT_CLUSTER;
   const endpoint = config.endpoint ?? getClusterEndpoint(cluster);
@@ -32,5 +38,6 @@ export function createSolanaContext(config: SolanaConfig = {}): SolanaContext {
     endpoint,
     wsEndpoint,
     connection: createSolanaConnection(config),
+    client: createSolanaClient(config),
   };
 }

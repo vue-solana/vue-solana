@@ -16,7 +16,8 @@ function getSsrContext(): VueSolanaContext {
     cluster: "devnet",
     endpoint: "",
     wsEndpoint: "",
-    connection: createUnavailableConnection(),
+    connection: createUnavailableProxy(),
+    client: createUnavailableProxy(),
     wallet: shallowRef(null),
     status: ref("idle"),
     error: ref(null),
@@ -32,7 +33,7 @@ function getSsrContext(): VueSolanaContext {
   return ssrContext;
 }
 
-function createUnavailableConnection(): VueSolanaContext["connection"] {
+function createUnavailableProxy<T>(): T {
   return new Proxy(
     {},
     {
@@ -40,5 +41,5 @@ function createUnavailableConnection(): VueSolanaContext["connection"] {
         throw new Error("Vue Solana plugin is not installed");
       },
     },
-  ) as VueSolanaContext["connection"];
+  ) as T;
 }

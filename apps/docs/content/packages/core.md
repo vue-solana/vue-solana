@@ -7,9 +7,9 @@ surroundOrder: 14
 
 [`@vue-solana/core`](https://www.npmjs.com/package/@vue-solana/core) contains framework-agnostic Solana primitives used by the Vue Solana packages.
 
-Use this package directly when you want connection helpers, shared wallet types, Android Mobile Wallet Adapter registration helpers, iOS browser wallet helpers, and transaction helpers without installing the Vue plugin.
+Use this package directly when you want Kit clients, connection helpers, shared wallet types, Android Mobile Wallet Adapter registration helpers, iOS browser wallet helpers, and transaction helpers without installing the Vue plugin.
 
-`@vue-solana/core` wraps `@solana/web3-compat` and re-exports the Solana primitives most Vue Solana apps need, including `Connection`, `PublicKey`, `Transaction`, and `VersionedTransaction`.
+`@vue-solana/core` supports both the modern [`@solana/kit`](https://www.npmjs.com/package/@solana/kit) API and the legacy `@solana/web3-compat` API. Prefer the Kit path (`createSolanaClient()`, the `@vue-solana/core/kit` subpath) in new code. The legacy `web3` subpath re-exports `Connection`, `PublicKey`, `Transaction`, and `VersionedTransaction` for compatibility and is marked deprecated. See [Kit Migration](/guides/kit-migration) for the full before/after map.
 
 ## Install
 
@@ -31,9 +31,24 @@ const { blockhash } = await solana.connection.getLatestBlockhash();
 console.log(solana.endpoint, blockhash);
 ```
 
+New code that uses `@solana/kit` can skip the legacy connection:
+
+```ts
+import { createSolanaClient } from "@vue-solana/core/kit";
+
+const client = createSolanaClient({ cluster: "devnet" });
+
+const slot = await client.rpc.getSlot().send();
+
+console.log(slot); // bigint
+```
+
+`createSolanaContext()` creates both paths side by side: the returned context carries the legacy `connection` and the Kit `client`.
+
 The root export remains supported. Direct subpath exports are also available for narrower imports:
 
 ```ts
+import { createSolanaClient } from "@vue-solana/core/kit";
 import { createSolanaContext } from "@vue-solana/core/rpc";
 import { PublicKey, Transaction } from "@vue-solana/core/web3";
 import type { SolanaConfig } from "@vue-solana/core/types";
@@ -47,6 +62,7 @@ Direct subpaths:
 - `@vue-solana/core/clusters`
 - `@vue-solana/core/errors`
 - `@vue-solana/core/ios-wallet`
+- `@vue-solana/core/kit`
 - `@vue-solana/core/mobile-wallet`
 - `@vue-solana/core/rpc`
 - `@vue-solana/core/timeout`
@@ -92,14 +108,18 @@ interface SolanaContext {
   endpoint: string;
   wsEndpoint: string;
   connection: Connection;
+  client: SolanaClient;
 }
 ```
+
+`connection` is the legacy `@solana/web3-compat` connection (deprecated). `client` is a [`@solana/kit`](https://www.npmjs.com/package/@solana/kit) client built by `createSolanaClient()` and exposes `client.rpc` and `client.rpcSubscriptions`.
 
 ## Wallet Interface
 
 ```ts
 interface SolanaWallet {
   publicKey: PublicKey | null;
+  address?: Address;
   connected: boolean;
   connecting?: boolean;
   disconnecting?: boolean;
@@ -118,6 +138,8 @@ interface SolanaWallet {
 ```
 
 Browser wallets discovered through the Solana Wallet Standard and supported iOS browser wallet links are adapted into this interface. You can also provide a custom object that implements `SolanaWallet`. A discovered wallet remains disconnected until `connect()` resolves successfully, even if the browser extension exposes previously authorized accounts.
+
+`address` is the base58-encoded Kit `Address` form of the connected account and is set by the Wallet Standard adapter. It is available in the transition release so Kit code can consume the connected account; `publicKey` remains the legacy `PublicKey`.
 
 Android Mobile Wallet Adapter is registered through `@solana-mobile/wallet-standard-mobile` and then adapted through the same Wallet Standard adapter.
 
@@ -183,21 +205,22 @@ These helpers are SSR-safe. Android registration returns without registering whe
 
 The root `@vue-solana/core` export re-exports the public helpers below. Use direct subpaths when you want narrower imports or clearer module boundaries.
 
-| Import path                        | What it contains                                                              | Use it when                                                                                                         |
-| ---------------------------------- | ----------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `@vue-solana/core/address`         | `parsePublicKey()` and public-key input types.                                | You accept a Solana address as a string, `PublicKey`, ref-like object, or getter and need a normalized `PublicKey`. |
-| `@vue-solana/core/clusters`        | Default cluster and endpoint helpers.                                         | You need the package's built-in RPC or WebSocket endpoint for `mainnet-beta`, `testnet`, `devnet`, or `localnet`.   |
-| `@vue-solana/core/errors`          | `SolanaError`, error factories, and error guards.                             | You need stable error codes for user-facing wallet, RPC, address, transaction, timeout, or storage failures.        |
-| `@vue-solana/core/ios-wallet`      | iOS browser wallet discovery, deep-link adapters, and callback handling.      | You are wiring iOS wallet links without the Vue plugin's unified wallet flow.                                       |
-| `@vue-solana/core/mobile-wallet`   | Android Mobile Wallet Adapter registration helpers.                           | You need to register Android MWA before reading Wallet Standard wallets.                                            |
-| `@vue-solana/core/rpc`             | `createSolanaConnection()` and `createSolanaContext()`.                       | You want a configured `Connection` and resolved cluster endpoints without installing the Vue plugin.                |
-| `@vue-solana/core/timeout`         | Promise timeout helpers that produce Solana timeout errors.                   | You need timeout behavior consistent with transaction confirmation helpers.                                         |
-| `@vue-solana/core/transaction`     | Transaction send and confirmation helpers.                                    | You need a wallet-aware send path or a confirmation result for an existing signature.                               |
-| `@vue-solana/core/spl-token`       | SPL Token type re-exports (`TokenAccount`, `Mint`, program IDs).              | You need SPL Token types and constants without importing `@solana/spl-token` directly.                              |
-| `@vue-solana/core/token-accounts`  | Stateless SPL Token account helpers (`getTokenAccountsByOwner`, etc.).        | You need to fetch or unpack token accounts, or derive balances from associated token addresses.                     |
-| `@vue-solana/core/types`           | Shared TypeScript types.                                                      | You need `SolanaConfig`, `SolanaContext`, `SolanaWallet`, wallet metadata, or transaction option types.             |
-| `@vue-solana/core/wallet`          | Wallet state assertions and wallet capability errors.                         | You need to validate that a selected wallet is connected or supports signing before calling wallet methods.         |
-| `@vue-solana/core/wallet-standard` | Wallet Standard chain mapping, discovery, subscriptions, and adapter helpers. | You are building your own wallet discovery layer on top of Solana Wallet Standard.                                  |
+| Import path                        | What it contains                                                                                                            | Use it when                                                                                                         |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `@vue-solana/core/address`         | `parsePublicKey()` and public-key input types.                                                                              | You accept a Solana address as a string, `PublicKey`, ref-like object, or getter and need a normalized `PublicKey`. |
+| `@vue-solana/core/clusters`        | Default cluster and endpoint helpers.                                                                                       | You need the package's built-in RPC or WebSocket endpoint for `mainnet-beta`, `testnet`, `devnet`, or `localnet`.   |
+| `@vue-solana/core/errors`          | `SolanaError`, error factories, and error guards.                                                                           | You need stable error codes for user-facing wallet, RPC, address, transaction, timeout, or storage failures.        |
+| `@vue-solana/core/ios-wallet`      | iOS browser wallet discovery, deep-link adapters, and callback handling.                                                    | You are wiring iOS wallet links without the Vue plugin's unified wallet flow.                                       |
+| `@vue-solana/core/kit`             | `createSolanaClient()` and the `@solana/kit` re-exports (`Address`, `address`, `lamports`, `SolanaRpcApi`, `SolanaClient`). | You want the modern Kit API without the legacy connection or full `@solana/kit` dependency graph.                   |
+| `@vue-solana/core/mobile-wallet`   | Android Mobile Wallet Adapter registration helpers.                                                                         | You need to register Android MWA before reading Wallet Standard wallets.                                            |
+| `@vue-solana/core/rpc`             | `createSolanaConnection()` and `createSolanaContext()`.                                                                     | You want a configured `Connection` and resolved cluster endpoints without installing the Vue plugin.                |
+| `@vue-solana/core/timeout`         | Promise timeout helpers that produce Solana timeout errors.                                                                 | You need timeout behavior consistent with transaction confirmation helpers.                                         |
+| `@vue-solana/core/transaction`     | Transaction send and confirmation helpers.                                                                                  | You need a wallet-aware send path or a confirmation result for an existing signature.                               |
+| `@vue-solana/core/spl-token`       | SPL Token type re-exports (`TokenAccount`, `Mint`, program IDs).                                                            | You need SPL Token types and constants without importing `@solana/spl-token` directly.                              |
+| `@vue-solana/core/token-accounts`  | Stateless SPL Token account helpers (`getTokenAccountsByOwner`, etc.).                                                      | You need to fetch or unpack token accounts, or derive balances from associated token addresses.                     |
+| `@vue-solana/core/types`           | Shared TypeScript types.                                                                                                    | You need `SolanaConfig`, `SolanaContext`, `SolanaWallet`, wallet metadata, or transaction option types.             |
+| `@vue-solana/core/wallet`          | Wallet state assertions and wallet capability errors.                                                                       | You need to validate that a selected wallet is connected or supports signing before calling wallet methods.         |
+| `@vue-solana/core/wallet-standard` | Wallet Standard chain mapping, discovery, subscriptions, and adapter helpers.                                               | You are building your own wallet discovery layer on top of Solana Wallet Standard.                                  |
 
 ### Clusters and RPC
 
@@ -205,8 +228,19 @@ The root `@vue-solana/core` export re-exports the public helpers below. Use dire
 - `getClusterEndpoint(cluster?)`: returns the HTTP RPC endpoint for a cluster.
 - `getClusterWebSocketEndpoint(cluster?)`: returns the WebSocket endpoint for a cluster.
 - `getWebSocketEndpoint(endpoint)`: converts `http`/`https` RPC URLs to `ws`/`wss` URLs.
-- `createSolanaConnection(config?)`: creates a `Connection` using the resolved endpoint and commitment.
-- `createSolanaContext(config?)`: creates `{ cluster, endpoint, wsEndpoint, connection }` for framework-agnostic app setup.
+- `createSolanaClient(config?)`: creates a `@solana/kit` client whose `rpc` is wired to the resolved endpoint and WebSocket subscriptions. Recommended for new code.
+- `createSolanaConnection(config?)`: creates a legacy `Connection` using the resolved endpoint and commitment. Deprecated — use `createSolanaClient()`.
+- `createSolanaContext(config?)`: creates `{ cluster, endpoint, wsEndpoint, connection, client }` for framework-agnostic app setup.
+
+```ts
+import { createSolanaClient } from "@vue-solana/core/kit";
+
+const client = createSolanaClient({ cluster: "devnet" });
+
+const slot = await client.rpc.getSlot().send();
+```
+
+The legacy `createSolanaContext` RPC example:
 
 ```ts
 import { createSolanaContext } from "@vue-solana/core/rpc";
@@ -216,9 +250,26 @@ const solana = createSolanaContext({ cluster: "devnet" });
 const slot = await solana.connection.getSlot();
 ```
 
+### Kit
+
+The `@vue-solana/core/kit` subpath exports everything most apps need from `@solana/kit` without installing it directly:
+
+```ts
+import { address, lamports } from "@vue-solana/core/kit";
+import type { Address, SolanaRpcApi } from "@vue-solana/core/kit";
+```
+
+- `createSolanaClient(config?)`: builds a Kit client for the given `SolanaConfig`. Reuses `clusters.ts` endpoint resolution and wires `rpcSubscriptionsUrl` from the resolved WebSocket endpoint.
+- `solana`'s `client.rpc` exposes the full Solana read API (`getSlot`, `getBalance`, `getBlockHeight`, `getSignatureStatuses`, and more) as RPC functions called with `.send()`.
+- `address(value)`: validates and returns an `Address` (base58 string brand) — the Kit replacement for `new PublicKey(...)`.
+- `lamports(value: bigint)`: returns a `Lamports` value — the Kit replacement for raw lamport numbers.
+- Types: `Address`, `Lamports`, `Rpc`, `SolanaRpcApi`, `SolanaClient`.
+
+RPC numeric results are `bigint`, and account data is `Uint8Array` rather than `Buffer`. See [Kit Migration](/guides/kit-migration) for details.
+
 ### Addresses
 
-- `parsePublicKey(value)`: parses a `PublicKey`, address string, ref-like value, or getter and returns `null` for nullish input.
+- `parsePublicKey(value)`: parses a `PublicKey`, address string, ref-like value, or getter and returns `null` for nullish input. Deprecated in favor of `address()` from `@vue-solana/core/kit`.
 
 ```ts
 import { parsePublicKey } from "@vue-solana/core/address";
@@ -243,8 +294,8 @@ const signedTransaction = await wallet.signTransaction(transaction);
 
 ### Transactions
 
-- `signAndSendTransaction(connection, wallet, transaction, options?)`: signs and sends a transaction using a configured wallet and returns the RPC signature. Android Mobile Wallet Adapter wallets use `signTransaction` plus `connection.sendRawTransaction()` when available so the app owns submission and can reliably return the RPC signature after the wallet handoff.
-- `confirmTransactionSignature(connection, signature, options?)`: waits for a submitted signature to reach a requested commitment. Defaults to `confirmed` commitment and a 60 second timeout.
+- `signAndSendTransaction(connection, wallet, transaction, options?)`: signs and sends a transaction using a configured wallet and returns the RPC signature. Android Mobile Wallet Adapter wallets use `signTransaction` plus `connection.sendRawTransaction()` when available so the app owns submission and can reliably return the RPC signature after the wallet handoff. Deprecated in favor of the Kit send path (see [Kit Migration](/guides/kit-migration)).
+- `confirmTransactionSignature(connection, signature, options?)`: waits for a submitted signature to reach a requested commitment. Defaults to `confirmed` commitment and a 60 second timeout. Deprecated in favor of Kit confirmation reads.
 
 ```ts
 import { confirmTransactionSignature, signAndSendTransaction } from "@vue-solana/core/transaction";
@@ -326,3 +377,5 @@ Stable error codes are:
 ## Known TypeScript Issue
 
 See [Troubleshooting](/troubleshooting) for the `@solana/web3-compat@0.0.21` TypeScript metadata issue. Current `@vue-solana/core` packages publish temporary declaration shims for the documented core import paths.
+
+This only affects the legacy `web3` path. The Kit path (`@vue-solana/core/kit`, `createSolanaClient()`) has no shims. See [Kit Migration](/guides/kit-migration) for the recommended path.

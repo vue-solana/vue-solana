@@ -13,6 +13,7 @@ export default defineBuildConfig({
     "src/useSignMessage",
     "src/useSignatureStatus",
     "src/useSolana",
+    "src/useSolanaClient",
     "src/useTokenAccounts",
     "src/useTokenBalance",
     "src/useTransaction",
@@ -20,11 +21,12 @@ export default defineBuildConfig({
     "src/useWallet",
     "src/useWallets",
     "src/web3",
+    "src/kit",
   ],
   declaration: true,
   clean: true,
   rollup: {
     emitCJS: true,
   },
-  externals: ["@solana/web3-compat", "vue", /^@vue-solana\/core(?:\/.*)?$/],
+  externals: ["@solana/kit", "@solana/web3-compat", "vue", /^@vue-solana\/core(?:\/.*)?$/],
 });

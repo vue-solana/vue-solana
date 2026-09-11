@@ -3,6 +3,7 @@ export * from "./address";
 export * from "./buffer-polyfill";
 export * from "./errors";
 export * from "./ios-wallet";
+export * from "./kit";
 export * from "./mobile-wallet";
 export * from "./rpc";
 export * from "./spl-token";

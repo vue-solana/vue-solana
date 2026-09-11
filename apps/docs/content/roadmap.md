@@ -21,6 +21,12 @@ The detailed implementation tracker lives in [`plans/v1-roadmap.md`](https://git
 - Clear desktop native wallet support status.
 - Updated examples, package docs, tests, and E2E coverage.
 
+## v1.x Kit Migration (shipped with v1.2.0)
+
+Vue Solana now ships both APIs side by side. The context carries the legacy `Connection` and a new [Kit](https://solana.com/docs/kit) `client` (`createSolanaClient()` from `@vue-solana/core/kit`, `useSolanaClient()` in Vue, auto-imported in Nuxt). Legacy helpers are marked `@deprecated` but keep working unchanged.
+
+The migration is scheduled to remove the legacy path in v2. See the [Kit Migration guide](/guides/kit-migration) for the timeline, the before/after map, and step-by-step Vue and Nuxt upgrades.
+
 ## Roadmap Phases
 
 ### 1. Public API Stabilization

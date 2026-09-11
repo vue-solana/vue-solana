@@ -22,6 +22,7 @@ The root export remains supported. Direct subpath exports are also available whe
 - `@vue-solana/core/clusters`
 - `@vue-solana/core/errors`
 - `@vue-solana/core/ios-wallet`
+- `@vue-solana/core/kit`
 - `@vue-solana/core/mobile-wallet`
 - `@vue-solana/core/rpc`
 - `@vue-solana/core/timeout`
@@ -50,6 +51,24 @@ interface SolanaConfig {
 If `endpoint` is omitted, the default public endpoint for the selected cluster is used. If `wsEndpoint` is omitted, it is derived from the selected cluster or custom endpoint.
 
 `autoConnect` defaults to `false`. When enabled in the Vue plugin or Nuxt module, Vue Solana reconnects only a wallet identity that the user previously selected and that is discovered again on the client. It stores only wallet identity metadata under `localStorage["vue-solana:selected-wallet"]`: `name`, and `platform`/`source` when available. It never stores private keys, session data, or transaction data, and it never connects an arbitrary installed wallet. Calling `selectWallet(null)` or `setWallet(customWallet)` clears the stored selection.
+
+## `@solana/kit` Client
+
+The modern path re-exports Kit primitives and a client factory from `@vue-solana/core/kit`:
+
+```ts
+import { createSolanaClient, address, lamports } from "@vue-solana/core/kit";
+import type { Address, SolanaClient } from "@vue-solana/core/kit";
+```
+
+`createSolanaClient(config?)` builds a read-only `@solana/kit` client (with `rpc` and `rpcSubscriptions`) from the same `SolanaConfig` used by the legacy helpers. It is the recommended replacement for `createSolanaConnection`.
+
+```ts
+const client = createSolanaClient({ cluster: "devnet" });
+const slot = await client.rpc.getSlot().send(); // bigint
+```
+
+`@vue-solana/core/kit` re-exports the Kit helpers and types Vue Solana consumers need: `address`, `lamports`, and the types `Address`, `Lamports`, `Rpc`, `SolanaRpcApi`, and `SolanaClient`. Read calls return `bigint` numerics and `Uint8Array` account data — not `Buffer`. For the full before/after map, see [Kit Migration](../guides/kit-migration.md) (the docs-site guide lives at [`apps/docs/content/guides/kit-migration.md`](../../apps/docs/content/guides/kit-migration.md)).
 
 ## `@solana/web3-compat` Compatibility
 
@@ -80,14 +99,18 @@ interface SolanaContext {
   endpoint: string;
   wsEndpoint: string;
   connection: Connection;
+  client: SolanaClient;
 }
 ```
+
+`connection` is the legacy web3-compat `Connection` (deprecated, removed in v2). `client` is the `@solana/kit` client from `createSolanaClient()` exposing `rpc` and `rpcSubscriptions`. `createSolanaContext()` builds both.
 
 ## Wallet
 
 ```ts
 interface SolanaWallet {
   publicKey: PublicKey | null;
+  address?: Address;
   connected: boolean;
   connecting?: boolean;
   disconnecting?: boolean;
@@ -193,8 +216,9 @@ interface TransactionConfirmation {
 - `getClusterEndpoint(cluster?)`: returns the HTTP RPC endpoint for a cluster.
 - `getClusterWebSocketEndpoint(cluster?)`: returns the WebSocket endpoint for a cluster.
 - `getWebSocketEndpoint(endpoint)`: converts `http`/`https` endpoints to `ws`/`wss` endpoints.
-- `createSolanaConnection(config?)`: creates a Solana `Connection`.
-- `createSolanaContext(config?)`: creates a `SolanaContext`.
+- `createSolanaConnection(config?)`: (deprecated) creates a legacy Solana `Connection`. Prefer `createSolanaClient(config?)` for new code.
+- `createSolanaContext(config?)`: creates a `SolanaContext` carrying both the legacy `connection` and the Kit `client`.
+- `createSolanaClient(config?)`: creates a `@solana/kit` client with `rpc` and `rpcSubscriptions` from `@vue-solana/core/kit`.
 - `createSolanaError(code, message, options?)`: creates a normalized `SolanaError` with optional original `cause` and wallet `feature` metadata.
 - `isSolanaError(error)`: checks whether an unknown thrown value is a `SolanaError`.
 - `normalizeSolanaError(cause, fallbackCode, fallbackMessage?, options?)`: preserves existing `SolanaError` values, maps wallet rejection values to `USER_REJECTED`, and otherwise wraps the original cause in a fallback `SolanaError`.
@@ -202,8 +226,8 @@ interface TransactionConfirmation {
 - `assertWalletConnected(wallet)`: throws if the wallet is not connected.
 - `assertWalletCanSign(wallet)`: throws if the wallet cannot sign transactions.
 - `assertWalletCanSignMessage(wallet)`: throws if the wallet cannot sign messages.
-- `signAndSendTransaction(connection, wallet, transaction, options?)`: signs and sends a transaction using wallet capabilities. Android Mobile Wallet Adapter wallets prefer `signTransaction` plus app-side RPC submission when available so the app can reliably return the submitted signature.
-- `confirmTransactionSignature(connection, signature, options?)`: waits for a submitted signature to reach the requested commitment. Defaults to `confirmed` commitment and a 60 second timeout. It returns `TransactionConfirmation` and throws a clear timeout or failed-confirmation error.
+- `signAndSendTransaction(connection, wallet, transaction, options?)`: (deprecated) signs and sends a transaction using wallet capabilities. Android Mobile Wallet Adapter wallets prefer `signTransaction` plus app-side RPC submission when available so the app can reliably return the submitted signature. Prefer the Kit send path (`client.sendTransaction`/`client.sendTransactions`) in new code.
+- `confirmTransactionSignature(connection, signature, options?)`: (deprecated) waits for a submitted signature to reach the requested commitment. Defaults to `confirmed` commitment and a 60 second timeout. It returns `TransactionConfirmation` and throws a clear timeout or failed-confirmation error. Prefer Kit confirmation helpers or `client.rpc.getSignatureStatuses(...).send()` in new code.
 - `getSolanaChain(cluster)`: maps a package cluster to a Wallet Standard chain ID.
 - `isSolanaStandardWallet(wallet)`: checks whether a Wallet Standard wallet supports Solana.
 - `getRegisteredSolanaWallets()`: returns discovered Solana Wallet Standard wallets in browser environments, including Android Mobile Wallet Adapter after it is registered on supported clients.

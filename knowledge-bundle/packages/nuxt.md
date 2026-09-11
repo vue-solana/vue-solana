@@ -37,6 +37,7 @@ Nuxt module options are written to public runtime config, so they must be JSON-s
 The Nuxt module installs the runtime plugin on the client only and auto-imports composables from the direct `@vue-solana/vue/*` subpaths. This keeps SSR bundles from pulling in the full Vue package barrel solely because a page uses one composable.
 
 - `useSolana()`
+- `useSolanaClient()`
 - `useSolanaRpc()`
 - `useSolanaConnection()`
 - `useSolanaAccountInfo()`
@@ -60,12 +61,22 @@ import { installSolanaBufferPolyfill } from "@vue-solana/nuxt/buffer-polyfill";
 import { PublicKey, Transaction } from "@vue-solana/nuxt/web3";
 ```
 
+For the modern Kit API, use the auto-imported `useSolanaClient()` and explicit imports from `@vue-solana/nuxt/kit` (`createSolanaClient`, `address`, `lamports`, and the types `Address`, `Rpc`, `SolanaRpcApi`, `SolanaClient`):
+
+```ts
+import { address } from "@vue-solana/nuxt/kit";
+
+const { rpc } = useSolanaClient();
+const slot = await rpc.getSlot().send(); // bigint
+```
+
 Use direct `@vue-solana/core/*` imports only for lower-level core usage.
 
 Available package subpaths:
 
 - `@vue-solana/nuxt/buffer-polyfill`
 - `@vue-solana/nuxt/web3`
+- `@vue-solana/nuxt/kit`
 
 ## Error Handling
 

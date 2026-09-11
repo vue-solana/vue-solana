@@ -40,8 +40,10 @@ Available package subpaths:
 - `@vue-solana/vue/useTokenAccounts`
 - `@vue-solana/vue/useTokenBalance`
 - `@vue-solana/vue/web3`
+- `@vue-solana/vue/kit`
+- `@vue-solana/vue/useSolanaClient`
 
-Use `@vue-solana/vue/web3` for supported raw Solana primitives such as `PublicKey`, `Transaction`, and `TransactionInstruction`. Use `@vue-solana/vue/buffer-polyfill` when browser transaction code needs the Buffer polyfill. Direct `@vue-solana/core/*` imports remain supported for lower-level core usage.
+Use `@vue-solana/vue/web3` for supported legacy raw Solana primitives such as `PublicKey`, `Transaction`, and `TransactionInstruction`. Use `@vue-solana/vue/kit` for the modern Kit API (`createSolanaClient`, `address`, `lamports`, and the types `Address`, `Rpc`, `SolanaRpcApi`, `SolanaClient`) and `@vue-solana/vue/useSolanaClient` for the Kit client composable. Use `@vue-solana/vue/buffer-polyfill` when browser transaction code needs the Buffer polyfill. Direct `@vue-solana/core/*` imports remain supported for lower-level core usage.
 
 ## `createSolanaPlugin(options?)`
 
@@ -76,6 +78,19 @@ createApp(App).use(
 
 Returns the full injected Vue Solana context. If the plugin has not been installed, such as during Nuxt SSR before the client-only plugin runs, it returns inert SSR-safe state instead of throwing. Runtime RPC and wallet actions still require the plugin-provided client context.
 
+## `useSolanaClient()`
+
+Returns the `@solana/kit` client from the injected context as `{ client, rpc }`. It is the recommended RPC path for new code and the replacement for `useConnection()` and `useRpc().connection`:
+
+```ts
+import { useSolanaClient } from "@vue-solana/vue/useSolanaClient";
+
+const { client, rpc } = useSolanaClient();
+const slot = await rpc.getSlot().send(); // bigint
+```
+
+`client.rpc` exposes the read-only `@solana/kit` RPC API. Read calls return `bigint` numerics and `Uint8Array` account data — not `Buffer`. In Nuxt SSR before the client-only plugin runs, it follows `useSolana()` and throws the "Vue Solana plugin is not installed" error instead of returning an inert client. For the full before/after map, see the [Kit Migration guide](../guides/kit-migration.md).
+
 ## `useRpc()`
 
 Returns RPC state and connection helpers:
@@ -93,7 +108,7 @@ Returns RPC state and connection helpers:
 
 ## `useConnection()`
 
-Returns the Solana `Connection` directly.
+Returns the legacy Solana `Connection` directly. Deprecated in favor of `useSolanaClient().rpc`; removed in v2.
 
 ## `useWallet()`
 
