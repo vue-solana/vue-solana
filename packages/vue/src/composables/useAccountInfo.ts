@@ -1,28 +1,33 @@
-import { parsePublicKey, type PublicKeyInput } from "@vue-solana/core/address";
+import type { Commitment } from "@vue-solana/core/kit";
 import { normalizeSolanaError, type SolanaError } from "@vue-solana/core/errors";
-import type { AccountInfo, Commitment } from "@vue-solana/core/web3";
-import { onMounted, onUnmounted, shallowRef, toValue, watch, type MaybeRefOrGetter } from "vue";
+import { onMounted, shallowRef, toValue, watch, type MaybeRefOrGetter } from "vue";
+import { parseAddress } from "@vue-solana/core/address";
 import { useConnection } from "./useConnection";
 import { tryUseSolana } from "./useSolana";
+import { decodeBase64 } from "./decode-base64";
 
 export interface UseAccountInfoOptions {
   commitment?: Commitment;
-  watch?: boolean;
+}
+
+export interface AccountInfo {
+  executable: boolean;
+  lamports: number;
+  owner: string;
+  space: number;
+  data: Uint8Array;
 }
 
 export function useAccountInfo(
-  address: MaybeRefOrGetter<PublicKeyInput>,
+  address: MaybeRefOrGetter<string | null | undefined>,
   options: UseAccountInfoOptions = {},
 ) {
   const solana = tryUseSolana();
-  const connection = solana?.connection ?? useConnection();
-  const accountInfo = shallowRef<AccountInfo<Uint8Array> | null>(null);
+  const client = solana?.client ?? useConnection();
+  const accountInfo = shallowRef<AccountInfo | null>(null);
   const loading = shallowRef(false);
   const error = shallowRef<SolanaError | null>(null);
   let refreshId = 0;
-  let watchId = 0;
-  let subscriptionId: number | null = null;
-  let manuallyStopped = false;
 
   async function refresh() {
     const requestId = ++refreshId;
@@ -39,14 +44,20 @@ export function useAccountInfo(
     error.value = null;
 
     try {
-      const publicKey = parsePublicKey(value);
+      const parsedAddress = parseAddress(value);
 
-      if (!publicKey) {
+      if (!parsedAddress) {
         accountInfo.value = null;
         return null;
       }
 
-      const nextAccountInfo = await connection.getAccountInfo(publicKey, options.commitment);
+      const { value: account } = await client.rpc
+        .getAccountInfo(parsedAddress, {
+          encoding: "base64",
+          commitment: options.commitment,
+        })
+        .send();
+      const nextAccountInfo = account ? normalizeAccountInfo(account) : null;
 
       if (requestId === refreshId) {
         accountInfo.value = nextAccountInfo;
@@ -69,87 +80,14 @@ export function useAccountInfo(
     }
   }
 
-  async function stopWatching() {
-    manuallyStopped = true;
-    watchId += 1;
-    await stopCurrentWatcher();
-  }
-
-  async function stopCurrentWatcher() {
-    if (subscriptionId === null) {
-      return;
-    }
-
-    const currentSubscriptionId = subscriptionId;
-    subscriptionId = null;
-
-    try {
-      await connection.removeAccountChangeListener(currentSubscriptionId);
-    } catch (cause) {
-      error.value = normalizeSolanaError(cause, "RPC_FAILURE");
-    }
-  }
-
-  async function startWatching() {
-    const requestId = ++watchId;
-    await stopCurrentWatcher();
-
-    if (requestId !== watchId) {
-      return;
-    }
-
-    if (manuallyStopped || !options.watch || !solana) {
-      return;
-    }
-
-    try {
-      const publicKey = parsePublicKey(toValue(address));
-
-      if (!publicKey) {
-        return;
-      }
-
-      const nextSubscriptionId = connection.onAccountChange(
-        publicKey,
-        (nextAccountInfo: AccountInfo<Uint8Array>) => {
-          if (requestId !== watchId) {
-            return;
-          }
-
-          accountInfo.value = nextAccountInfo;
-          error.value = null;
-        },
-        options.commitment,
-      );
-
-      if (requestId !== watchId) {
-        await connection.removeAccountChangeListener(nextSubscriptionId);
-        return;
-      }
-
-      subscriptionId = nextSubscriptionId;
-    } catch (cause) {
-      if (requestId === watchId) {
-        error.value = normalizeSolanaError(cause, "RPC_FAILURE");
-      }
-    }
-  }
-
   onMounted(() => {
     void refresh().catch(() => undefined);
-    void startWatching();
-  });
-
-  onUnmounted(() => {
-    refreshId += 1;
-    void stopWatching();
   });
 
   watch(
     () => toValue(address),
     () => {
       void refresh().catch(() => undefined);
-      void startWatching();
     },
   );
 
@@ -158,6 +96,21 @@ export function useAccountInfo(
     loading,
     error,
     refresh,
-    stopWatching,
+  };
+}
+
+function normalizeAccountInfo(account: {
+  executable: boolean;
+  lamports: bigint;
+  owner: string;
+  space: bigint;
+  data: readonly [string, "base64"];
+}): AccountInfo {
+  return {
+    executable: account.executable,
+    lamports: Number(account.lamports),
+    owner: account.owner,
+    space: Number(account.space),
+    data: decodeBase64(account.data[0]),
   };
 }

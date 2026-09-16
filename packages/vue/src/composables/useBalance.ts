@@ -1,16 +1,15 @@
-import type { Commitment, PublicKey } from "@vue-solana/core/web3";
-import { parsePublicKey } from "@vue-solana/core/address";
+import type { Commitment } from "@vue-solana/core/kit";
+import { parseAddress } from "@vue-solana/core/address";
 import { normalizeSolanaError, type SolanaError } from "@vue-solana/core/errors";
 import { onMounted, shallowRef, toValue, watch, type MaybeRefOrGetter } from "vue";
 import { useConnection } from "./useConnection";
 import { tryUseSolana } from "./useSolana";
 
-export function useBalance(
-  address: MaybeRefOrGetter<PublicKey | string | null | undefined>,
-  commitment?: Commitment,
-) {
+export type BalanceInput = string | null | undefined;
+
+export function useBalance(address: MaybeRefOrGetter<BalanceInput>, commitment?: Commitment) {
   const solana = tryUseSolana();
-  const connection = solana?.connection ?? useConnection();
+  const client = solana?.client ?? useConnection();
   const balance = shallowRef<number | null>(null);
   const loading = shallowRef(false);
   const error = shallowRef<SolanaError | null>(null);
@@ -31,20 +30,22 @@ export function useBalance(
     error.value = null;
 
     try {
-      const publicKey = parsePublicKey(value);
+      const parsedAddress = parseAddress(value);
 
-      if (!publicKey) {
+      if (!parsedAddress) {
         balance.value = null;
         return null;
       }
 
-      const nextBalance = await connection.getBalance(publicKey, commitment);
+      const { value: lamports } = await client.rpc
+        .getBalance(parsedAddress, commitment ? { commitment } : undefined)
+        .send();
 
       if (requestId === refreshId) {
-        balance.value = nextBalance;
+        balance.value = Number(lamports);
       }
 
-      return nextBalance;
+      return Number(lamports);
     } catch (cause) {
       const normalizedError = normalizeSolanaError(cause, "RPC_FAILURE");
 

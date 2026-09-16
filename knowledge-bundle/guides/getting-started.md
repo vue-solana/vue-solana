@@ -31,7 +31,7 @@ Official Solana references:
 
 ## Before You Start
 
-Use `@vue-solana/core` directly if you need Solana primitives such as `Connection`, `PublicKey`, and transactions without Vue/Nuxt integration. Use `@vue-solana/vue` or `@vue-solana/nuxt` when you want framework integration.
+Use `@vue-solana/core` directly if you need framework-agnostic Solana helpers such as `createSolanaContext()`, `createSolanaClient()`, `parseAddress()`, and token-account reads without Vue/Nuxt integration. Use `@vue-solana/vue` or `@vue-solana/nuxt` when you want framework integration. Build transaction messages with `@solana/kit`.
 
 Supported clusters:
 
@@ -96,13 +96,11 @@ For an external example app before publishing, use one of these:
 pnpm add ../path-to/vue-solana/packages/nuxt
 ```
 
-## Known TypeScript Issue
+## v2 Note
 
-`@solana/web3-compat@0.0.21` currently has broken TypeScript metadata. Its package metadata points to `dist/types/index.d.ts`, but that file is not included in the published package.
+`@vue-solana/*@^2` is Kit-only. `@solana/web3-compat` was removed from every package, the context no longer carries `connection`, and the `web3` subpaths were deleted. All composables are Kit-first and `SolanaWallet.publicKey` is a base58 `Address` string. The v1 shims for the broken `@solana/web3-compat` metadata are gone; the only remaining package-owned shim covers the browser `buffer/` subpath used by the Buffer polyfill.
 
-Runtime imports still use the real `@solana/web3-compat` package. Current Vue Solana packages publish temporary package-owned declaration shims, so apps following the documented `@vue-solana/core`, `@vue-solana/vue`, or `@vue-solana/nuxt` imports should not need their own local shim.
-
-Only add a local shim if you are using an older Vue Solana package version or importing `@solana/web3-compat` directly from app code. Re-check this note after each new `@solana/web3-compat` release; the package-owned shim should be removed once upstream ships valid root declarations.
+If you are migrating an app from v1, see [Kit Migration](../guides/kit-migration.md) for the full before/after map.
 
 ## Vue
 
@@ -230,7 +228,7 @@ If you are wiring your own playground, use these dependencies:
 }
 ```
 
-Vue apps can import supported Solana primitives from `@vue-solana/vue/web3` and the Buffer helper from `@vue-solana/vue/buffer-polyfill` without installing `@vue-solana/core`, `@solana/web3-compat`, or `buffer` directly.
+Vue apps can import the Buffer helper from `@vue-solana/vue/buffer-polyfill` and Kit helpers/types from `@vue-solana/vue/kit` without installing `@vue-solana/core` or `buffer` directly.
 
 Then install again from the repository root:
 
@@ -355,7 +353,7 @@ If you are wiring your own Nuxt app, use these dependencies:
 }
 ```
 
-Nuxt apps can import supported Solana primitives from `@vue-solana/nuxt/web3` and the Buffer helper from `@vue-solana/nuxt/buffer-polyfill` without installing `@vue-solana/core`, `@vue-solana/vue`, `@solana/web3-compat`, or `buffer` directly.
+Nuxt apps can import the Buffer helper from `@vue-solana/nuxt/buffer-polyfill` and Kit helpers/types from `@vue-solana/nuxt/kit` without installing `@vue-solana/core`, `@vue-solana/vue`, or `buffer` directly.
 
 Then install again from the repository root:
 
@@ -447,7 +445,7 @@ const { publicKey, connected, connecting, connect, disconnect } = useWallet();
 
     <p>Selected: {{ selectedWallet?.name ?? "None" }}</p>
     <p>Connected: {{ connected }}</p>
-    <p>Public key: {{ publicKey?.toBase58() }}</p>
+    <p>Public key: {{ publicKey }}</p>
 
     <button type="button" :disabled="!selectedWallet || connecting || connected" @click="connect">
       Connect
@@ -604,37 +602,49 @@ Desktop native wallet adapters are intentionally deferred from v1. On desktop, m
 
 Use a devnet wallet with enough devnet SOL for fees. The examples include recipient address and amount fields. Start with a tiny amount such as `0.000001` SOL.
 
-The transfer flow creates a normal legacy transaction. In browser Vue apps, initialize the Buffer polyfill from the Vue package before transaction code that may touch `@solana/web3-compat` internals. In Nuxt apps, use the equivalent `@vue-solana/nuxt/*` subpaths.
+The transfer flow builds a Kit v0 transaction message and serializes it to raw wire bytes, which is what `useSignAndSendTransaction()` accepts. In browser apps, initialize the Buffer polyfill before transaction code that serializes transactions.
 
 ```ts
 import { installSolanaBufferPolyfill } from "@vue-solana/vue/buffer-polyfill";
-import { PublicKey, Transaction, TransactionInstruction } from "@vue-solana/vue/web3";
+import {
+  AccountRole,
+  address,
+  appendTransactionMessageInstruction,
+  compileTransaction,
+  createTransactionMessage,
+  getTransactionEncoder,
+  setTransactionMessageFeePayer,
+  setTransactionMessageLifetimeUsingBlockhash,
+} from "@solana/kit";
 
 installSolanaBufferPolyfill();
 
-const systemProgramId = new PublicKey("11111111111111111111111111111111");
+const SYSTEM_PROGRAM_ADDRESS = address("11111111111111111111111111111111");
 
-const transaction = new Transaction();
-const latestBlockhash = await connection.getLatestBlockhash();
-const recipientPublicKey = new PublicKey(recipientAddress.value);
+const { value: latestBlockhash } = await client.rpc.getLatestBlockhash().send();
+const recipientAddress = address(recipientInput.value.trim());
 const data = new Uint8Array(12);
 const view = new DataView(data.buffer);
 
 view.setUint32(0, 2, true);
 view.setBigUint64(4, BigInt(lamports), true);
 
-transaction.feePayer = publicKey.value;
-transaction.recentBlockhash = latestBlockhash.blockhash;
-transaction.add(
-  new TransactionInstruction({
-    keys: [
-      { pubkey: publicKey.value, isSigner: true, isWritable: true },
-      { pubkey: recipientPublicKey, isSigner: false, isWritable: true },
+const transactionMessage = appendTransactionMessageInstruction(
+  {
+    programAddress: SYSTEM_PROGRAM_ADDRESS,
+    accounts: [
+      { address: publicKey.value, role: AccountRole.WRITABLE_SIGNER },
+      { address: recipientAddress, role: AccountRole.WRITABLE },
     ],
-    programId: systemProgramId,
     data,
-  }),
+  },
+  setTransactionMessageLifetimeUsingBlockhash(
+    latestBlockhash,
+    setTransactionMessageFeePayer(publicKey.value, createTransactionMessage({ version: 0 })),
+  ),
 );
+
+const transaction = getTransactionEncoder().encode(compileTransaction(transactionMessage));
 
 await sendTransaction.execute(transaction, {
   confirm: true,

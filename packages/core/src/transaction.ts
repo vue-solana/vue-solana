@@ -1,6 +1,7 @@
-import type { Connection, TransactionSignature } from "@solana/web3-compat";
+import type { Signature } from "@solana/kit";
+import { getBase64EncodedWireTransaction, getTransactionDecoder } from "@solana/kit";
+import type { SolanaClient } from "./kit";
 import { createSolanaError, normalizeSolanaError } from "./errors";
-import { withSolanaTimeout } from "./timeout";
 import { assertWalletCanSign, assertWalletConnected } from "./wallet";
 import type {
   ConfirmTransactionOptions,
@@ -12,95 +13,114 @@ import type {
 
 const DEFAULT_CONFIRMATION_COMMITMENT = "confirmed";
 const DEFAULT_CONFIRMATION_TIMEOUT_MS = 60_000;
+const SIGNATURE_STATUS_POLL_INTERVAL_MS = 1_500;
+
+const COMMITMENT_RANK: Record<string, number> = { processed: 0, confirmed: 1, finalized: 2 };
 
 /**
- * Sign and send a transaction through a connected wallet using the legacy
- * web3-compat `Connection` API.
+ * Sign and send a transaction through a connected wallet.
  *
- * @deprecated Kit transactions are sent with `client.sendTransaction([...])`
- * once the client has a payer; see `@vue-solana/core/kit`.
+ * Walks through the supported kit RPC path: the wallet signs the raw wire
+ * transaction, and the client sends it via `client.rpc.sendTransaction`.
  */
 export async function signAndSendTransaction(
-  connection: Connection,
+  client: SolanaClient,
   wallet: SolanaWallet,
   transaction: SolanaTransaction,
   options?: SendTransactionOptions,
-): Promise<TransactionSignature> {
+): Promise<Signature> {
   try {
     assertWalletConnected(wallet);
 
-    if (isMobileWalletAdapterWallet(wallet) && wallet.signTransaction) {
-      assertWalletCanSign(wallet);
-      return await signAndSendRawTransaction(connection, wallet, transaction, options);
-    }
-
     if (wallet.signAndSendTransaction) {
       const result = await wallet.signAndSendTransaction(transaction, options);
-      return result.signature;
+      return result.signature as Signature;
     }
 
     assertWalletCanSign(wallet);
 
-    return await signAndSendRawTransaction(connection, wallet, transaction, options);
+    const signedTransaction = await wallet.signTransaction(transaction);
+    const base64Transaction = toBase64WireTransaction(signedTransaction);
+    const { maxRetries, minContextSlot, preflightCommitment, skipPreflight } = options ?? {};
+
+    return await client.rpc
+      .sendTransaction(base64Transaction, {
+        encoding: "base64",
+        maxRetries,
+        minContextSlot,
+        preflightCommitment,
+        skipPreflight,
+      })
+      .send();
   } catch (cause) {
     throw normalizeSolanaError(cause, "RPC_FAILURE");
   }
 }
 
 /**
- * Confirm a transaction signature using the legacy `Connection` API.
- *
- * @deprecated Use `client.rpc.getSignatureStatuses([...]).send()` from
- * `@vue-solana/core/kit` instead.
+ * Confirm a transaction signature against the kit RPC until it reaches the
+ * requested commitment.
  */
 export async function confirmTransactionSignature(
-  connection: Connection,
-  signature: TransactionSignature,
+  client: SolanaClient,
+  signature: Signature,
   options: ConfirmTransactionOptions = {},
 ): Promise<TransactionConfirmation> {
   const commitment = options.commitment ?? DEFAULT_CONFIRMATION_COMMITMENT;
-  const confirmation = connection.confirmTransaction(signature, commitment) as Promise<
-    TransactionConfirmation["result"]
-  >;
-  let result: TransactionConfirmation["result"];
+  const timeoutMs = options.timeoutMs ?? DEFAULT_CONFIRMATION_TIMEOUT_MS;
+  let elapsedMs = 0;
 
   try {
-    result = await withSolanaTimeout(
-      confirmation,
-      options.timeoutMs ?? DEFAULT_CONFIRMATION_TIMEOUT_MS,
+    while (elapsedMs < timeoutMs) {
+      const response = await client.rpc.getSignatureStatuses([signature]).send();
+      const [status] = response.value;
+
+      if (!status) {
+        throw new Error(`Transaction ${signature} was not found.`);
+      }
+
+      if (status.err) {
+        throw createSolanaError(
+          "RPC_FAILURE",
+          `Transaction ${signature} failed to reach ${commitment} commitment.`,
+          { cause: status.err },
+        );
+      }
+
+      if (hasReachedCommitment(status.confirmationStatus, commitment)) {
+        return { signature, commitment, status };
+      }
+
+      await wait(SIGNATURE_STATUS_POLL_INTERVAL_MS);
+      elapsedMs += SIGNATURE_STATUS_POLL_INTERVAL_MS;
+    }
+
+    throw createSolanaError(
+      "TRANSACTION_TIMEOUT",
       `Timed out waiting for transaction ${signature} to reach ${commitment} commitment.`,
     );
   } catch (cause) {
     throw normalizeSolanaError(cause, "RPC_FAILURE");
   }
+}
 
-  if (result.value.err) {
-    throw createSolanaError(
-      "RPC_FAILURE",
-      `Transaction ${signature} failed to reach ${commitment} commitment.`,
-      { cause: result.value.err },
-    );
+function toBase64WireTransaction(transaction: SolanaTransaction) {
+  return getBase64EncodedWireTransaction(getTransactionDecoder().decode(transaction));
+}
+
+function hasReachedCommitment(
+  actualStatus: string | null | undefined,
+  targetCommitment: string,
+): boolean {
+  if (!actualStatus) {
+    return false;
   }
 
-  return {
-    signature,
-    commitment,
-    result,
-  };
+  return (COMMITMENT_RANK[actualStatus] ?? 0) >= (COMMITMENT_RANK[targetCommitment] ?? 0);
 }
 
-async function signAndSendRawTransaction(
-  connection: Connection,
-  wallet: SolanaWallet & Required<Pick<SolanaWallet, "signTransaction">>,
-  transaction: SolanaTransaction,
-  options?: SendTransactionOptions,
-): Promise<TransactionSignature> {
-  const signedTransaction = await wallet.signTransaction(transaction);
-  const rawTransaction = signedTransaction.serialize();
-
-  return connection.sendRawTransaction(rawTransaction, options);
-}
-
-function isMobileWalletAdapterWallet(wallet: SolanaWallet): boolean {
-  return wallet.source === "mobile-wallet-adapter";
+function wait(ms: number) {
+  return new Promise<void>((resolve) => {
+    setTimeout(resolve, ms);
+  });
 }

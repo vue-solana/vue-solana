@@ -17,10 +17,10 @@ export function deferred<T>() {
 export function mountUseAccountInfo(
   address: Parameters<typeof useAccountInfo>[0],
   options?: UseAccountInfoOptions,
-  connection: Partial<ReturnType<typeof createMockSolanaContext>["connection"]> = {},
+  client: Partial<{ rpc: Record<string, unknown> }> = {},
 ) {
   const context = createMockSolanaContext({
-    connection: connection as ReturnType<typeof createMockSolanaContext>["connection"],
+    client: client as ReturnType<typeof createMockSolanaContext>["client"],
   });
   let result: ReturnType<typeof useAccountInfo> | undefined;
 

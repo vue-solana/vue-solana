@@ -9,7 +9,7 @@ surroundOrder: 2
 
 ## 시작 전 확인
 
-Vue/Nuxt 통합 없이 `Connection`, `PublicKey`, 트랜잭션 같은 Solana primitive가 필요하면 `@vue-solana/core`를 직접 사용하세요. 프레임워크 통합이 필요하면 `@vue-solana/vue` 또는 `@vue-solana/nuxt`를 사용합니다.
+Vue/Nuxt 통합 없이 Solana primitive가 필요하면 `@vue-solana/core`를 직접 사용하세요. 이 패키지는 `@solana/kit`을 기반으로 하며 `@vue-solana/core/kit`에서 `createSolanaClient()`, `Address`/`address()`/`lamports()`, Kit transaction과 RPC type을 다시 export합니다. 프레임워크 통합이 필요하면 `@vue-solana/vue` 또는 `@vue-solana/nuxt`를 사용합니다.
 
 지원 클러스터:
 
@@ -41,7 +41,7 @@ pnpm add @vue-solana/vue
 npm install @vue-solana/vue
 ```
 
-Vue 앱은 low-level Solana 또는 Buffer 패키지를 직접 설치하지 않고 `@vue-solana/vue/web3`와 `@vue-solana/vue/buffer-polyfill`을 사용할 수 있습니다.
+Vue 앱은 low-level Solana 또는 Buffer 패키지를 직접 설치하지 않고 `@vue-solana/vue/kit`(`createSolanaClient`, `address`, `lamports`, type)와 `@vue-solana/vue/buffer-polyfill`을 사용할 수 있습니다. 주입된 클라이언트는 `@vue-solana/vue/useSolanaClient`의 `useSolanaClient()`를 사용하세요.
 
 ## Nuxt 설치
 
@@ -51,15 +51,11 @@ npx nuxt module add @vue-solana/nuxt
 
 이 명령은 패키지를 설치하고 `nuxt.config.ts`의 `modules` 배열에 `@vue-solana/nuxt`를 추가합니다.
 
-Nuxt 앱은 `@vue-solana/core`, `@vue-solana/vue`, low-level Solana/Buffer 패키지를 직접 설치하지 않고 `@vue-solana/nuxt/web3`와 `@vue-solana/nuxt/buffer-polyfill`을 사용할 수 있습니다.
+Nuxt 앱은 `@vue-solana/core`, `@vue-solana/vue`, low-level Solana/Buffer 패키지를 직접 설치하지 않고 `@vue-solana/nuxt/kit`와 `@vue-solana/nuxt/buffer-polyfill`을 사용할 수 있습니다. 자동 import된 `useSolanaClient()`는 주입된 Kit 클라이언트를 반환합니다.
 
-## 알려진 TypeScript 이슈
+## v2 메모
 
-`@solana/web3-compat@0.0.21`은 현재 TypeScript 패키지 메타데이터가 깨져 있습니다. 패키지 메타데이터는 `dist/types/index.d.ts`를 가리키지만, 배포된 패키지에 해당 파일이 포함되어 있지 않습니다.
-
-런타임 import는 여전히 실제 `@solana/web3-compat` 패키지를 사용합니다. 현재 Vue Solana 패키지는 임시 패키지 소유 declaration shim을 함께 배포하므로, 문서화된 `@vue-solana/core`, `@vue-solana/vue`, `@vue-solana/nuxt` import를 따르면 앱에서 별도 shim이 필요하지 않습니다.
-
-오래된 Vue Solana 패키지 버전을 쓰거나 앱 코드에서 `@solana/web3-compat`를 직접 import할 때만 로컬 shim을 추가하세요. `@solana/web3-compat` 새 릴리스마다 이 메모를 다시 확인하세요. upstream이 유효한 root declaration을 배포하면 package-owned shim은 제거되어야 합니다.
+v2.0.0에서 레거시 `@solana/web3-compat` 표면이 제거되었습니다. context는 더 이상 `connection`을 갖지 않으며 `@vue-solana/*/web3` subpath가 삭제되었습니다. 모든 컴포저블은 Kit 우선이며 `SolanaWallet.publicKey`는 일반 base58 `Address` 문자열입니다. 이전 v1 문서에서 설명한 `@solana/buffer/` shim은 사라졌습니다. 유지되는 package-owned shim은 Buffer polyfill이 사용하는 브라우저 `buffer/` subpath만 커버합니다. 전체 변경 전/후 비교는 [Kit Migration 가이드](/ko/guides/kit-migration)를 참조하세요.
 
 ## Vue 설정
 
@@ -94,7 +90,10 @@ createApp(App)
 ```ts
 import { useRpc } from "@vue-solana/vue/useRpc";
 import { useBalance } from "@vue-solana/vue/useBalance";
+import { useSolanaClient } from "@vue-solana/vue/useSolanaClient";
 ```
+
+`useRpc()`는 해석된 cluster state와 주입된 Kit `client`를 반환하고 `useBalance()`는 `client.rpc`를 통해 읽습니다. `useSolanaClient()`는 동일한 `client`와 그 read-only `rpc`를 직접 반환하며 `@vue-solana/vue/kit`에서 `address()`/`lamports()`도 제공합니다. 전체 변경 전/후 비교는 [Kit Migration 가이드](/ko/guides/kit-migration)를 참조하세요.
 
 ## Nuxt 설정
 
@@ -130,12 +129,12 @@ Vue에서는 `useRpc()`를 사용합니다.
 import { onMounted, ref } from "vue";
 import { useRpc } from "@vue-solana/vue/useRpc";
 
-const { cluster, endpoint, connection } = useRpc();
+const { cluster, endpoint, client } = useRpc();
 const latestBlockhash = ref<string | null>(null);
 
 onMounted(async () => {
-  const result = await connection.getLatestBlockhash();
-  latestBlockhash.value = result.blockhash;
+  const { value } = await client.rpc.getLatestBlockhash().send();
+  latestBlockhash.value = value.blockhash;
 });
 </script>
 
@@ -144,6 +143,28 @@ onMounted(async () => {
     <p>Cluster: {{ cluster }}</p>
     <p>Endpoint: {{ endpoint }}</p>
     <p>Latest blockhash: {{ latestBlockhash }}</p>
+  </main>
+</template>
+```
+
+새 코드는 대신 Kit 클라이언트를 사용할 수 있습니다. `useSolanaClient()`는 지갑이 필요 없으며 Kit RPC API용으로 타입된 동일한 정보를 반환합니다(read 호출은 `bigint`를 반환).
+
+```vue
+<script setup lang="ts">
+import { onMounted, ref } from "vue";
+import { useSolanaClient } from "@vue-solana/vue/useSolanaClient";
+
+const { rpc } = useSolanaClient();
+const slot = ref<bigint | null>(null);
+
+onMounted(async () => {
+  slot.value = await rpc.getSlot().send();
+});
+</script>
+
+<template>
+  <main>
+    <p>Slot: {{ slot }}</p>
   </main>
 </template>
 ```
@@ -163,6 +184,19 @@ const { cluster, endpoint, checkConnection, latestBlockhash } = useSolanaRpc();
     <button type="button" @click="checkConnection">Check RPC</button>
   </main>
 </template>
+```
+
+Nuxt에서도 동일한 Kit 읽기는 자동 import된 `useSolanaClient()`에서 가져옵니다.
+
+```vue
+<script setup lang="ts">
+const { rpc } = useSolanaClient();
+const slot = ref<bigint | null>(null);
+
+onMounted(async () => {
+  slot.value = await rpc.getSlot().send();
+});
+</script>
 ```
 
 ## Devnet 또는 Testnet SOL 받기
@@ -258,7 +292,7 @@ iOS 브라우저 지갑 지원은 Mobile Wallet Adapter web support가 Android C
 | Desktop browser extension    | `wallet-standard`       | Phantom, Solflare, Backpack 및 다른 standard wallet이 설치되면 나타날 수 있습니다. |
 | Android Chrome or Chrome PWA | `mobile-wallet-adapter` | 호환 native wallet과 Android MWA browser support가 필요합니다.                     |
 | iOS browser                  | `deep-link`             | Phantom, Solflare, Backpack entry는 wallet-specific universal link를 사용합니다.   |
-| Desktop native app           | Not implemented in v1   | Desktop native protocol link는 v1에서 명시적으로 보류됩니다.                       |
+| Desktop native app           | Not implemented yet     | Desktop native protocol link는 아직 지원되지 않습니다.                             |
 
 ## 메시지 서명
 
@@ -355,5 +389,6 @@ Signature가 반환된 뒤 confirmation이 timeout되면 즉시 다시 제출하
 - [클러스터](/ko/concepts/clusters)
 - [지갑](/ko/guides/wallets)
 - [트랜잭션 가이드](/ko/guides/transactions)
+- [Kit Migration](/ko/guides/kit-migration)
 - [문제 해결](/ko/troubleshooting)
 - [Solana Documentation](https://solana.com/docs)

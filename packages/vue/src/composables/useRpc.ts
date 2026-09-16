@@ -12,6 +12,6 @@ export function useRpc() {
     error: solana.error,
     latestBlockhash: solana.latestBlockhash,
     checkConnection: solana.checkConnection,
-    connection: solana.connection,
+    client: solana.client,
   };
 }

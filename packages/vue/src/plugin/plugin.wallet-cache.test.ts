@@ -33,7 +33,7 @@ describe("createSolanaPlugin cached wallets", () => {
     solana?.selectWallet(firstWalletInfo);
 
     expect(wallet?.connected.value).toBe(true);
-    expect(wallet?.publicKey.value?.toBase58()).toBe(account.address);
+    expect(wallet?.publicKey.value).toBe(account.address);
     expect(getDisconnectFeature(firstStandardWallet).disconnect).not.toHaveBeenCalled();
   });
 
@@ -57,7 +57,7 @@ describe("createSolanaPlugin cached wallets", () => {
     solana?.selectWallet(walletInfo);
 
     expect(wallet?.connected.value).toBe(true);
-    expect(wallet?.publicKey.value?.toBase58()).toBe(account.address);
+    expect(wallet?.publicKey.value).toBe(account.address);
   });
 
   it("disconnects other cached wallets after connecting another wallet", async () => {

@@ -1,15 +1,15 @@
 ---
 title: "@vue-solana/core"
-description: Configuracion Solana independiente del framework, RPC, tipos de wallet y helpers de transaccion.
-ogSection: Paquetes
+description: Configuración Solana independiente del framework, RPC, tipos de wallet y helpers de transacción.
+ogSection: Packages
 surroundOrder: 14
 ---
 
 [`@vue-solana/core`](https://www.npmjs.com/package/@vue-solana/core) contiene primitivas Solana independientes del framework usadas por los paquetes Vue Solana.
 
-Usa este paquete directamente cuando quieras helpers de conexion, tipos de wallet compartidos, helpers de registro de Android Mobile Wallet Adapter, helpers de wallet de navegador iOS y helpers de transaccion sin instalar el plugin de Vue.
+Usa este paquete directamente cuando quieras clientes Kit, helpers de endpoint, tipos de wallet compartidos, helpers de registro de Android Mobile Wallet Adapter, helpers de wallet de navegador iOS, lecturas de cuentas de token y helpers de transacción sin instalar el plugin de Vue.
 
-`@vue-solana/core` envuelve `@solana/web3-compat` y reexporta las primitivas Solana que necesitan la mayoria de apps Vue Solana, incluidas `Connection`, `PublicKey`, `Transaction` y `VersionedTransaction`.
+`@vue-solana/core` se basa en el moderno [`@solana/kit`](https://www.npmjs.com/package/@solana/kit). `createSolanaClient()` y el subpath `@vue-solana/core/kit` reexportan primitivas de Kit. La API legacy `@solana/web3-compat` y el subpath `web3` se eliminaron en v2.0.0 — consulta [Kit Migration](/guides/kit-migration) para el mapa completo antes/después.
 
 ## Instalar
 
@@ -17,29 +17,44 @@ Usa este paquete directamente cuando quieras helpers de conexion, tipos de walle
 pnpm add @vue-solana/core
 ```
 
-## Inicio rapido
+## Inicio rápido
 
 ```ts
-import { createSolanaContext } from "@vue-solana/core";
+import { address } from "@vue-solana/core/kit";
+import { createSolanaContext } from "@vue-solana/core/rpc";
 
-const solana = createSolanaContext({
-  cluster: "devnet",
-});
+const solana = createSolanaContext({ cluster: "devnet" });
 
-const { blockhash } = await solana.connection.getLatestBlockhash();
+const { value: latestBlockhash } = await solana.client.rpc.getLatestBlockhash().send();
 
-console.log(solana.endpoint, blockhash);
+console.log(solana.endpoint, latestBlockhash.blockhash);
 ```
 
-La exportacion raiz sigue estando soportada. Tambien hay exportaciones directas por subruta para imports mas especificos:
+También puedes crear un cliente Kit directamente:
 
 ```ts
+import { createSolanaClient } from "@vue-solana/core/kit";
+
+const client = createSolanaClient({ cluster: "devnet" });
+
+const slot = await client.rpc.getSlot().send();
+
+console.log(slot); // bigint
+```
+
+`createSolanaContext()` devuelve `{ cluster, endpoint, wsEndpoint, client }`; el `client` lleva `client.rpc` y `client.rpcSubscriptions`.
+
+La exportación raíz sigue estando soportada. También hay exportaciones directas por subpath para imports más específicos:
+
+```ts
+import { createSolanaClient } from "@vue-solana/core/kit";
 import { createSolanaContext } from "@vue-solana/core/rpc";
-import { PublicKey, Transaction } from "@vue-solana/core/web3";
+import { parseAddress } from "@vue-solana/core/address";
+import { getTokenBalance } from "@vue-solana/core/token-accounts";
 import type { SolanaConfig } from "@vue-solana/core/types";
 ```
 
-Subrutas directas:
+Subpaths directos:
 
 - `@vue-solana/core/address`
 - `@vue-solana/core/buffer-polyfill`
@@ -47,24 +62,23 @@ Subrutas directas:
 - `@vue-solana/core/clusters`
 - `@vue-solana/core/errors`
 - `@vue-solana/core/ios-wallet`
+- `@vue-solana/core/kit`
 - `@vue-solana/core/mobile-wallet`
 - `@vue-solana/core/rpc`
 - `@vue-solana/core/timeout`
 - `@vue-solana/core/transaction`
 - `@vue-solana/core/wallet`
 - `@vue-solana/core/wallet-standard`
-- `@vue-solana/core/web3`
-- `@vue-solana/core/spl-token`
 - `@vue-solana/core/token-accounts`
 
-## Guias relacionadas
+## Guías relacionadas
 
-- [RPC and Clusters](/guides/rpc-and-clusters): configura nombres de cluster, endpoints RPC personalizados, endpoints WebSocket y helpers de conexion.
-- [Wallets](/guides/wallets): descubre wallets Wallet Standard, registra fuentes de wallet movil y comprueba capacidades de wallet.
-- [Transactions](/guides/transactions): firma, envia, confirma y maneja timeouts de transaccion de forma segura.
-- [Errors](/guides/errors): ramifica con codigos `SolanaError` estables y evita mostrar causas sin procesar en UI para usuarios.
+- [RPC and Clusters](/guides/rpc-and-clusters): configura nombres de cluster, endpoints RPC personalizados, endpoints WebSocket y helpers de cliente.
+- [Wallets](/guides/wallets): descubre wallets Wallet Standard, registra fuentes de wallet móvil y comprueba capacidades de wallet.
+- [Transactions](/guides/transactions): firma, envía, confirma y maneja timeouts de transacción de forma segura.
+- [Errors](/guides/errors): ramifica con códigos `SolanaError` estables y mantén las causas sin procesar fuera de la UI orientada al usuario.
 
-## Configuracion
+## Configuración
 
 ```ts
 type SolanaCluster = "mainnet-beta" | "testnet" | "devnet" | "localnet";
@@ -78,9 +92,9 @@ interface SolanaConfig {
 }
 ```
 
-Los clusters soportados son `mainnet-beta`, `testnet`, `devnet` y `localnet`. Los helpers de wallet usan identificadores de cadena Wallet Standard como `solana:devnet`, derivados de los clusters por `getSolanaChain()`. Si se omite `endpoint`, el paquete usa el endpoint RPC publico de Solana para el cluster seleccionado. Si se omite `wsEndpoint`, se deriva del endpoint RPC.
+Los clusters soportados son `mainnet-beta`, `testnet`, `devnet` y `localnet`. Los helpers de wallet usan identificadores de cadena Wallet Standard como `solana:devnet`, derivados de los clusters por `getSolanaChain()`. Si se omite `endpoint`, el paquete usa el endpoint RPC público de Solana para el cluster seleccionado. Si se omite `wsEndpoint`, se deriva del endpoint RPC.
 
-`autoConnect` usa `false` por defecto. Cuando se activa mediante el plugin de Vue o el modulo Nuxt, Vue Solana reconecta solo una identidad de wallet que el usuario selecciono antes y que se descubre otra vez en el cliente. Solo guarda metadatos de identidad de wallet en `localStorage["vue-solana:selected-wallet"]`: `name`, y `platform`/`source` cuando estan disponibles. Nunca guarda claves privadas, datos de sesion ni datos de transaccion, y nunca conecta una wallet instalada arbitraria.
+`autoConnect` usa `false` por defecto. Cuando se activa mediante el plugin de Vue o el módulo Nuxt, Vue Solana reconecta solo una identidad de wallet que el usuario seleccionó antes y que se descubre otra vez en el cliente. Solo guarda metadatos de identidad de wallet en `localStorage["vue-solana:selected-wallet"]`: `name`, y `platform`/`source` cuando están disponibles. Nunca guarda claves privadas, datos de sesión ni datos de transacción, y nunca conecta una wallet instalada arbitraria.
 
 Usa `mainnet-beta` para la mainnet de Solana. Este es el nombre oficial del cluster de Solana; el paquete intencionalmente no usa `mainnet` como alias.
 
@@ -91,15 +105,17 @@ interface SolanaContext {
   cluster: SolanaCluster;
   endpoint: string;
   wsEndpoint: string;
-  connection: Connection;
+  client: SolanaClient;
 }
 ```
+
+`client` es un cliente de [`@solana/kit`](https://www.npmjs.com/package/@solana/kit) creado por `createSolanaClient()` y expone `client.rpc` y `client.rpcSubscriptions`.
 
 ## Interfaz de wallet
 
 ```ts
 interface SolanaWallet {
-  publicKey: PublicKey | null;
+  publicKey: Address | null;
   connected: boolean;
   connecting?: boolean;
   disconnecting?: boolean;
@@ -108,16 +124,18 @@ interface SolanaWallet {
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
   signMessage?: (message: Uint8Array) => Promise<SolanaSignMessageResult>;
-  signTransaction?: <T extends SolanaTransaction>(transaction: T) => Promise<T>;
-  signAllTransactions?: <T extends SolanaTransaction>(transactions: T[]) => Promise<T[]>;
+  signTransaction?: (transaction: SolanaTransaction) => Promise<SolanaTransaction>;
+  signAllTransactions?: (transactions: SolanaTransaction[]) => Promise<SolanaTransaction[]>;
   signAndSendTransaction?: (
     transaction: SolanaTransaction,
-    options?: SendOptions,
-  ) => Promise<{ signature: TransactionSignature }>;
+    options?: SendTransactionOptions,
+  ) => Promise<{ signature: Signature }>;
 }
 ```
 
-Las wallets de navegador descubiertas mediante Solana Wallet Standard y los enlaces soportados de wallets de navegador iOS se adaptan a esta interfaz. Tambien puedes proporcionar un objeto personalizado que implemente `SolanaWallet`. Una wallet descubierta permanece desconectada hasta que `connect()` se resuelve correctamente, incluso si la extension del navegador expone cuentas autorizadas previamente.
+Las wallets de navegador descubiertas mediante Solana Wallet Standard y los enlaces soportados de wallets de navegador iOS se adaptan a esta interfaz. También puedes proporcionar un objeto personalizado que implemente `SolanaWallet`. Una wallet descubierta permanece desconectada hasta que `connect()` se resuelve correctamente, incluso si la extensión del navegador expone cuentas autorizadas previamente.
+
+`publicKey` es el `Address` de Kit codificado en base58 (un string) de la cuenta conectada. `SolanaTransaction` es `Uint8Array` — bytes de transacción en la red (wire) que la wallet firma tal cual; el byte inicial distingue las transacciones legacy de las versioned.
 
 Android Mobile Wallet Adapter se registra mediante `@solana-mobile/wallet-standard-mobile` y luego se adapta con el mismo adaptador Wallet Standard.
 
@@ -148,10 +166,10 @@ interface SolanaWalletInfo {
 
 Valores de metadatos actuales:
 
-- Las wallets de extension de navegador usan `platform: "browser"` y `source: "wallet-standard"`.
+- Las wallets de extensión de navegador usan `platform: "browser"` y `source: "wallet-standard"`.
 - Android Mobile Wallet Adapter usa `platform: "mobile"` y `source: "mobile-wallet-adapter"`.
 - Las wallets de navegador iOS usan `platform: "mobile"` y `source: "deep-link"`.
-- `protocol-link` esta reservado para posibles adaptadores de wallet nativa de escritorio posteriores a v1.
+- `protocol-link` está reservado para posibles adaptadores futuros de wallet nativa de escritorio.
 
 ## Helpers de Wallet Standard
 
@@ -159,45 +177,45 @@ Valores de metadatos actuales:
 type SolanaChain = "solana:mainnet" | "solana:testnet" | "solana:devnet" | "solana:localnet";
 ```
 
-`SolanaChain` es el identificador de cadena Wallet Standard usado por el descubrimiento de wallets, el registro de wallets moviles, los enlaces de wallet iOS y las opciones de firma del adaptador de wallet. Usa `getSolanaChain(cluster)` cuando necesites derivarlo desde un cluster Solana configurado.
+`SolanaChain` es el identificador de cadena Wallet Standard usado por el descubrimiento de wallets, el registro de wallets móviles, los enlaces de wallet iOS y las opciones de firma del adaptador de wallet. Usa `getSolanaChain(cluster)` cuando necesites derivarlo desde un cluster Solana configurado.
 
 - `getSolanaChain(cluster)`: asigna `mainnet-beta`, `devnet`, `testnet` o `localnet` a un ID de cadena Solana Wallet Standard.
 - `isSolanaStandardWallet(wallet)`: comprueba si una wallet Wallet Standard soporta Solana.
-- `getRegisteredSolanaWallets()`: devuelve wallets Solana Wallet Standard descubiertas en entornos de navegador, incluido Android Mobile Wallet Adapter despues de registrarlo en clientes soportados.
-- `subscribeSolanaWallets(listener)`: se suscribe a eventos de registro/anulacion de registro de Wallet Standard.
+- `getRegisteredSolanaWallets()`: devuelve wallets Solana Wallet Standard descubiertas en entornos de navegador, incluido Android Mobile Wallet Adapter después de registrarlo en clientes soportados.
+- `subscribeSolanaWallets(listener)`: se suscribe a eventos de registro/anulación de registro de Wallet Standard.
 - `adaptSolanaStandardWallet(walletInfo, options?)`: adapta una wallet Wallet Standard descubierta a `SolanaWallet`.
 
-## Helpers de wallet movil
+## Helpers de wallet móvil
 
 - `registerSolanaMobileWallet(options?)`: registra Android Mobile Wallet Adapter mediante Wallet Standard en clientes Android Chrome soportados.
 - `isSolanaMobileWalletSupported()`: devuelve si el runtime actual soporta registro web Android MWA.
 - `getDefaultMobileWalletAppIdentity()`: deriva una identidad de app Mobile Wallet Adapter por defecto desde el documento actual.
 - `getSolanaIosWallets(options?)`: devuelve entradas de wallet de navegador iOS para Phantom, Solflare y Backpack en navegadores iOS.
 - `adaptSolanaIosWallet(walletInfo, options?)`: adapta una entrada de wallet iOS con deep link a `SolanaWallet`.
-- `handleSolanaIosWalletCallback(options?)`: valida y descifra callbacks de redireccion de wallet iOS.
-- `isSolanaIosBrowserWalletSupported()`: devuelve si el runtime actual deberia exponer enlaces de wallet de navegador iOS.
+- `handleSolanaIosWalletCallback(options?)`: valida y descifra callbacks de redirección de wallet iOS.
+- `isSolanaIosBrowserWalletSupported()`: devuelve si el runtime actual debería exponer enlaces de wallet de navegador iOS.
 
-Estos helpers son seguros para SSR. El registro de Android devuelve sin registrar cuando `window` no esta disponible o cuando el navegador no es un runtime web movil/PWA de Android Chrome. El descubrimiento de wallets iOS devuelve una lista vacia cuando el navegador no es un runtime de navegador iOS.
+Estos helpers son seguros para SSR. El registro de Android devuelve sin registrar cuando `window` no está disponible o cuando el navegador no es un runtime web móvil/PWA de Android Chrome. El descubrimiento de wallets iOS devuelve una lista vacía cuando el navegador no es un runtime de navegador iOS.
 
 ## Helpers
 
-La exportacion raiz `@vue-solana/core` reexporta los helpers publicos siguientes. Usa subrutas directas cuando quieras imports mas especificos o limites de modulo mas claros.
+La exportación raíz `@vue-solana/core` reexporta los helpers públicos siguientes. Usa subpaths directos cuando quieras imports más específicos o límites de módulo más claros.
 
-| Ruta de import                     | Que contiene                                                                   | Usalo cuando                                                                                                                |
-| ---------------------------------- | ------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------- |
-| `@vue-solana/core/address`         | `parsePublicKey()` y tipos de entrada de clave publica.                        | Aceptas una direccion Solana como string, `PublicKey`, objeto tipo ref o getter y necesitas un `PublicKey` normalizado.     |
-| `@vue-solana/core/clusters`        | Helpers de cluster y endpoint por defecto.                                     | Necesitas el endpoint RPC o WebSocket integrado del paquete para `mainnet-beta`, `testnet`, `devnet` o `localnet`.          |
-| `@vue-solana/core/errors`          | `SolanaError`, fabricas de error y guards de error.                            | Necesitas codigos de error estables para fallos de wallet, RPC, direccion, transaccion, timeout o storage en UI de usuario. |
-| `@vue-solana/core/ios-wallet`      | Descubrimiento de wallets de navegador iOS, adaptadores deep-link y callbacks. | Estas conectando enlaces de wallet iOS sin el flujo unificado de wallets del plugin de Vue.                                 |
-| `@vue-solana/core/mobile-wallet`   | Helpers de registro de Android Mobile Wallet Adapter.                          | Necesitas registrar Android MWA antes de leer wallets Wallet Standard.                                                      |
-| `@vue-solana/core/rpc`             | `createSolanaConnection()` y `createSolanaContext()`.                          | Quieres una `Connection` configurada y endpoints de cluster resueltos sin instalar el plugin de Vue.                        |
-| `@vue-solana/core/timeout`         | Helpers de timeout de Promise que producen errores de timeout Solana.          | Necesitas comportamiento de timeout coherente con los helpers de confirmacion de transaccion.                               |
-| `@vue-solana/core/transaction`     | Helpers de envio y confirmacion de transacciones.                              | Necesitas una ruta de envio consciente de wallet o un resultado de confirmacion para una firma existente.                   |
-| `@vue-solana/core/spl-token`       | Reexportaciones de tipos SPL Token (`TokenAccount`, `Mint`, program IDs).      | Necesitas tipos y constantes SPL Token sin importar `@solana/spl-token` directamente.                                       |
-| `@vue-solana/core/token-accounts`  | Helpers de cuenta SPL Token sin estado (`getTokenAccountsByOwner`, etc.).      | Necesitas obtener o desempaquetar cuentas de token, o derivar balances desde direcciones de token asociadas.                |
-| `@vue-solana/core/types`           | Tipos TypeScript compartidos.                                                  | Necesitas `SolanaConfig`, `SolanaContext`, `SolanaWallet`, metadatos de wallet o tipos de opciones de transaccion.          |
-| `@vue-solana/core/wallet`          | Aserciones de estado de wallet y errores de capacidad de wallet.               | Necesitas validar que una wallet seleccionada esta conectada o soporta firma antes de llamar metodos de wallet.             |
-| `@vue-solana/core/wallet-standard` | Mapeo de cadenas Wallet Standard, descubrimiento, suscripciones y adaptadores. | Estas creando tu propia capa de descubrimiento de wallets sobre Solana Wallet Standard.                                     |
+| Import path                        | Qué contiene                                                                                                                      | Úsalo cuando                                                                                                                     |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `@vue-solana/core/address`         | `parseAddress()` y tipos de entrada de dirección.                                                                                 | Aceptas una dirección Solana como string, objeto tipo ref o getter y necesitas un `Address` validado y normalizado.              |
+| `@vue-solana/core/clusters`        | Helpers de cluster y endpoint por defecto.                                                                                        | Necesitas el endpoint RPC o WebSocket integrado del paquete para `mainnet-beta`, `testnet`, `devnet` o `localnet`.               |
+| `@vue-solana/core/errors`          | `SolanaError`, fábricas de error y guards de error.                                                                               | Necesitas códigos de error estables para fallos de wallet, RPC, dirección, transacción, timeout o storage orientados al usuario. |
+| `@vue-solana/core/ios-wallet`      | Descubrimiento de wallets de navegador iOS, adaptadores deep-link y callbacks.                                                    | Estás conectando enlaces de wallet iOS sin el flujo unificado de wallets del plugin de Vue.                                      |
+| `@vue-solana/core/kit`             | `createSolanaClient()` y las reexportaciones de `@solana/kit` (`Address`, `address`, `lamports`, `SolanaRpcApi`, `SolanaClient`). | Quieres la API Kit moderna sin el grafo completo de dependencias de `@solana/kit`.                                               |
+| `@vue-solana/core/mobile-wallet`   | Helpers de registro de Android Mobile Wallet Adapter.                                                                             | Necesitas registrar Android MWA antes de leer wallets Wallet Standard.                                                           |
+| `@vue-solana/core/rpc`             | `createSolanaContext()`.                                                                                                          | Quieres un cliente Kit configurado y endpoints de cluster resueltos sin instalar el plugin de Vue.                               |
+| `@vue-solana/core/timeout`         | Helpers de timeout de Promise que producen errores de timeout Solana.                                                             | Necesitas comportamiento de timeout coherente con los helpers de confirmación de transacción.                                    |
+| `@vue-solana/core/transaction`     | Helpers de envío y confirmación de transacciones.                                                                                 | Necesitas una ruta de envío consciente de wallet o un resultado de confirmación para una firma existente.                        |
+| `@vue-solana/core/token-accounts`  | Lecturas de cuenta SPL Token sin estado (`getTokenAccountsByOwner`, `getTokenAccount`, `getTokenBalance`).                        | Necesitas lecturas de cuenta de token o balance mediante la API `jsonParsed` del RPC Kit.                                        |
+| `@vue-solana/core/types`           | Tipos TypeScript compartidos.                                                                                                     | Necesitas `SolanaConfig`, `SolanaContext`, `SolanaWallet`, metadatos de wallet o tipos de opciones de transacción.               |
+| `@vue-solana/core/wallet`          | Aserciones de estado de wallet y errores de capacidad de wallet.                                                                  | Necesitas validar que una wallet seleccionada está conectada o soporta firma antes de llamar métodos de wallet.                  |
+| `@vue-solana/core/wallet-standard` | Mapeo de cadenas Wallet Standard, descubrimiento, suscripciones y helpers de adaptador.                                           | Estás creando tu propia capa de descubrimiento de wallets sobre Solana Wallet Standard.                                          |
 
 ### Clusters y RPC
 
@@ -205,34 +223,61 @@ La exportacion raiz `@vue-solana/core` reexporta los helpers publicos siguientes
 - `getClusterEndpoint(cluster?)`: devuelve el endpoint HTTP RPC para un cluster.
 - `getClusterWebSocketEndpoint(cluster?)`: devuelve el endpoint WebSocket para un cluster.
 - `getWebSocketEndpoint(endpoint)`: convierte URLs RPC `http`/`https` a URLs `ws`/`wss`.
-- `createSolanaConnection(config?)`: crea una `Connection` usando el endpoint y commitment resueltos.
-- `createSolanaContext(config?)`: crea `{ cluster, endpoint, wsEndpoint, connection }` para configuracion de app independiente del framework.
+- `createSolanaClient(config?)`: crea un cliente de `@solana/kit` cuyo `rpc` está conectado al endpoint resuelto y a las suscripciones WebSocket.
+- `createSolanaContext(config?)`: crea `{ cluster, endpoint, wsEndpoint, client }` para configuración de app independiente del framework.
+
+```ts
+import { createSolanaClient } from "@vue-solana/core/kit";
+
+const client = createSolanaClient({ cluster: "devnet" });
+
+const slot = await client.rpc.getSlot().send();
+```
+
+El equivalente con `createSolanaContext`:
 
 ```ts
 import { createSolanaContext } from "@vue-solana/core/rpc";
 
 const solana = createSolanaContext({ cluster: "devnet" });
 
-const slot = await solana.connection.getSlot();
+const slot = await solana.client.rpc.getSlot().send();
 ```
+
+### Kit
+
+El subpath `@vue-solana/core/kit` exporta todo lo que la mayoría de apps necesitan de `@solana/kit` sin instalarlo directamente:
+
+```ts
+import { address, lamports } from "@vue-solana/core/kit";
+import type { Address, Commitment, Lamports, Signature, SolanaRpcApi } from "@vue-solana/core/kit";
+```
+
+- `createSolanaClient(config?)`: construye un cliente Kit para el `SolanaConfig` dado. Reutiliza la resolución de endpoint de `clusters.ts` y conecta `rpcSubscriptionsUrl` desde el endpoint WebSocket resuelto.
+- `client.rpc` expone la API completa de lectura de Solana (`getSlot`, `getBalance`, `getBlockHeight`, `getSignatureStatuses` y más) como funciones RPC llamadas con `.send()`.
+- `address(value)`: valida y devuelve un `Address` (marca de string base58) — el reemplazo de Kit para `new PublicKey(...)`.
+- `lamports(value: bigint)`: devuelve un valor `Lamports` — el reemplazo de Kit para números de lamports sin procesar.
+- Types: `Address`, `Commitment`, `Lamports`, `Rpc`, `Signature`, `SolanaRpcApi`, `SolanaClient`.
+
+Los resultados numéricos de RPC son `bigint`, y los datos de cuenta son `Uint8Array` en vez de `Buffer`. Consulta [Kit Migration](/guides/kit-migration) para más detalles.
 
 ### Direcciones
 
-- `parsePublicKey(value)`: analiza un `PublicKey`, string de direccion, valor tipo ref o getter, y devuelve `null` para entrada nula o indefinida.
+- `parseAddress(value)`: analiza un string de dirección, valor tipo ref o getter, y devuelve `null` para entrada nullish. Lanza `INVALID_ADDRESS` para un string base58 inválido. Acepta valores `Address` sin cambios.
 
 ```ts
-import { parsePublicKey } from "@vue-solana/core/address";
+import { parseAddress } from "@vue-solana/core/address";
 
-const publicKey = parsePublicKey("11111111111111111111111111111111");
-const balance = publicKey ? await connection.getBalance(publicKey) : null;
+const address = parseAddress("11111111111111111111111111111111");
+const balance = address ? await client.rpc.getBalance(address).send() : null;
 ```
 
 ### Wallets
 
-- `isWalletConnected(wallet)`: comprueba si una wallet esta conectada y tiene una clave publica.
-- `assertWalletConnected(wallet)`: lanza `WALLET_NOT_CONNECTED` si la wallet no esta conectada.
-- `assertWalletCanSign(wallet)`: lanza si la wallet esta desconectada o no soporta `signTransaction`.
-- `assertWalletCanSignMessage(wallet)`: lanza si la wallet esta desconectada o no soporta `signMessage`.
+- `isWalletConnected(wallet)`: comprueba si una wallet está conectada y tiene una clave pública.
+- `assertWalletConnected(wallet)`: lanza `WALLET_NOT_CONNECTED` si la wallet no está conectada.
+- `assertWalletCanSign(wallet)`: lanza si la wallet está desconectada o no soporta `signTransaction`.
+- `assertWalletCanSignMessage(wallet)`: lanza si la wallet está desconectada o no soporta `signMessage`.
 
 ```ts
 import { assertWalletCanSign } from "@vue-solana/core/wallet";
@@ -243,32 +288,28 @@ const signedTransaction = await wallet.signTransaction(transaction);
 
 ### Transacciones
 
-- `signAndSendTransaction(connection, wallet, transaction, options?)`: firma y envia una transaccion usando una wallet configurada y devuelve la firma RPC. Las wallets Android Mobile Wallet Adapter usan `signTransaction` mas `connection.sendRawTransaction()` cuando esta disponible para que la app controle el envio y pueda devolver de forma fiable la firma RPC despues del traspaso a la wallet.
-- `confirmTransactionSignature(connection, signature, options?)`: espera a que una firma enviada alcance un commitment solicitado. Usa por defecto commitment `confirmed` y un timeout de 60 segundos.
+- `signAndSendTransaction(client, wallet, transaction, options?)`: firma y envía bytes de transacción en la red (wire) usando una wallet configurada y devuelve la firma RPC. Se delega en las wallets que exponen `signAndSendTransaction`; en caso contrario, la transacción se firma con `wallet.signTransaction` y se envía mediante `client.rpc.sendTransaction(...).send()`. Las wallets Android Mobile Wallet Adapter prefieren firma más envío RPC del lado de la app para que la app controle el envío y devuelva de forma fiable la firma RPC después del traspaso a la wallet.
+- `confirmTransactionSignature(client, signature, options?)`: espera a que una firma enviada alcance un commitment solicitado. Usa por defecto commitment `confirmed`, timeout de 60 segundos y sondeo de `client.rpc.getSignatureStatuses([signature]).send()`.
 
 ```ts
 import { confirmTransactionSignature, signAndSendTransaction } from "@vue-solana/core/transaction";
 
-const signature = await signAndSendTransaction(connection, wallet, transaction);
-await confirmTransactionSignature(connection, signature, { commitment: "confirmed" });
+const signature = await signAndSendTransaction(client, wallet, transaction);
+await confirmTransactionSignature(client, signature, { commitment: "confirmed" });
 ```
 
 ### SPL Token
 
-- `TOKEN_PROGRAM_ID` y `TOKEN_2022_PROGRAM_ID`: IDs de programa para el SPL Token original y las extensiones Token-2022.
-- `TokenAccount` (reexportacion de `Account`): estado de cuenta de token desempaquetado incluyendo `mint`, `owner`, `amount` y campos de delegacion.
-- `Mint`: estado de cuenta mint desempaquetado incluyendo `decimals`, `supply` y campos de autoridad.
-- `AccountState`: enum para el estado de cuenta de token (`Uninitialized`, `Initialized`, `Frozen`).
-- `getTokenAccountsByOwner(connection, owner, options?)`: obtiene y desempaqueta todas las cuentas de token para un propietario, consultando ambos programas Token y Token-2022 por defecto. Pasa `programId` para limitar a un solo programa.
-- `getTokenAccount(connection, address)`: obtiene y desempaqueta una sola cuenta de token. Devuelve `null` cuando la cuenta no existe.
-- `getTokenBalance(connection, mint, owner)`: deriva la direccion de token asociada, obtiene la cuenta de token y mint, y devuelve `{ amount, decimals }`. Devuelve `null` cuando la ATA o la cuenta mint no existe.
-- `getAssociatedTokenAddressSync(mint, owner, allowOwnerOffCurve?)`: deriva la direccion de cuenta de token asociada de forma determinista.
-- `unpackAccount(address, accountData)` y `unpackMint(address, accountData)`: desempaquetan datos de cuenta sin procesar en objetos tipados.
+Las lecturas de token usan la API `jsonParsed` del RPC Kit — sin dependencia de `@solana/spl-token`.
+
+- `getTokenAccountsByOwner(client, owner, options?)`: devuelve todas las cuentas SPL Token y Token-2022 de un propietario como `TokenAccountInfo[]` (`{ address, mint, owner, amount: bigint, decimals, state, isNative }`). Pasa `programId` para limitar a un solo programa.
+- `getTokenAccount(client, address, commitment?)`: devuelve una sola cuenta de token analizada (`TokenAccountInfo | null`). Devuelve `null` cuando la cuenta no existe o no es una cuenta de token.
+- `getTokenBalance(client, mint, owner, commitment?)`: lee la cuenta de token del propietario para el mint dado y devuelve `{ amount, decimals }`. Devuelve `null` cuando no existe una cuenta de token.
 
 ```ts
-import { getTokenBalance, TOKEN_PROGRAM_ID } from "@vue-solana/core/token-accounts";
+import { getTokenBalance } from "@vue-solana/core/token-accounts";
 
-const balance = await getTokenBalance(connection, mint, owner);
+const balance = await getTokenBalance(client, mint, owner);
 if (balance) {
   console.log(`${balance.amount} (${balance.decimals} decimals)`);
 }
@@ -285,24 +326,24 @@ if (balance) {
 
 ## Modelo de error
 
-Vue Solana normaliza fallos comunes de wallet, RPC, direccion, transaccion y storage en `SolanaError`. Las apps deberian ramificar con el valor estable `error.code` en vez de analizar mensajes de adaptadores o RPC.
+Vue Solana normaliza fallos comunes de wallet, RPC, dirección, transacción y storage en `SolanaError`. Las apps deberían ramificar con el valor estable `error.code` en vez de analizar mensajes de adaptadores o RPC.
 
 ```ts
 import { isSolanaError } from "@vue-solana/core/errors";
 
 try {
-  await signAndSendTransaction(connection, wallet, transaction);
+  await signAndSendTransaction(client, wallet, transaction);
 } catch (error) {
   if (isSolanaError(error)) {
     switch (error.code) {
       case "USER_REJECTED":
-        // El usuario rechazo un prompt de wallet.
+        // El usuario rechazó un prompt de wallet.
         break;
       case "TRANSACTION_TIMEOUT":
-        // La operacion agoto el tiempo; comprueba el estado de la firma antes de reintentar.
+        // La operación agotó el tiempo; comprueba el estado de la firma antes de reintentar.
         break;
       case "RPC_FAILURE":
-        // RPC o confirmacion fallo.
+        // RPC o confirmación falló.
         console.error(error.cause);
         break;
     }
@@ -310,7 +351,7 @@ try {
 }
 ```
 
-Los codigos de error estables son:
+Los códigos de error estables son:
 
 - `NO_WALLET_SELECTED`
 - `WALLET_NOT_CONNECTED`
@@ -321,8 +362,8 @@ Los codigos de error estables son:
 - `RPC_FAILURE`
 - `STORAGE_FAILURE`
 
-`SolanaError.cause` conserva el error original del adaptador de wallet, RPC, analisis o storage para depuracion. No muestres detalles sin procesar de `cause` a usuarios finales a menos que la app confie explicitamente en esa fuente.
+`SolanaError.cause` conserva el error original del adaptador de wallet, RPC, análisis o storage para depuración. No muestres detalles sin procesar de `cause` a usuarios finales a menos que la app confíe explícitamente en esa fuente.
 
-## Problema conocido de TypeScript
+## Buffer Polyfill
 
-Consulta [Troubleshooting](/troubleshooting) para el problema de metadatos TypeScript de `@solana/web3-compat@0.0.21`. Los paquetes actuales de `@vue-solana/core` publican shims temporales de declaraciones para las rutas de import core documentadas.
+El código de navegador que serializa transacciones Solana puede necesitar un global `Buffer` compatible con Node. Inicialízalo antes del código de transacción con `installSolanaBufferPolyfill()` desde `@vue-solana/core/buffer-polyfill`. El único shim de tipos que queda dentro del paquete cubre el subpath `buffer/` de navegador del que importa este polyfill.

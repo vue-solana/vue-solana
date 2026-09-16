@@ -1,7 +1,7 @@
 ---
 title: Clusters
 description: Nombres de clusters de Solana, endpoints RPC e instrucciones para faucet.
-ogSection: Conceptos
+ogSection: Concepts
 surroundOrder: 6
 ---
 
@@ -30,7 +30,7 @@ Ejemplos:
 - `https://api.mainnet-beta.solana.com`
 - `http://127.0.0.1:8899`
 
-El objeto `Connection` de `@vue-solana/vue/web3`, `@vue-solana/nuxt/web3` o `@vue-solana/core/web3` envía solicitudes RPC a este endpoint. Los endpoints públicos son útiles para empezar, pero las apps de producción normalmente usan un proveedor RPC dedicado por fiabilidad y límites de tasa.
+Las peticiones RPC pasan por `client.rpc` desde `useSolanaClient()` o `useSolanaRpc()`, o desde `createSolanaClient()` / `createSolanaContext()` en `@vue-solana/core`. La clase legacy `Connection` y los subpaths `web3` se eliminaron en v2.0.0. Los endpoints públicos son útiles para empezar, pero las apps de producción normalmente usan un proveedor RPC dedicado por fiabilidad y límites de tasa.
 
 Referencia oficial: [Solana RPC](https://solana.com/docs/rpc)
 

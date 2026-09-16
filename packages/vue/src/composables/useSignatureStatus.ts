@@ -1,9 +1,4 @@
-import type {
-  Commitment,
-  SignatureResult,
-  SignatureStatus,
-  TransactionSignature,
-} from "@vue-solana/core/web3";
+import type { Commitment, Signature } from "@vue-solana/core/kit";
 import { createSolanaError, normalizeSolanaError, type SolanaError } from "@vue-solana/core/errors";
 import bs58 from "bs58";
 import { onMounted, onUnmounted, shallowRef, toValue, watch, type MaybeRefOrGetter } from "vue";
@@ -14,24 +9,27 @@ export interface UseSignatureStatusOptions {
   commitment?: Commitment;
   pollIntervalMs?: number;
   searchTransactionHistory?: boolean;
-  subscribe?: boolean;
+}
+
+export interface SignatureStatus {
+  slot: number;
+  confirmations: number | null;
+  err: unknown | null;
+  confirmationStatus: Commitment | null;
 }
 
 export function useSignatureStatus(
-  signature: MaybeRefOrGetter<TransactionSignature | null | undefined>,
+  signature: MaybeRefOrGetter<string | null | undefined>,
   options: UseSignatureStatusOptions = {},
 ) {
   const solana = tryUseSolana();
-  const connection = solana?.connection ?? useConnection();
+  const client = solana?.client ?? useConnection();
   const status = shallowRef<SignatureStatus | null>(null);
   const loading = shallowRef(false);
   const error = shallowRef<SolanaError | null>(null);
   let refreshId = 0;
-  let subscriptionStartId = 0;
   let pollId: ReturnType<typeof setInterval> | null = null;
-  let subscriptionId: number | null = null;
   let manuallyStoppedPolling = false;
-  let manuallyStoppedSubscription = false;
 
   async function refresh() {
     const requestId = ++refreshId;
@@ -49,10 +47,13 @@ export function useSignatureStatus(
 
     try {
       const validSignature = parseTransactionSignature(value);
-      const response = await connection.getSignatureStatuses([validSignature], {
-        searchTransactionHistory: options.searchTransactionHistory,
-      });
-      const nextStatus = response.value[0] ?? null;
+      const response = await client.rpc
+        .getSignatureStatuses([validSignature], {
+          searchTransactionHistory: options.searchTransactionHistory,
+        })
+        .send();
+      const nextRawStatus = response.value[0] ?? null;
+      const nextStatus = nextRawStatus ? normalizeSignatureStatus(nextRawStatus) : null;
 
       if (requestId === refreshId) {
         status.value = nextStatus;
@@ -115,95 +116,21 @@ export function useSignatureStatus(
     }, options.pollIntervalMs);
   }
 
-  async function stopSubscription() {
-    manuallyStoppedSubscription = true;
-    subscriptionStartId += 1;
-    await stopCurrentSubscription();
-  }
-
-  async function stopCurrentSubscription() {
-    if (subscriptionId === null) {
-      return;
-    }
-
-    const currentSubscriptionId = subscriptionId;
-    subscriptionId = null;
-
-    try {
-      await connection.removeSignatureListener(currentSubscriptionId);
-    } catch (cause) {
-      error.value = normalizeSolanaError(cause, "RPC_FAILURE");
-    }
-  }
-
-  async function startSubscription() {
-    const requestId = ++subscriptionStartId;
-    await stopCurrentSubscription();
-
-    if (requestId !== subscriptionStartId) {
-      return;
-    }
-
-    const value = toValue(signature);
-
-    if (manuallyStoppedSubscription || !options.subscribe || !value || !solana) {
-      return;
-    }
-
-    try {
-      const validSignature = parseTransactionSignature(value);
-      const nextSubscriptionId = connection.onSignature(
-        validSignature,
-        (notification: SignatureResult, context: { slot: number }) => {
-          if (requestId !== subscriptionStartId) {
-            return;
-          }
-
-          status.value = {
-            slot: context.slot,
-            confirmations: null,
-            err: notification.err,
-            confirmationStatus: options.commitment ?? "confirmed",
-          };
-          error.value = null;
-        },
-        options.commitment,
-      );
-
-      if (requestId !== subscriptionStartId) {
-        await connection.removeSignatureListener(nextSubscriptionId);
-        return;
-      }
-
-      subscriptionId = nextSubscriptionId;
-    } catch (cause) {
-      if (requestId === subscriptionStartId) {
-        error.value = normalizeSolanaError(cause, "RPC_FAILURE");
-      }
-    }
-  }
-
-  function resetIntervals() {
-    startPolling();
-    void startSubscription();
-  }
-
   onMounted(() => {
     void refresh().catch(() => undefined);
-    resetIntervals();
+    startPolling();
   });
 
   onUnmounted(() => {
     refreshId += 1;
     stopPolling();
-    void stopSubscription();
   });
 
   watch(
     () => toValue(signature),
     () => {
       void refresh().catch(() => undefined);
-      resetIntervals();
+      startPolling();
     },
   );
 
@@ -213,11 +140,10 @@ export function useSignatureStatus(
     error,
     refresh,
     stopPolling,
-    stopSubscription,
   };
 }
 
-function parseTransactionSignature(signature: string): TransactionSignature {
+function parseTransactionSignature(signature: string): Signature {
   let decodedSignature: Uint8Array;
 
   try {
@@ -230,5 +156,19 @@ function parseTransactionSignature(signature: string): TransactionSignature {
     throw new TypeError("Invalid Solana transaction signature");
   }
 
-  return signature;
+  return signature as Signature;
+}
+
+function normalizeSignatureStatus(status: {
+  slot: bigint;
+  confirmations: bigint | null;
+  err: unknown | null;
+  confirmationStatus: Commitment | null;
+}): SignatureStatus {
+  return {
+    slot: Number(status.slot),
+    confirmations: status.confirmations === null ? null : Number(status.confirmations),
+    err: status.err,
+    confirmationStatus: status.confirmationStatus,
+  };
 }

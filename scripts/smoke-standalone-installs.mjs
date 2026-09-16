@@ -129,28 +129,31 @@ try {
       typescript: "^5.8.3",
     },
     overrides: {},
-    source: `import { createSolanaContext } from "@vue-solana/core";
+    source: `import { createSolanaContext, type SolanaContext } from "@vue-solana/core";
 import { installSolanaBufferPolyfill, Buffer } from "@vue-solana/core/buffer-polyfill";
-import { createSolanaConnection } from "@vue-solana/core/rpc";
-import { PublicKey, SystemProgram, Transaction, TransactionInstruction, type VersionedTransaction } from "@vue-solana/core/web3";
+import { parseAddress } from "@vue-solana/core/address";
+import { address, lamports, type Address, type Commitment, type Rpc, type SolanaClient, type SolanaRpcApi } from "@vue-solana/core/kit";
+import { getTokenAccount, getTokenAccountsByOwner, getTokenBalance, type TokenAccountInfo } from "@vue-solana/core/token-accounts";
 
 installSolanaBufferPolyfill();
 
-const payer = new PublicKey("11111111111111111111111111111111");
-const recipient = new PublicKey("11111111111111111111111111111111");
-const transaction = new Transaction().add(
-  SystemProgram.transfer({ fromPubkey: payer, toPubkey: recipient, lamports: 1 }),
-);
-const instruction = new TransactionInstruction({ keys: [], programId: payer, data: Buffer.from([]) });
-const connection = createSolanaConnection({ cluster: "devnet" });
-const context = createSolanaContext({ cluster: "devnet" });
-const maybeVersionedTransaction: VersionedTransaction | undefined = undefined;
+const payer = address("11111111111111111111111111111111");
+const amount = lamports(0n);
+const context: SolanaContext = createSolanaContext({ cluster: "devnet" });
+const client: SolanaClient = context.client;
+const rpc: Rpc<SolanaRpcApi> = context.client.rpc;
+const parsed: Address | null = parseAddress("11111111111111111111111111111111");
+const commitment: Commitment = "confirmed";
 
-void transaction;
-void instruction;
-void connection;
-void context;
-void maybeVersionedTransaction;
+void payer;
+void amount;
+void rpc;
+void parsed;
+void commitment;
+void getTokenAccount;
+void getTokenAccountsByOwner;
+void getTokenBalance;
+void (null as TokenAccountInfo | null);
 `,
   });
 
@@ -169,33 +172,29 @@ void maybeVersionedTransaction;
     source: `import { defineComponent } from "vue";
 import { createSolanaPlugin } from "@vue-solana/vue";
 import { installSolanaBufferPolyfill, Buffer } from "@vue-solana/vue/buffer-polyfill";
+import { useSolanaClient } from "@vue-solana/vue/useSolanaClient";
 import { useConnection } from "@vue-solana/vue/useConnection";
 import { useWallet } from "@vue-solana/vue/useWallet";
-import { PublicKey, SystemProgram, Transaction, TransactionInstruction, type VersionedTransaction } from "@vue-solana/vue/web3";
+import { createSolanaClient, address, type Address, type SolanaClient } from "@vue-solana/vue/kit";
 
 installSolanaBufferPolyfill();
 
-const payer = new PublicKey("11111111111111111111111111111111");
-const recipient = new PublicKey("11111111111111111111111111111111");
-const transaction = new Transaction().add(
-  SystemProgram.transfer({ fromPubkey: payer, toPubkey: recipient, lamports: 1 }),
-);
-const instruction = new TransactionInstruction({ keys: [], programId: payer, data: Buffer.from([]) });
 const plugin = createSolanaPlugin({ cluster: "devnet" });
-const maybeVersionedTransaction: VersionedTransaction | undefined = undefined;
+const client: SolanaClient = createSolanaClient({ cluster: "devnet" });
+const publicKey: Address = address("11111111111111111111111111111111");
 
 export default defineComponent({
   setup() {
+    const { client: injectedClient, rpc } = useSolanaClient();
     const connection = useConnection();
     const wallet = useWallet();
-    return { connection, wallet };
+    return { injectedClient, rpc, connection, wallet };
   },
 });
 
-void transaction;
-void instruction;
 void plugin;
-void maybeVersionedTransaction;
+void client;
+void publicKey;
 `,
   });
 
@@ -217,22 +216,14 @@ void maybeVersionedTransaction;
     tsconfigCompilerOptions: {},
     source: `import VueSolana from "@vue-solana/nuxt";
 import { installSolanaBufferPolyfill, Buffer } from "@vue-solana/nuxt/buffer-polyfill";
-import { PublicKey, SystemProgram, Transaction, TransactionInstruction, type VersionedTransaction } from "@vue-solana/nuxt/web3";
+import { createSolanaClient, type SolanaClient } from "@vue-solana/nuxt/kit";
 
 installSolanaBufferPolyfill();
 
-const payer = new PublicKey("11111111111111111111111111111111");
-const recipient = new PublicKey("11111111111111111111111111111111");
-const transaction = new Transaction().add(
-  SystemProgram.transfer({ fromPubkey: payer, toPubkey: recipient, lamports: 1 }),
-);
-const instruction = new TransactionInstruction({ keys: [], programId: payer, data: Buffer.from([]) });
-const maybeVersionedTransaction: VersionedTransaction | undefined = undefined;
+const client: SolanaClient = createSolanaClient({ cluster: "devnet" });
 
 void VueSolana;
-void transaction;
-void instruction;
-void maybeVersionedTransaction;
+void client;
 `,
   });
 

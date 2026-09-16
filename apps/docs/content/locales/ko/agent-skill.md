@@ -12,7 +12,7 @@ Vue Solana는 Agent Skills 형식을 지원하는 AI 코딩 에이전트가 사�
 - `@vue-solana/core`
 - `@vue-solana/vue`
 - `@vue-solana/nuxt`
-- Vue 또는 Nuxt 앱에서 사용하는 `@vue-solana/vue/web3` 및 `@vue-solana/nuxt/web3` primitive
+- Vue 또는 Nuxt 앱에서 사용하는 `@vue-solana/*/kit` primitive
 
 ## 설치
 
@@ -36,14 +36,13 @@ CLI는 설치 중 선택한 에이전트의 skill 디렉터리에 skill을 설�
 
 ## 포함 내용
 
-- `@vue-solana/core`, `@vue-solana/vue`, `@vue-solana/vue/web3`, `@vue-solana/nuxt`, `@vue-solana/nuxt/web3`를 언제 사용할지에 대한 규칙입니다.
+- `@vue-solana/core`, `@vue-solana/vue`, `@vue-solana/vue/kit`, `@vue-solana/nuxt`, `@vue-solana/nuxt/kit`를 언제 사용할지에 대한 규칙입니다.
 - Vue 플러그인 설정과 권장 direct 컴포저블 import 방식입니다.
 - Nuxt 모듈 설정과 자동 import 컴포저블입니다.
 - `useWallets()` 및 `useWallet()`을 통한 통합 지갑 검색과 연결입니다.
 - 브라우저 확장 지갑, Android Mobile Wallet Adapter 지원, iOS 브라우저 지갑 지원, 현재 desktop native wallet 제한입니다.
-- RPC, 잔액, 트랜잭션 헬퍼 사용법입니다.
+- RPC, 잔액, 트랜잭션, 토큰 계정 헬퍼 사용법입니다.
 - 트랜잭션 코드용 `installSolanaBufferPolyfill()` 브라우저 polyfill 안내입니다.
-- 현재 `@solana/web3-compat@0.0.21` TypeScript 메타데이터 우회 방법입니다.
 - Vue Solana 자체 변경을 검증하는 저장소 명령입니다.
 
 ## 소스

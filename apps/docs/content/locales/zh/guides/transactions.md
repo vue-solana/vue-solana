@@ -7,23 +7,23 @@ surroundOrder: 11
 
 Vue Solana 提供了感知钱包的钱包提交辅助函数，以及用于响应式交易状态的组合式函数。
 
-本指南涵盖 Vue Solana 的边界：钱包能力检查、签名、发送、确认和错误。请使用 `@vue-solana/vue/web3`、`@vue-solana/nuxt/web3` 或你的程序客户端来构建交易指令。
+本指南涵盖 Vue Solana 的边界：钱包能力检查、签名、发送、确认和错误。请使用 `@solana/kit` 和你的程序客户端的指令辅助函数来构建交易消息。
 
 ## Core 发送辅助函数
 
-当你已经拥有 `Connection`、钱包和交易时，请使用来自 `@vue-solana/core/transaction` 的 `signAndSendTransaction()`。
+当你已经拥有 Kit 客户端、钱包和原始 wire 交易字节时，请使用来自 `@vue-solana/core/transaction` 的 `signAndSendTransaction()`。
 
 ```ts
 import { signAndSendTransaction } from "@vue-solana/core/transaction";
 
-const signature = await signAndSendTransaction(connection, wallet, transaction, {
+const signature = await signAndSendTransaction(client, wallet, transaction, {
   skipPreflight: false,
 });
 ```
 
 该辅助函数返回 RPC 签名字符串。
 
-对于 Android Mobile Wallet Adapter 钱包，Vue Solana 会在可用时优先使用 `signTransaction` 加 `connection.sendRawTransaction()`，这样应用拥有提交过程，并能在钱包切换后可靠返回 RPC 签名。
+对于 Android Mobile Wallet Adapter 钱包，Vue Solana 会在可用时优先使用 `signTransaction`，并通过 `client.rpc.sendTransaction(...).send()` 在应用侧提交 RPC，这样应用拥有提交过程，并能在钱包切换后可靠返回 RPC 签名。
 
 ## 确认签名
 
@@ -32,7 +32,7 @@ const signature = await signAndSendTransaction(connection, wallet, transaction, 
 ```ts
 import { confirmTransactionSignature } from "@vue-solana/core/transaction";
 
-const confirmation = await confirmTransactionSignature(connection, signature, {
+const confirmation = await confirmTransactionSignature(client, signature, {
   commitment: "confirmed",
   timeoutMs: 60_000,
 });
@@ -40,11 +40,11 @@ const confirmation = await confirmTransactionSignature(connection, signature, {
 console.log(confirmation.signature, confirmation.commitment);
 ```
 
-确认默认使用 `confirmed` commitment 和 60 秒超时。
+确认默认使用 `confirmed` commitment 和 60 秒超时。它会轮询 `client.rpc.getSignatureStatuses([signature]).send()`，因此交易必须已经提交。
 
 ## 构建真实的 Devnet 转账
 
-此示例在 devnet 上创建一笔很小的系统转账。它使用 Vue 包的 web3 子路径获取 Solana 基础类型，并使用 Vue Solana 处理钱包状态和提交。
+此示例在 devnet 上创建一笔很小的系统转账。它构建一条 Kit v0 交易消息，并将其序列化为 Vue Solana 交给钱包签署的 wire 字节。
 
 创建或序列化交易的浏览器应用，应在交易代码运行前初始化一次 Vue 包的 Buffer polyfill：
 
@@ -55,34 +55,60 @@ installSolanaBufferPolyfill();
 ```
 
 ```ts
-import { PublicKey, SystemProgram, Transaction } from "@vue-solana/vue/web3";
+import {
+  AccountRole,
+  address,
+  appendTransactionMessageInstruction,
+  compileTransaction,
+  createTransactionMessage,
+  getTransactionEncoder,
+  setTransactionMessageFeePayer,
+  setTransactionMessageLifetimeUsingBlockhash,
+  type Address,
+} from "@solana/kit";
+
+const SYSTEM_PROGRAM_ADDRESS = address("11111111111111111111111111111111");
+
+function createTransferInstruction(from: Address, to: Address, lamports: number) {
+  const data = new DataView(new ArrayBuffer(12));
+  data.setUint32(0, 2, true); // System program transfer instruction index
+  data.setBigUint64(4, BigInt(lamports), true);
+
+  return {
+    programAddress: SYSTEM_PROGRAM_ADDRESS,
+    accounts: [
+      { address: from, role: AccountRole.WRITABLE_SIGNER },
+      { address: to, role: AccountRole.WRITABLE },
+    ],
+    data: new Uint8Array(data.buffer),
+  };
+}
 
 async function createTransferTransaction(params: {
-  connection: Connection;
-  from: PublicKey;
+  rpc: { getLatestBlockhash(): { send(): Promise<{ value: { blockhash: string } }> } };
+  from: Address;
   to: string;
   lamports: number;
 }) {
-  const recipient = new PublicKey(params.to);
-  const { blockhash, lastValidBlockHeight } = await params.connection.getLatestBlockhash();
+  const recipient = address(params.to);
+  const { value: latestBlockhash } = await params.rpc.getLatestBlockhash().send();
 
-  const transaction = new Transaction({
-    feePayer: params.from,
-    blockhash,
-    lastValidBlockHeight,
-  });
-
-  transaction.add(
-    SystemProgram.transfer({
-      fromPubkey: params.from,
-      toPubkey: recipient,
-      lamports: params.lamports,
-    }),
+  const message = setTransactionMessageLifetimeUsingBlockhash(
+    latestBlockhash,
+    setTransactionMessageFeePayer(
+      params.from,
+      appendTransactionMessageInstruction(
+        createTransferInstruction(params.from, recipient, params.lamports),
+        createTransactionMessage({ version: 0 }),
+      ),
+    ),
   );
 
-  return transaction;
+  return getTransactionEncoder().encode(compileTransaction(message));
 }
 ```
+
+`createTransferTransaction` 返回原始 wire 交易字节（`Uint8Array`），这正是 `SolanaWallet.signTransaction` 和 `useSignAndSendTransaction()` 所接受的格式。
 
 测试时使用 devnet SOL。从非常小的值开始，例如 `1_000` lamports（`0.000001` SOL）。验证教程或示例流程时，永远不要使用包含真实资金的钱包。
 
@@ -94,23 +120,24 @@ async function createTransferTransaction(params: {
 <script setup lang="ts">
 import { computed } from "vue";
 import { useSignAndSendTransaction } from "@vue-solana/vue/useSignAndSendTransaction";
-import { useConnection } from "@vue-solana/vue/useConnection";
+import { useSolanaClient } from "@vue-solana/vue/useSolanaClient";
 import { useWallet } from "@vue-solana/vue/useWallet";
 
 const recipient = ref("PASTE_DEVNET_RECIPIENT_ADDRESS");
 const lamports = ref(1_000);
-const connection = useConnection();
+const { client } = useSolanaClient();
 const { publicKey, connected, canSignTransaction } = useWallet();
 const { signature, confirmation, status, error, execute } = useSignAndSendTransaction();
 
 const canSubmit = computed(() => connected.value && canSignTransaction.value);
 
 async function submitTransaction() {
-  if (!publicKey.value) return;
+  const from = publicKey.value;
+  if (!from) return;
 
   const transaction = await createTransferTransaction({
-    connection,
-    from: publicKey.value,
+    rpc: client.rpc,
+    from,
     to: recipient.value,
     lamports: lamports.value,
   });
@@ -124,11 +151,13 @@ async function submitTransaction() {
 
 <template>
   <section>
-    <button type="button" :disabled="!canSubmit" @click="submitTransaction">发送交易</button>
-    <p>状态：{{ status }}</p>
-    <p v-if="signature">签名：{{ signature }}</p>
-    <p v-if="confirmation">已在 {{ confirmation.commitment }} 确认</p>
-    <p v-if="error">无法发送交易。</p>
+    <button type="button" :disabled="!canSubmit" @click="submitTransaction">
+      Send transaction
+    </button>
+    <p>Status: {{ status }}</p>
+    <p v-if="signature">Signature: {{ signature }}</p>
+    <p v-if="confirmation">Confirmed at {{ confirmation.commitment }}</p>
+    <p v-if="error">Unable to send transaction.</p>
   </section>
 </template>
 ```
@@ -174,7 +203,7 @@ Nuxt 暴露：
 <script setup lang="ts">
 const { signature, status, error, execute } = useSolanaSignAndSendTransaction();
 
-async function submit(transaction: Transaction) {
+async function submit(transaction: Uint8Array) {
   await execute(transaction, { confirm: true });
 }
 </script>
@@ -192,25 +221,25 @@ async function submit(transaction: Transaction) {
 import { isSolanaError } from "@vue-solana/core/errors";
 
 try {
-  await signAndSendTransaction(connection, wallet, transaction);
+  await signAndSendTransaction(client, wallet, transaction);
 } catch (error) {
   if (isSolanaError(error)) {
     switch (error.code) {
       case "NO_WALLET_SELECTED":
       case "WALLET_NOT_CONNECTED":
-        // 要求用户连接钱包。
+        // Ask the user to connect a wallet.
         break;
       case "WALLET_FEATURE_UNSUPPORTED":
-        // 隐藏或禁用不支持的交易操作。
+        // Hide or disable unsupported transaction actions.
         break;
       case "USER_REJECTED":
-        // 用户拒绝了钱包提示。
+        // The user declined the wallet prompt.
         break;
       case "TRANSACTION_TIMEOUT":
-        // 重试前检查签名状态。
+        // Check signature status before retrying.
         break;
       case "RPC_FAILURE":
-        // RPC 发送或确认失败。
+        // RPC send or confirmation failed.
         console.error(error.cause);
         break;
     }

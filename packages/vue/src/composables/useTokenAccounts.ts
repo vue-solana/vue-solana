@@ -1,27 +1,24 @@
-import type { Commitment, PublicKey } from "@vue-solana/core/web3";
-import type { TokenAccount } from "@vue-solana/core/spl-token";
-import { parsePublicKey } from "@vue-solana/core/address";
+import type { Address, Commitment } from "@vue-solana/core/kit";
+import type { TokenAccountInfo } from "@vue-solana/core/token-accounts";
+import { getTokenAccountsByOwner } from "@vue-solana/core/token-accounts";
 import { normalizeSolanaError, type SolanaError } from "@vue-solana/core/errors";
-import {
-  getTokenAccountsByOwner,
-  type TokenAccountsByOwnerOptions,
-} from "@vue-solana/core/token-accounts";
+import { parseAddress } from "@vue-solana/core/address";
 import { onMounted, shallowRef, toValue, watch, type MaybeRefOrGetter } from "vue";
 import { useConnection } from "./useConnection";
 import { tryUseSolana } from "./useSolana";
 
 export interface UseTokenAccountsOptions {
   commitment?: Commitment;
-  programId?: PublicKey;
+  programId?: Address;
 }
 
 export function useTokenAccounts(
-  owner: MaybeRefOrGetter<PublicKey | string | null | undefined>,
+  owner: MaybeRefOrGetter<Address | string | null | undefined>,
   options?: UseTokenAccountsOptions,
 ) {
   const solana = tryUseSolana();
-  const connection = solana?.connection ?? useConnection();
-  const tokenAccounts = shallowRef<TokenAccount[]>([]);
+  const client = solana?.client ?? useConnection();
+  const tokenAccounts = shallowRef<TokenAccountInfo[]>([]);
   const loading = shallowRef(false);
   const error = shallowRef<SolanaError | null>(null);
   let refreshId = 0;
@@ -41,20 +38,18 @@ export function useTokenAccounts(
     error.value = null;
 
     try {
-      const publicKey = parsePublicKey(value);
+      const parsedAddress = parseAddress(value);
 
-      if (!publicKey) {
+      if (!parsedAddress) {
         tokenAccounts.value = [];
         loading.value = false;
         return [];
       }
 
-      const opts: TokenAccountsByOwnerOptions = {
-        commitment: options?.commitment as TokenAccountsByOwnerOptions["commitment"],
+      const nextAccounts = await getTokenAccountsByOwner(client, parsedAddress, {
+        commitment: options?.commitment,
         programId: options?.programId,
-      };
-
-      const nextAccounts = await getTokenAccountsByOwner(connection, publicKey, opts);
+      });
 
       if (requestId === refreshId) {
         tokenAccounts.value = nextAccounts;

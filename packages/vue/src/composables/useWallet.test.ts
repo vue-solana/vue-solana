@@ -5,7 +5,7 @@ import type { SolanaError } from "@vue-solana/core/errors";
 import { createMockSolanaContext, mountWithSolana } from "../../test-utils";
 import { useWallet } from "./useWallet";
 
-const publicKey = { toBase58: () => "public-key" } as SolanaWallet["publicKey"];
+const publicKey = "public-key" as SolanaWallet["publicKey"];
 
 type WalletResult = ReturnType<typeof useWallet>;
 type TestSolanaContext = ReturnType<typeof createMockSolanaContext>;

@@ -30,7 +30,7 @@ RPC 엔드포인트는 앱이 Solana를 읽거나 쓰는 데 사용하는 HTTP U
 - `https://api.mainnet-beta.solana.com`
 - `http://127.0.0.1:8899`
 
-`@vue-solana/vue/web3`, `@vue-solana/nuxt/web3`, `@vue-solana/core/web3`의 `Connection` 객체는 이 엔드포인트로 RPC 요청을 보냅니다. 공개 엔드포인트는 시작하기에 유용하지만, 프로덕션 앱은 일반적으로 안정성과 rate limit 때문에 전용 RPC provider를 사용합니다.
+RPC 요청은 `useSolanaClient()` 또는 `useSolanaRpc()`의 `client.rpc`, 또는 `@vue-solana/core`의 `createSolanaClient()` / `createSolanaContext()`를 통해 전송됩니다. 레거시 `Connection` 클래스와 `web3` 하위 경로는 v2.0.0에서 제거되었습니다. 공개 엔드포인트는 시작하기에 유용하지만, 프로덕션 앱은 일반적으로 안정성과 rate limit 때문에 전용 RPC provider를 사용합니다.
 
 공식 참고 자료: [Solana RPC](https://solana.com/docs/rpc)
 

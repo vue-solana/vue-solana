@@ -16,12 +16,9 @@ Official references:
 
 ## Connections And RPC
 
-Frontend apps read Solana data through an RPC endpoint. There are two ways to send RPC requests:
+Frontend apps read Solana data through an RPC endpoint. The Kit path exposes a read-only `client.rpc` via `useSolanaClient()` (or `createSolanaClient()` from `@vue-solana/core/kit`).
 
-- The modern Kit path exposes a read-only `client.rpc` via `useSolanaClient()` (or `createSolanaClient()` from `@vue-solana/core/kit`).
-- The legacy `Connection` class from `@vue-solana/vue/web3` and `@vue-solana/nuxt/web3` is still supported but deprecated.
-
-Vue Solana packages create and provide the connection and client for Vue and Nuxt code so composables can share the same cluster, endpoint, commitment, and wallet state.
+Vue Solana packages create and provide the Kit client for Vue and Nuxt code so composables can share the same cluster, endpoint, commitment, and wallet state.
 
 ```ts
 createSolanaPlugin({
@@ -42,13 +39,7 @@ import { address } from "@vue-solana/vue/kit";
 const publicKey = address("PASTE_A_SOLANA_ADDRESS");
 ```
 
-The legacy path uses the `PublicKey` class:
-
-```ts
-import { PublicKey } from "@vue-solana/vue/web3";
-
-const publicKey = new PublicKey("PASTE_A_SOLANA_ADDRESS");
-```
+Addresses are base58 `Address` strings; the legacy `PublicKey` class and the `web3` subpaths were removed in v2.0.0.
 
 See the [Kit Migration](/guides/kit-migration) guide for the full map between the two.
 
@@ -64,21 +55,14 @@ SOL is the native token on Solana. Lamports are the smallest unit of SOL.
 
 RPC balance methods return lamports. Convert lamports to SOL only for display.
 
-The Kit read API returns lamports as a `bigint`:
+Kit RPC methods return lamports as a `bigint`:
 
 ```ts
-const lamports = await rpc.getBalance(address("YOUR_ADDRESS")).send();
+const { value: lamports } = await rpc.getBalance(address("YOUR_ADDRESS")).send();
 const sol = Number(lamports) / 1_000_000_000;
 ```
 
-The legacy `Connection` returns a number:
-
-```ts
-const lamports = await connection.getBalance(publicKey);
-const sol = lamports / 1_000_000_000;
-```
-
-Note that Kit RPC calls return `bigint` for numeric fields and `Uint8Array` for account data.
+Kit RPC calls return `bigint` for numeric fields and `Uint8Array` for account data.
 
 ## Wallets
 
@@ -86,7 +70,7 @@ A wallet stores keys and signs transactions. Browser extension wallets include P
 
 Vue Solana discovers Solana Wallet Standard browser extension wallets, Android Mobile Wallet Adapter wallets, and supported iOS browser wallet links through the unified `useWallets()` flow. RPC reads and balance reads work without a wallet. Connecting, signing, and sending transactions require a discovered wallet or custom object that implements the `SolanaWallet` interface.
 
-See [Wallets](/guides/wallets) for current support and the desktop native wallet post-v1 status.
+See [Wallets](/guides/wallets) for current support and the desktop native wallet status.
 
 ## Transactions And Signing
 

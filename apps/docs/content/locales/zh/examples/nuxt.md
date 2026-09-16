@@ -16,7 +16,7 @@ Live demo: [vue-solana-docs.vercel.app/demo](/zh/demo)
 - 使用 `modules: ['@vue-solana/nuxt']` 安装 Nuxt 模块。
 - 使用 `solana: { cluster: 'devnet' }` 配置模块。
 - 使用自动导入的 `useSolanaRpc()` 读取 RPC 状态。
-- 使用 `useSolanaConnection()` 和注入的连接。
+- 使用自动导入的 `useSolanaClient()` 使用注入的 Kit client。
 - 使用 `useSolanaBalance()` 读取 lamport 余额。
 - 使用 `useSolanaWallets()` 发现浏览器扩展钱包、Android Mobile Wallet Adapter 钱包，以及受支持的 iOS 浏览器钱包条目。
 - 使用 `useSolanaWallet()` 管理当前活跃钱包状态。
@@ -43,7 +43,7 @@ pnpm dev:nuxt
 ## 可以尝试的内容
 
 - 检查初始模块/RPC 状态和最新 blockhash。
-- 点击 `Load Blockhash` 直接调用 `connection.getLatestBlockhash()`。
+- 点击 `Load Blockhash` 直接调用 `client.rpc.getLatestBlockhash().send()`。
 - 粘贴 devnet 钱包地址并刷新余额。
 - 安装 Solana 浏览器钱包，并切换到 devnet。
 - 在 Android Chrome 上，安装兼容的 Solana 移动钱包，并查找 `Mobile Wallet Adapter`。

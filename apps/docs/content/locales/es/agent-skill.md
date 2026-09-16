@@ -1,18 +1,18 @@
 ---
 title: Skill de agente
-description: Instala el Agent Skill de Vue Solana para agentes de codificación con IA.
+description: Instala el Agent Skill de Vue Solana para agentes de codificacion con IA.
 ogSection: Herramientas
 surroundOrder: 3
 ---
 
-Vue Solana incluye un Agent Skill instalable para agentes de codificación con IA que soportan el formato Agent Skills. El skill entrega a los agentes patrones de configuración de Vue Solana, reglas para elegir paquetes, guía de flujos de wallet, advertencias sobre SSR en Nuxt, detalles importantes de transacciones y comandos de verificación.
+Vue Solana incluye un Agent Skill instalable para agentes de codificacion con IA que soportan el formato Agent Skills. El skill entrega a los agentes patrones de configuracion de Vue Solana, reglas para elegir paquetes, guia de flujos de wallet, advertencias sobre SSR en Nuxt, detalles importantes de transacciones y comandos de verificacion.
 
-Úsalo cuando pidas a un agente construir, depurar, revisar o documentar apps que usan:
+Usalo cuando pidas a un agente construir, depurar, revisar o documentar apps que usan:
 
 - `@vue-solana/core`
 - `@vue-solana/vue`
 - `@vue-solana/nuxt`
-- primitivas de `@vue-solana/vue/web3` y `@vue-solana/nuxt/web3` en apps Vue o Nuxt
+- primitivas de `@vue-solana/*/kit` en apps Vue o Nuxt
 
 ## Instalar
 
@@ -32,19 +32,18 @@ npx skills add vue-solana/vue-solana --list
 npx skills add vue-solana/vue-solana --global
 ```
 
-La CLI instala los skills en el directorio de skills del agente que elijas durante la instalación. Para Claude, eso es `.claude/skills/` en el proyecto actual, o `~/.claude/skills/` cuando se usa `--global`.
+La CLI instala los skills en el directorio de skills del agente que elijas durante la instalacion. Para Claude, eso es `.claude/skills/` en el proyecto actual, o `~/.claude/skills/` cuando se usa `--global`.
 
-## Qué cubre el skill
+## Que cubre el skill
 
-- Cuándo usar `@vue-solana/core`, `@vue-solana/vue`, `@vue-solana/vue/web3`, `@vue-solana/nuxt` y `@vue-solana/nuxt/web3`.
-- Configuración del plugin de Vue e imports directos de composables recomendados.
-- Configuración del módulo de Nuxt y composables autoimportados.
-- Descubrimiento y conexión unificados de wallets mediante `useWallets()` y `useWallet()`.
-- Wallets de extensión de navegador, soporte para Android Mobile Wallet Adapter, soporte para wallets en navegadores iOS y límites actuales de wallets nativas de escritorio.
-- Uso de helpers de RPC, balances y transacciones.
-- Guía de `installSolanaBufferPolyfill()` para el polyfill de navegador en código de transacciones.
-- La solución temporal actual para metadatos TypeScript de `@solana/web3-compat@0.0.21`.
-- Comandos de verificación del repositorio para cambios en Vue Solana.
+- Cuando usar `@vue-solana/core`, `@vue-solana/vue`, `@vue-solana/vue/kit`, `@vue-solana/nuxt` y `@vue-solana/nuxt/kit`.
+- Configuracion del plugin de Vue e imports directos de composables recomendados.
+- Configuracion del modulo de Nuxt y composables autoimportados.
+- Descubrimiento y conexion unificados de wallets mediante `useWallets()` y `useWallet()`.
+- Wallets de extension de navegador, soporte para Android Mobile Wallet Adapter, soporte para wallets en navegadores iOS y limites actuales de wallets nativas de escritorio.
+- Uso de helpers de RPC, balances, transacciones y cuentas de tokens.
+- Guia de `installSolanaBufferPolyfill()` para el polyfill de navegador en codigo de transacciones.
+- Comandos de verificacion del repositorio para cambios en Vue Solana.
 
 ## Fuente
 

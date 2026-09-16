@@ -1,19 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { createSolanaConnection, createSolanaContext } from "./rpc";
-
-describe("createSolanaConnection", () => {
-  it("creates a devnet connection by default", () => {
-    const connection = createSolanaConnection();
-
-    expect(connection.rpcEndpoint).toBe("https://api.devnet.solana.com");
-  });
-
-  it("creates a connection for a custom endpoint", () => {
-    const connection = createSolanaConnection({ endpoint: "https://rpc.example.com" });
-
-    expect(connection.rpcEndpoint).toBe("https://rpc.example.com");
-  });
-});
+import { createSolanaContext } from "./rpc";
 
 describe("createSolanaContext", () => {
   it("creates a devnet context by default", () => {
@@ -22,7 +8,7 @@ describe("createSolanaContext", () => {
     expect(context.cluster).toBe("devnet");
     expect(context.endpoint).toBe("https://api.devnet.solana.com");
     expect(context.wsEndpoint).toBe("wss://api.devnet.solana.com");
-    expect(context.connection).toBeDefined();
+    expect(context.client).toBeDefined();
   });
 
   it("uses cluster endpoints when only a cluster is provided", () => {

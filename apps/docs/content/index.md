@@ -15,7 +15,7 @@ Vue Solana provides RPC setup, reactive account reads, balance reads, browser ex
 - [`@vue-solana/vue`](/packages/vue): Vue plugin and composables.
 - [`@vue-solana/nuxt`](/packages/nuxt): Nuxt module that installs the Vue plugin and auto-imports composables.
 
-`@vue-solana/core` supports both `@solana/web3-compat` and [Solana Kit](https://solana.com/docs/kit). The modern path re-exports Kit primitives and a `createSolanaClient()` factory from `@vue-solana/core/kit`; the legacy web3-compat surface stays available from the `web3` subpaths and is deprecated. New code should prefer the Kit path — see the [Kit Migration guide](/guides/kit-migration).
+`@vue-solana/core` builds on [Solana Kit](https://solana.com/docs/kit). It re-exports Kit primitives and a `createSolanaClient()` factory from `@vue-solana/core/kit`, and the framework packages expose Kit-first composables such as `useSolanaClient()`. The legacy `@solana/web3-compat` surface and `web3` subpaths were removed in v2.0.0 — see the [Kit Migration guide](/guides/kit-migration) for the before/after map.
 
 ## Start Here
 
@@ -25,7 +25,7 @@ Vue Solana provides RPC setup, reactive account reads, balance reads, browser ex
 - [Transaction Guide](/guides/transactions)
 - [Solana For Vue Developers](/concepts/solana-for-vue-developers)
 - [Clusters](/concepts/clusters)
-- [v1 Roadmap](/roadmap)
+- [Roadmap](/roadmap)
 - [Agent Skill](/agent-skill)
 - [Troubleshooting](/troubleshooting)
 

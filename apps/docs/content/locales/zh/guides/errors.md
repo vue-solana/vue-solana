@@ -30,7 +30,7 @@ const error = new SolanaError("RPC_FAILURE", "Unable to reach RPC");
 - `WALLET_NOT_CONNECTED`：活跃钱包未连接，或没有公钥。
 - `WALLET_FEATURE_UNSUPPORTED`：活跃钱包不支持请求的功能。
 - `USER_REJECTED`：用户拒绝了钱包请求。
-- `INVALID_ADDRESS`：地址字符串无法解析为 Solana 公钥。
+- `INVALID_ADDRESS`：地址字符串无法解析为 Solana 地址。
 - `TRANSACTION_TIMEOUT`：与交易相关的操作超时。
 - `RPC_FAILURE`：RPC 发送、读取或确认失败。
 - `STORAGE_FAILURE`：无法读取或写入浏览器存储。
@@ -43,7 +43,7 @@ const error = new SolanaError("RPC_FAILURE", "Unable to reach RPC");
 import { isSolanaError } from "@vue-solana/core/errors";
 
 try {
-  await signAndSendTransaction(connection, wallet, transaction);
+  await signAndSendTransaction(client, wallet, transaction);
 } catch (error) {
   if (isSolanaError(error)) {
     console.log(error.code);
@@ -59,7 +59,7 @@ import { normalizeSolanaError } from "@vue-solana/core/errors";
 
 async function loadData() {
   try {
-    return await connection.getLatestBlockhash();
+    return await client.rpc.getLatestBlockhash().send();
   } catch (cause) {
     throw normalizeSolanaError(cause, "RPC_FAILURE", "Unable to load blockhash");
   }

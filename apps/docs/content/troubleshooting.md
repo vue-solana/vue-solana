@@ -7,46 +7,15 @@ surroundOrder: 4
 
 Use this guide to diagnose the most common Vue Solana setup issues across Vue, Nuxt, TypeScript, wallet discovery, RPC calls, and transactions. Start with the error message or behavior that matches your app, then follow the checks in order before opening an issue.
 
-## TypeScript Cannot Resolve `@solana/web3-compat`
+## `@solana/web3-compat` Cannot Be Resolved
 
-`@solana/web3-compat@0.0.21` currently has broken TypeScript metadata. Runtime imports still use the real package. Current Vue Solana packages publish temporary package-owned declaration shims, so the documented imports from `@vue-solana/core`, `@vue-solana/vue`, and `@vue-solana/nuxt` should typecheck without a consumer-local shim.
+v2.0.0 removed `@solana/web3-compat` from every Vue Solana package, so a missing-declaration error against that package almost always means your app still imports from the deleted legacy surface: `@vue-solana/core/web3`, `@vue-solana/vue/web3`, `@vue-solana/nuxt/web3`, or a direct `@solana/web3-compat` dependency.
 
-If TypeScript still reports missing declarations, first confirm that you are using a current Vue Solana package version and are not importing `@solana/web3-compat` directly from app code. For older Vue Solana versions or direct `@solana/web3-compat` imports, add `types/web3-compat.d.ts` to your app:
-
-```ts
-declare module "@solana/web3-compat" {
-  export type {
-    Commitment,
-    RpcResponseAndContext,
-    SendOptions,
-    SignatureResult,
-    TransactionSignature,
-  } from "@solana/web3.js";
-  export {
-    Connection,
-    Keypair,
-    PublicKey,
-    SystemProgram,
-    Transaction,
-    TransactionInstruction,
-    VersionedTransaction,
-  } from "@solana/web3.js";
-}
-```
-
-Make sure your `tsconfig.json` includes the file:
-
-```json
-{
-  "include": ["src/**/*.ts", "src/**/*.vue", "types/**/*.d.ts"]
-}
-```
-
-Re-check new `@solana/web3-compat` versions before keeping this workaround. The package-owned shim should be removed once upstream ships valid root declarations.
+Update those imports to the Kit equivalents — see the [Kit Migration guide](/guides/kit-migration). If you are still on a v1.x package, the v1 packages shipped package-owned declaration shims for the documented core imports, and apps on v1 could add their own `@solana/web3-compat` shim only when importing the package directly. Upgrading to `@vue-solana/*@^2` removes the need for any shim.
 
 ## `Vue Solana plugin is not installed`
 
-This means client-side code tried to use the Solana connection or wallet actions without installing the plugin. Current composables return inert SSR-safe state when Nuxt renders on the server, but real RPC and wallet operations still require the client plugin context.
+This means client-side code tried to use the Solana client or wallet actions without installing the plugin. Current composables return inert SSR-safe state when Nuxt renders on the server, but real RPC and wallet operations still require the client plugin context.
 
 For Vue:
 
@@ -66,7 +35,7 @@ export default defineNuxtConfig({
 });
 ```
 
-The Nuxt module keeps the Vue Solana plugin client-only. Auto-imported composables can be called during SSR, but avoid doing direct RPC or wallet work on the server. Trigger RPC reads from client lifecycle hooks or user actions when you need the real Solana connection.
+The Nuxt module keeps the Vue Solana plugin client-only. Auto-imported composables can be called during SSR, but avoid doing direct RPC or wallet work on the server. Trigger RPC reads from client lifecycle hooks or user actions when you need the real Solana client.
 
 ## `No Solana wallet is configured`
 
@@ -116,7 +85,7 @@ Common causes:
 - The configured `redirectUrl` does not return to the same app page that refreshes wallet state.
 - Wallet refresh or callback handling is only running during SSR instead of on the client.
 
-Keep iOS wallet work client-side, make sure the redirect URL loads the app again, and call `refreshWallets()` after the redirected page loads. The Vue plugin handles iOS callbacks during wallet refresh; apps using core helpers directly should call `handleSolanaIosWalletCallback()` before relying on the returned connection.
+Keep iOS wallet work client-side, make sure the redirect URL loads the app again, and call `refreshWallets()` after the redirected page loads. The Vue plugin handles iOS callbacks during wallet refresh; apps using core helpers directly should call `handleSolanaIosWalletCallback()` before relying on the adapted wallet session.
 
 ## `Solana wallet is not connected`
 
@@ -149,7 +118,7 @@ Android Mobile Wallet Adapter wallets prefer wallet signing plus app-side RPC su
 
 ## `Buffer is not defined`
 
-Some `@solana/web3-compat` transaction paths still expect a Node-compatible `Buffer` global. In browser Vue apps, initialize the Vue package Buffer polyfill before creating or serializing transactions. Use `@vue-solana/nuxt/buffer-polyfill` in Nuxt apps.
+Some Solana transaction serialization paths still expect a Node-compatible `Buffer` global in browser runtimes. In browser Vue apps, initialize the Vue package Buffer polyfill before creating or serializing transactions. Use `@vue-solana/nuxt/buffer-polyfill` in Nuxt apps.
 
 ```ts
 import { installSolanaBufferPolyfill } from "@vue-solana/vue/buffer-polyfill";

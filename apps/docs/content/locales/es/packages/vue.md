@@ -1,11 +1,11 @@
 ---
 title: "@vue-solana/vue"
 description: Plugin de Vue y composables para aplicaciones Solana.
-ogSection: Paquetes
+ogSection: Packages
 surroundOrder: 15
 ---
 
-[`@vue-solana/vue`](https://www.npmjs.com/package/@vue-solana/vue) proporciona un plugin de Vue y composables para acceso RPC de Solana, lecturas de balance, estado de wallet y estado de helpers de transaccion.
+[`@vue-solana/vue`](https://www.npmjs.com/package/@vue-solana/vue) proporciona un plugin de Vue y composables para acceso RPC de Solana, lecturas de balance, estado de wallet y estado de helpers de transacción.
 
 ## Instalar
 
@@ -15,7 +15,7 @@ pnpm add @vue-solana/vue
 
 Las apps de navegador que crean o serializan transacciones pueden inicializar el polyfill de Buffer desde `@vue-solana/vue/buffer-polyfill`.
 
-## Configuracion del plugin
+## Configuración del plugin
 
 ```ts
 import { createApp } from "vue";
@@ -38,11 +38,11 @@ createApp(App)
   .mount("#app");
 ```
 
-El registro de Android Mobile Wallet Adapter esta activado por defecto en clientes Android Chrome soportados. Pasa opciones `mobileWallet` para personalizar la identidad de app MWA, o pasa `mobileWallet: false` para desactivar el registro de wallet movil Android.
+El registro de Android Mobile Wallet Adapter está activado por defecto en clientes Android Chrome soportados. Pasa opciones `mobileWallet` para personalizar la identidad de app MWA, o pasa `mobileWallet: false` para desactivar el registro de wallet móvil Android.
 
-Los enlaces de wallet de navegador iOS estan activados por defecto en navegadores iOS para Phantom, Solflare y Backpack. Pasa opciones `iosWallet` para personalizar identidad de app, URL de redireccion, cadenas o cluster, o pasa `iosWallet: false` para desactivar el descubrimiento de enlaces de wallet iOS.
+Los enlaces de wallet de navegador iOS están activados por defecto en navegadores iOS para Phantom, Solflare y Backpack. Pasa opciones `iosWallet` para personalizar identidad de app, URL de redirección, cadenas o cluster, o pasa `iosWallet: false` para desactivar el descubrimiento de enlaces de wallet iOS.
 
-Tambien puedes pasar un endpoint RPC personalizado:
+También puedes pasar un endpoint RPC personalizado:
 
 ```ts
 createApp(App).use(
@@ -56,17 +56,18 @@ createApp(App).use(
 
 ## Composables
 
-La exportacion raiz sigue estando soportada. Para composables, prefiere imports directos por subruta en codigo nuevo para que los bundlers puedan evitar evaluar codigo de entrada no relacionado del paquete:
+La exportación raíz sigue estando soportada. Para composables, prefiere imports directos por subpath en código nuevo para que los bundlers puedan evitar evaluar código de entrada no relacionado del paquete:
 
 ```ts
 import { useRpc } from "@vue-solana/vue/useRpc";
 import { useWallet } from "@vue-solana/vue/useWallet";
 ```
 
-Subrutas directas del paquete:
+Subpaths directos del paquete:
 
 - `@vue-solana/vue/buffer-polyfill`
 - `@vue-solana/vue/useSolana`
+- `@vue-solana/vue/useSolanaClient`
 - `@vue-solana/vue/useRpc`
 - `@vue-solana/vue/useConnection`
 - `@vue-solana/vue/useAccountInfo`
@@ -81,33 +82,34 @@ Subrutas directas del paquete:
 - `@vue-solana/vue/useSignAndSendTransaction`
 - `@vue-solana/vue/useTokenBalance`
 - `@vue-solana/vue/useTokenAccounts`
-- `@vue-solana/vue/web3`
+- `@vue-solana/vue/kit`
 
-Usa `@vue-solana/vue/web3` para primitivas Solana sin procesar soportadas como `PublicKey`, `Transaction` y `TransactionInstruction`. Usa `@vue-solana/vue/buffer-polyfill` para codigo de transacciones en navegador que necesita el polyfill de Buffer. Los imports directos `@vue-solana/core/*` siguen soportados para uso core de menor nivel.
+Usa `@vue-solana/vue/buffer-polyfill` para código de transacciones en navegador que necesita el polyfill de Buffer. Usa `@vue-solana/vue/kit` para la API Kit (`createSolanaClient`, `address`, `lamports` y tipos). Los imports directos `@vue-solana/core/*` siguen soportados para uso core de menor nivel.
 
 - `useSolana()`: devuelve el contexto Solana inyectado completo.
-- `useRpc()`: devuelve cluster, endpoint, estado de conexion, ultimo blockhash y `checkConnection()`.
-- `useConnection()`: devuelve la `Connection` de Solana.
-- `useAccountInfo(address, options?)`: carga datos de cuenta y puede suscribirse a cambios de cuenta.
+- `useSolanaClient()`: devuelve el `{ client, rpc }` de Kit desde el contexto. Recomendado para código nuevo.
+- `useRpc()`: devuelve cluster, endpoint, estado de conexión, último blockhash, el `client` de Kit inyectado y `checkConnection()`.
+- `useConnection()`: devuelve el cliente Kit inyectado (deprecado en favor de `useSolanaClient()`).
+- `useAccountInfo(address, options?)`: carga datos normalizados de cuenta (executable, lamports, owner, space, bytes de datos).
 - `useProgramAccounts(programId, options?)`: carga cuentas propiedad de un program id con filtros opcionales y recorte de datos.
-- `useWallet()`: devuelve refs de wallet activa, estado de conexion computado y acciones de wallet.
-- `useWallets()`: devuelve wallets de extension de navegador descubiertas, wallets Android Mobile Wallet Adapter, entradas soportadas de wallet de navegador iOS y acciones de seleccion de wallet.
-- `useBalance(address, commitment?)`: carga el balance en lamports para un `PublicKey` o string de direccion.
+- `useWallet()`: devuelve refs de wallet activa, estado de conexión computado y acciones de wallet.
+- `useWallets()`: devuelve wallets de extensión de navegador descubiertas, wallets Android Mobile Wallet Adapter, entradas soportadas de wallet de navegador iOS y acciones de selección de wallet.
+- `useBalance(address, commitment?)`: carga el balance en lamports para un string de dirección.
 - `useTokenAccounts(owner, options?)`: carga todas las cuentas de token SPL para un propietario, consultando ambos programas Token y Token-2022 por defecto.
-- `useTokenBalance(mint, owner)`: carga el balance y decimales del token SPL para un par mint/propietario via la cuenta de token asociada.
-- `useTransaction(handler, options?)`: helper generico de estado de transaccion async con configuracion opcional de timeout.
+- `useTokenBalance(mint, owner)`: carga el balance y decimales del token SPL para un par mint/propietario vía la cuenta de token asociada.
+- `useTransaction(handler, options?)`: helper genérico de estado de transacción async con configuración opcional de timeout.
 - `useTransactionConfirmation(options?)`: confirma una firma enviada con estado reactivo y estado de timeout/error.
 - `useSignatureStatus(signature, options?)`: lee, sondea o se suscribe a actualizaciones de estado de firma.
-- `useSignMessage()`: firma mensajes de autenticacion arbitrarios mediante la wallet configurada cuando esta soportado.
-- `useSignAndSendTransaction()`: firma y envia una transaccion mediante la wallet configurada, con espera de confirmacion opcional.
+- `useSignMessage()`: firma mensajes de autenticación arbitrarios mediante la wallet configurada cuando está soportado.
+- `useSignAndSendTransaction()`: firma y envía una transacción mediante la wallet configurada, con espera de confirmación opcional.
 
-## Guias relacionadas
+## Guías relacionadas
 
-- [RPC and Clusters](/guides/rpc-and-clusters): lee estado de conexion y configura endpoints.
+- [RPC and Clusters](/guides/rpc-and-clusters): lee estado de conexión y configura endpoints.
 - [Wallets](/guides/wallets): descubre, selecciona, conecta, desconecta y comprueba capacidades de wallet.
 - [Account Reads](/guides/account-reads): lee balances, info de cuenta, cuentas de programa y estado de firma.
-- [Transactions](/guides/transactions): firma, envia, confirma y muestra progreso de transaccion.
-- [Message Signing](/guides/message-signing): firma desafios de autenticacion o propiedad fuera de cadena.
+- [Transactions](/guides/transactions): firma, envía, confirma y muestra progreso de transacción.
+- [Message Signing](/guides/message-signing): firma desafíos de autenticación o propiedad fuera de cadena.
 - [Errors](/guides/errors): mapea refs `error` de composables a mensajes de UI seguros.
 
 ## Leer estado RPC
@@ -123,7 +125,7 @@ const rpcErrorMessage = computed(() => {
   if (!error.value) return null;
   return error.value.code === "RPC_FAILURE"
     ? "No se puede alcanzar el endpoint RPC de Solana configurado."
-    : "No se puede comprobar la conexion de Solana.";
+    : "No se puede comprobar la conexión de Solana.";
 });
 </script>
 
@@ -132,12 +134,39 @@ const rpcErrorMessage = computed(() => {
     <p>Cluster: {{ cluster }}</p>
     <p>Endpoint: {{ endpoint }}</p>
     <p>Estado: {{ status }}</p>
-    <p>Ultimo blockhash: {{ latestBlockhash }}</p>
+    <p>Último blockhash: {{ latestBlockhash }}</p>
     <p v-if="rpcErrorMessage">{{ rpcErrorMessage }}</p>
     <button type="button" @click="checkConnection">Comprobar RPC</button>
   </section>
 </template>
 ```
+
+## Usar el cliente Kit
+
+```vue
+<script setup lang="ts">
+import { onMounted, ref } from "vue";
+import { useSolanaClient } from "@vue-solana/vue/useSolanaClient";
+
+const { client, rpc } = useSolanaClient();
+const slot = ref<bigint>();
+
+async function checkSlot() {
+  slot.value = await rpc.getSlot().send();
+}
+
+onMounted(checkSlot);
+</script>
+
+<template>
+  <section>
+    <p>Slot: {{ slot }}</p>
+    <button type="button" @click="checkSlot">Comprobar slot</button>
+  </section>
+</template>
+```
+
+`useSolanaClient()` devuelve el mismo contexto que `useSolana()` pero lo configura para lecturas Kit: `client` es el cliente completo de `@solana/kit` y `rpc` es su API de lectura. Los resultados de RPC son `bigint` y los datos de cuenta son `Uint8Array`. Consulta [Kit Migration](/guides/kit-migration).
 
 ## Leer balance
 
@@ -152,7 +181,7 @@ const { balance, loading, error, refresh } = useBalance(address);
 const balanceErrorMessage = computed(() => {
   switch (error.value?.code) {
     case "INVALID_ADDRESS":
-      return "Introduce una direccion Solana valida.";
+      return "Introduce una dirección Solana válida.";
     case "RPC_FAILURE":
       return "No se puede cargar el balance desde RPC.";
     default:
@@ -184,7 +213,7 @@ const { tokenAccounts, loading, error, refresh } = useTokenAccounts(owner);
 const tokenErrorMessage = computed(() => {
   switch (error.value?.code) {
     case "INVALID_ADDRESS":
-      return "Introduce una direccion Solana valida.";
+      return "Introduce una dirección Solana válida.";
     case "RPC_FAILURE":
       return "No se pueden cargar las cuentas de token desde RPC.";
     default:
@@ -224,7 +253,7 @@ const { balance, decimals, loading, error, refresh } = useTokenBalance(mint, own
 const tokenBalanceErrorMessage = computed(() => {
   switch (error.value?.code) {
     case "INVALID_ADDRESS":
-      return "Introduce direcciones de mint y propietario validas.";
+      return "Introduce direcciones de mint y propietario válidas.";
     case "RPC_FAILURE":
       return "No se puede cargar el balance del token desde RPC.";
     default:
@@ -236,7 +265,7 @@ const tokenBalanceErrorMessage = computed(() => {
 <template>
   <section>
     <p v-if="balance !== null">Balance: {{ balance }} ({{ decimals }} decimales)</p>
-    <p v-else>No se encontro cuenta de token.</p>
+    <p v-else>No se encontró cuenta de token.</p>
     <p v-if="loading">Cargando...</p>
     <p v-if="tokenBalanceErrorMessage">{{ tokenBalanceErrorMessage }}</p>
     <button type="button" @click="refresh">Actualizar</button>
@@ -248,7 +277,7 @@ const tokenBalanceErrorMessage = computed(() => {
 
 ## Manejo de errores
 
-Las refs `error` de composables usan `SolanaError | null` de `@vue-solana/core/errors`. Ramifica con `error.value.code` para UI de usuario y conserva `error.value.cause` para depurar fallos originales de wallet, RPC, analisis de direccion, timeout o storage.
+Las refs `error` de composables usan `SolanaError | null` de `@vue-solana/core/errors`. Ramifica con `error.value.code` para UI de usuario y conserva `error.value.cause` para depurar fallos originales de wallet, RPC, análisis de dirección, timeout o storage.
 
 ```ts
 const message = computed(() => {
@@ -258,9 +287,9 @@ const message = computed(() => {
     case "USER_REJECTED":
       return "La solicitud de wallet fue rechazada.";
     case "TRANSACTION_TIMEOUT":
-      return "La transaccion esta tardando mas de lo esperado.";
+      return "La transacción está tardando más de lo esperado.";
     case "RPC_FAILURE":
-      return "La solicitud RPC de Solana fallo.";
+      return "La solicitud RPC de Solana falló.";
     default:
       return null;
   }
@@ -289,7 +318,7 @@ const { accountInfo, loading, error, refresh, stopWatching } = useAccountInfo(ad
 const accountInfoErrorMessage = computed(() => {
   switch (error.value?.code) {
     case "INVALID_ADDRESS":
-      return "Introduce una direccion Solana valida.";
+      return "Introduce una dirección Solana válida.";
     case "RPC_FAILURE":
       return "No se pueden cargar datos de cuenta desde RPC.";
     default:
@@ -309,7 +338,7 @@ const accountInfoErrorMessage = computed(() => {
 </template>
 ```
 
-`useAccountInfo()` limpia el estado sin llamar a RPC cuando la direccion es null. Los strings de direccion invalidos limpian `accountInfo` obsoleta, establecen `error` y no llaman a `getAccountInfo()`. Cuando `watch: true` esta activado, el listener websocket se elimina automaticamente al desmontar el componente. Llamar a `stopWatching()` elimina el listener actual y evita reinicios automaticos para esa instancia del composable.
+`useAccountInfo()` limpia el estado sin llamar a RPC cuando la dirección es null. Los strings de dirección inválidos limpian `accountInfo` obsoleta, establecen `error` y no llaman a `getAccountInfo()`. Cuando `watch: true` está activado, el listener websocket se elimina automáticamente al desmontar el componente. Llamar a `stopWatching()` elimina el listener actual y evita reinicios automáticos para esa instancia del composable.
 
 ## Leer cuentas de programa
 
@@ -328,7 +357,7 @@ const { accounts, loading, error, refresh } = useProgramAccounts(programId, {
 const programAccountsErrorMessage = computed(() => {
   switch (error.value?.code) {
     case "INVALID_ADDRESS":
-      return "Introduce un program id de Solana valido.";
+      return "Introduce un program id de Solana válido.";
     case "RPC_FAILURE":
       return "No se pueden cargar cuentas de programa desde RPC.";
     default:
@@ -347,9 +376,9 @@ const programAccountsErrorMessage = computed(() => {
 </template>
 ```
 
-`useProgramAccounts()` limpia el estado sin llamar a RPC cuando el program id es null. Los strings de program id invalidos limpian `accounts` obsoletas, establecen `error` y no llaman a `getProgramAccounts()`.
+`useProgramAccounts()` limpia el estado sin llamar a RPC cuando el program id es null. Los strings de program id inválidos limpian `accounts` obsoletas, establecen `error` y no llaman a `getProgramAccounts()`.
 
-> Advertencia: `useProgramAccounts()` puede ser costoso. Cada actualizacion puede escanear un conjunto grande de cuentas propiedad del programa, consumir creditos RPC significativos, alcanzar limites de tasa del proveedor o agotar el tiempo. No ejecutes escaneos amplios desde rutas de UI de alto trafico. Usa filtros estrechos, `dataSlice`, cache, indexacion, estrategias de paginacion o infraestructura RPC dedicada para lecturas de produccion.
+> Advertencia: `useProgramAccounts()` puede ser costoso. Cada actualización puede escanear un conjunto grande de cuentas propiedad del programa, consumir créditos RPC significativos, alcanzar límites de tasa del proveedor o agotar el tiempo. No ejecutes escaneos amplios desde rutas de UI de alto tráfico. Usa filtros estrechos, `dataSlice`, caché, indexación, estrategias de paginación o infraestructura RPC dedicada para lecturas de producción.
 
 ## Estado de wallet
 
@@ -377,7 +406,7 @@ const { publicKey, connected, connecting, connect, disconnect } = useWallet();
 
     <p>Seleccionada: {{ selectedWallet?.name ?? "Ninguna" }}</p>
     <p>Conectada: {{ connected }}</p>
-    <p>Clave publica: {{ publicKey?.toBase58() }}</p>
+    <p>Dirección: {{ publicKey }}</p>
     <p v-if="connecting">Conectando...</p>
     <button type="button" :disabled="!selectedWallet || connected || connecting" @click="connect">
       Conectar
@@ -387,11 +416,11 @@ const { publicKey, connected, connecting, connect, disconnect } = useWallet();
 </template>
 ```
 
-Las wallets de extension de navegador se descubren mediante Solana Wallet Standard. Las wallets Android Mobile Wallet Adapter se registran mediante `@solana-mobile/wallet-standard-mobile` y se exponen mediante la misma lista `useWallets()` en clientes Android Chrome soportados. Las entradas iOS Phantom, Solflare y Backpack se exponen mediante enlaces universales especificos de wallet en navegadores iOS. `refreshWallets()` solo actualiza la lista de wallets descubiertas, y `selectWallet()` solo configura la wallet activa. `connected` permanece false hasta que `connect()` tiene exito, incluso si la extension expone cuentas autorizadas previamente despues de refrescar la pagina.
+Las wallets de extensión de navegador se descubren mediante Solana Wallet Standard. Las wallets Android Mobile Wallet Adapter se registran mediante `@solana-mobile/wallet-standard-mobile` y se exponen mediante la misma lista `useWallets()` en clientes Android Chrome soportados. Las entradas iOS Phantom, Solflare y Backpack se exponen mediante enlaces universales específicos de wallet en navegadores iOS. `refreshWallets()` solo actualiza la lista de wallets descubiertas, y `selectWallet()` solo configura la wallet activa. `connected` permanece false hasta que `connect()` tiene éxito, incluso si la extensión expone cuentas autorizadas previamente después de refrescar la página.
 
-Los adaptadores de wallet de app nativa de escritorio aun no estan implementados. El soporte nativo de escritorio requiere enlaces de protocolo especificos de wallet o registro nativo futuro de Wallet Standard.
+Los adaptadores de wallet de app nativa de escritorio aún no están implementados. El soporte nativo de escritorio requiere enlaces de protocolo específicos de wallet o registro nativo futuro de Wallet Standard.
 
-Los composables devuelven estado inerte seguro para SSR cuando no hay contexto de plugin disponible. Las operaciones RPC y de wallet reales aun requieren el contexto de cliente proporcionado por el plugin.
+Los composables devuelven estado inerte seguro para SSR cuando no hay contexto de plugin disponible. Las operaciones RPC y de wallet reales aún requieren el contexto de cliente proporcionado por el plugin.
 
 ## Firma de mensajes
 
@@ -403,13 +432,13 @@ const { connected, canSignMessage } = useWallet();
 const { signature, status, error, execute } = useSignMessage();
 
 if (connected.value && canSignMessage.value) {
-  await execute(new TextEncoder().encode("Iniciar sesion en example.com"));
+  await execute(new TextEncoder().encode("Iniciar sesión en example.com"));
 }
 ```
 
-La firma de mensajes es para desafios de propiedad de wallet o autenticacion. No es firma de transacciones y no autoriza cambios de estado on-chain. Las wallets que no exponen firma de mensajes reportan `canSignMessage` como false y `execute()` rechaza con un error de wallet no soportada.
+La firma de mensajes es para desafíos de propiedad de wallet o autenticación. No es firma de transacciones y no autoriza cambios de estado on-chain. Las wallets que no exponen firma de mensajes reportan `canSignMessage` como false y `execute()` rechaza con un error de wallet no soportada.
 
-## Estado de transaccion
+## Estado de transacción
 
 ```ts
 import { useSignAndSendTransaction } from "@vue-solana/vue/useSignAndSendTransaction";
@@ -423,15 +452,15 @@ await execute(transaction, {
 });
 ```
 
-La wallet actual debe estar conectada y soportar `signAndSendTransaction` o `signTransaction`. Las wallets Android Mobile Wallet Adapter prefieren `signTransaction` mas envio RPC del lado de la app cuando esta disponible. Esto evita un caso limite de traspaso movil donde la wallet envia correctamente pero la pagina del navegador no recibe la firma devuelta por el adaptador de wallet.
+La wallet actual debe estar conectada y soportar `signAndSendTransaction` o `signTransaction`. Las wallets Android Mobile Wallet Adapter prefieren `signTransaction` más envío RPC del lado de la app cuando está disponible. Esto evita un caso límite de traspaso móvil donde la wallet envía correctamente pero la página del navegador no recibe la firma devuelta por el adaptador de wallet.
 
-Sin `confirm: true`, `execute()` devuelve despues del envio y establece `status` en `sent`. Con la confirmacion activada, el estado pasa por `sending`, `confirming` y luego `processed`, `confirmed` o `finalized` para coincidir con el commitment solicitado. Si la confirmacion agota el tiempo o falla, la `signature` enviada sigue disponible para que la app pueda enlazar a un explorador.
+Sin `confirm: true`, `execute()` devuelve después del envío y establece `status` en `sent`. Con la confirmación activada, el estado pasa por `sending`, `confirming` y luego `processed`, `confirmed` o `finalized` para coincidir con el commitment solicitado. Si la confirmación agota el tiempo o falla, la `signature` enviada sigue disponible para que la app pueda enlazar a un explorador.
 
-`useSignAndSendTransaction()` tambien limpia `loading` si un adaptador de wallet nunca devuelve un resultado. En ese caso obsoleto, se establece `error` y el estado de cadena puede ser desconocido, asi que comprueba la wallet conectada o un explorador antes de reintentar.
+`useSignAndSendTransaction()` también limpia `loading` si un adaptador de wallet nunca devuelve un resultado. En ese caso obsoleto, se establece `error` y el estado de cadena puede ser desconocido, así que comprueba la wallet conectada o un explorador antes de reintentar.
 
 ## Confirmar una firma existente
 
-Usa `useTransactionConfirmation()` cuando tu app ya tiene una firma enviada y quiere esperar un commitment especifico por separado de firmar y enviar:
+Usa `useTransactionConfirmation()` cuando tu app ya tiene una firma enviada y quiere esperar un commitment específico por separado de firmar y enviar:
 
 ```ts
 import { useTransactionConfirmation } from "@vue-solana/vue/useTransactionConfirmation";
@@ -442,7 +471,7 @@ const { signature, confirmation, status, loading, error, confirm, reset } =
 await confirm("PASTE_SUBMITTED_SIGNATURE", { commitment: "finalized" });
 ```
 
-El composable conserva la `signature` enviada cuando la confirmacion agota el tiempo o la llamada RPC falla, para que las apps aun puedan mostrar un enlace de explorador mientras muestran `error` al usuario.
+El composable conserva la `signature` enviada cuando la confirmación agota el tiempo o la llamada RPC falla, para que las apps aún puedan mostrar un enlace de explorador mientras muestran `error` al usuario.
 
 ## Seguir estado de firma
 
@@ -460,7 +489,7 @@ const { status, loading, error, refresh, stopPolling, stopSubscription } = useSi
 );
 ```
 
-El sondeo usa `getSignatureStatuses()` en cada intervalo, asi que detenlo cuando la UI ya no necesite actualizaciones. Llamar a `stopPolling()` limpia el intervalo actual y evita reinicios automaticos del sondeo para esa instancia del composable. Las firmas invalidas limpian `status` obsoleto, establecen `error` y no llaman a RPC ni inician sondeo. Los valores invalidos de `pollIntervalMs` menores o iguales a `0` establecen un `RangeError` y no inician sondeo. `subscribe: true` usa `onSignature()` y elimina el listener al desmontar el componente. Llamar a `stopSubscription()` elimina el listener de firma actual y evita reinicios automaticos para esa instancia del composable.
+El sondeo usa `getSignatureStatuses()` en cada intervalo, así que detenlo cuando la UI ya no necesite actualizaciones. Llamar a `stopPolling()` limpia el intervalo actual y evita reinicios automáticos del sondeo para esa instancia del composable. Las firmas inválidas limpian `status` obsoleto, establecen `error` y no llaman a RPC ni inician sondeo. Los valores inválidos de `pollIntervalMs` menores o iguales a `0` establecen un `RangeError` y no inician sondeo. `subscribe: true` usa `onSignature()` y elimina el listener al desmontar el componente. Llamar a `stopSubscription()` elimina el listener de firma actual y evita reinicios automáticos para esa instancia del composable.
 
 ## App de ejemplo
 

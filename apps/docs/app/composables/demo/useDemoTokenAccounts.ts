@@ -10,9 +10,9 @@ export function useDemoTokenAccounts() {
   const tokenBalance = useSolanaTokenBalance(mintAddress, ownerAddress);
 
   watch(
-    () => wallet.publicKey.value,
-    (pk) => {
-      ownerAddress.value = pk?.toBase58() ?? null;
+    () => wallet.wallet.value?.address,
+    (address) => {
+      ownerAddress.value = address ?? null;
     },
     { immediate: true },
   );

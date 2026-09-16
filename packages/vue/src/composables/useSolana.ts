@@ -16,7 +16,6 @@ function getSsrContext(): VueSolanaContext {
     cluster: "devnet",
     endpoint: "",
     wsEndpoint: "",
-    connection: createUnavailableProxy(),
     client: createUnavailableProxy(),
     wallet: shallowRef(null),
     status: ref("idle"),

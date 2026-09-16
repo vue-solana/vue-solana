@@ -2,6 +2,12 @@
 
 All notable changes to the knowledge bundle are documented here.
 
+## 2026-09-12
+
+### Updated
+
+- Documented the v2.0.0 Kit migration across the bundle: `concepts/web3-compat.md` archived as v1-only, `guides/kit-migration.md` rewritten to the shipped v2 state, packages/index.md / packages/core.md / packages/vue.md / packages/nuxt.md updated to the Kit-only API (no `connection`, no `web3` subpaths, `publicKey: Address`), and guides (getting-started, wallets, message-signing, troubleshooting) aligned to raw-byte transactions and `client.rpc`.
+
 ## 2025-07-17
 
 ### Restructured

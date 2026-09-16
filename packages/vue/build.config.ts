@@ -20,7 +20,6 @@ export default defineBuildConfig({
     "src/useTransactionConfirmation",
     "src/useWallet",
     "src/useWallets",
-    "src/web3",
     "src/kit",
   ],
   declaration: true,
@@ -28,5 +27,5 @@ export default defineBuildConfig({
   rollup: {
     emitCJS: true,
   },
-  externals: ["@solana/kit", "@solana/web3-compat", "vue", /^@vue-solana\/core(?:\/.*)?$/],
+  externals: ["@solana/kit", "vue", /^@vue-solana\/core(?:\/.*)?$/],
 });

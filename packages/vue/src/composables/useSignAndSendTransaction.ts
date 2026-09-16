@@ -1,3 +1,4 @@
+import type { Signature } from "@vue-solana/core/kit";
 import { normalizeSolanaError, type SolanaError } from "@vue-solana/core/errors";
 import { withSolanaTimeout } from "@vue-solana/core/timeout";
 import { confirmTransactionSignature, signAndSendTransaction } from "@vue-solana/core/transaction";
@@ -8,7 +9,6 @@ import type {
   TransactionConfirmation,
 } from "@vue-solana/core/types";
 import { createNoWalletSelectedError } from "@vue-solana/core/wallet";
-import type { TransactionSignature } from "@vue-solana/core/web3";
 import { ref } from "vue";
 import { useConnection } from "./useConnection";
 import { useWallet } from "./useWallet";
@@ -32,9 +32,9 @@ export interface SignAndSendTransactionOptions extends SendTransactionOptions {
 }
 
 export function useSignAndSendTransaction() {
-  const connection = useConnection();
+  const client = useConnection();
   const { wallet } = useWallet();
-  const signature = ref<TransactionSignature | null>(null);
+  const signature = ref<Signature | null>(null);
   const confirmation = ref<TransactionConfirmation | null>(null);
   const status = ref<SignAndSendTransactionStatus>("idle");
   const loading = ref(false);
@@ -64,7 +64,7 @@ export function useSignAndSendTransaction() {
 
     try {
       const nextSignature = await withSolanaTimeout(
-        signAndSendTransaction(connection, activeWallet, transaction, transactionOptions),
+        signAndSendTransaction(client, activeWallet, transaction, transactionOptions),
         SIGN_AND_SEND_TIMEOUT_MS,
         "Wallet transaction did not return a result. Check your wallet or explorer for the final status.",
       );
@@ -79,7 +79,7 @@ export function useSignAndSendTransaction() {
       }
 
       const nextConfirmation = await confirmTransactionSignature(
-        connection,
+        client,
         nextSignature,
         confirmationOptions,
       );

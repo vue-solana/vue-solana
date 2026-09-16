@@ -1,37 +1,34 @@
-import { PublicKey } from "@solana/web3-compat";
+import { address, isAddress, type Address } from "@solana/kit";
 import { createSolanaError } from "./errors";
 
-export type PublicKeyInput = PublicKey | string | null | undefined;
-export type MaybePublicKeyInput =
-  | PublicKeyInput
-  | { value: PublicKeyInput }
-  | (() => PublicKeyInput);
+export type AddressInput = Address | string | null | undefined;
+export type MaybeAddressInput = AddressInput | { value: AddressInput } | (() => AddressInput);
 
 /**
- * Parse a public key from a `PublicKey` instance, string, ref, or getter.
+ * Parse a Solana address from a Kit `Address`, string, ref, or getter.
  *
- * @deprecated Use `address()` from `@vue-solana/core/kit` for strings; a base58
- * string is already `Address`-shaped.
+ * Valid strings are returned as `Address`; invalid input throws a
+ * `SolanaError` with code `INVALID_ADDRESS`.
  */
-export function parsePublicKey(value: MaybePublicKeyInput): PublicKey | null {
-  const publicKeyInput = toPublicKeyInput(value);
+export function parseAddress(value: MaybeAddressInput): Address | null {
+  const input = toAddressInput(value);
 
-  if (!publicKeyInput) {
+  if (!input) {
     return null;
   }
 
-  if (typeof publicKeyInput !== "string") {
-    return publicKeyInput;
+  if (isAddress(input)) {
+    return input;
   }
 
   try {
-    return new PublicKey(publicKeyInput);
+    return address(input);
   } catch (cause) {
     throw createSolanaError("INVALID_ADDRESS", "Invalid Solana address", { cause });
   }
 }
 
-function toPublicKeyInput(value: MaybePublicKeyInput): PublicKeyInput {
+function toAddressInput(value: MaybeAddressInput): AddressInput {
   if (!value) {
     return null;
   }
@@ -40,7 +37,7 @@ function toPublicKeyInput(value: MaybePublicKeyInput): PublicKeyInput {
     return value();
   }
 
-  if (value instanceof PublicKey || typeof value === "string") {
+  if (typeof value === "string") {
     return value;
   }
 

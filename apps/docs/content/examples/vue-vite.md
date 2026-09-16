@@ -15,7 +15,7 @@ Live demo: [vue-solana-docs.vercel.app/demo](/demo)
 
 - Installing the Vue Solana plugin with `createSolanaPlugin()`.
 - Reading RPC status with `useRpc()`.
-- Using the injected `Connection` with `useConnection()`.
+- Using the injected Kit client with `useSolanaClient()`.
 - Reading lamport balances with `useBalance()`.
 - Discovering browser extension wallets, Android Mobile Wallet Adapter wallets, and supported iOS browser wallet entries with `useWallets()`.
 - Managing active wallet state with `useWallet()`.
@@ -42,7 +42,7 @@ Open the Vite URL printed in the terminal, usually `http://localhost:5173`.
 ## What To Try
 
 - Check the initial RPC status and latest blockhash.
-- Click `Load Blockhash` to call `connection.getLatestBlockhash()` directly.
+- Click `Load Blockhash` to call `client.rpc.getLatestBlockhash().send()` directly.
 - Paste a devnet wallet address and refresh the balance.
 - Install a Solana browser wallet and switch it to devnet.
 - On Android Chrome, install a compatible Solana mobile wallet and look for `Mobile Wallet Adapter`.

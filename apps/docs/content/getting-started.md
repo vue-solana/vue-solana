@@ -9,7 +9,7 @@ This guide covers installing the Vue Solana packages, configuring Vue or Nuxt, t
 
 ## Before You Start
 
-Use `@vue-solana/core` directly if you need Solana primitives such as `Connection`, `PublicKey`, and transactions without Vue/Nuxt integration. Use `@vue-solana/vue` or `@vue-solana/nuxt` when you want framework integration. For Kit-based primitives, use `createSolanaClient()` from `@vue-solana/core/kit` and `Address`/`address()`/`lamports()` re-exported there.
+Use `@vue-solana/core` directly if you need Solana primitives without Vue/Nuxt integration. It builds on `@solana/kit` and re-exports `createSolanaClient()` plus `Address`/`address()`/`lamports()` and the Kit transaction and RPC types from `@vue-solana/core/kit`. Use `@vue-solana/vue` or `@vue-solana/nuxt` when you want framework integration.
 
 Supported clusters:
 
@@ -41,7 +41,7 @@ pnpm add @vue-solana/vue
 npm install @vue-solana/vue
 ```
 
-Vue apps can use `@vue-solana/vue/web3` and `@vue-solana/vue/buffer-polyfill` without installing low-level Solana or Buffer packages directly. For the modern Kit API, use `@vue-solana/vue/kit` (`createSolanaClient`, `address`, `lamports`, and types) and `useSolanaClient()` from `@vue-solana/vue/useSolanaClient`.
+Vue apps can use `@vue-solana/vue/kit` (`createSolanaClient`, `address`, `lamports`, and types) and `@vue-solana/vue/buffer-polyfill` without installing low-level Solana or Buffer packages directly. Use `useSolanaClient()` from `@vue-solana/vue/useSolanaClient` for the injected client.
 
 ## Install For Nuxt
 
@@ -51,17 +51,11 @@ npx nuxt module add @vue-solana/nuxt
 
 This installs the package and adds `@vue-solana/nuxt` to the `modules` array in `nuxt.config.ts`.
 
-Nuxt apps can use `@vue-solana/nuxt/web3` and `@vue-solana/nuxt/buffer-polyfill` without installing `@vue-solana/core`, `@vue-solana/vue`, or low-level Solana and Buffer packages directly. For the modern Kit API, use `@vue-solana/nuxt/kit` and the auto-imported `useSolanaClient()`.
+Nuxt apps can use `@vue-solana/nuxt/kit` and `@vue-solana/nuxt/buffer-polyfill` without installing `@vue-solana/core`, `@vue-solana/vue`, or low-level Solana and Buffer packages directly. The auto-imported `useSolanaClient()` returns the injected Kit client.
 
-## Known TypeScript Issue
+## v2 Note
 
-`@solana/web3-compat@0.0.21` currently has broken TypeScript package metadata. Its package metadata points to `dist/types/index.d.ts`, but that file is not included in the published package.
-
-Runtime imports still use the real `@solana/web3-compat` package. Current Vue Solana packages publish temporary package-owned declaration shims, so apps following the documented `@vue-solana/core`, `@vue-solana/vue`, or `@vue-solana/nuxt` imports should not need their own local shim.
-
-Only add a local shim if you are using an older Vue Solana package version or importing `@solana/web3-compat` directly from app code. Re-check this note after each new `@solana/web3-compat` release; the package-owned shim should be removed once upstream ships valid root declarations.
-
-This issue only affects the legacy `web3` path. The Kit path (`@vue-solana/*/kit` and `useSolanaClient()`) depends on `@solana/kit`, which ships valid declarations — plan to move to it via the [Kit Migration guide](/guides/kit-migration) before `@solana/web3-compat` is removed in v2.
+v2.0.0 removed the legacy `@solana/web3-compat` surface. The context no longer carries a `connection`, and the `@vue-solana/*/web3` subpaths were deleted. All composables are Kit-first and `SolanaWallet.publicKey` is a plain base58 `Address` string. The `@solana/buffer/` shim that earlier v1 docs described is gone; the retained package-owned shims only cover the browser `buffer/` subpath used by the Buffer polyfill. See the [Kit Migration guide](/guides/kit-migration) for the full before/after map.
 
 ## Vue Setup
 
@@ -99,7 +93,7 @@ import { useBalance } from "@vue-solana/vue/useBalance";
 import { useSolanaClient } from "@vue-solana/vue/useSolanaClient";
 ```
 
-`useRpc()` and `useBalance()` use the legacy connection. New code should prefer `useSolanaClient()`, which returns the Kit `client` and its read-only `rpc`, plus `address()`/`lamports()` from `@vue-solana/vue/kit`. See the [Kit Migration guide](/guides/kit-migration) for the full before/after map.
+`useRpc()` returns the resolved cluster state and the injected Kit `client`; `useBalance()` reads through `client.rpc`. `useSolanaClient()` returns the same `client` and its read-only `rpc` directly, plus `address()`/`lamports()` from `@vue-solana/vue/kit`. See the [Kit Migration guide](/guides/kit-migration) for the full before/after map.
 
 ## Nuxt Setup
 
@@ -135,12 +129,12 @@ In Vue, use `useRpc()`:
 import { onMounted, ref } from "vue";
 import { useRpc } from "@vue-solana/vue/useRpc";
 
-const { cluster, endpoint, connection } = useRpc();
+const { cluster, endpoint, client } = useRpc();
 const latestBlockhash = ref<string | null>(null);
 
 onMounted(async () => {
-  const result = await connection.getLatestBlockhash();
-  latestBlockhash.value = result.blockhash;
+  const { value } = await client.rpc.getLatestBlockhash().send();
+  latestBlockhash.value = value.blockhash;
 });
 </script>
 
@@ -298,7 +292,7 @@ Expected wallet sources:
 | Desktop browser extension    | `wallet-standard`       | Phantom, Solflare, Backpack, and other standard wallets can appear when installed. |
 | Android Chrome or Chrome PWA | `mobile-wallet-adapter` | Requires a compatible native wallet and Android MWA browser support.               |
 | iOS browser                  | `deep-link`             | Phantom, Solflare, and Backpack entries use wallet-specific universal links.       |
-| Desktop native app           | Not implemented in v1   | Desktop native protocol links are explicitly deferred from v1.                     |
+| Desktop native app           | Not implemented yet     | Desktop native protocol links are not supported yet.                               |
 
 ## Sign A Message
 

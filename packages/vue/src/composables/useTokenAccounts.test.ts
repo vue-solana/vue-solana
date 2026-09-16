@@ -1,4 +1,3 @@
-import { PublicKey } from "@vue-solana/core/web3";
 import { flushPromises } from "@vue/test-utils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { defineComponent, h, ref } from "vue";
@@ -31,7 +30,7 @@ describe("useTokenAccounts", () => {
     const mockAccounts = [{ mint: "mint1", amount: 100n }];
     mockedGetTokenAccountsByOwner.mockResolvedValue(mockAccounts as never);
     const context = createMockSolanaContext({
-      connection: {} as never,
+      client: {} as never,
     });
     const owner = ref("11111111111111111111111111111111");
     let result: ReturnType<typeof useTokenAccounts> | undefined;
@@ -56,7 +55,7 @@ describe("useTokenAccounts", () => {
   it("clears token accounts when owner is null", async () => {
     mockedGetTokenAccountsByOwner.mockResolvedValue([] as never);
     const context = createMockSolanaContext({
-      connection: {} as never,
+      client: {} as never,
     });
     let result: ReturnType<typeof useTokenAccounts> | undefined;
 
@@ -80,14 +79,14 @@ describe("useTokenAccounts", () => {
     const failure = new Error("RPC failed");
     mockedGetTokenAccountsByOwner.mockRejectedValue(failure);
     const context = createMockSolanaContext({
-      connection: {} as never,
+      client: {} as never,
     });
     let result: ReturnType<typeof useTokenAccounts> | undefined;
 
     mountWithSolana(
       defineComponent({
         setup() {
-          result = useTokenAccounts(new PublicKey("11111111111111111111111111111111"));
+          result = useTokenAccounts("11111111111111111111111111111111");
           return () => h("div");
         },
       }),
@@ -108,7 +107,7 @@ describe("useTokenAccounts", () => {
       .mockReturnValueOnce(secondRequest.promise);
 
     const context = createMockSolanaContext({
-      connection: {} as never,
+      client: {} as never,
     });
     const owner = ref("11111111111111111111111111111111");
     let result: ReturnType<typeof useTokenAccounts> | undefined;

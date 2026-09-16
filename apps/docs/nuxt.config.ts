@@ -150,13 +150,12 @@ export default defineNuxtConfig({
   vite: {
     optimizeDeps: {
       include: [
-        "@vue-solana/nuxt > @solana/web3-compat > @solana/web3.js > eventemitter3",
         "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > buffer/",
         "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl",
         "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl/nacl-fast.js",
+        "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > @solana/spl-token > @solana/buffer-layout-utils > bigint-buffer",
       ],
       needsInterop: [
-        "@vue-solana/nuxt > @solana/web3-compat > @solana/web3.js > eventemitter3",
         "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl",
         "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl/nacl-fast.js",
       ],
@@ -164,17 +163,32 @@ export default defineNuxtConfig({
     $client: {
       optimizeDeps: {
         include: [
-          "@vue-solana/nuxt > @solana/web3-compat > @solana/web3.js > eventemitter3",
           "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > buffer/",
           "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl",
           "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl/nacl-fast.js",
+          "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > @solana/spl-token > @solana/buffer-layout-utils > bigint-buffer",
         ],
         needsInterop: [
-          "@vue-solana/nuxt > @solana/web3-compat > @solana/web3.js > eventemitter3",
           "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl",
           "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl/nacl-fast.js",
         ],
       },
     },
+    plugins: [
+      {
+        name: "solana-buffer-polyfill-entry",
+        // @ts-expect-error vite plugin
+        transform(code, id) {
+          if (id.includes("/nuxt/dist/app/entry.async")) {
+            return {
+              code:
+                `import { installSolanaBufferPolyfill } from "@vue-solana/nuxt/buffer-polyfill";\ninstallSolanaBufferPolyfill();\n` +
+                code,
+              map: null,
+            };
+          }
+        },
+      },
+    ],
   },
 });

@@ -1,13 +1,11 @@
 import bs58 from "bs58";
 import * as tweetnacl from "tweetnacl";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { createLegacyTransaction } from "../transaction.test-utils";
 import { decryptPayload } from "./crypto";
 import { IOS_WALLETS } from "./definitions";
 import { launchSignAllTransactions, launchSignTransaction } from "./deep-links";
 import { getPendingRequest, storeSession } from "./storage";
 import { resetIosWalletTestEnvironment } from "./test-utils";
-import { serializeTransaction } from "./transactions";
 import type { IosWalletDefinition } from "./types";
 
 describe("iOS wallet deep links", () => {
@@ -15,7 +13,7 @@ describe("iOS wallet deep links", () => {
 
   it("rejects signing requests before an iOS wallet is connected", async () => {
     await expect(
-      launchSignTransaction(getPhantomDefinition(), createLegacyTransaction(), {
+      launchSignTransaction(getPhantomDefinition(), createTestTransaction(), {
         redirectUrl: "https://example.com/callback",
       }),
     ).rejects.toThrow("Connect the iOS wallet before signing");
@@ -24,7 +22,7 @@ describe("iOS wallet deep links", () => {
   it("launches encrypted signTransaction links and records pending callback state", () => {
     const session = storeTestSession();
     const assign = vi.spyOn(window.location, "assign").mockImplementation(() => {});
-    const transaction = createLegacyTransaction();
+    const transaction = createTestTransaction();
 
     void launchSignTransaction(getPhantomDefinition(), transaction, {
       redirectUrl: "https://example.com/callback",
@@ -45,7 +43,7 @@ describe("iOS wallet deep links", () => {
     expect(url.searchParams.get("nonce")).toBeTruthy();
     expect(url.searchParams.get("payload")).toBeTruthy();
     expect(payload).toEqual({
-      transaction: bs58.encode(serializeTransaction(transaction)),
+      transaction: bs58.encode(transaction),
       session: "session-token",
     });
     expect(pending).toMatchObject({
@@ -59,7 +57,7 @@ describe("iOS wallet deep links", () => {
   it("records requested transaction counts for signAllTransactions links", () => {
     const session = storeTestSession();
     const assign = vi.spyOn(window.location, "assign").mockImplementation(() => {});
-    const transactions = [createLegacyTransaction(), createLegacyTransaction()];
+    const transactions = [createTestTransaction(), createTestTransaction()];
 
     void launchSignAllTransactions(getPhantomDefinition(), transactions, {
       redirectUrl: "https://example.com/callback",
@@ -71,9 +69,7 @@ describe("iOS wallet deep links", () => {
 
     expect(url.pathname).toBe("/ul/v1/signAllTransactions");
     expect(payload).toEqual({
-      transactions: transactions.map((transaction) =>
-        bs58.encode(serializeTransaction(transaction)),
-      ),
+      transactions: transactions.map((transaction) => bs58.encode(transaction)),
       session: "session-token",
     });
     expect(pending).toMatchObject({
@@ -86,6 +82,10 @@ describe("iOS wallet deep links", () => {
 
 function getPhantomDefinition(): IosWalletDefinition {
   return IOS_WALLETS[0]!;
+}
+
+function createTestTransaction() {
+  return new Uint8Array([1, 2, 3, 4, 5]);
 }
 
 function storeTestSession() {

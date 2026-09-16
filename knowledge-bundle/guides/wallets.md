@@ -21,7 +21,7 @@ Current wallet support is built on these libraries:
 - Browser extension wallets: discovered through `@wallet-standard/app`, `@wallet-standard/base`, `@wallet-standard/features`, and Solana signing features from `@solana/wallet-standard-features`.
 - Android mobile native wallets: registered through `@solana-mobile/wallet-standard-mobile`, which exposes Solana Mobile Wallet Adapter as a Wallet Standard wallet on supported Android Chrome mobile web and PWA runtimes.
 - iOS browser wallets: exposed as wallet-specific universal link entries for Phantom, Solflare, and Backpack on iOS browsers.
-- Solana primitives and transaction types: provided through `@vue-solana/vue/web3` for Vue apps, `@vue-solana/nuxt/web3` for Nuxt apps, and `@vue-solana/core/web3` for framework-agnostic core usage.
+- Solana primitives and transaction types: `@solana/kit` message builders and types (available directly or through `@vue-solana/vue/kit`, `@vue-solana/nuxt/kit`, and `@vue-solana/core/kit`).
 
 Wallets such as Phantom, Solflare, Backpack, and other Solana Wallet Standard-compatible wallets can be discovered at runtime when they register with Wallet Standard. Android users can also see `Mobile Wallet Adapter` when browsing on supported Android Chrome mobile web and PWA runtimes. iOS browser users can see Phantom, Solflare, and Backpack universal-link entries even though Mobile Wallet Adapter web flows are not available on iOS.
 
@@ -79,7 +79,7 @@ const { publicKey, connected, connecting, disconnecting, canSignMessage, connect
 
     <p>Selected: {{ selectedWallet?.name ?? "None" }}</p>
     <p>Connected: {{ connected }}</p>
-    <p>Public key: {{ publicKey?.toBase58() }}</p>
+    <p>Public key: {{ publicKey }}</p>
 
     <button type="button" :disabled="!selectedWallet || connected || connecting" @click="connect">
       {{ connecting ? "Connecting..." : "Connect" }}
@@ -95,48 +95,62 @@ const { publicKey, connected, connecting, disconnecting, canSignMessage, connect
 
 ## Real Transfer Flow
 
-After a wallet is selected and connected, create a normal Solana transaction and send it with `useSignAndSendTransaction()`. Browser apps that create or serialize transactions should initialize the Vue package Buffer polyfill before transaction code runs.
+After a wallet is selected and connected, build a Kit v0 transaction message, serialize it to raw wire bytes, and send it with `useSignAndSendTransaction()`. Browser apps that serialize transactions should initialize the Vue package Buffer polyfill before transaction code runs.
 
 ```ts
 import { installSolanaBufferPolyfill } from "@vue-solana/vue/buffer-polyfill";
-import { PublicKey, Transaction, TransactionInstruction } from "@vue-solana/vue/web3";
-import { useConnection } from "@vue-solana/vue/useConnection";
+import {
+  AccountRole,
+  address,
+  appendTransactionMessageInstruction,
+  compileTransaction,
+  createTransactionMessage,
+  getTransactionEncoder,
+  setTransactionMessageFeePayer,
+  setTransactionMessageLifetimeUsingBlockhash,
+} from "@solana/kit";
 import { useSignAndSendTransaction } from "@vue-solana/vue/useSignAndSendTransaction";
+import { useSolanaClient } from "@vue-solana/vue/useSolanaClient";
 import { useWallet } from "@vue-solana/vue/useWallet";
 
 installSolanaBufferPolyfill();
 
-const connection = useConnection();
 const wallet = useWallet();
+const { client } = useSolanaClient();
 const sendTransaction = useSignAndSendTransaction();
-const systemProgramId = new PublicKey("11111111111111111111111111111111");
+const SYSTEM_PROGRAM_ADDRESS = address("11111111111111111111111111111111");
 
 async function sendLamports(recipient: string, lamports: number) {
-  if (!wallet.publicKey.value) {
+  const sender = wallet.publicKey.value;
+
+  if (!sender) {
     throw new Error("Connect a wallet first");
   }
 
-  const transaction = new Transaction();
-  const latestBlockhash = await connection.getLatestBlockhash();
-  const recipientPublicKey = new PublicKey(recipient);
+  const { value: latestBlockhash } = await client.rpc.getLatestBlockhash().send();
+  const recipientAddress = address(recipient);
   const data = new Uint8Array(12);
   const view = new DataView(data.buffer);
 
   view.setUint32(0, 2, true);
   view.setBigUint64(4, BigInt(lamports), true);
 
-  transaction.feePayer = wallet.publicKey.value;
-  transaction.recentBlockhash = latestBlockhash.blockhash;
-  transaction.add(
-    new TransactionInstruction({
-      keys: [
-        { pubkey: wallet.publicKey.value, isSigner: true, isWritable: true },
-        { pubkey: recipientPublicKey, isSigner: false, isWritable: true },
+  const transactionMessage = appendTransactionMessageInstruction(
+    {
+      programAddress: SYSTEM_PROGRAM_ADDRESS,
+      accounts: [
+        { address: sender, role: AccountRole.WRITABLE_SIGNER },
+        { address: recipientAddress, role: AccountRole.WRITABLE },
       ],
-      programId: systemProgramId,
       data,
-    }),
+    },
+    setTransactionMessageLifetimeUsingBlockhash(
+      latestBlockhash,
+      setTransactionMessageFeePayer(sender, createTransactionMessage({ version: 0 })),
+    ),
   );
+
+  const transaction = getTransactionEncoder().encode(compileTransaction(transactionMessage));
 
   const signature = await sendTransaction.execute(transaction, {
     skipPreflight: false,

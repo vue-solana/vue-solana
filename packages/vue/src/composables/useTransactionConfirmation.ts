@@ -1,6 +1,6 @@
+import type { Signature } from "@vue-solana/core/kit";
 import { confirmTransactionSignature } from "@vue-solana/core/transaction";
 import type { ConfirmTransactionOptions, TransactionConfirmation } from "@vue-solana/core/types";
-import type { TransactionSignature } from "@vue-solana/core/web3";
 import { normalizeSolanaError, type SolanaError } from "@vue-solana/core/errors";
 import { ref } from "vue";
 import { useConnection } from "./useConnection";
@@ -24,18 +24,15 @@ export function getConfirmedTransactionStatus(
 }
 
 export function useTransactionConfirmation(defaultOptions: ConfirmTransactionOptions = {}) {
-  const connection = useConnection();
-  const signature = ref<TransactionSignature | null>(null);
+  const client = useConnection();
+  const signature = ref<Signature | null>(null);
   const confirmation = ref<TransactionConfirmation | null>(null);
   const status = ref<TransactionConfirmationStatus>("idle");
   const loading = ref(false);
   const error = ref<SolanaError | null>(null);
   let executionId = 0;
 
-  async function confirm(
-    nextSignature: TransactionSignature,
-    options: ConfirmTransactionOptions = {},
-  ) {
+  async function confirm(nextSignature: Signature, options: ConfirmTransactionOptions = {}) {
     const currentExecutionId = ++executionId;
     const confirmationOptions = { ...defaultOptions, ...options };
 
@@ -47,7 +44,7 @@ export function useTransactionConfirmation(defaultOptions: ConfirmTransactionOpt
 
     try {
       const nextConfirmation = await confirmTransactionSignature(
-        connection,
+        client,
         nextSignature,
         confirmationOptions,
       );

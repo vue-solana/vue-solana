@@ -7,46 +7,15 @@ surroundOrder: 4
 
 使用本指南诊断 Vue Solana 在 Vue、Nuxt、TypeScript、钱包发现、RPC 调用和交易中的常见问题。先找到与你的应用匹配的错误消息或行为，再按顺序完成检查，之后再考虑提交 issue。
 
-## TypeScript 无法解析 `@solana/web3-compat`
+## 无法解析 `@solana/web3-compat`
 
-`@solana/web3-compat@0.0.21` 当前的 TypeScript 元数据有问题。运行时导入仍然使用真实包。当前 Vue Solana 包会发布临时的包内声明 shim，因此文档中的 `@vue-solana/core`、`@vue-solana/vue` 和 `@vue-solana/nuxt` 导入应当不需要消费端本地 shim 就能通过类型检查。
+v2.0.0 从每个 Vue Solana 包中移除了 `@solana/web3-compat`，因此针对该包的缺少声明错误几乎总是意味着你的应用仍在从被删除的旧版表面导入：`@vue-solana/core/web3`、`@vue-solana/vue/web3`、`@vue-solana/nuxt/web3`，或直接依赖 `@solana/web3-compat`。
 
-如果 TypeScript 仍然报告缺少声明，请先确认你正在使用当前版本的 Vue Solana 包，并且没有在应用代码中直接导入 `@solana/web3-compat`。对于较旧的 Vue Solana 版本或直接 `@solana/web3-compat` 导入，请在应用中添加 `types/web3-compat.d.ts`：
-
-```ts
-declare module "@solana/web3-compat" {
-  export type {
-    Commitment,
-    RpcResponseAndContext,
-    SendOptions,
-    SignatureResult,
-    TransactionSignature,
-  } from "@solana/web3.js";
-  export {
-    Connection,
-    Keypair,
-    PublicKey,
-    SystemProgram,
-    Transaction,
-    TransactionInstruction,
-    VersionedTransaction,
-  } from "@solana/web3.js";
-}
-```
-
-确保你的 `tsconfig.json` 包含该文件：
-
-```json
-{
-  "include": ["src/**/*.ts", "src/**/*.vue", "types/**/*.d.ts"]
-}
-```
-
-在保留这个 workaround 前，请重新检查新的 `@solana/web3-compat` 版本。一旦上游发布有效的根声明，就应移除包内 shim。
+请把这些导入更新为 Kit 对应的写法——参见 [Kit 迁移指南](/zh/guides/kit-migration)。如果你仍在使用 v1.x 包：v1 包为文档中的 core 导入发布过包内声明 shim，v1 应用只有在直接导入该包时才需要添加自己的 `@solana/web3-compat` shim。升级到 `@vue-solana/*@^2` 后就不再需要任何 shim。
 
 ## `Vue Solana plugin is not installed`
 
-这表示客户端代码在没有安装插件的情况下尝试使用 Solana 连接或钱包操作。当前 composable 在 Nuxt 服务端渲染期间会返回惰性的 SSR 安全状态，但真实 RPC 和钱包操作仍然需要客户端插件上下文。
+这表示客户端代码在没有安装插件的情况下尝试使用 Solana 客户端或钱包操作。当前 composable 在 Nuxt 服务端渲染期间会返回惰性的 SSR 安全状态，但真实 RPC 和钱包操作仍然需要客户端插件上下文。
 
 Vue 中：
 
@@ -66,7 +35,7 @@ export default defineNuxtConfig({
 });
 ```
 
-Nuxt 模块会让 Vue Solana 插件仅在客户端运行。自动导入的 composable 可以在 SSR 期间调用，但请避免在服务端直接执行 RPC 或钱包工作。需要真实 Solana 连接时，请从客户端生命周期钩子或用户操作触发 RPC 读取。
+Nuxt 模块会让 Vue Solana 插件仅在客户端运行。自动导入的 composable 可以在 SSR 期间调用，但请避免在服务端直接执行 RPC 或钱包工作。需要真实 Solana 客户端时，请从客户端生命周期钩子或用户操作触发 RPC 读取。
 
 ## `No Solana wallet is configured`
 
@@ -116,7 +85,7 @@ iOS 钱包支持使用 Phantom、Solflare 和 Backpack universal link。批准�
 - 配置的 `redirectUrl` 没有返回到会刷新钱包状态的同一个应用页面。
 - 钱包刷新或回调处理只在 SSR 期间运行，而不是在客户端运行。
 
-请把 iOS 钱包工作保持在客户端，确保重定向 URL 会再次加载应用，并在重定向页面加载后调用 `refreshWallets()`。Vue 插件会在钱包刷新期间处理 iOS 回调；直接使用 core helper 的应用应先调用 `handleSolanaIosWalletCallback()`，再依赖返回的连接。
+请把 iOS 钱包工作保持在客户端，确保重定向 URL 会再次加载应用，并在重定向页面加载后调用 `refreshWallets()`。Vue 插件会在钱包刷新期间处理 iOS 回调；直接使用 core 辅助函数的应用应先调用 `handleSolanaIosWalletCallback()`，再依赖适配后的钱包会话。
 
 ## `Solana wallet is not connected`
 
@@ -149,7 +118,7 @@ Nuxt 请在重新构建包后使用 `pnpm dev:nuxt`。
 
 ## `Buffer is not defined`
 
-某些 `@solana/web3-compat` 交易路径仍然期望 Node 兼容的 `Buffer` 全局变量。在浏览器 Vue 应用中，请在创建或序列化交易前初始化 Vue 包的 Buffer polyfill。Nuxt 应用使用 `@vue-solana/nuxt/buffer-polyfill`。
+某些 Solana 交易序列化路径在浏览器运行时中仍然期望 Node 兼容的 `Buffer` 全局变量。在浏览器 Vue 应用中，请在创建或序列化交易前初始化 Vue 包的 Buffer polyfill。Nuxt 应用使用 `@vue-solana/nuxt/buffer-polyfill`。
 
 ```ts
 import { installSolanaBufferPolyfill } from "@vue-solana/vue/buffer-polyfill";

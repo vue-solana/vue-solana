@@ -1,27 +1,40 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import type { Connection } from "@solana/web3-compat";
 import { SolanaError } from "./errors";
-import type { SolanaTransaction, SolanaWallet } from "./types";
+import type { Signature } from "@solana/kit";
+import type { SolanaClient } from "./kit";
+import type { SendTransactionOptions, SolanaWallet } from "./types";
 import { confirmTransactionSignature, signAndSendTransaction } from "./transaction";
 
-const publicKey = { toBase58: () => "public-key" } as SolanaWallet["publicKey"];
+vi.mock("@solana/kit", () => ({
+  getTransactionDecoder: () => ({
+    decode: (bytes: Uint8Array) => ({ bytes }),
+  }),
+  getBase64EncodedWireTransaction: (transaction: { bytes: Uint8Array }) =>
+    `base64:${transaction.bytes[0]}`,
+}));
+
+const publicKey = "11111111111111111111111111111111" as SolanaWallet["publicKey"];
+const SIGNATURE = "signature" as Signature;
 
 afterEach(() => {
   vi.useRealTimers();
 });
 
-function createRawTransactionScenario() {
-  const rawTransaction = new Uint8Array([1, 2, 3]);
-  const signedTransaction = {
-    serialize: vi.fn(() => rawTransaction),
-  } as unknown as SolanaTransaction;
-  const connection = {
-    sendRawTransaction: vi.fn().mockResolvedValue("raw-signature"),
-  } as unknown as Connection;
-  const transaction = {} as SolanaTransaction;
-  const options = { skipPreflight: true };
+function createRpcClient(sendResult: unknown = "raw-signature") {
+  const send = vi.fn().mockResolvedValue(sendResult);
 
-  return { connection, options, rawTransaction, signedTransaction, transaction };
+  return {
+    rpc: {
+      sendTransaction: vi.fn(() => ({ send })),
+      getSignatureStatuses: vi.fn(),
+    },
+    rpcSubscriptions: {},
+  } as unknown as SolanaClient & {
+    rpc: {
+      sendTransaction: ReturnType<typeof vi.fn>;
+      getSignatureStatuses: ReturnType<typeof vi.fn>;
+    };
+  };
 }
 
 describe("signAndSendTransaction", () => {
@@ -31,59 +44,46 @@ describe("signAndSendTransaction", () => {
       publicKey,
       signAndSendTransaction: vi.fn().mockResolvedValue({ signature: "wallet-signature" }),
     } as unknown as SolanaWallet;
-    const connection = { sendRawTransaction: vi.fn() } as unknown as Connection;
-    const transaction = {} as SolanaTransaction;
+    const client = createRpcClient();
+    const transaction = new Uint8Array([1, 2, 3]);
 
-    await expect(signAndSendTransaction(connection, wallet, transaction)).resolves.toBe(
+    await expect(signAndSendTransaction(client, wallet, transaction)).resolves.toBe(
       "wallet-signature",
     );
     expect(wallet.signAndSendTransaction).toHaveBeenCalledWith(transaction, undefined);
-    expect(connection.sendRawTransaction).not.toHaveBeenCalled();
-  });
-
-  it("prefers signing locally before sending for Mobile Wallet Adapter wallets", async () => {
-    const { connection, options, rawTransaction, signedTransaction, transaction } =
-      createRawTransactionScenario();
-    const wallet = {
-      connected: true,
-      publicKey,
-      source: "mobile-wallet-adapter",
-      signTransaction: vi.fn().mockResolvedValue(signedTransaction),
-      signAndSendTransaction: vi.fn().mockResolvedValue({ signature: "wallet-signature" }),
-    } as unknown as SolanaWallet;
-
-    await expect(signAndSendTransaction(connection, wallet, transaction, options)).resolves.toBe(
-      "raw-signature",
-    );
-    expect(wallet.signTransaction).toHaveBeenCalledWith(transaction);
-    expect(wallet.signAndSendTransaction).not.toHaveBeenCalled();
-    expect(connection.sendRawTransaction).toHaveBeenCalledWith(rawTransaction, options);
+    expect(client.rpc.sendTransaction).not.toHaveBeenCalled();
   });
 
   it("signs and sends a raw transaction when the wallet cannot send directly", async () => {
-    const { connection, options, rawTransaction, signedTransaction, transaction } =
-      createRawTransactionScenario();
     const wallet = {
       connected: true,
       publicKey,
-      signTransaction: vi.fn().mockResolvedValue(signedTransaction),
+      signTransaction: vi.fn().mockResolvedValue(new Uint8Array([1, 2, 3])),
     } as unknown as SolanaWallet;
+    const client = createRpcClient();
+    const transaction = new Uint8Array([1, 2, 3]);
+    const options: SendTransactionOptions = { skipPreflight: true };
 
-    await expect(signAndSendTransaction(connection, wallet, transaction, options)).resolves.toBe(
+    await expect(signAndSendTransaction(client, wallet, transaction, options)).resolves.toBe(
       "raw-signature",
     );
     expect(wallet.signTransaction).toHaveBeenCalledWith(transaction);
-    expect(signedTransaction.serialize).toHaveBeenCalled();
-    expect(connection.sendRawTransaction).toHaveBeenCalledWith(rawTransaction, options);
+    expect(client.rpc.sendTransaction).toHaveBeenCalledWith("base64:1", {
+      encoding: "base64",
+      maxRetries: undefined,
+      minContextSlot: undefined,
+      preflightCommitment: undefined,
+      skipPreflight: true,
+    });
   });
 
   it("rejects when the wallet is disconnected", async () => {
     const wallet = { connected: false, publicKey } as SolanaWallet;
-    const connection = { sendRawTransaction: vi.fn() } as unknown as Connection;
+    const client = createRpcClient();
 
-    await expect(
-      signAndSendTransaction(connection, wallet, {} as SolanaTransaction),
-    ).rejects.toThrow("Solana wallet is not connected");
+    await expect(signAndSendTransaction(client, wallet, new Uint8Array([1, 2, 3]))).rejects.toThrow(
+      "Solana wallet is not connected",
+    );
   });
 
   it("normalizes wallet signing rejections", async () => {
@@ -93,10 +93,10 @@ describe("signAndSendTransaction", () => {
       publicKey,
       signAndSendTransaction: vi.fn().mockRejectedValue(walletRejection),
     } as unknown as SolanaWallet;
-    const connection = { sendRawTransaction: vi.fn() } as unknown as Connection;
+    const client = createRpcClient();
 
     try {
-      await signAndSendTransaction(connection, wallet, {} as SolanaTransaction);
+      await signAndSendTransaction(client, wallet, new Uint8Array([1, 2, 3]));
       throw new Error("Expected signAndSendTransaction to reject.");
     } catch (error) {
       expect(error).toBeInstanceOf(SolanaError);
@@ -106,17 +106,19 @@ describe("signAndSendTransaction", () => {
   });
 
   it("normalizes raw transaction send failures", async () => {
-    const { connection, signedTransaction, transaction } = createRawTransactionScenario();
     const sendFailure = new Error("RPC send failed");
-    vi.mocked(connection.sendRawTransaction).mockRejectedValue(sendFailure);
     const wallet = {
       connected: true,
       publicKey,
-      signTransaction: vi.fn().mockResolvedValue(signedTransaction),
+      signTransaction: vi.fn().mockResolvedValue(new Uint8Array([1, 2, 3])),
     } as unknown as SolanaWallet;
+    const client = createRpcClient();
+    vi.mocked(client.rpc.sendTransaction).mockReturnValue({
+      send: vi.fn().mockRejectedValue(sendFailure),
+    });
 
     try {
-      await signAndSendTransaction(connection, wallet, transaction);
+      await signAndSendTransaction(client, wallet, new Uint8Array([1, 2, 3]));
       throw new Error("Expected signAndSendTransaction to reject.");
     } catch (error) {
       expect(error).toBeInstanceOf(SolanaError);
@@ -128,56 +130,92 @@ describe("signAndSendTransaction", () => {
 
 describe("confirmTransactionSignature", () => {
   it("confirms a signature with confirmed commitment by default", async () => {
-    const result = { value: { err: null } };
-    const connection = {
-      confirmTransaction: vi.fn().mockResolvedValue(result),
-    } as unknown as Connection;
+    const client = createRpcClient();
+    client.rpc.getSignatureStatuses.mockReturnValue({
+      send: vi.fn().mockResolvedValue({
+        value: [
+          {
+            slot: 10n,
+            confirmations: 1n,
+            err: null,
+            confirmationStatus: "confirmed",
+          },
+        ],
+      }),
+    });
 
-    await expect(confirmTransactionSignature(connection, "signature")).resolves.toEqual({
+    await expect(confirmTransactionSignature(client, SIGNATURE)).resolves.toMatchObject({
       signature: "signature",
       commitment: "confirmed",
-      result,
     });
-    expect(connection.confirmTransaction).toHaveBeenCalledWith("signature", "confirmed");
+    expect(client.rpc.getSignatureStatuses).toHaveBeenCalledWith([SIGNATURE]);
   });
 
   it("supports caller-selected commitment", async () => {
-    const connection = {
-      confirmTransaction: vi.fn().mockResolvedValue({ value: { err: null } }),
-    } as unknown as Connection;
+    const client = createRpcClient();
+    client.rpc.getSignatureStatuses.mockReturnValue({
+      send: vi.fn().mockResolvedValue({
+        value: [
+          {
+            slot: 10n,
+            confirmations: null,
+            err: null,
+            confirmationStatus: "finalized",
+          },
+        ],
+      }),
+    });
 
     await expect(
-      confirmTransactionSignature(connection, "signature", { commitment: "finalized" }),
+      confirmTransactionSignature(client, SIGNATURE, { commitment: "finalized" }),
     ).resolves.toMatchObject({ commitment: "finalized" });
-    expect(connection.confirmTransaction).toHaveBeenCalledWith("signature", "finalized");
   });
 
   it("rejects when the confirmation result contains an error", async () => {
-    const connection = {
-      confirmTransaction: vi.fn().mockResolvedValue({
-        value: { err: { InstructionError: [0, "Custom"] } },
+    const instructionError = { InstructionError: [0, "Custom"] };
+    const client = createRpcClient();
+    client.rpc.getSignatureStatuses.mockReturnValue({
+      send: vi.fn().mockResolvedValue({
+        value: [
+          {
+            slot: 10n,
+            confirmations: null,
+            err: instructionError,
+            confirmationStatus: "confirmed",
+          },
+        ],
       }),
-    } as unknown as Connection;
+    });
 
-    await expect(confirmTransactionSignature(connection, "signature")).rejects.toThrow(
+    await expect(confirmTransactionSignature(client, SIGNATURE)).rejects.toThrow(
       "Transaction signature failed to reach confirmed commitment.",
     );
 
     try {
-      await confirmTransactionSignature(connection, "signature");
+      await confirmTransactionSignature(client, SIGNATURE);
     } catch (error) {
       expect(error).toBeInstanceOf(SolanaError);
       expect((error as SolanaError).code).toBe("RPC_FAILURE");
-      expect((error as SolanaError).cause).toEqual({ InstructionError: [0, "Custom"] });
+      expect((error as SolanaError).cause).toEqual(instructionError);
     }
   });
 
   it("rejects with a clear timeout message", async () => {
     vi.useFakeTimers();
-    const connection = {
-      confirmTransaction: vi.fn(() => new Promise(() => undefined)),
-    } as unknown as Connection;
-    const promise = confirmTransactionSignature(connection, "signature", { timeoutMs: 10 });
+    const client = createRpcClient();
+    client.rpc.getSignatureStatuses.mockReturnValue({
+      send: vi.fn().mockResolvedValue({
+        value: [
+          {
+            slot: 10n,
+            confirmations: 0n,
+            err: null,
+            confirmationStatus: "processed",
+          },
+        ],
+      }),
+    });
+    const promise = confirmTransactionSignature(client, SIGNATURE, { timeoutMs: 10 });
     const rejection = promise.then(
       () => {
         throw new Error("Expected confirmation to time out.");
@@ -187,25 +225,11 @@ describe("confirmTransactionSignature", () => {
         expect((error as SolanaError).message).toBe(
           "Timed out waiting for transaction signature to reach confirmed commitment.",
         );
+        expect((error as SolanaError).code).toBe("TRANSACTION_TIMEOUT");
       },
     );
 
-    await vi.advanceTimersByTimeAsync(10);
+    await vi.runAllTimersAsync();
     await rejection;
-
-    const nextPromise = confirmTransactionSignature(connection, "signature", { timeoutMs: 10 });
-    const nextRejection = nextPromise.then(
-      () => {
-        throw new Error("Expected confirmation to time out.");
-      },
-      (error: unknown) => {
-        expect(error).toMatchObject({
-          code: "TRANSACTION_TIMEOUT",
-        });
-      },
-    );
-
-    await vi.advanceTimersByTimeAsync(10);
-    await nextRejection;
   });
 });

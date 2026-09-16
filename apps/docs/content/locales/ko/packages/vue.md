@@ -67,6 +67,7 @@ Direct package subpath:
 
 - `@vue-solana/vue/buffer-polyfill`
 - `@vue-solana/vue/useSolana`
+- `@vue-solana/vue/useSolanaClient`
 - `@vue-solana/vue/useRpc`
 - `@vue-solana/vue/useConnection`
 - `@vue-solana/vue/useAccountInfo`
@@ -81,18 +82,19 @@ Direct package subpath:
 - `@vue-solana/vue/useSignAndSendTransaction`
 - `@vue-solana/vue/useTokenBalance`
 - `@vue-solana/vue/useTokenAccounts`
-- `@vue-solana/vue/web3`
+- `@vue-solana/vue/kit`
 
-`PublicKey`, `Transaction`, `TransactionInstruction` 같은 지원되는 raw Solana primitive에는 `@vue-solana/vue/web3`를 사용하세요. Buffer polyfill이 필요한 브라우저 트랜잭션 코드에는 `@vue-solana/vue/buffer-polyfill`을 사용하세요. 더 낮은 수준의 core 사용에는 direct `@vue-solana/core/*` import도 계속 지원됩니다.
+Buffer polyfill이 필요한 브라우저 트랜잭션 코드에는 `@vue-solana/vue/buffer-polyfill`을 사용하세요. Kit API(`createSolanaClient`, `address`, `lamports` 및 타입)에는 `@vue-solana/vue/kit`을 사용하세요. 더 낮은 수준의 core 사용에는 direct `@vue-solana/core/*` import도 계속 지원됩니다.
 
 - `useSolana()`: 주입된 전체 Solana context를 반환합니다.
-- `useRpc()`: cluster, endpoint, connection status, latest blockhash, `checkConnection()`을 반환합니다.
-- `useConnection()`: Solana `Connection`을 반환합니다.
-- `useAccountInfo(address, options?)`: account data를 로드하고 account 변경을 subscribe할 수 있습니다.
+- `useSolanaClient()`: Kit `{ client, rpc }`를 context에서 반환합니다. 새 코드에 권장됩니다.
+- `useRpc()`: cluster, endpoint, connection status, latest blockhash, 주입된 Kit `client`, `checkConnection()`을 반환합니다.
+- `useConnection()`: 주입된 Kit client를 반환합니다(`useSolanaClient()` 사용을 권장하며 deprecated입니다).
+- `useAccountInfo(address, options?)`: 정규화된 account data(executable, lamports, owner, space, data bytes)를 로드합니다.
 - `useProgramAccounts(programId, options?)`: optional filters와 data slicing으로 program id가 소유한 accounts를 로드합니다.
 - `useWallet()`: active wallet ref, computed connection state, wallet action을 반환합니다.
 - `useWallets()`: 발견된 browser extension wallet, Android Mobile Wallet Adapter wallet, 지원되는 iOS browser wallet entry, wallet 선택 action을 반환합니다.
-- `useBalance(address, commitment?)`: `PublicKey` 또는 address string의 lamport balance를 로드합니다.
+- `useBalance(address, commitment?)`: address string의 lamport balance를 로드합니다.
 - `useTokenAccounts(owner, options?)`: 기본적으로 Token과 Token-2022 program 모두를 쿼리하여 owner의 모든 SPL token account를 로드합니다.
 - `useTokenBalance(mint, owner)`: associated token account를 통해 mint/owner 쌍의 SPL token balance와 decimals를 로드합니다.
 - `useTransaction(handler, options?)`: optional timeout 설정을 지원하는 generic async transaction state helper입니다.
@@ -138,6 +140,33 @@ const rpcErrorMessage = computed(() => {
   </section>
 </template>
 ```
+
+## Kit Client 사용
+
+```vue
+<script setup lang="ts">
+import { onMounted, ref } from "vue";
+import { useSolanaClient } from "@vue-solana/vue/useSolanaClient";
+
+const { client, rpc } = useSolanaClient();
+const slot = ref<bigint>();
+
+async function checkSlot() {
+  slot.value = await rpc.getSlot().send();
+}
+
+onMounted(checkSlot);
+</script>
+
+<template>
+  <section>
+    <p>Slot: {{ slot }}</p>
+    <button type="button" @click="checkSlot">Check Slot</button>
+  </section>
+</template>
+```
+
+`useSolanaClient()`는 `useSolana()`와 같은 context를 반환하지만 Kit 읽기용으로 형태를 갖춥니다. `client`는 전체 `@solana/kit` 클라이언트이고 `rpc`는 그 read API입니다. RPC 결과는 `bigint`, account data는 `Uint8Array`입니다. [Kit 마이그레이션](/ko/guides/kit-migration)을 참고하세요.
 
 ## 잔액 읽기
 
@@ -377,7 +406,7 @@ const { publicKey, connected, connecting, connect, disconnect } = useWallet();
 
     <p>Selected: {{ selectedWallet?.name ?? "None" }}</p>
     <p>Connected: {{ connected }}</p>
-    <p>Public key: {{ publicKey?.toBase58() }}</p>
+    <p>Public key: {{ publicKey }}</p>
     <p v-if="connecting">Connecting...</p>
     <button type="button" :disabled="!selectedWallet || connected || connecting" @click="connect">
       Connect

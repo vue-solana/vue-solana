@@ -5,26 +5,26 @@ import { useConnection } from "./useConnection";
 import { useRpc } from "./useRpc";
 
 describe("useRpc", () => {
-  it("exposes RPC state and connection", () => {
-    const connection = { getLatestBlockhash: vi.fn() };
+  it("exposes RPC state and client", () => {
+    const client = { rpc: { getLatestBlockhash: vi.fn() } };
     const checkConnection = vi.fn().mockResolvedValue(undefined);
     const context = createMockSolanaContext({
       cluster: "localnet",
       endpoint: "http://127.0.0.1:8899",
       wsEndpoint: "ws://127.0.0.1:8900",
-      connection: connection as unknown as ReturnType<typeof createMockSolanaContext>["connection"],
+      client: client as unknown as ReturnType<typeof createMockSolanaContext>["client"],
       status: ref("connected"),
       latestBlockhash: ref("blockhash"),
       checkConnection,
     });
     let rpc: ReturnType<typeof useRpc> | undefined;
-    let directConnection: ReturnType<typeof useConnection> | undefined;
+    let directClient: ReturnType<typeof useConnection> | undefined;
 
     mountWithSolana(
       defineComponent({
         setup() {
           rpc = useRpc();
-          directConnection = useConnection();
+          directClient = useConnection();
 
           return () => h("div");
         },
@@ -37,7 +37,7 @@ describe("useRpc", () => {
     expect(rpc?.wsEndpoint.value).toBe("ws://127.0.0.1:8900");
     expect(rpc?.status.value).toBe("connected");
     expect(rpc?.latestBlockhash.value).toBe("blockhash");
-    expect(rpc?.connection).toBe(connection);
-    expect(directConnection).toBe(connection);
+    expect(rpc?.client).toBe(client);
+    expect(directClient).toBe(client);
   });
 });

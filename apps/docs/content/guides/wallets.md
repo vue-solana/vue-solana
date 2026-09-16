@@ -14,7 +14,7 @@ Current wallet support is built on these libraries:
 - Browser extension wallets: `@wallet-standard/app`, `@wallet-standard/base`, `@wallet-standard/features`, and `@solana/wallet-standard-features`.
 - Android mobile native wallets: `@solana-mobile/wallet-standard-mobile`, which registers Solana Mobile Wallet Adapter as a Wallet Standard wallet on supported Android Chrome mobile web and PWA runtimes.
 - iOS browser wallets: wallet-specific universal links for Phantom, Solflare, and Backpack.
-- Solana primitives and transaction types: `@vue-solana/vue/web3` for Vue apps, `@vue-solana/nuxt/web3` for Nuxt apps, and `@vue-solana/core/web3` for framework-agnostic core usage.
+- Solana primitives and transaction helpers: `@solana/kit` types and message builders, re-exported in part through `@vue-solana/vue/kit`, `@vue-solana/nuxt/kit`, and `@vue-solana/core/kit`.
 
 ## Wallet Sources
 
@@ -28,13 +28,13 @@ All sources appear in the same discovered wallet list. Apps should not build sep
 
 ## Support Matrix
 
-| Wallet path                   | v1 status                                   | How it appears                                          | Notes                                                                |
+| Wallet path                   | Status                                      | How it appears                                          | Notes                                                                |
 | ----------------------------- | ------------------------------------------- | ------------------------------------------------------- | -------------------------------------------------------------------- |
 | Browser extension wallets     | Supported                                   | `platform: "browser"`, `source: "wallet-standard"`      | Uses Solana Wallet Standard registration.                            |
 | Android native mobile wallets | Supported on Android Chrome and Chrome PWAs | `platform: "mobile"`, `source: "mobile-wallet-adapter"` | Registered through `@solana-mobile/wallet-standard-mobile`.          |
 | iOS browser wallets           | Supported for configured wallet links       | `platform: "mobile"`, `source: "deep-link"`             | Phantom, Solflare, and Backpack are exposed through universal links. |
 | Manual/custom wallet objects  | Supported                                   | App-provided wallet                                     | Must implement the `SolanaWallet` interface.                         |
-| Desktop native app wallets    | Deferred from v1                            | Not exposed by default                                  | Reserved `protocol-link` metadata is available for future adapters.  |
+| Desktop native app wallets    | Not supported yet                           | Not exposed by default                                  | Reserved `protocol-link` metadata is available for future adapters.  |
 
 What works today:
 
@@ -44,7 +44,7 @@ What works today:
 - Connecting, disconnecting, signing messages, signing transactions, and signing/sending transactions when the selected wallet supports those capabilities.
 - Rendering unsupported-capability UI from `canSignMessage`, `canSignTransaction`, `canSignAllTransactions`, and `canSignAndSendTransaction`.
 
-What is not included in v1:
+What is not included yet:
 
 - A built-in wallet modal or UI package.
 - Desktop native protocol-link adapters.
@@ -77,7 +77,7 @@ const { publicKey, connected, connecting, connect, disconnect } = useWallet();
 
     <p>Selected: {{ selectedWallet?.name ?? "None" }}</p>
     <p>Connected: {{ connected }}</p>
-    <p>Public key: {{ publicKey?.toBase58() ?? "None" }}</p>
+    <p>Public key: {{ publicKey ?? "None" }}</p>
 
     <button type="button" :disabled="!selectedWallet || connected || connecting" @click="connect">
       Connect
@@ -126,7 +126,7 @@ For framework-agnostic code, use wallet assertions from `@vue-solana/core/wallet
 import { assertWalletCanSign, assertWalletConnected } from "@vue-solana/core/wallet";
 
 assertWalletConnected(wallet);
-console.log(wallet.publicKey.toBase58());
+console.log(wallet.publicKey);
 
 assertWalletCanSign(wallet);
 const signed = await wallet.signTransaction(transaction);
@@ -200,13 +200,13 @@ Android notes:
 
 iOS notes:
 
-| Capability                 | v1 behavior                                                                             |
+| Capability                 | Current behavior                                                                        |
 | -------------------------- | --------------------------------------------------------------------------------------- |
 | Discovery                  | Phantom, Solflare, and Backpack entries can appear on iOS browsers.                     |
 | Connection                 | Uses wallet-specific universal links and redirect callbacks.                            |
 | Session handling           | Apps should handle callback state before assuming a wallet is connected after redirect. |
 | Transactions               | Capability depends on the wallet link and returned session data.                        |
-| Desktop Safari native apps | Not implemented as a v1 desktop-native path.                                            |
+| Desktop Safari native apps | Not implemented.                                                                        |
 
 If you use iOS core helpers directly, call `handleSolanaIosWalletCallback()` early in client startup so redirect data is validated and decrypted before the app reads wallet state.
 

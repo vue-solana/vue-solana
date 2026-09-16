@@ -200,7 +200,7 @@ const { publicKey, connected, connecting, canSignMessage, connect, disconnect } 
     </button>
     <p>Selected: {{ selectedWallet?.name ?? "None" }}</p>
     <p>Connected: {{ connected }}</p>
-    <p>Public key: {{ publicKey?.toBase58() }}</p>
+    <p>Public key: {{ publicKey }}</p>
     <p>Can sign messages: {{ canSignMessage }}</p>
     <p v-if="connecting">Connecting...</p>
     <button type="button" :disabled="!selectedWallet || connected || connecting" @click="connect">
@@ -310,17 +310,18 @@ Docs: [Vue Solana Agent Skill](https://vue-solana-docs.vercel.app/agent-skill)
 | `createSolanaPlugin(options?)`            | Installs the Vue Solana context.                                                                                           |
 | `VueSolana`                               | Alias for `createSolanaPlugin`.                                                                                            |
 | `useSolana()`                             | Returns the full injected Solana context.                                                                                  |
-| `useRpc()`                                | Returns cluster, endpoint, connection status, latest blockhash, and `checkConnection()`.                                   |
-| `useConnection()`                         | Returns the Solana `Connection`.                                                                                           |
+| `useRpc()`                                | Returns cluster, endpoint, connection status, latest blockhash, the Kit `client`, and `checkConnection()`.                 |
+| `useSolanaClient()`                       | Returns the injected Kit client as `{ client, rpc }`. The recommended RPC path.                                            |
+| `useConnection()`                         | Returns the Kit `client`. Deprecated in favor of `useSolanaClient()`.                                                      |
 | `useWallet()`                             | Returns wallet refs, computed connection state, and wallet actions.                                                        |
 | `useWallets()`                            | Returns discovered browser extension wallets, Android MWA wallets, iOS browser wallet links, and wallet selection actions. |
 | `useSignMessage()`                        | Signs arbitrary message bytes through the connected wallet when message signing is supported.                              |
-| `useBalance(address, commitment?)`        | Loads lamport balance for a `PublicKey` or address string.                                                                 |
-| `useAccountInfo(address, options?)`       | Loads account info and can subscribe to account changes with `watch: true`.                                                |
+| `useBalance(address, commitment?)`        | Loads lamport balance for an address string.                                                                               |
+| `useAccountInfo(address, options?)`       | Loads normalized account info (executable, lamports, owner, space, data bytes).                                            |
 | `useProgramAccounts(programId, config?)`  | Loads accounts owned by a program with optional filters, commitment, and `dataSlice`.                                      |
 | `useTransaction(handler, options?)`       | Generic async transaction state helper with optional timeout settings.                                                     |
 | `useTransactionConfirmation(options?)`    | Confirms a submitted signature with reactive status and timeout/error state.                                               |
-| `useSignatureStatus(signature, options?)` | Reads a transaction signature status with optional polling or websocket subscription.                                      |
+| `useSignatureStatus(signature, options?)` | Reads a transaction signature status with optional polling.                                                                |
 | `useSignAndSendTransaction()`             | Signs and sends a transaction through the configured wallet, with optional confirmation waiting.                           |
 
 Direct composable subpaths:
@@ -341,7 +342,7 @@ Direct composable subpaths:
 
 Other direct subpaths:
 
-- `@vue-solana/vue/web3`
+- `@vue-solana/vue/kit`
 - `@vue-solana/vue/buffer-polyfill`
 
 ## Caveats
@@ -350,7 +351,7 @@ Other direct subpaths:
 - Public Solana RPC endpoints are useful for development, but production apps should use dedicated RPC infrastructure.
 - Broad `useProgramAccounts()` scans can be expensive or blocked on public RPC nodes. Prefer narrow filters and `dataSlice`.
 - Use `mainnet-beta` for Solana mainnet. `mainnet` is intentionally not accepted as a cluster alias.
-- `@solana/web3-compat@0.0.21` currently has broken TypeScript package metadata. Runtime imports still use the real package, and current Vue Solana packages publish temporary declaration shims for documented imports. See [Troubleshooting](https://vue-solana-docs.vercel.app/troubleshooting) for details.
+- v2.0.0 removed `@solana/web3-compat` and the `web3` subpaths. Build transaction messages with `@solana/kit` and pass raw `Uint8Array` wire bytes to wallet flows. See the [Kit Migration guide](https://vue-solana-docs.vercel.app/guides/kit-migration) for migrating from v1.
 - Desktop native app wallets are planned but not implemented yet.
 
 ## Status

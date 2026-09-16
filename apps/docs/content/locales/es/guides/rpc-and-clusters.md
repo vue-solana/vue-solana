@@ -1,15 +1,15 @@
 ---
 title: "RPC Y Clusters"
-description: Configura clusters de Solana, endpoints RPC, endpoints WebSocket y helpers de conexion.
-ogSection: Guias
+description: Configura clusters de Solana, endpoints RPC, endpoints WebSocket y helpers de cliente.
+ogSection: Guías
 surroundOrder: 8
 ---
 
-Vue Solana mantiene la configuracion de clusters y endpoints compartida entre `@vue-solana/core`, `@vue-solana/vue` y `@vue-solana/nuxt`.
+Vue Solana mantiene la configuración de clusters y endpoints compartida entre `@vue-solana/core`, `@vue-solana/vue` y `@vue-solana/nuxt`.
 
-Usa esta guia cuando necesites elegir un cluster, proporcionar un endpoint RPC personalizado o entender que exponen los composables RPC.
+Usa esta guía cuando necesites elegir un cluster, proporcionar un endpoint RPC personalizado o entender qué exponen los composables RPC.
 
-## Nombres De Clusters
+## Nombres de Clusters
 
 Los nombres de cluster admitidos son:
 
@@ -20,11 +20,11 @@ Los nombres de cluster admitidos son:
 
 Usa `mainnet-beta` para la mainnet de Solana. Vue Solana sigue intencionalmente el nombre oficial de cluster de Solana y no usa `mainnet` como alias.
 
-`devnet` es el valor predeterminado porque es el cluster mas seguro para ejemplos y desarrollo.
+`devnet` es el valor predeterminado porque es el cluster más seguro para ejemplos y desarrollo.
 
-## Configuracion Core
+## Configuración Core
 
-Usa `@vue-solana/core/rpc` cuando quieras configurar conexiones sin depender de un framework.
+Usa `@vue-solana/core/rpc` cuando quieras configuración de cliente agnóstica al framework.
 
 ```ts
 import { createSolanaContext } from "@vue-solana/core/rpc";
@@ -34,16 +34,16 @@ const solana = createSolanaContext({
   commitment: "confirmed",
 });
 
-const { blockhash } = await solana.connection.getLatestBlockhash();
+const { value: latestBlockhash } = await solana.client.rpc.getLatestBlockhash().send();
 
-console.log(solana.endpoint, blockhash);
+console.log(solana.endpoint, latestBlockhash.blockhash);
 ```
 
-`createSolanaContext()` devuelve el `cluster` resuelto, el `endpoint` HTTP, el `wsEndpoint` WebSocket y la `connection`.
+`createSolanaContext()` devuelve el `cluster` resuelto, el `endpoint` HTTP, el `wsEndpoint` WebSocket y un `client` de Kit cuyo `rpc` envía solicitudes RPC.
 
 ## Endpoints RPC Personalizados
 
-Las aplicaciones de produccion normalmente deberian usar un proveedor RPC dedicado en lugar de endpoints publicos de cluster.
+Las aplicaciones de producción normalmente deberían usar un proveedor RPC dedicado en lugar de endpoints públicos de cluster.
 
 ```ts
 import { createSolanaContext } from "@vue-solana/core/rpc";
@@ -63,9 +63,9 @@ import { getWebSocketEndpoint } from "@vue-solana/core/clusters";
 const wsEndpoint = getWebSocketEndpoint("https://api.devnet.solana.com");
 ```
 
-## Configuracion En Vue
+## Configuración en Vue
 
-Instala el plugin de Vue una vez cerca del arranque de la aplicacion.
+Instala el plugin de Vue una vez cerca del arranque de la aplicación.
 
 ```ts
 import { createApp } from "vue";
@@ -95,17 +95,17 @@ const { cluster, endpoint, status, latestBlockhash, error, checkConnection } = u
   <section>
     <p>Cluster: {{ cluster }}</p>
     <p>Endpoint: {{ endpoint }}</p>
-    <p>Estado: {{ status }}</p>
-    <p>Ultimo blockhash: {{ latestBlockhash }}</p>
-    <p v-if="error">No se pudo alcanzar el RPC.</p>
-    <button type="button" @click="checkConnection">Comprobar RPC</button>
+    <p>Status: {{ status }}</p>
+    <p>Latest blockhash: {{ latestBlockhash }}</p>
+    <p v-if="error">Unable to reach RPC.</p>
+    <button type="button" @click="checkConnection">Check RPC</button>
   </section>
 </template>
 ```
 
-## Configuracion En Nuxt
+## Configuración en Nuxt
 
-Configura el modulo en `nuxt.config.ts`.
+Configura el módulo en `nuxt.config.ts`.
 
 ```ts
 export default defineNuxtConfig({
@@ -117,9 +117,9 @@ export default defineNuxtConfig({
 });
 ```
 
-Nuxt guarda las opciones del modulo en runtime config publico, asi que las opciones deben ser serializables como JSON.
+Nuxt guarda las opciones del módulo en runtime config público, así que las opciones deben ser serializables como JSON.
 
-Usa el composable autoimportado `useSolanaRpc()` en paginas y componentes Nuxt.
+Usa el composable autoimportado `useSolanaRpc()` en páginas y componentes Nuxt.
 
 ```vue
 <script setup lang="ts">
@@ -129,9 +129,9 @@ const { cluster, endpoint, status, checkConnection } = useSolanaRpc();
 
 El plugin runtime de Nuxt es solo de cliente. Los composables se pueden llamar durante SSR, pero el trabajo de wallets y RPC debe iniciarse desde hooks del cliente o acciones del usuario.
 
-## Helpers De Endpoint
+## Helpers de Endpoint
 
-Usa `@vue-solana/core/clusters` cuando necesites los valores de endpoint incorporados sin crear una `Connection`.
+Usa `@vue-solana/core/clusters` cuando necesites los valores de endpoint incorporados sin crear un cliente.
 
 ```ts
 import {
@@ -144,9 +144,9 @@ const endpoint = getClusterEndpoint(DEFAULT_CLUSTER);
 const wsEndpoint = getClusterWebSocketEndpoint("devnet");
 ```
 
-## Notas De Produccion
+## Notas de Producción
 
-- Prefiere un proveedor RPC dedicado para trafico de produccion.
-- Evita escaneos amplios o frecuentes en endpoints RPC publicos.
-- Usa suscripciones WebSocket intencionalmente; limpialas siempre cuando ya no las necesites.
+- Prefiere un proveedor RPC dedicado para tráfico de producción.
+- Evita escaneos amplios o frecuentes en endpoints RPC públicos.
+- Usa suscripciones WebSocket intencionalmente; límpialas siempre cuando ya no las necesites.
 - Trata las respuestas RPC como entrada no confiable y maneja datos ausentes, obsoletos o fallidos.

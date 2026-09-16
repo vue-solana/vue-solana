@@ -1,13 +1,7 @@
 import { defineBuildConfig } from "unbuild";
 
 export default defineBuildConfig({
-  entries: [
-    "src/module",
-    "src/runtime/buffer-polyfill",
-    "src/runtime/kit",
-    "src/runtime/plugin",
-    "src/runtime/web3",
-  ],
+  entries: ["src/module", "src/runtime/buffer-polyfill", "src/runtime/kit", "src/runtime/plugin"],
   declaration: true,
   clean: true,
   rollup: {
@@ -15,7 +9,6 @@ export default defineBuildConfig({
   },
   externals: [
     "#app",
-    "@solana/web3-compat",
     "@nuxt/kit",
     /^@vue-solana\/core(?:\/.*)?$/,
     /^@vue-solana\/vue(?:\/.*)?$/,

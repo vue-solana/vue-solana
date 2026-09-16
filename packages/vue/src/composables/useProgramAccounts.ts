@@ -1,11 +1,12 @@
-import { parsePublicKey, type PublicKeyInput } from "@vue-solana/core/address";
+import type { Commitment } from "@vue-solana/core/kit";
 import { normalizeSolanaError, type SolanaError } from "@vue-solana/core/errors";
-import type { AccountInfo, Commitment, PublicKey } from "@vue-solana/core/web3";
 import { onMounted, onUnmounted, shallowRef, toValue, watch, type MaybeRefOrGetter } from "vue";
+import { parseAddress } from "@vue-solana/core/address";
 import { useConnection } from "./useConnection";
 import { tryUseSolana } from "./useSolana";
+import { decodeBase64 } from "./decode-base64";
 
-export type ProgramAccountMemcmpEncoding = "base58" | "base64" | "base64+zstd" | "bytes";
+export type ProgramAccountMemcmpEncoding = "base58" | "base64";
 
 export type ProgramAccountMemcmpFilter = {
   memcmp: {
@@ -32,17 +33,23 @@ export interface UseProgramAccountsOptions {
   filters?: ProgramAccountFilter[];
 }
 
-export interface ProgramAccount<TData extends Uint8Array = Uint8Array> {
-  pubkey: PublicKey;
-  account: AccountInfo<TData>;
+export interface ProgramAccount {
+  pubkey: string;
+  account: {
+    executable: boolean;
+    lamports: number;
+    owner: string;
+    space: number;
+    data: Uint8Array;
+  };
 }
 
 export function useProgramAccounts(
-  programId: MaybeRefOrGetter<PublicKeyInput>,
+  programId: MaybeRefOrGetter<string | null | undefined>,
   options: UseProgramAccountsOptions = {},
 ) {
   const solana = tryUseSolana();
-  const connection = solana?.connection ?? useConnection();
+  const client = solana?.client ?? useConnection();
   const accounts = shallowRef<ProgramAccount[]>([]);
   const loading = shallowRef(false);
   const error = shallowRef<SolanaError | null>(null);
@@ -63,18 +70,31 @@ export function useProgramAccounts(
     error.value = null;
 
     try {
-      const publicKey = parsePublicKey(value);
+      const parsedAddress = parseAddress(value);
 
-      if (!publicKey) {
+      if (!parsedAddress) {
         accounts.value = [];
         return [];
       }
 
-      const nextAccounts = (await connection.getProgramAccounts(publicKey, {
-        commitment: options.commitment,
-        dataSlice: options.dataSlice,
-        filters: options.filters,
-      })) as ProgramAccount[];
+      const { value: response } = await client.rpc
+        .getProgramAccounts(parsedAddress, {
+          encoding: "base64",
+          commitment: options.commitment,
+          dataSlice: options.dataSlice,
+          filters: options.filters,
+        } as never)
+        .send();
+      const nextAccounts = response.map(({ pubkey, account }) => ({
+        pubkey,
+        account: {
+          executable: account.executable,
+          lamports: Number(account.lamports),
+          owner: account.owner,
+          space: Number(account.space),
+          data: decodeBase64(account.data[0]),
+        },
+      }));
 
       if (requestId === refreshId) {
         accounts.value = nextAccounts;

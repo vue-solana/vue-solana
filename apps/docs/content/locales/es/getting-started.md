@@ -9,7 +9,7 @@ Esta guia cubre la instalacion de los paquetes de Vue Solana, la configuracion d
 
 ## Antes de empezar
 
-Usa `@vue-solana/core` directamente si necesitas primitivas de Solana como `Connection`, `PublicKey` y transacciones sin integracion con Vue/Nuxt. Usa `@vue-solana/vue` o `@vue-solana/nuxt` cuando quieras integracion con el framework.
+Usa `@vue-solana/core` directamente si necesitas primitivas de Solana sin integracion con Vue/Nuxt. Se construye sobre `@solana/kit` y reexporta `createSolanaClient()` mas `Address`/`address()`/`lamports()` y los tipos de transaccion y RPC de Kit desde `@vue-solana/core/kit`. Usa `@vue-solana/vue` o `@vue-solana/nuxt` cuando quieras integracion con el framework.
 
 Clusters compatibles:
 
@@ -41,7 +41,7 @@ pnpm add @vue-solana/vue
 npm install @vue-solana/vue
 ```
 
-Las apps Vue pueden usar `@vue-solana/vue/web3` y `@vue-solana/vue/buffer-polyfill` sin instalar directamente paquetes Solana de bajo nivel o Buffer.
+Las apps Vue pueden usar `@vue-solana/vue/kit` (`createSolanaClient`, `address`, `lamports` y tipos) y `@vue-solana/vue/buffer-polyfill` sin instalar directamente paquetes Solana de bajo nivel o Buffer. Usa `useSolanaClient()` desde `@vue-solana/vue/useSolanaClient` para el cliente inyectado.
 
 ## Instalar para Nuxt
 
@@ -51,15 +51,11 @@ npx nuxt module add @vue-solana/nuxt
 
 Esto instala el paquete y agrega `@vue-solana/nuxt` al arreglo `modules` en `nuxt.config.ts`.
 
-Las apps Nuxt pueden usar `@vue-solana/nuxt/web3` y `@vue-solana/nuxt/buffer-polyfill` sin instalar directamente `@vue-solana/core`, `@vue-solana/vue` ni paquetes Solana y Buffer de bajo nivel.
+Las apps Nuxt pueden usar `@vue-solana/nuxt/kit` y `@vue-solana/nuxt/buffer-polyfill` sin instalar directamente `@vue-solana/core`, `@vue-solana/vue` ni paquetes Solana y Buffer de bajo nivel. El `useSolanaClient()` autoimportado devuelve el cliente Kit inyectado.
 
-## Problema conocido de TypeScript
+## Nota sobre v2
 
-`@solana/web3-compat@0.0.21` actualmente tiene metadatos de paquete TypeScript rotos. Sus metadatos de paquete apuntan a `dist/types/index.d.ts`, pero ese archivo no esta incluido en el paquete publicado.
-
-Las importaciones en runtime siguen usando el paquete real `@solana/web3-compat`. Los paquetes actuales de Vue Solana publican shims temporales de declaraciones propios del paquete, asi que las apps que sigan las importaciones documentadas de `@vue-solana/core`, `@vue-solana/vue` o `@vue-solana/nuxt` no deberian necesitar su propio shim local.
-
-Agrega un shim local solo si usas una version anterior del paquete Vue Solana o si importas `@solana/web3-compat` directamente desde codigo de la app. Vuelve a revisar esta nota despues de cada nueva version de `@solana/web3-compat`; el shim propio del paquete deberia quitarse cuando upstream publique declaraciones raiz validas.
+v2.0.0 elimino la superficie legacy `@solana/web3-compat`. El contexto ya no lleva un `connection`, y los subpaths `@vue-solana/*/web3` fueron eliminados. Todos los composables son con prioridad en Kit y `SolanaWallet.publicKey` es un string base58 `Address`. El shim `@solana/buffer/` que describian las docs v1 anteriores ya no existe; los shims propios del paquete que se conservan solo cubren el subpath del navegador `buffer/` usado por el polyfill de Buffer. Consulta la [guia de migracion a Kit](/guides/kit-migration) para el mapa completo de antes/despues.
 
 ## Configuracion de Vue
 
@@ -89,12 +85,15 @@ createApp(App)
 
 `mobileWallet` e `iosWallet` son opcionales. El registro de Android Mobile Wallet Adapter y los enlaces de iOS para Phantom, Solflare y Backpack estan habilitados por defecto cuando el runtime del navegador los soporta. Pasa `mobileWallet: false` o `iosWallet: false` para deshabilitar cualquiera de las dos fuentes.
 
-Para composables de Vue, prefiere importaciones directas de subrutas en codigo nuevo:
+Para composables de Vue, prefiere importaciones directas de subpaths en codigo nuevo:
 
 ```ts
 import { useRpc } from "@vue-solana/vue/useRpc";
 import { useBalance } from "@vue-solana/vue/useBalance";
+import { useSolanaClient } from "@vue-solana/vue/useSolanaClient";
 ```
+
+`useRpc()` devuelve el estado resuelto del cluster y el `client` Kit inyectado; `useBalance()` lee a traves de `client.rpc`. `useSolanaClient()` devuelve el mismo `client` y su `rpc` de solo lectura directamente, mas `address()`/`lamports()` desde `@vue-solana/vue/kit`. Consulta la [guia de migracion a Kit](/guides/kit-migration) para el mapa completo de antes/despues.
 
 ## Configuracion de Nuxt
 
@@ -117,7 +116,7 @@ export default defineNuxtConfig({
 });
 ```
 
-El modulo Nuxt instala el plugin de runtime solo en el cliente y autoimporta composables desde subrutas directas `@vue-solana/vue/*`. Los composables se pueden llamar de forma segura durante SSR, pero las operaciones RPC y de wallet reales deberian ejecutarse despues de la hidratacion, por ejemplo desde `onMounted()` o acciones del usuario. Las opciones `solana` de Nuxt viven en la configuracion publica de runtime, asi que mantenlas serializables como JSON.
+El modulo Nuxt instala el plugin de runtime solo en el cliente y autoimporta composables desde subpaths directos `@vue-solana/vue/*`. Los composables se pueden llamar de forma segura durante SSR, pero las operaciones RPC y de wallet reales deberian ejecutarse despues de la hidratacion, por ejemplo desde `onMounted()` o acciones del usuario. Las opciones `solana` de Nuxt viven en la configuracion publica de runtime, asi que mantenlas serializables como JSON.
 
 ## Probar RPC sin wallet
 
@@ -130,12 +129,12 @@ En Vue, usa `useRpc()`:
 import { onMounted, ref } from "vue";
 import { useRpc } from "@vue-solana/vue/useRpc";
 
-const { cluster, endpoint, connection } = useRpc();
+const { cluster, endpoint, client } = useRpc();
 const latestBlockhash = ref<string | null>(null);
 
 onMounted(async () => {
-  const result = await connection.getLatestBlockhash();
-  latestBlockhash.value = result.blockhash;
+  const { value } = await client.rpc.getLatestBlockhash().send();
+  latestBlockhash.value = value.blockhash;
 });
 </script>
 
@@ -144,6 +143,28 @@ onMounted(async () => {
     <p>Cluster: {{ cluster }}</p>
     <p>Endpoint: {{ endpoint }}</p>
     <p>Ultimo blockhash: {{ latestBlockhash }}</p>
+  </main>
+</template>
+```
+
+El codigo nuevo puede usar el cliente Kit en su lugar. `useSolanaClient()` no necesita wallet y devuelve la misma info tipada para la API RPC de Kit (las llamadas de lectura devuelven `bigint`):
+
+```vue
+<script setup lang="ts">
+import { onMounted, ref } from "vue";
+import { useSolanaClient } from "@vue-solana/vue/useSolanaClient";
+
+const { rpc } = useSolanaClient();
+const slot = ref<bigint | null>(null);
+
+onMounted(async () => {
+  slot.value = await rpc.getSlot().send();
+});
+</script>
+
+<template>
+  <main>
+    <p>Slot: {{ slot }}</p>
   </main>
 </template>
 ```
@@ -163,6 +184,19 @@ const { cluster, endpoint, checkConnection, latestBlockhash } = useSolanaRpc();
     <button type="button" @click="checkConnection">Comprobar RPC</button>
   </main>
 </template>
+```
+
+En Nuxt, las mismas lecturas Kit vienen del `useSolanaClient()` autoimportado:
+
+```vue
+<script setup lang="ts">
+const { rpc } = useSolanaClient();
+const slot = ref<bigint | null>(null);
+
+onMounted(async () => {
+  slot.value = await rpc.getSlot().send();
+});
+</script>
 ```
 
 ## Obtener SOL de devnet o testnet
@@ -258,7 +292,7 @@ Fuentes de wallet esperadas:
 | Extension de navegador desktop | `wallet-standard`       | Phantom, Solflare, Backpack y otras wallets standard pueden aparecer si estan instaladas. |
 | Android Chrome o Chrome PWA    | `mobile-wallet-adapter` | Requiere una wallet nativa compatible y soporte de navegador Android MWA.                 |
 | Navegador iOS                  | `deep-link`             | Las entradas de Phantom, Solflare y Backpack usan enlaces universales especificos.        |
-| App nativa desktop             | Not implemented in v1   | Los enlaces de protocolo nativos desktop se aplazan explicitamente fuera de v1.           |
+| App nativa desktop             | Not implemented yet     | Los enlaces de protocolo nativos desktop aun no son compatibles.                          |
 
 ## Firmar un mensaje
 
@@ -355,5 +389,6 @@ Antes de confiar en un flujo de app, verifica estos comportamientos en devnet:
 - [Clusters](/concepts/clusters)
 - [Wallets](/guides/wallets)
 - [Guia de transacciones](/guides/transactions)
+- [Migracion a Kit](/guides/kit-migration)
 - [Solucion de problemas](/troubleshooting)
 - [Documentacion de Solana](https://solana.com/docs)

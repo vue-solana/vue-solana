@@ -57,14 +57,15 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}) {
         });
 
         try {
-          const blockhash = await withTimeout(
-            context.connection.getLatestBlockhash() as Promise<{ blockhash: string }>,
+          const response = await withTimeout(
+            context.client.rpc.getLatestBlockhash().send(),
             RPC_CHECK_TIMEOUT_MS,
             () =>
               new Error(
                 `RPC connection check timed out after ${RPC_CHECK_TIMEOUT_MS / 1_000} seconds.`,
               ),
           );
+          const blockhash = response.value;
 
           if (checkId !== rpcCheckId) {
             return;

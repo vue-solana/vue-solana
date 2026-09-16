@@ -1,15 +1,5 @@
-import type {
-  Commitment,
-  Connection,
-  RpcResponseAndContext,
-  PublicKey,
-  SendOptions,
-  SignatureResult,
-  Transaction,
-  TransactionSignature,
-  VersionedTransaction,
-} from "@solana/web3-compat";
-import type { Address, SolanaClient } from "./kit";
+import type { Address, Commitment, Signature, Slot } from "@solana/kit";
+import type { SolanaClient } from "./kit";
 
 export type SolanaCluster = "mainnet-beta" | "testnet" | "devnet" | "localnet";
 
@@ -27,11 +17,10 @@ export interface SolanaContext {
   cluster: SolanaCluster;
   endpoint: string;
   wsEndpoint: string;
-  connection: Connection;
   client: SolanaClient;
 }
 
-export type SolanaTransaction = Transaction | VersionedTransaction;
+export type SolanaTransaction = Uint8Array;
 
 export interface SolanaSignMessageResult {
   signedMessage: Uint8Array;
@@ -39,8 +28,7 @@ export interface SolanaSignMessageResult {
 }
 
 export interface SolanaWallet {
-  publicKey: PublicKey | null;
-  address?: Address;
+  publicKey: Address | null;
   connected: boolean;
   connecting?: boolean;
   disconnecting?: boolean;
@@ -49,12 +37,12 @@ export interface SolanaWallet {
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
   signMessage?: (message: Uint8Array) => Promise<SolanaSignMessageResult>;
-  signTransaction?: <T extends SolanaTransaction>(transaction: T) => Promise<T>;
-  signAllTransactions?: <T extends SolanaTransaction>(transactions: T[]) => Promise<T[]>;
+  signTransaction?: (transaction: SolanaTransaction) => Promise<SolanaTransaction>;
+  signAllTransactions?: (transactions: SolanaTransaction[]) => Promise<SolanaTransaction[]>;
   signAndSendTransaction?: (
     transaction: SolanaTransaction,
-    options?: SendOptions,
-  ) => Promise<{ signature: TransactionSignature }>;
+    options?: SendTransactionOptions,
+  ) => Promise<{ signature: string }>;
 }
 
 export interface SolanaWalletInfo {
@@ -84,8 +72,11 @@ export interface SolanaWalletInfo {
   wallet: unknown;
 }
 
-export interface SendTransactionOptions extends SendOptions {
+export interface SendTransactionOptions {
   skipPreflight?: boolean;
+  maxRetries?: bigint;
+  minContextSlot?: Slot;
+  preflightCommitment?: Commitment;
 }
 
 export interface ConfirmTransactionOptions {
@@ -93,8 +84,15 @@ export interface ConfirmTransactionOptions {
   timeoutMs?: number;
 }
 
+export interface TransactionStatus {
+  slot: Slot;
+  confirmations: bigint | null;
+  err: unknown | null;
+  confirmationStatus: Commitment | null;
+}
+
 export interface TransactionConfirmation {
-  signature: TransactionSignature;
+  signature: Signature;
   commitment: Commitment;
-  result: RpcResponseAndContext<SignatureResult>;
+  status: TransactionStatus;
 }

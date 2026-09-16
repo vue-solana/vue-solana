@@ -5,11 +5,9 @@ import {
   SolanaSignMessage,
   SolanaSignTransaction,
 } from "@solana/wallet-standard-features";
-import { PublicKey } from "@solana/web3-compat";
 import bs58 from "bs58";
 import type { Address } from "../kit";
-import type { SolanaChain, SolanaTransaction, SolanaWallet, SolanaWalletInfo } from "../types";
-import { SolanaWalletError } from "../wallet";
+import type { SolanaChain, SolanaWallet, SolanaWalletInfo } from "../types";
 import { SOLANA_CHAINS } from "./chains";
 import {
   hasSignAndSendTransaction,
@@ -19,7 +17,6 @@ import {
   type StandardDisconnectFeature,
   type StandardEventsFeature,
 } from "./features";
-import { deserializeTransaction, serializeTransaction } from "./transactions";
 
 export interface AdaptSolanaWalletOptions {
   chain?: SolanaChain;
@@ -57,10 +54,7 @@ export function adaptSolanaStandardWallet(
     platform: walletInfo.platform,
     source: walletInfo.source,
     get publicKey() {
-      return account ? new PublicKey(account.publicKey) : null;
-    },
-    get address() {
-      return account ? (account.address as Address) : undefined;
+      return account ? (account.address as Address) : null;
     },
     get connected() {
       return Boolean(account);
@@ -135,11 +129,11 @@ export function adaptSolanaStandardWallet(
         }
       : undefined,
     signTransaction: hasSignTransaction(wallet)
-      ? async <T extends SolanaTransaction>(transaction: T): Promise<T> => {
+      ? async (transaction) => {
           const activeAccount = getActiveAccount(account);
           const [result] = await wallet.features[SolanaSignTransaction].signTransaction({
             account: activeAccount,
-            transaction: serializeTransaction(transaction),
+            transaction,
             chain: options.chain,
           });
 
@@ -147,16 +141,16 @@ export function adaptSolanaStandardWallet(
             throw new Error("Solana wallet did not return a signed transaction");
           }
 
-          return deserializeTransaction(transaction, result.signedTransaction) as T;
+          return result.signedTransaction;
         }
       : undefined,
     signAllTransactions: hasSignTransaction(wallet)
-      ? async <T extends SolanaTransaction>(transactions: T[]): Promise<T[]> => {
+      ? async (transactions) => {
           const activeAccount = getActiveAccount(account);
           const results = await wallet.features[SolanaSignTransaction].signTransaction(
             ...transactions.map((transaction) => ({
               account: activeAccount,
-              transaction: serializeTransaction(transaction),
+              transaction,
               chain: options.chain,
             })),
           );
@@ -167,22 +161,13 @@ export function adaptSolanaStandardWallet(
             );
           }
 
-          return results.map((result, index) => {
+          return results.map((result) => {
             if (!result) {
               throw new Error("Solana wallet did not return a signed transaction");
             }
 
-            const transaction = transactions[index];
-            if (!transaction) {
-              throw new SolanaWalletError(
-                "WALLET_FEATURE_UNSUPPORTED",
-                "Solana wallet returned a signed transaction without a matching request",
-                { feature: "signTransaction" },
-              );
-            }
-
-            return deserializeTransaction(transaction, result.signedTransaction);
-          }) as T[];
+            return result.signedTransaction;
+          });
         }
       : undefined,
     signAndSendTransaction: hasSignAndSendTransaction(wallet)
@@ -192,7 +177,7 @@ export function adaptSolanaStandardWallet(
             SolanaSignAndSendTransaction
           ].signAndSendTransaction({
             account: activeAccount,
-            transaction: serializeTransaction(transaction),
+            transaction,
             chain: options.chain ?? getSolanaAccountChain(activeAccount),
             options: sendOptions,
           });

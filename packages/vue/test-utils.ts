@@ -10,9 +10,6 @@ export function createMockSolanaContext(
     cluster: "devnet",
     endpoint: "https://api.devnet.solana.com",
     wsEndpoint: "wss://api.devnet.solana.com",
-    connection: {
-      getBalance: async () => 0,
-    } as unknown as VueSolanaContext["connection"],
     client: {
       rpc: {},
     } as unknown as VueSolanaContext["client"],

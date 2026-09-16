@@ -11,19 +11,21 @@ Usa esta guía cuando tu app necesite leer estado de la cadena sin firmar una tr
 
 ## Parsear direcciones
 
-El código agnóstico al framework puede normalizar una dirección Solana con `parsePublicKey()`.
+El código agnóstico al framework puede normalizar una dirección Solana con `parseAddress()`.
 
 ```ts
-import { parsePublicKey } from "@vue-solana/core/address";
+import { parseAddress } from "@vue-solana/core/address";
+import { createSolanaClient } from "@vue-solana/core/kit";
 
-const publicKey = parsePublicKey("11111111111111111111111111111111");
+const address = parseAddress("11111111111111111111111111111111");
 
-if (publicKey) {
-  const balance = await connection.getBalance(publicKey);
+if (address) {
+  const client = createSolanaClient({ cluster: "devnet" });
+  const { value: lamports } = await client.rpc.getBalance(address).send();
 }
 ```
 
-`parsePublicKey()` acepta un `PublicKey`, string de dirección, objeto tipo ref, getter, `null` o `undefined`. Las direcciones string inválidas lanzan `INVALID_ADDRESS`.
+`parseAddress()` acepta un `Address`, string de dirección, objeto tipo ref, getter, `null` o `undefined`. Las direcciones string inválidas lanzan `INVALID_ADDRESS`.
 
 ## Leer balance en Vue
 
@@ -59,7 +61,7 @@ const errorMessage = computed(() => {
 
 ## Leer información de cuenta
 
-Usa `useAccountInfo()` para una sola cuenta. Habilita `watch` cuando necesites actualizaciones en vivo de la cuenta.
+Usa `useAccountInfo()` para una sola cuenta.
 
 ```vue
 <script setup lang="ts">
@@ -67,14 +69,13 @@ import { ref } from "vue";
 import { useAccountInfo } from "@vue-solana/vue/useAccountInfo";
 
 const address = ref("PASTE_A_SOLANA_ADDRESS");
-const { accountInfo, loading, error, refresh, stopWatching } = useAccountInfo(address, {
+const { accountInfo, loading, error, refresh } = useAccountInfo(address, {
   commitment: "confirmed",
-  watch: true,
 });
 </script>
 ```
 
-Cuando `watch: true` está habilitado, Vue Solana elimina automáticamente el listener WebSocket al desmontar el componente. Llama a `stopWatching()` para eliminar antes el listener actual y evitar reinicios automáticos para esa instancia del composable.
+El composable devuelve datos normalizados de la cuenta (`executable`, `lamports`, `owner`, `space` y `data` decodificado en bytes) y limpia estado obsoleto cuando la dirección se vuelve `null` o inválida. Llama a `refresh()` para releer la cuenta bajo demanda.
 
 ## Leer cuentas de programa
 
@@ -107,7 +108,7 @@ import { ref } from "vue";
 import { useSignatureStatus } from "@vue-solana/vue/useSignatureStatus";
 
 const signature = ref("PASTE_A_TRANSACTION_SIGNATURE");
-const { status, confirmationStatus, error, refresh } = useSignatureStatus(signature, {
+const { status, error, refresh, stopPolling } = useSignatureStatus(signature, {
   pollIntervalMs: 2_000,
 });
 </script>

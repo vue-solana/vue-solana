@@ -1,80 +1,74 @@
-import type { Connection, PublicKey } from "@vue-solana/core/web3";
-import {
-  type Account as TokenAccount,
-  TOKEN_PROGRAM_ID,
-  TOKEN_2022_PROGRAM_ID,
-  getAssociatedTokenAddressSync,
-  unpackAccount,
-  unpackMint,
-} from "@solana/spl-token";
+import type { Address, Commitment, JsonParsedTokenAccount } from "@solana/kit";
+import { address } from "@solana/kit";
+import type { SolanaClient } from "./kit";
 import { normalizeSolanaError } from "./errors";
 
-// ponytail: spl-token expects full @solana/web3.js types; compat PublicKey
-// and Connection work at runtime but not structurally. Cast at boundaries.
+const TOKEN_PROGRAM_ADDRESS = address("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
+const TOKEN_2022_PROGRAM_ADDRESS = address("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb");
+
+export interface TokenAccountInfo {
+  address: Address;
+  mint: Address;
+  owner: Address;
+  amount: bigint;
+  decimals: number;
+  state: "frozen" | "initialized" | "uninitialized";
+  isNative: boolean;
+}
 
 export interface TokenAccountsByOwnerOptions {
-  commitment?: "processed" | "confirmed" | "finalized";
-  programId?: PublicKey;
+  commitment?: Commitment;
+  programId?: Address;
 }
 
 /**
- * Get all SPL token accounts for an owner using the legacy `Connection` API.
- *
- * @deprecated Prefer `@solana-program/token` reads against `client.rpc` from
- * `@vue-solana/core/kit`.
+ * Get all SPL token accounts for an owner using parsed kit RPC reads.
  */
 export async function getTokenAccountsByOwner(
-  connection: Connection,
-  owner: PublicKey,
-  options?: TokenAccountsByOwnerOptions,
-): Promise<TokenAccount[]> {
-  const commitment = options?.commitment ?? "confirmed";
-  const programId = options?.programId;
-
-  const programIds = programId ? [programId] : [TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID];
+  client: SolanaClient,
+  owner: Address,
+  options: TokenAccountsByOwnerOptions = {},
+): Promise<TokenAccountInfo[]> {
+  const programIds = options.programId
+    ? [options.programId]
+    : [TOKEN_PROGRAM_ADDRESS, TOKEN_2022_PROGRAM_ADDRESS];
 
   try {
-    const responses = await Promise.all(
-      programIds.map(async (pid) => {
-        const resp = await (
-          connection as unknown as {
-            getTokenAccountsByOwner: (
-              owner: PublicKey,
-              filter: { programId: PublicKey },
-              commitment?: string,
-            ) => Promise<{
-              value: { pubkey: PublicKey; account: { data: Uint8Array } }[];
-            }>;
-          }
-        ).getTokenAccountsByOwner(owner, { programId: pid }, commitment);
-        return resp.value.map((info) =>
-          unpackAccount(info.pubkey as never, { data: info.account.data } as never),
-        );
-      }),
+    const results = await Promise.all(
+      programIds.map((programId) =>
+        fetchParsedTokenAccounts(client, owner, { programId }, options.commitment),
+      ),
     );
 
-    return responses.flat();
+    return results.flat();
   } catch (cause) {
     throw normalizeSolanaError(cause, "RPC_FAILURE");
   }
 }
 
 /**
- * Get a single token account using the legacy `Connection` API.
- *
- * @deprecated Prefer `@solana-program/token` reads against `client.rpc` from
- * `@vue-solana/core/kit`.
+ * Get a single parsed token account at the given address.
  */
 export async function getTokenAccount(
-  connection: Connection,
-  address: PublicKey,
-): Promise<TokenAccount | null> {
+  client: SolanaClient,
+  address: Address,
+  commitment?: Commitment,
+): Promise<TokenAccountInfo | null> {
   try {
-    const accountInfo = await connection.getAccountInfo(address);
-    if (!accountInfo) {
+    const response = await client.rpc
+      .getAccountInfo(address, { encoding: "jsonParsed", commitment })
+      .send();
+    const accountInfo = response.value;
+
+    if (
+      !accountInfo ||
+      !isParsedTokenAccount(accountInfo.data) ||
+      accountInfo.data.parsed.type !== "account"
+    ) {
       return null;
     }
-    return unpackAccount(address as never, accountInfo as never);
+
+    return tokenAccountInfoFromParsed(address, accountInfo.data);
   } catch (cause) {
     throw normalizeSolanaError(cause, "RPC_FAILURE");
   }
@@ -86,34 +80,73 @@ export interface TokenBalanceResult {
 }
 
 /**
- * Read the token balance of the associated token account for an owner.
- *
- * @deprecated Prefer `@solana-program/token` reads against `client.rpc` from
- * `@vue-solana/core/kit`.
+ * Read the token balance of the accounts an owner holds for a given mint.
  */
 export async function getTokenBalance(
-  connection: Connection,
-  mint: PublicKey,
-  owner: PublicKey,
+  client: SolanaClient,
+  mint: Address,
+  owner: Address,
+  commitment?: Commitment,
 ): Promise<TokenBalanceResult | null> {
   try {
-    const ata = getAssociatedTokenAddressSync(mint as never, owner as never, true);
-    const accountInfo = await connection.getAccountInfo(ata);
+    const [account] = await fetchParsedTokenAccounts(client, owner, { mint }, commitment);
 
-    if (!accountInfo) {
+    if (!account) {
       return null;
     }
 
-    const tokenAccount = unpackAccount(ata as never, accountInfo as never);
-    const mintAccountInfo = await connection.getAccountInfo(mint);
-
-    if (!mintAccountInfo) {
-      return null;
-    }
-
-    const mintAccount = unpackMint(mint as never, mintAccountInfo as never);
-    return { amount: tokenAccount.amount, decimals: mintAccount.decimals };
+    return { amount: account.amount, decimals: account.decimals };
   } catch (cause) {
     throw normalizeSolanaError(cause, "RPC_FAILURE");
   }
+}
+
+async function fetchParsedTokenAccounts(
+  client: SolanaClient,
+  owner: Address,
+  filter: { mint: Address } | { programId: Address },
+  commitment?: Commitment,
+): Promise<TokenAccountInfo[]> {
+  const response = await client.rpc
+    .getTokenAccountsByOwner(owner, filter, { encoding: "jsonParsed", commitment })
+    .send();
+
+  return response.value
+    .filter(({ account }) => isParsedTokenAccount(account.data))
+    .map(({ pubkey, account }) => tokenAccountInfoFromParsed(pubkey, account.data));
+}
+
+type ParsedTokenAccountData = Readonly<{
+  parsed: Readonly<{ info?: object; type: string }>;
+  program: string;
+  space: bigint;
+}>;
+
+function isParsedTokenAccount(data: unknown): data is ParsedTokenAccountData {
+  return typeof data === "object" && data !== null && "parsed" in data;
+}
+
+function tokenAccountInfoFromParsed(
+  address: Address,
+  data: ParsedTokenAccountData,
+): TokenAccountInfo {
+  if (data.parsed.type !== "account") {
+    throw new Error(`Token account ${address} is not a parsed token account`);
+  }
+
+  const parsed = data.parsed.info as JsonParsedTokenAccount | undefined;
+
+  if (!parsed) {
+    throw new Error(`Token account ${address} has no parsed data`);
+  }
+
+  return {
+    address,
+    mint: parsed.mint,
+    owner: parsed.owner,
+    amount: BigInt(parsed.tokenAmount.amount),
+    decimals: parsed.tokenAmount.decimals,
+    state: parsed.state,
+    isNative: parsed.isNative,
+  };
 }

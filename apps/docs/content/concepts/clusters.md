@@ -30,7 +30,7 @@ Examples:
 - `https://api.mainnet-beta.solana.com`
 - `http://127.0.0.1:8899`
 
-The `Connection` object from `@vue-solana/vue/web3`, `@vue-solana/nuxt/web3`, or `@vue-solana/core/web3` sends RPC requests to this endpoint. The modern Kit path sends requests through `client.rpc` from `useSolanaClient()` or `createSolanaClient()` from `@vue-solana/*/kit`. Public endpoints are useful for getting started, but production apps usually use a dedicated RPC provider for reliability and rate limits.
+RPC requests go through `client.rpc` from `useSolanaClient()` or `useSolanaRpc()`, or from `createSolanaClient()` / `createSolanaContext()` in `@vue-solana/core`. The legacy `Connection` class and the `web3` subpaths were removed in v2.0.0. Public endpoints are useful for getting started, but production apps usually use a dedicated RPC provider for reliability and rate limits.
 
 Official reference: [Solana RPC](https://solana.com/docs/rpc)
 

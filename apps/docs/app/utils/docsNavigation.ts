@@ -139,7 +139,7 @@ export const docsNavSections: DocsNavSection[] = [
   {
     title: "Roadmap",
     titleKey: "navigation.sidebar.roadmap",
-    links: [{ label: "v1 Roadmap", labelKey: "navigation.sidebar.v1Roadmap", to: "/roadmap" }],
+    links: [{ label: "Roadmap", labelKey: "navigation.sidebar.roadmapPage", to: "/roadmap" }],
   },
 ];
 

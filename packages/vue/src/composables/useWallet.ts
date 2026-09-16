@@ -26,7 +26,7 @@ export function useWallet() {
       triggerRef(wallet);
 
       console.info("[Vue Solana] Wallet connected", {
-        publicKey: activeWallet.publicKey?.toBase58() ?? null,
+        publicKey: activeWallet.publicKey ?? null,
       });
     } catch (error) {
       const normalizedError = normalizeSolanaError(error, "RPC_FAILURE");
@@ -46,7 +46,7 @@ export function useWallet() {
       return;
     }
 
-    const publicKey = activeWallet.publicKey?.toBase58() ?? null;
+    const publicKey = activeWallet.publicKey ?? null;
 
     disconnecting.value = true;
 

@@ -11,19 +11,21 @@ Vue Solana는 일반적인 Solana 읽기 경로를 위한 컴포저블을 제공
 
 ## 주소 파싱
 
-프레임워크와 무관한 코드에서는 `parsePublicKey()`로 Solana 주소를 정규화할 수 있습니다.
+프레임워크와 무관한 코드에서는 `parseAddress()`로 Solana 주소를 정규화할 수 있습니다.
 
 ```ts
-import { parsePublicKey } from "@vue-solana/core/address";
+import { parseAddress } from "@vue-solana/core/address";
+import { createSolanaClient } from "@vue-solana/core/kit";
 
-const publicKey = parsePublicKey("11111111111111111111111111111111");
+const address = parseAddress("11111111111111111111111111111111");
 
-if (publicKey) {
-  const balance = await connection.getBalance(publicKey);
+if (address) {
+  const client = createSolanaClient({ cluster: "devnet" });
+  const { value: lamports } = await client.rpc.getBalance(address).send();
 }
 ```
 
-`parsePublicKey()`는 `PublicKey`, 주소 문자열, ref 형태 객체, getter, `null`, `undefined`를 받을 수 있습니다. 잘못된 주소 문자열은 `INVALID_ADDRESS`를 throw합니다.
+`parseAddress()`는 `Address`, 주소 문자열, ref 형태 객체, getter, `null`, `undefined`를 받을 수 있습니다. 잘못된 주소 문자열은 `INVALID_ADDRESS`를 throw합니다.
 
 ## Vue에서 잔액 읽기
 
@@ -59,7 +61,7 @@ const errorMessage = computed(() => {
 
 ## 계정 정보 읽기
 
-단일 계정에는 `useAccountInfo()`를 사용합니다. 계정 변경을 실시간으로 받아야 하면 `watch`를 활성화하세요.
+단일 계정에는 `useAccountInfo()`를 사용합니다.
 
 ```vue
 <script setup lang="ts">
@@ -67,14 +69,13 @@ import { ref } from "vue";
 import { useAccountInfo } from "@vue-solana/vue/useAccountInfo";
 
 const address = ref("PASTE_A_SOLANA_ADDRESS");
-const { accountInfo, loading, error, refresh, stopWatching } = useAccountInfo(address, {
+const { accountInfo, loading, error, refresh } = useAccountInfo(address, {
   commitment: "confirmed",
-  watch: true,
 });
 </script>
 ```
 
-`watch: true`를 활성화하면 Vue Solana가 컴포넌트 unmount 시 WebSocket listener를 자동으로 제거합니다. 현재 listener를 더 일찍 제거하고 해당 컴포저블 인스턴스에서 자동 재시작을 막으려면 `stopWatching()`을 호출하세요.
+컴포저블은 정규화된 계정 데이터(`executable`, `lamports`, `owner`, `space`, 디코딩된 `data` 바이트)를 반환하며, 주소가 `null`이 되거나 잘못되면 오래된 state를 비웁니다. 필요할 때 계정을 다시 읽으려면 `refresh()`를 호출하세요.
 
 ## 프로그램 계정 읽기
 
@@ -107,7 +108,7 @@ import { ref } from "vue";
 import { useSignatureStatus } from "@vue-solana/vue/useSignatureStatus";
 
 const signature = ref("PASTE_A_TRANSACTION_SIGNATURE");
-const { status, confirmationStatus, error, refresh } = useSignatureStatus(signature, {
+const { status, error, refresh, stopPolling } = useSignatureStatus(signature, {
   pollIntervalMs: 2_000,
 });
 </script>

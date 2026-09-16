@@ -36,7 +36,7 @@ export default {
       vueVite: "Vue Vite",
       nuxt: "Nuxt",
       roadmap: "로드맵",
-      v1Roadmap: "v1 로드맵",
+      roadmapPage: "로드맵",
     },
     external: {
       ariaLabel: "외부 링크",
@@ -104,15 +104,15 @@ export default {
       },
     },
     directConnection: {
-      title: "직접 Connection 호출",
-      description: "주입된 connection에서 {method}를 직접 호출합니다.",
+      title: "직접 Kit 클라이언트 호출",
+      description: "kit 클라이언트 RPC에서 {method}를 직접 호출합니다.",
       load: "블록해시 불러오기",
       blockhash: "블록해시:",
     },
     balance: {
       title: "잔액 조회",
-      publicKey: "공개 키",
-      publicKeyPlaceholder: "Solana 공개 키 입력",
+      publicKey: "주소",
+      publicKeyPlaceholder: "Solana 주소 입력",
       refresh: "잔액 새로고침",
       lamports: "Lamports:",
       sol: "SOL:",
@@ -136,7 +136,7 @@ export default {
         discoveredWallets: "검색된 지갑",
         selectedWallet: "선택한 지갑",
         configured: "지갑 설정됨",
-        publicKey: "공개 키",
+        publicKey: "주소",
       },
       status: {
         connecting: "연결 중",
@@ -193,7 +193,7 @@ export default {
         "연결된 지갑의 SPL 토큰 계정을 불러오고 특정 토큰의 mint 주소로 잔액을 확인합니다. 계정 목록을 보려면 연결된 지갑이 필요합니다.",
       refresh: "계정 새로고침",
       mintLabel: "Mint 주소",
-      mintPlaceholder: "토큰 mint 공개 키 입력",
+      mintPlaceholder: "토큰 mint 주소 입력",
       refreshBalance: "잔액 확인",
       labels: {
         accounts: "토큰 계정:",
@@ -203,9 +203,9 @@ export default {
     transfer: {
       title: "실제 Devnet 전송",
       description:
-        "연결된 지갑에서 실제 전송을 보낸 뒤 confirmed commitment를 기다립니다. devnet을 사용하고 수신자 공개 키를 입력한 다음 {amount} SOL처럼 아주 작은 금액으로 시작하세요.",
+        "연결된 지갑에서 실제 전송을 보낸 뒤 confirmed commitment를 기다립니다. devnet을 사용하고 수신자 주소를 입력한 다음 {amount} SOL처럼 아주 작은 금액으로 시작하세요.",
       recipient: "수신자 주소",
-      recipientPlaceholder: "수신자 공개 키 입력",
+      recipientPlaceholder: "수신자 주소 입력",
       amount: "SOL 금액",
       send: "Devnet 전송 보내기",
       signature: "서명:",

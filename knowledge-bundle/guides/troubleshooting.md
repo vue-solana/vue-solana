@@ -88,7 +88,7 @@ The selected wallet does not expose either `solana:signAndSendTransaction` or `s
 
 ## `Buffer is not defined`
 
-Some `@solana/web3-compat` transaction paths still expect a Node-compatible `Buffer` global. In browser Vue apps, initialize the Vue package Buffer polyfill before creating or serializing transactions. Use `@vue-solana/nuxt/buffer-polyfill` in Nuxt apps.
+Some Solana transaction serialization paths still expect a Node-compatible `Buffer` global. In browser Vue apps, initialize the Vue package Buffer polyfill before creating or serializing transactions. Use `@vue-solana/nuxt/buffer-polyfill` in Nuxt apps.
 
 ```ts
 import { installSolanaBufferPolyfill } from "@vue-solana/vue/buffer-polyfill";

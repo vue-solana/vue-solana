@@ -16,9 +16,9 @@ surroundOrder: 5
 
 ## Connection과 RPC
 
-프런트엔드 앱은 RPC 엔드포인트를 통해 Solana 데이터를 읽습니다. `@vue-solana/vue/web3`와 `@vue-solana/nuxt/web3`는 해당 엔드포인트로 요청을 보내는 지원 `Connection` 클래스를 노출합니다.
+프런트엔드 앱은 RPC 엔드포인트를 통해 Solana 데이터를 읽습니다. Kit 경로는 `useSolanaClient()`(또는 `@vue-solana/core/kit`의 `createSolanaClient()`)를 통해 읽기 전용 `client.rpc`를 노출합니다.
 
-Vue Solana 패키지는 Vue와 Nuxt 코드가 같은 클러스터, 엔드포인트, commitment, 지갑 상태를 공유할 수 있도록 이 connection을 만들고 제공합니다.
+Vue Solana 패키지는 컴포저블이 같은 클러스터, 엔드포인트, commitment, 지갑 상태를 공유할 수 있도록 Vue와 Nuxt 코드에 Kit client를 만들고 제공합니다.
 
 ```ts
 createSolanaPlugin({
@@ -31,11 +31,17 @@ createSolanaPlugin({
 
 공개 키는 Solana 계정 주소입니다. 프런트엔드 앱에서 공개 키를 보여 주는 것은 안전합니다.
 
-```ts
-import { PublicKey } from "@vue-solana/vue/web3";
+Kit 경로에서 주소는 `@vue-solana/vue/kit`의 `address()`로 만든 `Address` 타입 문자열입니다:
 
-const publicKey = new PublicKey("PASTE_A_SOLANA_ADDRESS");
+```ts
+import { address } from "@vue-solana/vue/kit";
+
+const publicKey = address("PASTE_A_SOLANA_ADDRESS");
 ```
+
+주소는 base58 `Address` 문자열입니다. 레거시 `PublicKey` 클래스와 `web3` 하위 경로는 v2.0.0에서 제거되었습니다.
+
+둘 사이의 전체 매핑은 [Kit 마이그레이션](/guides/kit-migration) 가이드를 참고하세요.
 
 프런트엔드 코드에 private key, seed phrase, secret key 배열을 절대 노출하지 마세요.
 
@@ -49,10 +55,14 @@ SOL은 Solana의 네이티브 토큰입니다. Lamport는 SOL의 가장 작은 �
 
 RPC 잔액 메서드는 lamports를 반환합니다. SOL 변환은 표시용으로만 하세요.
 
+Kit RPC 메서드는 lamports를 `bigint`로 반환합니다:
+
 ```ts
-const lamports = await connection.getBalance(publicKey);
-const sol = lamports / 1_000_000_000;
+const { value: lamports } = await rpc.getBalance(address("YOUR_ADDRESS")).send();
+const sol = Number(lamports) / 1_000_000_000;
 ```
+
+Kit RPC 호출은 숫자 필드에 `bigint`, 계정 데이터에 `Uint8Array`를 반환합니다.
 
 ## 지갑
 
@@ -60,7 +70,7 @@ const sol = lamports / 1_000_000_000;
 
 Vue Solana는 통합 `useWallets()` 플로를 통해 Solana Wallet Standard 브라우저 확장 지갑, Android Mobile Wallet Adapter 지갑, 지원되는 iOS 브라우저 지갑 링크를 검색합니다. RPC 읽기와 잔액 읽기는 지갑 없이 동작합니다. 연결, 서명, 트랜잭션 전송에는 검색된 지갑 또는 `SolanaWallet` 인터페이스를 구현한 커스텀 객체가 필요합니다.
 
-현재 지원 상태와 desktop native wallet의 post-v1 상태는 [지갑](/guides/wallets)을 참고하세요.
+현재 지원 상태와 desktop native wallet의 상태는 [지갑](/guides/wallets)을 참고하세요.
 
 ## 트랜잭션과 서명
 

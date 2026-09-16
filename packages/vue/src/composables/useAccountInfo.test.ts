@@ -1,4 +1,3 @@
-import { PublicKey } from "@vue-solana/core/web3";
 import { flushPromises } from "@vue/test-utils";
 import { describe, expect, it, vi } from "vitest";
 import { ref } from "vue";
@@ -9,27 +8,56 @@ import {
   wrappedSol,
 } from "../../test-utils/useAccountInfo";
 
+const ACCOUNT = {
+  executable: false,
+  lamports: 123,
+  owner: systemProgram,
+  space: 10,
+  data: ["AQ==", "base64"],
+};
+
 describe("useAccountInfo", () => {
-  it("loads account info for a public key string", async () => {
-    const account = { lamports: 123 };
-    const getAccountInfo = vi.fn().mockResolvedValue(account);
+  it("loads and normalizes account info for an address string", async () => {
+    const getAccountInfo = vi.fn(() => ({ send: vi.fn().mockResolvedValue({ value: ACCOUNT }) }));
     const { result } = mountUseAccountInfo(
       systemProgram,
       { commitment: "confirmed" },
-      { getAccountInfo },
+      {
+        rpc: { getAccountInfo },
+      },
     );
 
     await flushPromises();
 
-    expect(result.accountInfo.value).toBe(account);
+    expect(result.accountInfo.value).toEqual({
+      executable: false,
+      lamports: 123,
+      owner: systemProgram,
+      space: 10,
+      data: new Uint8Array([1]),
+    });
     expect(result.loading.value).toBe(false);
     expect(result.error.value).toBeNull();
-    expect(getAccountInfo).toHaveBeenCalledWith(expect.any(PublicKey), "confirmed");
+    expect(getAccountInfo).toHaveBeenCalledWith(systemProgram, {
+      encoding: "base64",
+      commitment: "confirmed",
+    });
+  });
+
+  it("leaves account info null when the account does not exist", async () => {
+    const getAccountInfo = vi.fn(() => ({ send: vi.fn().mockResolvedValue({ value: null }) }));
+    const { result } = mountUseAccountInfo(systemProgram, undefined, {
+      rpc: { getAccountInfo },
+    });
+
+    await flushPromises();
+
+    expect(result.accountInfo.value).toBeNull();
   });
 
   it("does not call RPC for null input", async () => {
     const getAccountInfo = vi.fn();
-    const { result } = mountUseAccountInfo(null, undefined, { getAccountInfo });
+    const { result } = mountUseAccountInfo(null, undefined, { rpc: { getAccountInfo } });
 
     await flushPromises();
 
@@ -37,9 +65,11 @@ describe("useAccountInfo", () => {
     expect(getAccountInfo).not.toHaveBeenCalled();
   });
 
-  it("stores invalid public key errors without spamming RPC", async () => {
+  it("stores invalid address errors without spamming RPC", async () => {
     const getAccountInfo = vi.fn();
-    const { result } = mountUseAccountInfo("not-a-public-key", undefined, { getAccountInfo });
+    const { result } = mountUseAccountInfo("not-a-public-key", undefined, {
+      rpc: { getAccountInfo },
+    });
 
     await flushPromises();
 
@@ -50,13 +80,12 @@ describe("useAccountInfo", () => {
   });
 
   it("clears stale account info when a loaded address becomes invalid", async () => {
-    const account = { lamports: 123 };
-    const getAccountInfo = vi.fn().mockResolvedValue(account);
+    const getAccountInfo = vi.fn(() => ({ send: vi.fn().mockResolvedValue({ value: ACCOUNT }) }));
     const address = ref(systemProgram);
-    const { result } = mountUseAccountInfo(address, undefined, { getAccountInfo });
+    const { result } = mountUseAccountInfo(address, undefined, { rpc: { getAccountInfo } });
 
     await flushPromises();
-    expect(result.accountInfo.value).toBe(account);
+    expect(result.accountInfo.value).toEqual(expect.objectContaining({ lamports: 123 }));
 
     address.value = "not-a-public-key";
     await flushPromises();
@@ -68,29 +97,29 @@ describe("useAccountInfo", () => {
   });
 
   it("keeps the newest account info when overlapping requests resolve out of order", async () => {
-    const firstRequest = deferred<unknown>();
-    const secondRequest = deferred<unknown>();
+    const firstRequest = deferred<{ value: unknown }>();
+    const secondRequest = deferred<{ value: unknown }>();
     const getAccountInfo = vi
       .fn()
-      .mockReturnValueOnce(firstRequest.promise)
-      .mockReturnValueOnce(secondRequest.promise);
+      .mockReturnValueOnce({ send: () => firstRequest.promise })
+      .mockReturnValueOnce({ send: () => secondRequest.promise });
     const address = ref(systemProgram);
-    const { result } = mountUseAccountInfo(address, undefined, { getAccountInfo });
+    const { result } = mountUseAccountInfo(address, undefined, { rpc: { getAccountInfo } });
 
     await flushPromises();
     address.value = wrappedSol;
     await flushPromises();
 
-    const newest = { lamports: 456 };
-    secondRequest.resolve(newest);
+    const newest = { ...ACCOUNT, lamports: 456 };
+    secondRequest.resolve({ value: newest });
     await flushPromises();
 
-    expect(result.accountInfo.value).toBe(newest);
+    expect(result.accountInfo.value).toEqual(expect.objectContaining({ lamports: 456 }));
 
-    firstRequest.resolve({ lamports: 123 });
+    firstRequest.resolve({ value: { ...ACCOUNT, lamports: 123 } });
     await flushPromises();
 
-    expect(result.accountInfo.value).toBe(newest);
+    expect(result.accountInfo.value).toEqual(expect.objectContaining({ lamports: 456 }));
     expect(getAccountInfo).toHaveBeenCalledTimes(2);
   });
 });

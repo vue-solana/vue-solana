@@ -12,7 +12,7 @@ Use it when asking an agent to build, debug, review, or document apps that use:
 - `@vue-solana/core`
 - `@vue-solana/vue`
 - `@vue-solana/nuxt`
-- `@vue-solana/vue/web3` and `@vue-solana/nuxt/web3` primitives in Vue or Nuxt apps
+- `@vue-solana/*/kit` primitives in Vue or Nuxt apps
 
 ## Install
 
@@ -36,14 +36,13 @@ The CLI installs skills into the skill directory for the agent you choose during
 
 ## What The Skill Covers
 
-- When to use `@vue-solana/core`, `@vue-solana/vue`, `@vue-solana/vue/web3`, `@vue-solana/nuxt`, and `@vue-solana/nuxt/web3`.
+- When to use `@vue-solana/core`, `@vue-solana/vue`, `@vue-solana/vue/kit`, `@vue-solana/nuxt`, and `@vue-solana/nuxt/kit`.
 - Vue plugin setup and preferred direct composable imports.
 - Nuxt module setup and auto-imported composables.
 - Unified wallet discovery and connection through `useWallets()` and `useWallet()`.
 - Browser extension wallets, Android Mobile Wallet Adapter support, iOS browser wallet support, and current desktop native wallet limits.
-- RPC, balance, and transaction helper usage.
+- RPC, balance, transaction, and token account helper usage.
 - `installSolanaBufferPolyfill()` browser polyfill guidance for transaction code.
-- The current `@solana/web3-compat@0.0.21` TypeScript metadata workaround.
 - Repository verification commands for changes to Vue Solana itself.
 
 ## Source

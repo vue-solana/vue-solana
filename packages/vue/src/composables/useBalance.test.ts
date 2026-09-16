@@ -1,4 +1,3 @@
-import { PublicKey } from "@vue-solana/core/web3";
 import { flushPromises } from "@vue/test-utils";
 import { describe, expect, it, vi } from "vitest";
 import { defineComponent, h, ref } from "vue";
@@ -16,14 +15,18 @@ function deferred<T>() {
   return { promise, resolve, reject };
 }
 
+function createGetBalance(getBalance: ReturnType<typeof vi.fn>) {
+  return createMockSolanaContext({
+    client: { rpc: { getBalance } } as unknown as ReturnType<
+      typeof createMockSolanaContext
+    >["client"],
+  });
+}
+
 describe("useBalance", () => {
-  it("loads a balance for a provided public key string", async () => {
-    const getBalance = vi.fn().mockResolvedValue(123);
-    const context = createMockSolanaContext({
-      connection: { getBalance } as unknown as ReturnType<
-        typeof createMockSolanaContext
-      >["connection"],
-    });
+  it("loads a balance for a provided address string", async () => {
+    const getBalance = vi.fn(() => ({ send: vi.fn().mockResolvedValue({ value: 123n }) }));
+    const context = createGetBalance(getBalance);
     const address = ref("11111111111111111111111111111111");
     let result: ReturnType<typeof useBalance> | undefined;
 
@@ -43,16 +46,14 @@ describe("useBalance", () => {
     expect(result?.balance.value).toBe(123);
     expect(result?.loading.value).toBe(false);
     expect(result?.error.value).toBeNull();
-    expect(getBalance).toHaveBeenCalledWith(expect.any(PublicKey), "confirmed");
+    expect(getBalance).toHaveBeenCalledWith("11111111111111111111111111111111", {
+      commitment: "confirmed",
+    });
   });
 
   it("clears the balance when no address is provided", async () => {
     const getBalance = vi.fn();
-    const context = createMockSolanaContext({
-      connection: { getBalance } as unknown as ReturnType<
-        typeof createMockSolanaContext
-      >["connection"],
-    });
+    const context = createGetBalance(getBalance);
     let result: ReturnType<typeof useBalance> | undefined;
 
     mountWithSolana(
@@ -74,17 +75,14 @@ describe("useBalance", () => {
 
   it("stores and rethrows balance loading errors", async () => {
     const failure = new Error("RPC failed");
-    const context = createMockSolanaContext({
-      connection: {
-        getBalance: vi.fn().mockRejectedValue(failure),
-      } as unknown as ReturnType<typeof createMockSolanaContext>["connection"],
-    });
+    const getBalance = vi.fn(() => ({ send: vi.fn().mockRejectedValue(failure) }));
+    const context = createGetBalance(getBalance);
     let result: ReturnType<typeof useBalance> | undefined;
 
     mountWithSolana(
       defineComponent({
         setup() {
-          result = useBalance(new PublicKey("11111111111111111111111111111111"));
+          result = useBalance("11111111111111111111111111111111");
 
           return () => h("div");
         },
@@ -101,17 +99,13 @@ describe("useBalance", () => {
   });
 
   it("keeps the newest balance when overlapping requests resolve out of order", async () => {
-    const firstRequest = deferred<number>();
-    const secondRequest = deferred<number>();
+    const firstRequest = deferred<{ value: bigint }>();
+    const secondRequest = deferred<{ value: bigint }>();
     const getBalance = vi
       .fn()
-      .mockReturnValueOnce(firstRequest.promise)
-      .mockReturnValueOnce(secondRequest.promise);
-    const context = createMockSolanaContext({
-      connection: { getBalance } as unknown as ReturnType<
-        typeof createMockSolanaContext
-      >["connection"],
-    });
+      .mockReturnValueOnce({ send: () => firstRequest.promise })
+      .mockReturnValueOnce({ send: () => secondRequest.promise });
+    const context = createGetBalance(getBalance);
     const address = ref("11111111111111111111111111111111");
     let result: ReturnType<typeof useBalance> | undefined;
 
@@ -130,13 +124,13 @@ describe("useBalance", () => {
     address.value = "So11111111111111111111111111111111111111112";
     await flushPromises();
 
-    secondRequest.resolve(456);
+    secondRequest.resolve({ value: 456n });
     await flushPromises();
 
     expect(result?.balance.value).toBe(456);
     expect(result?.loading.value).toBe(false);
 
-    firstRequest.resolve(123);
+    firstRequest.resolve({ value: 123n });
     await flushPromises();
 
     expect(result?.balance.value).toBe(456);

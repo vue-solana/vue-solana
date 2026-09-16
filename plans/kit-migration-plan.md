@@ -95,68 +95,68 @@ A developer never has a hard cut: in v1.x both APIs work; in v2 only the documen
 
 ### Core: remove web3-compat
 
-- [ ] Remove `@solana/web3-compat` from `packages/core/package.json` dependencies.
-- [ ] Rewrite `packages/core/src/web3.ts`: either delete it or re-point exports to Kit equivalents under new names. Delete the `./web3` subpath; add `./kit` (already present) as the supported path.
-- [ ] `packages/core/src/types.ts`: `SolanaContext.connection` removed (keep `client`); `SolanaWallet.publicKey: Address | null` (breaking), `SolanaTransaction` replaced by Kit transaction message types; `Commitment`/`SendOptions`/`TransactionSignature` etc. sourced from Kit’s `@solana` packages.
-- [ ] `packages/core/src/address.ts`: replace `PublicKey` parsing with Kit `address()` / `isStringAddress()`. Keep `parsePublicKey` as a thin deprecated convenience if desired; document migration.
-- [ ] `packages/core/src/rpc.ts`: `createSolanaConnection` deleted; `createSolanaContext` returns the Kit-client context only.
-- [ ] `packages/core/src/transaction.ts`: reimplement on Kit — a `sendTransaction(client, wallet, instructions, options)` built on the planner (or wallet bridging per Design Decision 5); confirmation via Kit’s transaction-confirmation/`getSignatureStatuses` instead of `connection.confirmTransaction`.
-- [ ] Add `@solana/kit-plugin-signer` to core dependencies for the v2 send path: `signer()`/`payer()`/`identity()` with their `generated*`/`*FromFile`/`airdrop*` variants (agent/script contexts without a browser wallet), and `client.airdrop` (enabled by `solanaDevnetRpc()`/`airdropSigner`) for devnet funding. Batch sends spanning several transactions use `client.sendTransactions` (mirrors the legacy `signAllTransactions` wallet capability).
-- [ ] `packages/core/src/wallet-standard/transactions.ts`: replace `Transaction.from`/`VersionedTransaction.deserialize` with Kit transaction/message codecs (`getTransactionEncoder` family); `serializeTransaction`/`deserializeTransaction` operate on Kit message types.
-- [ ] `packages/core/src/wallet-standard/adapter.ts`, `ios-wallet/*`: replace `new PublicKey(account.publicKey)` with account address strings (`bs58` decoding stays for wallet-standard feature bytes).
-- [ ] `packages/core/src/token-accounts.ts` (+ SPL helpers): switch `connection` parameter to Kit `client.rpc` reads (`getTokenAccountsByOwner`, `getAccountInfo` with `@solana/spl-token` unpacking unchanged). Prefer the Kit-native `@solana-program/token`/`@solana-program/token-2022` program plugins (`client.token`) as the documented path — per the official web3.js `@solana/spl-token` → `@solana-program/token` companion migration guide — and keep `@solana/spl-token` unpacking only if the swap is disproportionately large.
-- [ ] Delete `packages/core/types/web3-compat.d.ts`; trim `packages/core/scripts/prepare-declarations.mjs` to the `buffer.d.ts` shim only (or delete if no longer needed).
-- [ ] Delete dev-time shim `types/web3-compat.d.ts`. Remove `@solana/web3-compat` from `build.config.ts`/rollup externals in `packages/nuxt`.
+- [x] Remove `@solana/web3-compat` from `packages/core/package.json` dependencies.
+- [x] Rewrite `packages/core/src/web3.ts`: either delete it or re-point exports to Kit equivalents under new names. Delete the `./web3` subpath; add `./kit` (already present) as the supported path.
+- [x] `packages/core/src/types.ts`: `SolanaContext.connection` removed (keep `client`); `SolanaWallet.publicKey: Address | null` (breaking), `SolanaTransaction` replaced by Kit transaction message types; `Commitment`/`SendOptions`/`TransactionSignature` etc. sourced from Kit’s `@solana` packages.
+- [x] `packages/core/src/address.ts`: replace `PublicKey` parsing with Kit `address()` / `isStringAddress()`. Keep `parsePublicKey` as a thin deprecated convenience if desired; document migration.
+- [x] `packages/core/src/rpc.ts`: `createSolanaConnection` deleted; `createSolanaContext` returns the Kit-client context only.
+- [x] `packages/core/src/transaction.ts`: reimplement on Kit — a `sendTransaction(client, wallet, instructions, options)` built on the planner (or wallet bridging per Design Decision 5); confirmation via Kit’s transaction-confirmation/`getSignatureStatuses` instead of `connection.confirmTransaction`.
+- [x] Add `@solana/kit-plugin-signer` to core dependencies for the v2 send path: `signer()`/`payer()`/`identity()` with their `generated*`/`*FromFile`/`airdrop*` variants (agent/script contexts without a browser wallet), and `client.airdrop` (enabled by `solanaDevnetRpc()`/`airdropSigner`) for devnet funding. Batch sends spanning several transactions use `client.sendTransactions` (mirrors the legacy `signAllTransactions` wallet capability). _Resolved by design: Vue Solana targets browser wallet flows and does not bundle the signer/instruction-plan/system plugins. The migration guide documents the mapping to `signer()`/`payer()`/`identity()` (with `generated*`/`*FromFile`/`airdrop*` variants) and `client.airdrop`/`client.sendTransactions` as drop-in plugins consumers install directly from the `@solana` ecosystem when they need agent/script signing._
+- [x] `packages/core/src/wallet-standard/transactions.ts`: replace `Transaction.from`/`VersionedTransaction.deserialize` with Kit transaction/message codecs (`getTransactionEncoder` family); `serializeTransaction`/`deserializeTransaction` operate on Kit message types.
+- [x] `packages/core/src/wallet-standard/adapter.ts`, `ios-wallet/*`: replace `new PublicKey(account.publicKey)` with account address strings (`bs58` decoding stays for wallet-standard feature bytes).
+- [x] `packages/core/src/token-accounts.ts` (+ SPL helpers): switch `connection` parameter to Kit `client.rpc` reads (`getTokenAccountsByOwner`, `getAccountInfo` with `@solana/spl-token` unpacking unchanged). Prefer the Kit-native `@solana-program/token`/`@solana-program/token-2022` program plugins (`client.token`) as the documented path — per the official web3.js `@solana/spl-token` → `@solana-program/token` companion migration guide — and keep `@solana/spl-token` unpacking only if the swap is disproportionately large.
+- [x] Delete `packages/core/types/web3-compat.d.ts`; trim `packages/core/scripts/prepare-declarations.mjs` to the `buffer.d.ts` shim only (or delete if no longer needed).
+- [x] Delete dev-time shim `types/web3-compat.d.ts`. Remove `@solana/web3-compat` from `build.config.ts`/rollup externals in `packages/nuxt`.
 
 ### Vue: kit-first composables
 
-- [ ] `packages/vue/src/plugin.ts`: context has no `connection`; plugin denied if a consumer still asks for it.
-- [ ] Delete `packages/vue/src/composables/useConnection.ts`; `useRpc()` becomes the Kit-RPC composable (`useSolana().client.rpc`).
-- [ ] Migrate `useBalance` (accept `Address | string | null`, use `client.rpc.getBalance().send()` → `lamports`), `useAccountInfo`, `useProgramAccounts`, `useTokenAccounts`, `useTokenBalance`, `useSignatureStatus`, `useSignMessage`, `useSignAndSendTransaction`, `useTransactionConfirmation` to Kit reads/send paths. Keep composable names and return shapes as close to today as possible.
-- [ ] Wallet composables (`useWallet`, `useWallets`, `useSignAndSendTransaction`) read `publicKey: Address`.
-- [ ] Delete `packages/vue/src/web3.ts`; keep `kit.ts`. Remove `web3`/`buffer-polyfill` subpaths only if the buffer polyfill is truly web3-compat-scoped — otherwise keep `buffer-polyfill`.
-- [ ] Remove `@solana/web3-compat` from `packages/vue/package.json`.
+- [x] `packages/vue/src/plugin.ts`: context has no `connection`; plugin denied if a consumer still asks for it.
+- [x] Delete `packages/vue/src/composables/useConnection.ts`; `useRpc()` becomes the Kit-RPC composable (`useSolana().client.rpc`).
+- [x] Migrate `useBalance` (accept `Address | string | null`, use `client.rpc.getBalance().send()` → `lamports`), `useAccountInfo`, `useProgramAccounts`, `useTokenAccounts`, `useTokenBalance`, `useSignatureStatus`, `useSignMessage`, `useSignAndSendTransaction`, `useTransactionConfirmation` to Kit reads/send paths. Keep composable names and return shapes as close to today as possible.
+- [x] Wallet composables (`useWallet`, `useWallets`, `useSignAndSendTransaction`) read `publicKey: Address`.
+- [x] Delete `packages/vue/src/web3.ts`; keep `kit.ts`. Remove `web3`/`buffer-polyfill` subpaths only if the buffer polyfill is truly web3-compat-scoped — otherwise keep `buffer-polyfill`.
+- [x] Remove `@solana/web3-compat` from `packages/vue/package.json`.
 
 ### Nuxt: cleanup
 
-- [ ] Delete web3-compat `optimizeDeps.include`/`needsInterop` entries in `packages/nuxt/src/module.ts` (web3.js transitive chain: `qrcode`, `bn.js`, `borsh`, `eventemitter3`, `rpc-websockets`, `@solana/buffer-layout`, …), keep/add Kit entries for the v2 dependencies (`@solana/kit`, `@solana/kit-plugin-rpc`, `@solana/kit-plugin-signer`, `@solana/kit-plugin-instruction-plan`, `@solana-program/system`, and `@solana-program/token{,2022}` if adopted).
-- [ ] Remove `./web3` runtime subpath; update `packages/nuxt/src/runtime/plugin.ts` and `runtime/web3.ts`. Update module auto-import list to the kit-first composable set.
-- [ ] Update `packages/nuxt/src/module.test.ts` to the new arrays; add a Kit sanity test (`useSolanaClient` auto-import resolves).
-- [ ] Remove `@solana/web3-compat` from `packages/nuxt/package.json`.
-- [ ] Remove the manual web3-compat `optimizeDeps` entries from `apps/docs/nuxt.config.ts`; switch `solana` config/usage in the docs app to the Kit path.
+- [x] Delete web3-compat `optimizeDeps.include`/`needsInterop` entries in `packages/nuxt/src/module.ts` (web3.js transitive chain: `qrcode`, `bn.js`, `borsh`, `eventemitter3`, `rpc-websockets`, `@solana/buffer-layout`, …), keep/add Kit entries for the v2 dependencies (`@solana/kit`, `@solana/kit-plugin-rpc`, `@solana/kit-plugin-signer`, `@solana/kit-plugin-instruction-plan`, `@solana-program/system`, and `@solana-program/token{,2022}` if adopted).
+- [x] Remove `./web3` runtime subpath; update `packages/nuxt/src/runtime/plugin.ts` and `runtime/web3.ts`. Update module auto-import list to the kit-first composable set.
+- [x] Update `packages/nuxt/src/module.test.ts` to the new arrays; add a Kit sanity test (`useSolanaClient` auto-import resolves).
+- [x] Remove `@solana/web3-compat` from `packages/nuxt/package.json`.
+- [x] Remove the manual web3-compat `optimizeDeps` entries from `apps/docs/nuxt.config.ts`; switch `solana` config/usage in the docs app to the Kit path.
 
 ## Docs
 
 ### Migration guide page (new)
 
-- [ ] Create `apps/docs/content/guides/kit-migration.md` (English root). Content:
+- [x] Create `apps/docs/content/guides/kit-migration.md` (English root). Content:
   - **Why:** web3-compat is superseded; broken TS metadata shims disappear in v2; Kit is Solana’s current + future API.
   - **Timeline:** v1.x dual support (what still works, what’s deprecated), v2.0.0 (what disappears).
   - **Migration map (before → after) table:** `Connection` → `client.rpc`/`useSolanaClient()`; `new Connection(url)` → `createSolanaRpc(url)` or `client.rpc`; `PublicKey` → `Address` (`address("...")`); `new PublicKey(s)` and `.toBase58()` → `address(s)` (base58 strings are already Kit `Address`-shaped); `Keypair`/`Keypair.generate()` → `generateKeyPairSigner()` (from `@solana/kit`) or the `@solana/kit-plugin-signer` variants (`signer`/`payer`/`identity`, `*FromFile`, `generated*`, `generated*WithSol`, `airdrop*`); `keypair.publicKey` → signer `.address`; `SystemProgram.transfer` → `getTransferSolInstruction` from `@solana-program/system`; `LAMPORTS_PER_SOL` math → `lamports()` from `@solana/kit`; `sendAndConfirmTransaction` → `client.sendTransaction([...])` (batch → `client.sendTransactions`) with `{ context: { signature } }`; devnet airdrop → `client.airdrop` (from `solanaDevnetRpc()`/`airdropSigner`); `Transaction`/`VersionedTransaction` → Kit instruction/message builders; `connection.getBalance` → `client.rpc.getBalance(...).send()` (returns lamports as `bigint`); `@solana/spl-token` helpers → `@solana-program/token` plugin reads; confirmation/status → `getSignatureStatuses`; wallet standard flows → Kit signer bridging. Note for readers: RPC numerics are `bigint` and account data is `Uint8Array` — no `Buffer`, and `JSON.stringify` on `bigint` throws.<br> Also add a **bridge note**: devs who want the classic class API during migration can run `@solana/web3.js@rc` (v3) — `PublicKey` is a deprecated alias of `Address` and a v3 `Keypair` structurally satisfies Kit’s `KeyPairSigner` — and point to the official [web3.js v1 → v3 migration guide](https://github.com/solana-foundation/solana-web3.js/blob/v3.x/docs/web3js-v1-to-v3-migration.md).
   - **Step-by-step upgrade for a Vue app** and a **Nuxt app** (both from v1.x legacy → v1.x kit → v2 API), with runnable snippets.
   - **Composable rename/change table** (e.g. `useConnection()` → `useSolanaClient()`; `useRpc()` meaning change in v2).
   - **Cleaning up after v2:** remove shims, remove web3-compat imports from consumer code, remove `buffer-polyfill` if only needed for web3-compat paths.
-- [ ] Mirror to `apps/docs/content/locales/{es,ko,zh}/guides/` (existing translations are maintained by hand — reuse the pattern).
-- [ ] Add `/guides/kit-migration` (+ locale variants) to the sitemap in `apps/docs/nuxt.config.ts` and set `surroundOrder` in frontmatter consistent with the other guides.
-- [ ] Link the guide from Getting Started, Roadmap, and the F.A.Q./Troubleshooting page once v2 lands.
+- [x] Mirror to `apps/docs/content/locales/{es,ko,zh}/guides/` (ko and zh updated during the v2 migration; es mirrors updated to the v2 content as well, including the `kit-migration` guide and the rewritten `getting-started`/`troubleshooting`/`roadmap` pages).
+- [x] Add `/guides/kit-migration` (+ locale variants) to the sitemap in `apps/docs/nuxt.config.ts` and set `surroundOrder` in frontmatter consistent with the other guides.
+- [x] Link the guide from Getting Started, Roadmap, and the F.A.Q./Troubleshooting page once v2 lands.
 
 ### Update existing docs
 
-- [ ] `apps/docs/content/getting-started.md`: remove the `@solana/web3-compat` broken-metadata note and the local-shim guidance once v2 ships (add a “not supported after v2 / see migration guide” pointer in the transition period).
-- [ ] `apps/docs/content/troubleshooting.md`: remove the “TypeScript Cannot Resolve `@solana/web3-compat`” and web3-compat Buffer sections; replace with Kit troubleshooting entries learned during implementation.
-- [ ] `apps/docs/content/index.md`, `concepts/solana-for-vue-developers.md`, `concepts/clusters.md`, `packages/{core,vue,nuxt}.md`: swap `Connection`/`PublicKey`/`web3` subpath language for `client.rpc`/`Address`/`kit` subpaths and document `useSolanaClient()`.
-- [ ] `apps/docs/content/roadmap.md`: add the Kit migration to “Post-v1 Plan” status once shipped.
+- [x] `apps/docs/content/getting-started.md`: remove the `@solana/web3-compat` broken-metadata note and the local-shim guidance once v2 ships (add a “not supported after v2 / see migration guide” pointer in the transition period).
+- [x] `apps/docs/content/troubleshooting.md`: remove the “TypeScript Cannot Resolve `@solana/web3-compat`” and web3-compat Buffer sections; replace with Kit troubleshooting entries learned during implementation.
+- [x] `apps/docs/content/index.md`, `concepts/solana-for-vue-developers.md`, `concepts/clusters.md`, `packages/{core,vue,nuxt}.md`: swap `Connection`/`PublicKey`/`web3` subpath language for `client.rpc`/`Address`/`kit` subpaths and document `useSolanaClient()`.
+- [x] `apps/docs/content/roadmap.md`: add the Kit migration to “Post-v1 Plan” status once shipped. (No change needed — roadmap has no web3-compat references; the SPL line already says “built on the Kit client”.)
 
 ### Knowledge bundle and repo docs
 
-- [ ] Add a `knowledge-bundle/guides/kit-migration.md` entry (OKF format with `type`, `title`, `description`, `tags`, `timestamp`) summarizing the map above for AI agents; update `knowledge-bundle/index.md`.
-- [ ] Update `knowledge-bundle/packages/{core,vue,nuxt}.md` for new exports (`createSolanaClient`, `useSolanaClient`, `kit` subpaths, removal of `web3`/`connection`).
-- [ ] Update `AGENTS.md`: replace the web3-compat/shims section with the Kit-first state and reference this plan; note that leftover shims are gone.
-- [ ] Update `README.md` known-limitations if it still references the web3-compat metadata workaround.
+- [x] Add a `knowledge-bundle/guides/kit-migration.md` entry (OKF format with `type`, `title`, `description`, `tags`, `timestamp`) summarizing the map above for AI agents; update `knowledge-bundle/index.md`.
+- [x] Update `knowledge-bundle/packages/{core,vue,nuxt}.md` for new exports (`createSolanaClient`, `useSolanaClient`, `kit` subpaths, removal of `web3`/`connection`).
+- [x] Update `AGENTS.md`: replace the web3-compat/shims section with the Kit-first state and reference this plan; note that leftover shims are gone.
+- [x] Update `README.md` known-limitations if it still references the web3-compat metadata workaround.
 
 ## Rollout / Releases
 
-- [ ] Changesets per package per phase (`core`, `vue`, `nuxt`). Phase 1: minors. Phase 2: breaking majors coordinated in one release.
+- [x] Changesets per package per phase (`core`, `vue`, `nuxt`). Phase 1: minors. Phase 2: breaking majors coordinated in one release.
 - [ ] Phase 1 and Phase 2 land as separate PRs so the transition window is a real released version, giving docs/guide time to guide users before v2.
 - [ ] Before cutting v2, run a full standalone-consumer smoke (`pnpm smoke:standalone-installs`) and re-run the manual devnet testing steps from `knowledge-bundle/guides/getting-started.md` on the Kit path.
 - [ ] Add versioned docs at v2: ship an archived v1 docs build under `/v1/` (branch-based static build) and keep `latest` at `/`, with a `v1 | latest` dropdown in the header and old-URL redirects. This is the first point where v1 (legacy) and v2 (Kit-only) docs genuinely diverge, so v1 users who haven't migrated can still read v1 docs. Do not build a full per-release versioning framework — two entries, two static builds.

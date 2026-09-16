@@ -147,6 +147,22 @@ const {
       @select-wallet="selectDiscoveredWallet"
     />
 
+    <DemoTransferPanel
+      v-model:recipient="transferRecipient"
+      v-model:amount="transferAmount"
+      :wallet-ready="wallet.connected.value"
+      :signature="sendTransaction.signature.value"
+      :confirmation-state="signAndSendState"
+      :status="signAndSendState"
+      :status-text="signAndSendStatus"
+      :ready="signAndSendReady"
+      :loading="sendTransaction.loading.value"
+      :disabled-reason="signAndSendDisabledReason"
+      :explorer-url="transferExplorerUrl"
+      :error="sendTransactionError"
+      @send="sendDevnetTransfer"
+    />
+
     <DemoMockTransactionPanel
       :loading="mockTransaction.loading.value"
       :signature="mockTransaction.signature.value"
@@ -167,22 +183,6 @@ const {
       :disabled-reason="messageSigningDisabledReason"
       :error="messageSigningError"
       @sign="signWalletMessage"
-    />
-
-    <DemoTransferPanel
-      v-model:recipient="transferRecipient"
-      v-model:amount="transferAmount"
-      :wallet-ready="wallet.connected.value"
-      :signature="sendTransaction.signature.value"
-      :confirmation-state="signAndSendState"
-      :status="signAndSendState"
-      :status-text="signAndSendStatus"
-      :ready="signAndSendReady"
-      :loading="sendTransaction.loading.value"
-      :disabled-reason="signAndSendDisabledReason"
-      :explorer-url="transferExplorerUrl"
-      :error="sendTransactionError"
-      @send="sendDevnetTransfer"
     />
   </main>
 </template>

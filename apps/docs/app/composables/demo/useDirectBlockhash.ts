@@ -2,7 +2,7 @@ import { shallowRef } from "vue";
 import { formatError } from "./errors";
 
 export function useDirectBlockhash() {
-  const connection = useSolanaConnection();
+  const { rpc } = useSolanaClient();
   const directBlockhash = shallowRef<string | null>(null);
   const directConnectionLoading = shallowRef(false);
   const directConnectionError = shallowRef<string | null>(null);
@@ -12,8 +12,8 @@ export function useDirectBlockhash() {
     directConnectionError.value = null;
 
     try {
-      const blockhash = await connection.getLatestBlockhash();
-      directBlockhash.value = blockhash.blockhash;
+      const { value } = await rpc.getLatestBlockhash().send();
+      directBlockhash.value = value.blockhash;
     } catch (error) {
       directConnectionError.value = formatError(error);
     } finally {

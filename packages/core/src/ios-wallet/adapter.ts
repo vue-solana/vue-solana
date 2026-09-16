@@ -1,5 +1,5 @@
-import { PublicKey } from "@solana/web3-compat";
-import type { SolanaTransaction, SolanaWallet, SolanaWalletInfo } from "../types";
+import type { Address } from "../kit";
+import type { SolanaWallet, SolanaWalletInfo } from "../types";
 import {
   DEFAULT_IOS_WALLET_CHAINS,
   getDefaultIosWalletRedirectUrl,
@@ -15,7 +15,6 @@ import {
   launchSignTransaction,
 } from "./deep-links";
 import { getStoredIosWalletAccount, getStoredSession, removeStoredSession } from "./storage";
-import { deserializeTransaction } from "./transactions";
 import type {
   AdaptSolanaIosWalletOptions,
   GetSolanaIosWalletsOptions,
@@ -67,7 +66,7 @@ export function adaptSolanaIosWallet(
 
   return {
     get publicKey() {
-      return session?.publicKey ? new PublicKey(session.publicKey) : null;
+      return session?.publicKey ? (session.publicKey as Address) : null;
     },
     get connected() {
       return Boolean(session?.publicKey && session.session);
@@ -110,14 +109,12 @@ export function adaptSolanaIosWallet(
       }
     },
     signTransaction: definition.signTransactionUrl
-      ? async <T extends SolanaTransaction>(transaction: T): Promise<T> => {
-          const signedTransaction = await launchSignTransaction(definition, transaction, options);
-
-          return deserializeTransaction(transaction, signedTransaction) as T;
+      ? async (transaction) => {
+          return launchSignTransaction(definition, transaction, options);
         }
       : undefined,
     signAllTransactions: definition.signAllTransactionsUrl
-      ? async <T extends SolanaTransaction>(transactions: T[]): Promise<T[]> => {
+      ? async (transactions) => {
           const signedTransactions = await launchSignAllTransactions(
             definition,
             transactions,
@@ -130,9 +127,7 @@ export function adaptSolanaIosWallet(
             );
           }
 
-          return signedTransactions.map((transaction, index) =>
-            deserializeTransaction(transactions[index], transaction),
-          ) as T[];
+          return signedTransactions;
         }
       : undefined,
     signAndSendTransaction: definition.signAndSendTransactionUrl

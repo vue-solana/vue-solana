@@ -4,7 +4,7 @@ import type { SolanaTransaction, SolanaWallet } from "@vue-solana/core";
 import { createMockSolanaContext, mountWithSolana } from "../../test-utils";
 import { useSignAndSendTransaction } from "./useSignAndSendTransaction";
 
-const publicKey = { toBase58: () => "public-key" } as SolanaWallet["publicKey"];
+const publicKey = "public-key" as SolanaWallet["publicKey"];
 
 type SignAndSendTransactionResult = ReturnType<typeof useSignAndSendTransaction>;
 
@@ -33,12 +33,14 @@ describe("useSignAndSendTransaction", () => {
 
   it("optionally waits for confirmation after sending", async () => {
     const wallet = createWallet();
-    const confirmationResult = { value: { err: null } };
+    const getSignatureStatuses = vi.fn(() => ({
+      send: vi.fn().mockResolvedValue({
+        value: [{ slot: 1n, confirmations: null, err: null, confirmationStatus: "finalized" }],
+      }),
+    }));
     const context = createMockSolanaContext({
       wallet: shallowRef(wallet),
-      connection: {
-        confirmTransaction: vi.fn().mockResolvedValue(confirmationResult),
-      } as never,
+      client: { rpc: { getSignatureStatuses } } as never,
     });
     const transaction = {} as SolanaTransaction;
     const result = mountUseSignAndSendTransaction(context);
@@ -53,18 +55,21 @@ describe("useSignAndSendTransaction", () => {
     expect(wallet.signAndSendTransaction).toHaveBeenCalledWith(transaction, {
       skipPreflight: false,
     });
-    expect(context.connection.confirmTransaction).toHaveBeenCalledWith("signature", "finalized");
+    expect(getSignatureStatuses).toHaveBeenCalledWith(["signature"]);
     expect(result.status.value).toBe("finalized");
-    expect(result.confirmation.value?.result).toEqual(confirmationResult);
+    expect(result.confirmation.value?.commitment).toBe("finalized");
   });
 
   it("marks processed when confirmation uses processed commitment", async () => {
     const wallet = createWallet();
+    const getSignatureStatuses = vi.fn(() => ({
+      send: vi.fn().mockResolvedValue({
+        value: [{ slot: 1n, confirmations: null, err: null, confirmationStatus: "processed" }],
+      }),
+    }));
     const context = createMockSolanaContext({
       wallet: shallowRef(wallet),
-      connection: {
-        confirmTransaction: vi.fn().mockResolvedValue({ value: { err: null } }),
-      } as never,
+      client: { rpc: { getSignatureStatuses } } as never,
     });
     const result = mountUseSignAndSendTransaction(context);
 
@@ -74,7 +79,7 @@ describe("useSignAndSendTransaction", () => {
     });
 
     expect(result.status.value).toBe("processed");
-    expect(context.connection.confirmTransaction).toHaveBeenCalledWith("signature", "processed");
+    expect(getSignatureStatuses).toHaveBeenCalledWith(["signature"]);
   });
 
   it("ignores an older send that resolves after a newer send", async () => {
@@ -132,11 +137,10 @@ describe("useSignAndSendTransaction", () => {
   it("keeps the signature when confirmation fails", async () => {
     const failure = new Error("confirmation failed");
     const wallet = createWallet();
+    const getSignatureStatuses = vi.fn(() => ({ send: vi.fn().mockRejectedValue(failure) }));
     const context = createMockSolanaContext({
       wallet: shallowRef(wallet),
-      connection: {
-        confirmTransaction: vi.fn().mockRejectedValue(failure),
-      } as never,
+      client: { rpc: { getSignatureStatuses } } as never,
     });
     const result = mountUseSignAndSendTransaction(context);
 

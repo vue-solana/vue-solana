@@ -1,17 +1,18 @@
-import type { PublicKey } from "@vue-solana/core/web3";
-import { parsePublicKey } from "@vue-solana/core/address";
-import { normalizeSolanaError, type SolanaError } from "@vue-solana/core/errors";
+import type { Commitment } from "@vue-solana/core/kit";
 import { getTokenBalance } from "@vue-solana/core/token-accounts";
+import { normalizeSolanaError, type SolanaError } from "@vue-solana/core/errors";
+import { parseAddress } from "@vue-solana/core/address";
 import { onMounted, shallowRef, toValue, watch, type MaybeRefOrGetter } from "vue";
 import { useConnection } from "./useConnection";
 import { tryUseSolana } from "./useSolana";
 
 export function useTokenBalance(
-  mint: MaybeRefOrGetter<PublicKey | string | null | undefined>,
-  owner: MaybeRefOrGetter<PublicKey | string | null | undefined>,
+  mint: MaybeRefOrGetter<string | null | undefined>,
+  owner: MaybeRefOrGetter<string | null | undefined>,
+  commitment?: Commitment,
 ) {
   const solana = tryUseSolana();
-  const connection = solana?.connection ?? useConnection();
+  const client = solana?.client ?? useConnection();
   const balance = shallowRef<bigint | null>(null);
   const decimals = shallowRef<number | null>(null);
   const loading = shallowRef(false);
@@ -35,8 +36,8 @@ export function useTokenBalance(
     error.value = null;
 
     try {
-      const mintKey = parsePublicKey(mintValue);
-      const ownerKey = parsePublicKey(ownerValue);
+      const mintKey = parseAddress(mintValue);
+      const ownerKey = parseAddress(ownerValue);
 
       if (!mintKey || !ownerKey) {
         balance.value = null;
@@ -45,7 +46,7 @@ export function useTokenBalance(
         return null;
       }
 
-      const nextBalance = await getTokenBalance(connection, mintKey, ownerKey);
+      const nextBalance = await getTokenBalance(client, mintKey, ownerKey, commitment);
 
       if (requestId === refreshId) {
         balance.value = nextBalance?.amount ?? null;

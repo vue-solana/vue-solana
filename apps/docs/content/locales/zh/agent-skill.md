@@ -12,7 +12,7 @@ Vue Solana 提供一个可安装的 Agent Skill，适用于支持 Agent Skills �
 - `@vue-solana/core`
 - `@vue-solana/vue`
 - `@vue-solana/nuxt`
-- Vue 或 Nuxt 应用中的 `@vue-solana/vue/web3` 和 `@vue-solana/nuxt/web3` primitives
+- 在 Vue 或 Nuxt 应用中使用的 `@vue-solana/*/kit` primitives
 
 ## 安装
 
@@ -36,14 +36,13 @@ CLI 会把 skills 安装到你在安装期间选择的代理 skill 目录。对 
 
 ## Skill 覆盖内容
 
-- 什么时候使用 `@vue-solana/core`、`@vue-solana/vue`、`@vue-solana/vue/web3`、`@vue-solana/nuxt` 和 `@vue-solana/nuxt/web3`。
+- 什么时候使用 `@vue-solana/core`、`@vue-solana/vue`、`@vue-solana/vue/kit`、`@vue-solana/nuxt` 和 `@vue-solana/nuxt/kit`。
 - Vue 插件设置和推荐的直接 composable 导入方式。
 - Nuxt 模块设置和自动导入的 composables。
 - 通过 `useWallets()` 和 `useWallet()` 统一发现和连接钱包。
 - 浏览器扩展钱包、Android Mobile Wallet Adapter 支持、iOS 浏览器钱包支持，以及当前桌面原生钱包限制。
-- RPC、余额和交易工具用法。
+- RPC、余额、交易和代币账户辅助函数用法。
 - 交易代码中 `installSolanaBufferPolyfill()` 浏览器 polyfill 指导。
-- 当前 `@solana/web3-compat@0.0.21` TypeScript 元数据临时方案。
 - 修改 Vue Solana 自身时的仓库验证命令。
 
 ## 源码

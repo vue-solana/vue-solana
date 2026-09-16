@@ -7,23 +7,23 @@ surroundOrder: 11
 
 Vue Solana는 트랜잭션 제출을 위한 wallet-aware helper와 반응형 트랜잭션 상태를 위한 컴포저블을 제공합니다.
 
-이 가이드는 Vue Solana 경계에서 필요한 지갑 capability 확인, 서명, 전송, confirmation, 오류 처리를 다룹니다. 트랜잭션 instruction은 `@vue-solana/vue/web3`, `@vue-solana/nuxt/web3` 또는 program client로 구성하세요.
+이 가이드는 Vue Solana 경계에서 필요한 지갑 capability 확인, 서명, 전송, confirmation, 오류 처리를 다룹니다. 트랜잭션 message는 `@solana/kit`과 program client의 instruction helper로 구성하세요.
 
 ## Core Send Helper
 
-이미 `Connection`, wallet, transaction이 있다면 `@vue-solana/core/transaction`의 `signAndSendTransaction()`을 사용하세요.
+이미 Kit client, wallet, raw wire transaction bytes가 있다면 `@vue-solana/core/transaction`의 `signAndSendTransaction()`을 사용하세요.
 
 ```ts
 import { signAndSendTransaction } from "@vue-solana/core/transaction";
 
-const signature = await signAndSendTransaction(connection, wallet, transaction, {
+const signature = await signAndSendTransaction(client, wallet, transaction, {
   skipPreflight: false,
 });
 ```
 
 이 helper는 RPC signature 문자열을 반환합니다.
 
-Android Mobile Wallet Adapter 지갑의 경우, 가능한 때에는 Vue Solana가 `signTransaction`과 `connection.sendRawTransaction()`을 선호합니다. 이렇게 하면 앱이 제출을 소유하고 wallet handoff 이후에도 RPC signature를 안정적으로 반환할 수 있습니다.
+Android Mobile Wallet Adapter 지갑의 경우, 가능한 때에는 Vue Solana가 `signTransaction`과 `client.rpc.sendTransaction(...).send()`를 통한 app-side RPC 제출을 선호합니다. 이렇게 하면 앱이 제출을 소유하고 wallet handoff 이후에도 RPC signature를 안정적으로 반환할 수 있습니다.
 
 ## 서명 확인
 
@@ -32,7 +32,7 @@ Android Mobile Wallet Adapter 지갑의 경우, 가능한 때에는 Vue Solana�
 ```ts
 import { confirmTransactionSignature } from "@vue-solana/core/transaction";
 
-const confirmation = await confirmTransactionSignature(connection, signature, {
+const confirmation = await confirmTransactionSignature(client, signature, {
   commitment: "confirmed",
   timeoutMs: 60_000,
 });
@@ -40,11 +40,11 @@ const confirmation = await confirmTransactionSignature(connection, signature, {
 console.log(confirmation.signature, confirmation.commitment);
 ```
 
-confirmation 기본값은 `confirmed` commitment와 60초 timeout입니다.
+confirmation 기본값은 `confirmed` commitment와 60초 timeout입니다. 이는 `client.rpc.getSignatureStatuses([signature]).send()`를 폴링하므로, 트랜잭션이 이미 제출되어 있어야 합니다.
 
 ## 실제 Devnet 전송 만들기
 
-이 예제는 devnet에서 아주 작은 system transfer를 만듭니다. Solana primitive에는 Vue 패키지 web3 subpath를 사용하고, 지갑 상태와 제출에는 Vue Solana를 사용합니다.
+이 예제는 devnet에서 아주 작은 system transfer를 만듭니다. Kit v0 transaction message를 만들고, Vue Solana가 서명을 위해 wallet에 넘겨주는 wire bytes로 serialize합니다.
 
 브라우저 앱에서 트랜잭션을 만들거나 serialize한다면 transaction code가 실행되기 전에 Vue 패키지 Buffer polyfill을 한 번 초기화하세요.
 
@@ -55,34 +55,60 @@ installSolanaBufferPolyfill();
 ```
 
 ```ts
-import { PublicKey, SystemProgram, Transaction } from "@vue-solana/vue/web3";
+import {
+  AccountRole,
+  address,
+  appendTransactionMessageInstruction,
+  compileTransaction,
+  createTransactionMessage,
+  getTransactionEncoder,
+  setTransactionMessageFeePayer,
+  setTransactionMessageLifetimeUsingBlockhash,
+  type Address,
+} from "@solana/kit";
+
+const SYSTEM_PROGRAM_ADDRESS = address("11111111111111111111111111111111");
+
+function createTransferInstruction(from: Address, to: Address, lamports: number) {
+  const data = new DataView(new ArrayBuffer(12));
+  data.setUint32(0, 2, true); // System program transfer instruction index
+  data.setBigUint64(4, BigInt(lamports), true);
+
+  return {
+    programAddress: SYSTEM_PROGRAM_ADDRESS,
+    accounts: [
+      { address: from, role: AccountRole.WRITABLE_SIGNER },
+      { address: to, role: AccountRole.WRITABLE },
+    ],
+    data: new Uint8Array(data.buffer),
+  };
+}
 
 async function createTransferTransaction(params: {
-  connection: Connection;
-  from: PublicKey;
+  rpc: { getLatestBlockhash(): { send(): Promise<{ value: { blockhash: string } }> } };
+  from: Address;
   to: string;
   lamports: number;
 }) {
-  const recipient = new PublicKey(params.to);
-  const { blockhash, lastValidBlockHeight } = await params.connection.getLatestBlockhash();
+  const recipient = address(params.to);
+  const { value: latestBlockhash } = await params.rpc.getLatestBlockhash().send();
 
-  const transaction = new Transaction({
-    feePayer: params.from,
-    blockhash,
-    lastValidBlockHeight,
-  });
-
-  transaction.add(
-    SystemProgram.transfer({
-      fromPubkey: params.from,
-      toPubkey: recipient,
-      lamports: params.lamports,
-    }),
+  const message = setTransactionMessageLifetimeUsingBlockhash(
+    latestBlockhash,
+    setTransactionMessageFeePayer(
+      params.from,
+      appendTransactionMessageInstruction(
+        createTransferInstruction(params.from, recipient, params.lamports),
+        createTransactionMessage({ version: 0 }),
+      ),
+    ),
   );
 
-  return transaction;
+  return getTransactionEncoder().encode(compileTransaction(message));
 }
 ```
+
+`createTransferTransaction`은 raw wire transaction bytes(`Uint8Array`)를 반환하며, 이는 `SolanaWallet.signTransaction`과 `useSignAndSendTransaction()`이 받아들이는 형식입니다.
 
 테스트 중에는 devnet SOL을 사용하세요. `1_000` lamports(`0.000001` SOL)처럼 아주 작은 값으로 시작합니다. 튜토리얼이나 예제 flow를 검증할 때 실제 자금이 있는 지갑을 사용하지 마세요.
 
@@ -94,23 +120,24 @@ Vue component에서 반응형 status, error, 선택적 confirmation이 필요하
 <script setup lang="ts">
 import { computed } from "vue";
 import { useSignAndSendTransaction } from "@vue-solana/vue/useSignAndSendTransaction";
-import { useConnection } from "@vue-solana/vue/useConnection";
+import { useSolanaClient } from "@vue-solana/vue/useSolanaClient";
 import { useWallet } from "@vue-solana/vue/useWallet";
 
 const recipient = ref("PASTE_DEVNET_RECIPIENT_ADDRESS");
 const lamports = ref(1_000);
-const connection = useConnection();
+const { client } = useSolanaClient();
 const { publicKey, connected, canSignTransaction } = useWallet();
 const { signature, confirmation, status, error, execute } = useSignAndSendTransaction();
 
 const canSubmit = computed(() => connected.value && canSignTransaction.value);
 
 async function submitTransaction() {
-  if (!publicKey.value) return;
+  const from = publicKey.value;
+  if (!from) return;
 
   const transaction = await createTransferTransaction({
-    connection,
-    from: publicKey.value,
+    rpc: client.rpc,
+    from,
     to: recipient.value,
     lamports: lamports.value,
   });
@@ -176,7 +203,7 @@ Nuxt는 다음을 노출합니다.
 <script setup lang="ts">
 const { signature, status, error, execute } = useSolanaSignAndSendTransaction();
 
-async function submit(transaction: Transaction) {
+async function submit(transaction: Uint8Array) {
   await execute(transaction, { confirm: true });
 }
 </script>
@@ -194,7 +221,7 @@ async function submit(transaction: Transaction) {
 import { isSolanaError } from "@vue-solana/core/errors";
 
 try {
-  await signAndSendTransaction(connection, wallet, transaction);
+  await signAndSendTransaction(client, wallet, transaction);
 } catch (error) {
   if (isSolanaError(error)) {
     switch (error.code) {

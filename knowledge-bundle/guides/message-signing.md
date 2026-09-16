@@ -37,7 +37,7 @@ async function signIn(nonce: string) {
   const result = await signMessage.execute(message);
 
   return {
-    publicKey: wallet.publicKey.value?.toBase58(),
+    publicKey: wallet.publicKey.value,
     message: result.signedMessage,
     signature: result.signature,
   };

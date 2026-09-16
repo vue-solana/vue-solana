@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 
 const distDir = fileURLToPath(new URL("../dist/", import.meta.url));
 const typesDir = fileURLToPath(new URL("../types/", import.meta.url));
-const shims = ["web3-compat.d.ts", "buffer.d.ts"];
+const shims = ["buffer.d.ts"];
 
 const declarationExtensions = new Set([".ts", ".mts", ".cts"]);
 
@@ -29,7 +29,7 @@ async function prepareDeclarations(directory) {
 
     const content = await readFile(filePath, "utf8");
 
-    if (!content.includes("@solana/web3-compat") && !content.includes("buffer/")) {
+    if (!content.includes("buffer/")) {
       continue;
     }
 

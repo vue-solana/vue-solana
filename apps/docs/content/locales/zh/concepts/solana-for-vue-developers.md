@@ -16,9 +16,9 @@ surroundOrder: 5
 
 ## 连接和 RPC
 
-前端应用通过 RPC 端点读取 Solana 数据。`@vue-solana/vue/web3` 和 `@vue-solana/nuxt/web3` 暴露受支持的 `Connection` 类，它会向该端点发送请求。
+前端应用通过 RPC 端点读取 Solana 数据。Kit 路径通过 `useSolanaClient()`（或 `@vue-solana/core/kit` 中的 `createSolanaClient()`）暴露只读的 `client.rpc`。
 
-Vue Solana 包会为 Vue 和 Nuxt 代码创建并提供这个连接，让 composables 可以共享同一个集群、端点、commitment 和钱包状态。
+Vue Solana 包会为 Vue 和 Nuxt 代码创建并提供 Kit client，让 composables 可以共享同一个集群、端点、commitment 和钱包状态。
 
 ```ts
 createSolanaPlugin({
@@ -31,11 +31,17 @@ createSolanaPlugin({
 
 公钥就是 Solana 账户地址。你可以安全地在前端应用中展示公钥。
 
-```ts
-import { PublicKey } from "@vue-solana/vue/web3";
+在 Kit 路径中，地址是使用 `@vue-solana/vue/kit` 中的 `address()` 创建的 `Address` 类型字符串：
 
-const publicKey = new PublicKey("PASTE_A_SOLANA_ADDRESS");
+```ts
+import { address } from "@vue-solana/vue/kit";
+
+const publicKey = address("PASTE_A_SOLANA_ADDRESS");
 ```
+
+地址是 base58 的 `Address` 字符串；旧版 `PublicKey` 类和 `web3` 子路径已在 v2.0.0 中被移除。
+
+有关两者之间完整的对应关系，请参阅 [Kit 迁移](/zh/guides/kit-migration) 指南。
 
 绝不要在前端代码中暴露私钥、助记词或 secret key 数组。
 
@@ -49,10 +55,14 @@ SOL 是 Solana 上的原生代币。Lamports 是 SOL 的最小单位。
 
 RPC 余额方法返回 lamports。仅在展示时才把 lamports 转换为 SOL。
 
+Kit RPC 方法以 `bigint` 形式返回 lamports：
+
 ```ts
-const lamports = await connection.getBalance(publicKey);
-const sol = lamports / 1_000_000_000;
+const { value: lamports } = await rpc.getBalance(address("YOUR_ADDRESS")).send();
+const sol = Number(lamports) / 1_000_000_000;
 ```
+
+Kit RPC 调用对数字字段返回 `bigint`，对账户数据返回 `Uint8Array`。
 
 ## 钱包
 
@@ -60,7 +70,7 @@ const sol = lamports / 1_000_000_000;
 
 Vue Solana 会通过统一的 `useWallets()` 流程发现 Solana Wallet Standard 浏览器扩展钱包、Android Mobile Wallet Adapter 钱包，以及受支持的 iOS 浏览器钱包链接。RPC 读取和余额读取不需要钱包。连接、签名和发送交易需要一个已发现的钱包，或一个实现 `SolanaWallet` 接口的自定义对象。
 
-请参阅[钱包](/zh/guides/wallets)，了解当前支持情况以及桌面原生钱包的 post-v1 状态。
+请参阅[钱包](/zh/guides/wallets)，了解当前支持情况以及桌面原生钱包的状态。
 
 ## 交易和签名
 

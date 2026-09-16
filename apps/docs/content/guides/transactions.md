@@ -7,23 +7,23 @@ surroundOrder: 11
 
 Vue Solana provides wallet-aware helpers for submitting transactions and composables for reactive transaction state.
 
-This guide covers the Vue Solana boundary: wallet capability checks, signing, sending, confirmation, and errors. Build transaction instructions with `@vue-solana/vue/web3`, `@vue-solana/nuxt/web3`, or your program client.
+This guide covers the Vue Solana boundary: wallet capability checks, signing, sending, confirmation, and errors. Build transaction messages with `@solana/kit` and your program client's instruction helpers.
 
 ## Core Send Helper
 
-Use `signAndSendTransaction()` from `@vue-solana/core/transaction` when you already have a `Connection`, wallet, and transaction.
+Use `signAndSendTransaction()` from `@vue-solana/core/transaction` when you already have a Kit client, wallet, and raw wire transaction bytes.
 
 ```ts
 import { signAndSendTransaction } from "@vue-solana/core/transaction";
 
-const signature = await signAndSendTransaction(connection, wallet, transaction, {
+const signature = await signAndSendTransaction(client, wallet, transaction, {
   skipPreflight: false,
 });
 ```
 
 The helper returns the RPC signature string.
 
-For Android Mobile Wallet Adapter wallets, Vue Solana prefers `signTransaction` plus `connection.sendRawTransaction()` when available so the app owns submission and can reliably return the RPC signature after the wallet handoff.
+For Android Mobile Wallet Adapter wallets, Vue Solana prefers `signTransaction` plus app-side RPC submission through `client.rpc.sendTransaction(...).send()` when available so the app owns submission and can reliably return the RPC signature after the wallet handoff.
 
 ## Confirm a Signature
 
@@ -32,7 +32,7 @@ Use `confirmTransactionSignature()` when you need to wait until a submitted sign
 ```ts
 import { confirmTransactionSignature } from "@vue-solana/core/transaction";
 
-const confirmation = await confirmTransactionSignature(connection, signature, {
+const confirmation = await confirmTransactionSignature(client, signature, {
   commitment: "confirmed",
   timeoutMs: 60_000,
 });
@@ -40,11 +40,11 @@ const confirmation = await confirmTransactionSignature(connection, signature, {
 console.log(confirmation.signature, confirmation.commitment);
 ```
 
-Confirmation defaults to `confirmed` commitment and a 60 second timeout.
+Confirmation defaults to `confirmed` commitment and a 60 second timeout. It polls `client.rpc.getSignatureStatuses([signature]).send()`, so the transaction must already be submitted.
 
 ## Build A Real Devnet Transfer
 
-This example creates a tiny system transfer on devnet. It uses the Vue package web3 subpath for Solana primitives and Vue Solana for wallet state and submission.
+This example creates a tiny system transfer on devnet. It builds a Kit v0 transaction message and serializes it to wire bytes that Vue Solana hands to the wallet for signing.
 
 Browser apps that create or serialize transactions should initialize the Vue package Buffer polyfill once before transaction code runs:
 
@@ -55,34 +55,60 @@ installSolanaBufferPolyfill();
 ```
 
 ```ts
-import { PublicKey, SystemProgram, Transaction } from "@vue-solana/vue/web3";
+import {
+  AccountRole,
+  address,
+  appendTransactionMessageInstruction,
+  compileTransaction,
+  createTransactionMessage,
+  getTransactionEncoder,
+  setTransactionMessageFeePayer,
+  setTransactionMessageLifetimeUsingBlockhash,
+  type Address,
+} from "@solana/kit";
+
+const SYSTEM_PROGRAM_ADDRESS = address("11111111111111111111111111111111");
+
+function createTransferInstruction(from: Address, to: Address, lamports: number) {
+  const data = new DataView(new ArrayBuffer(12));
+  data.setUint32(0, 2, true); // System program transfer instruction index
+  data.setBigUint64(4, BigInt(lamports), true);
+
+  return {
+    programAddress: SYSTEM_PROGRAM_ADDRESS,
+    accounts: [
+      { address: from, role: AccountRole.WRITABLE_SIGNER },
+      { address: to, role: AccountRole.WRITABLE },
+    ],
+    data: new Uint8Array(data.buffer),
+  };
+}
 
 async function createTransferTransaction(params: {
-  connection: Connection;
-  from: PublicKey;
+  rpc: { getLatestBlockhash(): { send(): Promise<{ value: { blockhash: string } }> } };
+  from: Address;
   to: string;
   lamports: number;
 }) {
-  const recipient = new PublicKey(params.to);
-  const { blockhash, lastValidBlockHeight } = await params.connection.getLatestBlockhash();
+  const recipient = address(params.to);
+  const { value: latestBlockhash } = await params.rpc.getLatestBlockhash().send();
 
-  const transaction = new Transaction({
-    feePayer: params.from,
-    blockhash,
-    lastValidBlockHeight,
-  });
-
-  transaction.add(
-    SystemProgram.transfer({
-      fromPubkey: params.from,
-      toPubkey: recipient,
-      lamports: params.lamports,
-    }),
+  const message = setTransactionMessageLifetimeUsingBlockhash(
+    latestBlockhash,
+    setTransactionMessageFeePayer(
+      params.from,
+      appendTransactionMessageInstruction(
+        createTransferInstruction(params.from, recipient, params.lamports),
+        createTransactionMessage({ version: 0 }),
+      ),
+    ),
   );
 
-  return transaction;
+  return getTransactionEncoder().encode(compileTransaction(message));
 }
 ```
+
+`createTransferTransaction` returns raw wire transaction bytes (`Uint8Array`), which is what `SolanaWallet.signTransaction` and `useSignAndSendTransaction()` accept.
 
 Use devnet SOL while testing. Start with a tiny value such as `1_000` lamports (`0.000001` SOL). Never use a wallet with real funds while validating a tutorial or example flow.
 
@@ -94,23 +120,24 @@ Use `useSignAndSendTransaction()` when a Vue component needs reactive status, er
 <script setup lang="ts">
 import { computed } from "vue";
 import { useSignAndSendTransaction } from "@vue-solana/vue/useSignAndSendTransaction";
-import { useConnection } from "@vue-solana/vue/useConnection";
+import { useSolanaClient } from "@vue-solana/vue/useSolanaClient";
 import { useWallet } from "@vue-solana/vue/useWallet";
 
 const recipient = ref("PASTE_DEVNET_RECIPIENT_ADDRESS");
 const lamports = ref(1_000);
-const connection = useConnection();
+const { client } = useSolanaClient();
 const { publicKey, connected, canSignTransaction } = useWallet();
 const { signature, confirmation, status, error, execute } = useSignAndSendTransaction();
 
 const canSubmit = computed(() => connected.value && canSignTransaction.value);
 
 async function submitTransaction() {
-  if (!publicKey.value) return;
+  const from = publicKey.value;
+  if (!from) return;
 
   const transaction = await createTransferTransaction({
-    connection,
-    from: publicKey.value,
+    rpc: client.rpc,
+    from,
     to: recipient.value,
     lamports: lamports.value,
   });
@@ -176,7 +203,7 @@ Nuxt exposes:
 <script setup lang="ts">
 const { signature, status, error, execute } = useSolanaSignAndSendTransaction();
 
-async function submit(transaction: Transaction) {
+async function submit(transaction: Uint8Array) {
   await execute(transaction, { confirm: true });
 }
 </script>
@@ -194,7 +221,7 @@ Transaction helpers normalize failures into `SolanaError`.
 import { isSolanaError } from "@vue-solana/core/errors";
 
 try {
-  await signAndSendTransaction(connection, wallet, transaction);
+  await signAndSendTransaction(client, wallet, transaction);
 } catch (error) {
   if (isSolanaError(error)) {
     switch (error.code) {
