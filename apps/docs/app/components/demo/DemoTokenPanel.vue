@@ -46,10 +46,8 @@ const emit = defineEmits<{
 
     <UAlert v-if="error" class="mt-4" color="error" variant="subtle" :description="error" />
 
-    <UDivider class="my-4" />
-
     <p
-      class="mb-2 text-xs font-black uppercase tracking-[0.18em] text-violet-700 dark:text-violet-300"
+      class="mt-8 mb-2 text-xs font-black uppercase tracking-[0.18em] text-violet-700 dark:text-violet-300"
     >
       useSolanaTokenBalance
     </p>

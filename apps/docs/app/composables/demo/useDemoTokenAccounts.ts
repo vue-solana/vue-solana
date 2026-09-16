@@ -10,7 +10,7 @@ export function useDemoTokenAccounts() {
   const tokenBalance = useSolanaTokenBalance(mintAddress, ownerAddress);
 
   watch(
-    () => wallet.wallet.value?.address,
+    () => wallet.publicKey.value,
     (address) => {
       ownerAddress.value = address ?? null;
     },

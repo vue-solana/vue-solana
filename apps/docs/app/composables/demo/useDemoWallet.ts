@@ -9,9 +9,7 @@ export function useDemoWallet() {
   const toast = useToast();
   const walletsLoaded = shallowRef(false);
 
-  const walletRawAddress = computed(
-    () => wallet.wallet.value?.address ?? wallet.publicKey.value?.toBase58() ?? null,
-  );
+  const walletRawAddress = computed(() => wallet.publicKey.value ?? null);
   const walletPublicKey = computed(() => walletRawAddress.value ?? t("demo.fallback.notConnected"));
   const walletConfigured = computed(() => Boolean(wallet.wallet.value));
   const discoveredWalletCount = computed(() =>

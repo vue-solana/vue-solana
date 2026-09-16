@@ -1,5 +1,5 @@
 import { normalizeSolanaError } from "@vue-solana/core/errors";
-import { createNoWalletSelectedError } from "@vue-solana/core/wallet";
+import { assertWalletConnected, createNoWalletSelectedError } from "@vue-solana/core/wallet";
 import { computed, ref, triggerRef } from "vue";
 import { useSolana } from "./useSolana";
 
@@ -10,6 +10,10 @@ export function useWallet() {
   const disconnecting = ref(false);
 
   async function connect() {
+    if (connecting.value || wallet.value?.connecting) {
+      return;
+    }
+
     const activeWallet = wallet.value;
 
     if (!activeWallet) {
@@ -23,6 +27,7 @@ export function useWallet() {
 
       triggerRef(wallet);
       await connection;
+      assertWalletConnected(activeWallet);
       triggerRef(wallet);
 
       console.info("[Vue Solana] Wallet connected", {
