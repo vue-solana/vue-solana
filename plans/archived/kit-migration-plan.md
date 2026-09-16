@@ -157,8 +157,8 @@ A developer never has a hard cut: in v1.x both APIs work; in v2 only the documen
 ## Rollout / Releases
 
 - [x] Changesets per package per phase (`core`, `vue`, `nuxt`). Phase 1: minors. Phase 2: breaking majors coordinated in one release.
-- [ ] Phase 1 and Phase 2 land as separate PRs so the transition window is a real released version, giving docs/guide time to guide users before v2.
-- [ ] Before cutting v2, run a full standalone-consumer smoke (`pnpm smoke:standalone-installs`) and re-run the manual devnet testing steps from `knowledge-bundle/guides/getting-started.md` on the Kit path.
+- [x] Phase 1 and Phase 2 land as separate PRs so the transition window is a real released version, giving docs/guide time to guide users before v2.
+- [x] Before cutting v2, run a full standalone-consumer smoke (`pnpm smoke:standalone-installs`) and re-run the manual devnet testing steps from `knowledge-bundle/guides/getting-started.md` on the Kit path.
 - [ ] Add versioned docs at v2: ship an archived v1 docs build under `/v1/` (branch-based static build) and keep `latest` at `/`, with a `v1 | latest` dropdown in the header and old-URL redirects. This is the first point where v1 (legacy) and v2 (Kit-only) docs genuinely diverge, so v1 users who haven't migrated can still read v1 docs. Do not build a full per-release versioning framework — two entries, two static builds.
 
 ## Acceptance Criteria

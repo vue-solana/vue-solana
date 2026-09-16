@@ -34,8 +34,9 @@ This directory contains OKF-formatted knowledge files for AI agents working with
 
 Plans live in the top-level [`plans/`](../plans/) directory:
 
-- [v1 Roadmap](../plans/v1-roadmap.md)
-- [Kit Migration Plan](../plans/kit-migration-plan.md)
+- [Roadmap](../apps/docs/content/roadmap.md)
+- [React Parity Plan](../plans/react-parity-plan.md)
 - [Native Wallet Plan](../plans/native-wallet-plan.md)
 - [Solana Pay QR Plan](../plans/solana-pay-qr-plan.md)
+- [Archived Plans](../plans/archived/) (completed: Kit migration, SPL tokens, standalone installs, v1 roadmap)
 - [Standalone Package Install Plan](../plans/stand-alone-package-install-plan.md)
