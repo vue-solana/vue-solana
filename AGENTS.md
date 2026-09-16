@@ -180,7 +180,7 @@ Plans live in the top-level `plans/` directory, separate from the knowledge bund
 
 ## Suggested Next Tasks
 
-- Follow `plans/v1-roadmap.md` Post-v1 Plan for upcoming features (SPL tokens, desktop native wallets, UI package, etc.).
+- Follow `apps/docs/content/roadmap.md` for upcoming features (core composables, wallet features, Ecosystem integrations, etc.).
 - Follow `plans/native-wallet-plan.md` to add mobile native wallet and desktop native wallet support through the unified `useWallets()` flow.
 - Re-check the `@solana/kit` and `@solana/kit-plugin-rpc` peer versions on every new release.
 

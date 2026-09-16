@@ -15,7 +15,7 @@ timestamp: 2026-09-11T00:00:00Z
 
 `@vue-solana/*` moved from `@solana/web3-compat` to `@solana/kit` in v2.0.0. This guide explains why, what changed, and how to migrate a Vue or Nuxt app that is still on the v1.x surface.
 
-See the public-facing source of this guide at [`apps/docs/content/guides/kit-migration.md`](../../apps/docs/content/guides/kit-migration.md) and the implementation tracker at [`plans/kit-migration-plan.md`](../../plans/kit-migration-plan.md).
+See the public-facing source of this guide at [`apps/docs/content/guides/kit-migration.md`](../../apps/docs/content/guides/kit-migration.md) and the completed implementation tracker at [`plans/archived/kit-migration-plan.md`](../../plans/archived/kit-migration-plan.md).
 
 More references:
 

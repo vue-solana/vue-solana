@@ -131,8 +131,11 @@ Root `knowledge-bundle/` is kept as OKF-formatted reference material for AI agen
 
 Plans live in the top-level `plans/` directory:
 
-- [v1 Roadmap](./plans/v1-roadmap.md)
+- [Roadmap](./apps/docs/content/roadmap.md)
+- [React Parity Plan](./plans/react-parity-plan.md)
 - [Native Wallet Plan](./plans/native-wallet-plan.md)
+- [Solana Pay QR Plan](./plans/solana-pay-qr-plan.md)
+- Archived plans: [`plans/archived/`](./plans/archived/) (completed Kit migration, SPL tokens, standalone installs, v1 roadmap)
 
 ## Agent Skill
 
