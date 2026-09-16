@@ -6,7 +6,7 @@ import { getTokenAccountsByOwner, getTokenAccount, getTokenBalance } from "./tok
 const OWNER = "11111111111111111111111111111111" as Address;
 const MINT = "Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9SEiFPUQpX" as Address;
 const TOKEN_ACCOUNT = "BHUdKjNQLK7XxxYggCSbcrUBvc9LCBveAqDN2cM3b5b2" as Address;
-const TOKEN_PROGRAM_ID = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA" as Address;
+const TOKEN_PROGRAM_ADDRESS = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA" as Address;
 
 function parsedTokenAccountResponse(
   overrides: Partial<Record<string, unknown>> = {},
@@ -16,7 +16,7 @@ function parsedTokenAccountResponse(
     account: {
       executable: false,
       lamports: 2039280n,
-      owner: TOKEN_PROGRAM_ID,
+      owner: TOKEN_PROGRAM_ADDRESS,
       space: 165n,
       data: {
         parsed: {
@@ -98,12 +98,12 @@ describe("getTokenAccountsByOwner", () => {
     const { client, tokenAccounts } = mockClient();
     tokenAccounts.mockResolvedValue({ value: [] });
 
-    await getTokenAccountsByOwner(client, OWNER, { programId: TOKEN_PROGRAM_ID });
+    await getTokenAccountsByOwner(client, OWNER, { programId: TOKEN_PROGRAM_ADDRESS });
 
     expect(tokenAccounts).toHaveBeenCalledTimes(1);
     expect(tokenAccounts).toHaveBeenCalledWith(
       OWNER,
-      { programId: TOKEN_PROGRAM_ID },
+      { programId: TOKEN_PROGRAM_ADDRESS },
       { encoding: "jsonParsed", commitment: undefined },
     );
   });
@@ -153,7 +153,7 @@ describe("getTokenAccount", () => {
       value: {
         executable: false,
         lamports: 10n,
-        owner: TOKEN_PROGRAM_ID,
+        owner: TOKEN_PROGRAM_ADDRESS,
         space: 1n,
         data: { parsed: { info: null, type: "mint" }, program: "spl-token", space: 1n },
       },

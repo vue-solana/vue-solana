@@ -12,7 +12,7 @@ Vue Solana provides RPC reads, account reads, balance reads, browser extension w
 
 ## Which Package Should I Use?
 
-Use `@vue-solana/core` directly if you only need Solana APIs such as `Connection`, `PublicKey`, and transactions plus shared Vue Solana helpers.
+Use `@vue-solana/core` directly if you only need Solana APIs such as `createSolanaClient`, `Address`, and transactions plus shared Vue Solana helpers.
 
 Use [`@vue-solana/core`](https://www.npmjs.com/package/@vue-solana/core) if you want shared Solana config, cluster endpoint defaults, wallet types, and transaction helpers without Vue.
 
@@ -70,7 +70,7 @@ Root package exports remain supported for compatibility. New code can use direct
 ```ts
 import { createSolanaContext } from "@vue-solana/core/rpc";
 import type { SolanaConfig } from "@vue-solana/core/types";
-import { PublicKey, Transaction } from "@vue-solana/vue/web3";
+import { createSolanaClient } from "@vue-solana/vue/kit";
 import { installSolanaBufferPolyfill } from "@vue-solana/vue/buffer-polyfill";
 import { useAccountInfo } from "@vue-solana/vue/useAccountInfo";
 import { useProgramAccounts } from "@vue-solana/vue/useProgramAccounts";
@@ -80,7 +80,7 @@ import { useSignMessage } from "@vue-solana/vue/useSignMessage";
 import { useWallet } from "@vue-solana/vue/useWallet";
 ```
 
-Vue apps can import transaction primitives from `@vue-solana/vue/web3` and the Buffer helper from `@vue-solana/vue/buffer-polyfill` without installing `@vue-solana/core`, `@solana/web3-compat`, or `buffer` directly. Nuxt apps use the equivalent `@vue-solana/nuxt/web3` and `@vue-solana/nuxt/buffer-polyfill` subpaths. Direct `@vue-solana/core/*` imports remain supported for lower-level core usage.
+Vue apps can import Kit primitives from `@vue-solana/vue/kit` and the Buffer helper from `@vue-solana/vue/buffer-polyfill` without installing `@vue-solana/core` or `buffer` directly. Nuxt apps use the equivalent `@vue-solana/nuxt/kit` and `@vue-solana/nuxt/buffer-polyfill` subpaths. Direct `@vue-solana/core/*` imports remain supported for lower-level core usage.
 
 The Nuxt module auto-imports composables from these direct Vue subpaths and keeps its runtime plugin client-only. Auto-imported composables are SSR-safe, but real RPC and wallet work should run after hydration.
 
@@ -173,7 +173,7 @@ pnpm dev:docs
 
 Pre-commit checks run through lint-staged and only lint/format staged files. Run `pnpm lint`, `pnpm format`, `pnpm test`, `pnpm typecheck`, and `pnpm build:packages` before opening larger pull requests.
 
-Run `pnpm smoke:standalone-installs` before release-facing package changes. It builds and packs `@vue-solana/core`, `@vue-solana/vue`, and `@vue-solana/nuxt`, installs each tarball into a fresh temporary TypeScript consumer, and typechecks representative root, `web3`, and `buffer-polyfill` imports without workspace aliases or repo-local shims. Set `KEEP_STANDALONE_SMOKE=1` to keep the temporary projects for debugging.
+Run `pnpm smoke:standalone-installs` before release-facing package changes. It builds and packs `@vue-solana/core`, `@vue-solana/vue`, and `@vue-solana/nuxt`, installs each tarball into a fresh temporary TypeScript consumer, and typechecks representative root, `kit`, and `buffer-polyfill` imports without workspace aliases or repo-local shims. Set `KEEP_STANDALONE_SMOKE=1` to keep the temporary projects for debugging.
 
 ## CI And Releases
 

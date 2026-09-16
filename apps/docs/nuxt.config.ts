@@ -153,7 +153,6 @@ export default defineNuxtConfig({
         "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > buffer/",
         "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl",
         "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl/nacl-fast.js",
-        "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > @solana/spl-token > @solana/buffer-layout-utils > bigint-buffer",
       ],
       needsInterop: [
         "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl",
@@ -166,7 +165,6 @@ export default defineNuxtConfig({
           "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > buffer/",
           "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl",
           "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl/nacl-fast.js",
-          "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > @solana/spl-token > @solana/buffer-layout-utils > bigint-buffer",
         ],
         needsInterop: [
           "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl",
