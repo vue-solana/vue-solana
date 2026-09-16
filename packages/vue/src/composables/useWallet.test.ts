@@ -193,6 +193,50 @@ describe("useWallet", () => {
     } satisfies Partial<SolanaError>);
   });
 
+  it("rejects connect when the wallet resolves without connecting", async () => {
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    const wallet = {
+      publicKey: null,
+      connected: false,
+      connect: vi.fn().mockResolvedValue(undefined),
+      disconnect: vi.fn(),
+    } as unknown as SolanaWallet;
+    const context = createMockSolanaContext({ wallet: shallowRef(wallet) });
+    const result = mountUseWallet(context);
+
+    await expect(result.connect()).rejects.toMatchObject({
+      code: "WALLET_NOT_CONNECTED",
+    } satisfies Partial<SolanaError>);
+  });
+
+  it("ignores connect calls while a connect is pending", async () => {
+    vi.spyOn(console, "info").mockImplementation(() => {});
+    vi.spyOn(console, "error").mockImplementation(() => {});
+    let resolveConnect: (() => void) | undefined;
+    const wallet = {
+      publicKey,
+      connected: true,
+      connect: vi.fn(
+        () =>
+          new Promise<void>((resolve) => {
+            resolveConnect = resolve;
+          }),
+      ),
+      disconnect: vi.fn(),
+    } as unknown as SolanaWallet;
+    const context = createMockSolanaContext({ wallet: shallowRef(wallet) });
+    const result = mountUseWallet(context);
+
+    const first = result.connect();
+    const second = result.connect();
+
+    expect(wallet.connect).toHaveBeenCalledOnce();
+
+    resolveConnect?.();
+    await first;
+    await second;
+  });
+
   it("normalizes wallet disconnect failures", async () => {
     vi.spyOn(console, "error").mockImplementation(() => {});
     const cause = new Error("disconnect transport failed");
