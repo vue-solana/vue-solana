@@ -14,7 +14,7 @@ Vue Solana는 브라우저 확장 지갑, Android Mobile Wallet Adapter 지갑, 
 - 브라우저 확장 지갑: `@wallet-standard/app`, `@wallet-standard/base`, `@wallet-standard/features`, `@solana/wallet-standard-features`.
 - Android 모바일 네이티브 지갑: `@solana-mobile/wallet-standard-mobile`. 지원되는 Android Chrome mobile web 및 PWA runtime에서 Solana Mobile Wallet Adapter를 Wallet Standard 지갑으로 등록합니다.
 - iOS 브라우저 지갑: Phantom, Solflare, Backpack용 wallet-specific universal link.
-- Solana primitive와 transaction type: Vue 앱은 `@vue-solana/vue/web3`, Nuxt 앱은 `@vue-solana/nuxt/web3`, 프레임워크 독립 core 사용은 `@vue-solana/core/web3`.
+- Solana primitive와 transaction helper: `@solana/kit` 타입과 message builder로, 일부는 `@vue-solana/vue/kit`, `@vue-solana/nuxt/kit`, `@vue-solana/core/kit`를 통해 다시 내보내집니다.
 
 ## 지갑 소스
 
@@ -28,13 +28,13 @@ Vue Solana는 브라우저 확장 지갑, Android Mobile Wallet Adapter 지갑, 
 
 ## 지원 행렬
 
-| 지갑 경로                    | v1 상태                               | 표시 방식                                               | 메모                                                              |
+| 지갑 경로                    | 상태                                  | 표시 방식                                               | 메모                                                              |
 | ---------------------------- | ------------------------------------- | ------------------------------------------------------- | ----------------------------------------------------------------- |
 | 브라우저 확장 지갑           | 지원                                  | `platform: "browser"`, `source: "wallet-standard"`      | Solana Wallet Standard 등록을 사용합니다.                         |
 | Android 네이티브 모바일 지갑 | Android Chrome 및 Chrome PWA에서 지원 | `platform: "mobile"`, `source: "mobile-wallet-adapter"` | `@solana-mobile/wallet-standard-mobile`로 등록됩니다.             |
 | iOS 브라우저 지갑            | 설정된 wallet link에 대해 지원        | `platform: "mobile"`, `source: "deep-link"`             | Phantom, Solflare, Backpack이 universal link로 노출됩니다.        |
 | 수동/custom wallet 객체      | 지원                                  | 앱이 제공한 wallet                                      | `SolanaWallet` interface를 구현해야 합니다.                       |
-| 데스크톱 네이티브 앱 지갑    | v1에서 보류                           | 기본 노출 없음                                          | 향후 adapter를 위해 `protocol-link` metadata가 예약되어 있습니다. |
+| 데스크톱 네이티브 앱 지갑    | 아직 지원되지 않음                    | 기본 노출 없음                                          | 향후 adapter를 위해 `protocol-link` metadata가 예약되어 있습니다. |
 
 오늘 동작하는 것:
 
@@ -44,7 +44,7 @@ Vue Solana는 브라우저 확장 지갑, Android Mobile Wallet Adapter 지갑, 
 - 선택된 지갑이 지원하면 연결, 연결 해제, 메시지 서명, 트랜잭션 서명, 트랜잭션 서명/전송.
 - `canSignMessage`, `canSignTransaction`, `canSignAllTransactions`, `canSignAndSendTransaction`에서 unsupported-capability UI 렌더링.
 
-v1에 포함되지 않는 것:
+아직 포함되지 않는 것:
 
 - built-in wallet modal 또는 UI package.
 - desktop native protocol-link adapter.
@@ -77,7 +77,7 @@ const { publicKey, connected, connecting, connect, disconnect } = useWallet();
 
     <p>Selected: {{ selectedWallet?.name ?? "None" }}</p>
     <p>Connected: {{ connected }}</p>
-    <p>Public key: {{ publicKey?.toBase58() ?? "None" }}</p>
+    <p>Public key: {{ publicKey ?? "None" }}</p>
 
     <button type="button" :disabled="!selectedWallet || connected || connecting" @click="connect">
       Connect
@@ -126,7 +126,7 @@ const { connected, canSignMessage, canSignTransaction, connect } = useWallet();
 import { assertWalletCanSign, assertWalletConnected } from "@vue-solana/core/wallet";
 
 assertWalletConnected(wallet);
-console.log(wallet.publicKey.toBase58());
+console.log(wallet.publicKey);
 
 assertWalletCanSign(wallet);
 const signed = await wallet.signTransaction(transaction);
@@ -200,13 +200,13 @@ Android 메모:
 
 iOS 메모:
 
-| Capability                 | v1 동작                                                                         |
+| Capability                 | 현재 동작                                                                       |
 | -------------------------- | ------------------------------------------------------------------------------- |
 | Discovery                  | iOS browser에서 Phantom, Solflare, Backpack entry가 나타날 수 있습니다.         |
 | Connection                 | Wallet-specific universal link와 redirect callback을 사용합니다.                |
 | Session handling           | Redirect 후 지갑이 연결되었다고 가정하기 전에 callback state를 처리해야 합니다. |
 | Transactions               | Capability는 wallet link와 반환된 session data에 따라 다릅니다.                 |
-| Desktop Safari native apps | v1 desktop-native path로 구현되지 않았습니다.                                   |
+| Desktop Safari native apps | 구현되지 않았습니다.                                                            |
 
 iOS core helper를 직접 사용한다면 client startup 초기에 `handleSolanaIosWalletCallback()`을 호출해 redirect data가 앱의 wallet state 읽기 전에 validate 및 decrypt되도록 하세요.
 

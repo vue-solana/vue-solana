@@ -6,7 +6,7 @@ import { SolanaWalletError } from "@vue-solana/core/wallet";
 import { createMockSolanaContext, mountWithSolana } from "../../test-utils";
 import { useSignMessage } from "./useSignMessage";
 
-const publicKey = { toBase58: () => "public-key" } as SolanaWallet["publicKey"];
+const publicKey = "public-key" as SolanaWallet["publicKey"];
 
 type SignMessageResult = ReturnType<typeof useSignMessage>;
 

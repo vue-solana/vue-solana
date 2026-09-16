@@ -32,5 +32,5 @@ export function createSolanaClient(config: SolanaConfig = {}) {
 
 export type SolanaClient = ReturnType<typeof createSolanaClient>;
 
-export type { Address, Lamports, Rpc, SolanaRpcApi } from "@solana/kit";
+export type { Address, Commitment, Lamports, Rpc, Signature, SolanaRpcApi } from "@solana/kit";
 export { address, lamports } from "@solana/kit";

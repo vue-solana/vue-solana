@@ -1,4 +1,4 @@
-import { PublicKey } from "@solana/web3-compat";
+import { isAddress } from "@solana/kit";
 import bs58 from "bs58";
 import { cleanCallbackUrl, hasIosWalletCallbackParams } from "./browser";
 import { decryptPayload, getSharedSecret } from "./crypto";
@@ -157,9 +157,7 @@ function getStringField(payload: Record<string, unknown>, field: string) {
 function getPublicKeyField(payload: Record<string, unknown>, field: string) {
   const value = getStringField(payload, field);
 
-  try {
-    new PublicKey(value);
-  } catch {
+  if (!isAddress(value)) {
     throw new Error(`iOS wallet callback returned an invalid ${field}`);
   }
 

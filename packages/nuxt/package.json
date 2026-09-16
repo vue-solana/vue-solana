@@ -8,7 +8,6 @@
     "nuxt",
     "nuxt-module",
     "vue",
-    "web3",
     "wallet"
   ],
   "homepage": "https://vue-solana-docs.vercel.app/packages/nuxt",
@@ -35,11 +34,6 @@
       "import": "./dist/runtime/buffer-polyfill.mjs",
       "require": "./dist/runtime/buffer-polyfill.cjs"
     },
-    "./web3": {
-      "types": "./dist/runtime/web3.d.ts",
-      "import": "./dist/runtime/web3.mjs",
-      "require": "./dist/runtime/web3.cjs"
-    },
     "./kit": {
       "types": "./dist/runtime/kit.d.ts",
       "import": "./dist/runtime/kit.mjs",
@@ -59,7 +53,6 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@solana/web3-compat": "^0.0.21",
     "@vue-solana/vue": "workspace:*"
   },
   "peerDependencies": {

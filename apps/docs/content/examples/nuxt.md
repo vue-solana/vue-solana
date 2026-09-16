@@ -16,7 +16,7 @@ Live demo: [vue-solana-docs.vercel.app/demo](/demo)
 - Installing the Nuxt module with `modules: ['@vue-solana/nuxt']`.
 - Configuring the module with `solana: { cluster: 'devnet' }`.
 - Reading RPC status with auto-imported `useSolanaRpc()`.
-- Using the injected connection with `useSolanaConnection()`.
+- Using the injected Kit client with auto-imported `useSolanaClient()`.
 - Reading lamport balances with `useSolanaBalance()`.
 - Discovering browser extension wallets, Android Mobile Wallet Adapter wallets, and supported iOS browser wallet entries with `useSolanaWallets()`.
 - Managing active wallet state with `useSolanaWallet()`.
@@ -43,7 +43,7 @@ Open the Nuxt URL printed in the terminal, usually `http://localhost:3000`.
 ## What To Try
 
 - Check the initial module/RPC status and latest blockhash.
-- Click `Load Blockhash` to call `connection.getLatestBlockhash()` directly.
+- Click `Load Blockhash` to call `client.rpc.getLatestBlockhash().send()` directly.
 - Paste a devnet wallet address and refresh the balance.
 - Install a Solana browser wallet and switch it to devnet.
 - On Android Chrome, install a compatible Solana mobile wallet and look for `Mobile Wallet Adapter`.

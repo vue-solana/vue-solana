@@ -15,7 +15,7 @@ npx nuxt module add @vue-solana/nuxt
 
 This installs the package and adds `@vue-solana/nuxt` to the `modules` array in `nuxt.config.ts`.
 
-Browser apps that create or serialize transactions can initialize the Buffer polyfill from `@vue-solana/nuxt/buffer-polyfill` and import supported Solana primitives from `@vue-solana/nuxt/web3`. For the modern Kit API, use `@vue-solana/nuxt/kit` (`createSolanaClient`, `address`, `lamports`, and types) and the auto-imported `useSolanaClient()`.
+Browser apps that create or serialize transactions can initialize the Buffer polyfill from `@vue-solana/nuxt/buffer-polyfill`. Use `@vue-solana/nuxt/kit` for the Kit API (`createSolanaClient`, `address`, `lamports`, and types) and the auto-imported `useSolanaClient()`.
 
 ## Module Setup
 
@@ -77,8 +77,8 @@ The module auto-imports these composables from direct `@vue-solana/vue/*` subpat
 
 - `useSolana()`: returns the full injected Solana context.
 - `useSolanaClient()`: returns the Kit `{ client, rpc }` from the context. Recommended for new code.
-- `useSolanaRpc()`: returns cluster, endpoint, RPC status, latest blockhash, and `checkConnection()`. RPC reads here use the legacy connection; prefer `useSolanaClient().rpc` in new code.
-- `useSolanaConnection()`: returns the legacy Solana `Connection` instance (deprecated in favor of `useSolanaClient()`).
+- `useSolanaRpc()`: returns cluster, endpoint, RPC status, latest blockhash, the injected Kit `client`, and `checkConnection()`.
+- `useSolanaConnection()`: returns the injected Kit `client` (deprecated in favor of `useSolanaClient()`).
 - `useSolanaAccountInfo(address, options?)`: reads account info and can subscribe to account changes.
 - `useSolanaWallet()`: returns selected wallet state, connection state, capabilities, and wallet actions.
 - `useSolanaWallets()`: returns discovered wallets and wallet selection/refresh actions.
@@ -101,11 +101,10 @@ The Nuxt module exposes prefixed names such as `useSolanaRpc()` because auto-imp
 
 Use the `useSolana*` names inside Nuxt apps so auto-imports work without explicit imports.
 
-Raw Solana primitives and the browser Buffer helper are explicit imports, not auto-imports:
+Raw transaction bytes and the browser Buffer helper are explicit imports, not auto-imports:
 
 ```ts
 import { installSolanaBufferPolyfill } from "@vue-solana/nuxt/buffer-polyfill";
-import { PublicKey, Transaction } from "@vue-solana/nuxt/web3";
 ```
 
 The Kit API is available both as an auto-import and as an explicit import:
@@ -123,7 +122,6 @@ Use direct `@vue-solana/core/*` imports only for lower-level core usage.
 Direct package subpaths:
 
 - `@vue-solana/nuxt/buffer-polyfill`
-- `@vue-solana/nuxt/web3`
 - `@vue-solana/nuxt/kit`
 
 The runtime plugin is client-only. Auto-imported composables can be called during SSR and return inert state until hydration provides the real client context. Trigger RPC and wallet work from client lifecycle hooks or user actions.
@@ -330,7 +328,7 @@ const { publicKey, connected, connect, disconnect } = useSolanaWallet();
 
     <p>Selected: {{ selectedWallet?.name ?? "None" }}</p>
     <p>Connected: {{ connected }}</p>
-    <p>Public key: {{ publicKey?.toBase58() }}</p>
+    <p>Public key: {{ publicKey }}</p>
     <button type="button" :disabled="!selectedWallet || connected" @click="connect">Connect</button>
     <button type="button" :disabled="!connected" @click="disconnect">Disconnect</button>
   </section>
@@ -360,7 +358,7 @@ Use `useSolanaSignAndSendTransaction()` from a client-side user action when the 
 
 ```vue
 <script setup lang="ts">
-import { Transaction } from "@vue-solana/nuxt/web3";
+import type { SolanaTransaction } from "@vue-solana/nuxt/kit";
 
 const { connected, canSignTransaction } = useSolanaWallet();
 const { signature, confirmation, status, loading, error, execute } =
@@ -368,9 +366,8 @@ const { signature, confirmation, status, loading, error, execute } =
 
 const canSubmit = computed(() => connected.value && canSignTransaction.value && !loading.value);
 
-async function submitTransaction() {
-  const transaction = new Transaction();
-  // Add instructions, recent blockhash, and fee payer before requesting a wallet signature.
+async function submitTransaction(transaction: SolanaTransaction) {
+  // Build the transaction message with @solana/kit and serialize it to wire bytes first.
   await execute(transaction, {
     confirm: true,
     confirmation: { commitment: "confirmed", timeoutMs: 120_000 },

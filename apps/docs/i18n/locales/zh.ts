@@ -36,7 +36,7 @@ export default {
       vueVite: "Vue Vite",
       nuxt: "Nuxt",
       roadmap: "路线图",
-      v1Roadmap: "v1 路线图",
+      roadmapPage: "路线图",
     },
     external: {
       ariaLabel: "外部链接",
@@ -103,15 +103,15 @@ export default {
       },
     },
     directConnection: {
-      title: "直接 Connection 调用",
-      description: "直接从注入的 connection 调用 {method}。",
+      title: "直接 Kit 客户端调用",
+      description: "直接从 kit 客户端 RPC 调用 {method}。",
       load: "加载 Blockhash",
       blockhash: "Blockhash:",
     },
     balance: {
       title: "余额查询",
-      publicKey: "公钥",
-      publicKeyPlaceholder: "输入 Solana 公钥",
+      publicKey: "地址",
+      publicKeyPlaceholder: "输入 Solana 地址",
       refresh: "刷新余额",
       lamports: "Lamports:",
       sol: "SOL:",
@@ -134,7 +134,7 @@ export default {
         discoveredWallets: "已发现的钱包",
         selectedWallet: "已选择的钱包",
         configured: "钱包已配置",
-        publicKey: "公钥",
+        publicKey: "地址",
       },
       status: {
         connecting: "连接中",
@@ -191,7 +191,7 @@ export default {
         "加载已连接钱包的 SPL 代币账户，并通过 mint 地址查询特定代币余额。账户列表需要已连接的钱包。",
       refresh: "刷新账户",
       mintLabel: "Mint 地址",
-      mintPlaceholder: "输入代币 mint 公钥",
+      mintPlaceholder: "输入代币 mint 地址",
       refreshBalance: "查询余额",
       labels: {
         accounts: "代币账户：",
@@ -201,9 +201,9 @@ export default {
     transfer: {
       title: "真实 Devnet 转账",
       description:
-        "从已连接钱包发送真实转账，然后等待 confirmed commitment。请使用 devnet，输入收款人公钥，并从 {amount} SOL 这样的小金额开始。",
+        "从已连接钱包发送真实转账，然后等待 confirmed commitment。请使用 devnet，输入收款人地址，并从 {amount} SOL 这样的小金额开始。",
       recipient: "收款地址",
-      recipientPlaceholder: "输入收款人公钥",
+      recipientPlaceholder: "输入收款人地址",
       amount: "SOL 数量",
       send: "发送 Devnet 转账",
       signature: "签名：",

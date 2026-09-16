@@ -1,4 +1,3 @@
-import { PublicKey } from "@vue-solana/core/web3";
 import { flushPromises } from "@vue/test-utils";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { defineComponent, h, ref } from "vue";
@@ -30,7 +29,7 @@ describe("useTokenBalance", () => {
   it("loads balance for a provided mint and owner", async () => {
     mockedGetTokenBalance.mockResolvedValue({ amount: 1000n, decimals: 6 });
     const context = createMockSolanaContext({
-      connection: {} as never,
+      client: {} as never,
     });
     const mint = ref("11111111111111111111111111111111");
     const owner = ref("11111111111111111111111111111111");
@@ -57,7 +56,7 @@ describe("useTokenBalance", () => {
   it("clears balance when mint is null", async () => {
     mockedGetTokenBalance.mockResolvedValue(null);
     const context = createMockSolanaContext({
-      connection: {} as never,
+      client: {} as never,
     });
     let result: ReturnType<typeof useTokenBalance> | undefined;
 
@@ -81,7 +80,7 @@ describe("useTokenBalance", () => {
   it("clears balance when owner is null", async () => {
     mockedGetTokenBalance.mockResolvedValue(null);
     const context = createMockSolanaContext({
-      connection: {} as never,
+      client: {} as never,
     });
     let result: ReturnType<typeof useTokenBalance> | undefined;
 
@@ -104,7 +103,7 @@ describe("useTokenBalance", () => {
   it("sets null balance for missing ATA without error", async () => {
     mockedGetTokenBalance.mockResolvedValue(null);
     const context = createMockSolanaContext({
-      connection: {} as never,
+      client: {} as never,
     });
     let result: ReturnType<typeof useTokenBalance> | undefined;
 
@@ -132,7 +131,7 @@ describe("useTokenBalance", () => {
     const failure = new Error("RPC failed");
     mockedGetTokenBalance.mockRejectedValue(failure);
     const context = createMockSolanaContext({
-      connection: {} as never,
+      client: {} as never,
     });
     let result: ReturnType<typeof useTokenBalance> | undefined;
 
@@ -140,8 +139,8 @@ describe("useTokenBalance", () => {
       defineComponent({
         setup() {
           result = useTokenBalance(
-            new PublicKey("11111111111111111111111111111111"),
-            new PublicKey("11111111111111111111111111111111"),
+            "11111111111111111111111111111111",
+            "11111111111111111111111111111111",
           );
           return () => h("div");
         },
@@ -163,7 +162,7 @@ describe("useTokenBalance", () => {
       .mockReturnValueOnce(secondRequest.promise);
 
     const context = createMockSolanaContext({
-      connection: {} as never,
+      client: {} as never,
     });
     const mint = ref("11111111111111111111111111111111");
     let result: ReturnType<typeof useTokenBalance> | undefined;

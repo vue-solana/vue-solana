@@ -40,22 +40,13 @@ export default defineConfig({
       "@vue-solana/core/wallet-standard": fileURLToPath(
         new URL("./packages/core/src/wallet-standard.ts", import.meta.url),
       ),
-      "@vue-solana/core/web3": fileURLToPath(
-        new URL("./packages/core/src/web3.ts", import.meta.url),
-      ),
       "@vue-solana/core/kit": fileURLToPath(new URL("./packages/core/src/kit.ts", import.meta.url)),
-      "@vue-solana/core/spl-token": fileURLToPath(
-        new URL("./packages/core/src/spl-token.ts", import.meta.url),
-      ),
       "@vue-solana/core/token-accounts": fileURLToPath(
         new URL("./packages/core/src/token-accounts.ts", import.meta.url),
       ),
       "@vue-solana/core": fileURLToPath(new URL("./packages/core/src/index.ts", import.meta.url)),
       "@vue-solana/nuxt/buffer-polyfill": fileURLToPath(
         new URL("./packages/nuxt/src/runtime/buffer-polyfill.ts", import.meta.url),
-      ),
-      "@vue-solana/nuxt/web3": fileURLToPath(
-        new URL("./packages/nuxt/src/runtime/web3.ts", import.meta.url),
       ),
       "@vue-solana/nuxt": fileURLToPath(new URL("./packages/nuxt/src/module.ts", import.meta.url)),
       "@vue-solana/vue/buffer-polyfill": fileURLToPath(
@@ -106,7 +97,6 @@ export default defineConfig({
       "@vue-solana/vue/useTokenBalance": fileURLToPath(
         new URL("./packages/vue/src/useTokenBalance.ts", import.meta.url),
       ),
-      "@vue-solana/vue/web3": fileURLToPath(new URL("./packages/vue/src/web3.ts", import.meta.url)),
       "@vue-solana/vue": fileURLToPath(new URL("./packages/vue/src/index.ts", import.meta.url)),
     },
   },

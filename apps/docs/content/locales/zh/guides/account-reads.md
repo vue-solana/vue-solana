@@ -11,19 +11,21 @@ Vue Solana 为常见的 Solana 读取路径提供了组合式函数：余额、�
 
 ## 解析地址
 
-与框架无关的代码可以使用 `parsePublicKey()` 规范化 Solana 地址。
+与框架无关的代码可以使用 `parseAddress()` 规范化 Solana 地址。
 
 ```ts
-import { parsePublicKey } from "@vue-solana/core/address";
+import { parseAddress } from "@vue-solana/core/address";
+import { createSolanaClient } from "@vue-solana/core/kit";
 
-const publicKey = parsePublicKey("11111111111111111111111111111111");
+const address = parseAddress("11111111111111111111111111111111");
 
-if (publicKey) {
-  const balance = await connection.getBalance(publicKey);
+if (address) {
+  const client = createSolanaClient({ cluster: "devnet" });
+  const { value: lamports } = await client.rpc.getBalance(address).send();
 }
 ```
 
-`parsePublicKey()` 接受 `PublicKey`、地址字符串、类似 ref 的对象、getter、`null` 或 `undefined`。无效的地址字符串会抛出 `INVALID_ADDRESS`。
+`parseAddress()` 接受 `Address`、地址字符串、类似 ref 的对象、getter、`null` 或 `undefined`。无效的地址字符串会抛出 `INVALID_ADDRESS`。
 
 ## 在 Vue 中读取余额
 
@@ -59,7 +61,7 @@ const errorMessage = computed(() => {
 
 ## 读取账户信息
 
-使用 `useAccountInfo()` 读取单个账户。当你需要实时账户更新时，启用 `watch`。
+使用 `useAccountInfo()` 读取单个账户。
 
 ```vue
 <script setup lang="ts">
@@ -67,14 +69,13 @@ import { ref } from "vue";
 import { useAccountInfo } from "@vue-solana/vue/useAccountInfo";
 
 const address = ref("PASTE_A_SOLANA_ADDRESS");
-const { accountInfo, loading, error, refresh, stopWatching } = useAccountInfo(address, {
+const { accountInfo, loading, error, refresh } = useAccountInfo(address, {
   commitment: "confirmed",
-  watch: true,
 });
 </script>
 ```
 
-启用 `watch: true` 时，Vue Solana 会在组件卸载时自动移除 WebSocket 监听器。调用 `stopWatching()` 可以更早移除当前监听器，并阻止该组合式函数实例自动重启监听。
+该组合式函数返回规范化的账户数据（`executable`、`lamports`、`owner`、`space` 和已解码的 `data` 字节），当地址变为 `null` 或无效时会清除过期状态。调用 `refresh()` 可按需重新读取账户。
 
 ## 读取程序账户
 
@@ -107,7 +108,7 @@ import { ref } from "vue";
 import { useSignatureStatus } from "@vue-solana/vue/useSignatureStatus";
 
 const signature = ref("PASTE_A_TRANSACTION_SIGNATURE");
-const { status, confirmationStatus, error, refresh } = useSignatureStatus(signature, {
+const { status, error, refresh, stopPolling } = useSignatureStatus(signature, {
   pollIntervalMs: 2_000,
 });
 </script>

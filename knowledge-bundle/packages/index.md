@@ -16,7 +16,7 @@ timestamp: 2025-07-17T00:00:00Z
 
 This section summarizes the public APIs exported by the Vue Solana packages.
 
-`@vue-solana/core` builds on top of `@solana/web3-compat` and re-exports supported Solana primitives from `@vue-solana/core/web3`. Vue apps can use `@vue-solana/vue/web3`, and Nuxt apps can use `@vue-solana/nuxt/web3`, without installing core directly. Direct `@solana/web3-compat` imports are only needed for legacy boundaries or troubleshooting.
+`@vue-solana/core` builds on [`@solana/kit`](https://solana.com/docs/kit). It exposes `createSolanaClient()` and re-exports Kit primitives (`address`, `lamports`, and types) from `@vue-solana/core/kit`. Vue apps use `@vue-solana/vue/kit`, and Nuxt apps use `@vue-solana/nuxt/kit`. The legacy `@solana/web3-compat` surface and the `web3` subpaths were removed in v2.0.0.
 
 Package references:
 

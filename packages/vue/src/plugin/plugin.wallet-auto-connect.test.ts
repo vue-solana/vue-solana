@@ -37,7 +37,7 @@ describe("createSolanaPlugin wallet auto-connect", () => {
     });
 
     expect(getConnectFeature(standardWallet).connect).toHaveBeenCalledOnce();
-    expect(wallet?.publicKey.value?.toBase58()).toBe(account.address);
+    expect(wallet?.publicKey.value).toBe(account.address);
   });
 
   it("restores and auto-connects a persisted wallet on client boot", async () => {
@@ -59,7 +59,7 @@ describe("createSolanaPlugin wallet auto-connect", () => {
 
     expect(getRegisteredSolanaWallets).toHaveBeenCalledOnce();
     expect(getConnectFeature(standardWallet).connect).toHaveBeenCalledOnce();
-    expect(wallet?.publicKey.value?.toBase58()).toBe(account.address);
+    expect(wallet?.publicKey.value).toBe(account.address);
   });
 
   it("restores and auto-connects a persisted Android mobile wallet after delayed registration", async () => {
@@ -88,7 +88,7 @@ describe("createSolanaPlugin wallet auto-connect", () => {
 
     expect(solana?.selectedWallet.value).toBe(mobileWallet);
     expect(getConnectFeature(standardWallet).connect).toHaveBeenCalledOnce();
-    expect(wallet?.publicKey.value?.toBase58()).toBe(account.address);
+    expect(wallet?.publicKey.value).toBe(account.address);
   });
 
   it("does not auto-connect arbitrary discovered wallets without persisted selection", () => {

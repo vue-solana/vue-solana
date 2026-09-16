@@ -82,20 +82,19 @@ Direct package subpaths:
 - `@vue-solana/vue/useSignAndSendTransaction`
 - `@vue-solana/vue/useTokenBalance`
 - `@vue-solana/vue/useTokenAccounts`
-- `@vue-solana/vue/web3`
 - `@vue-solana/vue/kit`
 
-Use `@vue-solana/vue/web3` for supported raw Solana primitives such as `PublicKey`, `Transaction`, and `TransactionInstruction`. Use `@vue-solana/vue/buffer-polyfill` for browser transaction code that needs the Buffer polyfill. Use `@vue-solana/vue/kit` for the modern Kit API (`createSolanaClient`, `address`, `lamports`, and types). Direct `@vue-solana/core/*` imports remain supported for lower-level core usage.
+Use `@vue-solana/vue/buffer-polyfill` for browser transaction code that needs the Buffer polyfill. Use `@vue-solana/vue/kit` for the Kit API (`createSolanaClient`, `address`, `lamports`, and types). Direct `@vue-solana/core/*` imports remain supported for lower-level core usage.
 
 - `useSolana()`: returns the full injected Solana context.
 - `useSolanaClient()`: returns the Kit `{ client, rpc }` from the context. Recommended for new code.
-- `useRpc()`: returns cluster, endpoint, connection status, latest blockhash, and `checkConnection()`. RPC reads here use the legacy connection; prefer `useSolanaClient().rpc` in new code.
-- `useConnection()`: returns the legacy Solana `Connection` (deprecated in favor of `useSolanaClient()`).
-- `useAccountInfo(address, options?)`: loads account data and can subscribe to account changes.
+- `useRpc()`: returns cluster, endpoint, connection status, latest blockhash, the injected Kit `client`, and `checkConnection()`.
+- `useConnection()`: returns the injected Kit client (deprecated in favor of `useSolanaClient()`).
+- `useAccountInfo(address, options?)`: loads normalized account data (executable, lamports, owner, space, data bytes).
 - `useProgramAccounts(programId, options?)`: loads accounts owned by a program id with optional filters and data slicing.
 - `useWallet()`: returns active wallet refs, computed connection state, and wallet actions.
 - `useWallets()`: returns discovered browser extension wallets, Android Mobile Wallet Adapter wallets, supported iOS browser wallet entries, and wallet selection actions.
-- `useBalance(address, commitment?)`: loads lamport balance for a `PublicKey` or address string.
+- `useBalance(address, commitment?)`: loads lamport balance for an address string.
 - `useTokenAccounts(owner, options?)`: loads all SPL token accounts for an owner, querying both Token and Token-2022 programs by default.
 - `useTokenBalance(mint, owner)`: loads the SPL token balance and decimals for a mint/owner pair via the associated token account.
 - `useTransaction(handler, options?)`: generic async transaction state helper with optional timeout settings.
@@ -407,7 +406,7 @@ const { publicKey, connected, connecting, connect, disconnect } = useWallet();
 
     <p>Selected: {{ selectedWallet?.name ?? "None" }}</p>
     <p>Connected: {{ connected }}</p>
-    <p>Public key: {{ publicKey?.toBase58() }}</p>
+    <p>Public key: {{ publicKey }}</p>
     <p v-if="connecting">Connecting...</p>
     <button type="button" :disabled="!selectedWallet || connected || connecting" @click="connect">
       Connect

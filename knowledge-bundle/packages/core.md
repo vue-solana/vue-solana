@@ -1,7 +1,7 @@
 ---
 type: Package Reference
 title: "@vue-solana/core API Reference"
-description: Framework-agnostic Solana primitives, config types, RPC connection helpers, wallet types, and transaction helpers.
+description: Framework-agnostic Solana primitives, config types, Kit RPC client, wallet types, token account reads, and transaction helpers.
 tags:
   - core
   - API
@@ -28,10 +28,8 @@ The root export remains supported. Direct subpath exports are also available whe
 - `@vue-solana/core/timeout`
 - `@vue-solana/core/transaction`
 - `@vue-solana/core/wallet`
-- `@vue-solana/core/spl-token`
 - `@vue-solana/core/token-accounts`
 - `@vue-solana/core/wallet-standard`
-- `@vue-solana/core/web3`
 
 ## Configuration
 
@@ -61,20 +59,20 @@ import { createSolanaClient, address, lamports } from "@vue-solana/core/kit";
 import type { Address, SolanaClient } from "@vue-solana/core/kit";
 ```
 
-`createSolanaClient(config?)` builds a read-only `@solana/kit` client (with `rpc` and `rpcSubscriptions`) from the same `SolanaConfig` used by the legacy helpers. It is the recommended replacement for `createSolanaConnection`.
+`createSolanaClient(config?)` builds a `@solana/kit` client (with `rpc` and `rpcSubscriptions`) from `SolanaConfig`.
 
 ```ts
 const client = createSolanaClient({ cluster: "devnet" });
 const slot = await client.rpc.getSlot().send(); // bigint
 ```
 
-`@vue-solana/core/kit` re-exports the Kit helpers and types Vue Solana consumers need: `address`, `lamports`, and the types `Address`, `Lamports`, `Rpc`, `SolanaRpcApi`, and `SolanaClient`. Read calls return `bigint` numerics and `Uint8Array` account data — not `Buffer`. For the full before/after map, see [Kit Migration](../guides/kit-migration.md) (the docs-site guide lives at [`apps/docs/content/guides/kit-migration.md`](../../apps/docs/content/guides/kit-migration.md)).
+`@vue-solana/core/kit` re-exports the Kit helpers and types Vue Solana consumers need: `address`, `lamports`, and the types `Address`, `Commitment`, `Lamports`, `Rpc`, `Signature`, `SolanaRpcApi`, and `SolanaClient`. Read calls return `bigint` numerics and base64-encoded account data — not `Buffer`. For the full before/after map, see [Kit Migration](../guides/kit-migration.md) (the docs-site guide lives at [`apps/docs/content/guides/kit-migration.md`](../../apps/docs/content/guides/kit-migration.md)).
 
-## `@solana/web3-compat` Compatibility
+## Legacy Compatibility Removed In v2
 
-The v1 package line uses `@solana/web3-compat` internally and re-exports supported Solana primitives from `@vue-solana/core` and `@vue-solana/core/web3`, including `Connection`, `PublicKey`, `SystemProgram`, `Transaction`, `TransactionInstruction`, and `VersionedTransaction`. The current `@solana/web3-compat@0.0.21` package has broken TypeScript root metadata, so `@vue-solana/core` publishes temporary declaration shims for its own public type surface. Runtime imports still resolve to the published package. Re-check the upstream package metadata before v1 and remove the package-owned shim once the package publishes valid root declarations.
+`@solana/web3-compat` was removed from every package in v2.0.0. There is no `connection` on the context, the `web3` subpaths (`@vue-solana/core/web3`, `@vue-solana/vue/web3`, `@vue-solana/nuxt/web3`) were deleted, `SolanaTransaction` is raw serialized `Uint8Array`, and `SolanaWallet.publicKey` is an `Address` string. The declaration shims that v1 published for the broken `web3-compat` metadata were removed.
 
-Browser apps that create or serialize legacy transactions can initialize the compatibility Buffer polyfill from core:
+Browser apps that create or serialize transactions can initialize the Buffer polyfill from core:
 
 ```ts
 import { installSolanaBufferPolyfill } from "@vue-solana/core/buffer-polyfill";
@@ -98,19 +96,17 @@ interface SolanaContext {
   cluster: SolanaCluster;
   endpoint: string;
   wsEndpoint: string;
-  connection: Connection;
   client: SolanaClient;
 }
 ```
 
-`connection` is the legacy web3-compat `Connection` (deprecated, removed in v2). `client` is the `@solana/kit` client from `createSolanaClient()` exposing `rpc` and `rpcSubscriptions`. `createSolanaContext()` builds both.
+`client` is the `@solana/kit` client from `createSolanaClient()` exposing `rpc` and `rpcSubscriptions`. `createSolanaContext()` builds it after resolving cluster, endpoint, and WebSocket endpoint.
 
 ## Wallet
 
 ```ts
 interface SolanaWallet {
-  publicKey: PublicKey | null;
-  address?: Address;
+  publicKey: Address | null;
   connected: boolean;
   connecting?: boolean;
   disconnecting?: boolean;
@@ -127,7 +123,7 @@ interface SolanaWallet {
   signAndSendTransaction?: (
     transaction: SolanaTransaction,
     options?: SendOptions,
-  ) => Promise<{ signature: TransactionSignature }>;
+  ) => Promise<{ signature: Signature }>;
 }
 ```
 
@@ -169,7 +165,7 @@ Current metadata values:
 - Browser extension wallets use `platform: "browser"` and `source: "wallet-standard"`.
 - Android Mobile Wallet Adapter uses `platform: "mobile"` and `source: "mobile-wallet-adapter"`.
 - iOS browser wallets use `platform: "mobile"` and `source: "deep-link"`.
-- `protocol-link` is reserved for possible post-v1 desktop native wallet adapters.
+- `protocol-link` is reserved for possible desktop native wallet adapters.
 
 For wallet behavior and platform support, see [Wallet Support](../guides/wallets.md).
 
@@ -205,10 +201,17 @@ interface ConfirmTransactionOptions {
   timeoutMs?: number;
 }
 
+type TransactionStatus = {
+  slot: bigint;
+  confirmations: bigint | null;
+  err: unknown | null;
+  confirmationStatus: Commitment | null;
+};
+
 interface TransactionConfirmation {
-  signature: TransactionSignature;
+  signature: Signature;
   commitment: Commitment;
-  result: RpcResponseAndContext<SignatureResult>;
+  status: TransactionStatus;
 }
 ```
 
@@ -216,8 +219,7 @@ interface TransactionConfirmation {
 - `getClusterEndpoint(cluster?)`: returns the HTTP RPC endpoint for a cluster.
 - `getClusterWebSocketEndpoint(cluster?)`: returns the WebSocket endpoint for a cluster.
 - `getWebSocketEndpoint(endpoint)`: converts `http`/`https` endpoints to `ws`/`wss` endpoints.
-- `createSolanaConnection(config?)`: (deprecated) creates a legacy Solana `Connection`. Prefer `createSolanaClient(config?)` for new code.
-- `createSolanaContext(config?)`: creates a `SolanaContext` carrying both the legacy `connection` and the Kit `client`.
+- `createSolanaContext(config?)`: resolves cluster, endpoint, and WebSocket endpoint into a `SolanaContext` with the `@solana/kit` `client`.
 - `createSolanaClient(config?)`: creates a `@solana/kit` client with `rpc` and `rpcSubscriptions` from `@vue-solana/core/kit`.
 - `createSolanaError(code, message, options?)`: creates a normalized `SolanaError` with optional original `cause` and wallet `feature` metadata.
 - `isSolanaError(error)`: checks whether an unknown thrown value is a `SolanaError`.
@@ -226,8 +228,9 @@ interface TransactionConfirmation {
 - `assertWalletConnected(wallet)`: throws if the wallet is not connected.
 - `assertWalletCanSign(wallet)`: throws if the wallet cannot sign transactions.
 - `assertWalletCanSignMessage(wallet)`: throws if the wallet cannot sign messages.
-- `signAndSendTransaction(connection, wallet, transaction, options?)`: (deprecated) signs and sends a transaction using wallet capabilities. Android Mobile Wallet Adapter wallets prefer `signTransaction` plus app-side RPC submission when available so the app can reliably return the submitted signature. Prefer the Kit send path (`client.sendTransaction`/`client.sendTransactions`) in new code.
-- `confirmTransactionSignature(connection, signature, options?)`: (deprecated) waits for a submitted signature to reach the requested commitment. Defaults to `confirmed` commitment and a 60 second timeout. It returns `TransactionConfirmation` and throws a clear timeout or failed-confirmation error. Prefer Kit confirmation helpers or `client.rpc.getSignatureStatuses(...).send()` in new code.
+- `parseAddress(value)`: validates and returns an `Address` from an `Address`, address string, ref-like object, getter, `null`, or `undefined`. Invalid address strings throw `INVALID_ADDRESS`.
+- `signAndSendTransaction(client, wallet, transaction, options?)`: signs and sends a transaction using wallet capabilities (raw wire bytes). Android Mobile Wallet Adapter wallets prefer `signTransaction` plus app-side RPC submission when available so the app can reliably return the submitted signature. Serializes signed bytes and calls `client.rpc.sendTransaction(...)`.
+- `confirmTransactionSignature(client, signature, options?)`: waits for a submitted signature to reach the requested commitment by polling `client.rpc.getSignatureStatuses([signature]).send()`. Defaults to `confirmed` commitment and a 60 second timeout. Returns `TransactionConfirmation` and throws a clear timeout or failed-confirmation error.
 - `getSolanaChain(cluster)`: maps a package cluster to a Wallet Standard chain ID.
 - `isSolanaStandardWallet(wallet)`: checks whether a Wallet Standard wallet supports Solana.
 - `getRegisteredSolanaWallets()`: returns discovered Solana Wallet Standard wallets in browser environments, including Android Mobile Wallet Adapter after it is registered on supported clients.
@@ -241,17 +244,22 @@ interface TransactionConfirmation {
 - `handleSolanaIosWalletCallback(options?)`: validates and decrypts iOS wallet redirect callbacks.
 - `isSolanaIosBrowserWalletSupported()`: returns whether the current runtime should expose iOS browser wallet links.
 
-## SPL Token
+## SPL Token Reads (`@vue-solana/core/token-accounts`)
 
-Re-exports from `@vue-solana/core/spl-token`:
+Token account reads go through Kit RPC `jsonParsed` responses. `@solana/spl-token` and its `unpack` helpers are no longer used; token accounts are returned as `TokenAccountInfo`:
 
-- `TOKEN_PROGRAM_ID`, `TOKEN_2022_PROGRAM_ID`: SPL Token and Token-2022 program IDs.
-- `TokenAccount` (alias for `Account`), `Mint`, `AccountState`: SPL account types.
-- `getAssociatedTokenAddressSync`, `unpackAccount`, `unpackMint`: SPL helpers.
+```ts
+interface TokenAccountInfo {
+  address: Address;
+  mint: Address;
+  owner: Address;
+  amount: bigint;
+  decimals: number;
+  state: string;
+  isNative: boolean;
+}
+```
 
-### Token Account Helpers (`@vue-solana/core/token-accounts`)
-
-- `getTokenAccountsByOwner(connection, owner, options?)`: fetches all token accounts for an owner. Queries both `TOKEN_PROGRAM_ID` and `TOKEN_2022_PROGRAM_ID` by default, or a single `programId` via options. Returns `TokenAccount[]`.
-- `getTokenAccount(connection, address)`: fetches and unpacks a single token account. Returns `TokenAccount | null` if the account does not exist.
-- `getMint(connection, address)`: fetches mint metadata. Returns `Mint | null` if the account does not exist.
-- `getTokenBalance(connection, mint, owner)`: derives the associated token account, fetches it with mint decimals, returns `{ amount: bigint, decimals: number } | null`. Returns `null` if the ATA or mint does not exist.
+- `getTokenAccountsByOwner(client, owner, options?)`: fetches all token accounts for an owner address. Queries both `TOKEN_PROGRAM_ID` and `TOKEN_2022_PROGRAM_ID` by default, or a single `programId` via options. Returns `TokenAccountInfo[]`.
+- `getTokenAccount(client, address, commitment?)`: fetches and parses a single token account by address. Returns `TokenAccountInfo | null`.
+- `getTokenBalance(client, mint, owner, commitment?)`: reads the balance of an owner's associated token account for a mint. Returns `{ amount: bigint, decimals: number } | null`.

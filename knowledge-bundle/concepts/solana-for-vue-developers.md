@@ -33,7 +33,7 @@ Examples:
 - `https://api.mainnet-beta.solana.com`
 - `http://127.0.0.1:8899`
 
-The `Connection` object, available from `@vue-solana/vue/web3`, `@vue-solana/nuxt/web3`, or `@vue-solana/core/web3`, sends RPC requests to this endpoint. Public endpoints are useful for getting started, but production apps usually use a dedicated RPC provider for reliability and rate limits.
+RPC requests go through `client.rpc` from `useSolanaClient()` / `useSolanaRpc()`, or from `createSolanaClient()` / `createSolanaContext()` in `@vue-solana/core`. The legacy `Connection` class and the `web3` subpaths were removed in v2.0.0. Public endpoints are useful for getting started, but production apps usually use a dedicated RPC provider for reliability and rate limits.
 
 Official reference: [Solana RPC](https://solana.com/docs/rpc)
 
@@ -54,9 +54,9 @@ A public key is a Solana account address. You can safely show public keys in a f
 Example public key usage:
 
 ```ts
-import { PublicKey } from "@vue-solana/vue/web3";
+import { address, type Address } from "@vue-solana/vue/kit";
 
-const publicKey = new PublicKey("PASTE_A_SOLANA_ADDRESS");
+const publicKey: Address = address("PASTE_A_SOLANA_ADDRESS");
 ```
 
 Never expose private keys, seed phrases, or secret key arrays in frontend code.

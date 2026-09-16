@@ -7,42 +7,11 @@ surroundOrder: 4
 
 Usa esta guia para diagnosticar los problemas mas comunes de setup de Vue Solana en Vue, Nuxt, TypeScript, descubrimiento de wallets, llamadas RPC y transacciones. Empieza con el mensaje de error o comportamiento que coincida con tu app, luego sigue las comprobaciones en orden antes de abrir un issue.
 
-## TypeScript no puede resolver `@solana/web3-compat`
+## `@solana/web3-compat` Cannot Be Resolved
 
-`@solana/web3-compat@0.0.21` actualmente tiene metadatos TypeScript rotos. Las importaciones en runtime siguen usando el paquete real. Los paquetes actuales de Vue Solana publican shims temporales de declaraciones propios del paquete, asi que las importaciones documentadas desde `@vue-solana/core`, `@vue-solana/vue` y `@vue-solana/nuxt` deberian pasar typecheck sin un shim local del consumidor.
+v2.0.0 elimino `@solana/web3-compat` de todos los paquetes de Vue Solana, asi que un error de declaracion faltante contra ese paquete casi siempre significa que tu app todavia importa desde la superficie legacy eliminada: `@vue-solana/core/web3`, `@vue-solana/vue/web3`, `@vue-solana/nuxt/web3`, o una dependencia directa de `@solana/web3-compat`.
 
-Si TypeScript todavia informa declaraciones faltantes, confirma primero que usas una version actual del paquete Vue Solana y que no estas importando `@solana/web3-compat` directamente desde codigo de la app. Para versiones antiguas de Vue Solana o importaciones directas de `@solana/web3-compat`, agrega `types/web3-compat.d.ts` a tu app:
-
-```ts
-declare module "@solana/web3-compat" {
-  export type {
-    Commitment,
-    RpcResponseAndContext,
-    SendOptions,
-    SignatureResult,
-    TransactionSignature,
-  } from "@solana/web3.js";
-  export {
-    Connection,
-    Keypair,
-    PublicKey,
-    SystemProgram,
-    Transaction,
-    TransactionInstruction,
-    VersionedTransaction,
-  } from "@solana/web3.js";
-}
-```
-
-Asegurate de que tu `tsconfig.json` incluya el archivo:
-
-```json
-{
-  "include": ["src/**/*.ts", "src/**/*.vue", "types/**/*.d.ts"]
-}
-```
-
-Vuelve a revisar nuevas versiones de `@solana/web3-compat` antes de mantener este workaround. El shim propio del paquete deberia quitarse cuando upstream publique declaraciones raiz validas.
+Actualiza esas importaciones a los equivalentes de Kit — consulta la [guia de migracion a Kit](/guides/kit-migration). Si aun estas en un paquete v1.x, los paquetes v1 incluian shims de declaraciones propios del paquete para las importaciones documentadas de core, y las apps en v1 podian agregar su propio shim de `@solana/web3-compat` solo cuando importaban el paquete directamente. Actualizar a `@vue-solana/*@^2` elimina la necesidad de cualquier shim.
 
 ## `Vue Solana plugin is not installed`
 
@@ -116,7 +85,7 @@ Causas comunes:
 - El `redirectUrl` configurado no vuelve a la misma pagina de la app que refresca el estado de wallet.
 - El refresh de wallet o el manejo de callback solo se ejecuta durante SSR en vez de en el cliente.
 
-Manten el trabajo de wallet iOS del lado cliente, asegurate de que la URL de redireccion cargue la app otra vez y llama `refreshWallets()` despues de que cargue la pagina redirigida. El plugin Vue maneja callbacks iOS durante el refresh de wallet; las apps que usen helpers core directamente deberian llamar `handleSolanaIosWalletCallback()` antes de depender de la conexion devuelta.
+Manten el trabajo de wallet iOS del lado cliente, asegurate de que la URL de redireccion cargue la app otra vez y llama `refreshWallets()` despues de que cargue la pagina redirigida. El plugin Vue maneja callbacks iOS durante el refresh de wallet; las apps que usen helpers core directamente deberian llamar `handleSolanaIosWalletCallback()` antes de depender de la sesion de wallet adaptada.
 
 ## `Solana wallet is not connected`
 
@@ -149,7 +118,7 @@ Las wallets Android Mobile Wallet Adapter prefieren firma de wallet mas envio RP
 
 ## `Buffer is not defined`
 
-Algunas rutas de transaccion de `@solana/web3-compat` todavia esperan un global `Buffer` compatible con Node. En apps Vue de navegador, inicializa el polyfill Buffer del paquete Vue antes de crear o serializar transacciones. Usa `@vue-solana/nuxt/buffer-polyfill` en apps Nuxt.
+Algunas rutas de serializacion de transacciones de Solana todavia esperan un global `Buffer` compatible con Node en runtimes de navegador. En apps Vue de navegador, inicializa el polyfill Buffer del paquete Vue antes de crear o serializar transacciones. Usa `@vue-solana/nuxt/buffer-polyfill` en apps Nuxt.
 
 ```ts
 import { installSolanaBufferPolyfill } from "@vue-solana/vue/buffer-polyfill";

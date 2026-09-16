@@ -15,7 +15,7 @@ npx nuxt module add @vue-solana/nuxt
 
 这会安装包，并把 `@vue-solana/nuxt` 添加到 `nuxt.config.ts` 的 `modules` 数组中。
 
-创建或序列化交易的浏览器应用可以从 `@vue-solana/nuxt/buffer-polyfill` 初始化 Buffer polyfill，并从 `@vue-solana/nuxt/web3` 导入受支持的 Solana primitive。
+创建或序列化交易的浏览器应用可以从 `@vue-solana/nuxt/buffer-polyfill` 初始化 Buffer polyfill。使用 `@vue-solana/nuxt/kit` 获取 Kit API（`createSolanaClient`、`address`、`lamports` 和类型）以及自动导入的 `useSolanaClient()`。
 
 ## 模块设置
 
@@ -76,8 +76,9 @@ export default defineNuxtConfig({
 模块从直接 `@vue-solana/vue/*` subpath 自动导入这些 composable，而不是从 Vue 包根 barrel 导入。这样即使页面只使用一个 composable，Nuxt SSR bundle 也不会拉入无关的 Solana 运行时代码。
 
 - `useSolana()`：返回完整注入的 Solana context。
-- `useSolanaRpc()`：返回 cluster、endpoint、RPC 状态、latest blockhash 和 `checkConnection()`。
-- `useSolanaConnection()`：返回 Solana `Connection` 实例。
+- `useSolanaClient()`：返回 context 中的 Kit `{ client, rpc }`。新代码推荐使用。
+- `useSolanaRpc()`：返回 cluster、endpoint、RPC 状态、latest blockhash、注入的 Kit `client` 和 `checkConnection()`。
+- `useSolanaConnection()`：返回注入的 Kit `client`（已弃用，推荐使用 `useSolanaClient()`）。
 - `useSolanaAccountInfo(address, options?)`：读取账户信息，并可订阅账户变化。
 - `useSolanaWallet()`：返回所选钱包状态、连接状态、能力和钱包操作。
 - `useSolanaWallets()`：返回已发现钱包和钱包选择/刷新操作。
@@ -100,11 +101,20 @@ Nuxt 模块暴露 `useSolanaRpc()` 这样的前缀名称，因为自动导入的
 
 在 Nuxt 应用中使用 `useSolana*` 名称，这样自动导入无需显式 import 即可工作。
 
-原始 Solana primitive 和浏览器 Buffer helper 是显式导入，不是自动导入：
+原始交易字节和浏览器 Buffer helper 是显式导入，不是自动导入：
 
 ```ts
 import { installSolanaBufferPolyfill } from "@vue-solana/nuxt/buffer-polyfill";
-import { PublicKey, Transaction } from "@vue-solana/nuxt/web3";
+```
+
+Kit API 既可以作为自动导入，也可以作为显式导入使用：
+
+```ts
+import { address, lamports } from "@vue-solana/nuxt/kit";
+
+const { client, rpc } = useSolanaClient();
+const slot = await rpc.getSlot().send(); // bigint
+const owner = address("PASTE_A_SOLANA_ADDRESS");
 ```
 
 只有较底层 core 用法才直接使用 `@vue-solana/core/*` 导入。
@@ -112,7 +122,7 @@ import { PublicKey, Transaction } from "@vue-solana/nuxt/web3";
 直接包 subpath：
 
 - `@vue-solana/nuxt/buffer-polyfill`
-- `@vue-solana/nuxt/web3`
+- `@vue-solana/nuxt/kit`
 
 运行时插件仅在客户端运行。自动导入的 composable 可以在 SSR 期间调用，并在 hydration 提供真实客户端上下文前返回惰性状态。请从客户端生命周期钩子或用户操作触发 RPC 和钱包工作。
 
@@ -318,7 +328,7 @@ const { publicKey, connected, connect, disconnect } = useSolanaWallet();
 
     <p>Selected: {{ selectedWallet?.name ?? "None" }}</p>
     <p>Connected: {{ connected }}</p>
-    <p>Public key: {{ publicKey?.toBase58() }}</p>
+    <p>Public key: {{ publicKey }}</p>
     <button type="button" :disabled="!selectedWallet || connected" @click="connect">Connect</button>
     <button type="button" :disabled="!connected" @click="disconnect">Disconnect</button>
   </section>
@@ -348,7 +358,7 @@ if (connected.value && canSignMessage.value) {
 
 ```vue
 <script setup lang="ts">
-import { Transaction } from "@vue-solana/nuxt/web3";
+import type { SolanaTransaction } from "@vue-solana/nuxt/kit";
 
 const { connected, canSignTransaction } = useSolanaWallet();
 const { signature, confirmation, status, loading, error, execute } =
@@ -356,9 +366,8 @@ const { signature, confirmation, status, loading, error, execute } =
 
 const canSubmit = computed(() => connected.value && canSignTransaction.value && !loading.value);
 
-async function submitTransaction() {
-  const transaction = new Transaction();
-  // Add instructions, recent blockhash, and fee payer before requesting a wallet signature.
+async function submitTransaction(transaction: SolanaTransaction) {
+  // Build the transaction message with @solana/kit and serialize it to wire bytes first.
   await execute(transaction, {
     confirm: true,
     confirmation: { commitment: "confirmed", timeoutMs: 120_000 },

@@ -6,12 +6,12 @@ This directory contains OKF-formatted knowledge files for AI agents working with
 
 - [Solana Concepts For Vue Developers](./concepts/solana-for-vue-developers.md) — practical overview of Solana terms, RPC, transactions, and commitment levels
 - [Solana Clusters](./concepts/clusters.md) — cluster types and how to choose the right one
-- [@solana/web3-compat TypeScript Workaround](./concepts/web3-compat.md) — resolving the broken TypeScript metadata issue
+- [@solana/web3-compat TypeScript Workaround (v1, archived)](./concepts/web3-compat.md) — historical v1.x shim guidance
 
 ## Guides
 
 - [Getting Started](./guides/getting-started.md) — install, configure, and test the Vue Solana packages
-- [Kit Migration](./guides/kit-migration.md) — migrate from the legacy web3-compat Connection API to @solana/kit
+- [Kit Migration](./guides/kit-migration.md) — migrate from the legacy web3-compat API to @solana/kit (v2)
 - [Wallet Support](./guides/wallets.md) — unified wallet discovery, selection, and connection
 - [Android Mobile Wallets](./guides/wallet-android.md) — Solana Mobile Wallet Adapter on Android
 - [iOS Browser Wallets](./guides/wallet-ios.md) — Phantom, Solflare, and Backpack universal links on iOS

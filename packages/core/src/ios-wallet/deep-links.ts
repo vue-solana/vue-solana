@@ -4,7 +4,6 @@ import { getDefaultIosWalletAppIdentity, openIosWalletUrl, waitForRedirect } fro
 import { handleSolanaIosWalletCallback } from "./callback";
 import { encryptPayload, nacl } from "./crypto";
 import { createPendingRequest, getStoredSession, storePendingRequest } from "./storage";
-import { serializeTransaction } from "./transactions";
 import type {
   AdaptSolanaIosWalletOptions,
   IosWalletDefinition,
@@ -38,7 +37,7 @@ export async function launchSignTransaction(
   options: AdaptSolanaIosWalletOptions,
 ): Promise<Uint8Array> {
   const response = await launchEncryptedWalletRequest(definition, "signTransaction", options, {
-    transaction: bs58.encode(serializeTransaction(transaction)),
+    transaction: bs58.encode(transaction),
   });
 
   if (!response.transaction) {
@@ -54,7 +53,7 @@ export async function launchSignAllTransactions(
   options: AdaptSolanaIosWalletOptions,
 ): Promise<Uint8Array[]> {
   const response = await launchEncryptedWalletRequest(definition, "signAllTransactions", options, {
-    transactions: transactions.map((transaction) => bs58.encode(serializeTransaction(transaction))),
+    transactions: transactions.map((transaction) => bs58.encode(transaction)),
   });
 
   if (!response.transactions) {
@@ -75,7 +74,7 @@ export async function launchSignAndSendTransaction(
     "signAndSendTransaction",
     options,
     {
-      transaction: bs58.encode(serializeTransaction(transaction)),
+      transaction: bs58.encode(transaction),
       sendOptions,
     },
   );

@@ -36,7 +36,7 @@ export default {
       vueVite: "Vue Vite",
       nuxt: "Nuxt",
       roadmap: "Roadmap",
-      v1Roadmap: "v1 Roadmap",
+      roadmapPage: "Roadmap",
     },
     external: {
       ariaLabel: "External links",
@@ -104,15 +104,15 @@ export default {
       },
     },
     directConnection: {
-      title: "Direct Connection Call",
-      description: "Calls {method} directly from the injected connection.",
+      title: "Direct Kit Client Call",
+      description: "Calls {method} directly from the kit client RPC.",
       load: "Load Blockhash",
       blockhash: "Blockhash:",
     },
     balance: {
       title: "Balance Lookup",
-      publicKey: "Public key",
-      publicKeyPlaceholder: "Enter a Solana public key",
+      publicKey: "Address",
+      publicKeyPlaceholder: "Enter a Solana address",
       refresh: "Refresh Balance",
       lamports: "Lamports:",
       sol: "SOL:",
@@ -136,7 +136,7 @@ export default {
         discoveredWallets: "Discovered wallets",
         selectedWallet: "Selected wallet",
         configured: "Wallet configured",
-        publicKey: "Public key",
+        publicKey: "Address",
       },
       status: {
         connecting: "connecting",
@@ -193,7 +193,7 @@ export default {
         "Loads SPL token accounts for the connected wallet and checks a specific token balance by mint address. Requires a connected wallet for the account list.",
       refresh: "Refresh Accounts",
       mintLabel: "Mint address",
-      mintPlaceholder: "Enter a token mint public key",
+      mintPlaceholder: "Enter a token mint address",
       refreshBalance: "Check Balance",
       labels: {
         accounts: "Token accounts:",
@@ -203,9 +203,9 @@ export default {
     transfer: {
       title: "Real Devnet Transfer",
       description:
-        "Sends a real transfer from the connected wallet, then waits for confirmed commitment. Use devnet, enter a recipient public key, and start with a tiny amount such as {amount} SOL.",
+        "Sends a real transfer from the connected wallet, then waits for confirmed commitment. Use devnet, enter a recipient address, and start with a tiny amount such as {amount} SOL.",
       recipient: "Recipient address",
-      recipientPlaceholder: "Enter recipient public key",
+      recipientPlaceholder: "Enter a recipient address",
       amount: "Amount in SOL",
       send: "Send Devnet Transfer",
       signature: "Signature:",

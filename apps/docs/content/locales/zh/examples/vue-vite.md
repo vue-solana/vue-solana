@@ -15,7 +15,7 @@ Live demo: [vue-solana-docs.vercel.app/demo](/zh/demo)
 
 - 使用 `createSolanaPlugin()` 安装 Vue Solana 插件。
 - 使用 `useRpc()` 读取 RPC 状态。
-- 使用注入的 `Connection` 和 `useConnection()`。
+- 使用 `useSolanaClient()` 使用注入的 Kit client。
 - 使用 `useBalance()` 读取 lamport 余额。
 - 使用 `useWallets()` 发现浏览器扩展钱包、Android Mobile Wallet Adapter 钱包，以及受支持的 iOS 浏览器钱包条目。
 - 使用 `useWallet()` 管理当前活跃钱包状态。
@@ -42,7 +42,7 @@ pnpm dev:vue
 ## 可以尝试的内容
 
 - 检查初始 RPC 状态和最新 blockhash。
-- 点击 `Load Blockhash` 直接调用 `connection.getLatestBlockhash()`。
+- 点击 `Load Blockhash` 直接调用 `client.rpc.getLatestBlockhash().send()`。
 - 粘贴 devnet 钱包地址并刷新余额。
 - 安装 Solana 浏览器钱包，并切换到 devnet。
 - 在 Android Chrome 上，安装兼容的 Solana 移动钱包，并查找 `Mobile Wallet Adapter`。

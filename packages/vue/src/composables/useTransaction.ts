@@ -1,4 +1,3 @@
-import type { TransactionSignature } from "@vue-solana/core/web3";
 import { normalizeSolanaError, type SolanaError } from "@vue-solana/core/errors";
 import { withSolanaTimeout } from "@vue-solana/core/timeout";
 import { ref } from "vue";
@@ -9,10 +8,10 @@ export interface UseTransactionOptions {
 }
 
 export function useTransaction<TArgs extends unknown[]>(
-  handler: (...args: TArgs) => Promise<TransactionSignature>,
+  handler: (...args: TArgs) => Promise<string>,
   options: UseTransactionOptions = {},
 ) {
-  const signature = ref<TransactionSignature | null>(null);
+  const signature = ref<string | null>(null);
   const loading = ref(false);
   const error = ref<SolanaError | null>(null);
   let executionId = 0;

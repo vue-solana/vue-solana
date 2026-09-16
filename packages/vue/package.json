@@ -115,11 +115,6 @@
       "import": "./dist/useTokenAccounts.mjs",
       "require": "./dist/useTokenAccounts.cjs"
     },
-    "./web3": {
-      "types": "./dist/web3.d.ts",
-      "import": "./dist/web3.mjs",
-      "require": "./dist/web3.cjs"
-    },
     "./kit": {
       "types": "./dist/kit.d.ts",
       "import": "./dist/kit.mjs",
@@ -139,7 +134,6 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@solana/web3-compat": "^0.0.21",
     "@vue-solana/core": "workspace:*",
     "bs58": "^6.0.0"
   },

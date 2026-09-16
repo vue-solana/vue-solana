@@ -1,43 +1,36 @@
-import { PublicKey } from "@solana/web3-compat";
 import { describe, expect, it } from "vitest";
-import { parsePublicKey } from "./address";
+import { parseAddress } from "./address";
 import { SolanaError } from "./errors";
 
-describe("parsePublicKey", () => {
+const ADDRESS = "11111111111111111111111111111111";
+
+describe("parseAddress", () => {
   it("returns null for nullish input", () => {
-    expect(parsePublicKey(null)).toBeNull();
-    expect(parsePublicKey(undefined)).toBeNull();
+    expect(parseAddress(null)).toBeNull();
+    expect(parseAddress(undefined)).toBeNull();
   });
 
-  it("returns existing public keys unchanged", () => {
-    const publicKey = new PublicKey("11111111111111111111111111111111");
-
-    expect(parsePublicKey(publicKey)).toBe(publicKey);
+  it("returns existing addresses unchanged", () => {
+    expect(parseAddress(ADDRESS)).toBe(ADDRESS);
   });
 
-  it("parses public key strings", () => {
-    expect(parsePublicKey("11111111111111111111111111111111")?.toBase58()).toBe(
-      "11111111111111111111111111111111",
-    );
+  it("parses address strings", () => {
+    expect(parseAddress(ADDRESS)).toBe(ADDRESS);
   });
 
-  it("parses public keys from refs", () => {
-    expect(parsePublicKey({ value: "11111111111111111111111111111111" })?.toBase58()).toBe(
-      "11111111111111111111111111111111",
-    );
+  it("parses addresses from refs", () => {
+    expect(parseAddress({ value: ADDRESS })).toBe(ADDRESS);
   });
 
-  it("parses public keys from getters", () => {
-    expect(parsePublicKey(() => "11111111111111111111111111111111")?.toBase58()).toBe(
-      "11111111111111111111111111111111",
-    );
+  it("parses addresses from getters", () => {
+    expect(parseAddress(() => ADDRESS)).toBe(ADDRESS);
   });
 
-  it("throws for invalid public key strings", () => {
-    expect(() => parsePublicKey("not-a-public-key")).toThrow();
+  it("throws for invalid address strings", () => {
+    expect(() => parseAddress("not-a-public-key")).toThrow();
 
     try {
-      parsePublicKey("not-a-public-key");
+      parseAddress("not-a-public-key");
     } catch (error) {
       expect(error).toBeInstanceOf(SolanaError);
       expect((error as SolanaError).code).toBe("INVALID_ADDRESS");

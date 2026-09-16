@@ -9,9 +9,10 @@ export function useDemoWallet() {
   const toast = useToast();
   const walletsLoaded = shallowRef(false);
 
-  const walletPublicKey = computed(
-    () => wallet.publicKey.value?.toBase58() ?? t("demo.fallback.notConnected"),
+  const walletRawAddress = computed(
+    () => wallet.wallet.value?.address ?? wallet.publicKey.value?.toBase58() ?? null,
   );
+  const walletPublicKey = computed(() => walletRawAddress.value ?? t("demo.fallback.notConnected"));
   const walletConfigured = computed(() => Boolean(wallet.wallet.value));
   const discoveredWalletCount = computed(() =>
     walletsLoaded.value ? walletDiscovery.wallets.value.length : 0,
@@ -49,7 +50,7 @@ export function useDemoWallet() {
 
       toast.add({
         title: t("demo.wallet.toast.connected"),
-        description: wallet.publicKey.value?.toBase58() ?? t("demo.wallet.toast.connectedFallback"),
+        description: walletRawAddress.value ?? t("demo.wallet.toast.connectedFallback"),
         color: "success",
       });
     } catch (error) {
@@ -62,14 +63,14 @@ export function useDemoWallet() {
   }
 
   async function disconnectWallet() {
-    const publicKey = wallet.publicKey.value?.toBase58();
+    const address = walletRawAddress.value;
 
     try {
       await wallet.disconnect();
 
       toast.add({
         title: t("demo.wallet.toast.disconnected"),
-        description: publicKey ?? t("demo.wallet.toast.disconnectedFallback"),
+        description: address ?? t("demo.wallet.toast.disconnectedFallback"),
         color: "success",
       });
     } catch (error) {
@@ -95,18 +96,18 @@ export function useDemoWallet() {
   }
 
   async function copyWalletAddress() {
-    const publicKey = wallet.publicKey.value?.toBase58();
+    const address = walletRawAddress.value;
 
-    if (!publicKey) {
+    if (!address) {
       return;
     }
 
     try {
-      await navigator.clipboard.writeText(publicKey);
+      await navigator.clipboard.writeText(address);
 
       toast.add({
         title: t("demo.wallet.toast.copied"),
-        description: publicKey,
+        description: address,
         color: "success",
       });
     } catch (error) {

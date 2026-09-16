@@ -67,6 +67,7 @@ import { useWallet } from "@vue-solana/vue/useWallet";
 
 - `@vue-solana/vue/buffer-polyfill`
 - `@vue-solana/vue/useSolana`
+- `@vue-solana/vue/useSolanaClient`
 - `@vue-solana/vue/useRpc`
 - `@vue-solana/vue/useConnection`
 - `@vue-solana/vue/useAccountInfo`
@@ -81,18 +82,19 @@ import { useWallet } from "@vue-solana/vue/useWallet";
 - `@vue-solana/vue/useSignAndSendTransaction`
 - `@vue-solana/vue/useTokenBalance`
 - `@vue-solana/vue/useTokenAccounts`
-- `@vue-solana/vue/web3`
+- `@vue-solana/vue/kit`
 
-使用 `@vue-solana/vue/web3` 获取受支持的原始 Solana primitive，例如 `PublicKey`、`Transaction` 和 `TransactionInstruction`。浏览器交易代码需要 Buffer polyfill 时，使用 `@vue-solana/vue/buffer-polyfill`。较底层 core 用法仍然支持直接 `@vue-solana/core/*` 导入。
+浏览器交易代码需要 Buffer polyfill 时，使用 `@vue-solana/vue/buffer-polyfill`。需要 Kit API（`createSolanaClient`、`address`、`lamports` 和类型）时，使用 `@vue-solana/vue/kit`。较底层 core 用法仍然支持直接 `@vue-solana/core/*` 导入。
 
 - `useSolana()`：返回完整注入的 Solana context。
-- `useRpc()`：返回 cluster、endpoint、连接状态、latest blockhash 和 `checkConnection()`。
-- `useConnection()`：返回 Solana `Connection`。
-- `useAccountInfo(address, options?)`：加载账户数据，并可订阅账户变化。
+- `useSolanaClient()`：返回 context 中的 Kit `{ client, rpc }`。新代码推荐使用。
+- `useRpc()`：返回 cluster、endpoint、连接状态、latest blockhash、注入的 Kit `client` 和 `checkConnection()`。
+- `useConnection()`：返回注入的 Kit `client`（已弃用，推荐使用 `useSolanaClient()`）。
+- `useAccountInfo(address, options?)`：加载规范化账户数据（executable、lamports、owner、space、data 字节）。
 - `useProgramAccounts(programId, options?)`：使用可选过滤器和数据切片加载 program id 拥有的账户。
 - `useWallet()`：返回活跃钱包 ref、计算出的连接状态和钱包操作。
 - `useWallets()`：返回已发现的浏览器扩展钱包、Android Mobile Wallet Adapter 钱包、受支持的 iOS 浏览器钱包条目和钱包选择操作。
-- `useBalance(address, commitment?)`：加载 `PublicKey` 或地址字符串的 lamport 余额。
+- `useBalance(address, commitment?)`：加载地址字符串的 lamport 余额。
 - `useTokenAccounts(owner, options?)`：加载某个所有者的所有 SPL token 账户，默认同时查询 Token 和 Token-2022 program。
 - `useTokenBalance(mint, owner)`：通过关联 token 账户加载 mint/owner 对的 SPL token 余额和小数位数。
 - `useTransaction(handler, options?)`：通用异步交易状态 helper，带可选超时设置。
@@ -138,6 +140,33 @@ const rpcErrorMessage = computed(() => {
   </section>
 </template>
 ```
+
+## 使用 Kit 客户端
+
+```vue
+<script setup lang="ts">
+import { onMounted, ref } from "vue";
+import { useSolanaClient } from "@vue-solana/vue/useSolanaClient";
+
+const { client, rpc } = useSolanaClient();
+const slot = ref<bigint>();
+
+async function checkSlot() {
+  slot.value = await rpc.getSlot().send();
+}
+
+onMounted(checkSlot);
+</script>
+
+<template>
+  <section>
+    <p>Slot: {{ slot }}</p>
+    <button type="button" @click="checkSlot">Check Slot</button>
+  </section>
+</template>
+```
+
+`useSolanaClient()` 返回与 `useSolana()` 相同的 context，但为 Kit 读取塑形：`client` 是完整的 `@solana/kit` 客户端，`rpc` 是它的读取 API。RPC 结果是 `bigint`，账户数据是 `Uint8Array`。参见 [Kit 迁移](/zh/guides/kit-migration)。
 
 ## 读取余额
 
@@ -377,7 +406,7 @@ const { publicKey, connected, connecting, connect, disconnect } = useWallet();
 
     <p>Selected: {{ selectedWallet?.name ?? "None" }}</p>
     <p>Connected: {{ connected }}</p>
-    <p>Public key: {{ publicKey?.toBase58() }}</p>
+    <p>Public key: {{ publicKey }}</p>
     <p v-if="connecting">Connecting...</p>
     <button type="button" :disabled="!selectedWallet || connected || connecting" @click="connect">
       Connect

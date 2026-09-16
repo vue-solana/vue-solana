@@ -7,46 +7,15 @@ surroundOrder: 4
 
 이 가이드는 Vue, Nuxt, TypeScript, 지갑 검색, RPC 호출, 트랜잭션에서 흔히 발생하는 Vue Solana 설정 문제를 진단하는 데 사용합니다. 앱과 일치하는 오류 메시지나 동작에서 시작한 뒤 issue를 열기 전에 순서대로 확인하세요.
 
-## TypeScript가 `@solana/web3-compat`를 resolve하지 못함
+## `@solana/web3-compat`를 resolve할 수 없음
 
-`@solana/web3-compat@0.0.21`은 현재 TypeScript metadata가 깨져 있습니다. 런타임 import는 여전히 실제 패키지를 사용합니다. 현재 Vue Solana 패키지는 임시 package-owned declaration shim을 publish하므로 `@vue-solana/core`, `@vue-solana/vue`, `@vue-solana/nuxt`의 문서화된 import는 consumer-local shim 없이 typecheck되어야 합니다.
+v2.0.0은 모든 Vue Solana package에서 `@solana/web3-compat`를 제거했으므로, 해당 package에 대한 declaration 누락 오류는 거의 항상 앱이 삭제된 legacy surface에서 import하고 있다는 뜻입니다: `@vue-solana/core/web3`, `@vue-solana/vue/web3`, `@vue-solana/nuxt/web3`, 또는 직접 `@solana/web3-compat` dependency.
 
-그래도 TypeScript가 declaration 누락을 보고하면 먼저 최신 Vue Solana 패키지 버전을 사용 중인지, 앱 코드에서 `@solana/web3-compat`를 직접 import하지 않는지 확인하세요. 오래된 Vue Solana 버전 또는 직접 `@solana/web3-compat` import의 경우 앱에 `types/web3-compat.d.ts`를 추가합니다.
-
-```ts
-declare module "@solana/web3-compat" {
-  export type {
-    Commitment,
-    RpcResponseAndContext,
-    SendOptions,
-    SignatureResult,
-    TransactionSignature,
-  } from "@solana/web3.js";
-  export {
-    Connection,
-    Keypair,
-    PublicKey,
-    SystemProgram,
-    Transaction,
-    TransactionInstruction,
-    VersionedTransaction,
-  } from "@solana/web3.js";
-}
-```
-
-`tsconfig.json`에 해당 파일이 포함되어 있는지 확인하세요.
-
-```json
-{
-  "include": ["src/**/*.ts", "src/**/*.vue", "types/**/*.d.ts"]
-}
-```
-
-이 workaround를 유지하기 전에 새 `@solana/web3-compat` 버전을 다시 확인하세요. upstream이 유효한 root declaration을 제공하면 package-owned shim은 제거되어야 합니다.
+이 import들을 Kit에 맞는 형태로 업데이트하세요 - [Kit Migration 가이드](/ko/guides/kit-migration)를 참고하세요. 여전히 v1.x package를 사용 중이라면, v1 package는 문서화된 core import에 package-owned declaration shim을 배포했으며, v1 앱은 package를 직접 import할 때만 자체 `@solana/web3-compat` shim을 추가할 수 있었습니다. `@vue-solana/*@^2`로 업그레이드하면 더 이상 어떤 shim도 필요 없습니다.
 
 ## `Vue Solana plugin is not installed`
 
-클라이언트 코드가 플러그인을 설치하지 않은 상태에서 Solana connection 또는 wallet action을 사용하려 했다는 뜻입니다. 현재 컴포저블은 Nuxt가 서버에서 렌더링할 때 inert SSR-safe 상태를 반환하지만, 실제 RPC와 지갑 작업에는 여전히 client plugin context가 필요합니다.
+클라이언트 코드가 플러그인을 설치하지 않은 상태에서 Solana client 또는 wallet action을 사용하려 했다는 뜻입니다. 현재 컴포저블은 Nuxt가 서버에서 렌더링할 때 inert SSR-safe 상태를 반환하지만, 실제 RPC와 지갑 작업에는 여전히 client plugin context가 필요합니다.
 
 Vue:
 
@@ -66,7 +35,7 @@ export default defineNuxtConfig({
 });
 ```
 
-Nuxt 모듈은 Vue Solana 플러그인을 client-only로 유지합니다. 자동 import 컴포저블은 SSR 중에도 호출할 수 있지만 서버에서 직접 RPC 또는 지갑 작업을 하지 마세요. 실제 Solana connection이 필요할 때는 client lifecycle hook이나 사용자 action에서 RPC 읽기를 트리거하세요.
+Nuxt 모듈은 Vue Solana 플러그인을 client-only로 유지합니다. 자동 import 컴포저블은 SSR 중에도 호출할 수 있지만 서버에서 직접 RPC 또는 지갑 작업을 하지 마세요. 실제 Solana client가 필요할 때는 client lifecycle hook이나 사용자 action에서 RPC 읽기를 트리거하세요.
 
 ## `No Solana wallet is configured`
 
@@ -116,7 +85,7 @@ iOS 지갑 지원은 Phantom, Solflare, Backpack universal link를 사용합니�
 - 설정된 `redirectUrl`이 지갑 상태를 refresh하는 같은 앱 페이지로 돌아오지 않습니다.
 - 지갑 refresh 또는 callback 처리가 클라이언트가 아니라 SSR 중에만 실행됩니다.
 
-iOS 지갑 작업은 client-side로 유지하고, redirect URL이 앱을 다시 로드하는지 확인하며, redirected page load 후 `refreshWallets()`를 호출하세요. Vue 플러그인은 지갑 refresh 중 iOS callback을 처리합니다. core 헬퍼를 직접 사용하는 앱은 반환된 connection에 의존하기 전에 `handleSolanaIosWalletCallback()`을 호출해야 합니다.
+iOS 지갑 작업은 client-side로 유지하고, redirect URL이 앱을 다시 로드하는지 확인하며, redirected page load 후 `refreshWallets()`를 호출하세요. Vue 플러그인은 지갑 refresh 중 iOS callback을 처리합니다. core 헬퍼를 직접 사용하는 앱은 adapt된 wallet session에 의존하기 전에 `handleSolanaIosWalletCallback()`을 호출해야 합니다.
 
 ## `Solana wallet is not connected`
 
@@ -149,7 +118,7 @@ Android Mobile Wallet Adapter 지갑은 `signTransaction`이 가능할 때 지�
 
 ## `Buffer is not defined`
 
-일부 `@solana/web3-compat` transaction path는 여전히 Node 호환 `Buffer` global을 기대합니다. 브라우저 Vue 앱에서는 트랜잭션 생성 또는 직렬화 전에 Vue 패키지 Buffer polyfill을 초기화하세요. Nuxt 앱에서는 `@vue-solana/nuxt/buffer-polyfill`을 사용합니다.
+일부 Solana transaction serialization path는 브라우저 런타임에서 여전히 Node 호환 `Buffer` global을 기대합니다. 브라우저 Vue 앱에서는 트랜잭션 생성 또는 직렬화 전에 Vue 패키지 Buffer polyfill을 초기화하세요. Nuxt 앱에서는 `@vue-solana/nuxt/buffer-polyfill`을 사용합니다.
 
 ```ts
 import { installSolanaBufferPolyfill } from "@vue-solana/vue/buffer-polyfill";

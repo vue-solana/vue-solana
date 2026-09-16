@@ -1,24 +1,24 @@
-import type { PublicKey, TransactionInstruction } from "@vue-solana/nuxt/web3";
-import type { Web3Compat } from "./web3Compat";
+import { AccountRole, address, type Address } from "@solana/kit";
+
+const SYSTEM_PROGRAM_ADDRESS = address("11111111111111111111111111111111");
 
 export function createTransferInstruction(
-  web3Compat: Web3Compat,
-  fromPubkey: PublicKey,
-  toPubkey: PublicKey,
+  fromPubkey: Address,
+  toPubkey: Address,
   lamports: number,
-): TransactionInstruction {
+) {
   const data = new Uint8Array(12);
   const view = new DataView(data.buffer);
 
   view.setUint32(0, 2, true);
   view.setBigUint64(4, BigInt(lamports), true);
 
-  return new web3Compat.TransactionInstruction({
-    keys: [
-      { pubkey: fromPubkey, isSigner: true, isWritable: true },
-      { pubkey: toPubkey, isSigner: false, isWritable: true },
+  return {
+    programAddress: SYSTEM_PROGRAM_ADDRESS,
+    accounts: [
+      { address: fromPubkey, role: AccountRole.WRITABLE_SIGNER },
+      { address: toPubkey, role: AccountRole.WRITABLE },
     ],
-    programId: new web3Compat.PublicKey("11111111111111111111111111111111"),
     data,
-  });
+  };
 }

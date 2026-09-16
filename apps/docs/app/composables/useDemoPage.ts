@@ -21,7 +21,7 @@ export function useDemoPage() {
   const demoWallet = useDemoWallet();
   const tokenAccounts = useDemoTokenAccounts();
 
-  const pluginInstalled = computed(() => Boolean(solana.connection && solana.endpoint));
+  const pluginInstalled = computed(() => Boolean(solana.client && solana.endpoint));
   const balanceInSol = computed(() => {
     if (balance.balance.value === null) {
       return t("demo.fallback.noBalance");

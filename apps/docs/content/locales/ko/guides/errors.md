@@ -30,7 +30,7 @@ const error = new SolanaError("RPC_FAILURE", "Unable to reach RPC");
 - `WALLET_NOT_CONNECTED`: 활성 지갑이 연결되어 있지 않거나 public key가 없습니다.
 - `WALLET_FEATURE_UNSUPPORTED`: 활성 지갑이 요청한 feature를 지원하지 않습니다.
 - `USER_REJECTED`: 사용자가 지갑 요청을 거절했습니다.
-- `INVALID_ADDRESS`: 주소 문자열을 Solana public key로 파싱할 수 없습니다.
+- `INVALID_ADDRESS`: 주소 문자열을 Solana 주소로 파싱할 수 없습니다.
 - `TRANSACTION_TIMEOUT`: 트랜잭션 관련 작업이 timeout되었습니다.
 - `RPC_FAILURE`: RPC send, read, confirmation이 실패했습니다.
 - `STORAGE_FAILURE`: 브라우저 storage를 읽거나 쓸 수 없습니다.
@@ -43,7 +43,7 @@ const error = new SolanaError("RPC_FAILURE", "Unable to reach RPC");
 import { isSolanaError } from "@vue-solana/core/errors";
 
 try {
-  await signAndSendTransaction(connection, wallet, transaction);
+  await signAndSendTransaction(client, wallet, transaction);
 } catch (error) {
   if (isSolanaError(error)) {
     console.log(error.code);
@@ -59,7 +59,7 @@ import { normalizeSolanaError } from "@vue-solana/core/errors";
 
 async function loadData() {
   try {
-    return await connection.getLatestBlockhash();
+    return await client.rpc.getLatestBlockhash().send();
   } catch (cause) {
     throw normalizeSolanaError(cause, "RPC_FAILURE", "Unable to load blockhash");
   }

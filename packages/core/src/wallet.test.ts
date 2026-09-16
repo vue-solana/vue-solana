@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import type { Address } from "./kit";
 import type { SolanaWallet } from "./types";
 import {
   assertWalletCanSign,
@@ -9,7 +10,7 @@ import {
   SolanaWalletError,
 } from "./wallet";
 
-const publicKey = { toBase58: () => "public-key" } as SolanaWallet["publicKey"];
+const publicKey = "11111111111111111111111111111111" as Address;
 
 describe("wallet helpers", () => {
   it("detects connected wallets", () => {

@@ -11,11 +11,11 @@ const emit = defineEmits<{
 </script>
 
 <template>
-  <DemoPanel eyebrow="useSolanaConnection" :title="$t('demo.directConnection.title')">
+  <DemoPanel eyebrow="useSolanaClient" :title="$t('demo.directConnection.title')">
     <p class="mb-4 text-sm leading-6 text-slate-600 dark:text-slate-300">
       <i18n-t keypath="demo.directConnection.description" tag="span">
         <template #method>
-          <code>connection.getLatestBlockhash()</code>
+          <code>client.rpc.getLatestBlockhash().send()</code>
         </template>
       </i18n-t>
     </p>

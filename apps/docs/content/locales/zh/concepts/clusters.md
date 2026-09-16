@@ -30,7 +30,7 @@ RPC 端点是应用用来从 Solana 读取数据或向 Solana 写入数据的 HT
 - `https://api.mainnet-beta.solana.com`
 - `http://127.0.0.1:8899`
 
-来自 `@vue-solana/vue/web3`、`@vue-solana/nuxt/web3` 或 `@vue-solana/core/web3` 的 `Connection` 对象会向该端点发送 RPC 请求。公共端点适合入门，但生产应用通常会使用专用 RPC provider，以获得更好的可靠性和速率限制。
+RPC 请求通过 `useSolanaClient()` 或 `useSolanaRpc()` 的 `client.rpc` 发送，或通过 `@vue-solana/core` 中的 `createSolanaClient()` / `createSolanaContext()` 发送。旧版 `Connection` 类和 `web3` 子路径已在 v2.0.0 中被移除。公共端点适合入门，但生产应用通常会使用专用 RPC provider，以获得更好的可靠性和速率限制。
 
 官方参考：[Solana RPC](https://solana.com/docs/rpc)
 

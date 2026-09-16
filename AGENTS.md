@@ -29,7 +29,7 @@ Implemented files:
 
 - `src/types.ts`: shared `SolanaConfig`, `SolanaContext`, `SolanaWallet`, and transaction types.
 - `src/clusters.ts`: cluster names and endpoint resolution.
-- `src/rpc.ts`: `createSolanaConnection()` and `createSolanaContext()`.
+- `src/rpc.ts`: `createSolanaContext()`.
 - `src/wallet.ts`: wallet connection assertions.
 - `src/transaction.ts`: `signAndSendTransaction()` helper.
 - `src/index.ts`: package exports.
@@ -41,8 +41,8 @@ Implemented files:
 - `src/plugin.ts`: `createSolanaPlugin()` and `VueSolana` alias.
 - `src/injection.ts`: Vue injection key and context type.
 - `src/composables/useSolana.ts`: access injected Solana context.
-- `src/composables/useRpc.ts`: expose cluster, endpoint, and connection.
-- `src/composables/useConnection.ts`: expose connection directly.
+- `src/composables/useRpc.ts`: expose cluster, endpoint, and client.
+- `src/composables/useConnection.ts`: deprecated alias returning the Kit client.
 - `src/composables/useWallet.ts`: expose wallet state, connect, disconnect, and `setWallet()`.
 - `src/composables/useBalance.ts`: read lamport balance for a public key/address.
 - `src/composables/useTransaction.ts`: generic async transaction state helper.
@@ -68,21 +68,13 @@ Auto-imported Nuxt composables:
 
 ## Solana Dependency Decision
 
-The code was switched from `@solana/web3.js` to `@solana/web3-compat` after reviewing Solana's compatibility documentation.
+The code switched from `@solana/web3.js` to `@solana/web3-compat` in v1, then to `@solana/kit` in v2.0.0. `@solana/web3-compat` is fully removed from every package; the context has no `connection`, the legacy `web3` subpaths are deleted, and the wallet exposes `publicKey: Address`.
 
 Current package dependency:
 
-- `@solana/web3-compat@^0.0.21`
+- `@solana/kit@^8.3.0` (with `@solana/kit-plugin-rpc` in `packages/core`)
 
-Important detail: `@solana/web3-compat@0.0.21` currently has broken TypeScript package metadata. Its `package.json` points to `dist/types/index.d.ts`, but that file is not present in the published package.
-
-Development-time workaround:
-
-- `types/web3-compat.d.ts`
-
-This repo-local shim allows TypeScript to resolve `@solana/web3-compat` while developing inside the workspace. Runtime imports still use the real package.
-
-Additional development-time type shim:
+Development-time type shim:
 
 - `types/buffer.d.ts`
 
@@ -90,19 +82,16 @@ This repo-local shim allows TypeScript to resolve the browser `buffer/` subpath 
 
 Published package workaround:
 
-- `packages/core/types/web3-compat.d.ts`
 - `packages/core/types/buffer.d.ts`
 - `packages/core/scripts/prepare-declarations.mjs`
 
-`@vue-solana/core` publishes package-owned declaration shims for current documented imports. The core build runs `prepare-declarations.mjs` after `unbuild` to add triple-slash references from generated declarations that mention `@solana/web3-compat` or `buffer/`, so fresh consumers do not need local shims for `@vue-solana/core`, `@vue-solana/core/web3`, or `@vue-solana/core/buffer-polyfill`.
-
-Future agents should re-check new `@solana/web3-compat` versions and remove both the development-time and package-owned shims once the package ships valid root declarations.
+The core build runs `prepare-declarations.mjs` after `unbuild` to add triple-slash references from generated declarations that mention `buffer/`, so fresh consumers do not need a local `buffer/` shim for `@vue-solana/core/buffer-polyfill`.
 
 ## Documentation Added
 
 Updated docs:
 
-- `README.md`: package overview, development commands, known `web3-compat` metadata issue, and project TODOs.
+- `README.md`: package overview, development commands, v2 Kit migration note, and project TODOs.
 - `knowledge-bundle/`: OKF-formatted knowledge files for AI agents (concepts, guides, package references).
 - `knowledge-bundle/guides/getting-started.md`: install snippets, Vue setup, Nuxt setup, and detailed manual devnet testing guide.
 - `plans/native-wallet-plan.md`: implementation tracker for mobile native wallet and desktop native wallet support on top of browser extension wallets.
@@ -183,7 +172,7 @@ Agent entry point: [`knowledge-bundle/index.md`](./knowledge-bundle/index.md)
 
 The knowledge bundle covers:
 
-- Solana concepts, clusters, and the web3-compat TypeScript workaround.
+- Solana concepts, clusters, and the Kit migration from the legacy web3-compat surface.
 - Getting started guide, wallet support (browser, Android, iOS), message signing, and troubleshooting.
 - Package API references for core, vue, and nuxt.
 
@@ -193,7 +182,7 @@ Plans live in the top-level `plans/` directory, separate from the knowledge bund
 
 - Follow `plans/v1-roadmap.md` Post-v1 Plan for upcoming features (SPL tokens, desktop native wallets, UI package, etc.).
 - Follow `plans/native-wallet-plan.md` to add mobile native wallet and desktop native wallet support through the unified `useWallets()` flow.
-- Re-check `@solana/web3-compat` package metadata on every new release.
+- Re-check the `@solana/kit` and `@solana/kit-plugin-rpc` peer versions on every new release.
 
 ## Useful Commands
 

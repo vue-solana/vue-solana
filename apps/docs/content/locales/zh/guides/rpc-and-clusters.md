@@ -1,6 +1,6 @@
 ---
 title: "RPC 和集群"
-description: 配置 Solana 集群、RPC 端点、WebSocket 端点和连接辅助函数。
+description: 配置 Solana 集群、RPC 端点、WebSocket 端点和客户端辅助函数。
 ogSection: 指南
 surroundOrder: 8
 ---
@@ -24,7 +24,7 @@ Solana 主网请使用 `mainnet-beta`。Vue Solana 有意遵循 Solana 官方集
 
 ## Core 设置
 
-当你需要与框架无关的连接设置时，请使用 `@vue-solana/core/rpc`。
+当你需要与框架无关的客户端设置时，请使用 `@vue-solana/core/rpc`。
 
 ```ts
 import { createSolanaContext } from "@vue-solana/core/rpc";
@@ -34,12 +34,12 @@ const solana = createSolanaContext({
   commitment: "confirmed",
 });
 
-const { blockhash } = await solana.connection.getLatestBlockhash();
+const { value: latestBlockhash } = await solana.client.rpc.getLatestBlockhash().send();
 
-console.log(solana.endpoint, blockhash);
+console.log(solana.endpoint, latestBlockhash.blockhash);
 ```
 
-`createSolanaContext()` 返回解析后的 `cluster`、HTTP `endpoint`、WebSocket `wsEndpoint` 和 `connection`。
+`createSolanaContext()` 返回解析后的 `cluster`、HTTP `endpoint`、WebSocket `wsEndpoint`，以及一个 Kit `client`，其 `rpc` 用于发送 RPC 请求。
 
 ## 自定义 RPC 端点
 
@@ -131,7 +131,7 @@ Nuxt 运行时插件仅在客户端运行。组合式函数可以在 SSR 期间�
 
 ## 端点辅助函数
 
-当你需要内置端点值，但不想创建 `Connection` 时，请使用 `@vue-solana/core/clusters`。
+当你需要内置端点值，但不想创建客户端时，请使用 `@vue-solana/core/clusters`。
 
 ```ts
 import {

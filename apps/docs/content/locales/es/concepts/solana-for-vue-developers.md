@@ -1,7 +1,7 @@
 ---
 title: Solana para desarrolladores Vue
 description: Conceptos prácticos de Solana para desarrolladores Vue y Nuxt.
-ogSection: Conceptos
+ogSection: Concepts
 surroundOrder: 5
 ---
 
@@ -16,9 +16,9 @@ Referencias oficiales:
 
 ## Conexiones y RPC
 
-Las apps frontend leen datos de Solana mediante un endpoint RPC. `@vue-solana/vue/web3` y `@vue-solana/nuxt/web3` exponen la clase `Connection` soportada que envía solicitudes a ese endpoint.
+Las apps frontend leen datos de Solana mediante un endpoint RPC. El path de Kit expone un `client.rpc` de solo lectura mediante `useSolanaClient()` (o `createSolanaClient()` desde `@vue-solana/core/kit`).
 
-Los paquetes de Vue Solana crean y proveen esa conexión para código Vue y Nuxt, de modo que los composables compartan el mismo cluster, endpoint, commitment y estado de wallet.
+Los paquetes de Vue Solana crean y proveen el cliente Kit para código Vue y Nuxt, de modo que los composables compartan el mismo cluster, endpoint, commitment y estado de wallet.
 
 ```ts
 createSolanaPlugin({
@@ -31,11 +31,17 @@ createSolanaPlugin({
 
 Una clave pública es una dirección de cuenta de Solana. Puedes mostrar claves públicas de forma segura en una app frontend.
 
-```ts
-import { PublicKey } from "@vue-solana/vue/web3";
+En el path de Kit, las direcciones son strings de tipo `Address` creadas con `address()` desde `@vue-solana/vue/kit`:
 
-const publicKey = new PublicKey("PASTE_A_SOLANA_ADDRESS");
+```ts
+import { address } from "@vue-solana/vue/kit";
+
+const publicKey = address("PASTE_A_SOLANA_ADDRESS");
 ```
+
+Las direcciones son strings base58 `Address`; la clase legacy `PublicKey` y los subpaths `web3` se eliminaron en v2.0.0.
+
+Consulta la [guía de migración a Kit](/guides/kit-migration) para el mapeo completo entre ambos.
 
 Nunca expongas claves privadas, frases semilla ni arrays de clave secreta en código frontend.
 
@@ -49,10 +55,14 @@ SOL es el token nativo de Solana. Los lamports son la unidad más pequeña de SO
 
 Los métodos RPC de balance devuelven lamports. Convierte lamports a SOL solo para mostrarlo.
 
+Los métodos RPC de Kit devuelven lamports como `bigint`:
+
 ```ts
-const lamports = await connection.getBalance(publicKey);
-const sol = lamports / 1_000_000_000;
+const { value: lamports } = await rpc.getBalance(address("YOUR_ADDRESS")).send();
+const sol = Number(lamports) / 1_000_000_000;
 ```
+
+Las llamadas RPC de Kit devuelven `bigint` para campos numéricos y `Uint8Array` para datos de cuenta.
 
 ## Wallets
 
@@ -60,7 +70,7 @@ Una wallet almacena claves y firma transacciones. Las wallets de extensión de n
 
 Vue Solana descubre wallets de extensión de navegador Solana Wallet Standard, wallets Android Mobile Wallet Adapter y links soportados de wallets para navegador iOS mediante el flujo unificado `useWallets()`. Las lecturas RPC y de balances funcionan sin wallet. Conectar, firmar y enviar transacciones requiere una wallet descubierta o un objeto personalizado que implemente la interfaz `SolanaWallet`.
 
-Consulta [Wallets](/guides/wallets) para el soporte actual y el estado post-v1 de wallets nativas de escritorio.
+Consulta [Wallets](/guides/wallets) para el soporte actual y el estado de wallets nativas de escritorio.
 
 ## Transacciones y firma
 

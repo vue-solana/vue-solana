@@ -1,18 +1,26 @@
-import { computed, onMounted, shallowRef } from "vue";
+import { computed, shallowRef } from "vue";
+import {
+  address,
+  appendTransactionMessageInstruction,
+  compileTransaction,
+  createTransactionMessage,
+  getTransactionEncoder,
+  lamports,
+  setTransactionMessageFeePayer,
+  setTransactionMessageLifetimeUsingBlockhash,
+} from "@solana/kit";
 import { createTransferInstruction } from "./transferInstruction";
 import { formatError } from "./errors";
-import { loadWeb3Compat, type Web3Compat } from "./web3Compat";
 
 export function useDemoTransfer() {
   const { t } = useI18n();
-  const connection = useSolanaConnection();
+  const { client } = useSolana();
   const rpc = useSolanaRpc();
   const wallet = useSolanaWallet();
   const sendTransaction = useSolanaSignAndSendTransaction();
   const transferRecipient = shallowRef("");
   const transferAmount = shallowRef("0.000001");
   const devnetTransferError = shallowRef<unknown>(null);
-  const web3 = shallowRef<Web3Compat | null>(null);
 
   const transferLamports = computed(() => {
     const amount = Number(transferAmount.value);
@@ -21,15 +29,15 @@ export function useDemoTransfer() {
       return null;
     }
 
-    return Math.round(amount * 1_000_000_000);
+    try {
+      return lamports(Math.round(amount * 1_000_000_000));
+    } catch {
+      return null;
+    }
   });
   const recipientAddressValid = computed(() => {
-    if (!web3.value) {
-      return false;
-    }
-
     try {
-      new web3.value.PublicKey(transferRecipient.value.trim());
+      address(transferRecipient.value.trim());
       return true;
     } catch {
       return false;
@@ -101,35 +109,29 @@ export function useDemoTransfer() {
     formatError(devnetTransferError.value ?? sendTransaction.error.value),
   );
 
-  async function loadTransferWeb3() {
-    web3.value = await loadWeb3Compat();
-  }
-
-  onMounted(() => {
-    void loadTransferWeb3().catch((error) => {
-      devnetTransferError.value = error;
-    });
-  });
-
   async function sendDevnetTransfer() {
     const fromPubkey = wallet.publicKey.value;
-    const lamports = transferLamports.value;
+    const lamportsCount = transferLamports.value;
 
-    if (!fromPubkey || !lamports) {
+    if (!fromPubkey || !lamportsCount) {
       return;
     }
 
     devnetTransferError.value = null;
 
     try {
-      const web3Compat = await loadWeb3Compat();
-      const toPubkey = new web3Compat.PublicKey(transferRecipient.value.trim());
-      const latestBlockhash = await connection.getLatestBlockhash();
-      const transaction = new web3Compat.Transaction();
-
-      transaction.feePayer = fromPubkey;
-      transaction.recentBlockhash = latestBlockhash.blockhash;
-      transaction.add(createTransferInstruction(web3Compat, fromPubkey, toPubkey, lamports));
+      const toAddress = address(transferRecipient.value.trim());
+      const { value: latestBlockhash } = await client.rpc.getLatestBlockhash().send();
+      const transactionMessage = appendTransactionMessageInstruction(
+        createTransferInstruction(fromPubkey, toAddress, Number(lamportsCount)),
+        setTransactionMessageLifetimeUsingBlockhash(
+          latestBlockhash,
+          setTransactionMessageFeePayer(fromPubkey, createTransactionMessage({ version: 0 })),
+        ),
+      );
+      const transaction = new Uint8Array(
+        getTransactionEncoder().encode(compileTransaction(transactionMessage)),
+      );
 
       await sendTransaction.execute(transaction, {
         confirm: true,

@@ -15,7 +15,7 @@ npx nuxt module add @vue-solana/nuxt
 
 이 명령은 package를 설치하고 `nuxt.config.ts`의 `modules` 배열에 `@vue-solana/nuxt`를 추가합니다.
 
-트랜잭션을 만들거나 직렬화하는 브라우저 앱은 `@vue-solana/nuxt/buffer-polyfill`에서 Buffer polyfill을 초기화하고, `@vue-solana/nuxt/web3`에서 지원되는 Solana primitive를 import할 수 있습니다.
+트랜잭션을 만들거나 직렬화하는 브라우저 앱은 `@vue-solana/nuxt/buffer-polyfill`에서 Buffer polyfill을 초기화할 수 있습니다. Kit API(`createSolanaClient`, `address`, `lamports` 및 타입)와 자동 import되는 `useSolanaClient()`에는 `@vue-solana/nuxt/kit`을 사용하세요.
 
 ## 모듈 설정
 
@@ -76,8 +76,9 @@ export default defineNuxtConfig({
 이 모듈은 root Vue package barrel이 아니라 direct `@vue-solana/vue/*` subpath에서 다음 컴포저블을 자동 import합니다. 이렇게 하면 한 페이지가 하나의 컴포저블만 사용해도 Nuxt SSR bundle이 관련 없는 Solana runtime code를 가져오지 않아도 됩니다.
 
 - `useSolana()`: 주입된 전체 Solana context를 반환합니다.
-- `useSolanaRpc()`: cluster, endpoint, RPC status, latest blockhash, `checkConnection()`을 반환합니다.
-- `useSolanaConnection()`: Solana `Connection` instance를 반환합니다.
+- `useSolanaClient()`: Kit `{ client, rpc }`를 context에서 반환합니다. 새 코드에 권장됩니다.
+- `useSolanaRpc()`: cluster, endpoint, RPC status, latest blockhash, 주입된 Kit `client`, `checkConnection()`을 반환합니다.
+- `useSolanaConnection()`: 주입된 Kit `client`를 반환합니다(`useSolanaClient()` 사용을 권장하며 deprecated입니다).
 - `useSolanaAccountInfo(address, options?)`: account info를 읽고 account 변경을 subscribe할 수 있습니다.
 - `useSolanaWallet()`: selected wallet state, connection state, capabilities, wallet actions를 반환합니다.
 - `useSolanaWallets()`: discovered wallets와 wallet selection/refresh actions를 반환합니다.
@@ -100,11 +101,20 @@ Nuxt module은 auto-imported composable이 앱 전체 Nuxt namespace를 공유�
 
 Nuxt 앱 안에서는 explicit import 없이 auto-import가 작동하도록 `useSolana*` 이름을 사용하세요.
 
-Raw Solana primitive와 browser Buffer helper는 auto-import가 아니라 explicit import입니다.
+Raw transaction bytes와 browser Buffer helper는 auto-import가 아니라 explicit import입니다.
 
 ```ts
 import { installSolanaBufferPolyfill } from "@vue-solana/nuxt/buffer-polyfill";
-import { PublicKey, Transaction } from "@vue-solana/nuxt/web3";
+```
+
+Kit API는 auto-import와 explicit import 모두로 사용할 수 있습니다.
+
+```ts
+import { address, lamports } from "@vue-solana/nuxt/kit";
+
+const { client, rpc } = useSolanaClient();
+const slot = await rpc.getSlot().send(); // bigint
+const owner = address("PASTE_A_SOLANA_ADDRESS");
 ```
 
 더 낮은 수준의 core 사용에만 direct `@vue-solana/core/*` import를 사용하세요.
@@ -112,7 +122,7 @@ import { PublicKey, Transaction } from "@vue-solana/nuxt/web3";
 Direct package subpath:
 
 - `@vue-solana/nuxt/buffer-polyfill`
-- `@vue-solana/nuxt/web3`
+- `@vue-solana/nuxt/kit`
 
 Runtime plugin은 client-only입니다. Auto-imported composable은 SSR 중에도 호출할 수 있으며 hydration이 실제 client context를 제공하기 전까지 inert state를 반환합니다. RPC와 wallet 작업은 client lifecycle hook 또는 사용자 액션에서 트리거하세요.
 
@@ -318,7 +328,7 @@ const { publicKey, connected, connect, disconnect } = useSolanaWallet();
 
     <p>Selected: {{ selectedWallet?.name ?? "None" }}</p>
     <p>Connected: {{ connected }}</p>
-    <p>Public key: {{ publicKey?.toBase58() }}</p>
+    <p>Public key: {{ publicKey }}</p>
     <button type="button" :disabled="!selectedWallet || connected" @click="connect">Connect</button>
     <button type="button" :disabled="!connected" @click="disconnect">Disconnect</button>
   </section>
@@ -348,7 +358,7 @@ if (connected.value && canSignMessage.value) {
 
 ```vue
 <script setup lang="ts">
-import { Transaction } from "@vue-solana/nuxt/web3";
+import type { SolanaTransaction } from "@vue-solana/nuxt/kit";
 
 const { connected, canSignTransaction } = useSolanaWallet();
 const { signature, confirmation, status, loading, error, execute } =
@@ -356,9 +366,8 @@ const { signature, confirmation, status, loading, error, execute } =
 
 const canSubmit = computed(() => connected.value && canSignTransaction.value && !loading.value);
 
-async function submitTransaction() {
-  const transaction = new Transaction();
-  // Add instructions, recent blockhash, and fee payer before requesting a wallet signature.
+async function submitTransaction(transaction: SolanaTransaction) {
+  // Build the transaction message with @solana/kit and serialize it to wire bytes first.
   await execute(transaction, {
     confirm: true,
     confirmation: { commitment: "confirmed", timeoutMs: 120_000 },

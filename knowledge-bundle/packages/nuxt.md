@@ -54,14 +54,13 @@ The Nuxt module installs the runtime plugin on the client only and auto-imports 
 
 ## Explicit Solana Imports
 
-Raw Solana primitives and the browser Buffer helper are explicit imports, not auto-imports:
+The browser Buffer helper is an explicit import, not an auto-import:
 
 ```ts
 import { installSolanaBufferPolyfill } from "@vue-solana/nuxt/buffer-polyfill";
-import { PublicKey, Transaction } from "@vue-solana/nuxt/web3";
 ```
 
-For the modern Kit API, use the auto-imported `useSolanaClient()` and explicit imports from `@vue-solana/nuxt/kit` (`createSolanaClient`, `address`, `lamports`, and the types `Address`, `Rpc`, `SolanaRpcApi`, `SolanaClient`):
+Use the auto-imported `useSolanaClient()` and explicit imports from `@vue-solana/nuxt/kit` (`createSolanaClient`, `address`, `lamports`, and the types `Address`, `Commitment`, `Rpc`, `Signature`, `SolanaRpcApi`, `SolanaClient`):
 
 ```ts
 import { address } from "@vue-solana/nuxt/kit";
@@ -75,7 +74,6 @@ Use direct `@vue-solana/core/*` imports only for lower-level core usage.
 Available package subpaths:
 
 - `@vue-solana/nuxt/buffer-polyfill`
-- `@vue-solana/nuxt/web3`
 - `@vue-solana/nuxt/kit`
 
 ## Error Handling

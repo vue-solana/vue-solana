@@ -14,7 +14,7 @@ Vue Solana 通过同一个钱包流程暴露浏览器扩展钱包、Android Mobi
 - 浏览器扩展钱包：`@wallet-standard/app`、`@wallet-standard/base`、`@wallet-standard/features` 和 `@solana/wallet-standard-features`。
 - Android 移动端原生钱包：`@solana-mobile/wallet-standard-mobile`，它会在受支持的 Android Chrome 移动网页和 PWA 运行时中，将 Solana Mobile Wallet Adapter 注册为 Wallet Standard 钱包。
 - iOS 浏览器钱包：Phantom、Solflare 和 Backpack 的钱包专属 universal links。
-- Solana 基础类型和交易类型：Vue 应用使用 `@vue-solana/vue/web3`，Nuxt 应用使用 `@vue-solana/nuxt/web3`，框架无关的 core 用法使用 `@vue-solana/core/web3`。
+- Solana 基础类型和交易辅助函数：`@solana/kit` 的类型和消息构建器，部分通过 `@vue-solana/vue/kit`、`@vue-solana/nuxt/kit` 和 `@vue-solana/core/kit` 重新导出。
 
 ## 钱包来源
 
@@ -28,13 +28,13 @@ Vue Solana 通过同一个钱包流程暴露浏览器扩展钱包、Android Mobi
 
 ## 支持矩阵
 
-| 钱包路径               | v1 状态                              | 呈现方式                                                | 说明                                                      |
+| 钱包路径               | 状态                                 | 呈现方式                                                | 说明                                                      |
 | ---------------------- | ------------------------------------ | ------------------------------------------------------- | --------------------------------------------------------- |
 | 浏览器扩展钱包         | 已支持                               | `platform: "browser"`, `source: "wallet-standard"`      | 使用 Solana Wallet Standard 注册。                        |
 | Android 原生移动端钱包 | 在 Android Chrome 和 Chrome PWA 支持 | `platform: "mobile"`, `source: "mobile-wallet-adapter"` | 通过 `@solana-mobile/wallet-standard-mobile` 注册。       |
 | iOS 浏览器钱包         | 支持已配置的钱包链接                 | `platform: "mobile"`, `source: "deep-link"`             | Phantom、Solflare 和 Backpack 通过 universal links 暴露。 |
 | 手动/自定义钱包对象    | 已支持                               | 应用提供的钱包                                          | 必须实现 `SolanaWallet` 接口。                            |
-| 桌面原生应用钱包       | 从 v1 延后                           | 默认不暴露                                              | 预留的 `protocol-link` 元数据可用于未来适配器。           |
+| 桌面原生应用钱包       | 尚未支持                             | 默认不暴露                                              | 预留的 `protocol-link` 元数据可用于未来适配器。           |
 
 今天可用的功能：
 
@@ -44,7 +44,7 @@ Vue Solana 通过同一个钱包流程暴露浏览器扩展钱包、Android Mobi
 - 当所选钱包支持相关能力时，连接、断开连接、签署消息、签署交易，以及签署并发送交易。
 - 基于 `canSignMessage`、`canSignTransaction`、`canSignAllTransactions` 和 `canSignAndSendTransaction` 渲染不支持能力的 UI。
 
-v1 不包含的内容：
+尚未包含的内容：
 
 - 内置钱包弹窗或 UI 包。
 - 桌面原生 protocol-link 适配器。
@@ -64,7 +64,7 @@ const { publicKey, connected, connecting, connect, disconnect } = useWallet();
 
 <template>
   <section>
-    <button type="button" @click="refreshWallets">刷新钱包</button>
+    <button type="button" @click="refreshWallets">Refresh wallets</button>
 
     <button
       v-for="wallet in wallets"
@@ -75,14 +75,14 @@ const { publicKey, connected, connecting, connect, disconnect } = useWallet();
       {{ wallet.name }}
     </button>
 
-    <p>已选择：{{ selectedWallet?.name ?? "无" }}</p>
-    <p>已连接：{{ connected }}</p>
-    <p>公钥：{{ publicKey?.toBase58() ?? "无" }}</p>
+    <p>Selected: {{ selectedWallet?.name ?? "None" }}</p>
+    <p>Connected: {{ connected }}</p>
+    <p>Public key: {{ publicKey ?? "None" }}</p>
 
     <button type="button" :disabled="!selectedWallet || connected || connecting" @click="connect">
-      连接
+      Connect
     </button>
-    <button type="button" :disabled="!connected" @click="disconnect">断开连接</button>
+    <button type="button" :disabled="!connected" @click="disconnect">Disconnect</button>
   </section>
 </template>
 ```
@@ -114,9 +114,9 @@ const { connected, canSignMessage, canSignTransaction, connect } = useWallet();
 </script>
 
 <template>
-  <button type="button" :disabled="connected" @click="connect">连接</button>
-  <button type="button" :disabled="!connected || !canSignMessage">签署消息</button>
-  <button type="button" :disabled="!connected || !canSignTransaction">签署交易</button>
+  <button type="button" :disabled="connected" @click="connect">Connect</button>
+  <button type="button" :disabled="!connected || !canSignMessage">Sign message</button>
+  <button type="button" :disabled="!connected || !canSignTransaction">Sign transaction</button>
 </template>
 ```
 
@@ -126,7 +126,7 @@ const { connected, canSignMessage, canSignTransaction, connect } = useWallet();
 import { assertWalletCanSign, assertWalletConnected } from "@vue-solana/core/wallet";
 
 assertWalletConnected(wallet);
-console.log(wallet.publicKey.toBase58());
+console.log(wallet.publicKey);
 
 assertWalletCanSign(wallet);
 const signed = await wallet.signTransaction(transaction);
@@ -200,13 +200,13 @@ Android 注意事项：
 
 iOS 注意事项：
 
-| 能力                    | v1 行为                                                     |
+| 能力                    | 当前行为                                                    |
 | ----------------------- | ----------------------------------------------------------- |
 | 发现                    | Phantom、Solflare 和 Backpack 条目可以出现在 iOS 浏览器中。 |
 | 连接                    | 使用钱包专属 universal links 和重定向回调。                 |
 | 会话处理                | 应用应在重定向后先处理回调状态，再假设钱包已连接。          |
 | 交易                    | 能力取决于钱包链接和返回的会话数据。                        |
-| Desktop Safari 原生应用 | 未作为 v1 桌面原生路径实现。                                |
+| Desktop Safari 原生应用 | 未实现。                                                    |
 
 如果你直接使用 iOS core 辅助函数，请在客户端启动早期调用 `handleSolanaIosWalletCallback()`，以便在应用读取钱包状态前验证并解密重定向数据。
 
@@ -221,13 +221,13 @@ const customWallet: SolanaWallet = {
   publicKey: null,
   connected: false,
   async connect() {
-    // 打开你的钱包 UI，并在批准后分配 publicKey。
+    // Open your wallet UI and assign publicKey after approval.
   },
   async disconnect() {
-    // 清除本地钱包状态。
+    // Clear local wallet state.
   },
   async signTransaction(transaction) {
-    // 返回已签名交易。
+    // Return the signed transaction.
     return transaction;
   },
 };

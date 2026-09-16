@@ -1,6 +1,6 @@
 ---
 title: "RPC and Clusters"
-description: Configure Solana clusters, RPC endpoints, WebSocket endpoints, and connection helpers.
+description: Configure Solana clusters, RPC endpoints, WebSocket endpoints, and client helpers.
 ogSection: Guides
 surroundOrder: 8
 ---
@@ -24,7 +24,7 @@ Use `mainnet-beta` for Solana mainnet. Vue Solana intentionally follows Solana's
 
 ## Core Setup
 
-Use `@vue-solana/core/rpc` when you want framework-agnostic connection setup.
+Use `@vue-solana/core/rpc` when you want framework-agnostic client setup.
 
 ```ts
 import { createSolanaContext } from "@vue-solana/core/rpc";
@@ -34,12 +34,12 @@ const solana = createSolanaContext({
   commitment: "confirmed",
 });
 
-const { blockhash } = await solana.connection.getLatestBlockhash();
+const { value: latestBlockhash } = await solana.client.rpc.getLatestBlockhash().send();
 
-console.log(solana.endpoint, blockhash);
+console.log(solana.endpoint, latestBlockhash.blockhash);
 ```
 
-`createSolanaContext()` returns the resolved `cluster`, HTTP `endpoint`, WebSocket `wsEndpoint`, and `connection`.
+`createSolanaContext()` returns the resolved `cluster`, HTTP `endpoint`, WebSocket `wsEndpoint`, and a Kit `client` whose `rpc` sends RPC requests.
 
 ## Custom RPC Endpoints
 
@@ -131,7 +131,7 @@ The Nuxt runtime plugin is client-only. Composables can be called during SSR, bu
 
 ## Endpoint Helpers
 
-Use `@vue-solana/core/clusters` when you need the built-in endpoint values without creating a `Connection`.
+Use `@vue-solana/core/clusters` when you need the built-in endpoint values without creating a client.
 
 ```ts
 import {

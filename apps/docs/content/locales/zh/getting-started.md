@@ -9,7 +9,7 @@ surroundOrder: 2
 
 ## 开始之前
 
-如果你只需要 `Connection`、`PublicKey` 和交易等 Solana primitives，而不需要 Vue/Nuxt 集成，请直接使用 `@vue-solana/core`。如果你需要框架集成，请使用 `@vue-solana/vue` 或 `@vue-solana/nuxt`。
+如果你只需要 Solana primitives，而不需要 Vue/Nuxt 集成，请直接使用 `@vue-solana/core`。它基于 `@solana/kit`，并从 `@vue-solana/core/kit` 重新导出 `createSolanaClient()` 以及 `Address`/`address()`/`lamports()` 和 Kit 交易与 RPC 类型。如果你需要框架集成，请使用 `@vue-solana/vue` 或 `@vue-solana/nuxt`。
 
 支持的集群：
 
@@ -41,7 +41,7 @@ pnpm add @vue-solana/vue
 npm install @vue-solana/vue
 ```
 
-Vue 应用可以使用 `@vue-solana/vue/web3` 和 `@vue-solana/vue/buffer-polyfill`，无需直接安装低层 Solana 或 Buffer 包。
+Vue 应用可以直接使用 `@vue-solana/vue/kit`（`createSolanaClient`、`address`、`lamports` 和类型）以及 `@vue-solana/vue/buffer-polyfill`，无需直接安装低层 Solana 或 Buffer 包。注入的客户端请从 `@vue-solana/vue/useSolanaClient` 使用 `useSolanaClient()`。
 
 ## 为 Nuxt 安装
 
@@ -51,15 +51,11 @@ npx nuxt module add @vue-solana/nuxt
 
 这会安装包，并把 `@vue-solana/nuxt` 添加到 `nuxt.config.ts` 的 `modules` 数组。
 
-Nuxt 应用可以使用 `@vue-solana/nuxt/web3` 和 `@vue-solana/nuxt/buffer-polyfill`，无需直接安装 `@vue-solana/core`、`@vue-solana/vue` 或低层 Solana 与 Buffer 包。
+Nuxt 应用可以直接使用 `@vue-solana/nuxt/kit` 和 `@vue-solana/nuxt/buffer-polyfill`，无需直接安装 `@vue-solana/core`、`@vue-solana/vue` 或低层 Solana 与 Buffer 包。自动导入的 `useSolanaClient()` 返回注入的 Kit 客户端。
 
-## 已知 TypeScript 问题
+## v2 说明
 
-`@solana/web3-compat@0.0.21` 当前的 TypeScript 包元数据有问题。它的 package metadata 指向 `dist/types/index.d.ts`，但发布包中没有包含该文件。
-
-运行时导入仍然使用真实的 `@solana/web3-compat` 包。当前 Vue Solana 包会发布临时的包内声明 shim，因此按文档使用 `@vue-solana/core`、`@vue-solana/vue` 或 `@vue-solana/nuxt` 导入的应用通常不需要自己的本地 shim。
-
-只有在使用旧版 Vue Solana 包，或从应用代码直接导入 `@solana/web3-compat` 时，才需要添加本地 shim。每次新的 `@solana/web3-compat` 发布后都应重新检查此说明；上游发布有效根声明后应移除包内 shim。
+v2.0.0 移除了旧版 `@solana/web3-compat` 表面。上下文不再携带 `connection`，`@vue-solana/*/web3` 子路径已被删除。所有 composable 都以 Kit 为先，`SolanaWallet.publicKey` 是普通的 base58 `Address` 字符串。早期 v1 文档描述的 `@solana/buffer/` shim 已不存在；保留的包内 shim 只覆盖 Buffer polyfill 使用的浏览器 `buffer/` 子路径。完整的 before/after 对照请参阅 [Kit 迁移指南](/zh/guides/kit-migration)。
 
 ## Vue 设置
 
@@ -89,12 +85,15 @@ createApp(App)
 
 `mobileWallet` 和 `iosWallet` 是可选的。当浏览器运行时支持时，Android Mobile Wallet Adapter 注册以及 iOS Phantom、Solflare 和 Backpack 链接默认启用。传入 `mobileWallet: false` 或 `iosWallet: false` 可以禁用对应来源。
 
-对于 Vue composables，新代码优先使用直接子路径导入：
+对于 Vue composable，新代码优先使用直接子路径导入：
 
 ```ts
 import { useRpc } from "@vue-solana/vue/useRpc";
 import { useBalance } from "@vue-solana/vue/useBalance";
+import { useSolanaClient } from "@vue-solana/vue/useSolanaClient";
 ```
+
+`useRpc()` 返回已解析的集群状态和注入的 Kit `client`；`useBalance()` 通过 `client.rpc` 读取。`useSolanaClient()` 直接返回同一个 `client` 及其只读 `rpc`，外加来自 `@vue-solana/vue/kit` 的 `address()`/`lamports()`。完整的 before/after 对照请参阅 [Kit 迁移指南](/zh/guides/kit-migration)。
 
 ## Nuxt 设置
 
@@ -117,7 +116,7 @@ export default defineNuxtConfig({
 });
 ```
 
-Nuxt 模块只在客户端安装运行时插件，并从直接的 `@vue-solana/vue/*` 子路径自动导入 composables。Composables 可以在 SSR 期间安全调用，但真实 RPC 和钱包操作应在 hydration 后运行，例如在 `onMounted()` 或用户操作中。Nuxt `solana` 选项位于 public runtime config 中，因此应保持 JSON 可序列化。
+Nuxt 模块只在客户端安装运行时插件，并从直接的 `@vue-solana/vue/*` 子路径自动导入 composable。Composable 可以在 SSR 期间安全调用，但真实 RPC 和钱包操作应在 hydration 后运行，例如在 `onMounted()` 或用户操作中。Nuxt `solana` 选项位于 public runtime config 中，因此应保持 JSON 可序列化。
 
 ## 无钱包测试 RPC
 
@@ -130,12 +129,12 @@ Vue 中使用 `useRpc()`：
 import { onMounted, ref } from "vue";
 import { useRpc } from "@vue-solana/vue/useRpc";
 
-const { cluster, endpoint, connection } = useRpc();
+const { cluster, endpoint, client } = useRpc();
 const latestBlockhash = ref<string | null>(null);
 
 onMounted(async () => {
-  const result = await connection.getLatestBlockhash();
-  latestBlockhash.value = result.blockhash;
+  const { value } = await client.rpc.getLatestBlockhash().send();
+  latestBlockhash.value = value.blockhash;
 });
 </script>
 
@@ -144,6 +143,28 @@ onMounted(async () => {
     <p>Cluster: {{ cluster }}</p>
     <p>Endpoint: {{ endpoint }}</p>
     <p>Latest blockhash: {{ latestBlockhash }}</p>
+  </main>
+</template>
+```
+
+新代码可以改用 Kit 客户端。`useSolanaClient()` 不需要钱包，并以 Kit RPC API 的类型返回相同信息（读取调用返回 `bigint`）：
+
+```vue
+<script setup lang="ts">
+import { onMounted, ref } from "vue";
+import { useSolanaClient } from "@vue-solana/vue/useSolanaClient";
+
+const { rpc } = useSolanaClient();
+const slot = ref<bigint | null>(null);
+
+onMounted(async () => {
+  slot.value = await rpc.getSlot().send();
+});
+</script>
+
+<template>
+  <main>
+    <p>Slot: {{ slot }}</p>
   </main>
 </template>
 ```
@@ -163,6 +184,19 @@ const { cluster, endpoint, checkConnection, latestBlockhash } = useSolanaRpc();
     <button type="button" @click="checkConnection">Check RPC</button>
   </main>
 </template>
+```
+
+在 Nuxt 中，同样的 Kit 读取来自自动导入的 `useSolanaClient()`：
+
+```vue
+<script setup lang="ts">
+const { rpc } = useSolanaClient();
+const slot = ref<bigint | null>(null);
+
+onMounted(async () => {
+  slot.value = await rpc.getSlot().send();
+});
+</script>
 ```
 
 ## 获取 Devnet 或 Testnet SOL
@@ -258,7 +292,7 @@ iOS 浏览器钱包支持使用钱包专用 universal links，因为 Mobile Wall
 | 桌面浏览器扩展               | `wallet-standard`       | 安装后 Phantom、Solflare、Backpack 和其他标准钱包可能出现。      |
 | Android Chrome 或 Chrome PWA | `mobile-wallet-adapter` | 需要兼容的原生钱包和 Android MWA 浏览器支持。                    |
 | iOS 浏览器                   | `deep-link`             | Phantom、Solflare 和 Backpack 条目使用钱包专用 universal links。 |
-| 桌面原生应用                 | v1 未实现               | 桌面原生协议链接已明确推迟到 v1 之后。                           |
+| 桌面原生应用                 | 尚未实现                | 桌面原生协议链接尚不支持。                                       |
 
 ## 签署消息
 
@@ -355,5 +389,6 @@ function explorerUrl(signature: string, cluster: string) {
 - [集群](/zh/concepts/clusters)
 - [钱包](/zh/guides/wallets)
 - [交易指南](/zh/guides/transactions)
+- [Kit 迁移](/zh/guides/kit-migration)
 - [故障排查](/zh/troubleshooting)
 - [Solana Documentation](https://solana.com/docs)

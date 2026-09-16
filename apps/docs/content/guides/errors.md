@@ -30,7 +30,7 @@ const error = new SolanaError("RPC_FAILURE", "Unable to reach RPC");
 - `WALLET_NOT_CONNECTED`: the active wallet is not connected or has no public key.
 - `WALLET_FEATURE_UNSUPPORTED`: the active wallet does not support the requested feature.
 - `USER_REJECTED`: the user rejected a wallet request.
-- `INVALID_ADDRESS`: an address string could not be parsed as a Solana public key.
+- `INVALID_ADDRESS`: an address string could not be parsed as a Solana address.
 - `TRANSACTION_TIMEOUT`: a transaction-related operation timed out.
 - `RPC_FAILURE`: an RPC send, read, or confirmation failed.
 - `STORAGE_FAILURE`: browser storage could not be read or written.
@@ -43,7 +43,7 @@ Use `isSolanaError()` when catching unknown failures.
 import { isSolanaError } from "@vue-solana/core/errors";
 
 try {
-  await signAndSendTransaction(connection, wallet, transaction);
+  await signAndSendTransaction(client, wallet, transaction);
 } catch (error) {
   if (isSolanaError(error)) {
     console.log(error.code);
@@ -59,7 +59,7 @@ import { normalizeSolanaError } from "@vue-solana/core/errors";
 
 async function loadData() {
   try {
-    return await connection.getLatestBlockhash();
+    return await client.rpc.getLatestBlockhash().send();
   } catch (cause) {
     throw normalizeSolanaError(cause, "RPC_FAILURE", "Unable to load blockhash");
   }

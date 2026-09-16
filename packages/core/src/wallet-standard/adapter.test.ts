@@ -28,7 +28,7 @@ describe("Wallet Standard adapter", () => {
     await wallet.connect();
 
     expect(wallet.connected).toBe(true);
-    expect(wallet.publicKey?.toBase58()).toBe(account.address);
+    expect(wallet.publicKey).toBe(account.address);
     expect(getConnectFeature(standardWallet).connect).toHaveBeenCalledOnce();
 
     await wallet.disconnect();
@@ -76,7 +76,7 @@ describe("Wallet Standard adapter", () => {
     await wallet.connect();
 
     expect(wallet.connected).toBe(true);
-    expect(wallet.publicKey?.toBase58()).toBe(account.address);
+    expect(wallet.publicKey).toBe(account.address);
   });
 
   it("notifies when wallet state changes", async () => {
@@ -123,6 +123,68 @@ describe("Wallet Standard adapter", () => {
     expect(wallet.publicKey).toBeNull();
   });
 
+  it("signs raw transaction bytes through the standard wallet", async () => {
+    const standardWallet = createStandardWallet();
+    const transaction = createTestTransaction();
+    const signedTransaction = new Uint8Array([9, 9, 9]);
+    const signTransaction = vi.fn().mockResolvedValue([{ signedTransaction }]);
+    (standardWallet.features as Record<string, unknown>)[SolanaSignTransaction] = {
+      version: "1.0.0",
+      supportedTransactionVersions: ["legacy", 0],
+      signTransaction,
+    };
+    const walletInfo = {
+      name: standardWallet.name,
+      icon: standardWallet.icon,
+      chains: standardWallet.chains,
+      accounts: [],
+      wallet: standardWallet,
+    } satisfies SolanaWalletInfo;
+    const wallet = adaptSolanaStandardWallet(walletInfo, { chain: "solana:devnet" });
+
+    await wallet.connect();
+
+    await expect(wallet.signTransaction?.(transaction)).resolves.toBe(signedTransaction);
+    expect(signTransaction).toHaveBeenCalledWith({
+      account,
+      transaction,
+      chain: "solana:devnet",
+    });
+  });
+
+  it("signs multiple raw transaction bytes through the standard wallet", async () => {
+    const standardWallet = createStandardWallet();
+    const transactions = [createTestTransaction(), new Uint8Array([6, 7, 8])];
+    const signedTransaction = new Uint8Array([9, 9, 9]);
+    const signTransaction = vi
+      .fn()
+      .mockResolvedValue([{ signedTransaction }, { signedTransaction }]);
+    (standardWallet.features as Record<string, unknown>)[SolanaSignTransaction] = {
+      version: "1.0.0",
+      supportedTransactionVersions: ["legacy", 0],
+      signTransaction,
+    };
+    const walletInfo = {
+      name: standardWallet.name,
+      icon: standardWallet.icon,
+      chains: standardWallet.chains,
+      accounts: [],
+      wallet: standardWallet,
+    } satisfies SolanaWalletInfo;
+    const wallet = adaptSolanaStandardWallet(walletInfo, { chain: "solana:devnet" });
+
+    await wallet.connect();
+
+    await expect(wallet.signAllTransactions?.(transactions)).resolves.toEqual([
+      signedTransaction,
+      signedTransaction,
+    ]);
+    expect(signTransaction).toHaveBeenCalledWith(
+      { account, transaction: transactions[0], chain: "solana:devnet" },
+      { account, transaction: transactions[1], chain: "solana:devnet" },
+    );
+  });
+
   it("rejects signAllTransactions when a wallet returns fewer results than requested", async () => {
     const standardWallet = createStandardWallet();
     const signTransaction = vi.fn().mockResolvedValue([]);
@@ -145,40 +207,6 @@ describe("Wallet Standard adapter", () => {
     await expect(
       wallet.signAllTransactions?.([createTestTransaction(), createTestTransaction()]),
     ).rejects.toThrow("Solana wallet returned 0 signed transactions for 2 requested transactions");
-    expect(signTransaction).toHaveBeenCalledOnce();
-  });
-
-  it("uses the standard wallet error shape when a signed transaction has no matching request", async () => {
-    const standardWallet = createStandardWallet();
-    const signedTransaction = createTestTransaction().serialize({
-      requireAllSignatures: false,
-      verifySignatures: false,
-    });
-    const signTransaction = vi.fn().mockResolvedValue([{ signedTransaction }]);
-    (standardWallet.features as Record<string, unknown>)[SolanaSignTransaction] = {
-      version: "1.0.0",
-      supportedTransactionVersions: ["legacy"],
-      signTransaction,
-    };
-    const walletInfo = {
-      name: standardWallet.name,
-      icon: standardWallet.icon,
-      chains: standardWallet.chains,
-      accounts: [],
-      wallet: standardWallet,
-    } satisfies SolanaWalletInfo;
-    const wallet = adaptSolanaStandardWallet(walletInfo, { chain: "solana:devnet" });
-
-    await wallet.connect();
-
-    const transactions = new Array(1) as ReturnType<typeof createTestTransaction>[];
-
-    await expect(wallet.signAllTransactions?.(transactions)).rejects.toMatchObject({
-      name: "SolanaWalletError",
-      code: "WALLET_FEATURE_UNSUPPORTED",
-      feature: "signTransaction",
-      message: "Solana wallet returned a signed transaction without a matching request",
-    });
     expect(signTransaction).toHaveBeenCalledOnce();
   });
 

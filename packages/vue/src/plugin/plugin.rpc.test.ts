@@ -10,19 +10,27 @@ import {
   subscribeSolanaWallets,
 } from "./plugin.test-utils";
 
+function createGetLatestBlockhashMock(blockhash = "latest-blockhash"): ReturnType<typeof vi.fn> {
+  return vi.fn().mockReturnValue({ send: vi.fn().mockResolvedValue({ value: { blockhash } }) });
+}
+
+function mockClientWithBlockhash(blockhash = "latest-blockhash") {
+  return {
+    rpc: { getLatestBlockhash: createGetLatestBlockhashMock(blockhash) },
+  };
+}
+
 describe("createSolanaPlugin RPC connection", () => {
   installPluginTestHooks();
 
   it("provides Solana context and checks the RPC connection", async () => {
     silenceConsole();
-    const connection = {
-      getLatestBlockhash: vi.fn().mockResolvedValue({ blockhash: "latest-blockhash" }),
-    };
+    const client = mockClientWithBlockhash();
     createSolanaContext.mockReturnValue({
       cluster: "devnet",
       endpoint: "https://api.devnet.solana.com",
       wsEndpoint: "wss://api.devnet.solana.com",
-      connection,
+      client,
     });
     const { solana } = mountSolanaPlugin({ cluster: "devnet" });
 
@@ -32,21 +40,19 @@ describe("createSolanaPlugin RPC connection", () => {
 
     expect(createSolanaContext).toHaveBeenCalledWith({ cluster: "devnet" });
     expect(solana?.latestBlockhash.value).toBe("latest-blockhash");
-    expect(solana?.connection).toBe(connection);
+    expect(solana?.client).toBe(client);
   });
 
   it("checks the RPC connection when startup wallet refresh fails", async () => {
     vi.useFakeTimers();
     const { error: consoleError } = silenceConsole();
     const discoveryError = new Error("wallet discovery failed");
-    const connection = {
-      getLatestBlockhash: vi.fn().mockResolvedValue({ blockhash: "latest-blockhash" }),
-    };
+    const getLatestBlockhash = createGetLatestBlockhashMock();
     createSolanaContext.mockReturnValue({
       cluster: "devnet",
       endpoint: "https://api.devnet.solana.com",
       wsEndpoint: "wss://api.devnet.solana.com",
-      connection,
+      client: { rpc: { getLatestBlockhash } },
     });
     getRegisteredSolanaWallets.mockImplementation(() => {
       throw discoveryError;
@@ -59,7 +65,7 @@ describe("createSolanaPlugin RPC connection", () => {
       expect(solana?.status.value).toBe("connected");
     });
 
-    expect(connection.getLatestBlockhash).toHaveBeenCalledTimes(1);
+    expect(getLatestBlockhash).toHaveBeenCalledTimes(1);
     expect(consoleError).toHaveBeenCalledWith("[Vue Solana] Wallet refresh failed", discoveryError);
   });
 
@@ -69,8 +75,12 @@ describe("createSolanaPlugin RPC connection", () => {
       cluster: "devnet",
       endpoint: "https://api.devnet.solana.com",
       wsEndpoint: "wss://api.devnet.solana.com",
-      connection: {
-        getLatestBlockhash: vi.fn().mockRejectedValue(new Error("offline")),
+      client: {
+        rpc: {
+          getLatestBlockhash: vi
+            .fn()
+            .mockReturnValue({ send: vi.fn().mockRejectedValue(new Error("offline")) }),
+        },
       },
     });
     const { solana } = mountSolanaPlugin({ mobileWallet: false });
@@ -90,8 +100,10 @@ describe("createSolanaPlugin RPC connection", () => {
       cluster: "devnet",
       endpoint: "https://api.devnet.solana.com",
       wsEndpoint: "wss://api.devnet.solana.com",
-      connection: {
-        getLatestBlockhash: vi.fn().mockReturnValue(new Promise(() => {})),
+      client: {
+        rpc: {
+          getLatestBlockhash: vi.fn().mockReturnValue({ send: () => new Promise(() => {}) }),
+        },
       },
     });
     const { solana } = mountSolanaPlugin({ mobileWallet: false });
@@ -112,23 +124,25 @@ describe("createSolanaPlugin RPC connection", () => {
 
   it("ignores stale RPC connection check results", async () => {
     silenceConsole();
-    const firstCheck = createDeferred<{ blockhash: string }>();
-    const secondCheck = createDeferred<{ blockhash: string }>();
+    const firstCheck = createDeferred<{ value: { blockhash: string } }>();
+    const secondCheck = createDeferred<{ value: { blockhash: string } }>();
     createSolanaContext.mockReturnValue({
       cluster: "devnet",
       endpoint: "https://api.devnet.solana.com",
       wsEndpoint: "wss://api.devnet.solana.com",
-      connection: {
-        getLatestBlockhash: vi
-          .fn()
-          .mockReturnValueOnce(firstCheck.promise)
-          .mockReturnValueOnce(secondCheck.promise),
+      client: {
+        rpc: {
+          getLatestBlockhash: vi
+            .fn()
+            .mockReturnValueOnce({ send: () => firstCheck.promise })
+            .mockReturnValueOnce({ send: () => secondCheck.promise }),
+        },
       },
     });
     const { solana } = mountSolanaPlugin({ mobileWallet: false });
 
     void solana?.checkConnection();
-    secondCheck.resolve({ blockhash: "second-blockhash" });
+    secondCheck.resolve({ value: { blockhash: "second-blockhash" } });
 
     await vi.waitFor(() => {
       expect(solana?.status.value).toBe("connected");
@@ -136,7 +150,7 @@ describe("createSolanaPlugin RPC connection", () => {
 
     expect(solana?.latestBlockhash.value).toBe("second-blockhash");
 
-    firstCheck.resolve({ blockhash: "first-blockhash" });
+    firstCheck.resolve({ value: { blockhash: "first-blockhash" } });
 
     await Promise.resolve();
 
@@ -156,9 +170,7 @@ describe("createSolanaPlugin RPC connection", () => {
       cluster: "devnet",
       endpoint: "https://api.devnet.solana.com",
       wsEndpoint: "wss://api.devnet.solana.com",
-      connection: {
-        getLatestBlockhash: vi.fn().mockResolvedValue({ blockhash: "latest-blockhash" }),
-      },
+      client: mockClientWithBlockhash(),
     });
     mockWalletDiscovery([walletInfo]);
     const { solana } = mountSolanaPlugin({ mobileWallet: false });

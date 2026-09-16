@@ -36,7 +36,7 @@ export default {
       vueVite: "Vue Vite",
       nuxt: "Nuxt",
       roadmap: "Hoja de ruta",
-      v1Roadmap: "Hoja de ruta v1",
+      roadmapPage: "Hoja de ruta",
     },
     external: {
       ariaLabel: "Enlaces externos",
@@ -104,15 +104,15 @@ export default {
       },
     },
     directConnection: {
-      title: "Llamada directa a la conexión",
-      description: "Llama a {method} directamente desde la conexión inyectada.",
+      title: "Llamada directa al cliente Kit",
+      description: "Llama a {method} directamente desde el RPC del cliente Kit.",
       load: "Cargar blockhash",
       blockhash: "Blockhash:",
     },
     balance: {
       title: "Consulta de balance",
-      publicKey: "Clave pública",
-      publicKeyPlaceholder: "Introduce una clave pública de Solana",
+      publicKey: "Dirección",
+      publicKeyPlaceholder: "Introduce una dirección de Solana",
       refresh: "Actualizar balance",
       lamports: "Lamports:",
       sol: "SOL:",
@@ -136,7 +136,7 @@ export default {
         discoveredWallets: "Wallets descubiertas",
         selectedWallet: "Wallet seleccionada",
         configured: "Wallet configurada",
-        publicKey: "Clave pública",
+        publicKey: "Dirección",
       },
       status: {
         connecting: "conectando",
@@ -194,7 +194,7 @@ export default {
         "Carga las cuentas de tokens SPL de la wallet conectada y verifica el balance de un token específico por dirección de mint. Requiere una wallet conectada para la lista de cuentas.",
       refresh: "Actualizar cuentas",
       mintLabel: "Dirección del mint",
-      mintPlaceholder: "Introduce una clave pública del mint de token",
+      mintPlaceholder: "Introduce la dirección del mint de token",
       refreshBalance: "Comprobar balance",
       labels: {
         accounts: "Cuentas de tokens:",
@@ -204,9 +204,9 @@ export default {
     transfer: {
       title: "Transferencia real en devnet",
       description:
-        "Envía una transferencia real desde la wallet conectada y luego espera confirmación. Usa devnet, introduce una clave pública destinataria y empieza con una cantidad pequeña como {amount} SOL.",
+        "Envía una transferencia real desde la wallet conectada y luego espera confirmación. Usa devnet, introduce una dirección destinataria y empieza con una cantidad pequeña como {amount} SOL.",
       recipient: "Dirección destinataria",
-      recipientPlaceholder: "Introduce la clave pública destinataria",
+      recipientPlaceholder: "Introduce la dirección destinataria",
       amount: "Cantidad en SOL",
       send: "Enviar transferencia en devnet",
       signature: "Firma:",

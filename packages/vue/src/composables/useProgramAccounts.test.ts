@@ -1,4 +1,3 @@
-import { PublicKey } from "@vue-solana/core/web3";
 import { flushPromises } from "@vue/test-utils";
 import {
   useProgramAccounts,
@@ -7,6 +6,20 @@ import {
 import { describe, expect, it, vi } from "vitest";
 import { defineComponent, h, ref } from "vue";
 import { createMockSolanaContext, mountWithSolana } from "../../test-utils";
+
+const PROGRAM_ID = "11111111111111111111111111111111";
+const ACCOUNTS = [
+  {
+    pubkey: PROGRAM_ID,
+    account: {
+      executable: false,
+      lamports: 123n,
+      owner: PROGRAM_ID,
+      space: 10n,
+      data: ["AQ==", "base64"],
+    },
+  },
+];
 
 function deferred<T>() {
   let resolve!: (value: T) => void;
@@ -19,7 +32,7 @@ function deferred<T>() {
 
 function createProgramAccountsContext(getProgramAccounts: unknown) {
   return createMockSolanaContext({
-    connection: { getProgramAccounts } as ReturnType<typeof createMockSolanaContext>["connection"],
+    client: { rpc: { getProgramAccounts } } as ReturnType<typeof createMockSolanaContext>["client"],
   });
 }
 
@@ -76,13 +89,12 @@ describe("useProgramAccounts", () => {
     expect(invalidOptions.filters).toHaveLength(1);
   });
 
-  it("loads accounts for a program id string with config", async () => {
-    const accounts = [
-      { pubkey: new PublicKey("11111111111111111111111111111111"), account: { lamports: 123 } },
-    ];
-    const getProgramAccounts = vi.fn().mockResolvedValue(accounts);
+  it("loads and normalizes accounts for a program id string with config", async () => {
+    const getProgramAccounts = vi.fn(() => ({
+      send: vi.fn().mockResolvedValue({ value: ACCOUNTS }),
+    }));
     const context = createProgramAccountsContext(getProgramAccounts);
-    const { result } = mountProgramAccounts(context, "11111111111111111111111111111111", {
+    const { result } = mountProgramAccounts(context, PROGRAM_ID, {
       commitment: "confirmed",
       dataSlice: { offset: 1, length: 32 },
       filters: [{ dataSize: 165 }],
@@ -90,10 +102,22 @@ describe("useProgramAccounts", () => {
 
     await flushPromises();
 
-    expect(result.accounts.value).toBe(accounts);
+    expect(result.accounts.value).toEqual([
+      {
+        pubkey: PROGRAM_ID,
+        account: {
+          executable: false,
+          lamports: 123,
+          owner: PROGRAM_ID,
+          space: 10,
+          data: new Uint8Array([1]),
+        },
+      },
+    ]);
     expect(result.loading.value).toBe(false);
     expect(result.error.value).toBeNull();
-    expect(getProgramAccounts).toHaveBeenCalledWith(expect.any(PublicKey), {
+    expect(getProgramAccounts).toHaveBeenCalledWith(PROGRAM_ID, {
+      encoding: "base64",
       commitment: "confirmed",
       dataSlice: { offset: 1, length: 32 },
       filters: [{ dataSize: 165 }],
@@ -111,7 +135,7 @@ describe("useProgramAccounts", () => {
     expect(getProgramAccounts).not.toHaveBeenCalled();
   });
 
-  it("stores invalid public key errors without spamming RPC", async () => {
+  it("stores invalid address errors without spamming RPC", async () => {
     const getProgramAccounts = vi.fn();
     const context = createProgramAccountsContext(getProgramAccounts);
     const { result } = mountProgramAccounts(context, "not-a-public-key");
@@ -125,16 +149,15 @@ describe("useProgramAccounts", () => {
   });
 
   it("clears stale program accounts when a loaded program id becomes invalid", async () => {
-    const accounts = [
-      { pubkey: new PublicKey("11111111111111111111111111111111"), account: { lamports: 123 } },
-    ];
-    const getProgramAccounts = vi.fn().mockResolvedValue(accounts);
+    const getProgramAccounts = vi.fn(() => ({
+      send: vi.fn().mockResolvedValue({ value: ACCOUNTS }),
+    }));
     const context = createProgramAccountsContext(getProgramAccounts);
-    const programId = ref("11111111111111111111111111111111");
+    const programId = ref(PROGRAM_ID);
     const { result } = mountProgramAccounts(context, programId);
 
     await flushPromises();
-    expect(result.accounts.value).toBe(accounts);
+    expect(result.accounts.value).toHaveLength(1);
 
     programId.value = "not-a-public-key";
     await flushPromises();
@@ -146,9 +169,12 @@ describe("useProgramAccounts", () => {
   });
 
   it("refreshes when the program id changes", async () => {
-    const getProgramAccounts = vi.fn().mockResolvedValueOnce([]).mockResolvedValueOnce([]);
+    const getProgramAccounts = vi
+      .fn()
+      .mockReturnValueOnce({ send: vi.fn().mockResolvedValue({ value: [] }) })
+      .mockReturnValueOnce({ send: vi.fn().mockResolvedValue({ value: [] }) });
     const context = createProgramAccountsContext(getProgramAccounts);
-    const programId = ref("11111111111111111111111111111111");
+    const programId = ref(PROGRAM_ID);
     mountProgramAccounts(context, programId);
 
     await flushPromises();
@@ -159,52 +185,47 @@ describe("useProgramAccounts", () => {
   });
 
   it("keeps the newest accounts when overlapping requests resolve out of order", async () => {
-    const firstRequest = deferred<unknown[]>();
-    const secondRequest = deferred<unknown[]>();
+    const firstRequest = deferred<{ value: unknown[] }>();
+    const secondRequest = deferred<{ value: unknown[] }>();
     const getProgramAccounts = vi
       .fn()
-      .mockReturnValueOnce(firstRequest.promise)
-      .mockReturnValueOnce(secondRequest.promise);
+      .mockReturnValueOnce({ send: () => firstRequest.promise })
+      .mockReturnValueOnce({ send: () => secondRequest.promise });
     const context = createProgramAccountsContext(getProgramAccounts);
-    const programId = ref("11111111111111111111111111111111");
+    const programId = ref(PROGRAM_ID);
     const { result } = mountProgramAccounts(context, programId);
 
     await flushPromises();
     programId.value = "So11111111111111111111111111111111111111112";
     await flushPromises();
 
-    const newest = [
-      { pubkey: new PublicKey("11111111111111111111111111111111"), account: { lamports: 456 } },
-    ];
-    secondRequest.resolve(newest);
+    const newest = [{ ...ACCOUNTS[0]!, account: { ...ACCOUNTS[0]!.account, lamports: 456n } }];
+    secondRequest.resolve({ value: newest });
     await flushPromises();
 
-    expect(result.accounts.value).toBe(newest);
+    expect(result.accounts.value[0]?.account.lamports).toBe(456);
 
-    firstRequest.resolve([
-      { pubkey: new PublicKey("11111111111111111111111111111111"), account: { lamports: 123 } },
-    ]);
+    firstRequest.resolve({
+      value: [{ ...ACCOUNTS[0]!, account: { ...ACCOUNTS[0]!.account, lamports: 123n } }],
+    });
     await flushPromises();
 
-    expect(result.accounts.value).toBe(newest);
+    expect(result.accounts.value[0]?.account.lamports).toBe(456);
     expect(getProgramAccounts).toHaveBeenCalledTimes(2);
   });
 
   it("ignores pending program account responses after unmount", async () => {
-    const pendingRequest = deferred<unknown[]>();
-    const getProgramAccounts = vi.fn().mockReturnValue(pendingRequest.promise);
+    const pendingRequest = deferred<{ value: unknown[] }>();
+    const getProgramAccounts = vi.fn().mockReturnValue({ send: () => pendingRequest.promise });
     const context = createProgramAccountsContext(getProgramAccounts);
-    const { result, wrapper } = mountProgramAccounts(context, "11111111111111111111111111111111");
+    const { result, wrapper } = mountProgramAccounts(context, PROGRAM_ID);
 
     await flushPromises();
     expect(result.loading.value).toBe(true);
 
     wrapper.unmount();
 
-    const accounts = [
-      { pubkey: new PublicKey("11111111111111111111111111111111"), account: { lamports: 123 } },
-    ];
-    pendingRequest.resolve(accounts);
+    pendingRequest.resolve({ value: ACCOUNTS });
     await flushPromises();
 
     expect(result.accounts.value).toEqual([]);

@@ -23,16 +23,18 @@ describe("useSignatureStatus", () => {
       err: null,
       confirmationStatus: "confirmed",
     };
-    const getSignatureStatuses = vi.fn().mockResolvedValue({ value: [signatureStatus] });
+    const getSignatureStatuses = vi.fn(() => ({
+      send: vi.fn().mockResolvedValue({ value: [signatureStatus] }),
+    }));
     const { result } = mountUseSignatureStatus(
       signature,
       { searchTransactionHistory: true },
-      { getSignatureStatuses },
+      { rpc: { getSignatureStatuses } },
     );
 
     await flushPromises();
 
-    expect(result.status.value).toBe(signatureStatus);
+    expect(result.status.value).toEqual(signatureStatus);
     expect(result.loading.value).toBe(false);
     expect(result.error.value).toBeNull();
     expect(getSignatureStatuses).toHaveBeenCalledWith([signature], {
@@ -48,7 +50,7 @@ describe("useSignatureStatus", () => {
       "not-a-signature",
       { pollIntervalMs: 1 },
       {
-        getSignatureStatuses,
+        rpc: { getSignatureStatuses },
       },
     );
 
@@ -65,7 +67,7 @@ describe("useSignatureStatus", () => {
   it("rejects signatures that do not decode to 64 bytes", async () => {
     const getSignatureStatuses = vi.fn();
     const { result } = mountUseSignatureStatus(bs58.encode(new Uint8Array(63).fill(1)), undefined, {
-      getSignatureStatuses,
+      rpc: { getSignatureStatuses },
     });
 
     await flushPromises();
@@ -83,12 +85,16 @@ describe("useSignatureStatus", () => {
       err: null,
       confirmationStatus: "confirmed",
     };
-    const getSignatureStatuses = vi.fn().mockResolvedValue({ value: [signatureStatus] });
+    const getSignatureStatuses = vi.fn(() => ({
+      send: vi.fn().mockResolvedValue({ value: [signatureStatus] }),
+    }));
     const signatureRef = ref(signature);
-    const { result } = mountUseSignatureStatus(signatureRef, undefined, { getSignatureStatuses });
+    const { result } = mountUseSignatureStatus(signatureRef, undefined, {
+      rpc: { getSignatureStatuses },
+    });
 
     await flushPromises();
-    expect(result.status.value).toBe(signatureStatus);
+    expect(result.status.value).toEqual(signatureStatus);
 
     signatureRef.value = "not-a-signature";
     await flushPromises();
@@ -101,12 +107,14 @@ describe("useSignatureStatus", () => {
 
   it("rejects invalid poll intervals without creating a tight polling loop", async () => {
     vi.useFakeTimers();
-    const getSignatureStatuses = vi.fn().mockResolvedValue({ value: [null] });
+    const getSignatureStatuses = vi.fn(() => ({
+      send: vi.fn().mockResolvedValue({ value: [null] }),
+    }));
     const { result } = mountUseSignatureStatus(
       signature,
       { pollIntervalMs: -1 },
       {
-        getSignatureStatuses,
+        rpc: { getSignatureStatuses },
       },
     );
 
@@ -120,8 +128,10 @@ describe("useSignatureStatus", () => {
 
   it("normalizes RPC failures while refreshing signature status", async () => {
     const cause = new Error("status RPC failed");
-    const getSignatureStatuses = vi.fn().mockRejectedValue(cause);
-    const { result } = mountUseSignatureStatus(signature, undefined, { getSignatureStatuses });
+    const getSignatureStatuses = vi.fn(() => ({ send: vi.fn().mockRejectedValue(cause) }));
+    const { result } = mountUseSignatureStatus(signature, undefined, {
+      rpc: { getSignatureStatuses },
+    });
 
     await flushPromises();
 
@@ -132,7 +142,7 @@ describe("useSignatureStatus", () => {
 
   it("does not poll RPC for null input", async () => {
     const getSignatureStatuses = vi.fn();
-    const { result } = mountUseSignatureStatus(null, undefined, { getSignatureStatuses });
+    const { result } = mountUseSignatureStatus(null, undefined, { rpc: { getSignatureStatuses } });
 
     await flushPromises();
 
@@ -145,10 +155,12 @@ describe("useSignatureStatus", () => {
     const secondRequest = deferred<unknown>();
     const getSignatureStatuses = vi
       .fn()
-      .mockReturnValueOnce(firstRequest.promise)
-      .mockReturnValueOnce(secondRequest.promise);
+      .mockReturnValueOnce({ send: () => firstRequest.promise })
+      .mockReturnValueOnce({ send: () => secondRequest.promise });
     const signatureRef = ref(signature);
-    const { result } = mountUseSignatureStatus(signatureRef, undefined, { getSignatureStatuses });
+    const { result } = mountUseSignatureStatus(signatureRef, undefined, {
+      rpc: { getSignatureStatuses },
+    });
 
     await flushPromises();
     signatureRef.value = nextSignature;
@@ -158,22 +170,24 @@ describe("useSignatureStatus", () => {
     secondRequest.resolve({ value: [newest] });
     await flushPromises();
 
-    expect(result.status.value).toBe(newest);
+    expect(result.status.value).toEqual(newest);
 
     firstRequest.resolve({ value: [{ slot: 1, confirmations: 1, err: null }] });
     await flushPromises();
 
-    expect(result.status.value).toBe(newest);
+    expect(result.status.value).toEqual(newest);
   });
 
   it("polls when a poll interval is provided and stops on unmount", async () => {
     vi.useFakeTimers();
-    const getSignatureStatuses = vi.fn().mockResolvedValue({ value: [null] });
+    const getSignatureStatuses = vi.fn(() => ({
+      send: vi.fn().mockResolvedValue({ value: [null] }),
+    }));
     const { wrapper } = mountUseSignatureStatus(
       signature,
       { pollIntervalMs: 50 },
       {
-        getSignatureStatuses,
+        rpc: { getSignatureStatuses },
       },
     );
 
@@ -190,13 +204,15 @@ describe("useSignatureStatus", () => {
 
   it("does not restart polling after manual stop when the input changes", async () => {
     vi.useFakeTimers();
-    const getSignatureStatuses = vi.fn().mockResolvedValue({ value: [null] });
+    const getSignatureStatuses = vi.fn(() => ({
+      send: vi.fn().mockResolvedValue({ value: [null] }),
+    }));
     const signatureRef = ref(signature);
     const { result } = mountUseSignatureStatus(
       signatureRef,
       { pollIntervalMs: 50 },
       {
-        getSignatureStatuses,
+        rpc: { getSignatureStatuses },
       },
     );
 

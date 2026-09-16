@@ -1,10 +1,14 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { defineComponent, h } from "vue";
-import type { Connection } from "@vue-solana/core/web3";
 import type { SolanaError } from "@vue-solana/core/errors";
+import type { Signature } from "@vue-solana/core/kit";
 import type { ConfirmTransactionOptions } from "@vue-solana/core/types";
 import { createMockSolanaContext, mountWithSolana } from "../../test-utils";
 import { useTransactionConfirmation } from "./useTransactionConfirmation";
+
+const SIGNATURE = "signature" as Signature;
+const OLD_SIGNATURE = "old-signature" as Signature;
+const NEW_SIGNATURE = "new-signature" as Signature;
 
 interface Deferred<T> {
   promise: Promise<T>;
@@ -14,76 +18,93 @@ interface Deferred<T> {
 
 type TransactionConfirmationComposable = ReturnType<typeof useTransactionConfirmation>;
 
+const CONFIRMED_STATUS = {
+  slot: 1n,
+  confirmations: null,
+  err: null,
+  confirmationStatus: "confirmed",
+};
+
+const PROCESSED_STATUS = {
+  slot: 1n,
+  confirmations: null,
+  err: null,
+  confirmationStatus: "processed",
+};
+
+const FINALIZED_STATUS = {
+  slot: 1n,
+  confirmations: null,
+  err: null,
+  confirmationStatus: "finalized",
+};
+
 describe("useTransactionConfirmation", () => {
   afterEach(() => {
     vi.useRealTimers();
   });
 
   it("tracks confirmation progress and result", async () => {
-    const confirmationResult = { value: { err: null } };
-    const connection = {
-      confirmTransaction: vi.fn().mockResolvedValue(confirmationResult),
-    } as unknown as Connection;
-    const result = mountTransactionConfirmation(connection);
+    const getSignatureStatuses = vi.fn(() => ({
+      send: vi.fn().mockResolvedValue({ value: [CONFIRMED_STATUS] }),
+    }));
+    const result = mountTransactionConfirmation(getSignatureStatuses);
 
-    const confirmation = result.confirm("signature");
+    const confirmation = result.confirm(SIGNATURE);
 
     expect(result.status.value).toBe("confirming");
-    await expect(confirmation).resolves.toEqual({
+    await expect(confirmation).resolves.toMatchObject({
       signature: "signature",
       commitment: "confirmed",
-      result: confirmationResult,
     });
     expect(result.status.value).toBe("confirmed");
     expect(result.signature.value).toBe("signature");
-    expect(result.confirmation.value?.result).toEqual(confirmationResult);
-    expect(connection.confirmTransaction).toHaveBeenCalledWith("signature", "confirmed");
+    expect(result.confirmation.value?.commitment).toBe("confirmed");
+    expect(getSignatureStatuses).toHaveBeenCalledWith(["signature"]);
   });
 
   it("marks finalized when finalized commitment is requested", async () => {
-    const connection = {
-      confirmTransaction: vi.fn().mockResolvedValue({ value: { err: null } }),
-    } as unknown as Connection;
-    const result = mountTransactionConfirmation(connection, { commitment: "finalized" });
+    const getSignatureStatuses = vi.fn(() => ({
+      send: vi.fn().mockResolvedValue({ value: [FINALIZED_STATUS] }),
+    }));
+    const result = mountTransactionConfirmation(getSignatureStatuses, { commitment: "finalized" });
 
-    await result.confirm("signature");
+    await result.confirm(SIGNATURE);
 
     expect(result.status.value).toBe("finalized");
-    expect(connection.confirmTransaction).toHaveBeenCalledWith("signature", "finalized");
+    expect(getSignatureStatuses).toHaveBeenCalledWith(["signature"]);
   });
 
   it("marks processed when processed commitment is requested", async () => {
-    const connection = {
-      confirmTransaction: vi.fn().mockResolvedValue({ value: { err: null } }),
-    } as unknown as Connection;
-    const result = mountTransactionConfirmation(connection, { commitment: "processed" });
+    const getSignatureStatuses = vi.fn(() => ({
+      send: vi.fn().mockResolvedValue({ value: [PROCESSED_STATUS] }),
+    }));
+    const result = mountTransactionConfirmation(getSignatureStatuses, { commitment: "processed" });
 
-    await result.confirm("signature");
+    await result.confirm(SIGNATURE);
 
     expect(result.status.value).toBe("processed");
-    expect(connection.confirmTransaction).toHaveBeenCalledWith("signature", "processed");
+    expect(getSignatureStatuses).toHaveBeenCalledWith(["signature"]);
   });
 
   it("ignores an older confirmation that resolves after a newer confirmation", async () => {
-    const firstConfirmation = createDeferred<{ value: { err: null } }>();
-    const secondConfirmation = createDeferred<{ value: { err: null } }>();
-    const connection = {
-      confirmTransaction: vi
-        .fn()
-        .mockReturnValueOnce(firstConfirmation.promise)
-        .mockReturnValueOnce(secondConfirmation.promise),
-    } as unknown as Connection;
-    const result = mountTransactionConfirmation(connection);
+    const firstConfirmation = createDeferred<{ value: (typeof CONFIRMED_STATUS)[] }>();
+    const secondConfirmation = createDeferred<{ value: (typeof CONFIRMED_STATUS)[] }>();
+    const getSignatureStatuses = vi
+      .fn()
+      .mockReturnValueOnce({ send: () => firstConfirmation.promise })
+      .mockReturnValueOnce({ send: () => secondConfirmation.promise });
+    const result = mountTransactionConfirmation(getSignatureStatuses);
 
-    const first = result.confirm("old-signature");
-    const second = result.confirm("new-signature", { commitment: "finalized" });
+    const first = result.confirm(OLD_SIGNATURE);
+    const second = result.confirm(NEW_SIGNATURE, { commitment: "finalized" });
 
-    secondConfirmation.resolve({ value: { err: null } });
+    secondConfirmation.resolve({ value: [FINALIZED_STATUS] });
     await expect(second).resolves.toMatchObject({ signature: "new-signature" });
     expect(result.signature.value).toBe("new-signature");
     expect(result.status.value).toBe("finalized");
 
-    firstConfirmation.resolve({ value: { err: null } });
+    firstConfirmation.resolve({ value: [CONFIRMED_STATUS] });
     await expect(first).resolves.toMatchObject({ signature: "old-signature" });
     expect(result.signature.value).toBe("new-signature");
     expect(result.status.value).toBe("finalized");
@@ -91,21 +112,19 @@ describe("useTransactionConfirmation", () => {
   });
 
   it("ignores an older confirmation that rejects after a newer confirmation", async () => {
-    const firstConfirmation = createDeferred<{ value: { err: null } }>();
-    const secondConfirmation = createDeferred<{ value: { err: null } }>();
+    const firstConfirmation = createDeferred<{ value: (typeof CONFIRMED_STATUS)[] }>();
+    const secondConfirmation = createDeferred<{ value: (typeof CONFIRMED_STATUS)[] }>();
     const staleFailure = new Error("stale confirmation failed");
-    const connection = {
-      confirmTransaction: vi
-        .fn()
-        .mockReturnValueOnce(firstConfirmation.promise)
-        .mockReturnValueOnce(secondConfirmation.promise),
-    } as unknown as Connection;
-    const result = mountTransactionConfirmation(connection);
+    const getSignatureStatuses = vi
+      .fn()
+      .mockReturnValueOnce({ send: () => firstConfirmation.promise })
+      .mockReturnValueOnce({ send: () => secondConfirmation.promise });
+    const result = mountTransactionConfirmation(getSignatureStatuses);
 
-    const first = result.confirm("old-signature");
-    const second = result.confirm("new-signature");
+    const first = result.confirm(OLD_SIGNATURE);
+    const second = result.confirm(NEW_SIGNATURE);
 
-    secondConfirmation.resolve({ value: { err: null } });
+    secondConfirmation.resolve({ value: [CONFIRMED_STATUS] });
     await expect(second).resolves.toMatchObject({ signature: "new-signature" });
 
     firstConfirmation.reject(staleFailure);
@@ -117,14 +136,14 @@ describe("useTransactionConfirmation", () => {
 
   it("preserves the submitted signature when confirmation times out", async () => {
     vi.useFakeTimers();
-    const connection = {
-      confirmTransaction: vi.fn(() => new Promise(() => undefined)),
-    } as unknown as Connection;
-    const result = mountTransactionConfirmation(connection, { timeoutMs: 10 });
+    const getSignatureStatuses = vi.fn(() => ({
+      send: vi.fn().mockResolvedValue({ value: [PROCESSED_STATUS] }),
+    }));
+    const result = mountTransactionConfirmation(getSignatureStatuses, { timeoutMs: 10 });
 
-    const rejection = result.confirm("signature").catch((cause: unknown) => cause);
+    const rejection = result.confirm(SIGNATURE).catch((cause: unknown) => cause);
 
-    await vi.advanceTimersByTimeAsync(10);
+    await vi.advanceTimersByTimeAsync(1500);
     await expect(rejection).resolves.toMatchObject({
       message: "Timed out waiting for transaction signature to reach confirmed commitment.",
     });
@@ -136,12 +155,10 @@ describe("useTransactionConfirmation", () => {
 
   it("normalizes confirmation failures", async () => {
     const failure = new Error("confirmation RPC failed");
-    const connection = {
-      confirmTransaction: vi.fn().mockRejectedValue(failure),
-    } as unknown as Connection;
-    const result = mountTransactionConfirmation(connection);
+    const getSignatureStatuses = vi.fn(() => ({ send: vi.fn().mockRejectedValue(failure) }));
+    const result = mountTransactionConfirmation(getSignatureStatuses);
 
-    await expect(result.confirm("signature")).rejects.toThrow("confirmation RPC failed");
+    await expect(result.confirm(SIGNATURE)).rejects.toThrow("confirmation RPC failed");
     expect(result.status.value).toBe("error");
     expect(result.error.value?.code).toBe("RPC_FAILURE");
     expect(result.error.value?.cause).toBe(failure);
@@ -149,10 +166,14 @@ describe("useTransactionConfirmation", () => {
 });
 
 function mountTransactionConfirmation(
-  connection: Connection,
+  getSignatureStatuses: unknown,
   options?: ConfirmTransactionOptions,
 ): TransactionConfirmationComposable {
-  const context = createMockSolanaContext({ connection });
+  const context = createMockSolanaContext({
+    client: { rpc: { getSignatureStatuses } } as ReturnType<
+      typeof createMockSolanaContext
+    >["client"],
+  });
   let result: TransactionConfirmationComposable | undefined;
 
   mountWithSolana(

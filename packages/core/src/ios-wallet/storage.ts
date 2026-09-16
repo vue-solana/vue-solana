@@ -1,4 +1,4 @@
-import { PublicKey } from "@solana/web3-compat";
+import { isAddress } from "@solana/kit";
 import bs58 from "bs58";
 import { getDefaultIosWalletRedirectUrl } from "./browser";
 import { createRequestId } from "./crypto";
@@ -37,7 +37,7 @@ export function getStoredIosWalletAccount(walletId: string, chains: readonly str
   return [
     {
       address: session.publicKey,
-      publicKey: new PublicKey(session.publicKey).toBytes(),
+      publicKey: bs58.decode(session.publicKey),
       chains,
     },
   ];
@@ -53,7 +53,9 @@ export function getStoredSession(walletId: string): IosWalletSession | null {
   try {
     const session = JSON.parse(value) as IosWalletSession;
 
-    new PublicKey(session.publicKey);
+    if (!isAddress(session.publicKey)) {
+      throw new Error("Invalid stored public key");
+    }
 
     return session;
   } catch {

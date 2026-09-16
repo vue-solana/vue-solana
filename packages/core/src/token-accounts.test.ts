@@ -1,186 +1,205 @@
-import type { Connection, PublicKey } from "@vue-solana/core/web3";
-import { describe, expect, it, vi, beforeEach } from "vitest";
-
-vi.mock("@solana/spl-token", () => ({
-  TOKEN_PROGRAM_ID: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
-  TOKEN_2022_PROGRAM_ID: "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
-  getAssociatedTokenAddressSync: vi.fn().mockReturnValue("mock-ata-pubkey"),
-  unpackAccount: vi.fn().mockImplementation(() => ({
-    mint: "mock-mint",
-    owner: "mock-owner",
-    amount: 1000n,
-    delegate: null,
-    state: 0,
-    isNative: null,
-    delegatedAmount: 0n,
-    closeAuthority: null,
-  })),
-  unpackMint: vi.fn().mockReturnValue({
-    mintAuthority: null,
-    supply: 1000000n,
-    decimals: 6,
-    isInitialized: true,
-    freezeAuthority: null,
-  }),
-}));
-
+import { describe, expect, it, vi } from "vitest";
+import type { Address } from "./kit";
+import type { SolanaClient } from "./kit";
 import { getTokenAccountsByOwner, getTokenAccount, getTokenBalance } from "./token-accounts";
-import { getAssociatedTokenAddressSync, unpackAccount } from "@solana/spl-token";
 
-function mockConnection(overrides: Record<string, unknown> = {}) {
+const OWNER = "11111111111111111111111111111111" as Address;
+const MINT = "Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9SEiFPUQpX" as Address;
+const TOKEN_ACCOUNT = "BHUdKjNQLK7XxxYggCSbcrUBvc9LCBveAqDN2cM3b5b2" as Address;
+const TOKEN_PROGRAM_ADDRESS = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA" as Address;
+
+function parsedTokenAccountResponse(
+  overrides: Partial<Record<string, unknown>> = {},
+): Record<string, unknown> {
   return {
-    getTokenAccountsByOwner: vi.fn(),
-    getAccountInfo: vi.fn(),
+    pubkey: TOKEN_ACCOUNT,
+    account: {
+      executable: false,
+      lamports: 2039280n,
+      owner: TOKEN_PROGRAM_ADDRESS,
+      space: 165n,
+      data: {
+        parsed: {
+          info: {
+            isNative: false,
+            mint: MINT,
+            owner: OWNER,
+            state: "initialized",
+            tokenAmount: {
+              amount: "1000",
+              decimals: 6,
+              uiAmount: 0.001,
+              uiAmountString: "0.001",
+            },
+          },
+          type: "account",
+        },
+        program: "spl-token",
+        space: 165n,
+      },
+    },
     ...overrides,
-  } as unknown as Connection & {
-    getTokenAccountsByOwner: ReturnType<typeof vi.fn>;
   };
 }
 
-function mockOwner() {
-  return { toString: () => "owner-pubkey" } as unknown as PublicKey;
-}
+function mockClient() {
+  const getTokenAccountsByOwner = vi.fn();
+  const getAccountInfo = vi.fn();
 
-function mockMint() {
-  return { toString: () => "mint-pubkey" } as unknown as PublicKey;
+  const client = {
+    rpc: {
+      getTokenAccountsByOwner: vi.fn((...args: unknown[]) => ({
+        send: () => getTokenAccountsByOwner(...args),
+      })),
+      getAccountInfo: vi.fn((...args: unknown[]) => ({
+        send: () => getAccountInfo(...args),
+      })),
+    },
+  } as unknown as SolanaClient & {
+    rpc: {
+      getTokenAccountsByOwner: ReturnType<typeof vi.fn>;
+      getAccountInfo: ReturnType<typeof vi.fn>;
+    };
+  };
+
+  return { accountInfo: getAccountInfo, client, tokenAccounts: getTokenAccountsByOwner };
 }
 
 describe("getTokenAccountsByOwner", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
+  it("returns parsed token accounts for both token programs", async () => {
+    const { client, tokenAccounts } = mockClient();
+    tokenAccounts.mockResolvedValue({ value: [parsedTokenAccountResponse()] });
 
-  it("returns token accounts for both token programs", async () => {
-    const mockAccount = { pubkey: "addr1", account: { data: Buffer.alloc(165) } };
-    const connection = mockConnection({
-      getTokenAccountsByOwner: vi.fn().mockResolvedValue({ value: [mockAccount] }),
-    });
+    const result = await getTokenAccountsByOwner(client, OWNER);
 
-    const result = await getTokenAccountsByOwner(connection, mockOwner());
-
-    expect(connection.getTokenAccountsByOwner).toHaveBeenCalledTimes(2);
+    expect(tokenAccounts).toHaveBeenCalledTimes(2);
     expect(result).toHaveLength(2);
+    expect(result[0]).toEqual({
+      address: TOKEN_ACCOUNT,
+      mint: MINT,
+      owner: OWNER,
+      amount: 1000n,
+      decimals: 6,
+      state: "initialized",
+      isNative: false,
+    });
   });
 
   it("returns empty array when no accounts found", async () => {
-    const connection = mockConnection({
-      getTokenAccountsByOwner: vi.fn().mockResolvedValue({ value: [] }),
-    });
+    const { client, tokenAccounts } = mockClient();
+    tokenAccounts.mockResolvedValue({ value: [] });
 
-    const result = await getTokenAccountsByOwner(connection, mockOwner());
+    const result = await getTokenAccountsByOwner(client, OWNER);
 
     expect(result).toEqual([]);
   });
 
   it("filters by programId when provided", async () => {
-    const programId = { toString: () => "custom-program" } as unknown as PublicKey;
-    const connection = mockConnection({
-      getTokenAccountsByOwner: vi.fn().mockResolvedValue({ value: [] }),
-    });
+    const { client, tokenAccounts } = mockClient();
+    tokenAccounts.mockResolvedValue({ value: [] });
 
-    await getTokenAccountsByOwner(connection, mockOwner(), { programId });
+    await getTokenAccountsByOwner(client, OWNER, { programId: TOKEN_PROGRAM_ADDRESS });
 
-    expect(connection.getTokenAccountsByOwner).toHaveBeenCalledTimes(1);
-    expect(connection.getTokenAccountsByOwner).toHaveBeenCalledWith(
-      expect.anything(),
-      { programId },
-      "confirmed",
+    expect(tokenAccounts).toHaveBeenCalledTimes(1);
+    expect(tokenAccounts).toHaveBeenCalledWith(
+      OWNER,
+      { programId: TOKEN_PROGRAM_ADDRESS },
+      { encoding: "jsonParsed", commitment: undefined },
     );
   });
 
   it("wraps RPC errors", async () => {
-    const connection = mockConnection({
-      getTokenAccountsByOwner: vi.fn().mockRejectedValue(new Error("RPC down")),
-    });
+    const { client, tokenAccounts } = mockClient();
+    tokenAccounts.mockRejectedValue(new Error("RPC down"));
 
-    await expect(getTokenAccountsByOwner(connection, mockOwner())).rejects.toThrow("RPC down");
+    await expect(getTokenAccountsByOwner(client, OWNER)).rejects.toThrow("RPC down");
   });
 });
 
 describe("getTokenAccount", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   it("returns null when account does not exist", async () => {
-    const connection = mockConnection({
-      getAccountInfo: vi.fn().mockResolvedValue(null),
-    });
+    const { accountInfo, client } = mockClient();
+    accountInfo.mockResolvedValue({ value: null });
 
-    const result = await getTokenAccount(connection, mockMint());
+    const result = await getTokenAccount(client, TOKEN_ACCOUNT);
 
     expect(result).toBeNull();
   });
 
-  it("unpacks and returns a token account", async () => {
-    const accountInfo = { data: Buffer.alloc(165) };
-    const connection = mockConnection({
-      getAccountInfo: vi.fn().mockResolvedValue(accountInfo),
+  it("returns a parsed token account", async () => {
+    const { accountInfo, client } = mockClient();
+    accountInfo.mockResolvedValue({ value: parsedTokenAccountResponse().account });
+
+    const result = await getTokenAccount(client, TOKEN_ACCOUNT);
+
+    expect(result).toEqual({
+      address: TOKEN_ACCOUNT,
+      mint: MINT,
+      owner: OWNER,
+      amount: 1000n,
+      decimals: 6,
+      state: "initialized",
+      isNative: false,
+    });
+    expect(accountInfo).toHaveBeenCalledWith(TOKEN_ACCOUNT, {
+      encoding: "jsonParsed",
+      commitment: undefined,
+    });
+  });
+
+  it("returns null for non-token parsed accounts", async () => {
+    const { accountInfo, client } = mockClient();
+    accountInfo.mockResolvedValue({
+      value: {
+        executable: false,
+        lamports: 10n,
+        owner: TOKEN_PROGRAM_ADDRESS,
+        space: 1n,
+        data: { parsed: { info: null, type: "mint" }, program: "spl-token", space: 1n },
+      },
     });
 
-    const result = await getTokenAccount(connection, mockMint());
+    const result = await getTokenAccount(client, TOKEN_ACCOUNT);
 
-    expect(result).toMatchObject({ amount: 1000n });
-    expect(unpackAccount).toHaveBeenCalledWith(expect.anything(), accountInfo);
+    expect(result).toBeNull();
   });
 
   it("wraps RPC errors", async () => {
-    const connection = mockConnection({
-      getAccountInfo: vi.fn().mockRejectedValue(new Error("timeout")),
-    });
+    const { accountInfo, client } = mockClient();
+    accountInfo.mockRejectedValue(new Error("timeout"));
 
-    await expect(getTokenAccount(connection, mockMint())).rejects.toThrow("timeout");
+    await expect(getTokenAccount(client, TOKEN_ACCOUNT)).rejects.toThrow("timeout");
   });
 });
 
 describe("getTokenBalance", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
+  it("returns amount and decimals from the first matching account", async () => {
+    const { client, tokenAccounts } = mockClient();
+    tokenAccounts.mockResolvedValue({ value: [parsedTokenAccountResponse()] });
 
-  it("returns amount and decimals for existing ATA", async () => {
-    const connection = mockConnection({
-      getAccountInfo: vi.fn().mockResolvedValue({ data: Buffer.alloc(165) }),
-    });
-
-    const result = await getTokenBalance(connection, mockMint(), mockOwner());
+    const result = await getTokenBalance(client, MINT, OWNER);
 
     expect(result).toEqual({ amount: 1000n, decimals: 6 });
-    expect(getAssociatedTokenAddressSync).toHaveBeenCalledWith(
-      expect.anything(),
-      expect.anything(),
-      true,
+    expect(tokenAccounts).toHaveBeenCalledWith(
+      OWNER,
+      { mint: MINT },
+      { encoding: "jsonParsed", commitment: undefined },
     );
   });
 
-  it("returns null when ATA does not exist", async () => {
-    const connection = mockConnection({
-      getAccountInfo: vi.fn().mockResolvedValue(null),
-    });
+  it("returns null when no account exists", async () => {
+    const { client, tokenAccounts } = mockClient();
+    tokenAccounts.mockResolvedValue({ value: [] });
 
-    const result = await getTokenBalance(connection, mockMint(), mockOwner());
-
-    expect(result).toBeNull();
-  });
-
-  it("returns null when mint account does not exist", async () => {
-    const connection = mockConnection({
-      getAccountInfo: vi
-        .fn()
-        .mockResolvedValueOnce({ data: Buffer.alloc(165) })
-        .mockResolvedValueOnce(null),
-    });
-
-    const result = await getTokenBalance(connection, mockMint(), mockOwner());
+    const result = await getTokenBalance(client, MINT, OWNER);
 
     expect(result).toBeNull();
   });
 
   it("wraps RPC errors", async () => {
-    const connection = mockConnection({
-      getAccountInfo: vi.fn().mockRejectedValue(new Error("RPC down")),
-    });
+    const { client, tokenAccounts } = mockClient();
+    tokenAccounts.mockRejectedValue(new Error("RPC down"));
 
-    await expect(getTokenBalance(connection, mockMint(), mockOwner())).rejects.toThrow("RPC down");
+    await expect(getTokenBalance(client, MINT, OWNER)).rejects.toThrow("RPC down");
   });
 });

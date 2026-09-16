@@ -16,7 +16,7 @@ Nuxt 예제는 `@vue-solana/nuxt`를 위한 실행 가능한 Nuxt 앱입니다.
 - `modules: ['@vue-solana/nuxt']`로 Nuxt 모듈을 설치합니다.
 - `solana: { cluster: 'devnet' }`으로 모듈을 설정합니다.
 - 자동 import된 `useSolanaRpc()`로 RPC 상태를 읽습니다.
-- `useSolanaConnection()`으로 주입된 connection을 사용합니다.
+- 자동 import된 `useSolanaClient()`로 주입된 Kit client를 사용합니다.
 - `useSolanaBalance()`로 lamport 잔액을 읽습니다.
 - `useSolanaWallets()`로 브라우저 확장 지갑, Android Mobile Wallet Adapter 지갑, 지원되는 iOS 브라우저 지갑 항목을 검색합니다.
 - `useSolanaWallet()`으로 활성 지갑 상태를 관리합니다.
@@ -43,7 +43,7 @@ pnpm dev:nuxt
 ## 확인할 것
 
 - 초기 모듈/RPC 상태와 최신 blockhash를 확인합니다.
-- `Load Blockhash`를 눌러 `connection.getLatestBlockhash()`를 직접 호출합니다.
+- `Load Blockhash`를 눌러 `client.rpc.getLatestBlockhash().send()`를 직접 호출합니다.
 - devnet 지갑 주소를 붙여 넣고 잔액을 새로고침합니다.
 - Solana 브라우저 지갑을 설치하고 devnet으로 전환합니다.
 - Android Chrome에서는 호환되는 Solana mobile wallet을 설치하고 `Mobile Wallet Adapter`를 찾습니다.

@@ -1,6 +1,6 @@
 ---
 title: RPC와 클러스터
-description: Solana 클러스터, RPC 엔드포인트, WebSocket 엔드포인트, connection helper를 설정합니다.
+description: Solana 클러스터, RPC 엔드포인트, WebSocket 엔드포인트, client helper를 설정합니다.
 ogSection: 가이드
 surroundOrder: 8
 ---
@@ -24,7 +24,7 @@ Solana mainnet에는 `mainnet-beta`를 사용하세요. Vue Solana는 Solana의 
 
 ## Core 설정
 
-프레임워크에 독립적인 connection 설정이 필요하면 `@vue-solana/core/rpc`를 사용하세요.
+프레임워크에 독립적인 client 설정이 필요하면 `@vue-solana/core/rpc`를 사용하세요.
 
 ```ts
 import { createSolanaContext } from "@vue-solana/core/rpc";
@@ -34,12 +34,12 @@ const solana = createSolanaContext({
   commitment: "confirmed",
 });
 
-const { blockhash } = await solana.connection.getLatestBlockhash();
+const { value: latestBlockhash } = await solana.client.rpc.getLatestBlockhash().send();
 
-console.log(solana.endpoint, blockhash);
+console.log(solana.endpoint, latestBlockhash.blockhash);
 ```
 
-`createSolanaContext()`는 resolved `cluster`, HTTP `endpoint`, WebSocket `wsEndpoint`, `connection`을 반환합니다.
+`createSolanaContext()`는 resolved `cluster`, HTTP `endpoint`, WebSocket `wsEndpoint`, 그리고 RPC 요청을 보내는 `rpc`를 가진 Kit `client`를 반환합니다.
 
 ## 커스텀 RPC 엔드포인트
 
@@ -131,7 +131,7 @@ Nuxt runtime plugin은 client-only입니다. 컴포저블은 SSR 중에도 호�
 
 ## 엔드포인트 헬퍼
 
-`Connection`을 만들지 않고 built-in 엔드포인트 값을 가져와야 할 때는 `@vue-solana/core/clusters`를 사용하세요.
+클라이언트를 만들지 않고 built-in 엔드포인트 값을 가져와야 할 때는 `@vue-solana/core/clusters`를 사용하세요.
 
 ```ts
 import {

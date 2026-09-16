@@ -39,11 +39,10 @@ Available package subpaths:
 - `@vue-solana/vue/useSignAndSendTransaction`
 - `@vue-solana/vue/useTokenAccounts`
 - `@vue-solana/vue/useTokenBalance`
-- `@vue-solana/vue/web3`
 - `@vue-solana/vue/kit`
 - `@vue-solana/vue/useSolanaClient`
 
-Use `@vue-solana/vue/web3` for supported legacy raw Solana primitives such as `PublicKey`, `Transaction`, and `TransactionInstruction`. Use `@vue-solana/vue/kit` for the modern Kit API (`createSolanaClient`, `address`, `lamports`, and the types `Address`, `Rpc`, `SolanaRpcApi`, `SolanaClient`) and `@vue-solana/vue/useSolanaClient` for the Kit client composable. Use `@vue-solana/vue/buffer-polyfill` when browser transaction code needs the Buffer polyfill. Direct `@vue-solana/core/*` imports remain supported for lower-level core usage.
+Use `@vue-solana/vue/kit` for the Kit API (`createSolanaClient`, `address`, `lamports`, and the types `Address`, `Commitment`, `Rpc`, `Signature`, `SolanaRpcApi`, `SolanaClient`) and `@vue-solana/vue/useSolanaClient` for the Kit client composable. Use `@vue-solana/vue/buffer-polyfill` when browser transaction code needs the Buffer polyfill. Direct `@vue-solana/core/*` imports remain supported for lower-level core usage.
 
 ## `createSolanaPlugin(options?)`
 
@@ -80,7 +79,7 @@ Returns the full injected Vue Solana context. If the plugin has not been install
 
 ## `useSolanaClient()`
 
-Returns the `@solana/kit` client from the injected context as `{ client, rpc }`. It is the recommended RPC path for new code and the replacement for `useConnection()` and `useRpc().connection`:
+Returns the `@solana/kit` client from the injected context as `{ client, rpc }`. It is the recommended RPC path and the replacement for `useRpc().connection` (now `client`) and the deprecated `useConnection()` alias:
 
 ```ts
 import { useSolanaClient } from "@vue-solana/vue/useSolanaClient";
@@ -93,7 +92,7 @@ const slot = await rpc.getSlot().send(); // bigint
 
 ## `useRpc()`
 
-Returns RPC state and connection helpers:
+Returns RPC state and the injected Kit client:
 
 - `cluster`
 - `endpoint`
@@ -102,13 +101,13 @@ Returns RPC state and connection helpers:
 - `error`
 - `latestBlockhash`
 - `checkConnection()`
-- `connection`
+- `client`
 
 `error` is `SolanaError | null`. For example, connection checks normalize RPC failures to `RPC_FAILURE` while preserving the original thrown value on `error.cause`.
 
 ## `useConnection()`
 
-Returns the legacy Solana `Connection` directly. Deprecated in favor of `useSolanaClient().rpc`; removed in v2.
+Returns the injected Kit `client`. Deprecated in favor of `useSolanaClient()`; kept as a backward-compatible alias in v2.
 
 ## `useWallet()`
 
@@ -146,9 +145,9 @@ For wallet behavior and platform support, see [Wallet Support](../guides/wallets
 
 ## `useBalance(address, commitment?)`
 
-Loads the lamport balance for a `PublicKey` or address string.
+Loads the lamport balance (as a number) for an address string.
 
-`useBalance()` accepts an existing `PublicKey` or parses an address string through the core address helper. Invalid address strings set a normalized `INVALID_ADDRESS` error before any RPC call is made.
+`useBalance()` parses the address string through `parseAddress()`. Invalid address strings set a normalized `INVALID_ADDRESS` error before any RPC call is made.
 
 Returns:
 
@@ -222,12 +221,11 @@ try {
 
 ## `useAccountInfo(address, options?)`
 
-Loads account data for a `PublicKey` or address string, with optional websocket subscription updates.
+Loads normalized account data (`executable`, `lamports`, `owner`, `space`, `data` as `Uint8Array`) for an address string.
 
 Options:
 
-- `commitment`: RPC commitment for the initial read and subscription.
-- `watch`: when `true`, subscribes with `connection.onAccountChange()` and removes the listener on component unmount.
+- `commitment`: RPC commitment for the read.
 
 Returns:
 
@@ -235,7 +233,6 @@ Returns:
 - `loading`
 - `error`
 - `refresh()`
-- `stopWatching()`: removes the current account listener and prevents automatic restarts for this composable instance.
 
 Null input clears state without calling RPC. Invalid address strings set `error` and do not call `getAccountInfo()`.
 
@@ -350,14 +347,13 @@ For explorer links, render after `signature` is set. For devnet, use a URL such 
 
 ## `useSignatureStatus(signature, options?)`
 
-Reads the current status for a submitted signature. Pass `pollIntervalMs` to poll, or `subscribe: true` to receive an `onSignature()` websocket update. Both polling intervals and signature listeners are cleaned up on component unmount. Websocket notifications do not include a full `getSignatureStatuses()` response, so subscription updates set `confirmationStatus` from the requested `commitment`, defaulting to `confirmed`.
+Reads the current status for a submitted signature. Pass `pollIntervalMs` to poll. Polling intervals are cleaned up on component unmount.
 
 Options:
 
-- `commitment`: commitment used for websocket signature subscriptions.
+- `commitment`: commitment used for signature status reads.
 - `pollIntervalMs`: interval in milliseconds for repeated `getSignatureStatuses()` calls.
 - `searchTransactionHistory`: forwards to `getSignatureStatuses()` for older signatures.
-- `subscribe`: enables `connection.onSignature()` listener setup.
 
 Returns:
 
@@ -366,7 +362,6 @@ Returns:
 - `error`
 - `refresh()`
 - `stopPolling()`
-- `stopSubscription()`: removes the current signature listener and prevents automatic subscription restarts for this composable instance.
 
 Null input clears state without calling RPC. Invalid signatures are rejected before RPC: the signature must be base58-encoded and decode to exactly 64 bytes. Invalid `pollIntervalMs` values less than or equal to `0` set a `RangeError` and do not start polling.
 

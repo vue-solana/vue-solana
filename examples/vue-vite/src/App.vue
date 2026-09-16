@@ -1,14 +1,25 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
 import { Buffer, installSolanaBufferPolyfill } from "@vue-solana/vue/buffer-polyfill";
-import { PublicKey, Transaction, TransactionInstruction } from "@vue-solana/vue/web3";
+import {
+  AccountRole,
+  address,
+  appendTransactionMessageInstruction,
+  compileTransaction,
+  createTransactionMessage,
+  getTransactionEncoder,
+  isAddress,
+  setTransactionMessageFeePayer,
+  setTransactionMessageLifetimeUsingBlockhash,
+  type Address,
+} from "@solana/kit";
 import {
   useBalance,
-  useConnection,
   useRpc,
   useSignAndSendTransaction,
   useSignMessage,
   useSolana,
+  useSolanaClient,
   useTransaction,
   useWallet,
   useWallets,
@@ -18,7 +29,7 @@ installSolanaBufferPolyfill();
 
 const solana = useSolana();
 const rpc = useRpc();
-const connection = useConnection();
+const { client } = useSolanaClient();
 const wallet = useWallet();
 const walletDiscovery = useWallets();
 const sendTransaction = useSignAndSendTransaction();
@@ -35,7 +46,7 @@ const devnetTransferError = ref<unknown>(null);
 const walletsLoaded = ref(false);
 const walletNotice = ref<{ type: "success" | "error"; message: string } | null>(null);
 
-const systemProgramId = new PublicKey("11111111111111111111111111111111");
+const SYSTEM_PROGRAM_ADDRESS = address("11111111111111111111111111111111");
 
 const balance = useBalance(balanceAddress);
 
@@ -44,8 +55,8 @@ const mockTransaction = useTransaction(async (label: string) => {
   return `mock-${label}-${Date.now()}`;
 });
 
-const pluginInstalled = computed(() => Boolean(solana.connection && solana.endpoint));
-const walletPublicKey = computed(() => wallet.publicKey.value?.toBase58() ?? "Not connected");
+const pluginInstalled = computed(() => Boolean(solana.client && solana.endpoint));
+const walletPublicKey = computed(() => wallet.publicKey.value ?? "Not connected");
 const walletConfigured = computed(() => Boolean(wallet.wallet.value));
 const discoveredWalletCount = computed(() =>
   walletsLoaded.value ? walletDiscovery.wallets.value.length : 0,
@@ -83,14 +94,7 @@ const transferLamports = computed(() => {
 
   return Math.round(amount * 1_000_000_000);
 });
-const recipientAddressValid = computed(() => {
-  try {
-    new PublicKey(transferRecipient.value.trim());
-    return true;
-  } catch {
-    return false;
-  }
-});
+const recipientAddressValid = computed(() => isAddress(transferRecipient.value.trim()));
 const signAndSendReady = computed(
   () =>
     wallet.connected.value &&
@@ -194,8 +198,8 @@ async function loadDirectBlockhash() {
   directConnectionError.value = null;
 
   try {
-    const blockhash = await connection.getLatestBlockhash();
-    directBlockhash.value = blockhash.blockhash;
+    const { value } = await client.rpc.getLatestBlockhash().send();
+    directBlockhash.value = value.blockhash;
   } catch (error) {
     directConnectionError.value = formatError(error);
   } finally {
@@ -209,7 +213,7 @@ async function connectWallet() {
 
     walletNotice.value = {
       type: "success",
-      message: `Wallet connected: ${wallet.publicKey.value?.toBase58() ?? "selected wallet"}`,
+      message: `Wallet connected: ${wallet.publicKey.value ?? "selected wallet"}`,
     };
   } catch (error) {
     walletNotice.value = {
@@ -220,7 +224,7 @@ async function connectWallet() {
 }
 
 async function disconnectWallet() {
-  const publicKey = wallet.publicKey.value?.toBase58();
+  const publicKey = wallet.publicKey.value;
 
   try {
     await wallet.disconnect();
@@ -247,7 +251,7 @@ function loadWallets() {
 }
 
 async function copyWalletAddress() {
-  const publicKey = wallet.publicKey.value?.toBase58();
+  const publicKey = wallet.publicKey.value;
 
   if (!publicKey) {
     return;
@@ -287,13 +291,18 @@ async function sendDevnetTransfer() {
   devnetTransferError.value = null;
 
   try {
-    const toPubkey = new PublicKey(transferRecipient.value.trim());
-    const latestBlockhash = await connection.getLatestBlockhash();
-    const transaction = new Transaction();
-
-    transaction.feePayer = fromPubkey;
-    transaction.recentBlockhash = latestBlockhash.blockhash;
-    transaction.add(createTransferInstruction(fromPubkey, toPubkey, lamports));
+    const toPubkey = address(transferRecipient.value.trim());
+    const { value: latestBlockhash } = await client.rpc.getLatestBlockhash().send();
+    const transactionMessage = appendTransactionMessageInstruction(
+      createTransferInstruction(fromPubkey, toPubkey, lamports),
+      setTransactionMessageLifetimeUsingBlockhash(
+        latestBlockhash,
+        setTransactionMessageFeePayer(fromPubkey, createTransactionMessage({ version: 0 })),
+      ),
+    );
+    const transaction = new Uint8Array(
+      getTransactionEncoder().encode(compileTransaction(transactionMessage)),
+    );
 
     await sendTransaction.execute(transaction, {
       confirm: true,
@@ -305,21 +314,21 @@ async function sendDevnetTransfer() {
   }
 }
 
-function createTransferInstruction(fromPubkey: PublicKey, toPubkey: PublicKey, lamports: number) {
+function createTransferInstruction(fromPubkey: Address, toPubkey: Address, lamports: number) {
   const data = new Uint8Array(12);
   const view = new DataView(data.buffer);
 
   view.setUint32(0, 2, true);
   view.setBigUint64(4, BigInt(lamports), true);
 
-  return new TransactionInstruction({
-    keys: [
-      { pubkey: fromPubkey, isSigner: true, isWritable: true },
-      { pubkey: toPubkey, isSigner: false, isWritable: true },
+  return {
+    programAddress: SYSTEM_PROGRAM_ADDRESS,
+    accounts: [
+      { address: fromPubkey, role: AccountRole.WRITABLE_SIGNER },
+      { address: toPubkey, role: AccountRole.WRITABLE },
     ],
-    programId: systemProgramId,
     data,
-  });
+  };
 }
 </script>
 
@@ -387,13 +396,14 @@ function createTransferInstruction(fromPubkey: PublicKey, toPubkey: PublicKey, l
     <section class="panel" data-testid="direct-connection-panel">
       <div class="panel-heading">
         <div>
-          <p class="eyebrow">useConnection</p>
-          <h2>Direct Connection Call</h2>
+          <p class="eyebrow">useSolanaClient</p>
+          <h2>Direct RPC Call</h2>
         </div>
       </div>
 
       <p>
-        Calls <code>connection.getLatestBlockhash()</code> directly from the injected connection.
+        Calls <code>client.rpc.getLatestBlockhash().send()</code> directly from the injected Kit
+        client.
       </p>
       <button
         type="button"

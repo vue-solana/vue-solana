@@ -31,7 +31,7 @@ describe("createSolanaPlugin wallet selection", () => {
     await wallet?.connect();
 
     expect(wallet?.connected.value).toBe(true);
-    expect(wallet?.publicKey.value?.toBase58()).toBe(account.address);
+    expect(wallet?.publicKey.value).toBe(account.address);
   });
 
   it("preserves message signing capability on selected standard wallets", async () => {

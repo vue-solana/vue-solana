@@ -12,7 +12,7 @@ Use this skill when helping with apps or libraries that use the Vue Solana ecosy
 
 ## Package Selection
 
-- Use `@vue-solana/vue/web3` in Vue apps and `@vue-solana/nuxt/web3` in Nuxt apps for supported raw Solana primitives such as `Connection`, `PublicKey`, `Transaction`, `TransactionInstruction`, and `VersionedTransaction`.
+- Use `@vue-solana/vue/kit` in Vue apps and `@vue-solana/nuxt/kit` in Nuxt apps for Kit primitives (types and values such as `Address`, `Commitment`, `Signature`, `address()`, `lamports()`, and `createSolanaClient()`). Build transaction messages with `@solana/kit` helpers (e.g. `createTransactionMessage()`, `compileTransaction()`); transactions flow through the packages as raw `Uint8Array` wire bytes.
 - Use `@vue-solana/core` for framework-agnostic config, cluster endpoint helpers, wallet types, Wallet Standard adapters, Android Mobile Wallet Adapter registration, iOS browser wallet helpers, transaction helpers, and core subpath exports.
 - Use `@vue-solana/vue` in Vue 3 apps for the plugin and composables.
 - Use `@vue-solana/nuxt` in Nuxt apps for module setup and auto-imported composables.
@@ -26,7 +26,7 @@ For Vue:
 pnpm add @vue-solana/vue
 ```
 
-Vue apps do not need `@vue-solana/core`, `@solana/web3-compat`, or `buffer` directly for primary composable, web3 primitive, or Buffer-helper usage.
+Vue apps do not need `@vue-solana/core` or `buffer` directly for primary composable, Kit primitive, or Buffer-helper usage.
 
 For Nuxt:
 
@@ -34,7 +34,7 @@ For Nuxt:
 npx nuxt module add @vue-solana/nuxt
 ```
 
-Nuxt apps do not need `@vue-solana/core`, `@vue-solana/vue`, `@solana/web3-compat`, or `buffer` directly for primary module, composable, web3 primitive, or Buffer-helper usage.
+Nuxt apps do not need `@vue-solana/core`, `@vue-solana/vue`, or `buffer` directly for primary module, composable, Kit primitive, or Buffer-helper usage.
 
 ## Vue Setup
 
@@ -198,8 +198,8 @@ Do not assign the Buffer global manually in public examples.
 
 ## Common Gotchas
 
-- Do not import Solana primitives from `@solana/web3.js` or direct `@solana/web3-compat` in new Vue Solana examples; use `@vue-solana/vue/web3`, `@vue-solana/nuxt/web3`, or `@vue-solana/core/web3` for framework-agnostic core usage.
-- Current Vue Solana packages publish package-owned declaration shims for documented `@vue-solana/*` imports affected by `@solana/web3-compat@0.0.21` metadata. Only suggest a local `types/web3-compat.d.ts` shim for older Vue Solana versions or apps that directly import `@solana/web3-compat`.
+- Do not import Solana primitives from `@solana/web3.js`, `@solana/web3-compat`, or the removed `@vue-solana/*/web3` subpaths in new Vue Solana examples; use `@vue-solana/vue/kit`, `@vue-solana/nuxt/kit`, or `@vue-solana/core/kit` for the Kit primitive surface.
+- v2.0.0 removed `@solana/web3-compat` from every package, deleted the `web3` subpaths, dropped the `connection` field from the context, and removed the declaration shims v1 published for the broken `web3-compat` metadata. Do not suggest local `types/web3-compat.d.ts` shims; upgrade examples to `@vue-solana/*@^2` instead.
 - Do not split browser, Android mobile, iOS browser, and future desktop native wallet sources into separate public flows. Keep them unified through `useWallets()` and `useWallet()`.
 - Do not mark a discovered wallet as connected just because accounts are visible. Connection state begins after `connect()` succeeds.
 - In Nuxt, avoid server-side RPC and wallet actions unless the app explicitly provides server-safe behavior.

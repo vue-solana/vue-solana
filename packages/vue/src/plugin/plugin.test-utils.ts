@@ -117,8 +117,12 @@ export function mockSolanaContext() {
     cluster: "devnet",
     endpoint: "https://api.devnet.solana.com",
     wsEndpoint: "wss://api.devnet.solana.com",
-    connection: {
-      getLatestBlockhash: vi.fn().mockResolvedValue({ blockhash: "latest-blockhash" }),
+    client: {
+      rpc: {
+        getLatestBlockhash: vi.fn().mockReturnValue({
+          send: vi.fn().mockResolvedValue({ value: { blockhash: "latest-blockhash" } }),
+        }),
+      },
     },
   });
 }
