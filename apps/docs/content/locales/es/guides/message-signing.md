@@ -40,6 +40,29 @@ async function signIn() {
 
 Las wallets que no exponen firma de mensajes reportan `canSignMessage` como false. Llamar a `execute()` sin soporte rechaza con `WALLET_FEATURE_UNSUPPORTED`.
 
+## Iniciar Sesion Con Solana (SIWS)
+
+Para autenticacion, prefiere SIWS sobre la firma de mensajes de texto libre cuando la wallet lo soporta. SIWS muestra al usuario una pantalla de consentimiento estructurada (dominio, statement, resources, URI) en lugar de bytes arbitrarios, y la wallet devuelve un resultado tipado:
+
+```ts
+import { useSignIn } from "@vue-solana/vue/useSignIn";
+
+const { signIn } = useSignIn();
+
+const { account, signedMessage, signature } = await signIn({
+  statement: "Iniciar sesion en example.com",
+  nonce: nonceDeTuServidor,
+});
+```
+
+El resultado no es una sesion autenticada: es una afirmacion que hay que verificar. En tu servidor:
+
+1. Decodifica `signedMessage` y comprueba que el dominio es tu origen, la URI es tuya y el nonce coincide con el que tu servidor emitio para este intento de inicio de sesion (de un solo uso, expiracion corta).
+2. Verifica la firma Ed25519 sobre `signedMessage` contra `account.publicKey`, por ejemplo con `tweetnacl`: `nacl.sign.detached.verify(signedMessage, signature, account.publicKey)`.
+3. Solo entonces crea la sesion, asociada a `account.address`.
+
+Las wallets sin soporte SIWS rechazan `signIn()` con `WALLET_FEATURE_UNSUPPORTED`; para esas wallets, usa `useSignMessage()` con tu propio texto de desafio.
+
 ## Firma De Mensajes En Nuxt
 
 Nuxt autoimporta `useSolanaSignMessage()` y `useSolanaWallet()`.

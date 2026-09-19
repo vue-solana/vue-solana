@@ -391,4 +391,5 @@ Antes de confiar en un flujo de app, verifica estos comportamientos en devnet:
 - [Guia de transacciones](/guides/transactions)
 - [Migracion a Kit](/guides/kit-migration)
 - [Solucion de problemas](/troubleshooting)
+- [Documentación de Solana Kit](https://www.solanakit.com/) — guías oficiales de Kit, recetas y referencia de API
 - [Documentacion de Solana](https://solana.com/docs)

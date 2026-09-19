@@ -75,9 +75,13 @@ Install only the package needed by your app. Nuxt apps normally install @vue-sol
 - [Errors](https://vue-solana-docs.vercel.app/guides/errors): Handle normalized Solana errors from core helpers and Vue/Nuxt composables.
 - [오류](https://vue-solana-docs.vercel.app/ko/guides/errors): core helper와 Vue/Nuxt 컴포저블에서 정규화된 Solana 오류를 처리합니다.
 - [错误](https://vue-solana-docs.vercel.app/zh/guides/errors): 处理来自核心辅助函数和 Vue/Nuxt 组合式函数的标准化 Solana 错误。
+- [Pruebas E2E](https://vue-solana-docs.vercel.app/es/guides/e2e-testing): Ejecuta la suite e2e de Playwright y simula RPC de Solana, suscripciones RPC y wallets para pruebas de UI.
 - [@vue-solana/core](https://vue-solana-docs.vercel.app/es/packages/core): Configuración Solana independiente del framework, RPC, tipos de wallet y helpers de transacción.
+- [E2E Testing](https://vue-solana-docs.vercel.app/guides/e2e-testing): Run the Playwright e2e suite and mock Solana RPC, RPC subscriptions, and wallets for UI tests.
+- [E2E 테스팅](https://vue-solana-docs.vercel.app/ko/guides/e2e-testing): Playwright e2e 스위트를 실행하고 UI 테스트를 위해 Solana RPC, RPC 구독, 지갑을 모킹합니다.
 - [@vue-solana/core](https://vue-solana-docs.vercel.app/ko/packages/core): 프레임워크 독립 Solana 설정, RPC, 지갑 타입, 트랜잭션 helper입니다.
 - [@vue-solana/core](https://vue-solana-docs.vercel.app/packages/core): Framework-agnostic Solana configuration, RPC, wallet types, and transaction helpers.
+- [E2E 测试](https://vue-solana-docs.vercel.app/zh/guides/e2e-testing): 运行 Playwright e2e 测试套件，并在 UI 测试中模拟 Solana RPC、RPC 订阅和钱包。
 - [@vue-solana/core](https://vue-solana-docs.vercel.app/zh/packages/core): 框架无关的 Solana 配置、RPC、钱包类型和交易 helper。
 - [@vue-solana/vue](https://vue-solana-docs.vercel.app/es/packages/vue): Plugin de Vue y composables para aplicaciones Solana.
 - [@vue-solana/vue](https://vue-solana-docs.vercel.app/ko/packages/vue): Solana 앱을 위한 Vue 플러그인과 컴포저블입니다.

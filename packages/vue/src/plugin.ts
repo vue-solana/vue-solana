@@ -23,8 +23,20 @@ export interface VueSolanaPluginOptions extends SolanaConfig {
 
 const RPC_CHECK_TIMEOUT_MS = 10_000;
 
-export function createSolanaPlugin(options: VueSolanaPluginOptions = {}) {
-  return {
+export interface VueSolanaPlugin {
+  /** Installs the plugin on a Vue app (called synchronously by `app.use`). */
+  install(app: App): void;
+  /**
+   * The app context built by `install`, available once `app.use(plugin)` has
+   * run. Lets framework integrations (e.g. the Nuxt module) hand the live
+   * context to consumers that run outside a component setup.
+   */
+  context: VueSolanaContext | null;
+}
+
+export function createSolanaPlugin(options: VueSolanaPluginOptions = {}): VueSolanaPlugin {
+  const plugin: VueSolanaPlugin = {
+    context: null,
     install(app: App) {
       const context = createSolanaContext(options);
       const wallet = shallowRef<SolanaWallet | null>(options.wallet ?? null);
@@ -216,6 +228,7 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}) {
       };
 
       app.provide(solanaInjectionKey, vueContext);
+      plugin.context = vueContext;
 
       if (typeof window !== "undefined") {
         window.setTimeout(() => {
@@ -230,6 +243,8 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}) {
       }
     },
   };
+
+  return plugin;
 }
 
 function isSameWallet(wallet: SolanaWalletInfo, selectedWallet: PersistedSelectedWallet | null) {

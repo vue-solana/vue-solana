@@ -261,6 +261,10 @@ import type { Address, Commitment, Lamports, Signature, SolanaRpcApi } from "@vu
 
 Los resultados numéricos de RPC son `bigint`, y los datos de cuenta son `Uint8Array` en vez de `Buffer`. Consulta [Kit Migration](/guides/kit-migration) para más detalles.
 
+### Acciones
+
+`createSolanaActionStore()` envuelve cualquier función asíncrona que reciba un `AbortSignal` nuevo por llamada en una máquina de estados de acciones con abort-on-redispatch. El composable de Vue `useAction()` se construye sobre este store; `isSolanaActionAborted()` detecta llamadas canceladas o superadas.
+
 ### Direcciones
 
 - `parseAddress(value)`: analiza un string de dirección, valor tipo ref o getter, y devuelve `null` para entrada nullish. Lanza `INVALID_ADDRESS` para un string base58 inválido. Acepta valores `Address` sin cambios.

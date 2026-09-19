@@ -37,20 +37,34 @@ Nuxt module options are written to public runtime config, so they must be JSON-s
 The Nuxt module installs the runtime plugin on the client only and auto-imports composables from the direct `@vue-solana/vue/*` subpaths. This keeps SSR bundles from pulling in the full Vue package barrel solely because a page uses one composable.
 
 - `useSolana()`
-- `useSolanaClient()`
-- `useSolanaRpc()`
-- `useSolanaConnection()`
 - `useSolanaAccountInfo()`
-- `useSolanaProgramAccounts()`
-- `useSolanaWallet()`
-- `useSolanaWallets()`
+- `useSolanaAction()`
 - `useSolanaBalance()`
-- `useSolanaSignMessage()`
+- `useSolanaClient()`
+- `useSolanaConnection()`
+- `useSolanaIdentity()`
+- `useSolanaPayer()`
+- `useSolanaPlanTransaction()`
+- `useSolanaPlanTransactions()`
+- `useSolanaProgramAccounts()`
+- `useSolanaRequest()`
+- `useSolanaRpc()`
+- `useSolanaSelectedWalletAccount()`
 - `useSolanaSignAndSendTransaction()`
-- `useSolanaTransactionConfirmation()`
+- `useSolanaSignAndSendTransactions()`
+- `useSolanaSignIn()`
+- `useSolanaSignMessage()`
+- `useSolanaSignTransactions()`
 - `useSolanaSignatureStatus()`
+- `useSolanaSubscription()`
 - `useSolanaTokenAccounts()`
 - `useSolanaTokenBalance()`
+- `useSolanaTrackedData()`
+- `useSolanaTransactionConfirmation()`
+- `useSolanaWallet()`
+- `useSolanaWallets()`
+
+The Nuxt runtime plugin also installs the selected wallet account context app-wide (via `createSelectedWalletAccountContext`), so `useSolanaSelectedWalletAccount()` works in any component without an explicit provider. Apps that need a custom filter or storage can mount `SelectedWalletAccountProvider` deeper in the component tree to shadow the default context.
 
 ## Explicit Solana Imports
 

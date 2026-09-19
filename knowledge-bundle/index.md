@@ -39,4 +39,4 @@ Plans live in the top-level [`plans/`](../plans/) directory:
 - [Native Wallet Plan](../plans/native-wallet-plan.md)
 - [Solana Pay QR Plan](../plans/solana-pay-qr-plan.md)
 - [Archived Plans](../plans/archived/) (completed: Kit migration, SPL tokens, standalone installs, v1 roadmap)
-- [Standalone Package Install Plan](../plans/stand-alone-package-install-plan.md)
+- [Standalone Package Install Plan](../plans/archived/stand-alone-package-install-plan.md)

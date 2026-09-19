@@ -26,6 +26,7 @@ Demo en vivo: [vue-solana-docs.vercel.app/demo](/demo)
 - Firmar un mensaje de autenticación con `useSignMessage()` cuando la wallet conectada lo soporta.
 - Enviar una transferencia real con `useSignAndSendTransaction()` y mostrar estado de transacción enviada vs confirmada. El ejemplo usa devnet por defecto para pruebas seguras.
 - Construir links a Solana Explorer conscientes del cluster para firmas enviadas.
+- Ejercitar la capa de datos reactiva de Kit en los Live Data Panels: `useRequest()` para peticiones de un solo uso, `useSubscription()` para notificaciones de slot en vivo por websocket, `useTrackedData()` para datos de cuenta sembrados por fetch y actualizados por notificaciones de cuenta, `useSignIn()` para Sign In With Solana, y `useRequestSwr()` desde `@vue-solana/vue/swr` para stale-while-revalidate cacheada por clave entre remounts.
 
 La app usa `devnet` por defecto. El SOL de devnet no tiene valor real.
 
@@ -55,6 +56,8 @@ Abre la URL de Vite impresa en la terminal, normalmente `http://localhost:5173`.
 - Ingresa una dirección destinataria y un monto, luego envía una transferencia real. Mantén el ejemplo en devnet mientras pruebas.
 - Observa cómo la transacción avanza desde firma enviada hasta estado de confirmación.
 - Abre el link del explorador y verifica que incluya `?cluster=devnet`.
+- En los Live Data Panels, cambia la dirección rastreada y observa cómo los paneles request, subscription y tracked-data se vuelven a disparar.
+- Alterna la tarjeta SWR entre apagado y encendido y observa que el valor cacheado aparece de inmediato (stale) antes de que la peticion revalidada lo reemplace.
 
 El ejemplo de transferencia inicializa el polyfill de navegador `Buffer` con `installSolanaBufferPolyfill()` desde `@vue-solana/vue/buffer-polyfill`. Reinicia el servidor de desarrollo de Vite si Vite cacheó previamente un import externalizado de Buffer.
 

@@ -35,6 +35,76 @@
       "import": "./dist/buffer-polyfill.mjs",
       "require": "./dist/buffer-polyfill.cjs"
     },
+    "./useAction": {
+      "types": "./dist/useAction.d.ts",
+      "import": "./dist/useAction.mjs",
+      "require": "./dist/useAction.cjs"
+    },
+    "./useRequest": {
+      "types": "./dist/useRequest.d.ts",
+      "import": "./dist/useRequest.mjs",
+      "require": "./dist/useRequest.cjs"
+    },
+    "./useSubscription": {
+      "types": "./dist/useSubscription.d.ts",
+      "import": "./dist/useSubscription.mjs",
+      "require": "./dist/useSubscription.cjs"
+    },
+    "./useTrackedData": {
+      "types": "./dist/useTrackedData.d.ts",
+      "import": "./dist/useTrackedData.mjs",
+      "require": "./dist/useTrackedData.cjs"
+    },
+    "./useSignIn": {
+      "types": "./dist/useSignIn.d.ts",
+      "import": "./dist/useSignIn.mjs",
+      "require": "./dist/useSignIn.cjs"
+    },
+    "./useSelectedWalletAccount": {
+      "types": "./dist/useSelectedWalletAccount.d.ts",
+      "import": "./dist/useSelectedWalletAccount.mjs",
+      "require": "./dist/useSelectedWalletAccount.cjs"
+    },
+    "./useSignTransactions": {
+      "types": "./dist/useSignTransactions.d.ts",
+      "import": "./dist/useSignTransactions.mjs",
+      "require": "./dist/useSignTransactions.cjs"
+    },
+    "./useSignAndSendTransactions": {
+      "types": "./dist/useSignAndSendTransactions.d.ts",
+      "import": "./dist/useSignAndSendTransactions.mjs",
+      "require": "./dist/useSignAndSendTransactions.cjs"
+    },
+    "./useClientCapability": {
+      "types": "./dist/useClientCapability.d.ts",
+      "import": "./dist/useClientCapability.mjs",
+      "require": "./dist/useClientCapability.cjs"
+    },
+    "./usePayer": {
+      "types": "./dist/usePayer.d.ts",
+      "import": "./dist/usePayer.mjs",
+      "require": "./dist/usePayer.cjs"
+    },
+    "./useIdentity": {
+      "types": "./dist/useIdentity.d.ts",
+      "import": "./dist/useIdentity.mjs",
+      "require": "./dist/useIdentity.cjs"
+    },
+    "./usePlanTransaction": {
+      "types": "./dist/usePlanTransaction.d.ts",
+      "import": "./dist/usePlanTransaction.mjs",
+      "require": "./dist/usePlanTransaction.cjs"
+    },
+    "./usePlanTransactions": {
+      "types": "./dist/usePlanTransactions.d.ts",
+      "import": "./dist/usePlanTransactions.mjs",
+      "require": "./dist/usePlanTransactions.cjs"
+    },
+    "./swr": {
+      "types": "./dist/swr.d.ts",
+      "import": "./dist/swr.mjs",
+      "require": "./dist/swr.cjs"
+    },
     "./useSolana": {
       "types": "./dist/useSolana.d.ts",
       "import": "./dist/useSolana.mjs",
@@ -128,7 +198,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "unbuild",
+    "build": "NODE_OPTIONS=--max-old-space-size=8192 unbuild",
     "dev": "unbuild --stub",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist"

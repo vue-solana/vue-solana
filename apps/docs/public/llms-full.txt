@@ -7592,6 +7592,29 @@ async function signIn() {
 
 Wallets that do not expose message signing report `canSignMessage` as false. Calling `execute()` without support rejects with `WALLET_FEATURE_UNSUPPORTED`.
 
+## Sign In With Solana (SIWS)
+
+For authentication, prefer SIWS over free-form message signing when the wallet supports it. SIWS shows the user a structured consent screen (domain, statement, resources, URI) instead of arbitrary bytes, and the wallet returns a typed result:
+
+```ts
+import { useSignIn } from "@vue-solana/vue/useSignIn";
+
+const { signIn } = useSignIn();
+
+const { account, signedMessage, signature } = await signIn({
+  statement: "Sign in to example.com",
+  nonce: nonceFromYourServer,
+});
+```
+
+The result is not an authenticated session — it is a claim to verify. On your server:
+
+1. Decode `signedMessage` and check the domain is your origin, the URI is yours, and the nonce matches the one your server issued for this login attempt (one-time use, short expiry).
+2. Verify the Ed25519 signature over `signedMessage` against `account.publicKey`, e.g. with `tweetnacl`: `nacl.sign.detached.verify(signedMessage, signature, account.publicKey)`.
+3. Only then create the session, keyed to `account.address`.
+
+Wallets without SIWS support reject `signIn()` with `WALLET_FEATURE_UNSUPPORTED`; fall back to `useSignMessage()` with your own challenge text for those wallets.
+
 ## Nuxt Message Signing
 
 Nuxt auto-imports `useSolanaSignMessage()` and `useSolanaWallet()`.
@@ -8516,6 +8539,105 @@ function getSolanaErrorMessage(code: string) {
 
 ---
 
+# Pruebas E2E
+
+Source: https://vue-solana-docs.vercel.app/es/guides/e2e-testing
+Description: Ejecuta la suite e2e de Playwright y simula RPC de Solana, suscripciones RPC y wallets para pruebas de UI.
+
+Las apps de ejemplo del repositorio están cubiertas por una suite de Playwright en `e2e/`. La suite ejecuta las apps de ejemplo Vue Vite y Nuxt compiladas contra mocks deterministas de RPC por defecto, y contra devnet real en una ejecución de integración separada.
+
+Usa esta guía cuando añadas funcionalidades a las apps de ejemplo, cambies el comportamiento de un composable visible en los ejemplos, o quieras simular RPC de Solana en tus propias pruebas de Playwright.
+
+## Ejecutar la suite
+
+```sh
+# Compila los paquetes y ambas apps de ejemplo, luego ejecuta Playwright.
+pnpm test:e2e
+
+# Ejecución de integración contra devnet real (sin mocks de RPC).
+pnpm test:e2e:integration
+
+# Instala el binario del navegador Chromium una vez.
+pnpm test:e2e:install
+```
+
+La configuración de Playwright inicia automáticamente ambos servidores de preview de las apps de ejemplo (`reuseExistingServer` está activado fuera de CI, así que un servidor que hayas iniciado manualmente se reutiliza).
+
+## Modos de simulación
+
+| Modo        | Comando                     | RPC                         | Suscripciones RPC                 | Wallets                                                   |
+| ----------- | --------------------------- | --------------------------- | --------------------------------- | --------------------------------------------------------- |
+| Por defecto | `pnpm test:e2e`             | Simulado (`e2e/helpers.ts`) | Simulado sobre un websocket falso | Wallets Wallet Standard simuladas                         |
+| Integración | `pnpm test:e2e:integration` | Devnet real                 | Devnet real                       | Wallets reales instaladas (las specs de wallet se omiten) |
+
+Las specs que verifican datos simulados se omiten a sí mismas bajo `E2E_REAL_RPC=true` con `test.skip(isRealRpcRun(), ...)`, así que los mismos archivos de specs se ejecutan en ambos modos.
+
+## Simular el RPC HTTP
+
+`mockSolanaRpc(page)` intercepta `https://api.devnet.solana.com/**` y responde métodos conocidos de forma determinista:
+
+```ts
+import { mockSolanaRpc } from "./helpers";
+
+test.beforeEach(async ({ page }) => {
+  await mockSolanaRpc(page);
+});
+```
+
+Métodos manejados: `getLatestBlockhash`, `getBalance`, `getVersion`, `getAccountInfo` y `getHealth`. Los métodos desconocidos devuelven `{ jsonrpc: "2.0", id, result: null }`. El preflight CORS (`OPTIONS`) se responde con `204`.
+
+Cuando añadas una llamada RPC a una app de ejemplo, añade el método a `createRpcResponse()` en `e2e/helpers.ts`. Mantén los valores numéricos como valores seguros para JSON (`rentEpoch` se pasa como string porque el `u64::MAX` real excede el rango de enteros seguros de JavaScript).
+
+## Simular suscripciones RPC sobre websocket
+
+`mockSolanaSubscriptions(page)` extiende el mock HTTP con un endpoint falso `wss://api.devnet.solana.com/**` que implementa el protocolo de suscripción JSON-RPC que habla `@solana/kit`:
+
+1. El cliente envía `{ jsonrpc, id, method: "<method>Subscribe", params }`.
+2. El servidor responde `{ jsonrpc, id, result: <subscriptionId> }`.
+3. Las actualizaciones llegan como `{ jsonrpc, method: "<method>Notification", params: { subscription: <id>, result: <payload> } }`. Kit demultiplexa por `params.subscription` y transforma `params.result`.
+4. Kit envía keepalives `{ method: "ping" }` sin `id`; el mock los ignora.
+
+La función resuelve a un harness para dirigir notificaciones desde una prueba:
+
+```ts
+import { mockSolanaSubscriptions } from "./helpers";
+
+test("live data", async ({ page }) => {
+  const subscriptions = await mockSolanaSubscriptions(page);
+  await page.goto("/");
+
+  // Verifica el valor sembrado, luego empuja una actualización.
+  subscriptions.pushAccountNotification(43_000_000_000, 123_457);
+  subscriptions.pushSlotNotification(24_042, 24_040);
+
+  // Cuántos sockets mantienen al menos una suscripción activa.
+  expect(subscriptions.openSubscriptionCount()).toBeGreaterThanOrEqual(1);
+});
+```
+
+- `pushAccountNotification(lamports, slot)` envía una `accountNotification` con un payload `{ context: { slot }, value: { lamports, data, ... } }` (la forma de `accountNotifications`) a todas las suscripciones de cuenta abiertas.
+- `pushSlotNotification(slot, root)` envía una `slotNotification` con `{ slot, root, parent }` a todas las suscripciones de slot abiertas.
+- Las peticiones `slotSubscribe` también reciben una notificación inmediata para que `useSubscription` tenga datos sin empujes dirigidos por la prueba.
+
+El formato de cable es crítico: si `@solana/kit` cambia su demultiplexación, las specs respaldadas por suscripciones (actualizaciones de notificaciones de slot y cuenta) fallan, que es exactamente la señal de alerta temprana buscada.
+
+## Simular wallets Wallet Standard
+
+`registerMockWallets(page)` inyecta dos wallets Wallet Standard mediante `page.addInitScript` antes de que la app arranque:
+
+- **Mock Signer Wallet** — soporta `standard:connect`, `standard:disconnect`, `standard:events`, `solana:signMessage` y `solana:signIn` (SIWS). `signMessage` devuelve los bytes de firma `[1..8]`; `signIn` devuelve una cuenta, mensaje y firma fijos.
+- **Mock Readonly Wallet** — soporta solo connect/disconnect/events, para verificar la UI de capacidades no soportadas.
+
+Las wallets se registran de ambas maneras que Wallet Standard espera: escuchan `wallet-standard:app-ready` (para registrarse en la app) y emiten `wallet-standard:register-wallet` (para apps inicializadas primero).
+
+## Aserciones para copiar
+
+- Envuelve los flujos con `expectNoPageErrors(page, run)` de `e2e/helpers.ts` para fallar ante cualquier `pageerror` o `console.error` durante el flujo.
+- Prefiere selectores `data-testid` (`getByTestId`) sobre selectores de texto o rol para las superficies estables de las apps de ejemplo.
+- Para semántica SWR, verifica ambas fases: el valor en caché (obsoleto) aparece inmediatamente tras el remontaje, luego el valor revalidado lo reemplaza.
+
+---
+
 # @vue-solana/core
 
 Source: https://vue-solana-docs.vercel.app/es/packages/core
@@ -8883,6 +9005,204 @@ Los códigos de error estables son:
 ## Buffer Polyfill
 
 El código de navegador que serializa transacciones Solana puede necesitar un global `Buffer` compatible con Node. Inicialízalo antes del código de transacción con `installSolanaBufferPolyfill()` desde `@vue-solana/core/buffer-polyfill`. El único shim de tipos que queda dentro del paquete cubre el subpath `buffer/` de navegador del que importa este polyfill.
+
+---
+
+# E2E Testing
+
+Source: https://vue-solana-docs.vercel.app/guides/e2e-testing
+Description: Run the Playwright e2e suite and mock Solana RPC, RPC subscriptions, and wallets for UI tests.
+
+The repository's example apps are covered by a Playwright suite in `e2e/`. The suite runs the built Vue Vite and Nuxt example apps against deterministic RPC mocks by default, and against real devnet in a separate integration run.
+
+Use this guide when you add example-app features, change composable behavior that is visible in the examples, or want to mock Solana RPC in your own Playwright tests.
+
+## Running The Suite
+
+```sh
+# Build the packages and both example apps, then run Playwright.
+pnpm test:e2e
+
+# Integration run against real devnet (no RPC mocks).
+pnpm test:e2e:integration
+
+# Install the Chromium browser binary once.
+pnpm test:e2e:install
+```
+
+The Playwright config starts both example preview servers automatically (`reuseExistingServer` is enabled outside CI, so a server you started manually is reused).
+
+## Mock Modes
+
+| Mode        | Command                     | RPC                       | RPC subscriptions            | Wallets                                    |
+| ----------- | --------------------------- | ------------------------- | ---------------------------- | ------------------------------------------ |
+| Default     | `pnpm test:e2e`             | Mocked (`e2e/helpers.ts`) | Mocked over a fake websocket | Mock Wallet Standard wallets               |
+| Integration | `pnpm test:e2e:integration` | Real devnet               | Real devnet                  | Real installed wallets (wallet specs skip) |
+
+Specs that assert against mock data skip themselves under `E2E_REAL_RPC=true` with `test.skip(isRealRpcRun(), ...)`, so the same spec files run in both modes.
+
+## Mocking The HTTP RPC
+
+`mockSolanaRpc(page)` routes `https://api.devnet.solana.com/**` and answers known methods deterministically:
+
+```ts
+import { mockSolanaRpc } from "./helpers";
+
+test.beforeEach(async ({ page }) => {
+  await mockSolanaRpc(page);
+});
+```
+
+Handled methods: `getLatestBlockhash`, `getBalance`, `getVersion`, `getAccountInfo`, and `getHealth`. Unknown methods return `{ jsonrpc: "2.0", id, result: null }`. CORS preflight (`OPTIONS`) is answered with `204`.
+
+When you add an RPC call to an example app, add the method to `createRpcResponse()` in `e2e/helpers.ts`. Keep numeric values as JSON-safe values (`rentEpoch` is passed as a string because the real `u64::MAX` exceeds JavaScript's safe integer range).
+
+## Mocking RPC Subscriptions Over Websocket
+
+`mockSolanaSubscriptions(page)` extends the HTTP mock with a fake `wss://api.devnet.solana.com/**` endpoint implementing the JSON-RPC subscription protocol that `@solana/kit` speaks:
+
+1. The client sends `{ jsonrpc, id, method: "<method>Subscribe", params }`.
+2. The server answers `{ jsonrpc, id, result: <subscriptionId> }`.
+3. Updates arrive as `{ jsonrpc, method: "<method>Notification", params: { subscription: <id>, result: <payload> } }`. Kit demultiplexes on `params.subscription` and transforms `params.result`.
+4. Kit sends `{ method: "ping" }` keepalives without an `id`; the mock ignores them.
+
+The function resolves to a harness for driving notifications from a test:
+
+```ts
+import { mockSolanaSubscriptions } from "./helpers";
+
+test("live data", async ({ page }) => {
+  const subscriptions = await mockSolanaSubscriptions(page);
+  await page.goto("/");
+
+  // Assert the seeded value, then push an update.
+  subscriptions.pushAccountNotification(43_000_000_000, 123_457);
+  subscriptions.pushSlotNotification(24_042, 24_040);
+
+  // How many sockets currently hold at least one subscription.
+  expect(subscriptions.openSubscriptionCount()).toBeGreaterThanOrEqual(1);
+});
+```
+
+- `pushAccountNotification(lamports, slot)` sends an `accountNotification` with a `{ context: { slot }, value: { lamports, data, ... } }` payload (the `accountNotifications` shape) to every open account subscription.
+- `pushSlotNotification(slot, root)` sends a `slotNotification` with `{ slot, root, parent }` to every open slot subscription.
+- `slotSubscribe` requests also receive one immediate notification so `useSubscription` has data without test-driven pushes.
+
+The wire format is load-bearing: if `@solana/kit` changes its demultiplexing, the subscription-backed specs (slot and account notification updates) fail, which is the intended early-warning signal.
+
+## Mocking Wallet Standard Wallets
+
+`registerMockWallets(page)` injects two Wallet Standard wallets via `page.addInitScript` before the app boots:
+
+- **Mock Signer Wallet** — supports `standard:connect`, `standard:disconnect`, `standard:events`, `solana:signMessage`, and `solana:signIn` (SIWS). `signMessage` returns the signature bytes `[1..8]`; `signIn` returns a fixed account, message, and signature.
+- **Mock Readonly Wallet** — supports connect/disconnect/events only, for asserting unsupported-capability UI.
+
+The wallets self-register both ways Wallet Standard expects: they listen for `wallet-standard:app-ready` (to register into the app) and dispatch `wallet-standard:register-wallet` (for apps initialized first).
+
+## Assertions To Copy
+
+- Wrap flows in `expectNoPageErrors(page, run)` from `e2e/helpers.ts` to fail on any `pageerror` or `console.error` during the flow.
+- Prefer `data-testid` handles (`getByTestId`) over text or role selectors for the example apps' stable surfaces.
+- For SWR semantics, assert both phases: the stale cached value appears immediately after remount, then the revalidated value replaces it.
+
+---
+
+# E2E 테스팅
+
+Source: https://vue-solana-docs.vercel.app/ko/guides/e2e-testing
+Description: Playwright e2e 스위트를 실행하고 UI 테스트를 위해 Solana RPC, RPC 구독, 지갑을 모킹합니다.
+
+이 리포지토리의 예제 앱은 `e2e/`의 Playwright 스위트로 커버됩니다. 스위트는 기본적으로 결정론적 RPC 모킹에 대해 빌드된 Vue Vite 및 Nuxt 예제 앱을 실행하고, 별도의 통합 실행에서는 실제 devnet에 대해 실행합니다.
+
+예제 앱에 기능을 추가하거나, 예제에 표시되는 컴포저블 동작을 변경하거나, 자신의 Playwright 테스트에서 Solana RPC를 모킹하고 싶을 때 이 가이드를 사용하세요.
+
+## 스위트 실행하기
+
+```sh
+# 패키지와 두 예제 앱을 빌드한 후 Playwright를 실행합니다.
+pnpm test:e2e
+
+# 실제 devnet에 대한 통합 실행 (RPC 모킹 없음).
+pnpm test:e2e:integration
+
+# Chromium 브라우저 바이너리를 한 번 설치합니다.
+pnpm test:e2e:install
+```
+
+Playwright 설정은 두 예제 프리뷰 서버를 자동으로 시작합니다(CI 외부에서는 `reuseExistingServer`가 활성화되어 있어 수동으로 시작한 서버는 재사용됩니다).
+
+## 모킹 모드
+
+| 모드 | 명령                        | RPC                       | RPC 구독                     | 지갑                                |
+| ---- | --------------------------- | ------------------------- | ---------------------------- | ----------------------------------- |
+| 기본 | `pnpm test:e2e`             | 모킹됨 (`e2e/helpers.ts`) | 가짜 websocket 위에서 모킹됨 | 모킹된 Wallet Standard 지갑         |
+| 통합 | `pnpm test:e2e:integration` | 실제 devnet               | 실제 devnet                  | 실제 설치된 지갑 (지갑 spec은 skip) |
+
+모킹 데이터를 단언하는 spec은 `test.skip(isRealRpcRun(), ...)`으로 `E2E_REAL_RPC=true` 하에서 스스로를 skip하므로, 동일한 spec 파일이 두 모드에서 모두 실행됩니다.
+
+## HTTP RPC 모킹
+
+`mockSolanaRpc(page)`는 `https://api.devnet.solana.com/**`을 라우트하고 알려진 메서드에 결정론적으로 응답합니다:
+
+```ts
+import { mockSolanaRpc } from "./helpers";
+
+test.beforeEach(async ({ page }) => {
+  await mockSolanaRpc(page);
+});
+```
+
+처리되는 메서드: `getLatestBlockhash`, `getBalance`, `getVersion`, `getAccountInfo`, `getHealth`. 알 수 없는 메서드는 `{ jsonrpc: "2.0", id, result: null }`을 반환합니다. CORS preflight(`OPTIONS`)는 `204`로 응답됩니다.
+
+예제 앱에 RPC 호출을 추가할 때는 `e2e/helpers.ts`의 `createRpcResponse()`에 해당 메서드를 추가하세요. 숫자 값은 JSON-safe 값으로 유지하세요(실제 `u64::MAX`는 JavaScript의 안전한 정수 범위를 초과하므로 `rentEpoch`는 문자열로 전달됩니다).
+
+## Websocket 위에서 RPC 구독 모킹
+
+`mockSolanaSubscriptions(page)`는 `@solana/kit`이 사용하는 JSON-RPC 구독 프로토콜을 구현하는 가짜 `wss://api.devnet.solana.com/**` 엔드포인트로 HTTP 모킹을 확장합니다:
+
+1. 클라이언트가 `{ jsonrpc, id, method: "<method>Subscribe", params }`를 보냅니다.
+2. 서버가 `{ jsonrpc, id, result: <subscriptionId> }`로 응답합니다.
+3. 업데이트는 `{ jsonrpc, method: "<method>Notification", params: { subscription: <id>, result: <payload> } }`로 도착합니다. Kit는 `params.subscription`으로 demultiplex하고 `params.result`를 변환합니다.
+4. Kit는 `id` 없이 `{ method: "ping" }` keepalive를 보냅니다. 모크는 이를 무시합니다.
+
+이 함수는 테스트에서 알림을 구동하기 위한 harness로 resolve됩니다:
+
+```ts
+import { mockSolanaSubscriptions } from "./helpers";
+
+test("live data", async ({ page }) => {
+  const subscriptions = await mockSolanaSubscriptions(page);
+  await page.goto("/");
+
+  // 시드된 값을 단언한 후 업데이트를 푸시합니다.
+  subscriptions.pushAccountNotification(43_000_000_000, 123_457);
+  subscriptions.pushSlotNotification(24_042, 24_040);
+
+  // 최소 하나의 구독을 유지하는 소켓 수.
+  expect(subscriptions.openSubscriptionCount()).toBeGreaterThanOrEqual(1);
+});
+```
+
+- `pushAccountNotification(lamports, slot)`은 열려 있는 모든 account 구독에 `{ context: { slot }, value: { lamports, data, ... } }` 페이로드(`accountNotifications` 형태)의 `accountNotification`을 보냅니다.
+- `pushSlotNotification(slot, root)`은 열려 있는 모든 slot 구독에 `{ slot, root, parent }`의 `slotNotification`을 보냅니다.
+- `slotSubscribe` 요청은 테스트 주도 푸시 없이도 `useSubscription`이 데이터를 가질 수 있도록 즉시 알림 하나도 받습니다.
+
+와이어 포맷은 매우 중요합니다: `@solana/kit`이 demultiplexing을 변경하면 구독 기반 spec(slot 및 account 알림 업데이트)이 실패하는데, 이것이 의도된 조기 경고 신호입니다.
+
+## Wallet Standard 지갑 모킹
+
+`registerMockWallets(page)`는 앱이 부팅되기 전에 `page.addInitScript`를 통해 두 개의 Wallet Standard 지갑을 주입합니다:
+
+- **Mock Signer Wallet** — `standard:connect`, `standard:disconnect`, `standard:events`, `solana:signMessage`, `solana:signIn`(SIWS)을 지원합니다. `signMessage`는 시그니처 바이트 `[1..8]`을 반환하고, `signIn`은 고정된 account, message, signature를 반환합니다.
+- **Mock Readonly Wallet** — connect/disconnect/events만 지원하여, 지원되지 않는 capability UI를 단언합니다.
+
+지갑은 Wallet Standard가 기대하는 두 가지 방식 모두로 self-register합니다: `wallet-standard:app-ready`를 리슨하여(앱에 register) `wallet-standard:register-wallet`을 디스패치합니다(앱이 먼저 초기화된 경우).
+
+## 복사해 쓸 수 있는 단언
+
+- `e2e/helpers.ts`의 `expectNoPageErrors(page, run)`으로 흐름을 감싸서 흐름 중 `pageerror` 또는 `console.error`가 발생하면 실패하도록 하세요.
+- 예제 앱의 안정적인 표면에는 텍스트나 role 셀렉터보다 `data-testid` 핸들(`getByTestId`)을 선호하세요.
+- SWR 시맨틱의 경우 두 단계를 모두 단언하세요: 리마운트 직후 캐시된(stale) 값이 즉시 나타나고, 이후 revalidate된 값이 이를 대체합니다.
 
 ---
 
@@ -9313,6 +9633,7 @@ import type { SolanaConfig } from "@vue-solana/core/types";
 Direct subpaths:
 
 - `@vue-solana/core/address`
+- `@vue-solana/core/action`
 - `@vue-solana/core/buffer-polyfill`
 - `@vue-solana/core/types`
 - `@vue-solana/core/clusters`
@@ -9623,6 +9944,105 @@ Stable error codes are:
 ## Buffer Polyfill
 
 Browser code that serializes Solana transactions may need a Node-compatible `Buffer` global. Initialize it before transaction code with `installSolanaBufferPolyfill()` from `@vue-solana/core/buffer-polyfill`. The only remaining package-owned type shim covers the browser `buffer/` subpath this polyfill imports from.
+
+---
+
+# E2E 测试
+
+Source: https://vue-solana-docs.vercel.app/zh/guides/e2e-testing
+Description: 运行 Playwright e2e 测试套件，并在 UI 测试中模拟 Solana RPC、RPC 订阅和钱包。
+
+本仓库的示例应用由 `e2e/` 中的 Playwright 测试套件覆盖。默认情况下，该套件针对确定性 RPC 模拟运行构建后的 Vue Vite 和 Nuxt 示例应用；在单独的集成运行中则针对真实 devnet 运行。
+
+当你为示例应用添加功能、更改示例中可见的 composable 行为，或想在自己的 Playwright 测试中模拟 Solana RPC 时，请使用本指南。
+
+## 运行测试套件
+
+```sh
+# 构建包和两个示例应用，然后运行 Playwright。
+pnpm test:e2e
+
+# 针对真实 devnet 的集成运行（无 RPC 模拟）。
+pnpm test:e2e:integration
+
+# 安装一次 Chromium 浏览器二进制文件。
+pnpm test:e2e:install
+```
+
+Playwright 配置会自动启动两个示例预览服务器（CI 之外启用了 `reuseExistingServer`，因此手动启动的服务器会被复用）。
+
+## 模拟模式
+
+| 模式 | 命令                        | RPC                     | RPC 订阅              | 钱包                               |
+| ---- | --------------------------- | ----------------------- | --------------------- | ---------------------------------- |
+| 默认 | `pnpm test:e2e`             | 模拟 (`e2e/helpers.ts`) | 通过假 websocket 模拟 | 模拟 Wallet Standard 钱包          |
+| 集成 | `pnpm test:e2e:integration` | 真实 devnet             | 真实 devnet           | 真实安装的钱包（钱包相关用例跳过） |
+
+针对模拟数据进行断言的用例会通过 `test.skip(isRealRpcRun(), ...)` 在 `E2E_REAL_RPC=true` 下自动跳过，因此同一批用例文件在两种模式下都能运行。
+
+## 模拟 HTTP RPC
+
+`mockSolanaRpc(page)` 拦截 `https://api.devnet.solana.com/**` 并对已知方法给出确定性响应：
+
+```ts
+import { mockSolanaRpc } from "./helpers";
+
+test.beforeEach(async ({ page }) => {
+  await mockSolanaRpc(page);
+});
+```
+
+已处理的方法：`getLatestBlockhash`、`getBalance`、`getVersion`、`getAccountInfo` 和 `getHealth`。未知方法返回 `{ jsonrpc: "2.0", id, result: null }`。CORS 预检（`OPTIONS`）以 `204` 应答。
+
+当你在示例应用中新增 RPC 调用时，请把该方法添加到 `e2e/helpers.ts` 的 `createRpcResponse()` 中。数值应保持为 JSON 安全值（真实 `u64::MAX` 超出 JavaScript 的安全整数范围，因此 `rentEpoch` 以字符串形式传递）。
+
+## 通过 websocket 模拟 RPC 订阅
+
+`mockSolanaSubscriptions(page)` 在 HTTP 模拟的基础上扩展了一个实现 `@solana/kit` 所用 JSON-RPC 订阅协议的假 `wss://api.devnet.solana.com/**` 端点：
+
+1. 客户端发送 `{ jsonrpc, id, method: "<method>Subscribe", params }`。
+2. 服务器以 `{ jsonrpc, id, result: <subscriptionId> }` 应答。
+3. 更新以 `{ jsonrpc, method: "<method>Notification", params: { subscription: <id>, result: <payload> } }` 的形式到达。Kit 按 `params.subscription` 多路分解并转换 `params.result`。
+4. Kit 发送不带 `id` 的 `{ method: "ping" }` 保活帧；模拟端忽略它们。
+
+该函数会 resolve 出一个用于在测试中驱动通知的 harness：
+
+```ts
+import { mockSolanaSubscriptions } from "./helpers";
+
+test("live data", async ({ page }) => {
+  const subscriptions = await mockSolanaSubscriptions(page);
+  await page.goto("/");
+
+  // 断言种子数据，然后推送一条更新。
+  subscriptions.pushAccountNotification(43_000_000_000, 123_457);
+  subscriptions.pushSlotNotification(24_042, 24_040);
+
+  // 当前至少持有一个订阅的 socket 数量。
+  expect(subscriptions.openSubscriptionCount()).toBeGreaterThanOrEqual(1);
+});
+```
+
+- `pushAccountNotification(lamports, slot)` 向所有打开的账户订阅发送带有 `{ context: { slot }, value: { lamports, data, ... } }` 载荷（`accountNotifications` 的形状）的 `accountNotification`。
+- `pushSlotNotification(slot, root)` 向所有打开的 slot 订阅发送带有 `{ slot, root, parent }` 的 `slotNotification`。
+- `slotSubscribe` 请求还会收到一条即时通知，使 `useSubscription` 在测试驱动推送之前就有数据。
+
+线上协议格式是关键所在：如果 `@solana/kit` 更改其多路分解方式，订阅相关的用例（slot 和账户通知更新）就会失败——这正是预期的预警信号。
+
+## 模拟 Wallet Standard 钱包
+
+`registerMockWallets(page)` 通过 `page.addInitScript` 在应用启动前注入两个 Wallet Standard 钱包：
+
+- **Mock Signer Wallet** — 支持 `standard:connect`、`standard:disconnect`、`standard:events`、`solana:signMessage` 和 `solana:signIn`（SIWS）。`signMessage` 返回签名 `[1..8]`；`signIn` 返回固定的账户、消息和签名。
+- **Mock Readonly Wallet** — 仅支持 connect/disconnect/events，用于断言不支持能力时的 UI。
+
+这些钱包以 Wallet Standard 期望的两种方式自注册：监听 `wallet-standard:app-ready`（向应用注册）并派发 `wallet-standard:register-wallet`（针对先初始化的应用）。
+
+## 可复用的断言模式
+
+- 用 `e2e/helpers.ts` 中的 `expectNoPageErrors(page, run)` 包裹流程，以便流程中出现任何 `pageerror` 或 `console.error` 时测试失败。
+- 对于示例应用的稳定界面，优先使用 `data-testid` 句柄（`getByTestId`）而非文本或角色选择器。
+- 对于 SWR 语义，断言两个阶段：重挂载后立即出现缓存的（过期）值，随后 revalidate 的值将其替换。
 
 ---
 
@@ -10062,6 +10482,20 @@ import { useWallet } from "@vue-solana/vue/useWallet";
 Subpaths directos del paquete:
 
 - `@vue-solana/vue/buffer-polyfill`
+- `@vue-solana/vue/useAction`
+- `@vue-solana/vue/useRequest`
+- `@vue-solana/vue/useSubscription`
+- `@vue-solana/vue/useTrackedData`
+- `@vue-solana/vue/useSignIn`
+- `@vue-solana/vue/useSelectedWalletAccount`
+- `@vue-solana/vue/useSignTransactions`
+- `@vue-solana/vue/useSignAndSendTransactions`
+- `@vue-solana/vue/useClientCapability`
+- `@vue-solana/vue/usePayer`
+- `@vue-solana/vue/useIdentity`
+- `@vue-solana/vue/usePlanTransaction`
+- `@vue-solana/vue/usePlanTransactions`
+- `@vue-solana/vue/swr`
 - `@vue-solana/vue/useSolana`
 - `@vue-solana/vue/useSolanaClient`
 - `@vue-solana/vue/useRpc`
@@ -10098,6 +10532,16 @@ Usa `@vue-solana/vue/buffer-polyfill` para código de transacciones en navegador
 - `useSignatureStatus(signature, options?)`: lee, sondea o se suscribe a actualizaciones de estado de firma.
 - `useSignMessage()`: firma mensajes de autenticación arbitrarios mediante la wallet configurada cuando está soportado.
 - `useSignAndSendTransaction()`: firma y envía una transacción mediante la wallet configurada, con espera de confirmación opcional.
+- `useAction(handler)`: máquina de estados de acción async genérica con cancelación al redespachar.
+- `useRequest(source, options?)`: petición de un solo uso que se re-ejecuta cuando cambia su fuente, con stale-while-revalidate.
+- `useSubscription(source, options?)`: datos en vivo de suscripciones RPC y otras fuentes de stream reactivas.
+- `useTrackedData(source, options?)`: suscripción RPC sembrada por una petición de un solo uso, con deduplicación por slot.
+- `useSignIn()`: dispara la funcionalidad Sign In With Solana (SIWS) de la wallet.
+- `useSelectedWalletAccount()`: lee el contexto de cuenta de wallet seleccionada a nivel de app con persistencia y filtrado.
+- `useSignTransactions()` / `useSignAndSendTransactions()`: firma, o firma y envía, múltiples transacciones en una sola petición de wallet.
+- `usePayer()` / `useIdentity()`: signers reactivos del cliente Kit (requiere un plugin de signer).
+- `usePlanTransaction()` / `usePlanTransactions()`: planifica mensajes de transacción a partir de instrucciones.
+- `useClientCapability(nombre)`: afirma que una capacidad está instalada en el cliente y lanza un error descriptivo si falta.
 
 ## Guías relacionadas
 
@@ -10106,6 +10550,7 @@ Usa `@vue-solana/vue/buffer-polyfill` para código de transacciones en navegador
 - [Account Reads](/guides/account-reads): lee balances, info de cuenta, cuentas de programa y estado de firma.
 - [Transactions](/guides/transactions): firma, envía, confirma y muestra progreso de transacción.
 - [Message Signing](/guides/message-signing): firma desafíos de autenticación o propiedad fuera de cadena.
+- [E2E Testing](/guides/e2e-testing): simula RPC, suscripciones RPC y wallets en pruebas de Playwright.
 - [Errors](/guides/errors): mapea refs `error` de composables a mensajes de UI seguros.
 
 ## Leer estado RPC
@@ -10434,6 +10879,108 @@ if (connected.value && canSignMessage.value) {
 
 La firma de mensajes es para desafíos de propiedad de wallet o autenticación. No es firma de transacciones y no autoriza cambios de estado on-chain. Las wallets que no exponen firma de mensajes reportan `canSignMessage` como false y `execute()` rechaza con un error de wallet no soportada.
 
+## Composables de obtención de datos
+
+`useRequest`, `useSubscription` y `useTrackedData` son la capa de datos estilo SWR, construida sobre las primitivas de stores reactivos de Kit:
+
+```ts
+import { useSolanaClient } from "@vue-solana/vue/useSolanaClient";
+import { useTrackedData } from "@vue-solana/vue/useTrackedData";
+import { address } from "@vue-solana/vue/kit";
+
+const { rpc, rpcSubscriptions } = useSolanaClient().client;
+const someAddress = address("...");
+
+const { data, status, refresh } = useTrackedData({
+  rpcRequest: rpc.getBalance(someAddress),
+  rpcValueMapper: (lamports) => lamports,
+  rpcSubscriptionRequest: rpcSubscriptions.accountNotifications(someAddress),
+  rpcSubscriptionValueMapper: ({ lamports }) => lamports,
+});
+
+// data.value es un sobre SolanaRpcResponse: data.value.value y
+// data.value.context.slot.
+```
+
+- `useRequest` se re-ejecuta cuando una fuente ref/computed cambia de identidad; pasar `null` la desactiva (estado `disabled`).
+- `useSubscription` conserva el valor obsoleto mientras se reconecta; `reconnect()` reabre el stream.
+- `useTrackedData` deduplica por slot la petición y la suscripción para que llegadas fuera de orden no puedan regresar el valor.
+
+Los callbacks `rpcValueMapper` y `rpcSubscriptionValueMapper` reciben el valor de respuesta **desenvuelto** (`value.lamports` para un balance), mientras que el ref `data` devuelto conserva el sobre `SolanaRpcResponse` completo para que puedas leer `data.value?.context.slot`.
+
+### Peticiones de un solo uso con `useRequest`
+
+`useRequest` es la petición SWR de propósito general. Acepta una función de petición, un objeto de petición de Kit (cualquier cosa con `send()`), o un `ref`/`computed` de cualquiera de ellos, o `null` para desactivar:
+
+```ts
+import { computed } from "vue";
+import { useRequest } from "@vue-solana/vue/useRequest";
+import { useSolanaClient } from "@vue-solana/vue/useSolanaClient";
+
+const { rpc } = useSolanaClient();
+const someAddress = ref("...");
+
+const { data, error, status, refresh } = useRequest(
+  computed(() => (someAddress.value ? rpc.getBalance(someAddress.value) : null)),
+  {
+    // Cancelación opcional por intento compuesta con la señal interna.
+    getAbortSignal: () => AbortSignal.timeout(5_000),
+  },
+);
+
+// data.value es el valor de respuesta crudo; status es
+// "fetching" | "success" | "error" | "disabled".
+```
+
+Mientras se ejecuta una revalidación, los `data` y `error` anteriores permanecen poblados, así que la UI sigue renderizando. `refresh()` se re-ejecuta manualmente y resuelve con el resultado del intento.
+
+### Streams con `useSubscription`
+
+`useSubscription` consume cualquier fuente de stream reactiva de Kit (con tipado de pato sobre `reactiveStore()`), desmonta la conexión al desinstalar el componente y soporta reconexión manual con stale-while-revalidate:
+
+```ts
+import { useSubscription } from "@vue-solana/vue/useSubscription";
+import { useSolanaClient } from "@vue-solana/vue/useSolanaClient";
+
+const { rpcSubscriptions } = useSolanaClient().client;
+
+const { data, error, status, reconnect } = useSubscription(
+  computed(() => (someAddress.value ? rpcSubscriptions.slotNotifications() : null)),
+  { onError: (cause) => console.error(cause) },
+);
+
+// El estado es "loading" | "loaded" | "error" | "disabled".
+// reconnect() reabre el stream mientras data conserva el último valor conocido.
+```
+
+Los errores conservan el último `data` conocido; una fuente `null` desactiva la suscripción y limpia el estado.
+
+### Clave de caché entre montajes
+
+Para clave de caché entre montajes, usa los adaptadores SWR de `@vue-solana/vue/swr`:
+
+```ts
+import {
+  useRequestSwr,
+  useSubscriptionSwr,
+  useTrackedDataSwr,
+  clearSwrCache,
+} from "@vue-solana/vue/swr";
+
+const balance = useRequestSwr(`balance:${someAddress}`, rpc.getBalance(someAddress));
+```
+
+Los componentes montados con la misma clave se siembran del último valor conocido mientras su propia petición se revalida. No hay adaptador de `useAction`: las acciones son mutaciones, no lecturas cacheables; usa la API de mutación de tu capa de datos (o el propio `useAction`).
+
+Detalles del comportamiento de caché:
+
+- Las claves tienen namespace por adaptador (`request:`, `subscription:`, `tracked:`), así que la misma clave es segura entre adaptadores.
+- Una fuente `null`/`undefined` desactiva el composable y **limpia** la entrada en caché de esa clave, incluso cuando un componente se monta con la fuente ya desactivada.
+- `useTrackedDataSwr` guarda en caché el sobre `SolanaRpcResponse` completo, así que los componentes remontados restauran tanto el valor como su contexto de slot.
+- La caché es un `Map` a nivel de módulo. En el servidor, dale namespace a las claves por petición o llama a `clearSwrCache()` entre peticiones para evitar fugas entre peticiones.
+
+Para una demostración ejecutable de los cinco composables (incluido el comportamiento SWR en remontajes) contra devnet, consulta los Live Data Panels del [Vue Vite example](/examples/vue-vite).
+
 ## Estado de transacción
 
 ```ts
@@ -10559,6 +11106,20 @@ import { useWallet } from "@vue-solana/vue/useWallet";
 Direct package subpath:
 
 - `@vue-solana/vue/buffer-polyfill`
+- `@vue-solana/vue/useAction`
+- `@vue-solana/vue/useRequest`
+- `@vue-solana/vue/useSubscription`
+- `@vue-solana/vue/useTrackedData`
+- `@vue-solana/vue/useSignIn`
+- `@vue-solana/vue/useSelectedWalletAccount`
+- `@vue-solana/vue/useSignTransactions`
+- `@vue-solana/vue/useSignAndSendTransactions`
+- `@vue-solana/vue/useClientCapability`
+- `@vue-solana/vue/usePayer`
+- `@vue-solana/vue/useIdentity`
+- `@vue-solana/vue/usePlanTransaction`
+- `@vue-solana/vue/usePlanTransactions`
+- `@vue-solana/vue/swr`
 - `@vue-solana/vue/useSolana`
 - `@vue-solana/vue/useSolanaClient`
 - `@vue-solana/vue/useRpc`
@@ -10595,6 +11156,16 @@ Buffer polyfill이 필요한 브라우저 트랜잭션 코드에는 `@vue-solana
 - `useSignatureStatus(signature, options?)`: signature status update를 읽거나 polling하거나 subscribe합니다.
 - `useSignMessage()`: 지원되는 경우 설정된 wallet을 통해 임의의 인증 메시지에 서명합니다.
 - `useSignAndSendTransaction()`: optional confirmation waiting과 함께 설정된 wallet을 통해 transaction에 서명하고 전송합니다.
+- `useAction(handler)`: 재디스패치 시 abort되는 generic async action 상태 머신입니다.
+- `useRequest(source, options?)`: 소스가 변경되면 다시 실행되는 one-shot request로, stale-while-revalidate를 지원합니다.
+- `useSubscription(source, options?)`: RPC 구독 및 기타 reactive stream 소스의 실시간 데이터입니다.
+- `useTrackedData(source, options?)`: one-shot fetch로 시드되는 RPC 구독으로, slot 기준 deduplicate됩니다.
+- `useSignIn()`: 지갑의 Sign In With Solana(SIWS) 기능을 트리거합니다.
+- `useSelectedWalletAccount()`: 지속성과 필터링이 있는 앱 전역 selected wallet account context를 읽습니다.
+- `useSignTransactions()` / `useSignAndSendTransactions()`: 지갑 요청 한 번으로 여러 transaction을 서명하거나 서명 후 전송합니다.
+- `usePayer()` / `useIdentity()`: Kit client의 reactive signer입니다(signer plugin 필요).
+- `usePlanTransaction()` / `usePlanTransactions()`: instruction 입력에서 transaction message를 계획합니다.
+- `useClientCapability(name)`: 클라이언트에 capability가 설치되어 있음을 단언하고, 없으면 설명적인 오류를 던집니다.
 
 ## 관련 가이드
 
@@ -10603,6 +11174,7 @@ Buffer polyfill이 필요한 브라우저 트랜잭션 코드에는 `@vue-solana
 - [계정 읽기](/ko/guides/account-reads): balance, account info, program accounts, signature status를 읽습니다.
 - [트랜잭션](/ko/guides/transactions): transaction을 sign, send, confirm하고 진행 상태를 표시합니다.
 - [메시지 서명](/ko/guides/message-signing): 오프체인 인증 또는 소유권 challenge에 서명합니다.
+- [E2E 테스팅](/ko/guides/e2e-testing): Playwright 테스트에서 RPC, RPC 구독, 지갑을 모킹합니다.
 - [오류](/ko/guides/errors): composable `error` ref를 안전한 UI 메시지로 매핑합니다.
 
 ## RPC 상태 읽기
@@ -10931,6 +11503,108 @@ if (connected.value && canSignMessage.value) {
 
 메시지 서명은 지갑 소유권 또는 인증 challenge를 위한 것입니다. 트랜잭션 서명이 아니며 온체인 상태 변경을 승인하지 않습니다. 메시지 서명을 노출하지 않는 지갑은 `canSignMessage`를 false로 보고하고 `execute()`는 unsupported-wallet error로 거부됩니다.
 
+## 데이터 페칭 컴포저블
+
+`useRequest`, `useSubscription`, `useTrackedData`는 Kit reactive store 프리미티브 위에 구축된 SWR 스타일 데이터 레이어입니다:
+
+```ts
+import { useSolanaClient } from "@vue-solana/vue/useSolanaClient";
+import { useTrackedData } from "@vue-solana/vue/useTrackedData";
+import { address } from "@vue-solana/vue/kit";
+
+const { rpc, rpcSubscriptions } = useSolanaClient().client;
+const someAddress = address("...");
+
+const { data, status, refresh } = useTrackedData({
+  rpcRequest: rpc.getBalance(someAddress),
+  rpcValueMapper: (lamports) => lamports,
+  rpcSubscriptionRequest: rpcSubscriptions.accountNotifications(someAddress),
+  rpcSubscriptionValueMapper: ({ lamports }) => lamports,
+});
+
+// data.value는 SolanaRpcResponse 봉투입니다: data.value.value와
+// data.value.context.slot.
+```
+
+- `useRequest`는 ref/computed 소스의 identity가 변경되면 다시 실행됩니다. `null`을 전달하면 비활성화됩니다(상태 `disabled`).
+- `useSubscription`은 재연결하는 동안 stale 값을 유지합니다. `reconnect()`가 stream을 다시 엽니다.
+- `useTrackedData`는 fetch와 구독을 slot 기준으로 deduplicate하여 순서가 뒤바뀐 도착도 값을 되돌릴 수 없습니다.
+
+`rpcValueMapper`와 `rpcSubscriptionValueMapper` 콜백은 **래핑되지 않은** 응답 값(`balance의 경우 value.lamports`)을 받고, 반환되는 `data` ref는 전체 `SolanaRpcResponse` 봉투를 유지하므로 `data.value?.context.slot`을 읽을 수 있습니다.
+
+### `useRequest`로 one-shot 요청하기
+
+`useRequest`는 범용 SWR 요청입니다. 요청 함수, Kit 요청 객체(`send()`가 있는 것), 그중 하나의 `ref`/`computed`, 또는 비활성화를 위한 `null`을 받습니다:
+
+```ts
+import { computed } from "vue";
+import { useRequest } from "@vue-solana/vue/useRequest";
+import { useSolanaClient } from "@vue-solana/vue/useSolanaClient";
+
+const { rpc } = useSolanaClient();
+const someAddress = ref("...");
+
+const { data, error, status, refresh } = useRequest(
+  computed(() => (someAddress.value ? rpc.getBalance(someAddress.value) : null)),
+  {
+    // 내부 signal과 결합되는 선택적 시도별 취소.
+    getAbortSignal: () => AbortSignal.timeout(5_000),
+  },
+);
+
+// data.value는 raw 응답 값입니다. status는
+// "fetching" | "success" | "error" | "disabled"입니다.
+```
+
+재검증이 실행되는 동안 이전 `data`와 `error`가 채워진 상태로 유지되므로 UI는 계속 렌더링됩니다. `refresh()`는 수동으로 다시 실행되고 시도 결과로 resolve됩니다.
+
+### `useSubscription`으로 스트림 구독하기
+
+`useSubscription`은 Kit reactive stream 소스(`reactiveStore()` 기반 duck typing)를 소비하고, 컴포넌트 unmount 시 연결을 해제하며, stale-while-revalidate를 통한 수동 재연결을 지원합니다:
+
+```ts
+import { useSubscription } from "@vue-solana/vue/useSubscription";
+import { useSolanaClient } from "@vue-solana/vue/useSolanaClient";
+
+const { rpcSubscriptions } = useSolanaClient().client;
+
+const { data, error, status, reconnect } = useSubscription(
+  computed(() => (someAddress.value ? rpcSubscriptions.slotNotifications() : null)),
+  { onError: (cause) => console.error(cause) },
+);
+
+// 상태는 "loading" | "loaded" | "error" | "disabled"입니다.
+// reconnect()는 data가 마지막으로 알려진 값을 유지한 채 stream을 다시 엽니다.
+```
+
+오류는 마지막으로 알려진 `data`를 보존합니다. `null` 소스는 구독을 비활성화하고 상태를 지웁니다.
+
+### 마운트 간 캐시 키 지정
+
+마운트 간 캐시 키 지정을 위해서는 `@vue-solana/vue/swr`의 SWR 어댑터를 사용하세요:
+
+```ts
+import {
+  useRequestSwr,
+  useSubscriptionSwr,
+  useTrackedDataSwr,
+  clearSwrCache,
+} from "@vue-solana/vue/swr";
+
+const balance = useRequestSwr(`balance:${someAddress}`, rpc.getBalance(someAddress));
+```
+
+같은 키로 마운트된 컴포넌트는 자체 요청이 재검증되는 동안 마지막으로 알려진 값으로 시드됩니다. `useAction` 어댑터는 없습니다. action은 읽을 수 있어 캐시 가능한 데이터가 아니라 mutation이므로, 데이터 레이어의 mutation API(또는 `useAction` 자체)를 사용하세요.
+
+캐시 동작 세부 사항:
+
+- 키는 어댑터별로 네임스페이스가 지정됩니다(`request:`, `subscription:`, `tracked:`). 따라서 동일한 키를 어댑터 간에 안전하게 사용할 수 있습니다.
+- `null`/`undefined` 소스는 컴포저블을 비활성화하고 해당 키의 캐시 항목을 **지웁니다**. 컴포넌트가 이미 비활성화된 소스로 마운트되는 경우에도 마찬가지입니다.
+- `useTrackedDataSwr`는 전체 `SolanaRpcResponse` 봉투를 캐시하므로, 리마운트된 컴포넌트는 값과 slot context를 모두 복원합니다.
+- 캐시는 모듈 수준 `Map`입니다. 서버에서는 요청별로 키에 네임스페이스를 지정하거나 요청 사이에 `clearSwrCache()`를 호출하여 요청 간 누수를 방지하세요.
+
+devnet에 대한 5개 컴포저블 모두의 실행 가능한 데모(SWR 리마운트 동작 포함)는 [Vue Vite 예제](/ko/examples/vue-vite)의 Live Data Panels를 참고하세요.
+
 ## 트랜잭션 상태
 
 ```ts
@@ -11056,6 +11730,20 @@ import { useWallet } from "@vue-solana/vue/useWallet";
 Direct package subpaths:
 
 - `@vue-solana/vue/buffer-polyfill`
+- `@vue-solana/vue/useAction`
+- `@vue-solana/vue/useRequest`
+- `@vue-solana/vue/useSubscription`
+- `@vue-solana/vue/useTrackedData`
+- `@vue-solana/vue/useSignIn`
+- `@vue-solana/vue/useSelectedWalletAccount`
+- `@vue-solana/vue/useSignTransactions`
+- `@vue-solana/vue/useSignAndSendTransactions`
+- `@vue-solana/vue/useClientCapability`
+- `@vue-solana/vue/usePayer`
+- `@vue-solana/vue/useIdentity`
+- `@vue-solana/vue/usePlanTransaction`
+- `@vue-solana/vue/usePlanTransactions`
+- `@vue-solana/vue/swr`
 - `@vue-solana/vue/useSolana`
 - `@vue-solana/vue/useSolanaClient`
 - `@vue-solana/vue/useRpc`
@@ -11092,6 +11780,17 @@ Use `@vue-solana/vue/buffer-polyfill` for browser transaction code that needs th
 - `useSignatureStatus(signature, options?)`: reads, polls, or subscribes to signature status updates.
 - `useSignMessage()`: signs arbitrary authentication messages through the configured wallet when supported.
 - `useSignAndSendTransaction()`: signs and sends a transaction through the configured wallet, with optional confirmation waiting.
+- `useAction(handler)`: generic async action state machine with abort-on-redispatch; the foundation for the data composables.
+- `useRequest(source, options?)`: one-shot async request that re-fires when its source changes, with stale-while-revalidate.
+- `useSubscription(source, options?)`: live data from RPC subscriptions and other reactive stream sources.
+- `useTrackedData(source, options?)`: RPC subscription seeded by a one-shot fetch, slot-deduplicated.
+- `useSignIn()`: triggers a wallet's Sign In With Solana (SIWS) feature.
+- `useSelectedWalletAccount()`: reads the app-wide selected wallet account from `SelectedWalletAccountProvider` (or `provideSelectedWalletAccount()`).
+- `useSignTransactions()`: signs multiple serialized transactions in one wallet request.
+- `useSignAndSendTransactions()`: signs and sends multiple transactions in one wallet request.
+- `useClientCapability(capability)`: asserts a capability is installed on the Kit client, failing fast with a clear error.
+- `usePayer()` / `useIdentity()`: reactively track the fee payer / acting identity signer from the Kit client.
+- `usePlanTransaction()` / `usePlanTransactions()`: plan transaction messages from instruction inputs without sending.
 
 ## Related Guides
 
@@ -11100,6 +11799,7 @@ Use `@vue-solana/vue/buffer-polyfill` for browser transaction code that needs th
 - [Account Reads](/guides/account-reads): read balances, account info, program accounts, and signature status.
 - [Transactions](/guides/transactions): sign, send, confirm, and show transaction progress.
 - [Message Signing](/guides/message-signing): sign off-chain authentication or ownership challenges.
+- [E2E Testing](/guides/e2e-testing): mock RPC, RPC subscriptions, and wallets in Playwright tests.
 - [Errors](/guides/errors): map composable `error` refs to safe UI messages.
 
 ## Read RPC State
@@ -11428,6 +12128,137 @@ if (connected.value && canSignMessage.value) {
 
 Message signing is for wallet ownership or authentication challenges. It is not transaction signing and does not authorize on-chain state changes. Wallets that do not expose message signing report `canSignMessage` as false and `execute()` rejects with an unsupported-wallet error.
 
+## Sign In With Solana
+
+```ts
+import { useSignIn } from "@vue-solana/vue/useSignIn";
+
+const { signInResult, status, loading, error, signIn } = useSignIn();
+
+async function handleSignIn() {
+  const { account, signedMessage, signature } = await signIn({
+    statement: "Sign in to My App",
+    // Generate the nonce server-side and verify it on the server.
+    nonce: await fetchNonceFromBackend(),
+  });
+
+  // Send { account.address, signature, signedMessage } to your backend for
+  // verification before creating a session.
+}
+```
+
+The wallet must support the SIWS feature (`canSignIn` is false otherwise, and `signIn()` rejects with a `WALLET_FEATURE_UNSUPPORTED` error). Wallets without a selected account connect first.
+
+### Verifying the signature on your server
+
+The wallet returns a signature over `signedMessage` — the SIWS message the user consented to. Trusting the result without verification would let a malicious client forge an identity, so verify server-side before issuing a session:
+
+1. **Check the message**: decode `signedMessage` and confirm the domain matches your origin, the `uri` is yours, the `nonce` matches the one your server issued for this session, and the statement/resources match what you expect.
+2. **Verify the signature**: the signature is an Ed25519 signature of the SIWS message bytes. Verify it with `tweetnacl` (`nacl.sign.detached.verify(signedMessage, signature, account.publicKey)`) or any Ed25519 library, against the account's `publicKey` from the sign-in result.
+3. **Bind the session**: only after the message checks and the signature verifies should you create the session — keyed to `account.address`.
+
+The server must re-derive the expected message from the nonce it issued (or validate every field of the received message) so expired or replayed nonces are rejected.
+
+## Data Fetching Composables
+
+`useRequest`, `useSubscription`, and `useTrackedData` are the SWR-style data layer, built on the Kit reactive-store primitives:
+
+```ts
+import { useSolanaClient } from "@vue-solana/vue/useSolanaClient";
+import { useTrackedData } from "@vue-solana/vue/useTrackedData";
+import { address } from "@vue-solana/vue/kit";
+
+const { rpc, rpcSubscriptions } = useSolanaClient().client;
+const someAddress = address("...");
+
+const { data, status, refresh } = useTrackedData({
+  rpcRequest: rpc.getBalance(someAddress),
+  rpcValueMapper: (lamports) => lamports,
+  rpcSubscriptionRequest: rpcSubscriptions.accountNotifications(someAddress),
+  rpcSubscriptionValueMapper: ({ lamports }) => lamports,
+});
+
+// data.value is a SolanaRpcResponse envelope: data.value.value and
+// data.value.context.slot.
+```
+
+- `useRequest` re-fires when a ref/computed source changes identity; passing `null` disables it (status `disabled`).
+- `useSubscription` keeps the stale value while reconnecting; `reconnect()` re-opens the stream.
+- `useTrackedData` slot-deduplicates the fetch and subscription so out-of-order arrivals cannot regress the value.
+
+The `rpcValueMapper` and `rpcSubscriptionValueMapper` callbacks receive the **unwrapped** response value (`value.lamports` for a balance), while the returned `data` ref keeps the full `SolanaRpcResponse` envelope so you can read `data.value?.context.slot`.
+
+### One-Shot Requests With `useRequest`
+
+`useRequest` is the general-purpose SWR request. It accepts a request function, a Kit request object (anything with `send()`), or a `ref`/`computed` of either, or `null` to disable:
+
+```ts
+import { computed } from "vue";
+import { useRequest } from "@vue-solana/vue/useRequest";
+import { useSolanaClient } from "@vue-solana/vue/useSolanaClient";
+
+const { rpc } = useSolanaClient();
+const someAddress = ref("...");
+
+const { data, error, status, refresh } = useRequest(
+  computed(() => (someAddress.value ? rpc.getBalance(someAddress.value) : null)),
+  {
+    // Optional per-attempt cancellation composed with the internal signal.
+    getAbortSignal: () => AbortSignal.timeout(5_000),
+  },
+);
+
+// data.value is the raw response value; status is
+// "fetching" | "success" | "error" | "disabled".
+```
+
+While a revalidation runs, the previous `data` and `error` stay populated, so the UI keeps rendering. `refresh()` re-fires manually and resolves with the attempt result.
+
+### Streams With `useSubscription`
+
+`useSubscription` consumes any Kit reactive stream source (duck-typed on `reactiveStore()`), tears the connection down on unmount, and supports manual reconnection with stale-while-revalidate:
+
+```ts
+import { useSubscription } from "@vue-solana/vue/useSubscription";
+import { useSolanaClient } from "@vue-solana/vue/useSolanaClient";
+
+const { rpcSubscriptions } = useSolanaClient().client;
+
+const { data, error, status, reconnect } = useSubscription(
+  computed(() => (someAddress.value ? rpcSubscriptions.slotNotifications() : null)),
+  { onError: (cause) => console.error(cause) },
+);
+
+// Status is "loading" | "loaded" | "error" | "disabled".
+// reconnect() re-opens the stream while data keeps the last known value.
+```
+
+Errors preserve the last known `data`; a `null` source disables the subscription and clears state.
+
+### Cache Keying Across Mounts
+
+```ts
+import {
+  useRequestSwr,
+  useSubscriptionSwr,
+  useTrackedDataSwr,
+  clearSwrCache,
+} from "@vue-solana/vue/swr";
+
+const balance = useRequestSwr(`balance:${someAddress}`, rpc.getBalance(someAddress));
+```
+
+Components mounted with the same key seed from the last-known value while their own request revalidates. There is no `useAction` adapter — actions are mutations, not cacheable reads; use the mutation API of your data layer (or `useAction` itself).
+
+Cache behavior details:
+
+- Keys are namespaced per adapter (`request:`, `subscription:`, `tracked:`), so the same key is safe across adapters.
+- A `null`/`undefined` source disables the composable and **clears** the cached entry for that key — including when a component mounts with its source already disabled.
+- `useTrackedDataSwr` caches the full `SolanaRpcResponse` envelope, so remounting components restore both the value and its slot context.
+- The cache is a module-level `Map`. On the server, namespace keys per request or call `clearSwrCache()` between requests to avoid cross-request leakage.
+
+For a runnable demonstration of all five composables (including SWR remount behavior) against devnet, see the Live Data Panels in the [Vue Vite example](/examples/vue-vite).
+
 ## Transaction State
 
 ```ts
@@ -11447,6 +12278,65 @@ The current wallet must be connected and support either `signAndSendTransaction`
 Without `confirm: true`, `execute()` returns after submission and sets `status` to `sent`. With confirmation enabled, status moves through `sending`, `confirming`, and then `processed`, `confirmed`, or `finalized` to match the requested commitment. If confirmation times out or fails, the submitted `signature` remains available so the app can link to an explorer.
 
 `useSignAndSendTransaction()` also clears `loading` if a wallet adapter never returns a result. In that stale case, `error` is set and the chain status may be unknown, so check the connected wallet or an explorer before retrying.
+
+## Batch Transactions
+
+```ts
+import { useSignTransactions } from "@vue-solana/vue/useSignTransactions";
+import { useSignAndSendTransactions } from "@vue-solana/vue/useSignAndSendTransactions";
+
+const { signedTransactions, execute: signMany } = useSignTransactions();
+const { signatures, execute: signAndSendMany } = useSignAndSendTransactions();
+
+// One wallet request for N transactions.
+const signed = await signMany([transactionA, transactionB]);
+
+// One wallet request for N signatures.
+const sent = await signAndSendMany([transactionA, transactionB], { minContextSlot });
+```
+
+Both prefer the wallet's batch capability and fall back to looping the singular request when only that exists. Batch signing is all-or-nothing (a rejection signs nothing), but the sign-and-send fallback can leave earlier transactions submitted if a later one fails — check `signatures` before retrying.
+
+## Selected Wallet Account
+
+For app-wide selected-account state with persistence and filtering, mount the provider once near the root and read it anywhere:
+
+```vue
+<script setup lang="ts">
+import { SelectedWalletAccountProvider } from "@vue-solana/vue/useSelectedWalletAccount";
+</script>
+
+<template>
+  <SelectedWalletAccountProvider :filter-wallet="filter">
+    <RouterView />
+  </SelectedWalletAccountProvider>
+</template>
+```
+
+```ts
+import { useSelectedWalletAccount } from "@vue-solana/vue/useSelectedWalletAccount";
+
+const [selectedAccount, setSelectedAccount, filteredWallets] = useSelectedWalletAccount();
+```
+
+The selection persists as `${walletName}:${accountAddress}` in `localStorage` by default (pass `stateSync` to customize or `null` to disable) and is restored on the next visit when the wallet and account are available. `filterWallet` restricts which wallet accounts are offered. In Nuxt, the module's runtime plugin installs this context automatically.
+
+## Client Capabilities and Planning
+
+```ts
+import { usePayer, useIdentity } from "@vue-solana/vue/usePayer";
+import { usePlanTransaction } from "@vue-solana/vue/usePlanTransaction";
+
+// Reactive signers from the Kit client (requires a signer plugin).
+const payer = usePayer();
+const identity = useIdentity();
+
+// Plan transaction messages from instructions without sending.
+const { transactionMessage, execute } = usePlanTransaction();
+const message = await execute(instructions);
+```
+
+`useClientCapability("payer")` asserts a capability is installed on the client and throws a descriptive error (naming the hook and how to install it) during setup when it is missing. `usePlanTransaction()` / `usePlanTransactions()` require the planning capability, e.g. `rpcTransactionPlanner()` from `@solana/kit-plugin-rpc`.
 
 ## Confirm an Existing Signature
 
@@ -11553,6 +12443,20 @@ import { useWallet } from "@vue-solana/vue/useWallet";
 直接包 subpath：
 
 - `@vue-solana/vue/buffer-polyfill`
+- `@vue-solana/vue/useAction`
+- `@vue-solana/vue/useRequest`
+- `@vue-solana/vue/useSubscription`
+- `@vue-solana/vue/useTrackedData`
+- `@vue-solana/vue/useSignIn`
+- `@vue-solana/vue/useSelectedWalletAccount`
+- `@vue-solana/vue/useSignTransactions`
+- `@vue-solana/vue/useSignAndSendTransactions`
+- `@vue-solana/vue/useClientCapability`
+- `@vue-solana/vue/usePayer`
+- `@vue-solana/vue/useIdentity`
+- `@vue-solana/vue/usePlanTransaction`
+- `@vue-solana/vue/usePlanTransactions`
+- `@vue-solana/vue/swr`
 - `@vue-solana/vue/useSolana`
 - `@vue-solana/vue/useSolanaClient`
 - `@vue-solana/vue/useRpc`
@@ -11589,6 +12493,16 @@ import { useWallet } from "@vue-solana/vue/useWallet";
 - `useSignatureStatus(signature, options?)`：读取、轮询或订阅签名状态更新。
 - `useSignMessage()`：在配置的钱包支持时签署任意认证消息。
 - `useSignAndSendTransaction()`：通过配置的钱包签名并发送交易，可选等待确认。
+- `useAction(handler)`：通用异步 action 状态机，重新派发时中止。
+- `useRequest(source, options?)`：源变更时重新触发的单次请求，支持 stale-while-revalidate。
+- `useSubscription(source, options?)`：来自 RPC 订阅和其他响应式流源的实时数据。
+- `useTrackedData(source, options?)`：由单次请求播种的 RPC 订阅，按 slot 去重。
+- `useSignIn()`：触发钱包的 Sign In With Solana（SIWS）功能。
+- `useSelectedWalletAccount()`：读取应用级选中钱包账户 context，带持久化和过滤。
+- `useSignTransactions()` / `useSignAndSendTransactions()`：在一次钱包请求中签署（或签署并发送）多笔交易。
+- `usePayer()` / `useIdentity()`：Kit client 的响应式 signer（需要 signer 插件）。
+- `usePlanTransaction()` / `usePlanTransactions()`：从 instruction 输入规划交易消息。
+- `useClientCapability(name)`：断言某能力已安装在 client 上，缺失时抛出描述性错误。
 
 ## 相关指南
 
@@ -11597,6 +12511,7 @@ import { useWallet } from "@vue-solana/vue/useWallet";
 - [账户读取](/zh/guides/account-reads)：读取余额、账户信息、program accounts 和签名状态。
 - [交易](/zh/guides/transactions)：签名、发送、确认并展示交易进度。
 - [消息签名](/zh/guides/message-signing)：签署链下认证或所有权 challenge。
+- [E2E 测试](/zh/guides/e2e-testing)：在 Playwright 测试中模拟 RPC、RPC 订阅和钱包。
 - [错误](/zh/guides/errors)：把 composable `error` ref 映射为安全 UI 消息。
 
 ## 读取 RPC 状态
@@ -11924,6 +12839,108 @@ if (connected.value && canSignMessage.value) {
 ```
 
 消息签名用于钱包所有权或认证 challenge。它不是交易签名，也不授权链上状态变更。不暴露消息签名的钱包会让 `canSignMessage` 为 false，`execute()` 会以不支持钱包错误拒绝。
+
+## 数据获取 Composables
+
+`useRequest`、`useSubscription` 和 `useTrackedData` 是构建在 Kit 响应式 store 原语之上的 SWR 风格数据层：
+
+```ts
+import { useSolanaClient } from "@vue-solana/vue/useSolanaClient";
+import { useTrackedData } from "@vue-solana/vue/useTrackedData";
+import { address } from "@vue-solana/vue/kit";
+
+const { rpc, rpcSubscriptions } = useSolanaClient().client;
+const someAddress = address("...");
+
+const { data, status, refresh } = useTrackedData({
+  rpcRequest: rpc.getBalance(someAddress),
+  rpcValueMapper: (lamports) => lamports,
+  rpcSubscriptionRequest: rpcSubscriptions.accountNotifications(someAddress),
+  rpcSubscriptionValueMapper: ({ lamports }) => lamports,
+});
+
+// data.value 是 SolanaRpcResponse 封套：data.value.value 和
+// data.value.context.slot。
+```
+
+- `useRequest` 在 ref/computed 源身份变化时重新触发；传入 `null` 会禁用它（状态 `disabled`）。
+- `useSubscription` 在重连期间保留过期值；`reconnect()` 重新打开流。
+- `useTrackedData` 对请求和订阅做 slot 去重，乱序到达也不会使值回退。
+
+`rpcValueMapper` 和 `rpcSubscriptionValueMapper` 回调接收**解包后**的响应值（余额是 `value.lamports`），而返回的 `data` ref 保留完整的 `SolanaRpcResponse` 封套，因此可以读取 `data.value?.context.slot`。
+
+### 使用 `useRequest` 的单次请求
+
+`useRequest` 是通用的 SWR 请求。它接受请求函数、Kit 请求对象（任何带 `send()` 的对象）、两者的 `ref`/`computed`，或用于禁用的 `null`：
+
+```ts
+import { computed } from "vue";
+import { useRequest } from "@vue-solana/vue/useRequest";
+import { useSolanaClient } from "@vue-solana/vue/useSolanaClient";
+
+const { rpc } = useSolanaClient();
+const someAddress = ref("...");
+
+const { data, error, status, refresh } = useRequest(
+  computed(() => (someAddress.value ? rpc.getBalance(someAddress.value) : null)),
+  {
+    // 可选的按次取消，与内部 signal 组合。
+    getAbortSignal: () => AbortSignal.timeout(5_000),
+  },
+);
+
+// data.value 是原始响应值；status 是
+// "fetching" | "success" | "error" | "disabled"。
+```
+
+重新验证运行期间，先前的 `data` 和 `error` 保持填充，UI 继续渲染。`refresh()` 手动重新触发并解析出本次结果。
+
+### 使用 `useSubscription` 的流订阅
+
+`useSubscription` 消费任何 Kit 响应式流源（基于 `reactiveStore()` 的鸭子类型），在组件卸载时拆除连接，并支持带 stale-while-revalidate 的手动重连：
+
+```ts
+import { useSubscription } from "@vue-solana/vue/useSubscription";
+import { useSolanaClient } from "@vue-solana/vue/useSolanaClient";
+
+const { rpcSubscriptions } = useSolanaClient().client;
+
+const { data, error, status, reconnect } = useSubscription(
+  computed(() => (someAddress.value ? rpcSubscriptions.slotNotifications() : null)),
+  { onError: (cause) => console.error(cause) },
+);
+
+// 状态为 "loading" | "loaded" | "error" | "disabled"。
+// reconnect() 在 data 保留最后已知值的同时重新打开流。
+```
+
+错误会保留最后已知的 `data`；`null` 源禁用订阅并清除状态。
+
+### 跨挂载的缓存键
+
+跨挂载缓存键使用 `@vue-solana/vue/swr` 中的 SWR 适配器：
+
+```ts
+import {
+  useRequestSwr,
+  useSubscriptionSwr,
+  useTrackedDataSwr,
+  clearSwrCache,
+} from "@vue-solana/vue/swr";
+
+const balance = useRequestSwr(`balance:${someAddress}`, rpc.getBalance(someAddress));
+```
+
+以相同键挂载的组件在自身请求重新验证期间，会立即从最后已知值播种。没有 `useAction` 适配器——action 是变更，不是可缓存的读取；请使用你数据层的变更 API（或 `useAction` 本身）。
+
+缓存行为细节：
+
+- 键按适配器命名空间隔离（`request:`、`subscription:`、`tracked:`），因此同一键可安全地跨适配器使用。
+- `null`/`undefined` 源会禁用 composable 并**清除**该键的缓存条目——即使组件以已禁用的源挂载也是如此。
+- `useTrackedDataSwr` 缓存完整的 `SolanaRpcResponse` 封套，因此重挂载的组件同时恢复值和 slot context。
+- 缓存是模块级 `Map`。在服务器端，按请求为键命名空间化，或在请求之间调用 `clearSwrCache()` 以避免跨请求泄漏。
+
+针对 devnet 的全部五个 composable 的可运行演示（包括 SWR 重挂载行为），请参阅 [Vue Vite 示例](/zh/examples/vue-vite)中的 Live Data Panels。
 
 ## 交易状态
 
@@ -12941,6 +13958,8 @@ Supported clusters are `mainnet-beta`, `devnet`, `testnet`, and `localnet`. Use 
 
 Nuxt module options are stored in public runtime config, so they must be JSON-serializable. Custom `wallet` adapter objects are intentionally excluded from Nuxt config; use the Vue plugin directly in client-only Vue code if you need to inject a custom wallet object.
 
+The module's client runtime plugin also installs the app-wide selected wallet account context automatically, so `useSolanaSelectedWalletAccount()` works in every component without mounting a provider. To customize persistence (`stateSync`) or filtering (`filterWallet`), mount `SelectedWalletAccountProvider` from `@vue-solana/vue/useSelectedWalletAccount` deeper in the tree to shadow the default context.
+
 Mobile wallet options are safe to configure in `nuxt.config.ts` when they contain only JSON-serializable app identity and redirect settings:
 
 ```ts
@@ -12986,6 +14005,27 @@ The module auto-imports these composables from direct `@vue-solana/vue/*` subpat
 - `useSolanaSignatureStatus(signature, options?)`: reads, polls, or subscribes to signature status.
 - `useSolanaSignMessage()`: signs off-chain authentication or ownership challenge messages.
 - `useSolanaSignAndSendTransaction()`: signs, sends, and optionally confirms transactions.
+- `useSolanaAction(handler)`: generic async action state machine with abort-on-redispatch.
+- `useSolanaRequest(source, options?)`: one-shot request that re-fires when its source changes, with stale-while-revalidate.
+- `useSolanaSubscription(source, options?)`: live data from RPC subscriptions and other reactive stream sources.
+- `useSolanaTrackedData(source, options?)`: RPC subscription seeded by a one-shot fetch, slot-deduplicated.
+- `useSolanaSignIn()`: triggers a wallet's Sign In With Solana (SIWS) feature.
+
+For cache keying across mounts, the SWR adapters are not auto-imported. Import them explicitly from the Vue package subpath:
+
+```ts
+import { useRequestSwr } from "@vue-solana/vue/swr";
+
+const balance = useRequestSwr(`balance:${someAddress}`, rpc.getBalance(someAddress));
+```
+
+See [Data Fetching Composables](/packages/vue#data-fetching-composables) for the full semantics of the request, subscription, tracked-data, and SWR-cache composables.
+
+- `useSolanaSelectedWalletAccount()`: reads the app-wide selected wallet account context installed by the runtime plugin.
+- `useSolanaSignTransactions()`: signs multiple transactions in one wallet request.
+- `useSolanaSignAndSendTransactions()`: signs and sends multiple transactions in one wallet request.
+- `useSolanaPayer()` / `useSolanaIdentity()`: reactive Kit client signers (requires a signer plugin).
+- `useSolanaPlanTransaction()` / `useSolanaPlanTransactions()`: plan transaction messages from instruction inputs.
 
 These are Nuxt aliases for the Vue composables.
 
@@ -13031,6 +14071,7 @@ Android Mobile Wallet Adapter registration also runs only on the client. On Andr
 - [Account Reads](/guides/account-reads): read balances, account data, program accounts, and signature status.
 - [Transactions](/guides/transactions): sign, send, confirm, and handle transaction status from Nuxt.
 - [Message Signing](/guides/message-signing): request wallet signatures for off-chain messages.
+- [E2E Testing](/guides/e2e-testing): mock RPC, RPC subscriptions, and wallets in Playwright tests.
 - [Errors](/guides/errors): map auto-imported composable errors to safe UI messages.
 
 ## Read RPC State
@@ -13906,6 +14947,7 @@ Source: <a href="https://github.com/vue-solana/vue-solana/tree/main/examples/vue
 - Signing an authentication message with `useSignMessage()` when the connected wallet supports it.
 - Sending a real transfer with `useSignAndSendTransaction()` and showing submitted vs confirmed transaction status. The example uses devnet by default for safe testing.
 - Building cluster-aware Solana Explorer links for submitted signatures.
+- Exercising the Kit-reactive data layer in the Live Data Panels: `useRequest()` for one-shot requests, `useSubscription()` for live slot notifications over websocket, `useTrackedData()` for fetch-seeded account data updated by account notifications, `useSignIn()` for Sign In With Solana, and `useRequestSwr()` from `@vue-solana/vue/swr` for cache-keyed stale-while-revalidate across remounts.
 
 The app uses `devnet` by default. Devnet SOL has no real value.
 
@@ -13935,6 +14977,8 @@ Open the Vite URL printed in the terminal, usually `http://localhost:5173`.
 - Enter a recipient address and amount, then send a real transfer. Keep the example on devnet while testing.
 - Watch the transaction move from submitted signature to confirmation status.
 - Open the explorer link and verify it includes `?cluster=devnet`.
+- In the Live Data Panels, change the tracked address and watch the request, subscription, and tracked-data panels re-fire.
+- Toggle the SWR card off and on and observe the cached value appear immediately (stale) before the revalidated request replaces it.
 
 The transfer example initializes the browser `Buffer` polyfill with `installSolanaBufferPolyfill()` from `@vue-solana/vue/buffer-polyfill`. Restart the Vite dev server if Vite previously cached an externalized Buffer import.
 
@@ -14209,6 +15253,7 @@ Source: <a href="https://github.com/vue-solana/vue-solana/tree/main/examples/nux
 - Sending a real transfer with `useSolanaSignAndSendTransaction()` and showing submitted vs confirmed transaction status. The example uses devnet by default for safe testing.
 - Building cluster-aware Solana Explorer links for submitted signatures.
 - Using `useTransaction()` from `@vue-solana/vue/useTransaction` for generic async transaction state.
+- Exercising the Kit-reactive data layer in the Live Data Panels with auto-imported composables: `useSolanaRequest()` for one-shot requests, `useSolanaSubscription()` for live slot notifications, `useSolanaTrackedData()` for fetch-seeded account data, `useSolanaSignIn()` for Sign In With Solana, and the `@vue-solana/vue/swr` cache adapter across remounts.
 
 The app uses `devnet` by default. Devnet SOL has no real value.
 
@@ -14475,24 +15520,42 @@ Description: Planned features and improvements for Vue Solana.
 
 The packages are stable for production use with RPC reads, wallet discovery and connection, balance lookup, transactions, account reads, message signing, and normalized error handling. This roadmap describes what comes next, ordered by impact rather than tied to a specific release.
 
+## Core Composables
+
+- A generic `useAction` composable that wraps any async function and tracks `status`, `data`, `error`, and `dispatch` with abort support and ref-based fresh closures.
+- A one-shot `useRequest` composable that re-fires reactively when its source changes, with stale-while-revalidate and per-attempt cancellation.
+- A `useSubscription` composable for live RPC subscription streams (account notifications, slot notifications, logs) with reconnect, error recovery, and stale-while-revalidate.
+- A `useTrackedData` composable that pairs an initial RPC fetch with a subscription and slot-dedupes the results for fast first paint plus live updates.
+- A `useClientCapability` composable that asserts at mount time that a capability is installed on a loosely-typed client, with a clear error message otherwise.
+
+## Wallet Features
+
+- Sign In With Solana (`useSignIn`) for wallet-based authentication.
+- A wallet selection context that persists the selected wallet account to storage and supports filtering available wallets.
+- `usePayer` and `useIdentity` composables that reactively track the client's fee payer and acting identity.
+- Batch transaction signing and sending (`useSignTransactions`, `useSignAndSendTransactions`) for multi-transaction wallet requests.
+
+## Transactions
+
+- Transaction planning composables (`usePlanTransaction`) that plan transaction messages from instruction inputs before signing.
+- Transaction simulation helpers.
+- Event subscription abstractions for real-time on-chain data.
+
 ## Ecosystem Integrations
 
+- Cache adapters for Vue data-fetching libraries (Pinia-based Query or SWR equivalents) mirroring the `@solana/react` query adapters.
 - SPL token account helpers and token balance composables built on the Kit client.
 - Desktop native wallet support via protocol links through the unified wallet flows.
 - Additional iOS wallet providers.
-
-## Developer Experience
-
 - Anchor provider and program helpers.
 - A dedicated wallet modal or UI package.
 - Nuxt server RPC utilities for server-side reads.
+- Versioned docs: an archived legacy docs build under `/v1/` with a `v1 | latest` dropdown and old-URL redirects, for users who have not yet migrated to the Kit path.
 
 ## Resilience And Advanced Patterns
 
 - RPC provider failover and rate-limit handling.
 - Advanced program account indexing patterns and caching.
-- Transaction simulation helpers.
-- Event subscription abstractions for real-time on-chain data.
 
 ---
 

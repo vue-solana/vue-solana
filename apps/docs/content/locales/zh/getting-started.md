@@ -391,4 +391,5 @@ function explorerUrl(signature: string, cluster: string) {
 - [交易指南](/zh/guides/transactions)
 - [Kit 迁移](/zh/guides/kit-migration)
 - [故障排查](/zh/troubleshooting)
+- [Solana Kit 文档](https://www.solanakit.com/) — 官方 Kit 指南、recipes 和 API reference
 - [Solana Documentation](https://solana.com/docs)

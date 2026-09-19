@@ -72,9 +72,11 @@ SOL is the native token on Solana. Lamports are the smallest unit of SOL.
 RPC balance methods return lamports. Convert lamports to SOL only for display.
 
 ```ts
-const lamports = await connection.getBalance(publicKey);
-const sol = lamports / 1_000_000_000;
+const { value: lamports } = await client.rpc.getBalance(publicKey).send();
+const sol = Number(lamports) / 1_000_000_000;
 ```
+
+The Kit RPC returns balance numerics as `bigint` — convert to `Number` first if you need float math.
 
 ## Wallets
 

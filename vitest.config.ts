@@ -6,6 +6,9 @@ export default defineConfig({
     alias: {
       "#app": fileURLToPath(new URL("./test/stubs/nuxt-app.ts", import.meta.url)),
       "buffer/": "node:buffer",
+      "@vue-solana/core/action": fileURLToPath(
+        new URL("./packages/core/src/action.ts", import.meta.url),
+      ),
       "@vue-solana/core/address": fileURLToPath(
         new URL("./packages/core/src/address.ts", import.meta.url),
       ),

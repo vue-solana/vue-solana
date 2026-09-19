@@ -62,3 +62,45 @@ export function assertWalletCanSignMessage(
     );
   }
 }
+
+export function assertWalletCanSignIn(
+  wallet: SolanaWallet | null | undefined,
+): asserts wallet is SolanaWallet & Required<Pick<SolanaWallet, "signIn">> {
+  assertWalletConnected(wallet);
+
+  if (!wallet.signIn) {
+    throw new SolanaWalletError(
+      "WALLET_FEATURE_UNSUPPORTED",
+      "Solana wallet does not support signIn (Sign In With Solana)",
+      { feature: "signIn" },
+    );
+  }
+}
+
+export function assertWalletCanSignTransactions(
+  wallet: SolanaWallet | null | undefined,
+): asserts wallet is SolanaWallet & Required<Pick<SolanaWallet, "signTransactions">> {
+  assertWalletConnected(wallet);
+
+  if (!wallet.signTransactions && !wallet.signAllTransactions) {
+    throw new SolanaWalletError(
+      "WALLET_FEATURE_UNSUPPORTED",
+      "Solana wallet does not support signTransactions",
+      { feature: "signTransactions" },
+    );
+  }
+}
+
+export function assertWalletCanSignAndSendTransactions(
+  wallet: SolanaWallet | null | undefined,
+): asserts wallet is SolanaWallet & Required<Pick<SolanaWallet, "signAndSendTransactions">> {
+  assertWalletConnected(wallet);
+
+  if (!wallet.signAndSendTransactions && !wallet.signAndSendTransaction) {
+    throw new SolanaWalletError(
+      "WALLET_FEATURE_UNSUPPORTED",
+      "Solana wallet does not support signAndSendTransactions",
+      { feature: "signAndSendTransactions" },
+    );
+  }
+}

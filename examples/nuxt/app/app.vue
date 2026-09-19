@@ -702,6 +702,8 @@ function createTransferInstruction(fromPubkey: Address, toPubkey: Address, lampo
       </p>
       <p v-if="sendTransactionError" class="error">{{ sendTransactionError }}</p>
     </section>
+
+    <LiveDataPanels />
   </main>
 </template>
 

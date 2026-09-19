@@ -27,6 +27,7 @@ Nuxt 예제는 `@vue-solana/nuxt`를 위한 실행 가능한 Nuxt 앱입니다.
 - `useSolanaSignAndSendTransaction()`으로 실제 전송을 보내고 제출 상태와 확인 상태를 보여 줍니다. 예제는 안전한 테스트를 위해 기본적으로 devnet을 사용합니다.
 - 제출된 signature에 대해 클러스터를 반영한 Solana Explorer 링크를 만듭니다.
 - generic async transaction 상태에는 `@vue-solana/vue/useTransaction`의 `useTransaction()`을 사용합니다.
+- Live Data Panels에서 자동 import된 composable로 Kit 반응형 데이터 레이어를 사용합니다: 일회성 요청에는 `useSolanaRequest()`, 실시간 slot 알림에는 `useSolanaSubscription()`, fetch 기반 계정 데이터에는 `useSolanaTrackedData()`, Sign In With Solana에는 `useSolanaSignIn()`, 그리고 remount 전반에 걸친 `@vue-solana/vue/swr` 캐시 어댑터를 사용합니다.
 
 앱은 기본적으로 `devnet`을 사용합니다. Devnet SOL은 실제 가치가 없습니다.
 

@@ -2,6 +2,17 @@
 
 All notable changes to the knowledge bundle are documented here.
 
+## 2026-09-19
+
+### Updated
+
+- Added the React-parity composable surface to `packages/vue.md`: `useAction`, `useClientCapability`, `usePayer`/`useIdentity`, `usePlanTransaction`/`usePlanTransactions`, `useSignTransactions`, `useSignAndSendTransactions`, and `useSelectedWalletAccount` (with `SelectedWalletAccountProvider`) are now documented.
+- Documented the `@vue-solana/core/action` subpath (`createSolanaActionStore`, `isAbortError`, `isSolanaActionAborted`, action store/state types) in `packages/core.md`.
+- Expanded `packages/nuxt.md` to the full 27 auto-imported composables and noted that the Nuxt runtime plugin installs the selected wallet account context app-wide.
+- Fixed legacy `connection` RPC examples in `guides/getting-started.md` (Vue and Nuxt now use `client.rpc.getLatestBlockhash().send()`).
+- Corrected the balance example in `concepts/solana-for-vue-developers.md` to the Kit RPC and noted bigint numerics.
+- Fixed the archived standalone install plan link in `index.md`.
+
 ## 2026-09-12
 
 ### Updated

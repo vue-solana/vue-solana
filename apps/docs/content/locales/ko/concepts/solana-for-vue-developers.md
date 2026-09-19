@@ -13,6 +13,7 @@ surroundOrder: 5
 - [Solana RPC Methods](https://solana.com/docs/rpc)
 - [Solana Clusters](https://solana.com/docs/references/clusters)
 - [Solana Transactions](https://solana.com/docs/core/transactions)
+- [Solana Cookbook](https://solana.com/developers/cookbook) — 일반적인 Solana 패턴을 위한 실용 레시피
 
 ## Connection과 RPC
 

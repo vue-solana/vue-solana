@@ -12,6 +12,7 @@ This example demonstrates:
 - Managing active wallet state with `useWallet()`.
 - Tracking async transaction state with `useTransaction()`.
 - Sending a real transfer with `useSignAndSendTransaction()`. The example uses devnet by default for safe testing.
+- Streaming live data with the `Live Data Panels` section, exercising `useRequest()` stale-while-revalidate reads, `useSubscription()` RPC subscriptions, slot-deduplicated `useTrackedData()`, `useSignIn()` Sign In With Solana, and the SWR cache adapters from `@vue-solana/vue/swr`.
 
 The app uses `devnet` by default. Devnet SOL has no real value.
 
@@ -45,6 +46,9 @@ pnpm --filter @vue-solana/example-vue-vite dev
 - Select and connect a discovered wallet.
 - Run the generic mock transaction.
 - Enter a recipient address and amount, then send a real transfer. Keep the example on devnet while testing.
+- Change the tracked address in the Live Data Panels section and watch the request, subscription, and tracked data panels re-fire.
+- Connect a wallet that supports Sign In With Solana and click `Sign In` in the Live Data Panels.
+- Toggle the SWR card off and on to see the stale-while-revalidate handoff from cached to fresh data.
 
 ## Devnet SOL
 

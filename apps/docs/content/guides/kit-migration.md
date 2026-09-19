@@ -165,4 +165,5 @@ If you want the classic class API, `@solana/web3.js@rc` (v3) is the upgrade path
 
 - [`RPC and Clusters`](/guides/rpc-and-clusters) — cluster and endpoint configuration
 - [`Getting Started`](/getting-started) — install and first devnet reads
+- [Solana Kit documentation](https://www.solanakit.com/) — official Kit guides, recipes, and API reference
 - [`@vue-solana/core`](/packages/core), [`@vue-solana/vue`](/packages/vue), [`@vue-solana/nuxt`](/packages/nuxt) — package reference

@@ -261,6 +261,10 @@ import type { Address, Commitment, Lamports, Signature, SolanaRpcApi } from "@vu
 
 RPC numeric result는 `bigint`이고, account data는 `Buffer`가 아니라 `Uint8Array`입니다. 자세한 내용은 [Kit Migration](/ko/guides/kit-migration)을 참고하세요.
 
+### Actions
+
+`createSolanaActionStore()`는 호출마다 새 `AbortSignal`을 받는 비동기 함수를 abort-on-redispatch 방식의 상태 머신으로 감쌉니다. Vue composable `useAction()`이 이 store 위에 구축되어 있고, `isSolanaActionAborted()`는 취소되거나 대체된 호출을 감지합니다.
+
 ### 주소
 
 - `parseAddress(value)`: address string, ref-like value 또는 getter를 파싱하고 nullish input에는 `null`을 반환합니다. 유효하지 않은 base58 string에는 `INVALID_ADDRESS`를 throw합니다. `Address` 값은 그대로 받아들입니다.

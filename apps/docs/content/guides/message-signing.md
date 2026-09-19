@@ -40,6 +40,29 @@ async function signIn() {
 
 Wallets that do not expose message signing report `canSignMessage` as false. Calling `execute()` without support rejects with `WALLET_FEATURE_UNSUPPORTED`.
 
+## Sign In With Solana (SIWS)
+
+For authentication, prefer SIWS over free-form message signing when the wallet supports it. SIWS shows the user a structured consent screen (domain, statement, resources, URI) instead of arbitrary bytes, and the wallet returns a typed result:
+
+```ts
+import { useSignIn } from "@vue-solana/vue/useSignIn";
+
+const { signIn } = useSignIn();
+
+const { account, signedMessage, signature } = await signIn({
+  statement: "Sign in to example.com",
+  nonce: nonceFromYourServer,
+});
+```
+
+The result is not an authenticated session — it is a claim to verify. On your server:
+
+1. Decode `signedMessage` and check the domain is your origin, the URI is yours, and the nonce matches the one your server issued for this login attempt (one-time use, short expiry).
+2. Verify the Ed25519 signature over `signedMessage` against `account.publicKey`, e.g. with `tweetnacl`: `nacl.sign.detached.verify(signedMessage, signature, account.publicKey)`.
+3. Only then create the session, keyed to `account.address`.
+
+Wallets without SIWS support reject `signIn()` with `WALLET_FEATURE_UNSUPPORTED`; fall back to `useSignMessage()` with your own challenge text for those wallets.
+
 ## Nuxt Message Signing
 
 Nuxt auto-imports `useSolanaSignMessage()` and `useSolanaWallet()`.

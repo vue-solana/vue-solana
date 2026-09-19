@@ -80,6 +80,9 @@ export function createSolanaWalletRegistry(options: SolanaWalletRegistryOptions)
       signTransaction: adaptedWallet.signTransaction?.bind(adaptedWallet),
       signAllTransactions: adaptedWallet.signAllTransactions?.bind(adaptedWallet),
       signAndSendTransaction: adaptedWallet.signAndSendTransaction?.bind(adaptedWallet),
+      signIn: adaptedWallet.signIn?.bind(adaptedWallet),
+      signTransactions: adaptedWallet.signTransactions?.bind(adaptedWallet),
+      signAndSendTransactions: adaptedWallet.signAndSendTransactions?.bind(adaptedWallet),
     };
 
     adaptedWallets.set(walletInfo.wallet, cachedAdapter);

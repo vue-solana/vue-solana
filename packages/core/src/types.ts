@@ -27,6 +27,36 @@ export interface SolanaSignMessageResult {
   signature: Uint8Array;
 }
 
+export interface SolanaSignInAccount {
+  address: Address;
+  publicKey: Uint8Array;
+  chains: string[];
+  label?: string;
+  icon?: string;
+}
+
+export interface SolanaSignInResult {
+  account: SolanaSignInAccount;
+  signedMessage: Uint8Array;
+  signature: Uint8Array;
+  signatureType?: "ed25519";
+}
+
+export interface SolanaSignInInput {
+  domain?: string;
+  address?: string;
+  statement?: string;
+  uri?: string;
+  version?: string;
+  chainId?: string;
+  nonce?: string;
+  issuedAt?: string;
+  expirationTime?: string;
+  notBefore?: string;
+  requestId?: string;
+  resources?: readonly string[];
+}
+
 export interface SolanaWallet {
   publicKey: Address | null;
   connected: boolean;
@@ -37,12 +67,18 @@ export interface SolanaWallet {
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
   signMessage?: (message: Uint8Array) => Promise<SolanaSignMessageResult>;
+  signIn?: (input?: SolanaSignInInput) => Promise<SolanaSignInResult>;
   signTransaction?: (transaction: SolanaTransaction) => Promise<SolanaTransaction>;
   signAllTransactions?: (transactions: SolanaTransaction[]) => Promise<SolanaTransaction[]>;
+  signTransactions?: (transactions: SolanaTransaction[]) => Promise<SolanaTransaction[]>;
   signAndSendTransaction?: (
     transaction: SolanaTransaction,
     options?: SendTransactionOptions,
   ) => Promise<{ signature: string }>;
+  signAndSendTransactions?: (
+    transactions: SolanaTransaction[],
+    options?: SendTransactionOptions,
+  ) => Promise<string[]>;
 }
 
 export interface SolanaWalletInfo {
@@ -57,6 +93,7 @@ export interface SolanaWalletInfo {
   capabilities?: {
     connect?: boolean;
     disconnect?: boolean;
+    signIn?: boolean;
     signMessage?: boolean;
     signTransaction?: boolean;
     signAllTransactions?: boolean;

@@ -35,6 +35,11 @@
       "import": "./dist/address.mjs",
       "require": "./dist/address.cjs"
     },
+    "./action": {
+      "types": "./dist/action.d.ts",
+      "import": "./dist/action.mjs",
+      "require": "./dist/action.cjs"
+    },
     "./buffer-polyfill": {
       "types": "./dist/buffer-polyfill.d.ts",
       "import": "./dist/buffer-polyfill.mjs",

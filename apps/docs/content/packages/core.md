@@ -57,6 +57,7 @@ import type { SolanaConfig } from "@vue-solana/core/types";
 Direct subpaths:
 
 - `@vue-solana/core/address`
+- `@vue-solana/core/action`
 - `@vue-solana/core/buffer-polyfill`
 - `@vue-solana/core/types`
 - `@vue-solana/core/clusters`
@@ -203,6 +204,7 @@ The root `@vue-solana/core` export re-exports the public helpers below. Use dire
 
 | Import path                        | What it contains                                                                                                            | Use it when                                                                                                       |
 | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `@vue-solana/core/action`          | `createSolanaActionStore()`, `SolanaActionState`, and `isSolanaActionAborted()`.                                            | You need a framework-agnostic async action state machine with abort-on-redispatch for Solana work.                |
 | `@vue-solana/core/address`         | `parseAddress()` and address input types.                                                                                   | You accept a Solana address as a string, ref-like object, or getter and need a validated, normalized `Address`.   |
 | `@vue-solana/core/clusters`        | Default cluster and endpoint helpers.                                                                                       | You need the package's built-in RPC or WebSocket endpoint for `mainnet-beta`, `testnet`, `devnet`, or `localnet`. |
 | `@vue-solana/core/errors`          | `SolanaError`, error factories, and error guards.                                                                           | You need stable error codes for user-facing wallet, RPC, address, transaction, timeout, or storage failures.      |
@@ -260,6 +262,25 @@ import type { Address, Commitment, Lamports, Signature, SolanaRpcApi } from "@vu
 - Types: `Address`, `Commitment`, `Lamports`, `Rpc`, `Signature`, `SolanaRpcApi`, `SolanaClient`.
 
 RPC numeric results are `bigint`, and account data is `Uint8Array` rather than `Buffer`. See [Kit Migration](/guides/kit-migration) for details.
+
+### Actions
+
+`createSolanaActionStore()` wraps any async function that receives a fresh `AbortSignal` per call into a framework-agnostic action state machine. UI frameworks bridge the returned store into reactive state; the Vue composable `useAction()` is built on this store.
+
+```ts
+import { createSolanaActionStore, isSolanaActionAborted } from "@vue-solana/core/action";
+
+const { dispatch, getState, subscribe, reset, withSignal } = createSolanaActionStore(
+  (signal, address: Address) => client.rpc.getBalance(address).send(),
+);
+
+await dispatch(address);
+```
+
+- Each `dispatch` aborts the previous in-flight call with a fresh `AbortSignal`; superseded calls reject with an abort error and never corrupt state.
+- `getState()` / `subscribe(listener)`: snapshot and stream of `SolanaActionState` (`status`, `data`, and `error`).
+- `withSignal(signal, ...args)`: composes a caller-provided cancellation source for a single dispatch (per-attempt timeouts, shared kill switches).
+- `isSolanaActionAborted(error)`: checks whether a rejection came from an aborted or superseded call.
 
 ### Addresses
 

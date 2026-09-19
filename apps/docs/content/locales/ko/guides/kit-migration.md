@@ -165,4 +165,5 @@ Kit REST RPC 메서드는 네이티브 JavaScript 타입을 반환합니다:
 
 - [`RPC와 클러스터`](/ko/guides/rpc-and-clusters) — 클러스터 및 엔드포인트 구성
 - [`시작하기`](/ko/getting-started) — 설치 및 첫 devnet 읽기
+- [Solana Kit 문서](https://www.solanakit.com/) — 공식 Kit 가이드, 레시피, API 레퍼런스
 - [`@vue-solana/core`](/ko/packages/core), [`@vue-solana/vue`](/ko/packages/vue), [`@vue-solana/nuxt`](/ko/packages/nuxt) — 패키지 레퍼런스

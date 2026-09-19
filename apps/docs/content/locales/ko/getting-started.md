@@ -391,4 +391,5 @@ Signature가 반환된 뒤 confirmation이 timeout되면 즉시 다시 제출하
 - [트랜잭션 가이드](/ko/guides/transactions)
 - [Kit Migration](/ko/guides/kit-migration)
 - [문제 해결](/ko/troubleshooting)
+- [Solana Kit 문서](https://www.solanakit.com/) — 공식 Kit 가이드, 레시피, API 레퍼런스
 - [Solana Documentation](https://solana.com/docs)

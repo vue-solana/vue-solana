@@ -165,4 +165,5 @@ Si quieres la API clásica de clases, `@solana/web3.js@rc` (v3) es la vía de ac
 
 - [`RPC y Clusters`](/es/guides/rpc-and-clusters) — configuración de clúster y endpoints
 - [`Primeros Pasos`](/es/getting-started) — instalación y primeras lecturas en devnet
+- [Documentación de Solana Kit](https://www.solanakit.com/) — guías oficiales de Kit, recetas y referencia de API
 - [`@vue-solana/core`](/es/packages/core), [`@vue-solana/vue`](/es/packages/vue), [`@vue-solana/nuxt`](/es/packages/nuxt) — referencia de paquetes

@@ -45,6 +45,8 @@ export default defineNuxtConfig({
 
 Nuxt 模块选项存储在 public runtime config 中，因此必须可 JSON 序列化。自定义 `wallet` adapter 对象有意不包含在 Nuxt 配置中；如果需要注入自定义钱包对象，请在 client-only Vue 代码中直接使用 Vue 插件。
 
+模块的客户端运行时插件还会自动安装应用级选定钱包账户上下文，因此无需挂载 provider，`useSolanaSelectedWalletAccount()` 就能在每个组件中工作。若要自定义持久化（`stateSync`）或过滤（`filterWallet`），请在组件树更深处挂载来自 `@vue-solana/vue/useSelectedWalletAccount` 的 `SelectedWalletAccountProvider` 来覆盖默认上下文。
+
 移动钱包选项只包含可 JSON 序列化的应用身份和重定向设置时，可以安全地配置在 `nuxt.config.ts` 中：
 
 ```ts
@@ -90,6 +92,27 @@ export default defineNuxtConfig({
 - `useSolanaSignatureStatus(signature, options?)`：读取、轮询或订阅签名状态。
 - `useSolanaSignMessage()`：签署链下认证或所有权 challenge 消息。
 - `useSolanaSignAndSendTransaction()`：签名、发送并可选确认交易。
+- `useSolanaAction(handler)`：支持 abort-on-redispatch 的通用异步 action 状态机。
+- `useSolanaRequest(source, options?)`：source 变化时重新触发的一次性 request，带 stale-while-revalidate。
+- `useSolanaSubscription(source, options?)`：来自 RPC 订阅和其他响应式 stream source 的实时数据。
+- `useSolanaTrackedData(source, options?)`：由一次性 fetch 播种、按 slot 去重的 RPC 订阅。
+- `useSolanaSignIn()`：触发钱包的 Sign In With Solana（SIWS）功能。
+
+为了在多次挂载之间进行 cache keying，SWR adapter 不会自动导入。请从 Vue 包 subpath 显式导入：
+
+```ts
+import { useRequestSwr } from "@vue-solana/vue/swr";
+
+const balance = useRequestSwr(`balance:${someAddress}`, rpc.getBalance(someAddress));
+```
+
+request、subscription、tracked-data 和 SWR-cache composable 的完整语义请参阅 [Data Fetching Composables](/packages/vue#data-fetching-composables)。
+
+- `useSolanaSelectedWalletAccount()`：读取运行时插件安装的应用级选定钱包账户上下文。
+- `useSolanaSignTransactions()`：在一次钱包请求中签名多笔交易。
+- `useSolanaSignAndSendTransactions()`：在一次钱包请求中签名并发送多笔交易。
+- `useSolanaPayer()` / `useSolanaIdentity()`：响应式 Kit client signer（需要 signer 插件）。
+- `useSolanaPlanTransaction()` / `useSolanaPlanTransactions()`：根据 instruction input 规划交易消息。
 
 这些是 Vue composable 的 Nuxt alias。
 
@@ -135,6 +158,7 @@ Android Mobile Wallet Adapter 注册也只在客户端运行。在 Android Chrom
 - [账户读取](/zh/guides/account-reads)：读取余额、账户数据、program accounts 和签名状态。
 - [交易](/zh/guides/transactions)：从 Nuxt 签名、发送、确认并处理交易状态。
 - [消息签名](/zh/guides/message-signing)：为链下消息请求钱包签名。
+- [E2E Testing](/zh/guides/e2e-testing)：在 Playwright 测试中 mock RPC、RPC 订阅和钱包。
 - [错误](/zh/guides/errors)：把自动导入 composable 的错误映射为安全 UI 消息。
 
 ## 读取 RPC 状态

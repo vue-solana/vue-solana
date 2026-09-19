@@ -45,6 +45,8 @@ Supported clusters are `mainnet-beta`, `devnet`, `testnet`, and `localnet`. Use 
 
 Nuxt module options are stored in public runtime config, so they must be JSON-serializable. Custom `wallet` adapter objects are intentionally excluded from Nuxt config; use the Vue plugin directly in client-only Vue code if you need to inject a custom wallet object.
 
+The module's client runtime plugin also installs the app-wide selected wallet account context automatically, so `useSolanaSelectedWalletAccount()` works in every component without mounting a provider. To customize persistence (`stateSync`) or filtering (`filterWallet`), mount `SelectedWalletAccountProvider` from `@vue-solana/vue/useSelectedWalletAccount` deeper in the tree to shadow the default context.
+
 Mobile wallet options are safe to configure in `nuxt.config.ts` when they contain only JSON-serializable app identity and redirect settings:
 
 ```ts
@@ -90,6 +92,27 @@ The module auto-imports these composables from direct `@vue-solana/vue/*` subpat
 - `useSolanaSignatureStatus(signature, options?)`: reads, polls, or subscribes to signature status.
 - `useSolanaSignMessage()`: signs off-chain authentication or ownership challenge messages.
 - `useSolanaSignAndSendTransaction()`: signs, sends, and optionally confirms transactions.
+- `useSolanaAction(handler)`: generic async action state machine with abort-on-redispatch.
+- `useSolanaRequest(source, options?)`: one-shot request that re-fires when its source changes, with stale-while-revalidate.
+- `useSolanaSubscription(source, options?)`: live data from RPC subscriptions and other reactive stream sources.
+- `useSolanaTrackedData(source, options?)`: RPC subscription seeded by a one-shot fetch, slot-deduplicated.
+- `useSolanaSignIn()`: triggers a wallet's Sign In With Solana (SIWS) feature.
+
+For cache keying across mounts, the SWR adapters are not auto-imported. Import them explicitly from the Vue package subpath:
+
+```ts
+import { useRequestSwr } from "@vue-solana/vue/swr";
+
+const balance = useRequestSwr(`balance:${someAddress}`, rpc.getBalance(someAddress));
+```
+
+See [Data Fetching Composables](/packages/vue#data-fetching-composables) for the full semantics of the request, subscription, tracked-data, and SWR-cache composables.
+
+- `useSolanaSelectedWalletAccount()`: reads the app-wide selected wallet account context installed by the runtime plugin.
+- `useSolanaSignTransactions()`: signs multiple transactions in one wallet request.
+- `useSolanaSignAndSendTransactions()`: signs and sends multiple transactions in one wallet request.
+- `useSolanaPayer()` / `useSolanaIdentity()`: reactive Kit client signers (requires a signer plugin).
+- `useSolanaPlanTransaction()` / `useSolanaPlanTransactions()`: plan transaction messages from instruction inputs.
 
 These are Nuxt aliases for the Vue composables.
 
@@ -135,6 +158,7 @@ Android Mobile Wallet Adapter registration also runs only on the client. On Andr
 - [Account Reads](/guides/account-reads): read balances, account data, program accounts, and signature status.
 - [Transactions](/guides/transactions): sign, send, confirm, and handle transaction status from Nuxt.
 - [Message Signing](/guides/message-signing): request wallet signatures for off-chain messages.
+- [E2E Testing](/guides/e2e-testing): mock RPC, RPC subscriptions, and wallets in Playwright tests.
 - [Errors](/guides/errors): map auto-imported composable errors to safe UI messages.
 
 ## Read RPC State

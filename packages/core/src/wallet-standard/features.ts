@@ -3,9 +3,11 @@ import type { Wallet, WalletAccount } from "@wallet-standard/base";
 import { StandardConnect, StandardDisconnect, StandardEvents } from "@wallet-standard/features";
 import {
   SolanaSignAndSendTransaction,
+  SolanaSignIn,
   SolanaSignMessage,
   SolanaSignTransaction,
 } from "@solana/wallet-standard-features";
+import type { SolanaSignInInput, SolanaSignInOutput } from "@solana/wallet-standard-features";
 
 export type StandardConnectFeature = {
   [StandardConnect]: {
@@ -65,20 +67,44 @@ export type SolanaSignMessageFeature = {
   };
 };
 
+export type SolanaSignInFeature = {
+  [SolanaSignIn]: {
+    signIn(...inputs: readonly SolanaSignInInput[]): Promise<readonly SolanaSignInOutput[]>;
+  };
+};
+
+/**
+ * Wallet Standard features are `{ version, ...methods }`. Requiring a string
+ * `version` rejects malformed entries that merely occupy the feature key.
+ */
+function hasVersionedFeature(wallet: Wallet, feature: string): boolean {
+  const value = (wallet.features as Record<string, unknown>)[feature];
+
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    typeof (value as { version?: unknown }).version === "string"
+  );
+}
+
 export function hasSignTransaction(
   wallet: Wallet,
 ): wallet is Wallet & { features: SolanaSignTransactionFeature } {
-  return SolanaSignTransaction in wallet.features;
+  return hasVersionedFeature(wallet, SolanaSignTransaction);
+}
+
+export function hasSignIn(wallet: Wallet): wallet is Wallet & { features: SolanaSignInFeature } {
+  return hasVersionedFeature(wallet, SolanaSignIn);
 }
 
 export function hasSignAndSendTransaction(
   wallet: Wallet,
 ): wallet is Wallet & { features: SolanaSignAndSendTransactionFeature } {
-  return SolanaSignAndSendTransaction in wallet.features;
+  return hasVersionedFeature(wallet, SolanaSignAndSendTransaction);
 }
 
 export function hasSignMessage(
   wallet: Wallet,
 ): wallet is Wallet & { features: SolanaSignMessageFeature } {
-  return SolanaSignMessage in wallet.features;
+  return hasVersionedFeature(wallet, SolanaSignMessage);
 }

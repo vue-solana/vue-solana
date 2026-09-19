@@ -2,17 +2,27 @@ import type { Wallet, WalletAccount } from "@wallet-standard/base";
 import { StandardConnect, StandardDisconnect, StandardEvents } from "@wallet-standard/features";
 import {
   SolanaSignAndSendTransaction,
+  SolanaSignIn,
   SolanaSignMessage,
   SolanaSignTransaction,
 } from "@solana/wallet-standard-features";
+import type { SolanaSignInInput, SolanaSignInOutput } from "@solana/wallet-standard-features";
 import bs58 from "bs58";
 import type { Address } from "../kit";
-import type { SolanaChain, SolanaWallet, SolanaWalletInfo } from "../types";
+import type {
+  SolanaChain,
+  SolanaSignInResult,
+  SolanaTransaction,
+  SolanaWallet,
+  SolanaWalletInfo,
+} from "../types";
 import { SOLANA_CHAINS } from "./chains";
 import {
   hasSignAndSendTransaction,
+  hasSignIn,
   hasSignMessage,
   hasSignTransaction,
+  type SolanaSignTransactionFeature,
   type StandardConnectFeature,
   type StandardDisconnectFeature,
   type StandardEventsFeature,
@@ -113,6 +123,17 @@ export function adaptSolanaStandardWallet(
         options.onChange?.();
       }
     },
+    signIn: hasSignIn(wallet)
+      ? async (input?: SolanaSignInInput): Promise<SolanaSignInResult> => {
+          const [result] = await wallet.features[SolanaSignIn].signIn(...(input ? [input] : []));
+
+          if (!result) {
+            throw new Error("Solana wallet did not return a sign-in result");
+          }
+
+          return toSolanaSignInResult(result);
+        }
+      : undefined,
     signMessage: hasSignMessage(wallet)
       ? async (message) => {
           const activeAccount = getActiveAccount(account);
@@ -170,6 +191,15 @@ export function adaptSolanaStandardWallet(
           });
         }
       : undefined,
+    signTransactions: hasSignTransaction(wallet)
+      ? async (transactions) =>
+          signAllThroughFeature(
+            wallet as Wallet & { features: SolanaSignTransactionFeature },
+            () => getActiveAccount(account),
+            transactions,
+            options.chain,
+          )
+      : undefined,
     signAndSendTransaction: hasSignAndSendTransaction(wallet)
       ? async (transaction, sendOptions) => {
           const activeAccount = getActiveAccount(account);
@@ -189,6 +219,80 @@ export function adaptSolanaStandardWallet(
           return { signature: bs58.encode(result.signature) };
         }
       : undefined,
+    signAndSendTransactions: hasSignAndSendTransaction(wallet)
+      ? async (transactions, sendOptions) => {
+          const activeAccount = getActiveAccount(account);
+          const results = await wallet.features[
+            SolanaSignAndSendTransaction
+          ].signAndSendTransaction(
+            ...transactions.map((transaction) => ({
+              account: activeAccount,
+              transaction,
+              chain: options.chain ?? getSolanaAccountChain(activeAccount),
+              options: sendOptions,
+            })),
+          );
+
+          if (results.length !== transactions.length) {
+            throw new Error(
+              `Solana wallet returned ${results.length} signatures for ${transactions.length} requested transactions`,
+            );
+          }
+
+          return results.map((result) => {
+            if (!result) {
+              throw new Error("Solana wallet did not return a transaction signature");
+            }
+
+            return bs58.encode(result.signature);
+          });
+        }
+      : undefined,
+  };
+}
+
+async function signAllThroughFeature(
+  wallet: Wallet & { features: SolanaSignTransactionFeature },
+  getAccount: () => WalletAccount,
+  transactions: readonly SolanaTransaction[],
+  chain: SolanaChain | undefined,
+): Promise<SolanaTransaction[]> {
+  const activeAccount = getAccount();
+  const results = await wallet.features[SolanaSignTransaction].signTransaction(
+    ...transactions.map((transaction) => ({
+      account: activeAccount,
+      transaction,
+      chain,
+    })),
+  );
+
+  if (results.length !== transactions.length) {
+    throw new Error(
+      `Solana wallet returned ${results.length} signed transactions for ${transactions.length} requested transactions`,
+    );
+  }
+
+  return results.map((result) => {
+    if (!result) {
+      throw new Error("Solana wallet did not return a signed transaction");
+    }
+
+    return result.signedTransaction;
+  });
+}
+
+function toSolanaSignInResult(result: SolanaSignInOutput): SolanaSignInResult {
+  return {
+    account: {
+      address: result.account.address as Address,
+      publicKey: Uint8Array.from(result.account.publicKey),
+      chains: [...result.account.chains],
+      label: result.account.label,
+      icon: result.account.icon,
+    },
+    signedMessage: result.signedMessage,
+    signature: result.signature,
+    signatureType: result.signatureType,
   };
 }
 

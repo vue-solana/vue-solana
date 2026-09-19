@@ -45,6 +45,8 @@ export default defineNuxtConfig({
 
 Nuxt module option은 public runtime config에 저장되므로 JSON 직렬화가 가능해야 합니다. Custom `wallet` adapter object는 의도적으로 Nuxt config에서 제외됩니다. Custom wallet object를 inject해야 한다면 client-only Vue 코드에서 Vue plugin을 직접 사용하세요.
 
+이 모듈의 client runtime plugin은 app-wide selected wallet account context도 자동으로 설치하므로 provider를 mount하지 않아도 모든 컴포넌트에서 `useSolanaSelectedWalletAccount()`가 작동합니다. persistence(`stateSync`)나 filtering(`filterWallet`)을 customize하려면 tree에서 더 깊은 곳에 `@vue-solana/vue/useSelectedWalletAccount`의 `SelectedWalletAccountProvider`를 mount하여 기본 context를 덮어쓰세요.
+
 Mobile wallet option은 JSON 직렬화 가능한 app identity와 redirect 설정만 포함한다면 `nuxt.config.ts`에 안전하게 설정할 수 있습니다.
 
 ```ts
@@ -90,6 +92,27 @@ export default defineNuxtConfig({
 - `useSolanaSignatureStatus(signature, options?)`: signature status를 읽거나 polling하거나 subscribe합니다.
 - `useSolanaSignMessage()`: 오프체인 인증 또는 소유권 challenge message에 서명합니다.
 - `useSolanaSignAndSendTransaction()`: transaction에 서명하고 전송하며 선택적으로 confirm합니다.
+- `useSolanaAction(handler)`: abort-on-redispatch를 지원하는 generic async action state machine입니다.
+- `useSolanaRequest(source, options?)`: source가 바뀌면 다시 실행되는 one-shot request이며 stale-while-revalidate를 지원합니다.
+- `useSolanaSubscription(source, options?)`: RPC subscription 및 기타 reactive stream source의 live data입니다.
+- `useSolanaTrackedData(source, options?)`: one-shot fetch로 seed되고 slot으로 deduplicate되는 RPC subscription입니다.
+- `useSolanaSignIn()`: wallet의 Sign In With Solana(SIWS) 기능을 트리거합니다.
+
+mount 간 cache keying을 위해 SWR adapter는 auto-import되지 않습니다. Vue package subpath에서 명시적으로 import하세요.
+
+```ts
+import { useRequestSwr } from "@vue-solana/vue/swr";
+
+const balance = useRequestSwr(`balance:${someAddress}`, rpc.getBalance(someAddress));
+```
+
+request, subscription, tracked-data, SWR-cache composable의 전체 semantics는 [Data Fetching Composables](/packages/vue#data-fetching-composables)를 참고하세요.
+
+- `useSolanaSelectedWalletAccount()`: runtime plugin이 설치한 app-wide selected wallet account context를 읽습니다.
+- `useSolanaSignTransactions()`: 여러 transaction을 한 번의 wallet request로 서명합니다.
+- `useSolanaSignAndSendTransactions()`: 여러 transaction을 한 번의 wallet request로 서명하고 전송합니다.
+- `useSolanaPayer()` / `useSolanaIdentity()`: reactive Kit client signer입니다(signer plugin 필요).
+- `useSolanaPlanTransaction()` / `useSolanaPlanTransactions()`: instruction input에서 transaction message를 plan합니다.
 
 이들은 Vue composable의 Nuxt alias입니다.
 
@@ -135,6 +158,7 @@ Android Mobile Wallet Adapter 등록도 client에서만 실행됩니다. Android
 - [계정 읽기](/ko/guides/account-reads): balance, account data, program accounts, signature status를 읽습니다.
 - [트랜잭션](/ko/guides/transactions): Nuxt에서 transaction을 sign, send, confirm하고 status를 처리합니다.
 - [메시지 서명](/ko/guides/message-signing): 오프체인 메시지에 대한 wallet signature를 요청합니다.
+- [E2E 테스트](/ko/guides/e2e-testing): Playwright test에서 RPC, RPC subscription, wallet을 mock합니다.
 - [오류](/ko/guides/errors): auto-imported composable error를 안전한 UI 메시지로 매핑합니다.
 
 ## RPC 상태 읽기
