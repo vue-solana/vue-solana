@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   SolanaSignAndSendTransaction,
+  SolanaSignIn,
   SolanaSignMessage,
   SolanaSignTransaction,
 } from "@solana/wallet-standard-features";
@@ -56,12 +57,17 @@ describe("Wallet Standard discovery", () => {
       supportedTransactionVersions: ["legacy"],
       signAndSendTransaction: async () => [],
     };
+    (wallet.features as Record<string, unknown>)[SolanaSignIn] = {
+      version: "1.0.0",
+      signIn: async () => [],
+    };
     walletRegistry.wallets = [wallet];
     vi.stubGlobal("window", {});
 
     expect(getRegisteredSolanaWallets()[0]?.capabilities).toEqual({
       connect: true,
       disconnect: true,
+      signIn: true,
       signMessage: true,
       signTransaction: true,
       signAllTransactions: true,
@@ -76,6 +82,7 @@ describe("Wallet Standard discovery", () => {
     expect(getRegisteredSolanaWallets()[0]?.capabilities).toEqual({
       connect: true,
       disconnect: true,
+      signIn: false,
       signMessage: false,
       signTransaction: false,
       signAllTransactions: false,

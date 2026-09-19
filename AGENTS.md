@@ -45,9 +45,24 @@ Implemented files:
 - `src/composables/useConnection.ts`: deprecated alias returning the Kit client.
 - `src/composables/useWallet.ts`: expose wallet state, connect, disconnect, and `setWallet()`.
 - `src/composables/useBalance.ts`: read lamport balance for a public key/address.
-- `src/composables/useTransaction.ts`: generic async transaction state helper.
+- `src/composables/useTransaction.ts`: generic async transaction state helper (built on `createSolanaActionStore`).
 - `src/composables/useSignAndSendTransaction.ts`: sign/send via current wallet.
+- `src/composables/useAction.ts`: generic async action state machine over `@vue-solana/core/action`.
+- `src/composables/useRequest.ts`: one-shot request with stale-while-revalidate and source watching.
+- `src/composables/useSubscription.ts`: live data over Kit reactive stream stores.
+- `src/composables/useTrackedData.ts`: slot-deduplicated fetch + subscription over Kit's slot-tracking store.
+- `src/composables/useSignIn.ts`: wallet Sign In With Solana (SIWS) trigger.
+- `src/composables/useSelectedWalletAccount.ts`: app-wide selected wallet account context (persistence via `src/plugin/selected-wallet-account-storage.ts`, component in `src/components/SelectedWalletAccountProvider.ts`).
+- `src/composables/useSignTransactions.ts` / `useSignAndSendTransactions.ts`: batch wallet requests with singular fallbacks.
+- `src/composables/useClientCapability.ts`: fail-fast client capability assertions.
+- `src/composables/usePayer.ts`: `usePayer()` / `useIdentity()` reactive Kit client signers.
+- `src/composables/usePlanTransaction.ts`: `usePlanTransaction()` / `usePlanTransactions()` over the client planning capability.
+- `src/swr.ts`: SWR cache-keyed adapters over `useRequest` / `useSubscription` / `useTrackedData`.
 - `src/index.ts`: package exports.
+
+Kit 8 reactive-store note: the stores from `@solana/subscribable` call Node's `setMaxListeners` on `AbortSignal`, so tests exercising them (or composables built on them) must run under the `node` vitest environment — tag those files with `// @vitest-environment node`.
+
+### `packages/nuxt`
 
 ### `packages/nuxt`
 
@@ -65,6 +80,13 @@ Auto-imported Nuxt composables:
 - `useSolanaBalance()`
 - `useSolanaWallet()`
 - `useSolanaSignAndSendTransaction()`
+- `useSolanaAction()`, `useSolanaRequest()`, `useSolanaSubscription()`, `useSolanaTrackedData()`
+- `useSolanaSignIn()`, `useSolanaSelectedWalletAccount()`
+- `useSolanaSignTransactions()`, `useSolanaSignAndSendTransactions()`
+- `useSolanaPayer()`, `useSolanaIdentity()`
+- `useSolanaPlanTransaction()`, `useSolanaPlanTransactions()`
+
+The runtime plugin also installs the selected wallet account context app-wide (`createSelectedWalletAccountContext` + `selectedWalletAccountInjectionKey`).
 
 ## Solana Dependency Decision
 
@@ -143,6 +165,16 @@ Recommended next step:
 ### Example Apps
 
 The `examples/vue-vite` and `examples/nuxt` directories contain runnable example apps wired to the workspace packages. They demonstrate plugin/module setup, RPC state, direct connection calls, balance reads, wallet state, and mock transaction flows.
+
+Both apps also mount Live Data Panels exercising the Kit-reactive composables (`useRequest`, `useSubscription`, `useTrackedData`, `useSignIn`, and the `swr` cache adapters) against devnet.
+
+The Playwright e2e suite in `e2e/` covers the example apps. `e2e/helpers.ts` mocks the HTTP RPC (getLatestBlockhash, getBalance, getVersion, getAccountInfo), fakes the Kit RPC-subscriptions websocket protocol (subscribe, id-correlated result, then `<method>Notification` frames keyed on `params.subscription`), and registers two mock Wallet Standard wallets including one with `solana:signIn`. Run with `pnpm test:e2e` (mocks) or `pnpm test:e2e:integration` (real devnet, `E2E_REAL_RPC=true`). Specs that assert against mock data skip in the integration run.
+
+### Locale Docs Structure
+
+The locale docs in `apps/docs/content/locales/{es,ko,zh}/` mirror the English docs tree. `packages/core/src/locale-docs.test.ts` (runs with `pnpm test`, so it gates CI) fails when a locale file is missing, has no English counterpart anymore, or its heading structure (levels and order, ignoring text) drifts from the English source.
+
+When you add, remove, or restructure sections in an English doc, translate the same change into all three locale files in the same change set. Spanish files follow their existing no-accent style; Korean freely mixes English technical terms; do not translate code, identifiers, or API names. If a structural difference is genuinely intentional, add the file to `STRUCTURE_EXEMPT_FILES` in the test with a comment explaining why.
 
 ### Workspace App Dependency Policy
 

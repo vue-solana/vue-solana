@@ -111,6 +111,7 @@ Docs app pages:
 - [Live demo](https://vue-solana-docs.vercel.app/demo)
 - [Vue Vite example docs](./apps/docs/content/examples/vue-vite.md)
 - [Nuxt example docs](./apps/docs/content/examples/nuxt.md)
+- [E2E Testing](./apps/docs/content/guides/e2e-testing.md)
 - [Troubleshooting](./apps/docs/content/troubleshooting.md)
 
 Root `knowledge-bundle/` is kept as OKF-formatted reference material for AI agents:
@@ -169,8 +170,11 @@ pnpm test
 pnpm typecheck
 pnpm build:packages
 pnpm smoke:standalone-installs
+pnpm test:e2e
 pnpm dev:docs
 ```
+
+`pnpm test:e2e` builds both example apps and runs the Playwright suite against deterministic RPC, RPC-subscription (websocket), and mock-wallet fixtures. Use `pnpm test:e2e:integration` to run the suite against real devnet instead. See the [E2E Testing guide](./apps/docs/content/guides/e2e-testing.md) for the mock surface.
 
 `pnpm install` runs the root `prepare` script and installs the Husky Git hooks. If hooks are missing after changing package managers or reinstalling dependencies, run `pnpm prepare` from the repository root.
 

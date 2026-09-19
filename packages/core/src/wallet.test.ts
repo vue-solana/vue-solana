@@ -3,7 +3,10 @@ import type { Address } from "./kit";
 import type { SolanaWallet } from "./types";
 import {
   assertWalletCanSign,
+  assertWalletCanSignAndSendTransactions,
+  assertWalletCanSignIn,
   assertWalletCanSignMessage,
+  assertWalletCanSignTransactions,
   assertWalletConnected,
   createNoWalletSelectedError,
   isWalletConnected,
@@ -103,6 +106,109 @@ describe("wallet helpers", () => {
     } as SolanaWallet;
 
     expect(() => assertWalletCanSignMessage(wallet)).not.toThrow();
+  });
+
+  it("throws when a connected wallet cannot sign in", () => {
+    const wallet = { connected: true, publicKey } as SolanaWallet;
+
+    expect(() => assertWalletCanSignIn(wallet)).toThrow(
+      "Solana wallet does not support signIn (Sign In With Solana)",
+    );
+
+    try {
+      assertWalletCanSignIn(wallet);
+    } catch (error) {
+      expect(error).toBeInstanceOf(SolanaWalletError);
+      expect((error as SolanaWalletError).code).toBe("WALLET_FEATURE_UNSUPPORTED");
+      expect((error as SolanaWalletError).feature).toBe("signIn");
+    }
+  });
+
+  it("accepts a connected wallet that can sign in", () => {
+    const wallet = {
+      connected: true,
+      publicKey,
+      signIn: async () => ({
+        account: { address: publicKey, publicKey: new Uint8Array(), chains: ["solana:devnet"] },
+        signedMessage: new Uint8Array(),
+        signature: new Uint8Array(),
+        signatureType: "ed25519",
+      }),
+    } as SolanaWallet;
+
+    expect(() => assertWalletCanSignIn(wallet)).not.toThrow();
+  });
+
+  it("throws when a connected wallet cannot sign batches of transactions", () => {
+    const wallet = { connected: true, publicKey } as SolanaWallet;
+
+    expect(() => assertWalletCanSignTransactions(wallet)).toThrow(
+      "Solana wallet does not support signTransactions",
+    );
+
+    try {
+      assertWalletCanSignTransactions(wallet);
+    } catch (error) {
+      expect(error).toBeInstanceOf(SolanaWalletError);
+      expect((error as SolanaWalletError).code).toBe("WALLET_FEATURE_UNSUPPORTED");
+      expect((error as SolanaWalletError).feature).toBe("signTransactions");
+    }
+  });
+
+  it("accepts a connected wallet that exposes a batch signTransactions method", () => {
+    const wallet = {
+      connected: true,
+      publicKey,
+      signTransactions: async (transactions) => transactions,
+    } as SolanaWallet;
+
+    expect(() => assertWalletCanSignTransactions(wallet)).not.toThrow();
+  });
+
+  it("accepts a connected wallet that only exposes signAllTransactions", () => {
+    const wallet = {
+      connected: true,
+      publicKey,
+      signAllTransactions: async (transactions) => transactions,
+    } as SolanaWallet;
+
+    expect(() => assertWalletCanSignTransactions(wallet)).not.toThrow();
+  });
+
+  it("throws when a connected wallet cannot sign and send batches of transactions", () => {
+    const wallet = { connected: true, publicKey } as SolanaWallet;
+
+    expect(() => assertWalletCanSignAndSendTransactions(wallet)).toThrow(
+      "Solana wallet does not support signAndSendTransactions",
+    );
+
+    try {
+      assertWalletCanSignAndSendTransactions(wallet);
+    } catch (error) {
+      expect(error).toBeInstanceOf(SolanaWalletError);
+      expect((error as SolanaWalletError).code).toBe("WALLET_FEATURE_UNSUPPORTED");
+      expect((error as SolanaWalletError).feature).toBe("signAndSendTransactions");
+    }
+  });
+
+  it("accepts a connected wallet that exposes a batch signAndSendTransactions method", () => {
+    const wallet = {
+      connected: true,
+      publicKey,
+      signAndSendTransactions: async () => [],
+    } as SolanaWallet;
+
+    expect(() => assertWalletCanSignAndSendTransactions(wallet)).not.toThrow();
+  });
+
+  it("accepts a connected wallet that only exposes signAndSendTransaction", () => {
+    const wallet = {
+      connected: true,
+      publicKey,
+      signAndSendTransaction: async () => ({ signature: "" }),
+    } as SolanaWallet;
+
+    expect(() => assertWalletCanSignAndSendTransactions(wallet)).not.toThrow();
   });
 
   it("creates no-wallet-selected errors with a stable code", () => {

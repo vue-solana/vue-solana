@@ -17,6 +17,7 @@ timestamp: 2025-07-17T00:00:00Z
 The root export remains supported. Direct subpath exports are also available when you want narrower imports:
 
 - `@vue-solana/core/address`
+- `@vue-solana/core/action`
 - `@vue-solana/core/buffer-polyfill`
 - `@vue-solana/core/types`
 - `@vue-solana/core/clusters`
@@ -168,6 +169,24 @@ Current metadata values:
 - `protocol-link` is reserved for possible desktop native wallet adapters.
 
 For wallet behavior and platform support, see [Wallet Support](../guides/wallets.md).
+
+## Action State (`@vue-solana/core/action`)
+
+A framework-agnostic action state machine for Solana async work, wrapped around Kit's `createReactiveActionStore`. Vue bridges it into `useAction()`; non-Vue consumers can use the store directly.
+
+```ts
+import { createSolanaActionStore, isSolanaActionAborted } from "@vue-solana/core/action";
+
+const store = createSolanaActionStore(async (signal, address) => {
+  const { value } = await client.rpc.getBalance(address).send({ abortSignal: signal });
+  return value;
+});
+```
+
+- Each `dispatch` aborts the previous in-flight call with a fresh `AbortSignal`. Superseded calls reject with an abort error and never corrupt state; real failures surface on state.
+- `withSignal` composes a caller-provided cancellation source per dispatch (per-attempt timeouts, shared kill switches).
+- `isAbortError(error)` / `isSolanaActionAborted(error)`: detect aborted dispatches so callers can ignore supersession.
+- Types: `SolanaActionStore<TArgs, TResult>`, `SolanaActionState<TResult>`.
 
 ## Helpers
 

@@ -66,6 +66,20 @@ import { useWallet } from "@vue-solana/vue/useWallet";
 直接包 subpath：
 
 - `@vue-solana/vue/buffer-polyfill`
+- `@vue-solana/vue/useAction`
+- `@vue-solana/vue/useRequest`
+- `@vue-solana/vue/useSubscription`
+- `@vue-solana/vue/useTrackedData`
+- `@vue-solana/vue/useSignIn`
+- `@vue-solana/vue/useSelectedWalletAccount`
+- `@vue-solana/vue/useSignTransactions`
+- `@vue-solana/vue/useSignAndSendTransactions`
+- `@vue-solana/vue/useClientCapability`
+- `@vue-solana/vue/usePayer`
+- `@vue-solana/vue/useIdentity`
+- `@vue-solana/vue/usePlanTransaction`
+- `@vue-solana/vue/usePlanTransactions`
+- `@vue-solana/vue/swr`
 - `@vue-solana/vue/useSolana`
 - `@vue-solana/vue/useSolanaClient`
 - `@vue-solana/vue/useRpc`
@@ -102,6 +116,16 @@ import { useWallet } from "@vue-solana/vue/useWallet";
 - `useSignatureStatus(signature, options?)`：读取、轮询或订阅签名状态更新。
 - `useSignMessage()`：在配置的钱包支持时签署任意认证消息。
 - `useSignAndSendTransaction()`：通过配置的钱包签名并发送交易，可选等待确认。
+- `useAction(handler)`：通用异步 action 状态机，重新派发时中止。
+- `useRequest(source, options?)`：源变更时重新触发的单次请求，支持 stale-while-revalidate。
+- `useSubscription(source, options?)`：来自 RPC 订阅和其他响应式流源的实时数据。
+- `useTrackedData(source, options?)`：由单次请求播种的 RPC 订阅，按 slot 去重。
+- `useSignIn()`：触发钱包的 Sign In With Solana（SIWS）功能。
+- `useSelectedWalletAccount()`：读取应用级选中钱包账户 context，带持久化和过滤。
+- `useSignTransactions()` / `useSignAndSendTransactions()`：在一次钱包请求中签署（或签署并发送）多笔交易。
+- `usePayer()` / `useIdentity()`：Kit client 的响应式 signer（需要 signer 插件）。
+- `usePlanTransaction()` / `usePlanTransactions()`：从 instruction 输入规划交易消息。
+- `useClientCapability(name)`：断言某能力已安装在 client 上，缺失时抛出描述性错误。
 
 ## 相关指南
 
@@ -110,6 +134,7 @@ import { useWallet } from "@vue-solana/vue/useWallet";
 - [账户读取](/zh/guides/account-reads)：读取余额、账户信息、program accounts 和签名状态。
 - [交易](/zh/guides/transactions)：签名、发送、确认并展示交易进度。
 - [消息签名](/zh/guides/message-signing)：签署链下认证或所有权 challenge。
+- [E2E 测试](/zh/guides/e2e-testing)：在 Playwright 测试中模拟 RPC、RPC 订阅和钱包。
 - [错误](/zh/guides/errors)：把 composable `error` ref 映射为安全 UI 消息。
 
 ## 读取 RPC 状态
@@ -438,6 +463,139 @@ if (connected.value && canSignMessage.value) {
 
 消息签名用于钱包所有权或认证 challenge。它不是交易签名，也不授权链上状态变更。不暴露消息签名的钱包会让 `canSignMessage` 为 false，`execute()` 会以不支持钱包错误拒绝。
 
+## Sign In With Solana
+
+```ts
+import { useSignIn } from "@vue-solana/vue/useSignIn";
+
+const { signInResult, status, loading, error, signIn } = useSignIn();
+
+async function handleSignIn() {
+  const { account, signedMessage, signature } = await signIn({
+    statement: "Sign in to My App",
+    // 在服务端生成 nonce，并在服务端验证。
+    nonce: await fetchNonceFromBackend(),
+  });
+
+  // 将 { account.address, signature, signedMessage } 发送到后端，
+  // 在创建会话前完成验证。
+}
+```
+
+钱包必须支持 SIWS 功能（否则 `canSignIn` 为 false，且 `signIn()` 会以 `WALLET_FEATURE_UNSUPPORTED` 错误拒绝）。没有已选账户的钱包会先连接。
+
+### 在服务端验证签名
+
+钱包返回的是对 `signedMessage`（用户同意的 SIWS 消息）的签名。若不经验证就信任该结果，恶意客户端便可伪造身份，因此在签发会话前必须在服务端验证：
+
+1. **检查消息**：解码 `signedMessage`，确认域名与你的 origin 一致、`uri` 属于你、`nonce` 与服务端为本次会话签发的一致，且 statement/resources 与预期相符。
+2. **验证签名**：该签名是 SIWS 消息字节的 Ed25519 签名。使用 `tweetnacl`（`nacl.sign.detached.verify(signedMessage, signature, account.publicKey)`）或任何 Ed25519 库，对照登录结果中账户的 `publicKey` 进行验证。
+3. **绑定会话**：只有在消息检查与签名验证都通过后才应创建会话——以 `account.address` 为键。
+
+服务端必须从其签发的 nonce 重新推导预期消息（或验证收到消息的每个字段），以拒绝过期或重放的 nonce。
+
+## 数据获取 Composables
+
+`useRequest`、`useSubscription` 和 `useTrackedData` 是构建在 Kit 响应式 store 原语之上的 SWR 风格数据层：
+
+```ts
+import { useSolanaClient } from "@vue-solana/vue/useSolanaClient";
+import { useTrackedData } from "@vue-solana/vue/useTrackedData";
+import { address } from "@vue-solana/vue/kit";
+
+const { rpc, rpcSubscriptions } = useSolanaClient().client;
+const someAddress = address("...");
+
+const { data, status, refresh } = useTrackedData({
+  rpcRequest: rpc.getBalance(someAddress),
+  rpcValueMapper: (lamports) => lamports,
+  rpcSubscriptionRequest: rpcSubscriptions.accountNotifications(someAddress),
+  rpcSubscriptionValueMapper: ({ lamports }) => lamports,
+});
+
+// data.value 是 SolanaRpcResponse 封套：data.value.value 和
+// data.value.context.slot。
+```
+
+- `useRequest` 在 ref/computed 源身份变化时重新触发；传入 `null` 会禁用它（状态 `disabled`）。
+- `useSubscription` 在重连期间保留过期值；`reconnect()` 重新打开流。
+- `useTrackedData` 对请求和订阅做 slot 去重，乱序到达也不会使值回退。
+
+`rpcValueMapper` 和 `rpcSubscriptionValueMapper` 回调接收**解包后**的响应值（余额是 `value.lamports`），而返回的 `data` ref 保留完整的 `SolanaRpcResponse` 封套，因此可以读取 `data.value?.context.slot`。
+
+### 使用 `useRequest` 的单次请求
+
+`useRequest` 是通用的 SWR 请求。它接受请求函数、Kit 请求对象（任何带 `send()` 的对象）、两者的 `ref`/`computed`，或用于禁用的 `null`：
+
+```ts
+import { computed } from "vue";
+import { useRequest } from "@vue-solana/vue/useRequest";
+import { useSolanaClient } from "@vue-solana/vue/useSolanaClient";
+
+const { rpc } = useSolanaClient();
+const someAddress = ref("...");
+
+const { data, error, status, refresh } = useRequest(
+  computed(() => (someAddress.value ? rpc.getBalance(someAddress.value) : null)),
+  {
+    // 可选的按次取消，与内部 signal 组合。
+    getAbortSignal: () => AbortSignal.timeout(5_000),
+  },
+);
+
+// data.value 是原始响应值；status 是
+// "fetching" | "success" | "error" | "disabled"。
+```
+
+重新验证运行期间，先前的 `data` 和 `error` 保持填充，UI 继续渲染。`refresh()` 手动重新触发并解析出本次结果。
+
+### 使用 `useSubscription` 的流订阅
+
+`useSubscription` 消费任何 Kit 响应式流源（基于 `reactiveStore()` 的鸭子类型），在组件卸载时拆除连接，并支持带 stale-while-revalidate 的手动重连：
+
+```ts
+import { useSubscription } from "@vue-solana/vue/useSubscription";
+import { useSolanaClient } from "@vue-solana/vue/useSolanaClient";
+
+const { rpcSubscriptions } = useSolanaClient().client;
+
+const { data, error, status, reconnect } = useSubscription(
+  computed(() => (someAddress.value ? rpcSubscriptions.slotNotifications() : null)),
+  { onError: (cause) => console.error(cause) },
+);
+
+// 状态为 "loading" | "loaded" | "error" | "disabled"。
+// reconnect() 在 data 保留最后已知值的同时重新打开流。
+```
+
+错误会保留最后已知的 `data`；`null` 源禁用订阅并清除状态。
+
+### 跨挂载的缓存键
+
+跨挂载缓存键使用 `@vue-solana/vue/swr` 中的 SWR 适配器：
+
+```ts
+import {
+  useRequestSwr,
+  useSubscriptionSwr,
+  useTrackedDataSwr,
+  clearSwrCache,
+} from "@vue-solana/vue/swr";
+
+const balance = useRequestSwr(`balance:${someAddress}`, rpc.getBalance(someAddress));
+```
+
+以相同键挂载的组件在自身请求重新验证期间，会立即从最后已知值播种。没有 `useAction` 适配器——action 是变更，不是可缓存的读取；请使用你数据层的变更 API（或 `useAction` 本身）。
+
+缓存行为细节：
+
+- 键按适配器命名空间隔离（`request:`、`subscription:`、`tracked:`），因此同一键可安全地跨适配器使用。
+- `null`/`undefined` 源会禁用 composable 并**清除**该键的缓存条目——即使组件以已禁用的源挂载也是如此。
+- `useTrackedDataSwr` 缓存完整的 `SolanaRpcResponse` 封套，因此重挂载的组件同时恢复值和 slot context。
+- 缓存是模块级 `Map`。在服务器端，按请求为键命名空间化，或在请求之间调用 `clearSwrCache()` 以避免跨请求泄漏。
+
+针对 devnet 的全部五个 composable 的可运行演示（包括 SWR 重挂载行为），请参阅 [Vue Vite 示例](/zh/examples/vue-vite)中的 Live Data Panels。
+
 ## 交易状态
 
 ```ts
@@ -457,6 +615,77 @@ await execute(transaction, {
 没有 `confirm: true` 时，`execute()` 会在提交后返回，并把 `status` 设置为 `sent`。启用确认后，状态会经过 `sending`、`confirming`，然后变为 `processed`、`confirmed` 或 `finalized`，以匹配请求的 commitment。如果确认超时或失败，已提交的 `signature` 仍然可用，因此应用可以链接到 explorer。
 
 如果钱包 adapter 从不返回结果，`useSignAndSendTransaction()` 也会清除 `loading`。这种 stale 情况下会设置 `error`，链上状态可能未知，因此重试前请检查连接的钱包或 explorer。
+
+## 批量交易
+
+```ts
+import { useSignTransactions } from "@vue-solana/vue/useSignTransactions";
+import { useSignAndSendTransactions } from "@vue-solana/vue/useSignAndSendTransactions";
+
+const { signedTransactions, execute: signMany } = useSignTransactions();
+const { signatures, execute: signAndSendMany } = useSignAndSendTransactions();
+
+// 一次钱包请求处理 N 笔交易。
+const signed = await signMany([transactionA, transactionB]);
+
+// 一次钱包请求处理 N 个签名。
+const sent = await signAndSendMany([transactionA, transactionB], { minContextSlot });
+```
+
+两者都优先使用钱包的批量能力。`useSignTransactions` 回退到旧版批量 `signAllTransactions` 功能；`useSignAndSendTransactions` 回退为按顺序发送单一请求。批量签名是全有或全无（一次拒绝则全部不签名），但“签名并发送”的回退路径可能让前面的交易已经提交。发生这种情况时会以 `PartialSignAndSendError` 拒绝，其 `signatures` 列出已发送的交易，因此重试时可以跳过它们：
+
+```ts
+import { PartialSignAndSendError } from "@vue-solana/vue/useSignAndSendTransactions";
+
+try {
+  await signAndSendMany([transactionA, transactionB]);
+} catch (error) {
+  if (error instanceof PartialSignAndSendError) {
+    // error.signatures：已经落地的交易——只重发其余的。
+  }
+}
+```
+
+## 已选钱包账户
+
+对于带持久化和过滤的应用级已选账户状态，在根部附近挂载一次 provider，然后随处读取：
+
+```vue
+<script setup lang="ts">
+import { SelectedWalletAccountProvider } from "@vue-solana/vue/useSelectedWalletAccount";
+</script>
+
+<template>
+  <SelectedWalletAccountProvider :filter-wallet="filter">
+    <RouterView />
+  </SelectedWalletAccountProvider>
+</template>
+```
+
+```ts
+import { useSelectedWalletAccount } from "@vue-solana/vue/useSelectedWalletAccount";
+
+const [selectedAccount, setSelectedAccount, filteredWallets] = useSelectedWalletAccount();
+```
+
+选择默认以 `${walletName}:${accountAddress}` 形式持久化在 `localStorage` 中（传入 `stateSync` 可自定义，传入 `null` 可禁用），当钱包与账户可用时会在下次访问时恢复。`filterWallet` 限制提供哪些钱包账户。在 Nuxt 中，模块的 runtime 插件会自动安装此 context。
+
+## 客户端能力与规划
+
+```ts
+import { usePayer, useIdentity } from "@vue-solana/vue/usePayer";
+import { usePlanTransaction } from "@vue-solana/vue/usePlanTransaction";
+
+// 来自 Kit 客户端的响应式签名者（需要 signer 插件）。
+const payer = usePayer();
+const identity = useIdentity();
+
+// 从指令规划交易消息，而不发送。
+const { transactionMessage, execute } = usePlanTransaction();
+const message = await execute(instructions);
+```
+
+`useClientCapability("payer")` 会断言某项能力已安装在客户端上，缺失时在 setup 阶段抛出描述性错误（指出钩子名称及安装方式）。`usePlanTransaction()` / `usePlanTransactions()` 需要规划能力，例如 `@solana/kit-plugin-rpc` 的 `rpcTransactionPlanner()`。
 
 ## 确认现有签名
 

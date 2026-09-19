@@ -391,4 +391,5 @@ Before relying on an app flow, verify these behaviors on devnet:
 - [Transaction Guide](/guides/transactions)
 - [Kit Migration](/guides/kit-migration)
 - [Troubleshooting](/troubleshooting)
+- [Solana Kit documentation](https://www.solanakit.com/) — official Kit guides, recipes, and API reference
 - [Solana Documentation](https://solana.com/docs)

@@ -1,6 +1,11 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import { expectNoPageErrors, isRealRpcRun, mockSolanaRpc } from "./helpers";
+import {
+  expectNoPageErrors,
+  isRealRpcRun,
+  mockSolanaRpc,
+  mockSolanaSubscriptions,
+} from "./helpers";
 
 const appNames: Record<string, string> = {
   "vue-vite": "Vue Solana Example App",
@@ -131,6 +136,110 @@ test("renders submitted-vs-confirmed transaction state", async ({ page }) => {
   await expect(page.getByTestId("transfer-explorer-link")).toHaveCount(0);
 });
 
+test("renders live request and slot subscription data", async ({ page }, testInfo) => {
+  if (isRealRpcRun()) {
+    test.skip(true, "Live panels are deterministic only against the RPC mocks");
+  }
+
+  const subscriptions = await mockSolanaSubscriptions(page);
+  await page.goto("/");
+
+  await expect(page.getByTestId("live-panels")).toBeVisible();
+
+  // useRequest: seeded from mocked getBalance + getVersion.
+  await expect(page.getByTestId("request-status")).toHaveText("success");
+  await expect(page.getByTestId("request-data")).toContainText("1 SOL");
+  await expect(page.getByTestId("request-data")).toContainText("solana-core 2.1.0");
+
+  // useSubscription: slot notifications stream over the mocked websocket.
+  await expect(page.getByTestId("subscription-status")).toHaveText("loaded");
+  await expect(page.getByTestId("subscription-data")).toContainText("Slot 2400");
+
+  const initialSlotText = await page.getByTestId("subscription-data").textContent();
+  subscriptions.pushSlotNotification(24_042, 24_040);
+  await expect(page.getByTestId("subscription-data")).toContainText("Slot 24042");
+  expect(initialSlotText).not.toContain("24042");
+
+  // Both apps mount the same panels, so the count is app-agnostic.
+  expect(subscriptions.openSubscriptionCount()).toBeGreaterThanOrEqual(1);
+
+  // Changing the address re-fires the request; the mock answers identically.
+  await page.getByTestId("tracked-address").fill("11111111111111111111111111111111");
+  await expect(page.getByTestId("request-status")).toHaveText("success");
+  await expect(page.getByTestId("request-data")).toContainText("1 SOL");
+
+  void testInfo;
+});
+
+test("seeds tracked data from the fetch and updates it from notifications", async ({ page }) => {
+  if (isRealRpcRun()) {
+    test.skip(true, "Live panels are deterministic only against the RPC mocks");
+  }
+
+  const subscriptions = await mockSolanaSubscriptions(page);
+  await page.goto("/");
+
+  // useTrackedData: seeded by mocked getAccountInfo (42 SOL), then updated by
+  // an accountNotification pushed over the mocked websocket.
+  await expect(page.getByTestId("tracked-status")).toHaveText("loaded");
+  await expect(page.getByTestId("tracked-data")).toContainText("Lamports 42000000000");
+  await expect(page.getByTestId("tracked-data")).toContainText("slot 123456");
+
+  subscriptions.pushAccountNotification(43_000_000_000, 123_457);
+  await expect(page.getByTestId("tracked-data")).toContainText("Lamports 43000000000");
+  await expect(page.getByTestId("tracked-data")).toContainText("slot 123457");
+});
+
+test("signs in with the mocked SIWS wallet and surfaces the account", async ({ page }) => {
+  if (isRealRpcRun()) {
+    test.skip(true, "SIWS panel requires the mock wallet");
+  }
+
+  await mockSolanaSubscriptions(page);
+  await registerMockWallets(page);
+  await page.goto("/");
+
+  await expect(page.getByTestId("sign-in-status")).toHaveText("idle");
+  await expect(page.getByTestId("sign-in-button")).toBeDisabled();
+
+  await page.getByTestId("load-wallets").click();
+  await page.getByRole("button", { name: /Mock Signer Wallet/ }).click();
+  await page.getByTestId("connect-wallet").click();
+  await expect(page.getByTestId("wallet-public-key")).toHaveText(
+    "11111111111111111111111111111111",
+  );
+
+  await expect(page.getByTestId("sign-in-button")).toBeEnabled();
+  await page.getByTestId("sign-in-button").click();
+
+  await expect(page.getByTestId("sign-in-status")).toHaveText("signed-in");
+  await expect(page.getByTestId("sign-in-result")).toContainText(
+    "Signed in as 11111111111111111111111111111111",
+  );
+});
+
+test("demonstrates stale-while-revalidate across SWR card remounts", async ({ page }) => {
+  if (isRealRpcRun()) {
+    test.skip(true, "Live panels are deterministic only against the RPC mocks");
+  }
+
+  await mockSolanaSubscriptions(page);
+  await page.goto("/");
+
+  // First mount: fetching -> success with request #1.
+  await expect(page.getByTestId("swr-status")).toHaveText("success");
+  await expect(page.getByTestId("swr-data")).toContainText("Request #1");
+
+  // Hide and re-show: the card remounts, shows the cached value immediately,
+  // then revalidates into request #2.
+  await page.getByTestId("swr-toggle").click();
+  await expect(page.getByTestId("swr-data")).toHaveText("Card hidden");
+
+  await page.getByTestId("swr-toggle").click();
+  await expect(page.getByTestId("swr-data")).toContainText("Request #1");
+  await expect(page.getByTestId("swr-data")).toContainText("Request #2");
+});
+
 test("runs the mock transaction helper", async ({ page }) => {
   await page.goto("/");
 
@@ -198,6 +307,27 @@ async function registerMockWallets(page: Page) {
           signMessage: async ({ message }: { message: Uint8Array }) => [
             { signedMessage: message, signature: Uint8Array.from([1, 2, 3, 4, 5, 6, 7, 8]) },
           ],
+        };
+        wallet.features["solana:signIn"] = {
+          version: "1.0.0",
+          signIn: async (input?: { domain?: string; statement?: string }) => {
+            void input;
+
+            return [
+              {
+                account: {
+                  address: "11111111111111111111111111111111",
+                  publicKey: new Uint8Array(32),
+                  chains: ["solana:devnet"],
+                  features: [],
+                  label: "Mock Signer Wallet",
+                },
+                signedMessage: new TextEncoder().encode("Welcome to Vue Solana"),
+                signature: Uint8Array.from([9, 8, 7, 6, 5, 4, 3, 2]),
+                signatureType: "ed25519",
+              },
+            ];
+          },
         };
       }
 

@@ -40,6 +40,29 @@ async function signIn() {
 
 不暴露消息签名的钱包会将 `canSignMessage` 报告为 false。若在不支持的情况下调用 `execute()`，会以 `WALLET_FEATURE_UNSUPPORTED` 拒绝。
 
+## Sign In With Solana (SIWS)
+
+对于认证，当钱包支持时，应优先选择 SIWS 而非自由格式的消息签名。SIWS 会向用户展示结构化的同意界面（域名、statement、resources、URI），而不是任意字节，并且钱包会返回一个类型化的结果：
+
+```ts
+import { useSignIn } from "@vue-solana/vue/useSignIn";
+
+const { signIn } = useSignIn();
+
+const { account, signedMessage, signature } = await signIn({
+  statement: "Sign in to example.com",
+  nonce: nonceFromYourServer,
+});
+```
+
+该结果不是已认证的会话——它是一个需要验证的声明。在你的服务端：
+
+1. 解码 `signedMessage` 并检查域名是你的 origin、URI 是你的、nonce 与服务端为本次登录尝试签发的一致（一次性使用，短有效期）。
+2. 使用 `account.publicKey` 验证 `signedMessage` 上的 Ed25519 签名，例如用 `tweetnacl`：`nacl.sign.detached.verify(signedMessage, signature, account.publicKey)`。
+3. 然后才创建会话，并以 `account.address` 作为键。
+
+不支持 SIWS 的钱包会以 `WALLET_FEATURE_UNSUPPORTED` 拒绝 `signIn()`；对这类钱包，回退到 `useSignMessage()` 并使用你自己的挑战文本。
+
 ## Nuxt 消息签名
 
 Nuxt 会自动导入 `useSolanaSignMessage()` 和 `useSolanaWallet()`。

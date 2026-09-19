@@ -261,6 +261,10 @@ import type { Address, Commitment, Lamports, Signature, SolanaRpcApi } from "@vu
 
 RPC 数值结果是 `bigint`，账户数据是 `Uint8Array` 而不是 `Buffer`。详见 [Kit 迁移](/zh/guides/kit-migration)。
 
+### 动作
+
+`createSolanaActionStore()` 将每次调用接收新 `AbortSignal` 的异步函数包装成 abort-on-redispatch 的动作状态机。Vue 组合式函数 `useAction()` 构建于此 store 之上，`isSolanaActionAborted()` 用于检测被取消或被取代的调用。
+
 ### 地址
 
 - `parseAddress(value)`：解析地址字符串、类似 ref 的值或 getter，输入为空时返回 `null`。无效 base58 字符串抛出 `INVALID_ADDRESS`。按原样接受 `Address` 值。

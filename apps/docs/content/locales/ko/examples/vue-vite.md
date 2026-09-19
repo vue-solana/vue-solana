@@ -26,6 +26,7 @@ Vue Vite 예제는 `@vue-solana/vue`를 위한 실행 가능한 Vue 3 앱입니�
 - 연결된 지갑이 지원할 때 `useSignMessage()`로 인증 메시지에 서명합니다.
 - `useSignAndSendTransaction()`으로 실제 전송을 보내고 제출 상태와 확인 상태를 보여 줍니다. 예제는 안전한 테스트를 위해 기본적으로 devnet을 사용합니다.
 - 제출된 signature에 대해 클러스터를 반영한 Solana Explorer 링크를 만듭니다.
+- Live Data Panels에서 Kit 반응형 데이터 레이어를 사용합니다: 일회성 요청에는 `useRequest()`, websocket을 통한 실시간 slot 알림에는 `useSubscription()`, 계정 알림으로 업데이트되는 fetch 기반 계정 데이터에는 `useTrackedData()`, Sign In With Solana에는 `useSignIn()`, 그리고 remount 전반에 걸친 cache-keyed stale-while-revalidate에는 `@vue-solana/vue/swr`의 `useRequestSwr()`를 사용합니다.
 
 앱은 기본적으로 `devnet`을 사용합니다. Devnet SOL은 실제 가치가 없습니다.
 
@@ -55,6 +56,8 @@ pnpm dev:vue
 - recipient 주소와 금액을 입력한 뒤 실제 전송을 보냅니다. 테스트 중에는 예제를 devnet으로 유지하세요.
 - 트랜잭션이 submitted signature에서 confirmation status로 이동하는지 확인합니다.
 - Explorer 링크를 열고 `?cluster=devnet`이 포함되어 있는지 확인합니다.
+- Live Data Panels에서 추적 주소를 바꾸고 request, subscription, tracked-data 패널이 다시 실행되는지 확인합니다.
+- SWR 카드를 껐다 켜고 stale 캐시 값이 즉시 나타난 뒤 revalidate된 요청이 이를 대체하는지 확인합니다.
 
 전송 예제는 `@vue-solana/vue/buffer-polyfill`의 `installSolanaBufferPolyfill()`로 브라우저 `Buffer` polyfill을 초기화합니다. Vite가 이전에 externalized Buffer import를 캐시했다면 Vite dev server를 재시작하세요.
 

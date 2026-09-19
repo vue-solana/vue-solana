@@ -3,7 +3,12 @@ import type { Wallet } from "@wallet-standard/base";
 import { StandardConnect, StandardDisconnect } from "@wallet-standard/features";
 import type { SolanaChain, SolanaWalletInfo } from "../types";
 import { SOLANA_CHAINS } from "./chains";
-import { hasSignAndSendTransaction, hasSignMessage, hasSignTransaction } from "./features";
+import {
+  hasSignAndSendTransaction,
+  hasSignIn,
+  hasSignMessage,
+  hasSignTransaction,
+} from "./features";
 
 export const SOLANA_MOBILE_WALLET_ADAPTER_WALLET_NAME = "Mobile Wallet Adapter";
 
@@ -51,6 +56,7 @@ function createSolanaWalletInfo(wallet: Wallet): SolanaWalletInfo {
     capabilities: {
       connect: true,
       disconnect: true,
+      signIn: hasSignIn(wallet),
       signMessage: hasSignMessage(wallet),
       signTransaction: hasSignTransaction(wallet),
       signAllTransactions: hasSignTransaction(wallet),

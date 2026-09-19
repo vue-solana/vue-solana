@@ -1,6 +1,43 @@
+// @vitest-environment node
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { effectScope } from "vue";
 import type { SolanaError } from "@vue-solana/core/errors";
 import { useTransaction } from "./useTransaction";
+
+interface Deferred<T> {
+  promise: Promise<T>;
+  resolve: (value: T) => void;
+  reject: (reason?: unknown) => void;
+}
+
+function deferred<T>(): Deferred<T> {
+  let resolve!: (value: T) => void;
+  let reject!: (reason?: unknown) => void;
+  const promise = new Promise<T>((promiseResolve, promiseReject) => {
+    resolve = promiseResolve;
+    reject = promiseReject;
+  });
+
+  return { promise, resolve, reject };
+}
+
+function setupInScope<TResult>(setup: () => TResult): {
+  result: TResult;
+  scope: ReturnType<typeof effectScope>;
+} {
+  let result: TResult | undefined;
+  const scope = effectScope();
+
+  scope.run(() => {
+    result = setup();
+  });
+
+  if (!result) {
+    throw new Error("setup did not initialize a result");
+  }
+
+  return { result, scope };
+}
 
 describe("useTransaction", () => {
   afterEach(() => {
@@ -66,7 +103,9 @@ describe("useTransaction", () => {
     });
 
     const staleExecution = transaction.execute();
-    const staleRejection = expect(staleExecution).rejects.toThrow("stale transaction");
+    // Superseded executions reject immediately with an abort (their outcome
+    // is dropped); the timeout error they would eventually raise is silenced.
+    const staleRejection = expect(staleExecution).rejects.toThrow();
 
     await vi.advanceTimersByTimeAsync(5);
 
@@ -83,5 +122,22 @@ describe("useTransaction", () => {
 
     expect(transaction.loading.value).toBe(false);
     expect(transaction.signature.value).toBe("signature");
+  });
+
+  it("stops updating refs once the scope is disposed", async () => {
+    const pending = deferred<string>();
+    const { result, scope } = setupInScope(() => useTransaction(() => pending.promise));
+
+    const execution = result.execute();
+    expect(result.loading.value).toBe(true);
+
+    scope.stop();
+    pending.resolve("late");
+
+    await execution.catch(() => undefined);
+
+    expect(result.signature.value).toBeNull();
+    expect(result.loading.value).toBe(true);
+    expect(result.error.value).toBeNull();
   });
 });

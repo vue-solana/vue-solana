@@ -165,4 +165,5 @@ Kit REST RPC 方法返回原生 JavaScript 类型：
 
 - [`RPC 和 Clusters`](/zh/guides/rpc-and-clusters) — 集群和端点配置
 - [`入门`](/zh/getting-started) — 安装和首次 devnet 读取
+- [Solana Kit 文档](https://www.solanakit.com/) — 官方 Kit 指南、recipes 和 API reference
 - [`@vue-solana/core`](/zh/packages/core)、[`@vue-solana/vue`](/zh/packages/vue)、[`@vue-solana/nuxt`](/zh/packages/nuxt) — 包参考

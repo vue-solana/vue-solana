@@ -13,6 +13,7 @@ Official references:
 - [Solana RPC Methods](https://solana.com/docs/rpc)
 - [Solana Clusters](https://solana.com/docs/references/clusters)
 - [Solana Transactions](https://solana.com/docs/core/transactions)
+- [Solana Cookbook](https://solana.com/developers/cookbook) — practical recipes for common Solana patterns
 
 ## Connections And RPC
 

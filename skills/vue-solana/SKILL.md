@@ -88,18 +88,16 @@ export default defineNuxtConfig({
 
 Nuxt auto-imports these composables:
 
-- `useSolana()`
-- `useSolanaRpc()`
-- `useSolanaConnection()`
-- `useSolanaAccountInfo()`
-- `useSolanaWallet()`
-- `useSolanaWallets()`
-- `useSolanaBalance()`
-- `useSolanaProgramAccounts()`
-- `useSolanaSignMessage()`
-- `useSolanaSignAndSendTransaction()`
-- `useSolanaTransactionConfirmation()`
-- `useSolanaSignatureStatus()`
+- `useSolana()`, `useSolanaClient()`
+- `useSolanaRpc()`, `useSolanaConnection()`
+- `useSolanaWallet()`, `useSolanaWallets()`, `useSolanaSelectedWalletAccount()`
+- `useSolanaAccountInfo()`, `useSolanaBalance()`, `useSolanaProgramAccounts()`, `useSolanaSignatureStatus()`, `useSolanaTokenAccounts()`, `useSolanaTokenBalance()`
+- `useSolanaRequest()`, `useSolanaSubscription()`, `useSolanaTrackedData()`, `useSolanaAction()`
+- `useSolanaSignMessage()`, `useSolanaSignIn()`
+- `useSolanaSignAndSendTransaction()`, `useSolanaSignTransactions()`, `useSolanaSignAndSendTransactions()`
+- `useSolanaPayer()`, `useSolanaIdentity()`, `useSolanaPlanTransaction()`, `useSolanaPlanTransactions()`
+
+`useClientCapability` is intentionally not auto-imported.
 
 The Nuxt runtime plugin is client-only. Composables are SSR-safe and may return inert state during SSR; run real RPC and wallet work after hydration, in client lifecycle hooks, or from user actions.
 
@@ -112,6 +110,8 @@ Use one public wallet flow for all supported wallet sources:
 3. Call `connect()` only after selecting a wallet.
 4. Treat `connected` as false until `connect()` resolves, even if an extension exposes previously authorized accounts.
 5. Call `disconnect()` from the active wallet composable.
+
+To persist a wallet choice across sessions, mount `SelectedWalletAccountProvider` once near the app root and use `useSelectedWalletAccount()` (or `useSolanaSelectedWalletAccount()` in Nuxt) to read and set the selected account. The Nuxt runtime plugin installs an app-wide selected-wallet-account context automatically, so `useSolanaSelectedWalletAccount()` works without a provider. The selection persists as `${walletName}:${accountAddress}` through `stateSync` (default `localStorage`), syncs across tabs, and is restored when the wallet reconnects.
 
 Current wallet support:
 
@@ -139,6 +139,26 @@ Use `useProgramAccounts(programId, config?)` or `useSolanaProgramAccounts(progra
 Use `useSignatureStatus(signature, options?)` or `useSolanaSignatureStatus(signature, options?)` to read, poll, or subscribe to submitted transaction status.
 
 RPC, balance, account, program-account, and signature-status reads do not require a connected wallet.
+
+## Data Layer (Request, Subscription, Tracked Data)
+
+Use the Kit-reactive data composables for SWR-style reads instead of hand-rolled `watch` + `try/catch` state:
+
+- `useRequest(source, options?)` or auto-imported `useSolanaRequest(source, options?)` for one-shot requests. The source may be a request function, a Kit request object (`rpc.getBalance(address)`), a `ref`/`computed` of either, or `null` to disable. Statuses: `fetching`, `success`, `error`, `disabled`.
+- `useSubscription(source, options?)` or `useSolanaSubscription(...)` for live streams. The source is a Kit reactive stream source (for example `rpcSubscriptions.slotNotifications()`), a ref of it, or `null`. Statuses: `loading`, `loaded`, `error`, `disabled`. `reconnect()` re-opens with stale-while-revalidate.
+- `useTrackedData(source, options?)` or `useSolanaTrackedData(...)` for RPC data seeded by a fetch and updated by a subscription (for example `getAccountInfo` + `accountNotifications`). The store slot-deduplicates both sources so out-of-order arrivals cannot regress the value.
+- SWR cache adapters from `@vue-solana/vue/swr` (`useRequestSwr`, `useSubscriptionSwr`, `useTrackedDataSwr`) key results across mounts. Keys are namespaced per adapter; a `null` source clears the key's cache. Not auto-imported in Nuxt.
+- `useAction(handler, options?)` or `useSolanaAction(handler, options?)` for generic async actions, backed by `createSolanaActionStore` from `@vue-solana/core/action`. The handler receives a fresh `AbortSignal` per call. Exposes `data`, `dispatch`, `error`, `isRunning`, `reset`, and `status` (`idle`, `running`, `success`, `error`). Re-dispatch aborts the in-flight call; failures keep the previous `data` for stale-while-revalidate.
+
+For `useTrackedData`, the `rpcValueMapper` / `rpcSubscriptionValueMapper` callbacks receive the unwrapped value; the returned `data` ref keeps the full `SolanaRpcResponse` envelope (`data.value.value`, `data.value.context.slot`).
+
+Tests touching these composables or real Kit reactive stores must run under the `node` vitest environment (Kit stores call Node's `setMaxListeners` on `AbortSignal`); tag the test file with `// @vitest-environment node`.
+
+## Sign In With Solana
+
+Use `useSignIn()` or `useSolanaSignIn()` to trigger a wallet's SIWS feature. `signIn(input?)` resolves `{ account, signedMessage, signature }` for **server-side verification**: verify the signature against `account.publicKey` on your backend before trusting the identity (see the message-signing guide). State exposes `status` (`idle`, `signing-in`, `signed-in`, `error`), `loading`, `error`, and `signInResult`; wallet cancellations normalize to `USER_REJECTED`.
+
+The composable does not auto-connect: `signIn()` rejects with `WALLET_NOT_CONNECTED` when no wallet is connected.
 
 ## Error Handling
 
@@ -184,6 +204,8 @@ The active wallet must support either `signAndSendTransaction` or `signTransacti
 
 Use `useTransactionConfirmation()` or `useSolanaTransactionConfirmation()` when an app already has a submitted signature and wants to wait for a requested commitment separately from signing and sending.
 
+For batch flows, use `useSignTransactions()` / `useSolanaSignTransactions()` (sign multiple transactions in one wallet request) and `useSignAndSendTransactions()` / `useSolanaSignAndSendTransactions()` (sign and send a batch). Both prefer the wallet's batch capability: `useSignTransactions` falls back to the legacy `signAllTransactions` feature, while `useSignAndSendTransactions` falls back to sending sequentially with the singular capability. A partial batch send rejects with `PartialSignAndSendError` (from `@vue-solana/vue/useSignAndSendTransactions`); its `signatures` array lists the transactions already submitted, so inspect it before retrying to avoid double-spends.
+
 When browser transaction code needs `Buffer`, use the framework package helper:
 
 ```ts
@@ -196,6 +218,12 @@ Use `@vue-solana/nuxt/buffer-polyfill` for the same helper in Nuxt apps. Use `@v
 
 Do not assign the Buffer global manually in public examples.
 
+## Client Capabilities, Payer, Identity, And Transaction Planning
+
+- `useClientCapability(methods, options?)` fails fast when the installed Solana client does not expose a named capability, throwing `MissingClientCapabilityError`. Not auto-imported in Nuxt.
+- `usePayer()` / `useIdentity()` (or `useSolanaPayer()` / `useSolanaIdentity()`) expose the Kit client's `payer` / `identity` `TransactionSigner`, re-read on change when the client advertises `subscribeToPayer` / `subscribeToIdentity`. They require a client built with a signer plugin (e.g. `generatedPayer()` / `generatedIdentity()` from `@solana/kit-plugin-signer`).
+- `usePlanTransaction()` / `usePlanTransactions()` (or `useSolanaPlanTransaction()` / `useSolanaPlanTransactions()`) expose the client's transaction planning capability. `usePlanTransaction` only requires `planTransaction`; `usePlanTransactions` only requires `planTransactions`.
+
 ## Common Gotchas
 
 - Do not import Solana primitives from `@solana/web3.js`, `@solana/web3-compat`, or the removed `@vue-solana/*/web3` subpaths in new Vue Solana examples; use `@vue-solana/vue/kit`, `@vue-solana/nuxt/kit`, or `@vue-solana/core/kit` for the Kit primitive surface.
@@ -204,6 +232,7 @@ Do not assign the Buffer global manually in public examples.
 - Do not mark a discovered wallet as connected just because accounts are visible. Connection state begins after `connect()` succeeds.
 - In Nuxt, avoid server-side RPC and wallet actions unless the app explicitly provides server-safe behavior.
 - Public Solana RPC endpoints can be rate-limited. For production, suggest a dedicated RPC provider and custom `endpoint`.
+- When example-app behavior changes, extend the Playwright e2e suite (`e2e/`) rather than relying on unit tests alone. `mockSolanaSubscriptions(page)` fakes the Kit RPC-subscriptions websocket protocol (subscribe, id-correlated result, then `<method>Notification` frames keyed on `params.subscription`); see the E2E Testing guide.
 
 ## Verification Checklist
 

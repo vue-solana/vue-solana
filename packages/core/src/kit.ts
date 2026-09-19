@@ -32,5 +32,40 @@ export function createSolanaClient(config: SolanaConfig = {}) {
 
 export type SolanaClient = ReturnType<typeof createSolanaClient>;
 
-export type { Address, Commitment, Lamports, Rpc, Signature, SolanaRpcApi } from "@solana/kit";
+export type {
+  Address,
+  Commitment,
+  InstructionPlanInput,
+  Lamports,
+  Rpc,
+  Signature,
+  SolanaRpcApi,
+  SolanaRpcResponse,
+  TransactionMessage,
+  TransactionPlan,
+  TransactionSigner,
+} from "@solana/kit";
+export type {
+  ClientWithIdentity,
+  ClientWithPayer,
+  ClientWithSubscribeToIdentity,
+  ClientWithSubscribeToPayer,
+  ClientWithTransactionPlanning,
+} from "@solana/kit";
+export type {
+  CreateReactiveStoreWithInitialValueAndSlotTrackingConfig,
+  ReactiveActionSource,
+  ReactiveActionState,
+  ReactiveActionStore,
+  ReactiveActionStatus,
+  ReactiveState,
+  ReactiveStreamSource,
+  ReactiveStreamStore,
+} from "@solana/kit";
+export {
+  createReactiveActionStore,
+  createReactiveStoreWithInitialValueAndSlotTracking,
+  getAbortablePromise,
+  isAbortError,
+} from "@solana/kit";
 export { address, lamports } from "@solana/kit";

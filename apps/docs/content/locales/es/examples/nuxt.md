@@ -27,6 +27,7 @@ Demo en vivo: [vue-solana-docs.vercel.app/demo](/demo)
 - Enviar una transferencia real con `useSolanaSignAndSendTransaction()` y mostrar estado de transacción enviada vs confirmada. El ejemplo usa devnet por defecto para pruebas seguras.
 - Construir links a Solana Explorer conscientes del cluster para firmas enviadas.
 - Usar `useTransaction()` desde `@vue-solana/vue/useTransaction` para estado genérico de transacción asíncrona.
+- Ejercitar la capa de datos reactiva de Kit en los Live Data Panels con composables autoimportados: `useSolanaRequest()` para peticiones de un solo uso, `useSolanaSubscription()` para notificaciones de slot en vivo, `useSolanaTrackedData()` para datos de cuenta sembrados por fetch, `useSolanaSignIn()` para Sign In With Solana, y el adaptador de caché `@vue-solana/vue/swr` entre remounts.
 
 La app usa `devnet` por defecto. El SOL de devnet no tiene valor real.
 

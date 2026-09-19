@@ -259,14 +259,14 @@ Then test `useRpc()` inside a component:
 import { onMounted, ref } from "vue";
 import { useRpc } from "@vue-solana/vue/useRpc";
 
-const { cluster, endpoint, connection } = useRpc();
+const { cluster, endpoint, client } = useRpc();
 const latestBlockhash = ref<string | null>(null);
 const error = ref<unknown>(null);
 
 onMounted(async () => {
   try {
-    const result = await connection.getLatestBlockhash();
-    latestBlockhash.value = result.blockhash;
+    const { value } = await client.rpc.getLatestBlockhash().send();
+    latestBlockhash.value = value.blockhash;
   } catch (cause) {
     error.value = cause;
   }
@@ -376,12 +376,12 @@ Then use the auto-imported composables in a page:
 
 ```vue
 <script setup lang="ts">
-const { cluster, endpoint, connection } = useSolanaRpc();
+const { cluster, endpoint, client } = useSolanaRpc();
 const blockhash = ref<string | null>(null);
 
 onMounted(async () => {
-  const result = await connection.getLatestBlockhash();
-  blockhash.value = result.blockhash;
+  const { value } = await client.rpc.getLatestBlockhash().send();
+  blockhash.value = value.blockhash;
 });
 </script>
 

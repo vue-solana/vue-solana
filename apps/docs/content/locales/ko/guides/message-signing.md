@@ -40,6 +40,29 @@ async function signIn() {
 
 메시지 서명 기능을 노출하지 않는 지갑은 `canSignMessage`를 false로 보고합니다. 지원되지 않는 상태에서 `execute()`를 호출하면 `WALLET_FEATURE_UNSUPPORTED`로 거부됩니다.
 
+## Sign In With Solana (SIWS)
+
+인증에는 자유 형식 메시지 서명보다 지갑이 지원하는 경우 SIWS를 우선하세요. SIWS는 임의의 바이트 대신 구조화된 동의 화면(도메인, statement, resources, URI)을 사용자에게 보여주고, 지갑은 타입화된 결과를 반환합니다:
+
+```ts
+import { useSignIn } from "@vue-solana/vue/useSignIn";
+
+const { signIn } = useSignIn();
+
+const { account, signedMessage, signature } = await signIn({
+  statement: "Sign in to example.com",
+  nonce: nonceFromYourServer,
+});
+```
+
+이 결과는 인증된 세션이 아닙니다. 검증해야 할 주장입니다. 서버에서 다음을 수행하세요:
+
+1. `signedMessage`를 디코드하고 도메인이 여러분의 origin인지, URI가 여러분의 것인지, nonce가 이 로그인 시도를 위해 서버가 발급한 것과 일치하는지 확인하세요(일회성, 짧은 만료).
+2. `signedMessage`에 대한 Ed25519 서명을 `account.publicKey`로 검증하세요. 예를 들어 `tweetnacl` 사용: `nacl.sign.detached.verify(signedMessage, signature, account.publicKey)`.
+3. 그 후에야 `account.address`를 키로 세션을 생성하세요.
+
+SIWS를 지원하지 않는 지갑은 `signIn()`을 `WALLET_FEATURE_UNSUPPORTED`로 거부합니다. 그런 지갑에는 고유한 challenge 문구와 함께 `useSignMessage()`로 폴백하세요.
+
 ## Nuxt 메시지 서명
 
 Nuxt는 `useSolanaSignMessage()`와 `useSolanaWallet()`을 자동 import합니다.

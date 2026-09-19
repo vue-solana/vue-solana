@@ -27,6 +27,158 @@ export async function mockSolanaRpc(page: Page) {
   });
 }
 
+/**
+ * Drives notifications into open mocked subscription sockets.
+ */
+export interface SubscriptionHarness {
+  /**
+   * Push an `accountNotification` (lamports changed) to every open account
+   * subscription, as if the tracked account just received SOL.
+   */
+  pushAccountNotification(lamports: number, slot: number): void;
+  /**
+   * Push a `slotNotification` to every open slot subscription.
+   */
+  pushSlotNotification(slot: number, root: number): void;
+  /**
+   * Number of sockets with at least one active subscription.
+   */
+  openSubscriptionCount(): number;
+}
+
+/**
+ * Mocks the devnet websocket subscription endpoint used by `useSubscription`
+ * and the stream half of `useTrackedData` (Kit RPC subscriptions protocol).
+ *
+ * Wire protocol: the client sends `{jsonrpc, id, method: "<method>Subscribe",
+ * params}` and the server answers `{jsonrpc, id, result: <subscriptionId>}`;
+ * updates arrive as `{jsonrpc, method: "<method>Notification", params:
+ * {subscription, result}}`. Kit's `{method: "ping"}` keepalives carry no id
+ * and are ignored.
+ */
+export async function mockSolanaSubscriptions(page: Page): Promise<SubscriptionHarness> {
+  await mockSolanaRpc(page);
+
+  interface OpenSocket {
+    send(message: string): unknown;
+    subscriptions: Map<number, string>;
+  }
+
+  const openSockets: OpenSocket[] = [];
+  let nextSubscriptionId = 1;
+
+  await page.routeWebSocket("wss://api.devnet.solana.com/**", (ws) => {
+    const socket: OpenSocket = { send: (message) => ws.send(message), subscriptions: new Map() };
+    openSockets.push(socket);
+
+    ws.onClose(() => {
+      const index = openSockets.indexOf(socket);
+
+      if (index >= 0) {
+        openSockets.splice(index, 1);
+      }
+    });
+
+    ws.onMessage((message) => {
+      let parsed: { id?: number | string; method?: string; params?: unknown };
+
+      try {
+        parsed = JSON.parse(message as string) as typeof parsed;
+      } catch {
+        return;
+      }
+
+      const method = parsed.method;
+
+      if (!method?.endsWith("Subscribe")) {
+        // Keepalive pings and non-subscribe frames are ignored.
+        return;
+      }
+
+      const id = parsed.id ?? 0;
+      const subscriptionId = nextSubscriptionId++;
+      socket.subscriptions.set(subscriptionId, method);
+      ws.send(JSON.stringify({ jsonrpc: "2.0", id, result: subscriptionId }));
+
+      if (method === "slotSubscribe") {
+        // Deliver an immediate slot notification so `useSubscription` shows
+        // data without a test-driven push.
+        const slot = 24_000 + subscriptionId;
+        sendNotification(ws, "slotNotification", subscriptionId, {
+          slot,
+          root: slot - 2,
+          parent: slot - 1,
+        });
+      }
+    });
+  });
+
+  return {
+    pushAccountNotification(lamports: number, slot: number) {
+      const notification = {
+        context: { slot },
+        value: {
+          lamports: String(lamports),
+          // base64-encoded empty data (accountNotifications was requested with
+          // the base64 encoding in the example panels).
+          data: ["", "base64"],
+          owner: "11111111111111111111111111111111",
+          executable: false,
+          rentEpoch: "18446744073709551615",
+          space: 0,
+        },
+      };
+
+      for (const socket of openSockets) {
+        for (const [subscriptionId, method] of socket.subscriptions) {
+          if (method === "accountSubscribe") {
+            socket.send(
+              JSON.stringify({
+                jsonrpc: "2.0",
+                method: "accountNotification",
+                params: { subscription: subscriptionId, result: notification },
+              }),
+            );
+          }
+        }
+      }
+    },
+    pushSlotNotification(slot: number, root: number) {
+      for (const socket of openSockets) {
+        for (const [subscriptionId, method] of socket.subscriptions) {
+          if (method === "slotSubscribe") {
+            socket.send(
+              JSON.stringify({
+                jsonrpc: "2.0",
+                method: "slotNotification",
+                params: { subscription: subscriptionId, result: { slot, root, parent: root } },
+              }),
+            );
+          }
+        }
+      }
+    },
+    openSubscriptionCount() {
+      return openSockets.filter((socket) => socket.subscriptions.size > 0).length;
+    },
+  };
+}
+
+function sendNotification(
+  ws: { send(message: string): unknown },
+  method: string,
+  subscriptionId: number,
+  result: unknown,
+) {
+  ws.send(
+    JSON.stringify({
+      jsonrpc: "2.0",
+      method,
+      params: { subscription: subscriptionId, result },
+    }),
+  );
+}
+
 export async function expectNoPageErrors(page: Page, run: () => Promise<void>) {
   const pageErrors: string[] = [];
   const consoleErrors: string[] = [];
@@ -66,6 +218,32 @@ function createRpcResponse(id: string | number, method?: string) {
       result: {
         context: { slot: 123456 },
         value: 1000000000,
+      },
+    };
+  }
+
+  if (method === "getVersion") {
+    return {
+      jsonrpc: "2.0",
+      id,
+      result: { "solana-core": "2.1.0", "feature-set": 3695458837 },
+    };
+  }
+
+  if (method === "getAccountInfo") {
+    return {
+      jsonrpc: "2.0",
+      id,
+      result: {
+        context: { slot: 123456 },
+        value: {
+          lamports: 42_000_000_000,
+          data: ["", "base64"],
+          owner: "11111111111111111111111111111111",
+          executable: false,
+          rentEpoch: "18446744073709551615",
+          space: 0,
+        },
       },
     };
   }

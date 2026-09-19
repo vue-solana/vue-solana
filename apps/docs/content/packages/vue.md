@@ -66,6 +66,20 @@ import { useWallet } from "@vue-solana/vue/useWallet";
 Direct package subpaths:
 
 - `@vue-solana/vue/buffer-polyfill`
+- `@vue-solana/vue/useAction`
+- `@vue-solana/vue/useRequest`
+- `@vue-solana/vue/useSubscription`
+- `@vue-solana/vue/useTrackedData`
+- `@vue-solana/vue/useSignIn`
+- `@vue-solana/vue/useSelectedWalletAccount`
+- `@vue-solana/vue/useSignTransactions`
+- `@vue-solana/vue/useSignAndSendTransactions`
+- `@vue-solana/vue/useClientCapability`
+- `@vue-solana/vue/usePayer`
+- `@vue-solana/vue/useIdentity`
+- `@vue-solana/vue/usePlanTransaction`
+- `@vue-solana/vue/usePlanTransactions`
+- `@vue-solana/vue/swr`
 - `@vue-solana/vue/useSolana`
 - `@vue-solana/vue/useSolanaClient`
 - `@vue-solana/vue/useRpc`
@@ -102,6 +116,17 @@ Use `@vue-solana/vue/buffer-polyfill` for browser transaction code that needs th
 - `useSignatureStatus(signature, options?)`: reads, polls, or subscribes to signature status updates.
 - `useSignMessage()`: signs arbitrary authentication messages through the configured wallet when supported.
 - `useSignAndSendTransaction()`: signs and sends a transaction through the configured wallet, with optional confirmation waiting.
+- `useAction(handler)`: generic async action state machine with abort-on-redispatch; the foundation for the data composables.
+- `useRequest(source, options?)`: one-shot async request that re-fires when its source changes, with stale-while-revalidate.
+- `useSubscription(source, options?)`: live data from RPC subscriptions and other reactive stream sources.
+- `useTrackedData(source, options?)`: RPC subscription seeded by a one-shot fetch, slot-deduplicated.
+- `useSignIn()`: triggers a wallet's Sign In With Solana (SIWS) feature.
+- `useSelectedWalletAccount()`: reads the app-wide selected wallet account from `SelectedWalletAccountProvider` (or `provideSelectedWalletAccount()`).
+- `useSignTransactions()`: signs multiple serialized transactions in one wallet request.
+- `useSignAndSendTransactions()`: signs and sends multiple transactions in one wallet request.
+- `useClientCapability(capability)`: asserts a capability is installed on the Kit client, failing fast with a clear error.
+- `usePayer()` / `useIdentity()`: reactively track the fee payer / acting identity signer from the Kit client.
+- `usePlanTransaction()` / `usePlanTransactions()`: plan transaction messages from instruction inputs without sending.
 
 ## Related Guides
 
@@ -110,6 +135,7 @@ Use `@vue-solana/vue/buffer-polyfill` for browser transaction code that needs th
 - [Account Reads](/guides/account-reads): read balances, account info, program accounts, and signature status.
 - [Transactions](/guides/transactions): sign, send, confirm, and show transaction progress.
 - [Message Signing](/guides/message-signing): sign off-chain authentication or ownership challenges.
+- [E2E Testing](/guides/e2e-testing): mock RPC, RPC subscriptions, and wallets in Playwright tests.
 - [Errors](/guides/errors): map composable `error` refs to safe UI messages.
 
 ## Read RPC State
@@ -438,6 +464,137 @@ if (connected.value && canSignMessage.value) {
 
 Message signing is for wallet ownership or authentication challenges. It is not transaction signing and does not authorize on-chain state changes. Wallets that do not expose message signing report `canSignMessage` as false and `execute()` rejects with an unsupported-wallet error.
 
+## Sign In With Solana
+
+```ts
+import { useSignIn } from "@vue-solana/vue/useSignIn";
+
+const { signInResult, status, loading, error, signIn } = useSignIn();
+
+async function handleSignIn() {
+  const { account, signedMessage, signature } = await signIn({
+    statement: "Sign in to My App",
+    // Generate the nonce server-side and verify it on the server.
+    nonce: await fetchNonceFromBackend(),
+  });
+
+  // Send { account.address, signature, signedMessage } to your backend for
+  // verification before creating a session.
+}
+```
+
+The wallet must support the SIWS feature (`canSignIn` is false otherwise, and `signIn()` rejects with a `WALLET_FEATURE_UNSUPPORTED` error). The sign-in uses the wallet's currently selected account; if no wallet is connected, `signIn()` rejects with a `WALLET_NOT_CONNECTED` error — connect first, the composable does not do it for you.
+
+### Verifying the signature on your server
+
+The wallet returns a signature over `signedMessage` — the SIWS message the user consented to. Trusting the result without verification would let a malicious client forge an identity, so verify server-side before issuing a session:
+
+1. **Check the message**: decode `signedMessage` and confirm the domain matches your origin, the `uri` is yours, the `nonce` matches the one your server issued for this session, and the statement/resources match what you expect.
+2. **Verify the signature**: the signature is an Ed25519 signature of the SIWS message bytes. Verify it with `tweetnacl` (`nacl.sign.detached.verify(signedMessage, signature, account.publicKey)`) or any Ed25519 library, against the account's `publicKey` from the sign-in result.
+3. **Bind the session**: only after the message checks and the signature verifies should you create the session — keyed to `account.address`.
+
+The server must re-derive the expected message from the nonce it issued (or validate every field of the received message) so expired or replayed nonces are rejected.
+
+## Data Fetching Composables
+
+`useRequest`, `useSubscription`, and `useTrackedData` are the SWR-style data layer, built on the Kit reactive-store primitives:
+
+```ts
+import { useSolanaClient } from "@vue-solana/vue/useSolanaClient";
+import { useTrackedData } from "@vue-solana/vue/useTrackedData";
+import { address } from "@vue-solana/vue/kit";
+
+const { rpc, rpcSubscriptions } = useSolanaClient().client;
+const someAddress = address("...");
+
+const { data, status, refresh } = useTrackedData({
+  rpcRequest: rpc.getBalance(someAddress),
+  rpcValueMapper: (lamports) => lamports,
+  rpcSubscriptionRequest: rpcSubscriptions.accountNotifications(someAddress),
+  rpcSubscriptionValueMapper: ({ lamports }) => lamports,
+});
+
+// data.value is a SolanaRpcResponse envelope: data.value.value and
+// data.value.context.slot.
+```
+
+- `useRequest` re-fires when a ref/computed source changes identity; passing `null` disables it (status `disabled`).
+- `useSubscription` keeps the stale value while reconnecting; `reconnect()` re-opens the stream.
+- `useTrackedData` slot-deduplicates the fetch and subscription so out-of-order arrivals cannot regress the value.
+
+The `rpcValueMapper` and `rpcSubscriptionValueMapper` callbacks receive the **unwrapped** response value (`value.lamports` for a balance), while the returned `data` ref keeps the full `SolanaRpcResponse` envelope so you can read `data.value?.context.slot`.
+
+### One-Shot Requests With `useRequest`
+
+`useRequest` is the general-purpose SWR request. It accepts a request function, a Kit request object (anything with `send()`), or a `ref`/`computed` of either, or `null` to disable:
+
+```ts
+import { computed } from "vue";
+import { useRequest } from "@vue-solana/vue/useRequest";
+import { useSolanaClient } from "@vue-solana/vue/useSolanaClient";
+
+const { rpc } = useSolanaClient();
+const someAddress = ref("...");
+
+const { data, error, status, refresh } = useRequest(
+  computed(() => (someAddress.value ? rpc.getBalance(someAddress.value) : null)),
+  {
+    // Optional per-attempt cancellation composed with the internal signal.
+    getAbortSignal: () => AbortSignal.timeout(5_000),
+  },
+);
+
+// data.value is the raw response value; status is
+// "fetching" | "success" | "error" | "disabled".
+```
+
+While a revalidation runs, the previous `data` and `error` stay populated, so the UI keeps rendering. `refresh()` re-fires manually and resolves with the attempt result.
+
+### Streams With `useSubscription`
+
+`useSubscription` consumes any Kit reactive stream source (duck-typed on `reactiveStore()`), tears the connection down on unmount, and supports manual reconnection with stale-while-revalidate:
+
+```ts
+import { useSubscription } from "@vue-solana/vue/useSubscription";
+import { useSolanaClient } from "@vue-solana/vue/useSolanaClient";
+
+const { rpcSubscriptions } = useSolanaClient().client;
+
+const { data, error, status, reconnect } = useSubscription(
+  computed(() => (someAddress.value ? rpcSubscriptions.slotNotifications() : null)),
+  { onError: (cause) => console.error(cause) },
+);
+
+// Status is "loading" | "loaded" | "error" | "disabled".
+// reconnect() re-opens the stream while data keeps the last known value.
+```
+
+Errors preserve the last known `data`; a `null` source disables the subscription and clears state.
+
+### Cache Keying Across Mounts
+
+```ts
+import {
+  useRequestSwr,
+  useSubscriptionSwr,
+  useTrackedDataSwr,
+  clearSwrCache,
+} from "@vue-solana/vue/swr";
+
+const balance = useRequestSwr(`balance:${someAddress}`, rpc.getBalance(someAddress));
+```
+
+Components mounted with the same key seed from the last-known value while their own request revalidates. There is no `useAction` adapter — actions are mutations, not cacheable reads; use the mutation API of your data layer (or `useAction` itself).
+
+Cache behavior details:
+
+- Keys are namespaced per adapter (`request:`, `subscription:`, `tracked:`), so the same key is safe across adapters.
+- A `null`/`undefined` source disables the composable and **clears** the cached entry for that key — including when a component mounts with its source already disabled.
+- `useTrackedDataSwr` caches the full `SolanaRpcResponse` envelope, so remounting components restore both the value and its slot context.
+- The cache is a module-level `Map`. On the server, namespace keys per request or call `clearSwrCache()` between requests to avoid cross-request leakage.
+
+For a runnable demonstration of all five composables (including SWR remount behavior) against devnet, see the Live Data Panels in the [Vue Vite example](/examples/vue-vite).
+
 ## Transaction State
 
 ```ts
@@ -457,6 +614,77 @@ The current wallet must be connected and support either `signAndSendTransaction`
 Without `confirm: true`, `execute()` returns after submission and sets `status` to `sent`. With confirmation enabled, status moves through `sending`, `confirming`, and then `processed`, `confirmed`, or `finalized` to match the requested commitment. If confirmation times out or fails, the submitted `signature` remains available so the app can link to an explorer.
 
 `useSignAndSendTransaction()` also clears `loading` if a wallet adapter never returns a result. In that stale case, `error` is set and the chain status may be unknown, so check the connected wallet or an explorer before retrying.
+
+## Batch Transactions
+
+```ts
+import { useSignTransactions } from "@vue-solana/vue/useSignTransactions";
+import { useSignAndSendTransactions } from "@vue-solana/vue/useSignAndSendTransactions";
+
+const { signedTransactions, execute: signMany } = useSignTransactions();
+const { signatures, execute: signAndSendMany } = useSignAndSendTransactions();
+
+// One wallet request for N transactions.
+const signed = await signMany([transactionA, transactionB]);
+
+// One wallet request for N signatures.
+const sent = await signAndSendMany([transactionA, transactionB], { minContextSlot });
+```
+
+Both prefer the wallet's batch capability. `useSignTransactions` falls back to the legacy batch `signAllTransactions` feature; `useSignAndSendTransactions` falls back to sending the singular request in sequence. Batch signing is all-or-nothing (a rejection signs nothing), but the sign-and-send fallback can leave earlier transactions submitted. When that happens it rejects with a `PartialSignAndSendError` whose `signatures` lists the transactions already sent, so a retry can skip them:
+
+```ts
+import { PartialSignAndSendError } from "@vue-solana/vue/useSignAndSendTransactions";
+
+try {
+  await signAndSendMany([transactionA, transactionB]);
+} catch (error) {
+  if (error instanceof PartialSignAndSendError) {
+    // error.signatures: the ones that already landed — resend only the rest.
+  }
+}
+```
+
+## Selected Wallet Account
+
+For app-wide selected-account state with persistence and filtering, mount the provider once near the root and read it anywhere:
+
+```vue
+<script setup lang="ts">
+import { SelectedWalletAccountProvider } from "@vue-solana/vue/useSelectedWalletAccount";
+</script>
+
+<template>
+  <SelectedWalletAccountProvider :filter-wallet="filter">
+    <RouterView />
+  </SelectedWalletAccountProvider>
+</template>
+```
+
+```ts
+import { useSelectedWalletAccount } from "@vue-solana/vue/useSelectedWalletAccount";
+
+const [selectedAccount, setSelectedAccount, filteredWallets] = useSelectedWalletAccount();
+```
+
+The selection persists as `${walletName}:${accountAddress}` in `localStorage` by default (pass `stateSync` to customize or `null` to disable) and is restored on the next visit when the wallet and account are available. `filterWallet` restricts which wallet accounts are offered. In Nuxt, the module's runtime plugin installs this context automatically.
+
+## Client Capabilities and Planning
+
+```ts
+import { usePayer, useIdentity } from "@vue-solana/vue/usePayer";
+import { usePlanTransaction } from "@vue-solana/vue/usePlanTransaction";
+
+// Reactive signers from the Kit client (requires a signer plugin).
+const payer = usePayer();
+const identity = useIdentity();
+
+// Plan transaction messages from instructions without sending.
+const { transactionMessage, execute } = usePlanTransaction();
+const message = await execute(instructions);
+```
+
+`useClientCapability("payer")` asserts a capability is installed on the client and throws a descriptive error (naming the hook and how to install it) during setup when it is missing. `usePlanTransaction()` / `usePlanTransactions()` require the planning capability, e.g. `rpcTransactionPlanner()` from `@solana/kit-plugin-rpc`.
 
 ## Confirm an Existing Signature
 
