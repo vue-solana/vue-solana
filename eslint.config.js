@@ -47,6 +47,7 @@ export default tseslint.config(
         useToast: "readonly",
         useSolana: "readonly",
         useSolanaAccountInfo: "readonly",
+        useSolanaAirdrop: "readonly",
         useSolanaBalance: "readonly",
         useSolanaClient: "readonly",
         useSolanaConnection: "readonly",

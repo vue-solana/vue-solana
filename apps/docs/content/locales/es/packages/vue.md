@@ -67,6 +67,7 @@ Subpaths directos del paquete:
 
 - `@vue-solana/vue/buffer-polyfill`
 - `@vue-solana/vue/useAction`
+- `@vue-solana/vue/useAirdrop`
 - `@vue-solana/vue/useRequest`
 - `@vue-solana/vue/useSubscription`
 - `@vue-solana/vue/useTrackedData`
@@ -109,6 +110,7 @@ Usa `@vue-solana/vue/buffer-polyfill` para código de transacciones en navegador
 - `useWallet()`: devuelve refs de wallet activa, estado de conexión computado y acciones de wallet.
 - `useWallets()`: devuelve wallets de extensión de navegador descubiertas, wallets Android Mobile Wallet Adapter, entradas soportadas de wallet de navegador iOS y acciones de selección de wallet.
 - `useBalance(address, commitment?)`: carga el balance en lamports para un string de dirección.
+- `useAirdrop()`: airdrops SOL en una cuenta en redes de prueba y validadores locales.
 - `useTokenAccounts(owner, options?)`: carga todas las cuentas de token SPL para un propietario, consultando ambos programas Token y Token-2022 por defecto.
 - `useTokenBalance(mint, owner)`: carga el balance y decimales del token SPL para un par mint/propietario vía la cuenta de token asociada.
 - `useTransaction(handler, options?)`: helper genérico de estado de transacción async con configuración opcional de timeout.

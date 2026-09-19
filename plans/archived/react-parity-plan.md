@@ -11,6 +11,7 @@ Priority labels, highest first:
 | Feature                     | Priority | Depends on                       |
 | --------------------------- | -------- | -------------------------------- |
 | `useAction`                 | P0       | —                                |
+| `useAirdrop`                | P0       | —                                |
 | `useRequest`                | P0       | `useAction`                      |
 | `useSubscription`           | P0       | —                                |
 | `useTrackedData`            | P1       | `useRequest` + `useSubscription` |
@@ -23,6 +24,7 @@ Priority labels, highest first:
 | Cache adapters (SWR)        | P2       | `useRequest` + `useSubscription` |
 
 - [x] P0 — `useAction`
+- [x] P0 — `useAirdrop`
 - [x] P0 — `useRequest`
 - [x] P0 — `useSubscription`
 - [x] P1 — `useTrackedData`

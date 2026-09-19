@@ -82,6 +82,7 @@ The module auto-imports these composables from direct `@vue-solana/vue/*` subpat
 - `useSolanaRpc()`: returns cluster, endpoint, RPC status, latest blockhash, the injected Kit `client`, and `checkConnection()`.
 - `useSolanaConnection()`: returns the injected Kit `client` (deprecated in favor of `useSolanaClient()`).
 - `useSolanaAccountInfo(address, options?)`: reads account info and can subscribe to account changes.
+- `useSolanaAirdrop()`: airdrops SOL into an account on test networks and local validators.
 - `useSolanaWallet()`: returns selected wallet state, connection state, capabilities, and wallet actions.
 - `useSolanaWallets()`: returns discovered wallets and wallet selection/refresh actions.
 - `useSolanaBalance(address, commitment?)`: reads lamport balance for a public key or address.

@@ -40,6 +40,11 @@
       "import": "./dist/useAction.mjs",
       "require": "./dist/useAction.cjs"
     },
+    "./useAirdrop": {
+      "types": "./dist/useAirdrop.d.ts",
+      "import": "./dist/useAirdrop.mjs",
+      "require": "./dist/useAirdrop.cjs"
+    },
     "./useRequest": {
       "types": "./dist/useRequest.d.ts",
       "import": "./dist/useRequest.mjs",

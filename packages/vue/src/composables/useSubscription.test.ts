@@ -223,6 +223,55 @@ describe("useSubscription", () => {
     expect(result.error.value?.cause).toBeInstanceOf(Error);
   });
 
+  it("reconnect({ abortSignal }) uses the override and skips getAbortSignal", async () => {
+    const factory = vi.fn(() => new AbortController().signal);
+    const store = createFakeStreamStore();
+    const source = { reactiveStore: () => store as ReactiveStreamStore<string> };
+    const { result } = setup(() => useSubscription(source, { getAbortSignal: factory }));
+
+    expect(factory).toHaveBeenCalledTimes(1);
+
+    const override = new AbortController();
+    result.reconnect({ abortSignal: override.signal });
+
+    expect(store.connectCount()).toBe(2);
+    expect(factory).toHaveBeenCalledTimes(1);
+
+    override.abort(new Error("killed"));
+
+    expect(result.status.value).toBe("error");
+  });
+
+  it("reconnect({}) and reconnect({ abortSignal: undefined }) skip getAbortSignal", async () => {
+    const factory = vi.fn(() => new AbortController().signal);
+    const store = createFakeStreamStore();
+    const source = { reactiveStore: () => store as ReactiveStreamStore<string> };
+    const { result } = setup(() => useSubscription(source, { getAbortSignal: factory }));
+
+    result.reconnect({});
+    result.reconnect({ abortSignal: undefined });
+
+    expect(store.connectCount()).toBe(3);
+    expect(factory).toHaveBeenCalledTimes(1);
+  });
+
+  it("applies error state immediately for a pre-aborted reconnect signal", async () => {
+    const store = createFakeStreamStore();
+    const source = { reactiveStore: () => store as ReactiveStreamStore<string> };
+    const { result } = setup(() => useSubscription(source));
+
+    store.publish("first", 1);
+    expect(result.data.value).toBe("first");
+
+    const controller = new AbortController();
+    controller.abort(new Error("cancel"));
+    result.reconnect({ abortSignal: controller.signal });
+
+    expect(result.status.value).toBe("error");
+    expect(result.error.value?.cause).toBeInstanceOf(Error);
+    expect(store.connectCount()).toBe(1);
+  });
+
   it("disconnects when the scope is disposed", async () => {
     const store = createFakeStreamStore();
     const source = { reactiveStore: () => store as ReactiveStreamStore<string> };

@@ -164,6 +164,22 @@ const { balance, loading, error, refresh } = useBalance(address);
 </template>
 ```
 
+### Airdrop on Test Networks
+
+`useAirdrop()` sends SOL to an account on devnet, testnet, or a local validator. It requires an airdrop capability on the Kit client, installed with `createClient().use(solanaRpcConnection({ ... })).use(rpcAirdrop())` from `@solana/kit-plugin-rpc`.
+
+```ts
+import { lamports } from "@solana/kit";
+import { useAirdrop } from "@vue-solana/vue/useAirdrop";
+
+const { data, status, error, dispatch } = useAirdrop();
+await dispatch(address, lamports(1_000_000_000)); // 1 SOL
+```
+
+Each `dispatch(address, amount)` runs a fresh airdrop and aborts the previous in-flight call. `data` resolves to the transaction `Signature`, or to `undefined` when the network applies the airdrop without a transaction (some local validators, e.g. LiteSVM).
+
+Airdrops to a single address are rate-limited (public devnets commonly return HTTP 429, and 1 SOL requires enough devnet balance); wait before dispatching again or use a fresh address. Errors surface through `error` / the `error` state.
+
 ## Read Account Data
 
 ```ts
@@ -341,6 +357,39 @@ import { useRequestSwr } from "@vue-solana/vue/swr";
 const balance = useRequestSwr(["balance", address], () => client.rpc.getBalance(address).send());
 ```
 
+### Cancellation & Timeouts
+
+`useRequest()`, `useSubscription()`, and `useTrackedData()` accept a `getAbortSignal` option — a factory called once per attempt (request) or connection (subscription/tracked data). It is the natural place for a timeout:
+
+```ts
+const { data, refresh } = useRequest(source, {
+  getAbortSignal: (attempt) => AbortSignal.timeout(10_000),
+});
+
+await refresh({ abortSignal: AbortSignal.timeout(2_000) });
+```
+
+The factory is read fresh from the latest render on every attempt, so inline closures work without `useCallback`-style wrapping. Each manual refresh or reconnect can instead pass a single `{ abortSignal }` override that replaces the factory for that attempt; pass `AbortSignal` explicitly as `undefined` to skip caller cancellation entirely. Aborting the composed signal fails only that attempt — previous `data` is kept and `status` drops back to `error`.
+
+To kill the data hook entirely, set its source to `null` (status becomes `disabled` and in-flight work is cancelled) or unmount the component that owns it.
+
+### Actions with `useAction`
+
+`useAction()` and its derivatives (`useAirdrop()`, `useSignAndSendTransaction()` themes) manage one async action at a time:
+
+```ts
+const { data, status, error, dispatch } = useAction(async (signal, input) => {
+  /* ... */
+});
+
+dispatch(inputA); // runs
+await dispatch(inputB); // aborts dispatch(inputA) before starting
+```
+
+- `useAction` keeps the handler in a ref — every `dispatch` runs the latest closure, so there is no deps array to keep in sync. In-flight calls keep running with the closure they started with.
+- `dispatch` returns a `Promise<TResult>`. If a newer dispatch supersedes it, the older promise rejects with an abort error; awaiters should treat that as "superseded", not a failure, and fresh awaits win.
+- Calling `dispatch` again aborts the prior in-flight call with a fresh `AbortSignal`, and resets state to `idle` before the new run starts.
+
 ### Sign In With Solana
 
 `useSignIn()` triggers the SIWS flow when the connected wallet supports the `solana:signIn` feature:
@@ -420,6 +469,7 @@ Docs: [Vue Solana Agent Skill](https://vue-solana-docs.vercel.app/agent-skill)
 | `useWallets()`                                                                             | Returns discovered browser extension wallets, Android MWA wallets, iOS browser wallet links, and wallet selection actions. |
 | `useSignMessage()`                                                                         | Signs arbitrary message bytes through the connected wallet when message signing is supported.                              |
 | `useBalance(address, commitment?)`                                                         | Loads lamport balance for an address string.                                                                               |
+| `useAirdrop()`                                                                             | Airdrops SOL on devnet/testnet/localnets; `data` is the `Signature`, or `undefined` when applied directly.                 |
 | `useAccountInfo(address, options?)`                                                        | Loads normalized account info (executable, lamports, owner, space, data bytes).                                            |
 | `useProgramAccounts(programId, config?)`                                                   | Loads accounts owned by a program with optional filters, commitment, and `dataSlice`.                                      |
 | `useTransaction(handler, options?)`                                                        | Generic async transaction state helper with optional timeout settings.                                                     |
@@ -452,6 +502,7 @@ Direct composable subpaths:
 - `@vue-solana/vue/useRpc`
 - `@vue-solana/vue/useConnection`
 - `@vue-solana/vue/useAccountInfo`
+- `@vue-solana/vue/useAirdrop`
 - `@vue-solana/vue/useBalance`
 - `@vue-solana/vue/useProgramAccounts`
 - `@vue-solana/vue/useWallet`
