@@ -195,6 +195,8 @@ describe("wallet helpers", () => {
     const wallet = {
       connected: true,
       publicKey,
+      connect: async () => {},
+      disconnect: async () => {},
       signAndSendTransactions: async () => [],
     } as SolanaWallet;
 
@@ -205,6 +207,8 @@ describe("wallet helpers", () => {
     const wallet = {
       connected: true,
       publicKey,
+      connect: async () => {},
+      disconnect: async () => {},
       signAndSendTransaction: async () => ({ signature: "" }),
     } as SolanaWallet;
 
