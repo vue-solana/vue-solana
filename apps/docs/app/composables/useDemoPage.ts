@@ -2,6 +2,7 @@ import { computed, shallowRef } from "vue";
 import { formatError } from "./demo/errors";
 import { packageVersions } from "./demo/packageVersions";
 import { useDemoMessageSigning } from "./demo/useDemoMessageSigning";
+import { useDemoLiveData } from "./demo/useDemoLiveData";
 import { useDemoTransfer } from "./demo/useDemoTransfer";
 import { useDemoTokenAccounts } from "./demo/useDemoTokenAccounts";
 import { useDemoWallet } from "./demo/useDemoWallet";
@@ -20,6 +21,8 @@ export function useDemoPage() {
   const transfer = useDemoTransfer();
   const demoWallet = useDemoWallet();
   const tokenAccounts = useDemoTokenAccounts();
+  const liveData = useDemoLiveData();
+  const signIn = useSolanaSignIn();
 
   const pluginInstalled = computed(() => Boolean(solana.client && solana.endpoint));
   const balanceInSol = computed(() => {
@@ -30,6 +33,9 @@ export function useDemoPage() {
     return `${balance.balance.value / 1_000_000_000} SOL`;
   });
   const balanceError = computed(() => formatError(balance.error.value));
+  const signInErrorText = computed(() =>
+    signIn.error.value instanceof Error ? signIn.error.value.message : "",
+  );
 
   return {
     balance,
@@ -38,11 +44,14 @@ export function useDemoPage() {
     balanceInSol,
     ...demoWallet,
     ...directConnection,
+    ...liveData,
     ...messageSigning,
     ...mockTransactionDemo,
     packageVersions,
     pluginInstalled,
     rpc,
+    signIn,
+    signInErrorText,
     ...tokenAccounts,
     ...transfer,
   };

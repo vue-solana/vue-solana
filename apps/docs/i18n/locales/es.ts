@@ -228,5 +228,70 @@ export default {
         waiting: "esperando",
       },
     },
+    sections: {
+      connection: {
+        eyebrow: "RPC en devnet",
+        title: "Conexion y RPC",
+        description:
+          "Estado del plugin, detalles del cluster y una llamada directa al cliente Kit.",
+      },
+      balances: {
+        eyebrow: "Balances",
+        title: "Balances y tokens",
+        description: "Balances en lamports y SOL, y cuentas de tokens SPL.",
+      },
+      wallets: {
+        eyebrow: "Wallet Standard",
+        title: "Wallets",
+        description: "Descubre, selecciona, conecta y gestiona wallets Solana Wallet Standard.",
+      },
+      signing: {
+        eyebrow: "Firma",
+        title: "Firma y transacciones",
+        description:
+          "Firma de mensajes, Sign In With Solana, transferencias y estado generico de transaccion.",
+      },
+      live: {
+        eyebrow: "Reactivo a Kit",
+        title: "Datos en vivo",
+        description:
+          "Composables reactivos a Kit: peticiones unicas, suscripciones websocket, datos con seguimiento de slot y cache SWR.",
+      },
+    },
+    liveData: {
+      trackedAddressEyebrow: "Cuenta rastreada",
+      trackedAddress: "Direccion rastreada",
+      noData: "Aun sin datos",
+      request: {
+        title: "useSolanaRequest",
+        description:
+          "Peticion RPC HTTP unica que se re-ejecuta cuando su fuente cambia, con stale-while-revalidate.",
+      },
+      subscription: {
+        title: "useSolanaSubscription",
+        description: "Notificaciones de slot en vivo sobre el RPC websocket.",
+      },
+      tracked: {
+        title: "useSolanaTrackedData",
+        description: "Fetch mas suscripcion, deduplicadas por slot entre las dos fuentes.",
+      },
+      swr: {
+        title: "useSolanaRequestSwr",
+        description:
+          "Peticion con cache por clave y stale-while-revalidate. Ocultar y volver a mostrar la tarjeta la remonta: los datos en cache aparecen al instante mientras la peticion se revalida.",
+        toggleHide: "Ocultar tarjeta",
+        toggleShow: "Mostrar tarjeta",
+        hidden: "Tarjeta oculta",
+      },
+    },
+    signIn: {
+      title: "Sign In With Solana",
+      description:
+        "Activa la funcion Sign In With Solana de la wallet. El resultado debe verificarse en un servidor antes de confiar en la identidad.",
+      button: "Iniciar sesion con la wallet",
+      signingIn: "Iniciando sesion...",
+      notSignedIn: "Sesion no iniciada",
+      signedInAs: "Sesion iniciada como {address}",
+    },
   },
 };

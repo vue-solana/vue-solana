@@ -225,5 +225,66 @@ export default {
         waiting: "等待中",
       },
     },
+    sections: {
+      connection: {
+        eyebrow: "Devnet RPC",
+        title: "连接和 RPC",
+        description: "插件状态、集群详情以及直接 Kit 客户端调用。",
+      },
+      balances: {
+        eyebrow: "余额",
+        title: "余额和代币",
+        description: "Lamport/SOL 余额以及 SPL 代币账户。",
+      },
+      wallets: {
+        eyebrow: "Wallet Standard",
+        title: "钱包",
+        description: "发现、选择、连接和管理 Solana Wallet Standard 钱包。",
+      },
+      signing: {
+        eyebrow: "签名",
+        title: "签名和交易",
+        description: "消息签名、Sign In With Solana、转账和通用交易状态。",
+      },
+      live: {
+        eyebrow: "Kit 响应式",
+        title: "实时数据",
+        description:
+          "Kit 响应式 composables：一次性请求、websocket 订阅、slot 追踪数据和 SWR 缓存。",
+      },
+    },
+    liveData: {
+      trackedAddressEyebrow: "追踪账户",
+      trackedAddress: "追踪地址",
+      noData: "暂无数据",
+      request: {
+        title: "useSolanaRequest",
+        description: "其源发生变化时重新执行的一次性 HTTP RPC 请求，支持 stale-while-revalidate。",
+      },
+      subscription: {
+        title: "useSolanaSubscription",
+        description: "通过 websocket RPC 实时获取 slot 通知。",
+      },
+      tracked: {
+        title: "useSolanaTrackedData",
+        description: "fetch 加订阅，并在两个来源之间按 slot 去重。",
+      },
+      swr: {
+        title: "useSolanaRequestSwr",
+        description:
+          "基于键值缓存并用 stale-while-revalidate 的请求。隐藏再显示卡片会重新挂载：缓存数据立即可见，同时请求重新验证。",
+        toggleHide: "隐藏卡片",
+        toggleShow: "显示卡片",
+        hidden: "卡片已隐藏",
+      },
+    },
+    signIn: {
+      title: "Sign In With Solana",
+      description: "触发钱包的 Sign In With Solana 功能。在信任身份之前，必须在服务器上验证结果。",
+      button: "用钱包登录",
+      signingIn: "登录中...",
+      notSignedIn: "未登录",
+      signedInAs: "已以 {address} 登录",
+    },
   },
 };
