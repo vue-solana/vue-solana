@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { address } from "@solana/kit";
+import { address, lamports } from "@solana/kit";
 import {
+  useAirdrop,
   useRequest,
   useSignIn,
   useSolanaClient,
@@ -14,6 +15,7 @@ import SwrCard from "./SwrCard.vue";
 const { client } = useSolanaClient();
 const wallet = useWallet();
 const signIn = useSignIn();
+const airdrop = useAirdrop();
 
 /** Account whose live data the panels track; re-typing it re-fires everything. */
 const trackedAddressInput = ref("HN7cABqLq46Es1jh92dQQisAq662SmxELLLsHHe4YWrH");
@@ -107,6 +109,9 @@ const trackedText = computed(() => {
 const signInErrorText = computed(() =>
   signIn.error.value instanceof Error ? signIn.error.value.message : "",
 );
+const airdropErrorText = computed(() =>
+  airdrop.error.value instanceof Error ? airdrop.error.value.message : "",
+);
 </script>
 
 <template>
@@ -198,6 +203,36 @@ const signInErrorText = computed(() =>
 
       <article class="subpanel">
         <header>
+          <h3>useAirdrop</h3>
+          <span class="status-pill" data-testid="airdrop-status">{{ airdrop.status.value }}</span>
+        </header>
+        <p>
+          Airdrops 1 SOL into the connected wallet. Requires an airdrop-capable RPC client such as
+          devnet or a local validator; some implementations update balances without a transaction.
+        </p>
+        <p v-if="!wallet.connected.value" class="hint" data-testid="airdrop-connect-hint">
+          Connect a wallet to airdrop SOL into it.
+        </p>
+        <div class="actions">
+          <button
+            type="button"
+            data-testid="airdrop-button"
+            :disabled="!wallet.connected.value || airdrop.isRunning.value"
+            @click="airdrop.dispatch(wallet.publicKey.value!, lamports(1_000_000_000n))"
+          >
+            {{ airdrop.isRunning.value ? "Airdropping..." : "Airdrop 1 SOL" }}
+          </button>
+        </div>
+        <p class="result" data-testid="airdrop-data">
+          {{ airdrop.data.value ? `Signature ${airdrop.data.value}` : "No airdrop yet" }}
+        </p>
+        <p v-if="airdropErrorText" class="error" data-testid="airdrop-error">
+          {{ airdropErrorText }}
+        </p>
+      </article>
+
+      <article class="subpanel">
+        <header>
           <h3>useRequestSwr</h3>
           <button
             type="button"
@@ -278,6 +313,13 @@ const signInErrorText = computed(() =>
 .error {
   margin: 0.85rem 0 0;
   color: hsl(0, 80%, 55%);
+  overflow-wrap: anywhere;
+}
+
+.hint {
+  margin: 0.85rem 0 0;
+  color: var(--color-text);
+  opacity: 0.7;
   overflow-wrap: anywhere;
 }
 </style>

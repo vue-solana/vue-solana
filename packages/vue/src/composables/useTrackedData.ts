@@ -76,7 +76,8 @@ export interface UseTrackedDataOptions {
    * Returns a caller-provided `AbortSignal` per connection (for example
    * `AbortSignal.timeout(60_000)`), composed with the per-connection signal
    * by the underlying store. Aborting it fails the connection with the abort
-   * reason without touching other state.
+   * reason without touching other state. Read fresh from the latest render,
+   * so inline closures need no callback wrapping.
    */
   getAbortSignal?: (connection: number) => AbortSignal | null | undefined;
   /**
@@ -84,6 +85,17 @@ export interface UseTrackedDataOptions {
    */
   onError?: (error: unknown) => void;
 }
+
+/** Per-connection abort overrides for `refresh()`. */
+export type UseTrackedDataRefresherOptions = {
+  /**
+   * Applies only this signal to both connections, bypassing `getAbortSignal`.
+   * Passing `undefined` (or an empty options object) applies no caller signal
+   * for that refresh; call `refresh()` with no argument to keep the
+   * `getAbortSignal` factory behavior.
+   */
+  abortSignal?: AbortSignal;
+};
 
 export interface UseTrackedDataReturn<TItem> {
   /**
@@ -93,7 +105,8 @@ export interface UseTrackedDataReturn<TItem> {
    */
   data: ComputedRef<SolanaRpcResponse<TItem> | undefined>;
   error: ComputedRef<SolanaError | null>;
-  refresh: () => void;
+  /** Rebuilds both connections. `refresh({ abortSignal })` overrides `getAbortSignal`. */
+  refresh: (options?: UseTrackedDataRefresherOptions) => void;
   status: ComputedRef<UseTrackedDataStatus>;
 }
 
@@ -151,7 +164,7 @@ export function useTrackedData<TInitialValue, TStreamValue, TItem>(
     }
   }
 
-  function buildAndConnect() {
+  function buildAndConnect(override?: UseTrackedDataRefresherOptions) {
     if (disposed) {
       return;
     }
@@ -250,7 +263,10 @@ export function useTrackedData<TInitialValue, TStreamValue, TItem>(
 
     connectionCount += 1;
     const connection = connectionCount;
-    const callerSignal = options.getAbortSignal?.(connection);
+    // A per-call override on refresh() replaces the factory for that
+    // connection; `refresh({ abortSignal: undefined })` means "no caller
+    // signal" and `refresh()` keeps the `getAbortSignal` behavior.
+    const callerSignal = override ? override.abortSignal : options.getAbortSignal?.(connection);
 
     const store = createReactiveStoreWithInitialValueAndSlotTracking({
       initialValueMapper: source.rpcValueMapper,
@@ -318,8 +334,8 @@ export function useTrackedData<TInitialValue, TStreamValue, TItem>(
   return {
     data: computed(() => data.value),
     error: computed(() => error.value),
-    refresh: () => {
-      buildAndConnect();
+    refresh: (options?: UseTrackedDataRefresherOptions) => {
+      buildAndConnect(options);
     },
     status: computed(() => status.value),
   };

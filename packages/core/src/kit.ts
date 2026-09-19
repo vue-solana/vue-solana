@@ -1,5 +1,5 @@
 import { createClient } from "@solana/kit";
-import { solanaRpcConnection } from "@solana/kit-plugin-rpc";
+import { rpcAirdrop, solanaRpcConnection } from "@solana/kit-plugin-rpc";
 import {
   DEFAULT_CLUSTER,
   getClusterEndpoint,
@@ -22,12 +22,14 @@ export function createSolanaClient(config: SolanaConfig = {}) {
     config.wsEndpoint ??
     (config.endpoint ? getWebSocketEndpoint(endpoint) : getClusterWebSocketEndpoint(cluster));
 
-  return createClient().use(
-    solanaRpcConnection({
-      rpcUrl: endpoint,
-      rpcSubscriptionsUrl: wsEndpoint,
-    }),
-  );
+  return createClient()
+    .use(
+      solanaRpcConnection({
+        rpcUrl: endpoint,
+        rpcSubscriptionsUrl: wsEndpoint,
+      }),
+    )
+    .use(rpcAirdrop());
 }
 
 export type SolanaClient = ReturnType<typeof createSolanaClient>;
