@@ -100,9 +100,9 @@ Install only the package needed by your app. Nuxt apps normally install @vue-sol
 - [Nuxt 예제](https://vue-solana-docs.vercel.app/ko/examples/nuxt): @vue-solana/nuxt를 위한 실행 가능한 Nuxt 예제 앱입니다.
 - [Nuxt 示例](https://vue-solana-docs.vercel.app/zh/examples/nuxt): 面向 @vue-solana/nuxt 的可运行 Nuxt 示例应用。
 - [Roadmap](https://vue-solana-docs.vercel.app/es/roadmap): Funcionalidades y mejoras planificadas para Vue Solana.
-- [로드맵](https://vue-solana-docs.vercel.app/ko/roadmap): Vue Solana의 계획된 기능 및 개선 사항입니다.
+- [로드맵](https://vue-solana-docs.vercel.app/ko/roadmap): Vue Solana의 계획된 기능과 개선 사항.
 - [Roadmap](https://vue-solana-docs.vercel.app/roadmap): Planned features and improvements for Vue Solana.
-- [路线图](https://vue-solana-docs.vercel.app/zh/roadmap): Vue Solana 计划的功能与改进。
+- [路线图](https://vue-solana-docs.vercel.app/zh/roadmap): Vue Solana 规划中的功能与改进。
 
 ## Crawling Notes
 

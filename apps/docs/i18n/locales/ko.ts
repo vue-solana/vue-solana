@@ -227,5 +227,68 @@ export default {
         waiting: "대기 중",
       },
     },
+    sections: {
+      connection: {
+        eyebrow: "Devnet RPC",
+        title: "연결 및 RPC",
+        description: "플러그인 상태, 클러스터 정보, 직접 Kit 클라이언트 호출.",
+      },
+      balances: {
+        eyebrow: "잔액",
+        title: "잔액 및 토큰",
+        description: "Lamport/SOL 잔액과 SPL 토큰 계정.",
+      },
+      wallets: {
+        eyebrow: "Wallet Standard",
+        title: "지갑",
+        description: "Solana Wallet Standard 지갑을 검색, 선택, 연결, 관리합니다.",
+      },
+      signing: {
+        eyebrow: "서명",
+        title: "서명 및 트랜잭션",
+        description: "메시지 서명, Sign In With Solana, 전송, 일반 트랜잭션 상태.",
+      },
+      live: {
+        eyebrow: "Kit reactive",
+        title: "라이브 데이터",
+        description:
+          "Kit-reactive 컴포저블: 일회성 요청, websocket 구독, slot 추적 데이터, SWR 캐시.",
+      },
+    },
+    liveData: {
+      trackedAddressEyebrow: "추적 계정",
+      trackedAddress: "추적 주소",
+      noData: "아직 데이터 없음",
+      request: {
+        title: "useSolanaRequest",
+        description:
+          "소스가 변경될 때 다시 실행되는 일회성 HTTP RPC 요청. stale-while-revalidate 지원.",
+      },
+      subscription: {
+        title: "useSolanaSubscription",
+        description: "websocket RPC를 통한 라이브 slot 알림.",
+      },
+      tracked: {
+        title: "useSolanaTrackedData",
+        description: "fetch와 구독을 결합하고 두 소스 사이의 slot 중복을 제거합니다.",
+      },
+      swr: {
+        title: "useSolanaRequestSwr",
+        description:
+          "키 캐시와 stale-while-revalidate를 사용하는 요청. 카드를 숨겼다가 다시 보여주면 다시 마운트되어 캐시된 데이터가 즉시 표시되고 요청은 재검증됩니다.",
+        toggleHide: "카드 숨기기",
+        toggleShow: "카드 보여주기",
+        hidden: "카드 숨겨짐",
+      },
+    },
+    signIn: {
+      title: "Sign In With Solana",
+      description:
+        "지갑의 Sign In With Solana 기능을 실행합니다. 결과는 서버에서 검증한 뒤 신뢰해야 합니다.",
+      button: "지갑으로 로그인",
+      signingIn: "로그인 중...",
+      notSignedIn: "로그인 안 됨",
+      signedInAs: "{address}(으)로 로그인됨",
+    },
   },
 };

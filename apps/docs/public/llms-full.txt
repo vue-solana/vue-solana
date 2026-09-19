@@ -607,6 +607,7 @@ Antes de confiar en un flujo de app, verifica estos comportamientos en devnet:
 - [Guia de transacciones](/guides/transactions)
 - [Migracion a Kit](/guides/kit-migration)
 - [Solucion de problemas](/troubleshooting)
+- [Documentación de Solana Kit](https://www.solanakit.com/) — guías oficiales de Kit, recetas y referencia de API
 - [Documentacion de Solana](https://solana.com/docs)
 
 ---
@@ -1002,6 +1003,7 @@ Before relying on an app flow, verify these behaviors on devnet:
 - [Transaction Guide](/guides/transactions)
 - [Kit Migration](/guides/kit-migration)
 - [Troubleshooting](/troubleshooting)
+- [Solana Kit documentation](https://www.solanakit.com/) — official Kit guides, recipes, and API reference
 - [Solana Documentation](https://solana.com/docs)
 
 ---
@@ -1397,6 +1399,7 @@ Signature가 반환된 뒤 confirmation이 timeout되면 즉시 다시 제출하
 - [트랜잭션 가이드](/ko/guides/transactions)
 - [Kit Migration](/ko/guides/kit-migration)
 - [문제 해결](/ko/troubleshooting)
+- [Solana Kit 문서](https://www.solanakit.com/) — 공식 Kit 가이드, 레시피, API 레퍼런스
 - [Solana Documentation](https://solana.com/docs)
 
 ---
@@ -1792,6 +1795,7 @@ function explorerUrl(signature: string, cluster: string) {
 - [交易指南](/zh/guides/transactions)
 - [Kit 迁移](/zh/guides/kit-migration)
 - [故障排查](/zh/troubleshooting)
+- [Solana Kit 文档](https://www.solanakit.com/) — 官方 Kit 指南、recipes 和 API reference
 - [Solana Documentation](https://solana.com/docs)
 
 ---
@@ -2629,6 +2633,7 @@ Official references:
 - [Solana RPC Methods](https://solana.com/docs/rpc)
 - [Solana Clusters](https://solana.com/docs/references/clusters)
 - [Solana Transactions](https://solana.com/docs/core/transactions)
+- [Solana Cookbook](https://solana.com/developers/cookbook) — practical recipes for common Solana patterns
 
 ## Connections And RPC
 
@@ -2735,6 +2740,7 @@ Referencias oficiales:
 - [Solana RPC Methods](https://solana.com/docs/rpc)
 - [Solana Clusters](https://solana.com/docs/references/clusters)
 - [Solana Transactions](https://solana.com/docs/core/transactions)
+- [Solana Cookbook](https://solana.com/developers/cookbook) — recetas practicas para patrones comunes de Solana
 
 ## Conexiones y RPC
 
@@ -2841,6 +2847,7 @@ Description: Vue와 Nuxt 개발자를 위한 실용적인 Solana 개념입니다
 - [Solana RPC Methods](https://solana.com/docs/rpc)
 - [Solana Clusters](https://solana.com/docs/references/clusters)
 - [Solana Transactions](https://solana.com/docs/core/transactions)
+- [Solana Cookbook](https://solana.com/developers/cookbook) — 일반적인 Solana 패턴을 위한 실용 레시피
 
 ## Connection과 RPC
 
@@ -2947,6 +2954,7 @@ Description: 面向 Vue 和 Nuxt 开发者的实用 Solana 概念。
 - [Solana RPC Methods](https://solana.com/docs/rpc)
 - [Solana Clusters](https://solana.com/docs/references/clusters)
 - [Solana Transactions](https://solana.com/docs/core/transactions)
+- [Solana Cookbook](https://solana.com/developers/cookbook) — 常见 Solana 模式的实用食谱
 
 ## 连接和 RPC
 
@@ -3601,6 +3609,7 @@ Si quieres la API clásica de clases, `@solana/web3.js@rc` (v3) es la vía de ac
 
 - [`RPC y Clusters`](/es/guides/rpc-and-clusters) — configuración de clúster y endpoints
 - [`Primeros Pasos`](/es/getting-started) — instalación y primeras lecturas en devnet
+- [Documentación de Solana Kit](https://www.solanakit.com/) — guías oficiales de Kit, recetas y referencia de API
 - [`@vue-solana/core`](/es/packages/core), [`@vue-solana/vue`](/es/packages/vue), [`@vue-solana/nuxt`](/es/packages/nuxt) — referencia de paquetes
 
 ---
@@ -3770,6 +3779,7 @@ If you want the classic class API, `@solana/web3.js@rc` (v3) is the upgrade path
 
 - [`RPC and Clusters`](/guides/rpc-and-clusters) — cluster and endpoint configuration
 - [`Getting Started`](/getting-started) — install and first devnet reads
+- [Solana Kit documentation](https://www.solanakit.com/) — official Kit guides, recipes, and API reference
 - [`@vue-solana/core`](/packages/core), [`@vue-solana/vue`](/packages/vue), [`@vue-solana/nuxt`](/packages/nuxt) — package reference
 
 ---
@@ -3939,6 +3949,7 @@ Kit REST RPC 메서드는 네이티브 JavaScript 타입을 반환합니다:
 
 - [`RPC와 클러스터`](/ko/guides/rpc-and-clusters) — 클러스터 및 엔드포인트 구성
 - [`시작하기`](/ko/getting-started) — 설치 및 첫 devnet 읽기
+- [Solana Kit 문서](https://www.solanakit.com/) — 공식 Kit 가이드, 레시피, API 레퍼런스
 - [`@vue-solana/core`](/ko/packages/core), [`@vue-solana/vue`](/ko/packages/vue), [`@vue-solana/nuxt`](/ko/packages/nuxt) — 패키지 레퍼런스
 
 ---
@@ -4108,6 +4119,7 @@ Kit REST RPC 方法返回原生 JavaScript 类型：
 
 - [`RPC 和 Clusters`](/zh/guides/rpc-and-clusters) — 集群和端点配置
 - [`入门`](/zh/getting-started) — 安装和首次 devnet 读取
+- [Solana Kit 文档](https://www.solanakit.com/) — 官方 Kit 指南、recipes 和 API reference
 - [`@vue-solana/core`](/zh/packages/core)、[`@vue-solana/vue`](/zh/packages/vue)、[`@vue-solana/nuxt`](/zh/packages/nuxt) — 包参考
 
 ---
@@ -7476,6 +7488,29 @@ async function signIn() {
 
 Las wallets que no exponen firma de mensajes reportan `canSignMessage` como false. Llamar a `execute()` sin soporte rechaza con `WALLET_FEATURE_UNSUPPORTED`.
 
+## Iniciar Sesion Con Solana (SIWS)
+
+Para autenticacion, prefiere SIWS sobre la firma de mensajes de texto libre cuando la wallet lo soporta. SIWS muestra al usuario una pantalla de consentimiento estructurada (dominio, statement, resources, URI) en lugar de bytes arbitrarios, y la wallet devuelve un resultado tipado:
+
+```ts
+import { useSignIn } from "@vue-solana/vue/useSignIn";
+
+const { signIn } = useSignIn();
+
+const { account, signedMessage, signature } = await signIn({
+  statement: "Iniciar sesion en example.com",
+  nonce: nonceDeTuServidor,
+});
+```
+
+El resultado no es una sesion autenticada: es una afirmacion que hay que verificar. En tu servidor:
+
+1. Decodifica `signedMessage` y comprueba que el dominio es tu origen, la URI es tuya y el nonce coincide con el que tu servidor emitio para este intento de inicio de sesion (de un solo uso, expiracion corta).
+2. Verifica la firma Ed25519 sobre `signedMessage` contra `account.publicKey`, por ejemplo con `tweetnacl`: `nacl.sign.detached.verify(signedMessage, signature, account.publicKey)`.
+3. Solo entonces crea la sesion, asociada a `account.address`.
+
+Las wallets sin soporte SIWS rechazan `signIn()` con `WALLET_FEATURE_UNSUPPORTED`; para esas wallets, usa `useSignMessage()` con tu propio texto de desafio.
+
 ## Firma De Mensajes En Nuxt
 
 Nuxt autoimporta `useSolanaSignMessage()` y `useSolanaWallet()`.
@@ -7731,6 +7766,29 @@ async function signIn() {
 
 메시지 서명 기능을 노출하지 않는 지갑은 `canSignMessage`를 false로 보고합니다. 지원되지 않는 상태에서 `execute()`를 호출하면 `WALLET_FEATURE_UNSUPPORTED`로 거부됩니다.
 
+## Sign In With Solana (SIWS)
+
+인증에는 자유 형식 메시지 서명보다 지갑이 지원하는 경우 SIWS를 우선하세요. SIWS는 임의의 바이트 대신 구조화된 동의 화면(도메인, statement, resources, URI)을 사용자에게 보여주고, 지갑은 타입화된 결과를 반환합니다:
+
+```ts
+import { useSignIn } from "@vue-solana/vue/useSignIn";
+
+const { signIn } = useSignIn();
+
+const { account, signedMessage, signature } = await signIn({
+  statement: "Sign in to example.com",
+  nonce: nonceFromYourServer,
+});
+```
+
+이 결과는 인증된 세션이 아닙니다. 검증해야 할 주장입니다. 서버에서 다음을 수행하세요:
+
+1. `signedMessage`를 디코드하고 도메인이 여러분의 origin인지, URI가 여러분의 것인지, nonce가 이 로그인 시도를 위해 서버가 발급한 것과 일치하는지 확인하세요(일회성, 짧은 만료).
+2. `signedMessage`에 대한 Ed25519 서명을 `account.publicKey`로 검증하세요. 예를 들어 `tweetnacl` 사용: `nacl.sign.detached.verify(signedMessage, signature, account.publicKey)`.
+3. 그 후에야 `account.address`를 키로 세션을 생성하세요.
+
+SIWS를 지원하지 않는 지갑은 `signIn()`을 `WALLET_FEATURE_UNSUPPORTED`로 거부합니다. 그런 지갑에는 고유한 challenge 문구와 함께 `useSignMessage()`로 폴백하세요.
+
 ## Nuxt 메시지 서명
 
 Nuxt는 `useSolanaSignMessage()`와 `useSolanaWallet()`을 자동 import합니다.
@@ -7846,6 +7904,29 @@ async function signIn() {
 ```
 
 不暴露消息签名的钱包会将 `canSignMessage` 报告为 false。若在不支持的情况下调用 `execute()`，会以 `WALLET_FEATURE_UNSUPPORTED` 拒绝。
+
+## Sign In With Solana (SIWS)
+
+对于认证，当钱包支持时，应优先选择 SIWS 而非自由格式的消息签名。SIWS 会向用户展示结构化的同意界面（域名、statement、resources、URI），而不是任意字节，并且钱包会返回一个类型化的结果：
+
+```ts
+import { useSignIn } from "@vue-solana/vue/useSignIn";
+
+const { signIn } = useSignIn();
+
+const { account, signedMessage, signature } = await signIn({
+  statement: "Sign in to example.com",
+  nonce: nonceFromYourServer,
+});
+```
+
+该结果不是已认证的会话——它是一个需要验证的声明。在你的服务端：
+
+1. 解码 `signedMessage` 并检查域名是你的 origin、URI 是你的、nonce 与服务端为本次登录尝试签发的一致（一次性使用，短有效期）。
+2. 使用 `account.publicKey` 验证 `signedMessage` 上的 Ed25519 签名，例如用 `tweetnacl`：`nacl.sign.detached.verify(signedMessage, signature, account.publicKey)`。
+3. 然后才创建会话，并以 `account.address` 作为键。
+
+不支持 SIWS 的钱包会以 `WALLET_FEATURE_UNSUPPORTED` 拒绝 `signIn()`；对这类钱包，回退到 `useSignMessage()` 并使用你自己的挑战文本。
 
 ## Nuxt 消息签名
 
@@ -8899,6 +8980,10 @@ import type { Address, Commitment, Lamports, Signature, SolanaRpcApi } from "@vu
 
 Los resultados numéricos de RPC son `bigint`, y los datos de cuenta son `Uint8Array` en vez de `Buffer`. Consulta [Kit Migration](/guides/kit-migration) para más detalles.
 
+### Acciones
+
+`createSolanaActionStore()` envuelve cualquier función asíncrona que reciba un `AbortSignal` nuevo por llamada en una máquina de estados de acciones con abort-on-redispatch. El composable de Vue `useAction()` se construye sobre este store; `isSolanaActionAborted()` detecta llamadas canceladas o superadas.
+
 ### Direcciones
 
 - `parseAddress(value)`: analiza un string de dirección, valor tipo ref o getter, y devuelve `null` para entrada nullish. Lanza `INVALID_ADDRESS` para un string base58 inválido. Acepta valores `Address` sin cambios.
@@ -9092,7 +9177,7 @@ The wire format is load-bearing: if `@solana/kit` changes its demultiplexing, th
 
 ## Mocking Wallet Standard Wallets
 
-`registerMockWallets(page)` injects two Wallet Standard wallets via `page.addInitScript` before the app boots:
+The example spec defines a spec-local `registerMockWallets(page)` helper (in `e2e/example-apps.spec.ts`, not exported from `e2e/helpers.ts`) that injects two Wallet Standard wallets via `page.addInitScript` before the app boots:
 
 - **Mock Signer Wallet** — supports `standard:connect`, `standard:disconnect`, `standard:events`, `solana:signMessage`, and `solana:signIn` (SIWS). `signMessage` returns the signature bytes `[1..8]`; `signIn` returns a fixed account, message, and signature.
 - **Mock Readonly Wallet** — supports connect/disconnect/events only, for asserting unsupported-capability UI.
@@ -9467,6 +9552,10 @@ import type { Address, Commitment, Lamports, Signature, SolanaRpcApi } from "@vu
 
 RPC numeric result는 `bigint`이고, account data는 `Buffer`가 아니라 `Uint8Array`입니다. 자세한 내용은 [Kit Migration](/ko/guides/kit-migration)을 참고하세요.
 
+### Actions
+
+`createSolanaActionStore()`는 호출마다 새 `AbortSignal`을 받는 비동기 함수를 abort-on-redispatch 방식의 상태 머신으로 감쌉니다. Vue composable `useAction()`이 이 store 위에 구축되어 있고, `isSolanaActionAborted()`는 취소되거나 대체된 호출을 감지합니다.
+
 ### 주소
 
 - `parseAddress(value)`: address string, ref-like value 또는 getter를 파싱하고 nullish input에는 `null`을 반환합니다. 유효하지 않은 base58 string에는 `INVALID_ADDRESS`를 throw합니다. `Address` 값은 그대로 받아들입니다.
@@ -9780,6 +9869,7 @@ The root `@vue-solana/core` export re-exports the public helpers below. Use dire
 
 | Import path                        | What it contains                                                                                                            | Use it when                                                                                                       |
 | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `@vue-solana/core/action`          | `createSolanaActionStore()`, `SolanaActionState`, and `isSolanaActionAborted()`.                                            | You need a framework-agnostic async action state machine with abort-on-redispatch for Solana work.                |
 | `@vue-solana/core/address`         | `parseAddress()` and address input types.                                                                                   | You accept a Solana address as a string, ref-like object, or getter and need a validated, normalized `Address`.   |
 | `@vue-solana/core/clusters`        | Default cluster and endpoint helpers.                                                                                       | You need the package's built-in RPC or WebSocket endpoint for `mainnet-beta`, `testnet`, `devnet`, or `localnet`. |
 | `@vue-solana/core/errors`          | `SolanaError`, error factories, and error guards.                                                                           | You need stable error codes for user-facing wallet, RPC, address, transaction, timeout, or storage failures.      |
@@ -9837,6 +9927,25 @@ import type { Address, Commitment, Lamports, Signature, SolanaRpcApi } from "@vu
 - Types: `Address`, `Commitment`, `Lamports`, `Rpc`, `Signature`, `SolanaRpcApi`, `SolanaClient`.
 
 RPC numeric results are `bigint`, and account data is `Uint8Array` rather than `Buffer`. See [Kit Migration](/guides/kit-migration) for details.
+
+### Actions
+
+`createSolanaActionStore()` wraps any async function that receives a fresh `AbortSignal` per call into a framework-agnostic action state machine. UI frameworks bridge the returned store into reactive state; the Vue composable `useAction()` is built on this store.
+
+```ts
+import { createSolanaActionStore, isSolanaActionAborted } from "@vue-solana/core/action";
+
+const { dispatch, getState, subscribe, reset, withSignal } = createSolanaActionStore(
+  (signal, address: Address) => client.rpc.getBalance(address).send(),
+);
+
+await dispatch(address);
+```
+
+- Each `dispatch` aborts the previous in-flight call with a fresh `AbortSignal`; superseded calls reject with an abort error and never corrupt state.
+- `getState()` / `subscribe(listener)`: snapshot and stream of `SolanaActionState` (`status`, `data`, and `error`).
+- `withSignal(signal, ...args)`: composes a caller-provided cancellation source for a single dispatch (per-attempt timeouts, shared kill switches).
+- `isSolanaActionAborted(error)`: checks whether a rejection came from an aborted or superseded call.
 
 ### Addresses
 
@@ -10306,6 +10415,10 @@ import type { Address, Commitment, Lamports, Signature, SolanaRpcApi } from "@vu
 - 类型：`Address`、`Commitment`、`Lamports`、`Rpc`、`Signature`、`SolanaRpcApi`、`SolanaClient`。
 
 RPC 数值结果是 `bigint`，账户数据是 `Uint8Array` 而不是 `Buffer`。详见 [Kit 迁移](/zh/guides/kit-migration)。
+
+### 动作
+
+`createSolanaActionStore()` 将每次调用接收新 `AbortSignal` 的异步函数包装成 abort-on-redispatch 的动作状态机。Vue 组合式函数 `useAction()` 构建于此 store 之上，`isSolanaActionAborted()` 用于检测被取消或被取代的调用。
 
 ### 地址
 
@@ -10879,6 +10992,37 @@ if (connected.value && canSignMessage.value) {
 
 La firma de mensajes es para desafíos de propiedad de wallet o autenticación. No es firma de transacciones y no autoriza cambios de estado on-chain. Las wallets que no exponen firma de mensajes reportan `canSignMessage` como false y `execute()` rechaza con un error de wallet no soportada.
 
+## Iniciar Sesión Con Solana
+
+```ts
+import { useSignIn } from "@vue-solana/vue/useSignIn";
+
+const { signInResult, status, loading, error, signIn } = useSignIn();
+
+async function handleSignIn() {
+  const { account, signedMessage, signature } = await signIn({
+    statement: "Iniciar sesión en Mi App",
+    // Genera el nonce en el servidor y verifícalo en el servidor.
+    nonce: await fetchNonceFromBackend(),
+  });
+
+  // Envía { account.address, signature, signedMessage } a tu backend para
+  // verificarlo antes de crear una sesión.
+}
+```
+
+La wallet debe soportar la función SIWS (`canSignIn` es false en caso contrario, y `signIn()` rechaza con un error `WALLET_FEATURE_UNSUPPORTED`). Las wallets sin cuenta seleccionada se conectan primero.
+
+### Verificación de la firma en tu servidor
+
+La wallet devuelve una firma sobre `signedMessage` — el mensaje SIWS que el usuario consintió. Confiar en el resultado sin verificarlo permitiría que un cliente malicioso falsifique una identidad, así que verifica en el servidor antes de emitir una sesión:
+
+1. **Comprueba el mensaje**: decodifica `signedMessage` y confirma que el dominio coincide con tu origen, que la `uri` es tuya, que el `nonce` coincide con el que tu servidor emitió para esta sesión y que statement y resources coinciden con lo que esperas.
+2. **Verifica la firma**: la firma es una firma Ed25519 de los bytes del mensaje SIWS. Verifícala con `tweetnacl` (`nacl.sign.detached.verify(signedMessage, signature, account.publicKey)`) o cualquier librería Ed25519, contra la `publicKey` de la cuenta del resultado de inicio de sesión.
+3. **Vincula la sesión**: solo después de que el mensaje pase las comprobaciones y la firma se verifique debes crear la sesión — asociada a `account.address`.
+
+El servidor debe re-derivar el mensaje esperado a partir del nonce que emitió (o validar todos los campos del mensaje recibido) para rechazar nonces expirados o reutilizados.
+
 ## Composables de obtención de datos
 
 `useRequest`, `useSubscription` y `useTrackedData` son la capa de datos estilo SWR, construida sobre las primitivas de stores reactivos de Kit:
@@ -11000,6 +11144,77 @@ La wallet actual debe estar conectada y soportar `signAndSendTransaction` o `sig
 Sin `confirm: true`, `execute()` devuelve después del envío y establece `status` en `sent`. Con la confirmación activada, el estado pasa por `sending`, `confirming` y luego `processed`, `confirmed` o `finalized` para coincidir con el commitment solicitado. Si la confirmación agota el tiempo o falla, la `signature` enviada sigue disponible para que la app pueda enlazar a un explorador.
 
 `useSignAndSendTransaction()` también limpia `loading` si un adaptador de wallet nunca devuelve un resultado. En ese caso obsoleto, se establece `error` y el estado de cadena puede ser desconocido, así que comprueba la wallet conectada o un explorador antes de reintentar.
+
+## Transacciones en lote
+
+```ts
+import { useSignTransactions } from "@vue-solana/vue/useSignTransactions";
+import { useSignAndSendTransactions } from "@vue-solana/vue/useSignAndSendTransactions";
+
+const { signedTransactions, execute: signMany } = useSignTransactions();
+const { signatures, execute: signAndSendMany } = useSignAndSendTransactions();
+
+// Una petición de wallet para N transacciones.
+const signed = await signMany([transactionA, transactionB]);
+
+// Una petición de wallet para N firmas.
+const sent = await signAndSendMany([transactionA, transactionB], { minContextSlot });
+```
+
+Ambas prefieren la capacidad de lote de la wallet. `useSignTransactions` recurre al lote legacy `signAllTransactions`; `useSignAndSendTransactions` recurre a enviar la petición singular en secuencia. La firma en lote es todo-o-nada (un rechazo no firma nada), pero el fallback de firmar-y-enviar puede dejar transacciones anteriores enviadas. Cuando eso ocurre, rechaza con `PartialSignAndSendError` cuyo `signatures` lista las transacciones ya enviadas, para que un reintento pueda omitirlas:
+
+```ts
+import { PartialSignAndSendError } from "@vue-solana/vue/useSignAndSendTransactions";
+
+try {
+  await signAndSendMany([transactionA, transactionB]);
+} catch (error) {
+  if (error instanceof PartialSignAndSendError) {
+    // error.signatures: las que ya aterrizaron — reenvía solo el resto.
+  }
+}
+```
+
+## Cuenta de wallet seleccionada
+
+Para un estado de cuenta seleccionada en toda la app, con persistencia y filtrado, monta el provider una vez cerca de la raíz y léelo donde quieras:
+
+```vue
+<script setup lang="ts">
+import { SelectedWalletAccountProvider } from "@vue-solana/vue/useSelectedWalletAccount";
+</script>
+
+<template>
+  <SelectedWalletAccountProvider :filter-wallet="filter">
+    <RouterView />
+  </SelectedWalletAccountProvider>
+</template>
+```
+
+```ts
+import { useSelectedWalletAccount } from "@vue-solana/vue/useSelectedWalletAccount";
+
+const [selectedAccount, setSelectedAccount, filteredWallets] = useSelectedWalletAccount();
+```
+
+La selección persiste como `${walletName}:${accountAddress}` en `localStorage` por defecto (pasa `stateSync` para personalizarla o `null` para desactivarla) y se restaura en la siguiente visita cuando la wallet y la cuenta están disponibles. `filterWallet` restringe qué cuentas de wallet se ofrecen. En Nuxt, el plugin runtime del módulo instala este contexto automáticamente.
+
+## Capacidades del cliente y planificación
+
+```ts
+import { usePayer, useIdentity } from "@vue-solana/vue/usePayer";
+import { usePlanTransaction } from "@vue-solana/vue/usePlanTransaction";
+
+// Signers reactivos desde el cliente Kit (requiere un plugin de signer).
+const payer = usePayer();
+const identity = useIdentity();
+
+// Planifica mensajes de transacción a partir de instrucciones sin enviar.
+const { transactionMessage, execute } = usePlanTransaction();
+const message = await execute(instructions);
+```
+
+`useClientCapability("payer")` comprueba que una capacidad está instalada en el cliente y lanza un error descriptivo (indicando el hook y cómo instalarla) durante el setup cuando falta. `usePlanTransaction()` / `usePlanTransactions()` requieren la capacidad de planificación, p.ej. `rpcTransactionPlanner()` de `@solana/kit-plugin-rpc`.
 
 ## Confirmar una firma existente
 
@@ -11503,6 +11718,37 @@ if (connected.value && canSignMessage.value) {
 
 메시지 서명은 지갑 소유권 또는 인증 challenge를 위한 것입니다. 트랜잭션 서명이 아니며 온체인 상태 변경을 승인하지 않습니다. 메시지 서명을 노출하지 않는 지갑은 `canSignMessage`를 false로 보고하고 `execute()`는 unsupported-wallet error로 거부됩니다.
 
+## Sign In With Solana
+
+```ts
+import { useSignIn } from "@vue-solana/vue/useSignIn";
+
+const { signInResult, status, loading, error, signIn } = useSignIn();
+
+async function handleSignIn() {
+  const { account, signedMessage, signature } = await signIn({
+    statement: "Sign in to My App",
+    // 서버에서 nonce를 생성하고 서버에서 검증하세요.
+    nonce: await fetchNonceFromBackend(),
+  });
+
+  // 세션을 만들기 전에 검증할 수 있도록
+  // { account.address, signature, signedMessage }를 백엔드로 보내세요.
+}
+```
+
+지갑은 SIWS 기능을 지원해야 합니다(그렇지 않으면 `canSignIn`이 false이고, `signIn()`은 `WALLET_FEATURE_UNSUPPORTED` 오류로 거부됩니다). 선택된 account가 없는 지갑은 먼저 connect됩니다.
+
+### 서버에서 서명 검증하기
+
+지갑은 사용자가 동의한 SIWS 메시지인 `signedMessage`에 대한 서명을 반환합니다. 검증 없이 결과를 신뢰하면 악의적인 클라이언트가 신원을 위조할 수 있으므로, 세션을 발급하기 전에 서버에서 검증하세요:
+
+1. **메시지 확인**: `signedMessage`를 디코드하고 도메인이 여러분의 origin과 일치하는지, `uri`가 여러분의 것인지, `nonce`가 이 세션을 위해 서버가 발급한 것과 일치하는지, statement/resources가 예상과 일치하는지 확인하세요.
+2. **서명 검증**: 서명은 SIWS 메시지 바이트의 Ed25519 서명입니다. `tweetnacl`(`nacl.sign.detached.verify(signedMessage, signature, account.publicKey)`)이나 다른 Ed25519 라이브러리로 sign-in 결과의 account `publicKey`에 대해 검증하세요.
+3. **세션 바인딩**: 메시지 검사와 서명 검증이 모두 통과된 후에만 세션을 생성하세요. `account.address`를 키로 사용합니다.
+
+서버는 발급한 nonce로부터 기대하는 메시지를 다시 도출하거나 수신된 메시지의 모든 필드를 검증하여, 만료되었거나 재사용된 nonce를 거부해야 합니다.
+
 ## 데이터 페칭 컴포저블
 
 `useRequest`, `useSubscription`, `useTrackedData`는 Kit reactive store 프리미티브 위에 구축된 SWR 스타일 데이터 레이어입니다:
@@ -11624,6 +11870,77 @@ await execute(transaction, {
 `confirm: true`가 없으면 `execute()`는 제출 후 반환하고 `status`를 `sent`로 설정합니다. Confirmation을 활성화하면 status는 `sending`, `confirming`을 거쳐 요청한 commitment에 맞게 `processed`, `confirmed`, `finalized` 중 하나로 이동합니다. Confirmation timeout 또는 failure가 발생해도 제출된 `signature`는 유지되므로 앱은 explorer 링크를 보여줄 수 있습니다.
 
 `useSignAndSendTransaction()`은 wallet adapter가 결과를 반환하지 않는 경우에도 `loading`을 clear합니다. 이 stale case에서는 `error`가 설정되고 chain status를 알 수 없을 수 있으므로 retry 전에 연결된 wallet 또는 explorer를 확인하세요.
+
+## 배치 트랜잭션
+
+```ts
+import { useSignTransactions } from "@vue-solana/vue/useSignTransactions";
+import { useSignAndSendTransactions } from "@vue-solana/vue/useSignAndSendTransactions";
+
+const { signedTransactions, execute: signMany } = useSignTransactions();
+const { signatures, execute: signAndSendMany } = useSignAndSendTransactions();
+
+// N개 트랜잭션에 대한 지갑 요청 한 번.
+const signed = await signMany([transactionA, transactionB]);
+
+// N개 서명에 대한 지갑 요청 한 번.
+const sent = await signAndSendMany([transactionA, transactionB], { minContextSlot });
+```
+
+둘 다 지갑의 배치 기능을 우선합니다. `useSignTransactions`는 legacy 배치 `signAllTransactions` 기능으로 폴백하고, `useSignAndSendTransactions`는 단일 요청을 순차적으로 전송하는 방식으로 폴백합니다. 배치 서명은 전부 아니면 전부입니다(거부되면 아무것도 서명되지 않음). 하지만 sign-and-send 폴백은 이후 트랜잭션이 실패하면 이전 트랜잭션이 이미 제출된 상태로 남을 수 있습니다. 이 경우 이미 전송된 트랜잭션을 `signatures`에 담은 `PartialSignAndSendError`로 거부되므로 재시도 시 건너뛸 수 있습니다:
+
+```ts
+import { PartialSignAndSendError } from "@vue-solana/vue/useSignAndSendTransactions";
+
+try {
+  await signAndSendMany([transactionA, transactionB]);
+} catch (error) {
+  if (error instanceof PartialSignAndSendError) {
+    // error.signatures: 이미 도달한 트랜잭션 — 나머지만 다시 전송합니다.
+  }
+}
+```
+
+## 선택된 지갑 Account
+
+영속성과 필터링을 갖춘 앱 전체 selected-account 상태를 위해 루트 근처에 provider를 한 번 마운트하고 어디서든 읽으세요:
+
+```vue
+<script setup lang="ts">
+import { SelectedWalletAccountProvider } from "@vue-solana/vue/useSelectedWalletAccount";
+</script>
+
+<template>
+  <SelectedWalletAccountProvider :filter-wallet="filter">
+    <RouterView />
+  </SelectedWalletAccountProvider>
+</template>
+```
+
+```ts
+import { useSelectedWalletAccount } from "@vue-solana/vue/useSelectedWalletAccount";
+
+const [selectedAccount, setSelectedAccount, filteredWallets] = useSelectedWalletAccount();
+```
+
+선택 항목은 기본적으로 `localStorage`에 `${walletName}:${accountAddress}`로 저장되고(`stateSync`로 커스터마이즈하거나 `null`로 비활성화) 지갑과 account가 사용 가능할 때 다음 방문 시 복원됩니다. `filterWallet`은 어떤 지갑 account가 제공되는지 제한합니다. Nuxt에서는 모듈의 runtime plugin이 이 context를 자동으로 설치합니다.
+
+## 클라이언트 Capability와 계획
+
+```ts
+import { usePayer, useIdentity } from "@vue-solana/vue/usePayer";
+import { usePlanTransaction } from "@vue-solana/vue/usePlanTransaction";
+
+// Kit 클라이언트의 반응형 signer(signer plugin 필요).
+const payer = usePayer();
+const identity = useIdentity();
+
+// 전송 없이 instruction으로 트랜잭션 메시지를 계획합니다.
+const { transactionMessage, execute } = usePlanTransaction();
+const message = await execute(instructions);
+```
+
+`useClientCapability("payer")`는 클라이언트에 capability가 설치되어 있는지 확인하고, 없으면 setup 중에 설명적인 오류(훅 이름과 설치 방법 명시)를 throw합니다. `usePlanTransaction()` / `usePlanTransactions()`는 계획 capability가 필요합니다. 예: `@solana/kit-plugin-rpc`의 `rpcTransactionPlanner()`.
 
 ## 기존 Signature Confirm
 
@@ -12147,7 +12464,7 @@ async function handleSignIn() {
 }
 ```
 
-The wallet must support the SIWS feature (`canSignIn` is false otherwise, and `signIn()` rejects with a `WALLET_FEATURE_UNSUPPORTED` error). Wallets without a selected account connect first.
+The wallet must support the SIWS feature (`canSignIn` is false otherwise, and `signIn()` rejects with a `WALLET_FEATURE_UNSUPPORTED` error). The sign-in uses the wallet's currently selected account; if no wallet is connected, `signIn()` rejects with a `WALLET_NOT_CONNECTED` error — connect first, the composable does not do it for you.
 
 ### Verifying the signature on your server
 
@@ -12295,7 +12612,19 @@ const signed = await signMany([transactionA, transactionB]);
 const sent = await signAndSendMany([transactionA, transactionB], { minContextSlot });
 ```
 
-Both prefer the wallet's batch capability and fall back to looping the singular request when only that exists. Batch signing is all-or-nothing (a rejection signs nothing), but the sign-and-send fallback can leave earlier transactions submitted if a later one fails — check `signatures` before retrying.
+Both prefer the wallet's batch capability. `useSignTransactions` falls back to the legacy batch `signAllTransactions` feature; `useSignAndSendTransactions` falls back to sending the singular request in sequence. Batch signing is all-or-nothing (a rejection signs nothing), but the sign-and-send fallback can leave earlier transactions submitted. When that happens it rejects with a `PartialSignAndSendError` whose `signatures` lists the transactions already sent, so a retry can skip them:
+
+```ts
+import { PartialSignAndSendError } from "@vue-solana/vue/useSignAndSendTransactions";
+
+try {
+  await signAndSendMany([transactionA, transactionB]);
+} catch (error) {
+  if (error instanceof PartialSignAndSendError) {
+    // error.signatures: the ones that already landed — resend only the rest.
+  }
+}
+```
 
 ## Selected Wallet Account
 
@@ -12840,6 +13169,37 @@ if (connected.value && canSignMessage.value) {
 
 消息签名用于钱包所有权或认证 challenge。它不是交易签名，也不授权链上状态变更。不暴露消息签名的钱包会让 `canSignMessage` 为 false，`execute()` 会以不支持钱包错误拒绝。
 
+## Sign In With Solana
+
+```ts
+import { useSignIn } from "@vue-solana/vue/useSignIn";
+
+const { signInResult, status, loading, error, signIn } = useSignIn();
+
+async function handleSignIn() {
+  const { account, signedMessage, signature } = await signIn({
+    statement: "Sign in to My App",
+    // 在服务端生成 nonce，并在服务端验证。
+    nonce: await fetchNonceFromBackend(),
+  });
+
+  // 将 { account.address, signature, signedMessage } 发送到后端，
+  // 在创建会话前完成验证。
+}
+```
+
+钱包必须支持 SIWS 功能（否则 `canSignIn` 为 false，且 `signIn()` 会以 `WALLET_FEATURE_UNSUPPORTED` 错误拒绝）。没有已选账户的钱包会先连接。
+
+### 在服务端验证签名
+
+钱包返回的是对 `signedMessage`（用户同意的 SIWS 消息）的签名。若不经验证就信任该结果，恶意客户端便可伪造身份，因此在签发会话前必须在服务端验证：
+
+1. **检查消息**：解码 `signedMessage`，确认域名与你的 origin 一致、`uri` 属于你、`nonce` 与服务端为本次会话签发的一致，且 statement/resources 与预期相符。
+2. **验证签名**：该签名是 SIWS 消息字节的 Ed25519 签名。使用 `tweetnacl`（`nacl.sign.detached.verify(signedMessage, signature, account.publicKey)`）或任何 Ed25519 库，对照登录结果中账户的 `publicKey` 进行验证。
+3. **绑定会话**：只有在消息检查与签名验证都通过后才应创建会话——以 `account.address` 为键。
+
+服务端必须从其签发的 nonce 重新推导预期消息（或验证收到消息的每个字段），以拒绝过期或重放的 nonce。
+
 ## 数据获取 Composables
 
 `useRequest`、`useSubscription` 和 `useTrackedData` 是构建在 Kit 响应式 store 原语之上的 SWR 风格数据层：
@@ -12962,6 +13322,77 @@ await execute(transaction, {
 
 如果钱包 adapter 从不返回结果，`useSignAndSendTransaction()` 也会清除 `loading`。这种 stale 情况下会设置 `error`，链上状态可能未知，因此重试前请检查连接的钱包或 explorer。
 
+## 批量交易
+
+```ts
+import { useSignTransactions } from "@vue-solana/vue/useSignTransactions";
+import { useSignAndSendTransactions } from "@vue-solana/vue/useSignAndSendTransactions";
+
+const { signedTransactions, execute: signMany } = useSignTransactions();
+const { signatures, execute: signAndSendMany } = useSignAndSendTransactions();
+
+// 一次钱包请求处理 N 笔交易。
+const signed = await signMany([transactionA, transactionB]);
+
+// 一次钱包请求处理 N 个签名。
+const sent = await signAndSendMany([transactionA, transactionB], { minContextSlot });
+```
+
+两者都优先使用钱包的批量能力。`useSignTransactions` 回退到旧版批量 `signAllTransactions` 功能；`useSignAndSendTransactions` 回退为按顺序发送单一请求。批量签名是全有或全无（一次拒绝则全部不签名），但“签名并发送”的回退路径可能让前面的交易已经提交。发生这种情况时会以 `PartialSignAndSendError` 拒绝，其 `signatures` 列出已发送的交易，因此重试时可以跳过它们：
+
+```ts
+import { PartialSignAndSendError } from "@vue-solana/vue/useSignAndSendTransactions";
+
+try {
+  await signAndSendMany([transactionA, transactionB]);
+} catch (error) {
+  if (error instanceof PartialSignAndSendError) {
+    // error.signatures：已经落地的交易——只重发其余的。
+  }
+}
+```
+
+## 已选钱包账户
+
+对于带持久化和过滤的应用级已选账户状态，在根部附近挂载一次 provider，然后随处读取：
+
+```vue
+<script setup lang="ts">
+import { SelectedWalletAccountProvider } from "@vue-solana/vue/useSelectedWalletAccount";
+</script>
+
+<template>
+  <SelectedWalletAccountProvider :filter-wallet="filter">
+    <RouterView />
+  </SelectedWalletAccountProvider>
+</template>
+```
+
+```ts
+import { useSelectedWalletAccount } from "@vue-solana/vue/useSelectedWalletAccount";
+
+const [selectedAccount, setSelectedAccount, filteredWallets] = useSelectedWalletAccount();
+```
+
+选择默认以 `${walletName}:${accountAddress}` 形式持久化在 `localStorage` 中（传入 `stateSync` 可自定义，传入 `null` 可禁用），当钱包与账户可用时会在下次访问时恢复。`filterWallet` 限制提供哪些钱包账户。在 Nuxt 中，模块的 runtime 插件会自动安装此 context。
+
+## 客户端能力与规划
+
+```ts
+import { usePayer, useIdentity } from "@vue-solana/vue/usePayer";
+import { usePlanTransaction } from "@vue-solana/vue/usePlanTransaction";
+
+// 来自 Kit 客户端的响应式签名者（需要 signer 插件）。
+const payer = usePayer();
+const identity = useIdentity();
+
+// 从指令规划交易消息，而不发送。
+const { transactionMessage, execute } = usePlanTransaction();
+const message = await execute(instructions);
+```
+
+`useClientCapability("payer")` 会断言某项能力已安装在客户端上，缺失时在 setup 阶段抛出描述性错误（指出钩子名称及安装方式）。`usePlanTransaction()` / `usePlanTransactions()` 需要规划能力，例如 `@solana/kit-plugin-rpc` 的 `rpcTransactionPlanner()`。
+
 ## 确认现有签名
 
 当应用已有已提交签名，并希望独立于签名和发送流程等待特定 commitment 时，请使用 `useTransactionConfirmation()`：
@@ -13046,6 +13477,8 @@ Los clusters soportados son `mainnet-beta`, `devnet`, `testnet` y `localnet`. Us
 
 Las opciones del módulo Nuxt se guardan en la configuración runtime pública, así que deben ser serializables a JSON. Los objetos adaptadores `wallet` personalizados se excluyen intencionalmente de la configuración Nuxt; usa el plugin de Vue directamente en código Vue solo de cliente si necesitas inyectar un objeto wallet personalizado.
 
+El plugin runtime de cliente del módulo también instala automáticamente el contexto de cuenta de wallet seleccionada de toda la app, así que `useSolanaSelectedWalletAccount()` funciona en cada componente sin montar un provider. Para personalizar la persistencia (`stateSync`) o el filtrado (`filterWallet`), monta `SelectedWalletAccountProvider` desde `@vue-solana/vue/useSelectedWalletAccount` más abajo en el árbol para anular el contexto por defecto.
+
 Las opciones de wallet móvil son seguras de configurar en `nuxt.config.ts` cuando solo contienen identidad de app y configuración de redirección serializables a JSON:
 
 ```ts
@@ -13091,6 +13524,27 @@ El módulo autoimporta estos composables desde subpaths directos `@vue-solana/vu
 - `useSolanaSignatureStatus(signature, options?)`: lee, sondea o se suscribe a estado de firma.
 - `useSolanaSignMessage()`: firma mensajes de autenticación o desafío de propiedad fuera de cadena.
 - `useSolanaSignAndSendTransaction()`: firma, envía y opcionalmente confirma transacciones.
+- `useSolanaAction(handler)`: máquina de estado de acción async genérica con abort-on-redispatch.
+- `useSolanaRequest(source, options?)`: request de una sola vez que se vuelve a disparar cuando cambia su source, con stale-while-revalidate.
+- `useSolanaSubscription(source, options?)`: datos en vivo de suscripciones RPC y otras fuentes de stream reactivas.
+- `useSolanaTrackedData(source, options?)`: suscripción RPC sembrada por un fetch de una sola vez, deduplicada por slot.
+- `useSolanaSignIn()`: dispara la función Sign In With Solana (SIWS) de una wallet.
+
+Para cache keying entre montajes, los adaptadores SWR no se autoimportan. Importalos explícitamente desde el subpath del paquete Vue:
+
+```ts
+import { useRequestSwr } from "@vue-solana/vue/swr";
+
+const balance = useRequestSwr(`balance:${someAddress}`, rpc.getBalance(someAddress));
+```
+
+Consulta [Data Fetching Composables](/packages/vue#data-fetching-composables) para la semántica completa de los composables de request, subscription, tracked-data y SWR-cache.
+
+- `useSolanaSelectedWalletAccount()`: lee el contexto de cuenta de wallet seleccionada de toda la app instalado por el plugin runtime.
+- `useSolanaSignTransactions()`: firma múltiples transacciones en una sola solicitud de wallet.
+- `useSolanaSignAndSendTransactions()`: firma y envía múltiples transacciones en una sola solicitud de wallet.
+- `useSolanaPayer()` / `useSolanaIdentity()`: firmantes reactivos del cliente Kit (requiere un plugin signer).
+- `useSolanaPlanTransaction()` / `useSolanaPlanTransactions()`: planifica mensajes de transacción desde inputs de instrucciones.
 
 Estos son aliases Nuxt para los composables de Vue.
 
@@ -13136,6 +13590,7 @@ El registro de Android Mobile Wallet Adapter también se ejecuta solo en el clie
 - [Account Reads](/guides/account-reads): lee balances, datos de cuenta, cuentas de programa y estado de firma.
 - [Transactions](/guides/transactions): firma, envía, confirma y maneja estado de transacción desde Nuxt.
 - [Message Signing](/guides/message-signing): solicita firmas de wallet para mensajes fuera de cadena.
+- [E2E Testing](/guides/e2e-testing): mockea RPC, suscripciones RPC y wallets en tests de Playwright.
 - [Errors](/guides/errors): mapea errores de composables autoimportados a mensajes de UI seguros.
 
 ## Leer estado RPC
@@ -13503,6 +13958,8 @@ export default defineNuxtConfig({
 
 Nuxt module option은 public runtime config에 저장되므로 JSON 직렬화가 가능해야 합니다. Custom `wallet` adapter object는 의도적으로 Nuxt config에서 제외됩니다. Custom wallet object를 inject해야 한다면 client-only Vue 코드에서 Vue plugin을 직접 사용하세요.
 
+이 모듈의 client runtime plugin은 app-wide selected wallet account context도 자동으로 설치하므로 provider를 mount하지 않아도 모든 컴포넌트에서 `useSolanaSelectedWalletAccount()`가 작동합니다. persistence(`stateSync`)나 filtering(`filterWallet`)을 customize하려면 tree에서 더 깊은 곳에 `@vue-solana/vue/useSelectedWalletAccount`의 `SelectedWalletAccountProvider`를 mount하여 기본 context를 덮어쓰세요.
+
 Mobile wallet option은 JSON 직렬화 가능한 app identity와 redirect 설정만 포함한다면 `nuxt.config.ts`에 안전하게 설정할 수 있습니다.
 
 ```ts
@@ -13548,6 +14005,27 @@ export default defineNuxtConfig({
 - `useSolanaSignatureStatus(signature, options?)`: signature status를 읽거나 polling하거나 subscribe합니다.
 - `useSolanaSignMessage()`: 오프체인 인증 또는 소유권 challenge message에 서명합니다.
 - `useSolanaSignAndSendTransaction()`: transaction에 서명하고 전송하며 선택적으로 confirm합니다.
+- `useSolanaAction(handler)`: abort-on-redispatch를 지원하는 generic async action state machine입니다.
+- `useSolanaRequest(source, options?)`: source가 바뀌면 다시 실행되는 one-shot request이며 stale-while-revalidate를 지원합니다.
+- `useSolanaSubscription(source, options?)`: RPC subscription 및 기타 reactive stream source의 live data입니다.
+- `useSolanaTrackedData(source, options?)`: one-shot fetch로 seed되고 slot으로 deduplicate되는 RPC subscription입니다.
+- `useSolanaSignIn()`: wallet의 Sign In With Solana(SIWS) 기능을 트리거합니다.
+
+mount 간 cache keying을 위해 SWR adapter는 auto-import되지 않습니다. Vue package subpath에서 명시적으로 import하세요.
+
+```ts
+import { useRequestSwr } from "@vue-solana/vue/swr";
+
+const balance = useRequestSwr(`balance:${someAddress}`, rpc.getBalance(someAddress));
+```
+
+request, subscription, tracked-data, SWR-cache composable의 전체 semantics는 [Data Fetching Composables](/packages/vue#data-fetching-composables)를 참고하세요.
+
+- `useSolanaSelectedWalletAccount()`: runtime plugin이 설치한 app-wide selected wallet account context를 읽습니다.
+- `useSolanaSignTransactions()`: 여러 transaction을 한 번의 wallet request로 서명합니다.
+- `useSolanaSignAndSendTransactions()`: 여러 transaction을 한 번의 wallet request로 서명하고 전송합니다.
+- `useSolanaPayer()` / `useSolanaIdentity()`: reactive Kit client signer입니다(signer plugin 필요).
+- `useSolanaPlanTransaction()` / `useSolanaPlanTransactions()`: instruction input에서 transaction message를 plan합니다.
 
 이들은 Vue composable의 Nuxt alias입니다.
 
@@ -13593,6 +14071,7 @@ Android Mobile Wallet Adapter 등록도 client에서만 실행됩니다. Android
 - [계정 읽기](/ko/guides/account-reads): balance, account data, program accounts, signature status를 읽습니다.
 - [트랜잭션](/ko/guides/transactions): Nuxt에서 transaction을 sign, send, confirm하고 status를 처리합니다.
 - [메시지 서명](/ko/guides/message-signing): 오프체인 메시지에 대한 wallet signature를 요청합니다.
+- [E2E 테스트](/ko/guides/e2e-testing): Playwright test에서 RPC, RPC subscription, wallet을 mock합니다.
 - [오류](/ko/guides/errors): auto-imported composable error를 안전한 UI 메시지로 매핑합니다.
 
 ## RPC 상태 읽기
@@ -14437,6 +14916,8 @@ export default defineNuxtConfig({
 
 Nuxt 模块选项存储在 public runtime config 中，因此必须可 JSON 序列化。自定义 `wallet` adapter 对象有意不包含在 Nuxt 配置中；如果需要注入自定义钱包对象，请在 client-only Vue 代码中直接使用 Vue 插件。
 
+模块的客户端运行时插件还会自动安装应用级选定钱包账户上下文，因此无需挂载 provider，`useSolanaSelectedWalletAccount()` 就能在每个组件中工作。若要自定义持久化（`stateSync`）或过滤（`filterWallet`），请在组件树更深处挂载来自 `@vue-solana/vue/useSelectedWalletAccount` 的 `SelectedWalletAccountProvider` 来覆盖默认上下文。
+
 移动钱包选项只包含可 JSON 序列化的应用身份和重定向设置时，可以安全地配置在 `nuxt.config.ts` 中：
 
 ```ts
@@ -14482,6 +14963,27 @@ export default defineNuxtConfig({
 - `useSolanaSignatureStatus(signature, options?)`：读取、轮询或订阅签名状态。
 - `useSolanaSignMessage()`：签署链下认证或所有权 challenge 消息。
 - `useSolanaSignAndSendTransaction()`：签名、发送并可选确认交易。
+- `useSolanaAction(handler)`：支持 abort-on-redispatch 的通用异步 action 状态机。
+- `useSolanaRequest(source, options?)`：source 变化时重新触发的一次性 request，带 stale-while-revalidate。
+- `useSolanaSubscription(source, options?)`：来自 RPC 订阅和其他响应式 stream source 的实时数据。
+- `useSolanaTrackedData(source, options?)`：由一次性 fetch 播种、按 slot 去重的 RPC 订阅。
+- `useSolanaSignIn()`：触发钱包的 Sign In With Solana（SIWS）功能。
+
+为了在多次挂载之间进行 cache keying，SWR adapter 不会自动导入。请从 Vue 包 subpath 显式导入：
+
+```ts
+import { useRequestSwr } from "@vue-solana/vue/swr";
+
+const balance = useRequestSwr(`balance:${someAddress}`, rpc.getBalance(someAddress));
+```
+
+request、subscription、tracked-data 和 SWR-cache composable 的完整语义请参阅 [Data Fetching Composables](/packages/vue#data-fetching-composables)。
+
+- `useSolanaSelectedWalletAccount()`：读取运行时插件安装的应用级选定钱包账户上下文。
+- `useSolanaSignTransactions()`：在一次钱包请求中签名多笔交易。
+- `useSolanaSignAndSendTransactions()`：在一次钱包请求中签名并发送多笔交易。
+- `useSolanaPayer()` / `useSolanaIdentity()`：响应式 Kit client signer（需要 signer 插件）。
+- `useSolanaPlanTransaction()` / `useSolanaPlanTransactions()`：根据 instruction input 规划交易消息。
 
 这些是 Vue composable 的 Nuxt alias。
 
@@ -14527,6 +15029,7 @@ Android Mobile Wallet Adapter 注册也只在客户端运行。在 Android Chrom
 - [账户读取](/zh/guides/account-reads)：读取余额、账户数据、program accounts 和签名状态。
 - [交易](/zh/guides/transactions)：从 Nuxt 签名、发送、确认并处理交易状态。
 - [消息签名](/zh/guides/message-signing)：为链下消息请求钱包签名。
+- [E2E Testing](/zh/guides/e2e-testing)：在 Playwright 测试中 mock RPC、RPC 订阅和钱包。
 - [错误](/zh/guides/errors)：把自动导入 composable 的错误映射为安全 UI 消息。
 
 ## 读取 RPC 状态
@@ -14872,6 +15375,7 @@ Fuente: <a href="https://github.com/vue-solana/vue-solana/tree/main/examples/vue
 - Firmar un mensaje de autenticación con `useSignMessage()` cuando la wallet conectada lo soporta.
 - Enviar una transferencia real con `useSignAndSendTransaction()` y mostrar estado de transacción enviada vs confirmada. El ejemplo usa devnet por defecto para pruebas seguras.
 - Construir links a Solana Explorer conscientes del cluster para firmas enviadas.
+- Ejercitar la capa de datos reactiva de Kit en los Live Data Panels: `useRequest()` para peticiones de un solo uso, `useSubscription()` para notificaciones de slot en vivo por websocket, `useTrackedData()` para datos de cuenta sembrados por fetch y actualizados por notificaciones de cuenta, `useSignIn()` para Sign In With Solana, y `useRequestSwr()` desde `@vue-solana/vue/swr` para stale-while-revalidate cacheada por clave entre remounts.
 
 La app usa `devnet` por defecto. El SOL de devnet no tiene valor real.
 
@@ -14901,6 +15405,8 @@ Abre la URL de Vite impresa en la terminal, normalmente `http://localhost:5173`.
 - Ingresa una dirección destinataria y un monto, luego envía una transferencia real. Mantén el ejemplo en devnet mientras pruebas.
 - Observa cómo la transacción avanza desde firma enviada hasta estado de confirmación.
 - Abre el link del explorador y verifica que incluya `?cluster=devnet`.
+- En los Live Data Panels, cambia la dirección rastreada y observa cómo los paneles request, subscription y tracked-data se vuelven a disparar.
+- Alterna la tarjeta SWR entre apagado y encendido y observa que el valor cacheado aparece de inmediato (stale) antes de que la peticion revalidada lo reemplace.
 
 El ejemplo de transferencia inicializa el polyfill de navegador `Buffer` con `installSolanaBufferPolyfill()` desde `@vue-solana/vue/buffer-polyfill`. Reinicia el servidor de desarrollo de Vite si Vite cacheó previamente un import externalizado de Buffer.
 
@@ -15025,6 +15531,7 @@ Vue Vite 예제는 `@vue-solana/vue`를 위한 실행 가능한 Vue 3 앱입니�
 - 연결된 지갑이 지원할 때 `useSignMessage()`로 인증 메시지에 서명합니다.
 - `useSignAndSendTransaction()`으로 실제 전송을 보내고 제출 상태와 확인 상태를 보여 줍니다. 예제는 안전한 테스트를 위해 기본적으로 devnet을 사용합니다.
 - 제출된 signature에 대해 클러스터를 반영한 Solana Explorer 링크를 만듭니다.
+- Live Data Panels에서 Kit 반응형 데이터 레이어를 사용합니다: 일회성 요청에는 `useRequest()`, websocket을 통한 실시간 slot 알림에는 `useSubscription()`, 계정 알림으로 업데이트되는 fetch 기반 계정 데이터에는 `useTrackedData()`, Sign In With Solana에는 `useSignIn()`, 그리고 remount 전반에 걸친 cache-keyed stale-while-revalidate에는 `@vue-solana/vue/swr`의 `useRequestSwr()`를 사용합니다.
 
 앱은 기본적으로 `devnet`을 사용합니다. Devnet SOL은 실제 가치가 없습니다.
 
@@ -15054,6 +15561,8 @@ pnpm dev:vue
 - recipient 주소와 금액을 입력한 뒤 실제 전송을 보냅니다. 테스트 중에는 예제를 devnet으로 유지하세요.
 - 트랜잭션이 submitted signature에서 confirmation status로 이동하는지 확인합니다.
 - Explorer 링크를 열고 `?cluster=devnet`이 포함되어 있는지 확인합니다.
+- Live Data Panels에서 추적 주소를 바꾸고 request, subscription, tracked-data 패널이 다시 실행되는지 확인합니다.
+- SWR 카드를 껐다 켜고 stale 캐시 값이 즉시 나타난 뒤 revalidate된 요청이 이를 대체하는지 확인합니다.
 
 전송 예제는 `@vue-solana/vue/buffer-polyfill`의 `installSolanaBufferPolyfill()`로 브라우저 `Buffer` polyfill을 초기화합니다. Vite가 이전에 externalized Buffer import를 캐시했다면 Vite dev server를 재시작하세요.
 
@@ -15101,6 +15610,7 @@ Live demo: [vue-solana-docs.vercel.app/demo](/zh/demo)
 - 当已连接钱包支持时，使用 `useSignMessage()` 签署认证消息。
 - 使用 `useSignAndSendTransaction()` 发送真实转账，并显示已提交和已确认的交易状态。示例默认使用 devnet，以便安全测试。
 - 为已提交的签名构建带有集群信息的 Solana Explorer 链接。
+- 在 Live Data Panels 中演练基于 Kit 的响应式数据层：`useRequest()` 用于一次性请求，`useSubscription()` 用于通过 websocket 的实时 slot 通知，`useTrackedData()` 用于由账户通知更新的、基于 fetch 种子的账户数据，`useSignIn()` 用于 Sign In With Solana，以及来自 `@vue-solana/vue/swr` 的 `useRequestSwr()` 用于跨重新挂载的缓存键控 stale-while-revalidate。
 
 该应用默认使用 `devnet`。Devnet SOL 没有真实价值。
 
@@ -15130,6 +15640,8 @@ pnpm dev:vue
 - 输入收款地址和金额，然后发送真实转账。测试时请让示例保持在 devnet。
 - 观察交易从已提交签名移动到确认状态。
 - 打开 explorer 链接，并确认其中包含 `?cluster=devnet`。
+- 在 Live Data Panels 中更改跟踪的地址，观察 request、subscription 和 tracked-data 面板重新触发。
+- 打开再关闭 SWR 卡片，观察缓存值立即出现（过期数据），然后被重新验证的请求替换。
 
 转账示例使用来自 `@vue-solana/vue/buffer-polyfill` 的 `installSolanaBufferPolyfill()` 初始化浏览器 `Buffer` polyfill。如果 Vite 之前缓存了 externalized Buffer import，请重启 Vite 开发服务器。
 
@@ -15177,6 +15689,7 @@ Fuente: <a href="https://github.com/vue-solana/vue-solana/tree/main/examples/nux
 - Enviar una transferencia real con `useSolanaSignAndSendTransaction()` y mostrar estado de transacción enviada vs confirmada. El ejemplo usa devnet por defecto para pruebas seguras.
 - Construir links a Solana Explorer conscientes del cluster para firmas enviadas.
 - Usar `useTransaction()` desde `@vue-solana/vue/useTransaction` para estado genérico de transacción asíncrona.
+- Ejercitar la capa de datos reactiva de Kit en los Live Data Panels con composables autoimportados: `useSolanaRequest()` para peticiones de un solo uso, `useSolanaSubscription()` para notificaciones de slot en vivo, `useSolanaTrackedData()` para datos de cuenta sembrados por fetch, `useSolanaSignIn()` para Sign In With Solana, y el adaptador de caché `@vue-solana/vue/swr` entre remounts.
 
 La app usa `devnet` por defecto. El SOL de devnet no tiene valor real.
 
@@ -15330,6 +15843,7 @@ Nuxt 예제는 `@vue-solana/nuxt`를 위한 실행 가능한 Nuxt 앱입니다.
 - `useSolanaSignAndSendTransaction()`으로 실제 전송을 보내고 제출 상태와 확인 상태를 보여 줍니다. 예제는 안전한 테스트를 위해 기본적으로 devnet을 사용합니다.
 - 제출된 signature에 대해 클러스터를 반영한 Solana Explorer 링크를 만듭니다.
 - generic async transaction 상태에는 `@vue-solana/vue/useTransaction`의 `useTransaction()`을 사용합니다.
+- Live Data Panels에서 자동 import된 composable로 Kit 반응형 데이터 레이어를 사용합니다: 일회성 요청에는 `useSolanaRequest()`, 실시간 slot 알림에는 `useSolanaSubscription()`, fetch 기반 계정 데이터에는 `useSolanaTrackedData()`, Sign In With Solana에는 `useSolanaSignIn()`, 그리고 remount 전반에 걸친 `@vue-solana/vue/swr` 캐시 어댑터를 사용합니다.
 
 앱은 기본적으로 `devnet`을 사용합니다. Devnet SOL은 실제 가치가 없습니다.
 
@@ -15407,6 +15921,7 @@ Live demo: [vue-solana-docs.vercel.app/demo](/zh/demo)
 - 使用 `useSolanaSignAndSendTransaction()` 发送真实转账，并显示已提交和已确认的交易状态。示例默认使用 devnet，以便安全测试。
 - 为已提交的签名构建带有集群信息的 Solana Explorer 链接。
 - 使用来自 `@vue-solana/vue/useTransaction` 的 `useTransaction()` 处理通用异步交易状态。
+- 在 Live Data Panels 中使用自动导入的组合式函数演练基于 Kit 的响应式数据层：`useSolanaRequest()` 用于一次性请求，`useSolanaSubscription()` 用于实时 slot 通知，`useSolanaTrackedData()` 用于基于 fetch 种子的账户数据，`useSolanaSignIn()` 用于 Sign In With Solana，以及跨重新挂载使用的 `@vue-solana/vue/swr` 缓存适配器。
 
 该应用默认使用 `devnet`。Devnet SOL 没有真实价值。
 
@@ -15462,54 +15977,52 @@ https://faucet.solana.com
 Source: https://vue-solana-docs.vercel.app/es/roadmap
 Description: Funcionalidades y mejoras planificadas para Vue Solana.
 
-Los paquetes son estables para producción con lecturas RPC, descubrimiento y conexión de wallets, consulta de balance, transacciones, lecturas de cuentas, firma de mensajes y errores normalizados. Esta hoja de ruta describe lo que viene a continuación, ordenado por impacto y sin vincularse a una versión concreta.
+Los paquetes son estables para producción con lecturas RPC, descubrimiento y conexión de wallets, consulta de balance, transacciones, lecturas de cuentas, firma de mensajes, manejo de errores normalizado, Sign In With Solana, firma y envío de transacciones en lote, planificación de transacciones, adaptadores de caché SWR y helpers de tokens SPL. Esta hoja de ruta describe lo que viene a continuación, ordenado por impacto y sin vincularse a una versión concreta.
+
+## Transacciones
+
+- Helpers de simulación de transacciones.
 
 ## Integraciones con el ecosistema
 
-- Helpers de cuentas de tokens SPL y composables de balance de tokens basados en el cliente Kit.
 - Soporte de wallets nativas de escritorio mediante enlaces de protocolo a través de los flujos de wallet unificados.
 - Más proveedores de wallets iOS.
-
-## Experiencia de desarrollo
-
 - Provider de Anchor y helpers de programas.
 - Un modal de wallet o paquete de UI dedicado.
 - Utilidades RPC de servidor en Nuxt para lecturas del lado del servidor.
+- Documentación versionada: una build de docs antigua archivada bajo `/v1/` con un desplegable `v1 | latest` y redirecciones de URLs antiguas, para usuarios que aún no han migrado a la ruta Kit.
 
 ## Resiliencia y patrones avanzados
 
 - Conmutación por error del proveedor RPC y manejo de límites de tasa.
 - Patrones avanzados de indexación y caché de cuentas de programas.
-- Helpers de simulación de transacciones.
-- Abstracciones de suscripción a eventos para datos on-chain en tiempo real.
 
 ---
 
 # 로드맵
 
 Source: https://vue-solana-docs.vercel.app/ko/roadmap
-Description: Vue Solana의 계획된 기능 및 개선 사항입니다.
+Description: Vue Solana의 계획된 기능과 개선 사항.
 
-패키지는 RPC 읽기, 지갑 검색 및 연결, 잔액 조회, 트랜잭션, 계정 읽기, 메시지 서명, 정규화된 오류 처리와 함께 프로덕션에서 안정적으로 사용할 수 있습니다. 이 로드맵은 특정 릴리스에 묶지 않고, 영향을 기준으로 정렬된 향후 작업을 설명합니다.
+패키지는 RPC 읽기, 지갑 탐색 및 연결, 잔액 조회, 트랜잭션, 계정 읽기, 메시지 서명, 정규화된 오류 처리, Sign In With Solana, 배치 트랜잭션 서명 및 전송, 트랜잭션 계획, SWR 캐시 adapter, SPL token 헬퍼를 위해 프로덕션 사용이 안정적입니다. 이 로드맵은 특정 릴리스에 얽매이지 않고 영향도 순으로 다음에 올 내용을 설명합니다.
+
+## 트랜잭션
+
+- 트랜잭션 시뮬레이션 헬퍼.
 
 ## 생태계 통합
 
-- Kit 클라이언트 기반의 SPL 토큰 계정 헬퍼 및 토큰 잔액 컴포저블.
-- 통합 지갑 흐름을 통한 프로토콜 링크 기반 데스크톱 네이티브 지갑 지원.
+- 통합 지갑 플로우를 통한 프로토콜 링크 방식의 데스크톱 네이티브 지갑 지원.
 - 추가 iOS 지갑 제공자.
-
-## 개발자 경험
-
-- Anchor provider 및 프로그램 헬퍼.
+- Anchor provider와 프로그램 헬퍼.
 - 전용 지갑 모달 또는 UI 패키지.
 - 서버 측 읽기를 위한 Nuxt 서버 RPC 유틸리티.
+- 버전 관리된 문서: 아직 Kit 경로로 마이그레이션하지 않은 사용자를 위해 `/v1/` 아래에 보관된 레거시 문서 빌드와 `v1 | latest` 드롭다운, 이전 URL 리다이렉트 제공.
 
-## 복원력 및 고급 패턴
+## 복원력과 고급 패턴
 
-- RPC 제공자 장애 조치 및 속도 제한 처리.
-- 고급 프로그램 계정 인덱싱 패턴 및 캐싱.
-- 트랜잭션 시뮬레이션 헬퍼.
-- 실시간 온체인 데이터를 위한 이벤트 구독 추상화.
+- RPC 제공자 장애 조치와 레이트 리밋 처리.
+- 고급 프로그램 account 인덱싱 패턴과 캐싱.
 
 ---
 
@@ -15518,33 +16031,14 @@ Description: Vue Solana의 계획된 기능 및 개선 사항입니다.
 Source: https://vue-solana-docs.vercel.app/roadmap
 Description: Planned features and improvements for Vue Solana.
 
-The packages are stable for production use with RPC reads, wallet discovery and connection, balance lookup, transactions, account reads, message signing, and normalized error handling. This roadmap describes what comes next, ordered by impact rather than tied to a specific release.
-
-## Core Composables
-
-- A generic `useAction` composable that wraps any async function and tracks `status`, `data`, `error`, and `dispatch` with abort support and ref-based fresh closures.
-- A one-shot `useRequest` composable that re-fires reactively when its source changes, with stale-while-revalidate and per-attempt cancellation.
-- A `useSubscription` composable for live RPC subscription streams (account notifications, slot notifications, logs) with reconnect, error recovery, and stale-while-revalidate.
-- A `useTrackedData` composable that pairs an initial RPC fetch with a subscription and slot-dedupes the results for fast first paint plus live updates.
-- A `useClientCapability` composable that asserts at mount time that a capability is installed on a loosely-typed client, with a clear error message otherwise.
-
-## Wallet Features
-
-- Sign In With Solana (`useSignIn`) for wallet-based authentication.
-- A wallet selection context that persists the selected wallet account to storage and supports filtering available wallets.
-- `usePayer` and `useIdentity` composables that reactively track the client's fee payer and acting identity.
-- Batch transaction signing and sending (`useSignTransactions`, `useSignAndSendTransactions`) for multi-transaction wallet requests.
+The packages are stable for production use with RPC reads, wallet discovery and connection, balance lookup, transactions, account reads, message signing, normalized error handling, Sign In With Solana, batch transaction signing and sending, transaction planning, SWR cache adapters, and SPL token helpers. This roadmap describes what comes next, ordered by impact rather than tied to a specific release.
 
 ## Transactions
 
-- Transaction planning composables (`usePlanTransaction`) that plan transaction messages from instruction inputs before signing.
 - Transaction simulation helpers.
-- Event subscription abstractions for real-time on-chain data.
 
 ## Ecosystem Integrations
 
-- Cache adapters for Vue data-fetching libraries (Pinia-based Query or SWR equivalents) mirroring the `@solana/react` query adapters.
-- SPL token account helpers and token balance composables built on the Kit client.
 - Desktop native wallet support via protocol links through the unified wallet flows.
 - Additional iOS wallet providers.
 - Anchor provider and program helpers.
@@ -15562,25 +16056,24 @@ The packages are stable for production use with RPC reads, wallet discovery and 
 # 路线图
 
 Source: https://vue-solana-docs.vercel.app/zh/roadmap
-Description: Vue Solana 计划的功能与改进。
+Description: Vue Solana 规划中的功能与改进。
 
-这些包已稳定可用于生产，包括 RPC 读取、钱包发现与连接、余额查询、交易、账户读取、消息签名和规范化错误处理。本路线图按影响力排序描述后续计划，不绑定到特定版本。
+这些包在生产环境中已经稳定支持 RPC 读取、钱包发现与连接、余额查询、交易、账户读取、消息签名、标准化错误处理、Sign In With Solana、批量交易签名与发送、交易规划、SWR 缓存适配器和 SPL token 辅助函数。本路线图描述接下来的计划，按影响力排序，而不与特定版本绑定。
+
+## 交易
+
+- 交易模拟辅助函数。
 
 ## 生态集成
 
-- 基于 Kit 客户端的 SPL 代币账户辅助工具和代币余额 composables。
-- 通过统一钱包流程中的协议链接支持桌面原生钱包。
-- 更多 iOS 钱包提供商。
+- 通过统一钱包流程的协议链接支持的桌面原生钱包。
+- 更多 iOS 钱包提供方。
+- Anchor provider 与程序辅助函数。
+- 专属钱包弹窗或 UI 包。
+- 用于服务端读取的 Nuxt 服务器 RPC 工具。
+- 版本化文档：在 `/v1/` 下归档的旧版文档构建，带 `v1 | latest` 下拉与旧 URL 重定向，服务尚未迁移到 Kit 路径的用户。
 
-## 开发者体验
-
-- Anchor provider 和程序辅助工具。
-- 专用的钱包弹窗或 UI 包。
-- 用于服务端读取的 Nuxt 服务端 RPC 工具。
-
-## 弹性和高级模式
+## 韧性与高级模式
 
 - RPC 提供方故障转移与速率限制处理。
 - 高级程序账户索引模式与缓存。
-- 交易模拟辅助工具。
-- 用于实时链上数据的事件订阅抽象。

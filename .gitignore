@@ -41,6 +41,7 @@ temp/
 # Local agent development skills
 .agents/skills/
 .agents-dev/
+.freebuff/
 
 # Local opencode config
 opencode.json

@@ -227,5 +227,69 @@ export default {
         waiting: "waiting",
       },
     },
+    sections: {
+      connection: {
+        eyebrow: "Devnet RPC",
+        title: "Connection & RPC",
+        description: "Plugin state, cluster details, and a direct Kit client call.",
+      },
+      balances: {
+        eyebrow: "Balances",
+        title: "Balances & Tokens",
+        description: "Lamport and SOL balances plus SPL token accounts.",
+      },
+      wallets: {
+        eyebrow: "Wallet Standard",
+        title: "Wallets",
+        description: "Discover, select, connect, and manage Solana Wallet Standard wallets.",
+      },
+      signing: {
+        eyebrow: "Signing",
+        title: "Signing & Transactions",
+        description:
+          "Message signing, Sign In With Solana, transfers, and generic transaction state.",
+      },
+      live: {
+        eyebrow: "Kit reactive",
+        title: "Live Data",
+        description:
+          "Kit-reactive composables: one-shot requests, websocket subscriptions, slot-tracked data, and SWR caching.",
+      },
+    },
+    liveData: {
+      trackedAddressEyebrow: "Tracked account",
+      trackedAddress: "Tracked address",
+      noData: "No data yet",
+      request: {
+        title: "useSolanaRequest",
+        description:
+          "One-shot HTTP RPC request re-fired when its source changes, with stale-while-revalidate.",
+      },
+      subscription: {
+        title: "useSolanaSubscription",
+        description: "Live slot notifications over the websocket RPC.",
+      },
+      tracked: {
+        title: "useSolanaTrackedData",
+        description: "Fetch plus subscription, slot-deduplicated between the two sources.",
+      },
+      swr: {
+        title: "useSolanaRequestSwr",
+        description:
+          "Cache-keyed request with stale-while-revalidate. Hiding and re-showing the card remounts it: cached data appears immediately while the request revalidates.",
+        toggleHide: "Hide card",
+        toggleShow: "Show card",
+        hidden: "Card hidden",
+      },
+    },
+    signIn: {
+      title: "Sign In With Solana",
+      description:
+        "Triggers the wallet's Sign In With Solana feature. The result must be verified on a server before trusting the identity.",
+      button: "Sign In With Wallet",
+      signingIn: "Signing in...",
+      notSignedIn: "Not signed in",
+      signedInAs: "Signed in as {address}",
+    },
   },
 };
