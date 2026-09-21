@@ -164,6 +164,35 @@ async function submitTransaction() {
 
 `status` 会区分提交和确认。返回 `signature` 表示交易已提交到 RPC。`confirmation` 表示已提交的签名达到了请求的 commitment。如果提交后确认超时，请继续显示签名，并在重试前检查其状态。
 
+### 钱包请求的输入与返回值
+
+钱包签名流程接受符合 Solana 交易 schema 的原始 `Uint8Array` wire 字节作为交易输入。使用 `@solana/kit` 构建它们（或从 base64/base58 RPC 响应中解码）；此处不接受 base64 字符串、交易对象和指令列表。
+
+```ts
+import { compileTransaction, getTransactionEncoder } from "@solana/kit";
+
+const transaction: Uint8Array = getTransactionEncoder().encode(compileTransaction(message));
+await execute(transaction);
+```
+
+`useSignMessage()` 接受要签名的原始消息字节。每个钱包发送请求还接受 Kit 的 `SendTransactionOptions`：
+
+| Option                | Description                                                                 |
+| --------------------- | --------------------------------------------------------------------------- |
+| `skipPreflight`       | 发送前跳过 preflight 模拟。                                                 |
+| `maxRetries`          | RPC 节点重试次数（`bigint`）。                                              |
+| `minContextSlot`      | 交易中任何 blockhash 或 nonce 已知存在的 slot；早于该 slot 发送可能被拒绝。 |
+| `preflightCommitment` | 用于 preflight 模拟的 commitment。                                          |
+
+返回形态：
+
+- `useSignMessage().execute(bytes)` resolve 为 `{ signedMessage, signature }`，两者均为 `Uint8Array`。
+- `useSignTransactions().execute(transactions)` resolve 为已签名的 `Uint8Array[]`（也以 `signedTransactions` 暴露）；单笔交易请传入单元素数组。
+- `useSignAndSendTransaction().execute(transaction)` resolve 为已提交的 `signature` 字符串；配合 `confirm: true` 时还会填充 `confirmation`。
+- `useSignAndSendTransactions().execute(transactions)` resolve 为签名组成的 `string[]`（也以 `signatures` 暴露）。
+
+钱包可能在签名前修改消息或交易（例如添加自己的指令或更改 fee payer），Wallet Standard 明确允许这样做。请重新读取返回的 `signedMessage` 或已签名交易字节，而不要假设它们与你的输入逐字节一致。
+
 ## 浏览器链接
 
 浏览器链接应与你的应用使用的集群匹配。

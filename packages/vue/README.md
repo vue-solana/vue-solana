@@ -116,6 +116,28 @@ import { useWallet } from "@vue-solana/vue/useWallet";
 import { useSignMessage } from "@vue-solana/vue/useSignMessage";
 ```
 
+### Client and Plugin Lifecycle
+
+`createSolanaPlugin()` builds the Kit client once, during `install()`. Create the plugin at module scope and reuse the instance:
+
+```ts
+// solana.ts
+import { createSolanaPlugin } from "@vue-solana/vue";
+
+export const solana = createSolanaPlugin({ cluster: "devnet" });
+```
+
+Calling `createSolanaPlugin()` again builds a new client and context, discarding the existing wallet selection and RPC state. If your config is reactive — a cluster toggle, for example — memoize on the config so a new plugin (and client) is built only when the value actually changes, not on every render:
+
+```ts
+import { computed, ref } from "vue";
+
+const cluster = ref<SolanaCluster>("devnet");
+const plugin = computed(() => createSolanaPlugin({ cluster: cluster.value }));
+```
+
+A Kit client runs its `createClient().use(...)` plugins during construction. When one of those plugins is async, the client — and any context built from it — only activates after that promise resolves. Defer real RPC and wallet work to client lifecycle hooks or user actions after hydration rather than running it during setup or SSR.
+
 For development, use `devnet` and request free test SOL from the official faucet:
 
 ```txt
@@ -315,6 +337,106 @@ await confirmation.confirm(signature);
 
 `useSignAndSendTransaction()` also clears `loading` if a wallet adapter never returns a result. In that stale case, `error` is set and the chain status may be unknown, so check the connected wallet or an explorer before retrying.
 
+### Wallet Request Inputs and Returns
+
+Wallet signing flows accept transaction input as raw `Uint8Array` wire bytes that conform to the Solana transaction schema. Build them with `@solana/kit` (or decode them from a base64/base58 RPC response); base64 strings, transaction objects, and instruction lists are not accepted here.
+
+```ts
+import { compileTransaction, getTransactionEncoder } from "@solana/kit";
+
+const transaction: Uint8Array = getTransactionEncoder().encode(compileTransaction(message));
+await execute(transaction);
+```
+
+`useSignMessage()` takes the raw message bytes to sign. Every wallet send request also accepts the Kit `SendTransactionOptions`:
+
+| Option                | Description                                                                                                   |
+| --------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `skipPreflight`       | Skip preflight simulation before sending.                                                                     |
+| `maxRetries`          | RPC node retry count (`bigint`).                                                                              |
+| `minContextSlot`      | Slot at which any blockhash or nonce in the transaction is known to exist; sending before it can be rejected. |
+| `preflightCommitment` | Commitment used for preflight simulation.                                                                     |
+
+Return shapes:
+
+- `useSignMessage().execute(bytes)` resolves to `{ signedMessage, signature }`, both `Uint8Array`.
+- `useSignTransactions().execute(transactions)` resolves to the signed `Uint8Array[]` (also exposed as `signedTransactions`); pass a single-element array for one transaction.
+- `useSignAndSendTransaction().execute(transaction)` resolves to the submitted `signature` string; with `confirm: true` it also fills `confirmation`.
+- `useSignAndSendTransactions().execute(transactions)` resolves to a `string[]` of signatures (also exposed as `signatures`).
+
+A wallet may modify the message or transaction before signing — for example to add its own instruction or change the fee payer — and the Wallet Standard explicitly allows it. Re-read the returned `signedMessage` or signed transaction bytes instead of assuming they match your input byte-for-byte.
+
+### Sending with the Client (no wallet popup)
+
+`useSendTransaction()` and `useSendTransactions()` send through the Kit client's transaction-sending capability (`ClientWithTransactionSending`) instead of the connected wallet. The client plans the transaction from your input, signs it with its own signers — typically the client identity or `payer` keypair, e.g. a relayer — submits it, and returns the result. There is no wallet extension and no approval popup.
+
+**Which to use:**
+
+| Flow                  | `useSendTransaction(s)` (client)                             | `useSignAndSendTransaction(s)` (wallet)   |
+| --------------------- | ------------------------------------------------------------ | ----------------------------------------- |
+| Who authorizes        | The client's fee payer / signer keypairs                     | The connected wallet (user approves)      |
+| Environment           | Server-side, relayer, or automated flows (no browser wallet) | Browser dapps where the user must approve |
+| Popup                 | None                                                         | Wallet approval popup / mobile handoff    |
+| Input                 | Instructions, instruction plans, transaction messages, plans | Raw transaction bytes (`Uint8Array`)      |
+| Multiple transactions | Yes, as a batch in one call                                  | Yes, one or more wallet requests          |
+
+Use the client flow for automated or server-backed signing (airdrop faucet, cron jobs, relayer fees paid by your keypair), and the wallet flow when the end user must own and approve each transaction.
+
+**Prerequisite.** Your Kit client must install a transaction planner and a transaction-sending executor, e.g. `rpcTransactionPlanner()` and `rpcTransactionPlanSendingExecutor()` from `@solana/kit-plugin-rpc`. The default client built by `createSolanaPlugin()` installs only RPC and airdrop plugins, so without a capable client both composables fail fast at setup with a clear capability error naming what to install. Plan first with `usePlanTransaction()` / `usePlanTransactions()` when you need separate planning and sending steps.
+
+```ts
+import { useSendTransaction } from "@vue-solana/vue/useSendTransaction";
+import { useSendTransactions } from "@vue-solana/vue/useSendTransactions";
+
+const single = useSendTransaction();
+const batch = useSendTransactions();
+```
+
+`useSendTransaction().execute()` accepts flexible input and resolves to the successful transaction result:
+
+```ts
+const { data, status, error, execute } = useSendTransaction();
+
+// A raw list of instructions
+await execute(instructions);
+
+// A planned instruction plan or a single transaction plan
+await execute(plan);
+
+// A single transaction message
+await execute(transactionMessage);
+
+// data.context.signature is the submitted Signature
+```
+
+`useSendTransactions().execute()` plans, signs, and sends one or more messages at once — parallel where possible, sequential where dependencies require it — and resolves to the full plan result tree:
+
+```ts
+const { data, status, error, execute } = useSendTransactions();
+
+// A batch of transaction messages
+await execute([messageA, messageB]);
+
+// A message, a plan, or a nested batch of messages/plans
+await execute(nestedBatch);
+```
+
+Both composables surface `status` (`idle`, `sending`, `sent`, `error`), `loading`, `error`, and `data`. Starting a new `execute()` while one is in flight aborts the previous call; the stale attempt rejects and its state is discarded. Pass an `{ abortSignal }` to additionally cancel from outside (unmounting the owning component also aborts in-flight work).
+
+Because signing keypairs live on the client, reserve `useSendTransaction(s)` for trusted contexts (your relayer, automated flows). Do not register app-signing keypairs on a client exposed to end-user browsers, where a compromised page could spend funds.
+
+Superseded or aborted attempts reject with a wrapped error. To tell "superseded or cancelled" apart from a real failure, inspect the rejection's `cause`:
+
+```ts
+try {
+  await execute(instructions);
+} catch (cause) {
+  if (cause?.cause instanceof DOMException && cause.cause.name === "AbortError") {
+    // superseded by a newer call or cancelled via abortSignal / unmount
+  }
+}
+```
+
 ### Live Data
 
 `useRequest()` fetches once per change and revalidates stale data in the background. Pass a request function, a pending Kit RPC request, or a ref/computed of either:
@@ -494,6 +616,8 @@ Docs: [Vue Solana Agent Skill](https://vue-solana-docs.vercel.app/agent-skill)
 | `useIdentity()`                                                                            | Reactive Kit client `identity` signer ref (requires a signer plugin on the client).                                        |
 | `usePlanTransaction()`                                                                     | Plans a single transaction message from instruction inputs without signing or sending.                                     |
 | `usePlanTransactions()`                                                                    | Plans a batch of transaction messages from instruction inputs.                                                             |
+| `useSendTransaction()`                                                                     | Plans, signs, submits, and confirms one transaction through the client's transaction-sending capability (no wallet).       |
+| `useSendTransactions()`                                                                    | Sends a batch of transactions (parallel or sequential) through the client's transaction-sending capability.                |
 
 Direct composable subpaths:
 
@@ -527,6 +651,8 @@ Direct composable subpaths:
 - `@vue-solana/vue/useIdentity`
 - `@vue-solana/vue/usePlanTransaction`
 - `@vue-solana/vue/usePlanTransactions`
+- `@vue-solana/vue/useSendTransaction`
+- `@vue-solana/vue/useSendTransactions`
 
 Other direct subpaths:
 

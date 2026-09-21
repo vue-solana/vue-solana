@@ -105,6 +105,16 @@
       "import": "./dist/usePlanTransactions.mjs",
       "require": "./dist/usePlanTransactions.cjs"
     },
+    "./useSendTransaction": {
+      "types": "./dist/useSendTransaction.d.ts",
+      "import": "./dist/useSendTransaction.mjs",
+      "require": "./dist/useSendTransaction.cjs"
+    },
+    "./useSendTransactions": {
+      "types": "./dist/useSendTransactions.d.ts",
+      "import": "./dist/useSendTransactions.mjs",
+      "require": "./dist/useSendTransactions.cjs"
+    },
     "./swr": {
       "types": "./dist/swr.d.ts",
       "import": "./dist/swr.mjs",

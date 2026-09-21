@@ -54,6 +54,28 @@ createApp(App).use(
 );
 ```
 
+### Client and Plugin Lifecycle
+
+`createSolanaPlugin()` builds the Kit client once, during `install()`. Create the plugin at module scope and reuse the instance:
+
+```ts
+// solana.ts
+import { createSolanaPlugin } from "@vue-solana/vue";
+
+export const solana = createSolanaPlugin({ cluster: "devnet" });
+```
+
+Calling `createSolanaPlugin()` again builds a new client and context, discarding the existing wallet selection and RPC state. If your config is reactive — a cluster toggle, for example — memoize on the config so a new plugin (and client) is built only when the value actually changes, not on every render:
+
+```ts
+import { computed, ref } from "vue";
+
+const cluster = ref<SolanaCluster>("devnet");
+const plugin = computed(() => createSolanaPlugin({ cluster: cluster.value }));
+```
+
+A Kit client runs its `createClient().use(...)` plugins during construction. When one of those plugins is async, the client — and any context built from it — only activates after that promise resolves. Defer real RPC and wallet work to client lifecycle hooks or user actions after hydration rather than running it during setup or SSR.
+
 ## Composables
 
 The root export remains supported. For composables, prefer direct subpath imports in new code so bundlers can avoid evaluating unrelated package entry code:
@@ -80,6 +102,8 @@ Direct package subpaths:
 - `@vue-solana/vue/useIdentity`
 - `@vue-solana/vue/usePlanTransaction`
 - `@vue-solana/vue/usePlanTransactions`
+- `@vue-solana/vue/useSendTransaction`
+- `@vue-solana/vue/useSendTransactions`
 - `@vue-solana/vue/swr`
 - `@vue-solana/vue/useSolana`
 - `@vue-solana/vue/useSolanaClient`
@@ -129,6 +153,7 @@ Use `@vue-solana/vue/buffer-polyfill` for browser transaction code that needs th
 - `useClientCapability(capability)`: asserts a capability is installed on the Kit client, failing fast with a clear error.
 - `usePayer()` / `useIdentity()`: reactively track the fee payer / acting identity signer from the Kit client.
 - `usePlanTransaction()` / `usePlanTransactions()`: plan transaction messages from instruction inputs without sending.
+- `useSendTransaction()` / `useSendTransactions()`: plan, sign with the client's signers (payer/identity), submit, and confirm transactions with no wallet popup; requires `rpcTransactionPlanner()` and `rpcTransactionPlanSendingExecutor()`.
 
 ## Related Guides
 
@@ -616,6 +641,35 @@ The current wallet must be connected and support either `signAndSendTransaction`
 Without `confirm: true`, `execute()` returns after submission and sets `status` to `sent`. With confirmation enabled, status moves through `sending`, `confirming`, and then `processed`, `confirmed`, or `finalized` to match the requested commitment. If confirmation times out or fails, the submitted `signature` remains available so the app can link to an explorer.
 
 `useSignAndSendTransaction()` also clears `loading` if a wallet adapter never returns a result. In that stale case, `error` is set and the chain status may be unknown, so check the connected wallet or an explorer before retrying.
+
+### Wallet Request Inputs and Returns
+
+Wallet signing flows accept transaction input as raw `Uint8Array` wire bytes that conform to the Solana transaction schema. Build them with `@solana/kit` (or decode them from a base64/base58 RPC response); base64 strings, transaction objects, and instruction lists are not accepted here.
+
+```ts
+import { compileTransaction, getTransactionEncoder } from "@solana/kit";
+
+const transaction: Uint8Array = getTransactionEncoder().encode(compileTransaction(message));
+await execute(transaction);
+```
+
+`useSignMessage()` takes the raw message bytes to sign. Every wallet send request also accepts the Kit `SendTransactionOptions`:
+
+| Option                | Description                                                                                                   |
+| --------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `skipPreflight`       | Skip preflight simulation before sending.                                                                     |
+| `maxRetries`          | RPC node retry count (`bigint`).                                                                              |
+| `minContextSlot`      | Slot at which any blockhash or nonce in the transaction is known to exist; sending before it can be rejected. |
+| `preflightCommitment` | Commitment used for preflight simulation.                                                                     |
+
+Return shapes:
+
+- `useSignMessage().execute(bytes)` resolves to `{ signedMessage, signature }`, both `Uint8Array`.
+- `useSignTransactions().execute(transactions)` resolves to the signed `Uint8Array[]` (also exposed as `signedTransactions`); pass a single-element array for one transaction.
+- `useSignAndSendTransaction().execute(transaction)` resolves to the submitted `signature` string; with `confirm: true` it also fills `confirmation`.
+- `useSignAndSendTransactions().execute(transactions)` resolves to a `string[]` of signatures (also exposed as `signatures`).
+
+A wallet may modify the message or transaction before signing — for example to add its own instruction or change the fee payer — and the Wallet Standard explicitly allows it. Re-read the returned `signedMessage` or signed transaction bytes instead of assuming they match your input byte-for-byte.
 
 ## Batch Transactions
 

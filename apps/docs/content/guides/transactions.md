@@ -164,6 +164,35 @@ async function submitTransaction() {
 
 `status` distinguishes submission from confirmation. A returned `signature` means the transaction was submitted to RPC. `confirmation` means the submitted signature reached the requested commitment. If confirmation times out after submission, keep showing the signature and check its status before retrying.
 
+### Wallet Request Inputs and Returns
+
+Wallet signing flows accept transaction input as raw `Uint8Array` wire bytes that conform to the Solana transaction schema. Build them with `@solana/kit` (or decode them from a base64/base58 RPC response); base64 strings, transaction objects, and instruction lists are not accepted here.
+
+```ts
+import { compileTransaction, getTransactionEncoder } from "@solana/kit";
+
+const transaction: Uint8Array = getTransactionEncoder().encode(compileTransaction(message));
+await execute(transaction);
+```
+
+`useSignMessage()` takes the raw message bytes to sign. Every wallet send request also accepts the Kit `SendTransactionOptions`:
+
+| Option                | Description                                                                                                   |
+| --------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `skipPreflight`       | Skip preflight simulation before sending.                                                                     |
+| `maxRetries`          | RPC node retry count (`bigint`).                                                                              |
+| `minContextSlot`      | Slot at which any blockhash or nonce in the transaction is known to exist; sending before it can be rejected. |
+| `preflightCommitment` | Commitment used for preflight simulation.                                                                     |
+
+Return shapes:
+
+- `useSignMessage().execute(bytes)` resolves to `{ signedMessage, signature }`, both `Uint8Array`.
+- `useSignTransactions().execute(transactions)` resolves to the signed `Uint8Array[]` (also exposed as `signedTransactions`); pass a single-element array for one transaction.
+- `useSignAndSendTransaction().execute(transaction)` resolves to the submitted `signature` string; with `confirm: true` it also fills `confirmation`.
+- `useSignAndSendTransactions().execute(transactions)` resolves to a `string[]` of signatures (also exposed as `signatures`).
+
+A wallet may modify the message or transaction before signing — for example to add its own instruction or change the fee payer — and the Wallet Standard explicitly allows it. Re-read the returned `signedMessage` or signed transaction bytes instead of assuming they match your input byte-for-byte.
+
 ## Explorer Links
 
 Explorer links should match the cluster your app is using.

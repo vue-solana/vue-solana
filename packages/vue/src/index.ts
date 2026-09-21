@@ -10,6 +10,7 @@ export * from "./composables/usePayer";
 export * from "./composables/useRequest";
 export * from "./composables/useRpc";
 export * from "./composables/useSelectedWalletAccount";
+export * from "./composables/useSendTransaction";
 export * from "./composables/useSignMessage";
 export * from "./composables/useSignAndSendTransaction";
 export * from "./composables/useSignTransactions";

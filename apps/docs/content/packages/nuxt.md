@@ -114,6 +114,7 @@ See [Data Fetching Composables](/packages/vue#data-fetching-composables) for the
 - `useSolanaSignAndSendTransactions()`: signs and sends multiple transactions in one wallet request.
 - `useSolanaPayer()` / `useSolanaIdentity()`: reactive Kit client signers (requires a signer plugin).
 - `useSolanaPlanTransaction()` / `useSolanaPlanTransactions()`: plan transaction messages from instruction inputs.
+- `useSolanaSendTransaction()` / `useSolanaSendTransactions()`: plan, sign, submit, and confirm transactions entirely through the Kit client's transaction-sending capability (no wallet popup). Use these when the client owns the fee payer and signing keys; use `useSolanaSignAndSendTransaction(s)` when a connected wallet must approve each transaction.
 
 These are Nuxt aliases for the Vue composables.
 

@@ -124,6 +124,8 @@ The module auto-imports these composables from direct `@vue-solana/vue/*` subpat
 - `useSolanaIdentity()`
 - `useSolanaPlanTransaction()`
 - `useSolanaPlanTransactions()`
+- `useSolanaSendTransaction()`
+- `useSolanaSendTransactions()`
 
 | Composable                           | Purpose                                                                          |
 | ------------------------------------ | -------------------------------------------------------------------------------- |
@@ -155,6 +157,8 @@ The module auto-imports these composables from direct `@vue-solana/vue/*` subpat
 | `useSolanaIdentity()`                | Reactive Kit client `identity` signer ref.                                       |
 | `useSolanaPlanTransaction()`         | Plans a single transaction message from instruction inputs without signing.      |
 | `useSolanaPlanTransactions()`        | Plans a batch of transaction messages from instruction inputs.                   |
+| `useSolanaSendTransaction()`         | Plans, signs, submits, and confirms one transaction through the client.          |
+| `useSolanaSendTransactions()`        | Sends a batch of transactions (parallel or sequential) through the client.       |
 
 The runtime plugin is client-only. Auto-imported composables can be called during SSR and return inert state until hydration provides the real client context. Trigger RPC and wallet work from client lifecycle hooks or user actions.
 

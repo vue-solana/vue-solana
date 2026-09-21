@@ -41,10 +41,14 @@ export type {
   Lamports,
   Rpc,
   Signature,
+  SingleTransactionPlan,
   SolanaRpcApi,
   SolanaRpcResponse,
+  SuccessfulSingleTransactionPlanResult,
   TransactionMessage,
   TransactionPlan,
+  TransactionPlanInput,
+  TransactionPlanResult,
   TransactionSigner,
 } from "@solana/kit";
 export type {
@@ -53,6 +57,7 @@ export type {
   ClientWithSubscribeToIdentity,
   ClientWithSubscribeToPayer,
   ClientWithTransactionPlanning,
+  ClientWithTransactionSending,
 } from "@solana/kit";
 export type {
   CreateReactiveStoreWithInitialValueAndSlotTrackingConfig,

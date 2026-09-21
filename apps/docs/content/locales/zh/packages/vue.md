@@ -54,6 +54,28 @@ createApp(App).use(
 );
 ```
 
+### 客户端与插件生命周期
+
+`createSolanaPlugin()` 会在 `install()` 期间构建一次 Kit client。请在模块作用域创建插件并复用该实例：
+
+```ts
+// solana.ts
+import { createSolanaPlugin } from "@vue-solana/vue";
+
+export const solana = createSolanaPlugin({ cluster: "devnet" });
+```
+
+再次调用 `createSolanaPlugin()` 会构建新的 client 和 context，并丢弃现有的钱包选择和 RPC 状态。如果你的配置是响应式的——例如 cluster 切换——请基于配置做 memoize，只在值真正变化时构建新的插件（和 client），而不是每次渲染都构建：
+
+```ts
+import { computed, ref } from "vue";
+
+const cluster = ref<SolanaCluster>("devnet");
+const plugin = computed(() => createSolanaPlugin({ cluster: cluster.value }));
+```
+
+Kit client 会在构建期间运行其 `createClient().use(...)` 插件。当其中某个插件是异步的，client——以及由它构建的任何 context——只会在该 promise resolve 后才激活。请把真正的 RPC 和钱包工作推迟到 hydration 之后的客户端生命周期钩子或用户操作，而不要在 setup 或 SSR 期间运行。
+
 ## Composables
 
 根导出仍然受支持。对于 composable，新代码优先使用直接 subpath 导入，这样 bundler 可以避免执行无关的包入口代码：
@@ -617,6 +639,35 @@ await execute(transaction, {
 没有 `confirm: true` 时，`execute()` 会在提交后返回，并把 `status` 设置为 `sent`。启用确认后，状态会经过 `sending`、`confirming`，然后变为 `processed`、`confirmed` 或 `finalized`，以匹配请求的 commitment。如果确认超时或失败，已提交的 `signature` 仍然可用，因此应用可以链接到 explorer。
 
 如果钱包 adapter 从不返回结果，`useSignAndSendTransaction()` 也会清除 `loading`。这种 stale 情况下会设置 `error`，链上状态可能未知，因此重试前请检查连接的钱包或 explorer。
+
+### 钱包请求的输入与返回值
+
+钱包签名流程接受符合 Solana 交易 schema 的原始 `Uint8Array` wire bytes 作为交易输入。请用 `@solana/kit` 构建它们（或从 base64/base58 RPC 响应中解码）；这里不接受 base64 字符串、交易对象和指令列表。
+
+```ts
+import { compileTransaction, getTransactionEncoder } from "@solana/kit";
+
+const transaction: Uint8Array = getTransactionEncoder().encode(compileTransaction(message));
+await execute(transaction);
+```
+
+`useSignMessage()` 接受要签名的原始消息 bytes。每个钱包发送请求也都接受 Kit 的 `SendTransactionOptions`：
+
+| Option                | Description                                                                 |
+| --------------------- | --------------------------------------------------------------------------- |
+| `skipPreflight`       | 发送前跳过 preflight 模拟。                                                 |
+| `maxRetries`          | RPC 节点重试次数（`bigint`）。                                              |
+| `minContextSlot`      | 交易中任何 blockhash 或 nonce 已知存在的最早 slot；在此之前发送可能被拒绝。 |
+| `preflightCommitment` | 用于 preflight 模拟的 commitment。                                          |
+
+返回值形式：
+
+- `useSignMessage().execute(bytes)` resolve 为 `{ signedMessage, signature }`，两者都是 `Uint8Array`。
+- `useSignTransactions().execute(transactions)` resolve 为已签名的 `Uint8Array[]`（也以 `signedTransactions` 暴露）；单个交易请传入单元素数组。
+- `useSignAndSendTransaction().execute(transaction)` resolve 为已提交的 `signature` 字符串；使用 `confirm: true` 时还会填充 `confirmation`。
+- `useSignAndSendTransactions().execute(transactions)` resolve 为签名的 `string[]`（也以 `signatures` 暴露）。
+
+钱包可能在签名前修改消息或交易——例如添加自己的指令或更改 fee payer——Wallet Standard 明确允许这样做。请重新读取返回的 `signedMessage` 或已签名交易 bytes，而不要假设它们与你的输入逐字节一致。
 
 ## 批量交易
 

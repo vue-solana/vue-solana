@@ -54,6 +54,28 @@ createApp(App).use(
 );
 ```
 
+### Ciclo de vida del cliente y del plugin
+
+`createSolanaPlugin()` construye el cliente Kit una vez, durante `install()`. Crea el plugin a nivel de módulo y reutiliza la instancia:
+
+```ts
+// solana.ts
+import { createSolanaPlugin } from "@vue-solana/vue";
+
+export const solana = createSolanaPlugin({ cluster: "devnet" });
+```
+
+Llamar a `createSolanaPlugin()` otra vez construye un cliente y contexto nuevos, descartando la selección de wallet y el estado RPC existentes. Si tu configuración es reactiva — un cambio de cluster, por ejemplo — memoiza sobre la configuración para que se construya un nuevo plugin (y cliente) solo cuando el valor cambia de verdad, no en cada render:
+
+```ts
+import { computed, ref } from "vue";
+
+const cluster = ref<SolanaCluster>("devnet");
+const plugin = computed(() => createSolanaPlugin({ cluster: cluster.value }));
+```
+
+Un cliente Kit ejecuta sus plugins `createClient().use(...)` durante la construcción. Cuando uno de esos plugins es asíncrono, el cliente — y cualquier contexto construido a partir de él — solo se activa después de que esa promesa se resuelva. Difiere el trabajo real de RPC y wallet a hooks del ciclo de vida del cliente o acciones del usuario después de la hidratación en lugar de ejecutarlo durante el setup o el SSR.
+
 ## Composables
 
 La exportación raíz sigue estando soportada. Para composables, prefiere imports directos por subpath en código nuevo para que los bundlers puedan evitar evaluar código de entrada no relacionado del paquete:
@@ -617,6 +639,35 @@ La wallet actual debe estar conectada y soportar `signAndSendTransaction` o `sig
 Sin `confirm: true`, `execute()` devuelve después del envío y establece `status` en `sent`. Con la confirmación activada, el estado pasa por `sending`, `confirming` y luego `processed`, `confirmed` o `finalized` para coincidir con el commitment solicitado. Si la confirmación agota el tiempo o falla, la `signature` enviada sigue disponible para que la app pueda enlazar a un explorador.
 
 `useSignAndSendTransaction()` también limpia `loading` si un adaptador de wallet nunca devuelve un resultado. En ese caso obsoleto, se establece `error` y el estado de cadena puede ser desconocido, así que comprueba la wallet conectada o un explorador antes de reintentar.
+
+### Entradas y resultados de las peticiones de wallet
+
+Los flujos de firma de wallet aceptan la transacción de entrada como bytes de wire `Uint8Array` en bruto que cumplen el esquema de transacción de Solana. Constróyelos con `@solana/kit` (o decodifícalos desde una respuesta RPC en base64/base58); las cadenas base64, los objetos de transacción y las listas de instrucciones no se aceptan aquí.
+
+```ts
+import { compileTransaction, getTransactionEncoder } from "@solana/kit";
+
+const transaction: Uint8Array = getTransactionEncoder().encode(compileTransaction(message));
+await execute(transaction);
+```
+
+`useSignMessage()` toma los bytes del mensaje en bruto a firmar. Toda petición de envío de wallet acepta también las `SendTransactionOptions` de Kit:
+
+| Opción                | Descripción                                                                                                        |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `skipPreflight`       | Omite la simulación de preflight antes de enviar.                                                                  |
+| `maxRetries`          | Número de reintentos del nodo RPC (`bigint`).                                                                      |
+| `minContextSlot`      | Slot en el que se sabe que existe cualquier blockhash o nonce de la transacción; enviar antes puede ser rechazado. |
+| `preflightCommitment` | Commitment usado para la simulación de preflight.                                                                  |
+
+Formas de retorno:
+
+- `useSignMessage().execute(bytes)` resuelve a `{ signedMessage, signature }`, ambos `Uint8Array`.
+- `useSignTransactions().execute(transactions)` resuelve al `Uint8Array[]` firmado (también expuesto como `signedTransactions`); pasa un array de un solo elemento para una transacción.
+- `useSignAndSendTransaction().execute(transaction)` resuelve a la `signature` enviada como string; con `confirm: true` también rellena `confirmation`.
+- `useSignAndSendTransactions().execute(transactions)` resuelve a un `string[]` de firmas (también expuesto como `signatures`).
+
+Una wallet puede modificar el mensaje o la transacción antes de firmar — por ejemplo para añadir su propia instrucción o cambiar el pagador de comisiones — y el Wallet Standard lo permite explícitamente. Vuelve a leer el `signedMessage` devuelto o los bytes de la transacción firmada en lugar de asumir que coinciden byte a byte con tu entrada.
 
 ## Transacciones en lote
 

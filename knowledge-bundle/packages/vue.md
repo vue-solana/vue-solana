@@ -37,6 +37,8 @@ Available package subpaths:
 - `@vue-solana/vue/useIdentity`
 - `@vue-solana/vue/usePlanTransaction`
 - `@vue-solana/vue/usePlanTransactions`
+- `@vue-solana/vue/useSendTransaction`
+- `@vue-solana/vue/useSendTransactions`
 - `@vue-solana/vue/swr`
 - `@vue-solana/vue/useSolana`
 - `@vue-solana/vue/useSolanaClient`
@@ -437,8 +439,24 @@ await execute(instructionInput, { abortSignal });
 
 - `usePlanTransaction()` returns `transactionMessage`, `status` (`idle`, `planning`, `planned`, `error`), `loading`, `error`, and `execute(input, config?)`.
 - `usePlanTransactions()` returns `transactionPlan` with the same status/loading/error/execute shape and produces a plan of possibly multiple transaction messages.
-- `config` accepts an optional `abortSignal`.
+- `config` accepts an optional `abortSignal`. Starting a new `execute()` while one is in flight aborts the previous call; unmounting the owning component also aborts in-flight work.
 - Both throw a clear capability error when the client does not plan (e.g. `rpcTransactionPlanner` is not installed).
+
+## `useSendTransaction()` / `useSendTransactions()`
+
+Plan, sign with the client's signers (payer/identity), submit, and confirm transactions through the client's transaction-sending capability (`ClientWithTransactionSending`), with no wallet popup. Requires `rpcTransactionPlanner()` and `rpcTransactionPlanSendingExecutor()` from `@solana/kit-plugin-rpc`; the default plugin client installs only RPC and airdrop plugins, so both composables fail fast at setup with a clear capability error naming what to install.
+
+Reserve these for trusted contexts (relayer, automated flows): the client signs with its own keypairs, so do not register app-signing keypairs on a client exposed to end-user browsers.
+
+```ts
+const single = useSendTransaction(); // data.context.signature is the submitted Signature
+const batch = useSendTransactions(); // resolves to the full plan result tree
+await single.execute(instructionInput, { abortSignal });
+```
+
+- `useSendTransaction().execute()` accepts instructions, an instruction plan, a transaction message, or a single transaction plan; `status` is `idle`, `sending`, `sent`, or `error`.
+- `useSendTransactions().execute()` accepts instructions or a transaction plan (messages and nested batches), parallel where possible, sequential where dependencies require it.
+- Both surface `status`, `loading`, `error`, and `data`. Starting a new `execute()` while one is in flight aborts the previous call; unmounting the owning component also aborts in-flight work. Superseded or cancelled attempts reject, so check the rejection's `cause` (e.g. an `AbortError` `DOMException`) to tell it apart from a real failure.
 
 ## `useSignTransactions()`
 

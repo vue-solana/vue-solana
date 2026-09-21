@@ -18,6 +18,8 @@ export default defineBuildConfig({
     "src/useRequest",
     "src/useRpc",
     "src/useSelectedWalletAccount",
+    "src/useSendTransaction",
+    "src/useSendTransactions",
     "src/useSignAndSendTransaction",
     "src/useSignAndSendTransactions",
     "src/useSignMessage",

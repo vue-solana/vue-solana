@@ -191,10 +191,9 @@ describe("usePlanTransaction", () => {
 
     const message = await promise;
 
-    expect(planningClient.planTransaction).toHaveBeenCalledWith(
-      [{ instruction: "noop" }],
-      undefined,
-    );
+    expect(planningClient.planTransaction).toHaveBeenCalledWith([{ instruction: "noop" }], {
+      abortSignal: expect.any(AbortSignal),
+    });
     expect(message).toMatchObject({ message: "single" });
     expect(result.transactionMessage.value).toMatchObject({ message: "single" });
     expect(result.status.value).toBe("planned");
@@ -224,10 +223,9 @@ describe("usePlanTransactions", () => {
 
     const plan = await result.execute([{ instruction: "noop" }] as never);
 
-    expect(planningClient.planTransactions).toHaveBeenCalledWith(
-      [{ instruction: "noop" }],
-      undefined,
-    );
+    expect(planningClient.planTransactions).toHaveBeenCalledWith([{ instruction: "noop" }], {
+      abortSignal: expect.any(AbortSignal),
+    });
     expect(plan).toMatchObject({ plan: "multi" });
     expect(result.transactionPlan.value).toMatchObject({ plan: "multi" });
     expect(result.status.value).toBe("planned");

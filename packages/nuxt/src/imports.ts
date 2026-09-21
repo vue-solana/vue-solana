@@ -12,6 +12,8 @@ const SOLANA_COMPOSABLE_IMPORTS = [
   ["useRequest", "useSolanaRequest"],
   ["useRpc", "useSolanaRpc"],
   ["useSelectedWalletAccount", "useSolanaSelectedWalletAccount"],
+  ["useSendTransaction", "useSolanaSendTransaction"],
+  ["useSendTransactions", "useSolanaSendTransactions"],
   ["useSignIn", "useSolanaSignIn"],
   ["useSignMessage", "useSolanaSignMessage"],
   ["useSignAndSendTransaction", "useSolanaSignAndSendTransaction"],

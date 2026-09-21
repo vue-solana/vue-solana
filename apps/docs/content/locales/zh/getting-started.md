@@ -95,6 +95,28 @@ import { useSolanaClient } from "@vue-solana/vue/useSolanaClient";
 
 `useRpc()` 返回已解析的集群状态和注入的 Kit `client`；`useBalance()` 通过 `client.rpc` 读取。`useSolanaClient()` 直接返回同一个 `client` 及其只读 `rpc`，外加来自 `@vue-solana/vue/kit` 的 `address()`/`lamports()`。完整的 before/after 对照请参阅 [Kit 迁移指南](/zh/guides/kit-migration)。
 
+### 客户端与插件生命周期
+
+`createSolanaPlugin()` 在 `install()` 期间构建一次 Kit 客户端。请在模块作用域创建插件并复用该实例：
+
+```ts
+// solana.ts
+import { createSolanaPlugin } from "@vue-solana/vue";
+
+export const solana = createSolanaPlugin({ cluster: "devnet" });
+```
+
+再次调用 `createSolanaPlugin()` 会构建新的客户端和上下文，并丢弃现有的钱包选择和 RPC 状态。如果你的配置是响应式的（例如集群切换），请基于配置进行 memoize，使新插件（和新客户端）仅在该值真正变化时构建，而不是每次渲染都构建：
+
+```ts
+import { computed, ref } from "vue";
+
+const cluster = ref<SolanaCluster>("devnet");
+const plugin = computed(() => createSolanaPlugin({ cluster: cluster.value }));
+```
+
+Kit 客户端在构造期间运行其 `createClient().use(...)` 插件。当其中某个插件是异步的时，客户端（以及由它构建的任何上下文）只有在该 promise resolve 之后才会激活。请将实际的 RPC 和钱包工作推迟到 hydration 之后的生命周期钩子或用户操作中，而不要在 setup 或 SSR 期间运行。
+
 ## Nuxt 设置
 
 ```ts

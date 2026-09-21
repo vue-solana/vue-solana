@@ -164,6 +164,35 @@ async function submitTransaction() {
 
 `status`는 제출과 confirmation을 구분합니다. `signature`가 반환되었다면 트랜잭션이 RPC에 제출된 것입니다. `confirmation`은 제출된 signature가 요청한 commitment에 도달했다는 뜻입니다. 제출 후 confirmation이 timeout되면 signature를 계속 보여 주고, 재시도 전에 해당 status를 확인하세요.
 
+### 지갑 요청 입력과 반환값
+
+지갑 서명 flow는 트랜잭션 입력으로 Solana 트랜잭션 스키마를 따르는 raw `Uint8Array` wire 바이트를 받습니다. `@solana/kit`으로 만들거나 base64/base58 RPC 응답에서 디코딩하세요. base64 문자열, 트랜잭션 객체, instruction 목록은 여기서 허용되지 않습니다.
+
+```ts
+import { compileTransaction, getTransactionEncoder } from "@solana/kit";
+
+const transaction: Uint8Array = getTransactionEncoder().encode(compileTransaction(message));
+await execute(transaction);
+```
+
+`useSignMessage()`는 서명할 raw 메시지 바이트를 받습니다. 모든 지갑 전송 요청은 Kit `SendTransactionOptions`도 받습니다:
+
+| Option                | Description                                                                                      |
+| --------------------- | ------------------------------------------------------------------------------------------------ |
+| `skipPreflight`       | 전송 전 preflight 시뮬레이션을 건너뜁니다.                                                       |
+| `maxRetries`          | RPC 노드 재시도 횟수(`bigint`).                                                                  |
+| `minContextSlot`      | 트랜잭션의 blockhash 또는 nonce가 존재한다고 알려진 slot. 이보다 먼저 보내면 거부될 수 있습니다. |
+| `preflightCommitment` | preflight 시뮬레이션에 사용하는 commitment.                                                      |
+
+반환 형태:
+
+- `useSignMessage().execute(bytes)`는 `{ signedMessage, signature }`로 resolve되며 둘 다 `Uint8Array`입니다.
+- `useSignTransactions().execute(transactions)`는 서명된 `Uint8Array[]`로 resolve됩니다(`signedTransactions`로도 노출됨). 트랜잭션 하나에는 단일 요소 배열을 전달하세요.
+- `useSignAndSendTransaction().execute(transaction)`는 제출된 `signature` 문자열로 resolve됩니다. `confirm: true`이면 `confirmation`도 채웁니다.
+- `useSignAndSendTransactions().execute(transactions)`는 signature의 `string[]`로 resolve됩니다(`signatures`로도 노출됨).
+
+지갑은 서명 전에 메시지나 트랜잭션을 수정할 수 있습니다(예: 자체 instruction 추가 또는 fee payer 변경). Wallet Standard가 이를 명시적으로 허용합니다. 입력과 바이트 단위로 일치한다고 가정하지 말고 반환된 `signedMessage`나 서명된 트랜잭션 바이트를 다시 읽으세요.
+
 ## Explorer 링크
 
 Explorer 링크는 앱이 사용하는 cluster와 일치해야 합니다.
