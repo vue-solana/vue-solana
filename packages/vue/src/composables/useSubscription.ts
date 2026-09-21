@@ -33,7 +33,8 @@ export interface UseSubscriptionOptions {
    * Returns a caller-provided `AbortSignal` per connection (for example
    * `AbortSignal.timeout(30_000)`), composed with the per-connection signal by
    * the underlying store. Aborting it fails the connection with the abort
-   * reason without touching other state.
+   * reason without touching other state. Read fresh from the latest render,
+   * so inline closures need no callback wrapping.
    */
   getAbortSignal?: (connection: number) => AbortSignal | null | undefined;
   /**
@@ -42,10 +43,22 @@ export interface UseSubscriptionOptions {
   onError?: (error: unknown) => void;
 }
 
+/** Per-connection abort overrides for `reconnect()`. */
+export type UseSubscriptionReconnectOptions = {
+  /**
+   * Applies only this signal to the connection, bypassing `getAbortSignal`.
+   * Passing `undefined` (or an empty options object) applies no caller signal
+   * for that connection; call `reconnect()` with no argument to keep the
+   * `getAbortSignal` factory behavior.
+   */
+  abortSignal?: AbortSignal;
+};
+
 export interface UseSubscriptionReturn<TResult> {
   data: ComputedRef<TResult | undefined>;
   error: ComputedRef<SolanaError | null>;
-  reconnect: () => void;
+  /** Re-opens the connection. `reconnect({ abortSignal })` overrides `getAbortSignal`. */
+  reconnect: (options?: UseSubscriptionReconnectOptions) => void;
   status: ComputedRef<UseSubscriptionStatus>;
 }
 
@@ -98,11 +111,17 @@ export function useSubscription<TResult>(
     }
   }
 
-  function openConnection(store: ReactiveStreamStore<TResult>) {
+  function openConnection(
+    store: ReactiveStreamStore<TResult>,
+    override?: { abortSignal?: AbortSignal },
+  ) {
     activeStore = store;
     connectionCount += 1;
     const connection = connectionCount;
-    const callerSignal = options.getAbortSignal?.(connection);
+    // A per-call override on reconnect() replaces the factory for that
+    // connection; `reconnect({ abortSignal: undefined })` means "no caller
+    // signal" and `reconnect()` keeps the `getAbortSignal` behavior.
+    const callerSignal = override ? override.abortSignal : options.getAbortSignal?.(connection);
 
     applyState(store.getState());
 
@@ -141,7 +160,7 @@ export function useSubscription<TResult>(
     activeSource = undefined;
   }
 
-  function connectCurrent() {
+  function connectCurrent(override?: UseSubscriptionReconnectOptions) {
     if (disposed) {
       return;
     }
@@ -159,14 +178,14 @@ export function useSubscription<TResult>(
 
     if (activeSource === resolved && activeStore) {
       // Same source: re-open the existing connection (stale-while-revalidate).
-      openConnection(activeStore);
+      openConnection(activeStore, override);
 
       return;
     }
 
     disconnect();
     activeSource = resolved;
-    openConnection(resolved.reactiveStore());
+    openConnection(resolved.reactiveStore(), override);
   }
 
   watch(
@@ -193,8 +212,8 @@ export function useSubscription<TResult>(
   return {
     data: computed(() => data.value),
     error: computed(() => error.value),
-    reconnect: () => {
-      connectCurrent();
+    reconnect: (options?: UseSubscriptionReconnectOptions) => {
+      connectCurrent(options);
     },
     status: computed(() => status.value),
   };

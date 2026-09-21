@@ -1,5 +1,6 @@
 export * from "./composables/useAccountInfo";
 export * from "./composables/useAction";
+export * from "./composables/useAirdrop";
 export * from "./composables/useBalance";
 export * from "./composables/useClientCapability";
 export * from "./composables/useConnection";

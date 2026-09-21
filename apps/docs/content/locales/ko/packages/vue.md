@@ -67,6 +67,7 @@ Direct package subpath:
 
 - `@vue-solana/vue/buffer-polyfill`
 - `@vue-solana/vue/useAction`
+- `@vue-solana/vue/useAirdrop`
 - `@vue-solana/vue/useRequest`
 - `@vue-solana/vue/useSubscription`
 - `@vue-solana/vue/useTrackedData`
@@ -109,6 +110,7 @@ Buffer polyfill이 필요한 브라우저 트랜잭션 코드에는 `@vue-solana
 - `useWallet()`: active wallet ref, computed connection state, wallet action을 반환합니다.
 - `useWallets()`: 발견된 browser extension wallet, Android Mobile Wallet Adapter wallet, 지원되는 iOS browser wallet entry, wallet 선택 action을 반환합니다.
 - `useBalance(address, commitment?)`: address string의 lamport balance를 로드합니다.
+- `useAirdrop()`: 테스트 네트워크와 로컬 validator에서 계정에 SOL을 에어드랍합니다.
 - `useTokenAccounts(owner, options?)`: 기본적으로 Token과 Token-2022 program 모두를 쿼리하여 owner의 모든 SPL token account를 로드합니다.
 - `useTokenBalance(mint, owner)`: associated token account를 통해 mint/owner 쌍의 SPL token balance와 decimals를 로드합니다.
 - `useTransaction(handler, options?)`: optional timeout 설정을 지원하는 generic async transaction state helper입니다.

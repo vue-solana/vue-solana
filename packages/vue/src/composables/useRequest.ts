@@ -40,15 +40,28 @@ export interface UseRequestOptions {
   /**
    * Returns a caller-provided `AbortSignal` per attempt (for example
    * `AbortSignal.timeout(5_000)`), composed with the internal per-attempt
-   * signal. Aborting it fails the attempt without touching other state.
+   * signal. Aborting it fails the attempt without touching other state. Read
+   * fresh from the latest render, so inline closures need no `useCallback`.
    */
   getAbortSignal?: (attempt: number) => AbortSignal | null | undefined;
 }
 
+/** Per-call abort overrides for `refresh()`. */
+export type UseRequestRefresherOptions = {
+  /**
+   * Applies only this signal to the attempt, bypassing `getAbortSignal`.
+   * Passing `undefined` (or an empty options object) applies no caller signal
+   * for that attempt; call `refresh()` with no argument to keep the
+   * `getAbortSignal` factory behavior.
+   */
+  abortSignal?: AbortSignal;
+};
+
 export interface UseRequestReturn<TResult> {
   data: ComputedRef<TResult | undefined>;
   error: ComputedRef<SolanaError | null>;
-  refresh: () => Promise<TResult | undefined>;
+  /** Re-fires manually. `refresh({ abortSignal })` overrides `getAbortSignal` for that attempt. */
+  refresh: (options?: UseRequestRefresherOptions) => Promise<TResult | undefined>;
   status: ComputedRef<UseRequestStatus>;
 }
 
@@ -63,9 +76,13 @@ export interface UseRequestReturn<TResult> {
  *   called outside one).
  * - Passing a ref/computed source re-fires whenever the source identity
  *   changes; a `null` source clears state and reports `disabled`.
- * - `refresh()` re-fires manually and resolves with the attempt result.
- * - `getAbortSignal` attaches per-attempt cancellation (timeouts, kill
- *   switches) on top of the internal per-attempt signal.
+ * - `refresh()` re-fires manually and resolves with the attempt result;
+ *   `refresh({ abortSignal })` overrides the caller signal for that attempt.
+ * - `getAbortSignal` (read fresh per render, so inline closures are fine)
+ *   attaches per-attempt cancellation on top of the internal per-attempt
+ *   signal.
+ * - Passing `null` as the source, or unmounting, cancels in-flight work and
+ *   reports `disabled`.
  */
 export function useRequest<TResult>(
   source: UseRequestSource<TResult>,
@@ -77,31 +94,35 @@ export function useRequest<TResult>(
   let disposed = false;
   let attempt = 0;
 
-  const store = createSolanaActionStore<[ResolvedSource<TResult>], TResult>(
-    async (signal, resolved) => {
-      attempt += 1;
+  const store = createSolanaActionStore<
+    [ResolvedSource<TResult>, UseRequestRefresherOptions | undefined],
+    TResult
+  >(async (signal, resolved, override) => {
+    attempt += 1;
 
-      const callerSignal = options.getAbortSignal?.(attempt);
-      const composedSignal = callerSignal ? AbortSignal.any([signal, callerSignal]) : signal;
+    // A per-call override on refresh() replaces the factory for that
+    // attempt; `refresh({ abortSignal: undefined })` means "no caller
+    // signal" and `refresh()` keeps the `getAbortSignal` behavior.
+    const callerSignal = override ? override.abortSignal : options.getAbortSignal?.(attempt);
+    const composedSignal = callerSignal ? AbortSignal.any([signal, callerSignal]) : signal;
 
-      let pending: Promise<TResult>;
+    let pending: Promise<TResult>;
 
-      if (isSendSource<TResult>(resolved)) {
-        pending = Promise.resolve(resolved.send({ abortSignal: composedSignal }));
-      } else if (typeof resolved === "function") {
-        pending = Promise.resolve(resolved(composedSignal)).then((result) =>
-          isSendSource<TResult>(result) ? result.send({ abortSignal: composedSignal }) : result,
-        );
-      } else {
-        throw new Error("useRequest source did not resolve to a request function");
-      }
+    if (isSendSource<TResult>(resolved)) {
+      pending = Promise.resolve(resolved.send({ abortSignal: composedSignal }));
+    } else if (typeof resolved === "function") {
+      pending = Promise.resolve(resolved(composedSignal)).then((result) =>
+        isSendSource<TResult>(result) ? result.send({ abortSignal: composedSignal }) : result,
+      );
+    } else {
+      throw new Error("useRequest source did not resolve to a request function");
+    }
 
-      // Race the attempt against the composed signal so a caller-provided
-      // abort (timeout, kill switch) fails the attempt even when the source
-      // ignores its signal.
-      return getAbortablePromise(pending, composedSignal);
-    },
-  );
+    // Race the attempt against the composed signal so a caller-provided
+    // abort (timeout, kill switch) fails the attempt even when the source
+    // ignores its signal.
+    return getAbortablePromise(pending, composedSignal);
+  });
 
   const unsubscribe = store.subscribe(() => {
     const next = store.getState();
@@ -136,7 +157,7 @@ export function useRequest<TResult>(
     return source;
   }
 
-  async function run(): Promise<TResult | undefined> {
+  async function run(override?: UseRequestRefresherOptions): Promise<TResult | undefined> {
     if (disposed) {
       return undefined;
     }
@@ -160,7 +181,7 @@ export function useRequest<TResult>(
     status.value = "fetching";
 
     try {
-      return await store.dispatchAsync(resolved);
+      return await store.dispatchAsync(resolved, override);
     } catch (cause) {
       // Superseded or aborted attempts leave the newest attempt in charge of
       // state, so only surface failures that actually landed on state.
@@ -172,7 +193,8 @@ export function useRequest<TResult>(
     }
   }
 
-  const refresh = (): Promise<TResult | undefined> => run();
+  const refresh = (options?: UseRequestRefresherOptions): Promise<TResult | undefined> =>
+    run(options);
 
   watch(
     () => (isRef(source) ? source.value : source),

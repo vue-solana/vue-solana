@@ -6,6 +6,7 @@ export default defineBuildConfig({
     "src/index",
     "src/useAccountInfo",
     "src/useAction",
+    "src/useAirdrop",
     "src/useBalance",
     "src/useClientCapability",
     "src/useConnection",

@@ -305,6 +305,74 @@ describe("useTrackedData", () => {
     expect(result.data.value?.context.slot).toBe(4n);
   });
 
+  it("refresh({ abortSignal }) uses the override and skips getAbortSignal", () => {
+    const factory = vi.fn(() => new AbortController().signal);
+    const actionSource = createFakeActionSource();
+    const streamSource = createFakeStreamSource();
+    const { result } = setup(() =>
+      useTrackedData<bigint, FakeNotification, bigint>(
+        {
+          rpcRequest: actionSource,
+          rpcValueMapper: (lamports) => lamports,
+          rpcSubscriptionRequest: streamSource,
+          rpcSubscriptionValueMapper: ({ lamports }) => lamports,
+        },
+        { getAbortSignal: factory },
+      ),
+    );
+
+    expect(factory).toHaveBeenCalledTimes(1);
+
+    result.refresh({ abortSignal: new AbortController().signal });
+
+    expect(streamSource.connectCount()).toBe(2);
+    expect(factory).toHaveBeenCalledTimes(1);
+  });
+
+  it("refresh({}) and refresh({ abortSignal: undefined }) skip getAbortSignal", () => {
+    const factory = vi.fn(() => new AbortController().signal);
+    const actionSource = createFakeActionSource();
+    const streamSource = createFakeStreamSource();
+    const { result } = setup(() =>
+      useTrackedData<bigint, FakeNotification, bigint>(
+        {
+          rpcRequest: actionSource,
+          rpcValueMapper: (lamports) => lamports,
+          rpcSubscriptionRequest: streamSource,
+          rpcSubscriptionValueMapper: ({ lamports }) => lamports,
+        },
+        { getAbortSignal: factory },
+      ),
+    );
+
+    result.refresh({});
+    result.refresh({ abortSignal: undefined });
+
+    expect(streamSource.connectCount()).toBe(3);
+    expect(factory).toHaveBeenCalledTimes(1);
+  });
+
+  it("applies error state immediately for a pre-aborted refresh signal", () => {
+    const actionSource = createFakeActionSource();
+    const streamSource = createFakeStreamSource();
+    const { result } = setup(() =>
+      useTrackedData<bigint, FakeNotification, bigint>({
+        rpcRequest: actionSource,
+        rpcValueMapper: (lamports) => lamports,
+        rpcSubscriptionRequest: streamSource,
+        rpcSubscriptionValueMapper: ({ lamports }) => lamports,
+      }),
+    );
+
+    const controller = new AbortController();
+    controller.abort(new Error("cancel"));
+    result.refresh({ abortSignal: controller.signal });
+
+    expect(result.status.value).toBe("error");
+    expect(result.error.value?.cause).toBeInstanceOf(Error);
+    expect(streamSource.connectCount()).toBe(1);
+  });
+
   it("refresh() after scope dispose is a no-op (no leaked reconnect)", () => {
     const actionSource = createFakeActionSource();
     const streamSource = createFakeStreamSource();

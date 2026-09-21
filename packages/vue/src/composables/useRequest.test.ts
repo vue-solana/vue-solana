@@ -272,6 +272,82 @@ describe("useRequest", () => {
     expect(send).toHaveBeenCalledTimes(1);
   });
 
+  it("refresh({ abortSignal }) uses the override and skips getAbortSignal", async () => {
+    const factory = vi.fn(() => AbortSignal.timeout(5));
+    const signals: AbortSignal[] = [];
+    const { result } = setup(() =>
+      useRequest(
+        (signal) => {
+          signals.push(signal);
+
+          return new Promise<string>(() => {});
+        },
+        { getAbortSignal: factory },
+      ),
+    );
+
+    await vi.waitFor(() => {
+      expect(signals).toHaveLength(1);
+    });
+    expect(factory).toHaveBeenCalledTimes(1);
+
+    const override = new AbortController();
+    const refreshed = result.refresh({ abortSignal: override.signal });
+
+    await vi.waitFor(() => {
+      expect(signals).toHaveLength(2);
+    });
+
+    // The attempted refresh skipped the factory entirely.
+    expect(factory).toHaveBeenCalledTimes(1);
+
+    override.abort();
+    await expect(refreshed).rejects.toThrow();
+  });
+
+  it("refresh({}) and refresh({ abortSignal: undefined }) skip getAbortSignal", async () => {
+    const factory = vi.fn();
+    let call = 0;
+    const { result } = setup(() =>
+      useRequest(
+        async () => {
+          call += 1;
+
+          return call;
+        },
+        { getAbortSignal: factory },
+      ),
+    );
+
+    await vi.waitFor(() => {
+      expect(result.data.value).toBe(1);
+    });
+    expect(factory).toHaveBeenCalledTimes(1);
+
+    await expect(result.refresh({})).resolves.toBe(2);
+    await expect(result.refresh({ abortSignal: undefined })).resolves.toBe(3);
+
+    // Neither override-triggered attempt consulted the factory.
+    expect(factory).toHaveBeenCalledTimes(1);
+  });
+
+  it("fails immediately when given a pre-aborted refresh signal", async () => {
+    const source = vi.fn(async () => "value");
+    const { result } = setup(() => useRequest(source));
+
+    await vi.waitFor(() => {
+      expect(result.data.value).toBe("value");
+    });
+
+    const controller = new AbortController();
+    controller.abort(new Error("cancel"));
+    await expect(result.refresh({ abortSignal: controller.signal })).rejects.toThrow();
+
+    await vi.waitFor(() => {
+      expect(result.status.value).toBe("error");
+    });
+  });
+
   it("stops tracking after the scope is disposed", async () => {
     const source = vi.fn(async () => 1);
     const { result, scope } = setup(() => useRequest(source));

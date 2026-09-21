@@ -101,6 +101,7 @@ The module auto-imports these composables from direct `@vue-solana/vue/*` subpat
 - `useSolanaRpc()`
 - `useSolanaConnection()`
 - `useSolanaAccountInfo()`
+- `useSolanaAirdrop()`
 - `useSolanaBalance()`
 - `useSolanaProgramAccounts()`
 - `useSolanaTokenAccounts()`
@@ -131,6 +132,7 @@ The module auto-imports these composables from direct `@vue-solana/vue/*` subpat
 | `useSolanaRpc()`                     | Cluster, endpoint, connection status, latest blockhash, and `checkConnection()`. |
 | `useSolanaConnection()`              | Deprecated alias for the Kit client returned by `useSolanaClient()`.             |
 | `useSolanaAccountInfo()`             | Account info reads and optional subscriptions.                                   |
+| `useSolanaAirdrop()`                 | Airdrops SOL into an account on test networks and local validators.              |
 | `useSolanaBalance()`                 | Lamport balance reads.                                                           |
 | `useSolanaProgramAccounts()`         | Program account scans with filters and `dataSlice`.                              |
 | `useSolanaTokenAccounts()`           | SPL token account reads for an owner.                                            |

@@ -67,6 +67,7 @@ import { useWallet } from "@vue-solana/vue/useWallet";
 
 - `@vue-solana/vue/buffer-polyfill`
 - `@vue-solana/vue/useAction`
+- `@vue-solana/vue/useAirdrop`
 - `@vue-solana/vue/useRequest`
 - `@vue-solana/vue/useSubscription`
 - `@vue-solana/vue/useTrackedData`
@@ -109,6 +110,7 @@ import { useWallet } from "@vue-solana/vue/useWallet";
 - `useWallet()`：返回活跃钱包 ref、计算出的连接状态和钱包操作。
 - `useWallets()`：返回已发现的浏览器扩展钱包、Android Mobile Wallet Adapter 钱包、受支持的 iOS 浏览器钱包条目和钱包选择操作。
 - `useBalance(address, commitment?)`：加载地址字符串的 lamport 余额。
+- `useAirdrop()`：在测试网络和本地验证器上将 SOL 空投到账户。
 - `useTokenAccounts(owner, options?)`：加载某个所有者的所有 SPL token 账户，默认同时查询 Token 和 Token-2022 program。
 - `useTokenBalance(mint, owner)`：通过关联 token 账户加载 mint/owner 对的 SPL token 余额和小数位数。
 - `useTransaction(handler, options?)`：通用异步交易状态 helper，带可选超时设置。

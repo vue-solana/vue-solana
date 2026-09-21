@@ -1,6 +1,7 @@
 const SOLANA_COMPOSABLE_IMPORTS = [
   ["useAccountInfo", "useSolanaAccountInfo"],
   ["useAction", "useSolanaAction"],
+  ["useAirdrop", "useSolanaAirdrop"],
   ["useBalance", "useSolanaBalance"],
   ["useConnection", "useSolanaConnection"],
   ["useIdentity", "useSolanaIdentity"],
