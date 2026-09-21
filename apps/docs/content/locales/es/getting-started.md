@@ -95,6 +95,28 @@ import { useSolanaClient } from "@vue-solana/vue/useSolanaClient";
 
 `useRpc()` devuelve el estado resuelto del cluster y el `client` Kit inyectado; `useBalance()` lee a traves de `client.rpc`. `useSolanaClient()` devuelve el mismo `client` y su `rpc` de solo lectura directamente, mas `address()`/`lamports()` desde `@vue-solana/vue/kit`. Consulta la [guia de migracion a Kit](/guides/kit-migration) para el mapa completo de antes/despues.
 
+### Ciclo de vida del cliente y del plugin
+
+`createSolanaPlugin()` construye el cliente Kit una sola vez, durante `install()`. Crea el plugin en el ambito del modulo y reutiliza la instancia:
+
+```ts
+// solana.ts
+import { createSolanaPlugin } from "@vue-solana/vue";
+
+export const solana = createSolanaPlugin({ cluster: "devnet" });
+```
+
+Llamar de nuevo a `createSolanaPlugin()` construye un cliente y un contexto nuevos, descartando la seleccion de wallet y el estado RPC existentes. Si tu configuracion es reactiva (un selector de cluster, por ejemplo), memoriza sobre la configuracion para que solo se construya un plugin (y un cliente) nuevos cuando el valor cambie de verdad, no en cada render:
+
+```ts
+import { computed, ref } from "vue";
+
+const cluster = ref<SolanaCluster>("devnet");
+const plugin = computed(() => createSolanaPlugin({ cluster: cluster.value }));
+```
+
+Un cliente Kit ejecuta sus plugins `createClient().use(...)` durante la construccion. Cuando uno de esos plugins es asincrono, el cliente (y cualquier contexto construido a partir de el) solo se activa despues de que esa promesa se resuelve. Difiere el trabajo real de RPC y wallet a hooks del ciclo de vida o a acciones del usuario tras la hidratacion, en lugar de ejecutarlo durante el setup o el SSR.
+
 ## Configuracion de Nuxt
 
 ```ts

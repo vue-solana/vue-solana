@@ -164,6 +164,35 @@ async function submitTransaction() {
 
 `status` distingue el envío de la confirmación. Una `signature` devuelta significa que la transacción fue enviada al RPC. `confirmation` significa que la firma enviada alcanzó el commitment solicitado. Si la confirmación expira después del envío, sigue mostrando la firma y comprueba su estado antes de reintentar.
 
+### Entradas y resultados de las peticiones de wallet
+
+Los flujos de firma de wallet aceptan la transaccion de entrada como bytes de cable `Uint8Array` sin procesar que cumplen el esquema de transaccion de Solana. Construyelos con `@solana/kit` (o decodificalos desde una respuesta RPC en base64/base58); las cadenas base64, los objetos de transaccion y las listas de instrucciones no se aceptan aqui.
+
+```ts
+import { compileTransaction, getTransactionEncoder } from "@solana/kit";
+
+const transaction: Uint8Array = getTransactionEncoder().encode(compileTransaction(message));
+await execute(transaction);
+```
+
+`useSignMessage()` toma los bytes del mensaje sin procesar que se van a firmar. Toda peticion de envio de wallet tambien acepta las `SendTransactionOptions` de Kit:
+
+| Opcion                | Descripcion                                                                                                                 |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `skipPreflight`       | Omite la simulacion de preflight antes de enviar.                                                                           |
+| `maxRetries`          | Numero de reintentos del nodo RPC (`bigint`).                                                                               |
+| `minContextSlot`      | Slot en el que se sabe que existe cualquier blockhash o nonce de la transaccion; enviar antes de ese slot puede rechazarse. |
+| `preflightCommitment` | Commitment usado para la simulacion de preflight.                                                                           |
+
+Formas de retorno:
+
+- `useSignMessage().execute(bytes)` resuelve a `{ signedMessage, signature }`, ambos `Uint8Array`.
+- `useSignTransactions().execute(transactions)` resuelve al `Uint8Array[]` firmado (tambien expuesto como `signedTransactions`); pasa un array de un solo elemento para una transaccion.
+- `useSignAndSendTransaction().execute(transaction)` resuelve a la cadena `signature` enviada; con `confirm: true` tambien rellena `confirmation`.
+- `useSignAndSendTransactions().execute(transactions)` resuelve a un `string[]` de firmas (tambien expuesto como `signatures`).
+
+Una wallet puede modificar el mensaje o la transaccion antes de firmar (por ejemplo, para anadir su propia instruccion o cambiar el pagador de la comision) y el Wallet Standard lo permite explicitamente. Vuelve a leer el `signedMessage` o los bytes de la transaccion firmada devueltos en lugar de asumir que coinciden byte a byte con tu entrada.
+
 ## Enlaces De Explorer
 
 Los enlaces de Explorer deben coincidir con el cluster que usa tu app.

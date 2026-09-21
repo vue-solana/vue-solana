@@ -4,7 +4,7 @@ import type {
   TransactionPlan,
 } from "@vue-solana/core/kit";
 import { normalizeSolanaError, type SolanaError } from "@vue-solana/core/errors";
-import { ref, shallowRef } from "vue";
+import { onScopeDispose, ref, shallowRef } from "vue";
 import { useClientCapability } from "./useClientCapability";
 import { useSolanaClient } from "./useSolanaClient";
 
@@ -31,6 +31,10 @@ interface PlanningClient {
  * (e.g. `rpcTransactionPlanner` from `@solana/kit-plugin-rpc`).
  *
  * Rejects with a clear capability error when the client does not plan.
+ *
+ * Calling `execute` while a prior execution is in flight aborts the prior call;
+ * the superseded attempt rejects, so check its `error.cause` to tell it apart
+ * from a real failure.
  */
 export function usePlanTransaction() {
   useClientCapability(["planTransaction"], {
@@ -45,11 +49,20 @@ export function usePlanTransaction() {
   const loading = ref(false);
   const error = ref<SolanaError | null>(null);
   let executionId = 0;
+  let abortController: AbortController | undefined;
+
+  onScopeDispose(() => {
+    abortController?.abort();
+    executionId++;
+  });
 
   async function execute(
     input: InstructionPlanInput,
     config?: PlanTransactionConfig,
   ): Promise<TransactionMessage> {
+    abortController?.abort();
+    const controller = new AbortController();
+    abortController = controller;
     const currentExecutionId = ++executionId;
     const planner = client as unknown as PlanningClient;
 
@@ -59,7 +72,10 @@ export function usePlanTransaction() {
     transactionMessage.value = null;
 
     try {
-      const message = await planner.planTransaction(input, config);
+      const abortSignal = config?.abortSignal
+        ? AbortSignal.any([controller.signal, config.abortSignal])
+        : controller.signal;
+      const message = await planner.planTransaction(input, { abortSignal });
 
       if (currentExecutionId === executionId) {
         transactionMessage.value = message;
@@ -110,11 +126,20 @@ export function usePlanTransactions() {
   const loading = ref(false);
   const error = ref<SolanaError | null>(null);
   let executionId = 0;
+  let abortController: AbortController | undefined;
+
+  onScopeDispose(() => {
+    abortController?.abort();
+    executionId++;
+  });
 
   async function execute(
     input: InstructionPlanInput,
     config?: PlanTransactionConfig,
   ): Promise<TransactionPlan> {
+    abortController?.abort();
+    const controller = new AbortController();
+    abortController = controller;
     const currentExecutionId = ++executionId;
     const planner = client as unknown as PlanningClient;
 
@@ -124,7 +149,10 @@ export function usePlanTransactions() {
     transactionPlan.value = null;
 
     try {
-      const plan = await planner.planTransactions(input, config);
+      const abortSignal = config?.abortSignal
+        ? AbortSignal.any([controller.signal, config.abortSignal])
+        : controller.signal;
+      const plan = await planner.planTransactions(input, { abortSignal });
 
       if (currentExecutionId === executionId) {
         transactionPlan.value = plan;

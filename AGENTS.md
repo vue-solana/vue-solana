@@ -85,6 +85,7 @@ Auto-imported Nuxt composables:
 - `useSolanaSignTransactions()`, `useSolanaSignAndSendTransactions()`
 - `useSolanaPayer()`, `useSolanaIdentity()`
 - `useSolanaPlanTransaction()`, `useSolanaPlanTransactions()`
+- `useSolanaSendTransaction()`, `useSolanaSendTransactions()`
 
 The runtime plugin also installs the selected wallet account context app-wide (`createSelectedWalletAccountContext` + `selectedWalletAccountInjectionKey`).
 

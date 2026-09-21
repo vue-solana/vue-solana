@@ -95,6 +95,28 @@ import { useSolanaClient } from "@vue-solana/vue/useSolanaClient";
 
 `useRpc()`는 해석된 cluster state와 주입된 Kit `client`를 반환하고 `useBalance()`는 `client.rpc`를 통해 읽습니다. `useSolanaClient()`는 동일한 `client`와 그 read-only `rpc`를 직접 반환하며 `@vue-solana/vue/kit`에서 `address()`/`lamports()`도 제공합니다. 전체 변경 전/후 비교는 [Kit Migration 가이드](/ko/guides/kit-migration)를 참조하세요.
 
+### Client와 Plugin 수명 주기
+
+`createSolanaPlugin()`은 `install()` 중에 Kit client를 한 번 빌드합니다. 모듈 스코프에서 plugin을 생성하고 인스턴스를 재사용하세요:
+
+```ts
+// solana.ts
+import { createSolanaPlugin } from "@vue-solana/vue";
+
+export const solana = createSolanaPlugin({ cluster: "devnet" });
+```
+
+`createSolanaPlugin()`을 다시 호출하면 새 client와 context가 만들어지고 기존 지갑 선택과 RPC 상태는 버려집니다. 설정이 반응형이라면(예: cluster 토글) 값이 실제로 바뀔 때만 새 plugin(과 client)이 생성되도록 설정에 memoize하세요:
+
+```ts
+import { computed, ref } from "vue";
+
+const cluster = ref<SolanaCluster>("devnet");
+const plugin = computed(() => createSolanaPlugin({ cluster: cluster.value }));
+```
+
+Kit client는 생성 중에 `createClient().use(...)` plugin들을 실행합니다. 그중 하나가 async이면 client와 그로부터 만들어진 context는 해당 promise가 resolve된 뒤에만 활성화됩니다. 실제 RPC와 지갑 작업은 setup이나 SSR 중에 실행하지 말고 hydration 이후 lifecycle hook이나 사용자 동작으로 미루세요.
+
 ## Nuxt 설정
 
 ```ts

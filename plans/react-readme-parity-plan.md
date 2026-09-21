@@ -23,14 +23,14 @@ Small, self-contained devnet "fund this account" action built on the existing `u
 - [x] ~~Add a row to `plans/react-parity-plan.md` (currently not listed there) and strike it through when done.~~
 - [x] ~~Tests: dispatch success, abort on re-dispatch, undefined-data airdrop path.~~
 
-### [ ] `useSendTransaction` / `useSendTransactions` — P1
+### [x] ~~`useSendTransaction` / `useSendTransactions` — P1~~
 
-Send via the client's transaction-sending capability (`ClientWithTransactionSending`), distinct from the wallet-based `useSignAndSendTransaction(s)`.
+~~Send via the client's transaction-sending capability (`ClientWithTransactionSending`), distinct from the wallet-based `useSignAndSendTransaction(s)`.~~
 
-- [ ] Add `useSendTransaction()` and `useSendTransactions()` in `packages/vue`: sign, submit, and confirm one or multiple transactions from instruction/plan/transaction input.
-- [ ] Add `useSolanaSendTransaction()` / `useSolanaSendTransactions()` to the Nuxt module auto-imports and docs.
-- [ ] Add API table rows and snippets in the `packages/vue` README; document the transaction-planning prerequisite and the flexible input forms.
-- [ ] Tests: instruction input, plan input, batch send, capability-missing fail-fast (via `useClientCapability`).
+- [x] ~~Add `useSendTransaction()` and `useSendTransactions()` in `packages/vue`: sign, submit, and confirm one or multiple transactions from instruction/plan/transaction input.~~
+- [x] ~~Add `useSolanaSendTransaction()` / `useSolanaSendTransactions()` to the Nuxt module auto-imports and docs.~~
+- [x] ~~Add API table rows and snippets in the `packages/vue` README; document the transaction-planning prerequisite and the flexible input forms.~~
+- [x] ~~Tests: instruction input, plan input, batch send, capability-missing fail-fast (via `useClientCapability`).~~
 
 ### [ ] Wallet Account Signer Adapters — P2
 
@@ -80,17 +80,17 @@ For `useSelectedWalletAccount` / `SelectedWalletAccountProvider` in `packages/vu
 - [ ] Document the `filterWallet` prop (filter supported wallets, e.g. mainnet-capable) and `stateSync` prop (store/get/delete the persisted selection).
 - [ ] Document the persistence identifier contract (`${walletName}:${accountAddress}` style storage key).
 
-### [ ] Plugin setup depth — P1
+### [x] ~~Plugin setup depth — P1~~
 
-For the Vue plugin docs in `packages/vue` README:
+~~For the Vue plugin docs in `packages/vue` README:~~
 
-- [ ] Client reference stability: build at module scope, or re-create via memoization when config is reactive (e.g. a cluster toggle).
-- [ ] When a plugin `.use()` is async, the context activates only after the plugin resolves; real RPC and wallet work should run after hydration.
+- [x] ~~Client reference stability: build at module scope, or re-create via memoization when config is reactive (e.g. a cluster toggle).~~
+- [x] ~~When a plugin `.use()` is async, the context activates only after the plugin resolves; real RPC and wallet work should run after hydration.~~
 
-### [ ] Wallet hook argument/returns shapes — P1
+### [x] ~~Wallet hook argument/returns shapes — P1~~
 
-For the wallet composables in `packages/vue` README (`useSignMessage`, `useSignTransaction(s)`, `useSignAndSendTransaction(s)`):
+~~For the wallet composables in `packages/vue` README (`useSignMessage`, `useSignTransaction(s)`, `useSignAndSendTransaction(s)`):~~
 
-- [ ] Document transaction input as raw `Uint8Array` wire bytes conforming to the Solana transaction schema.
-- [ ] Document the `minContextSlot` option (slot at which any blockhash/nonce in the transaction is known to exist).
-- [ ] Document return shapes: `signedTransaction` / `signature` fields, and that a wallet may modify the message/transaction before signing.
+- [x] ~~Document transaction input as raw `Uint8Array` wire bytes conforming to the Solana transaction schema.~~
+- [x] ~~Document the `minContextSlot` option (slot at which any blockhash/nonce in the transaction is known to exist).~~
+- [x] ~~Document return shapes: `signedTransaction` / `signature` fields, and that a wallet may modify the message/transaction before signing.~~

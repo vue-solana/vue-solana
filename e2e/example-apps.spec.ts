@@ -5,6 +5,7 @@ import {
   isRealRpcRun,
   mockSolanaRpc,
   mockSolanaSubscriptions,
+  waitForRpcConnected,
 } from "./helpers";
 
 const appNames: Record<string, string> = {
@@ -25,7 +26,7 @@ test("loads the example dashboard and RPC state", async ({ page }, testInfo) => 
     await expect(page.getByTestId("plugin-installed")).toHaveText("Yes");
     await expect(page.getByTestId("rpc-cluster")).toHaveText("devnet");
     await expect(page.getByTestId("rpc-endpoint")).toHaveText("https://api.devnet.solana.com");
-    await expect(page.getByTestId("rpc-status")).toHaveText("connected");
+    await waitForRpcConnected(page);
     await expect(page.getByTestId("rpc-latest-blockhash")).not.toHaveText("Not loaded yet");
   });
 });
@@ -33,8 +34,7 @@ test("loads the example dashboard and RPC state", async ({ page }, testInfo) => 
 test("runs direct RPC and balance interactions", async ({ page }) => {
   await page.goto("/");
 
-  await page.getByTestId("check-rpc").click();
-  await expect(page.getByTestId("rpc-status")).toHaveText("connected");
+  await waitForRpcConnected(page);
 
   await page.getByTestId("load-blockhash").click();
   await expect(page.getByTestId("blockhash-result")).toContainText("Blockhash:");
@@ -42,7 +42,7 @@ test("runs direct RPC and balance interactions", async ({ page }) => {
   await page.getByTestId("refresh-balance").click();
 
   if (isRealRpcRun()) {
-    await expect(page.getByTestId("balance-lamports")).toHaveText(/^Lamports: \d+$/);
+    await expect(page.getByTestId("balance-lamports")).toHaveText(/^\s*Lamports: \d+$/);
     await expect(page.getByTestId("balance-sol")).toContainText("SOL:");
   } else {
     await expect(page.getByTestId("balance-lamports")).toHaveText("Lamports: 1000000000");

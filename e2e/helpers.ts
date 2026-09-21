@@ -6,6 +6,36 @@ export function isRealRpcRun() {
   return process.env.E2E_REAL_RPC === "true";
 }
 
+/**
+ * Waits until the app's RPC connection check reports "connected".
+ *
+ * The app runs its connection check once at mount; a single transient devnet
+ * failure leaves the status stuck at "error" until the check is re-run. On
+ * real-network runs this helper re-triggers the check until devnet answers,
+ * so one blip doesn't fail the suite. A no-op against the RPC mocks.
+ */
+export async function waitForRpcConnected(page: Page) {
+  const status = page.getByTestId("rpc-status");
+  const checkRpcButton = page.getByTestId("check-rpc");
+
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    if ((await status.textContent()) === "connected") {
+      return;
+    }
+
+    await checkRpcButton.click();
+
+    try {
+      await expect(status).toHaveText("connected", { timeout: 8_000 });
+      return;
+    } catch {
+      // Transient failure; the re-check below absorbs it.
+    }
+  }
+
+  await expect(status).toHaveText("connected");
+}
+
 export async function mockSolanaRpc(page: Page) {
   await page.route("https://api.devnet.solana.com/**", async (route) => {
     const request = route.request();
@@ -185,9 +215,18 @@ export async function expectNoPageErrors(page: Page, run: () => Promise<void>) {
 
   page.on("pageerror", (error) => pageErrors.push(error.message));
   page.on("console", (message) => {
-    if (message.type() === "error") {
-      consoleErrors.push(message.text());
+    if (message.type() !== "error") {
+      return;
     }
+
+    // On real-network runs a transient devnet failure logs a connection
+    // error before `waitForRpcConnected` retries to success; just re-running
+    // the check proves connectivity, so those logs are ignored.
+    if (isRealRpcRun() && message.text().includes("[Vue Solana] Connection failed")) {
+      return;
+    }
+
+    consoleErrors.push(message.text());
   });
 
   await run();

@@ -54,6 +54,28 @@ createApp(App).use(
 );
 ```
 
+### Client와 Plugin 수명 주기
+
+`createSolanaPlugin()`는 `install()` 동안 Kit client를 한 번 빌드합니다. Plugin을 module scope에서 만들고 instance를 재사용하세요:
+
+```ts
+// solana.ts
+import { createSolanaPlugin } from "@vue-solana/vue";
+
+export const solana = createSolanaPlugin({ cluster: "devnet" });
+```
+
+`createSolanaPlugin()`를 다시 호출하면 새 client와 context가 만들어지고 기존 wallet 선택과 RPC 상태는 버려집니다. 설정이 reactive하다면 — 예를 들어 cluster 전환 — 값이 실제로 바뀔 때만 새 plugin(과 client)이 만들어지도록 설정에 memoize하세요. 매 render마다 만들지 마세요:
+
+```ts
+import { computed, ref } from "vue";
+
+const cluster = ref<SolanaCluster>("devnet");
+const plugin = computed(() => createSolanaPlugin({ cluster: cluster.value }));
+```
+
+Kit client는 생성 중에 `createClient().use(...)` plugin을 실행합니다. 그중 하나가 async이면 client — 그리고 그로부터 만들어진 context — 는 그 promise가 resolve된 뒤에야 활성화됩니다. 실제 RPC와 wallet 작업은 setup이나 SSR 중에 실행하지 말고 hydration 이후 client lifecycle hook이나 사용자 동작으로 미루세요.
+
 ## 컴포저블
 
 Root export는 계속 지원됩니다. 컴포저블은 새 코드에서 direct subpath import를 선호하세요. 이렇게 하면 bundler가 관련 없는 package entry 코드를 평가하지 않아도 됩니다.
@@ -617,6 +639,35 @@ await execute(transaction, {
 `confirm: true`가 없으면 `execute()`는 제출 후 반환하고 `status`를 `sent`로 설정합니다. Confirmation을 활성화하면 status는 `sending`, `confirming`을 거쳐 요청한 commitment에 맞게 `processed`, `confirmed`, `finalized` 중 하나로 이동합니다. Confirmation timeout 또는 failure가 발생해도 제출된 `signature`는 유지되므로 앱은 explorer 링크를 보여줄 수 있습니다.
 
 `useSignAndSendTransaction()`은 wallet adapter가 결과를 반환하지 않는 경우에도 `loading`을 clear합니다. 이 stale case에서는 `error`가 설정되고 chain status를 알 수 없을 수 있으므로 retry 전에 연결된 wallet 또는 explorer를 확인하세요.
+
+### 지갑 요청 입력과 반환값
+
+Wallet 서명 흐름은 트랜잭션 입력으로 Solana 트랜잭션 스키마를 따르는 raw `Uint8Array` wire bytes를 받습니다. `@solana/kit`으로 만들거나 base64/base58 RPC 응답에서 decode하세요. base64 문자열, 트랜잭션 객체, instruction 목록은 여기서 허용되지 않습니다.
+
+```ts
+import { compileTransaction, getTransactionEncoder } from "@solana/kit";
+
+const transaction: Uint8Array = getTransactionEncoder().encode(compileTransaction(message));
+await execute(transaction);
+```
+
+`useSignMessage()`는 서명할 raw message bytes를 받습니다. 모든 wallet send 요청은 Kit `SendTransactionOptions`도 받습니다:
+
+| Option                | Description                                                                                      |
+| --------------------- | ------------------------------------------------------------------------------------------------ |
+| `skipPreflight`       | 전송 전 preflight simulation을 건너뜁니다.                                                       |
+| `maxRetries`          | RPC node retry 횟수 (`bigint`).                                                                  |
+| `minContextSlot`      | 트랜잭션의 blockhash 또는 nonce가 존재한다고 알려진 slot. 이보다 먼저 보내면 거부될 수 있습니다. |
+| `preflightCommitment` | Preflight simulation에 사용하는 commitment.                                                      |
+
+반환 형태:
+
+- `useSignMessage().execute(bytes)`는 `{ signedMessage, signature }`로 resolve되며 둘 다 `Uint8Array`입니다.
+- `useSignTransactions().execute(transactions)`는 서명된 `Uint8Array[]`로 resolve됩니다(`signedTransactions`로도 노출). 트랜잭션 하나에는 단일 요소 array를 전달하세요.
+- `useSignAndSendTransaction().execute(transaction)`는 제출된 `signature` 문자열로 resolve됩니다. `confirm: true`이면 `confirmation`도 채웁니다.
+- `useSignAndSendTransactions().execute(transactions)`는 signature의 `string[]`로 resolve됩니다(`signatures`로도 노출).
+
+Wallet은 서명 전에 메시지나 트랜잭션을 수정할 수 있습니다 — 예를 들어 자체 instruction을 추가하거나 fee payer를 변경 — Wallet Standard는 이를 명시적으로 허용합니다. 반환된 `signedMessage`나 서명된 트랜잭션 bytes를 다시 읽고 입력과 byte 단위로 일치한다고 가정하지 마세요.
 
 ## 배치 트랜잭션
 
