@@ -108,3 +108,7 @@ Install only the package needed by your app. Nuxt apps normally install @vue-sol
 
 - /demo is an interactive demo route and is intentionally excluded from robots.txt and sitemap.xml.
 - For full plain-text documentation, read https://vue-solana-docs.vercel.app/llms-full.txt.
+- Machine-readable API surface: https://vue-solana-docs.vercel.app/openapi.json (OpenAPI 3.1).
+- Content negotiation: any documentation page returns markdown when requested with Accept: text/markdown, or by appending .md to the page URL (for example https://vue-solana-docs.vercel.app/getting-started.md).
+- Responses to negotiated pages always carry Vary: Accept, Accept-Encoding.
+- Unmatched paths return a real HTTP 404; with Accept: text/markdown the 404 body is markdown listing recovery links.

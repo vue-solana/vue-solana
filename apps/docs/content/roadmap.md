@@ -9,18 +9,42 @@ The packages are stable for production use with RPC reads, wallet discovery and 
 
 ## Transactions
 
-- Transaction simulation helpers.
+### Transaction Simulation Helpers
+
+Simulate transactions before submission so apps can preview fees, account changes, and likely failures without spending SOL.
 
 ## Ecosystem Integrations
 
-- Desktop native wallet support via protocol links through the unified wallet flows.
-- Additional iOS wallet providers.
-- Anchor provider and program helpers.
-- A dedicated wallet modal or UI package.
-- Nuxt server RPC utilities for server-side reads.
-- Versioned docs: an archived legacy docs build under `/v1/` with a `v1 | latest` dropdown and old-URL redirects, for users who have not yet migrated to the Kit path.
+### Desktop Native Wallet Support
+
+Desktop native wallet support through protocol links via the unified wallet flows.
+
+### Additional iOS Wallet Providers
+
+Support more iOS browser wallets beyond the current Phantom, Solflare, and Backpack universal links.
+
+### Anchor Provider And Program Helpers
+
+An Anchor provider and helpers for Anchor program accounts and instructions.
+
+### Wallet Modal Or UI Package
+
+A dedicated wallet modal or UI package with prebuilt connect and sign flows.
+
+### Nuxt Server RPC Utilities
+
+Nuxt server utilities for server-side Solana RPC reads.
+
+### Versioned Docs
+
+Versioned docs: an archived legacy docs build under `/v1/` with a `v1 | latest` dropdown and old-URL redirects, for users who have not yet migrated to the Kit path.
 
 ## Resilience And Advanced Patterns
 
-- RPC provider failover and rate-limit handling.
-- Advanced program account indexing patterns and caching.
+### RPC Provider Failover
+
+RPC provider failover and rate-limit handling.
+
+### Advanced Account Indexing
+
+Advanced program account indexing patterns and caching.
