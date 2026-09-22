@@ -58,12 +58,15 @@ const { data: surround } = useLazyAsyncData(
 );
 
 if (import.meta.server && !page.value) {
-  throw createError({ statusCode: 404, statusMessage: "Page not found", fatal: true });
+  // Non-fatal on purpose: browsers render the branded error.vue page while
+  // Nitro keeps the real 404 status (agents instead get the markdown body
+  // from the agent-404 server middleware before the renderer runs).
+  throw createError({ statusCode: 404, statusMessage: "Page not found", fatal: false });
 }
 
 watchEffect(() => {
   if (import.meta.client && status.value === "success" && !page.value) {
-    showError(createError({ statusCode: 404, statusMessage: "Page not found", fatal: true }));
+    showError(createError({ statusCode: 404, statusMessage: "Page not found", fatal: false }));
   }
 });
 

@@ -311,6 +311,28 @@ import { useSolanaClient } from "@vue-solana/vue/useSolanaClient";
 
 `useRpc()` devuelve el estado resuelto del cluster y el `client` Kit inyectado; `useBalance()` lee a traves de `client.rpc`. `useSolanaClient()` devuelve el mismo `client` y su `rpc` de solo lectura directamente, mas `address()`/`lamports()` desde `@vue-solana/vue/kit`. Consulta la [guia de migracion a Kit](/guides/kit-migration) para el mapa completo de antes/despues.
 
+### Ciclo de vida del cliente y del plugin
+
+`createSolanaPlugin()` construye el cliente Kit una sola vez, durante `install()`. Crea el plugin en el ambito del modulo y reutiliza la instancia:
+
+```ts
+// solana.ts
+import { createSolanaPlugin } from "@vue-solana/vue";
+
+export const solana = createSolanaPlugin({ cluster: "devnet" });
+```
+
+Llamar de nuevo a `createSolanaPlugin()` construye un cliente y un contexto nuevos, descartando la seleccion de wallet y el estado RPC existentes. Si tu configuracion es reactiva (un selector de cluster, por ejemplo), memoriza sobre la configuracion para que solo se construya un plugin (y un cliente) nuevos cuando el valor cambie de verdad, no en cada render:
+
+```ts
+import { computed, ref } from "vue";
+
+const cluster = ref<SolanaCluster>("devnet");
+const plugin = computed(() => createSolanaPlugin({ cluster: cluster.value }));
+```
+
+Un cliente Kit ejecuta sus plugins `createClient().use(...)` durante la construccion. Cuando uno de esos plugins es asincrono, el cliente (y cualquier contexto construido a partir de el) solo se activa despues de que esa promesa se resuelve. Difiere el trabajo real de RPC y wallet a hooks del ciclo de vida o a acciones del usuario tras la hidratacion, en lugar de ejecutarlo durante el setup o el SSR.
+
 ## Configuracion de Nuxt
 
 ```ts
@@ -706,6 +728,28 @@ import { useSolanaClient } from "@vue-solana/vue/useSolanaClient";
 ```
 
 `useRpc()` returns the resolved cluster state and the injected Kit `client`; `useBalance()` reads through `client.rpc`. `useSolanaClient()` returns the same `client` and its read-only `rpc` directly, plus `address()`/`lamports()` from `@vue-solana/vue/kit`. See the [Kit Migration guide](/guides/kit-migration) for the full before/after map.
+
+### Client and Plugin Lifecycle
+
+`createSolanaPlugin()` builds the Kit client once, during `install()`. Create the plugin at module scope and reuse the instance:
+
+```ts
+// solana.ts
+import { createSolanaPlugin } from "@vue-solana/vue";
+
+export const solana = createSolanaPlugin({ cluster: "devnet" });
+```
+
+Calling `createSolanaPlugin()` again builds a new client and context, discarding the existing wallet selection and RPC state. If your config is reactive — a cluster toggle, for example — memoize on the config so a new plugin (and client) is built only when the value actually changes, not on every render:
+
+```ts
+import { computed, ref } from "vue";
+
+const cluster = ref<SolanaCluster>("devnet");
+const plugin = computed(() => createSolanaPlugin({ cluster: cluster.value }));
+```
+
+A Kit client runs its `createClient().use(...)` plugins during construction. When one of those plugins is async, the client — and any context built from it — only activates after that promise resolves. Defer real RPC and wallet work to lifecycle hooks or user actions after hydration rather than running it during setup or SSR.
 
 ## Nuxt Setup
 
@@ -1103,6 +1147,28 @@ import { useSolanaClient } from "@vue-solana/vue/useSolanaClient";
 
 `useRpc()`는 해석된 cluster state와 주입된 Kit `client`를 반환하고 `useBalance()`는 `client.rpc`를 통해 읽습니다. `useSolanaClient()`는 동일한 `client`와 그 read-only `rpc`를 직접 반환하며 `@vue-solana/vue/kit`에서 `address()`/`lamports()`도 제공합니다. 전체 변경 전/후 비교는 [Kit Migration 가이드](/ko/guides/kit-migration)를 참조하세요.
 
+### Client와 Plugin 수명 주기
+
+`createSolanaPlugin()`은 `install()` 중에 Kit client를 한 번 빌드합니다. 모듈 스코프에서 plugin을 생성하고 인스턴스를 재사용하세요:
+
+```ts
+// solana.ts
+import { createSolanaPlugin } from "@vue-solana/vue";
+
+export const solana = createSolanaPlugin({ cluster: "devnet" });
+```
+
+`createSolanaPlugin()`을 다시 호출하면 새 client와 context가 만들어지고 기존 지갑 선택과 RPC 상태는 버려집니다. 설정이 반응형이라면(예: cluster 토글) 값이 실제로 바뀔 때만 새 plugin(과 client)이 생성되도록 설정에 memoize하세요:
+
+```ts
+import { computed, ref } from "vue";
+
+const cluster = ref<SolanaCluster>("devnet");
+const plugin = computed(() => createSolanaPlugin({ cluster: cluster.value }));
+```
+
+Kit client는 생성 중에 `createClient().use(...)` plugin들을 실행합니다. 그중 하나가 async이면 client와 그로부터 만들어진 context는 해당 promise가 resolve된 뒤에만 활성화됩니다. 실제 RPC와 지갑 작업은 setup이나 SSR 중에 실행하지 말고 hydration 이후 lifecycle hook이나 사용자 동작으로 미루세요.
+
 ## Nuxt 설정
 
 ```ts
@@ -1498,6 +1564,28 @@ import { useSolanaClient } from "@vue-solana/vue/useSolanaClient";
 ```
 
 `useRpc()` 返回已解析的集群状态和注入的 Kit `client`；`useBalance()` 通过 `client.rpc` 读取。`useSolanaClient()` 直接返回同一个 `client` 及其只读 `rpc`，外加来自 `@vue-solana/vue/kit` 的 `address()`/`lamports()`。完整的 before/after 对照请参阅 [Kit 迁移指南](/zh/guides/kit-migration)。
+
+### 客户端与插件生命周期
+
+`createSolanaPlugin()` 在 `install()` 期间构建一次 Kit 客户端。请在模块作用域创建插件并复用该实例：
+
+```ts
+// solana.ts
+import { createSolanaPlugin } from "@vue-solana/vue";
+
+export const solana = createSolanaPlugin({ cluster: "devnet" });
+```
+
+再次调用 `createSolanaPlugin()` 会构建新的客户端和上下文，并丢弃现有的钱包选择和 RPC 状态。如果你的配置是响应式的（例如集群切换），请基于配置进行 memoize，使新插件（和新客户端）仅在该值真正变化时构建，而不是每次渲染都构建：
+
+```ts
+import { computed, ref } from "vue";
+
+const cluster = ref<SolanaCluster>("devnet");
+const plugin = computed(() => createSolanaPlugin({ cluster: cluster.value }));
+```
+
+Kit 客户端在构造期间运行其 `createClient().use(...)` 插件。当其中某个插件是异步的时，客户端（以及由它构建的任何上下文）只有在该 promise resolve 之后才会激活。请将实际的 RPC 和钱包工作推迟到 hydration 之后的生命周期钩子或用户操作中，而不要在 setup 或 SSR 期间运行。
 
 ## Nuxt 设置
 
@@ -6572,6 +6660,35 @@ async function submitTransaction() {
 
 `status` distingue el envío de la confirmación. Una `signature` devuelta significa que la transacción fue enviada al RPC. `confirmation` significa que la firma enviada alcanzó el commitment solicitado. Si la confirmación expira después del envío, sigue mostrando la firma y comprueba su estado antes de reintentar.
 
+### Entradas y resultados de las peticiones de wallet
+
+Los flujos de firma de wallet aceptan la transaccion de entrada como bytes de cable `Uint8Array` sin procesar que cumplen el esquema de transaccion de Solana. Construyelos con `@solana/kit` (o decodificalos desde una respuesta RPC en base64/base58); las cadenas base64, los objetos de transaccion y las listas de instrucciones no se aceptan aqui.
+
+```ts
+import { compileTransaction, getTransactionEncoder } from "@solana/kit";
+
+const transaction: Uint8Array = getTransactionEncoder().encode(compileTransaction(message));
+await execute(transaction);
+```
+
+`useSignMessage()` toma los bytes del mensaje sin procesar que se van a firmar. Toda peticion de envio de wallet tambien acepta las `SendTransactionOptions` de Kit:
+
+| Opcion                | Descripcion                                                                                                                 |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `skipPreflight`       | Omite la simulacion de preflight antes de enviar.                                                                           |
+| `maxRetries`          | Numero de reintentos del nodo RPC (`bigint`).                                                                               |
+| `minContextSlot`      | Slot en el que se sabe que existe cualquier blockhash o nonce de la transaccion; enviar antes de ese slot puede rechazarse. |
+| `preflightCommitment` | Commitment usado para la simulacion de preflight.                                                                           |
+
+Formas de retorno:
+
+- `useSignMessage().execute(bytes)` resuelve a `{ signedMessage, signature }`, ambos `Uint8Array`.
+- `useSignTransactions().execute(transactions)` resuelve al `Uint8Array[]` firmado (tambien expuesto como `signedTransactions`); pasa un array de un solo elemento para una transaccion.
+- `useSignAndSendTransaction().execute(transaction)` resuelve a la cadena `signature` enviada; con `confirm: true` tambien rellena `confirmation`.
+- `useSignAndSendTransactions().execute(transactions)` resuelve a un `string[]` de firmas (tambien expuesto como `signatures`).
+
+Una wallet puede modificar el mensaje o la transaccion antes de firmar (por ejemplo, para anadir su propia instruccion o cambiar el pagador de la comision) y el Wallet Standard lo permite explicitamente. Vuelve a leer el `signedMessage` o los bytes de la transaccion firmada devueltos en lugar de asumir que coinciden byte a byte con tu entrada.
+
 ## Enlaces De Explorer
 
 Los enlaces de Explorer deben coincidir con el cluster que usa tu app.
@@ -6831,6 +6948,35 @@ async function submitTransaction() {
 ```
 
 `status` distinguishes submission from confirmation. A returned `signature` means the transaction was submitted to RPC. `confirmation` means the submitted signature reached the requested commitment. If confirmation times out after submission, keep showing the signature and check its status before retrying.
+
+### Wallet Request Inputs and Returns
+
+Wallet signing flows accept transaction input as raw `Uint8Array` wire bytes that conform to the Solana transaction schema. Build them with `@solana/kit` (or decode them from a base64/base58 RPC response); base64 strings, transaction objects, and instruction lists are not accepted here.
+
+```ts
+import { compileTransaction, getTransactionEncoder } from "@solana/kit";
+
+const transaction: Uint8Array = getTransactionEncoder().encode(compileTransaction(message));
+await execute(transaction);
+```
+
+`useSignMessage()` takes the raw message bytes to sign. Every wallet send request also accepts the Kit `SendTransactionOptions`:
+
+| Option                | Description                                                                                                   |
+| --------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `skipPreflight`       | Skip preflight simulation before sending.                                                                     |
+| `maxRetries`          | RPC node retry count (`bigint`).                                                                              |
+| `minContextSlot`      | Slot at which any blockhash or nonce in the transaction is known to exist; sending before it can be rejected. |
+| `preflightCommitment` | Commitment used for preflight simulation.                                                                     |
+
+Return shapes:
+
+- `useSignMessage().execute(bytes)` resolves to `{ signedMessage, signature }`, both `Uint8Array`.
+- `useSignTransactions().execute(transactions)` resolves to the signed `Uint8Array[]` (also exposed as `signedTransactions`); pass a single-element array for one transaction.
+- `useSignAndSendTransaction().execute(transaction)` resolves to the submitted `signature` string; with `confirm: true` it also fills `confirmation`.
+- `useSignAndSendTransactions().execute(transactions)` resolves to a `string[]` of signatures (also exposed as `signatures`).
+
+A wallet may modify the message or transaction before signing — for example to add its own instruction or change the fee payer — and the Wallet Standard explicitly allows it. Re-read the returned `signedMessage` or signed transaction bytes instead of assuming they match your input byte-for-byte.
 
 ## Explorer Links
 
@@ -7092,6 +7238,35 @@ async function submitTransaction() {
 
 `status`는 제출과 confirmation을 구분합니다. `signature`가 반환되었다면 트랜잭션이 RPC에 제출된 것입니다. `confirmation`은 제출된 signature가 요청한 commitment에 도달했다는 뜻입니다. 제출 후 confirmation이 timeout되면 signature를 계속 보여 주고, 재시도 전에 해당 status를 확인하세요.
 
+### 지갑 요청 입력과 반환값
+
+지갑 서명 flow는 트랜잭션 입력으로 Solana 트랜잭션 스키마를 따르는 raw `Uint8Array` wire 바이트를 받습니다. `@solana/kit`으로 만들거나 base64/base58 RPC 응답에서 디코딩하세요. base64 문자열, 트랜잭션 객체, instruction 목록은 여기서 허용되지 않습니다.
+
+```ts
+import { compileTransaction, getTransactionEncoder } from "@solana/kit";
+
+const transaction: Uint8Array = getTransactionEncoder().encode(compileTransaction(message));
+await execute(transaction);
+```
+
+`useSignMessage()`는 서명할 raw 메시지 바이트를 받습니다. 모든 지갑 전송 요청은 Kit `SendTransactionOptions`도 받습니다:
+
+| Option                | Description                                                                                      |
+| --------------------- | ------------------------------------------------------------------------------------------------ |
+| `skipPreflight`       | 전송 전 preflight 시뮬레이션을 건너뜁니다.                                                       |
+| `maxRetries`          | RPC 노드 재시도 횟수(`bigint`).                                                                  |
+| `minContextSlot`      | 트랜잭션의 blockhash 또는 nonce가 존재한다고 알려진 slot. 이보다 먼저 보내면 거부될 수 있습니다. |
+| `preflightCommitment` | preflight 시뮬레이션에 사용하는 commitment.                                                      |
+
+반환 형태:
+
+- `useSignMessage().execute(bytes)`는 `{ signedMessage, signature }`로 resolve되며 둘 다 `Uint8Array`입니다.
+- `useSignTransactions().execute(transactions)`는 서명된 `Uint8Array[]`로 resolve됩니다(`signedTransactions`로도 노출됨). 트랜잭션 하나에는 단일 요소 배열을 전달하세요.
+- `useSignAndSendTransaction().execute(transaction)`는 제출된 `signature` 문자열로 resolve됩니다. `confirm: true`이면 `confirmation`도 채웁니다.
+- `useSignAndSendTransactions().execute(transactions)`는 signature의 `string[]`로 resolve됩니다(`signatures`로도 노출됨).
+
+지갑은 서명 전에 메시지나 트랜잭션을 수정할 수 있습니다(예: 자체 instruction 추가 또는 fee payer 변경). Wallet Standard가 이를 명시적으로 허용합니다. 입력과 바이트 단위로 일치한다고 가정하지 말고 반환된 `signedMessage`나 서명된 트랜잭션 바이트를 다시 읽으세요.
+
 ## Explorer 링크
 
 Explorer 링크는 앱이 사용하는 cluster와 일치해야 합니다.
@@ -7351,6 +7526,35 @@ async function submitTransaction() {
 ```
 
 `status` 会区分提交和确认。返回 `signature` 表示交易已提交到 RPC。`confirmation` 表示已提交的签名达到了请求的 commitment。如果提交后确认超时，请继续显示签名，并在重试前检查其状态。
+
+### 钱包请求的输入与返回值
+
+钱包签名流程接受符合 Solana 交易 schema 的原始 `Uint8Array` wire 字节作为交易输入。使用 `@solana/kit` 构建它们（或从 base64/base58 RPC 响应中解码）；此处不接受 base64 字符串、交易对象和指令列表。
+
+```ts
+import { compileTransaction, getTransactionEncoder } from "@solana/kit";
+
+const transaction: Uint8Array = getTransactionEncoder().encode(compileTransaction(message));
+await execute(transaction);
+```
+
+`useSignMessage()` 接受要签名的原始消息字节。每个钱包发送请求还接受 Kit 的 `SendTransactionOptions`：
+
+| Option                | Description                                                                 |
+| --------------------- | --------------------------------------------------------------------------- |
+| `skipPreflight`       | 发送前跳过 preflight 模拟。                                                 |
+| `maxRetries`          | RPC 节点重试次数（`bigint`）。                                              |
+| `minContextSlot`      | 交易中任何 blockhash 或 nonce 已知存在的 slot；早于该 slot 发送可能被拒绝。 |
+| `preflightCommitment` | 用于 preflight 模拟的 commitment。                                          |
+
+返回形态：
+
+- `useSignMessage().execute(bytes)` resolve 为 `{ signedMessage, signature }`，两者均为 `Uint8Array`。
+- `useSignTransactions().execute(transactions)` resolve 为已签名的 `Uint8Array[]`（也以 `signedTransactions` 暴露）；单笔交易请传入单元素数组。
+- `useSignAndSendTransaction().execute(transaction)` resolve 为已提交的 `signature` 字符串；配合 `confirm: true` 时还会填充 `confirmation`。
+- `useSignAndSendTransactions().execute(transactions)` resolve 为签名组成的 `string[]`（也以 `signatures` 暴露）。
+
+钱包可能在签名前修改消息或交易（例如添加自己的指令或更改 fee payer），Wallet Standard 明确允许这样做。请重新读取返回的 `signedMessage` 或已签名交易字节，而不要假设它们与你的输入逐字节一致。
 
 ## 浏览器链接
 
@@ -10583,6 +10787,28 @@ createApp(App).use(
 );
 ```
 
+### Ciclo de vida del cliente y del plugin
+
+`createSolanaPlugin()` construye el cliente Kit una vez, durante `install()`. Crea el plugin a nivel de módulo y reutiliza la instancia:
+
+```ts
+// solana.ts
+import { createSolanaPlugin } from "@vue-solana/vue";
+
+export const solana = createSolanaPlugin({ cluster: "devnet" });
+```
+
+Llamar a `createSolanaPlugin()` otra vez construye un cliente y contexto nuevos, descartando la selección de wallet y el estado RPC existentes. Si tu configuración es reactiva — un cambio de cluster, por ejemplo — memoiza sobre la configuración para que se construya un nuevo plugin (y cliente) solo cuando el valor cambia de verdad, no en cada render:
+
+```ts
+import { computed, ref } from "vue";
+
+const cluster = ref<SolanaCluster>("devnet");
+const plugin = computed(() => createSolanaPlugin({ cluster: cluster.value }));
+```
+
+Un cliente Kit ejecuta sus plugins `createClient().use(...)` durante la construcción. Cuando uno de esos plugins es asíncrono, el cliente — y cualquier contexto construido a partir de él — solo se activa después de que esa promesa se resuelva. Difiere el trabajo real de RPC y wallet a hooks del ciclo de vida del cliente o acciones del usuario después de la hidratación en lugar de ejecutarlo durante el setup o el SSR.
+
 ## Composables
 
 La exportación raíz sigue estando soportada. Para composables, prefiere imports directos por subpath en código nuevo para que los bundlers puedan evitar evaluar código de entrada no relacionado del paquete:
@@ -10596,6 +10822,7 @@ Subpaths directos del paquete:
 
 - `@vue-solana/vue/buffer-polyfill`
 - `@vue-solana/vue/useAction`
+- `@vue-solana/vue/useAirdrop`
 - `@vue-solana/vue/useRequest`
 - `@vue-solana/vue/useSubscription`
 - `@vue-solana/vue/useTrackedData`
@@ -10638,6 +10865,7 @@ Usa `@vue-solana/vue/buffer-polyfill` para código de transacciones en navegador
 - `useWallet()`: devuelve refs de wallet activa, estado de conexión computado y acciones de wallet.
 - `useWallets()`: devuelve wallets de extensión de navegador descubiertas, wallets Android Mobile Wallet Adapter, entradas soportadas de wallet de navegador iOS y acciones de selección de wallet.
 - `useBalance(address, commitment?)`: carga el balance en lamports para un string de dirección.
+- `useAirdrop()`: airdrops SOL en una cuenta en redes de prueba y validadores locales.
 - `useTokenAccounts(owner, options?)`: carga todas las cuentas de token SPL para un propietario, consultando ambos programas Token y Token-2022 por defecto.
 - `useTokenBalance(mint, owner)`: carga el balance y decimales del token SPL para un par mint/propietario vía la cuenta de token asociada.
 - `useTransaction(handler, options?)`: helper genérico de estado de transacción async con configuración opcional de timeout.
@@ -11145,6 +11373,35 @@ Sin `confirm: true`, `execute()` devuelve después del envío y establece `statu
 
 `useSignAndSendTransaction()` también limpia `loading` si un adaptador de wallet nunca devuelve un resultado. En ese caso obsoleto, se establece `error` y el estado de cadena puede ser desconocido, así que comprueba la wallet conectada o un explorador antes de reintentar.
 
+### Entradas y resultados de las peticiones de wallet
+
+Los flujos de firma de wallet aceptan la transacción de entrada como bytes de wire `Uint8Array` en bruto que cumplen el esquema de transacción de Solana. Constróyelos con `@solana/kit` (o decodifícalos desde una respuesta RPC en base64/base58); las cadenas base64, los objetos de transacción y las listas de instrucciones no se aceptan aquí.
+
+```ts
+import { compileTransaction, getTransactionEncoder } from "@solana/kit";
+
+const transaction: Uint8Array = getTransactionEncoder().encode(compileTransaction(message));
+await execute(transaction);
+```
+
+`useSignMessage()` toma los bytes del mensaje en bruto a firmar. Toda petición de envío de wallet acepta también las `SendTransactionOptions` de Kit:
+
+| Opción                | Descripción                                                                                                        |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `skipPreflight`       | Omite la simulación de preflight antes de enviar.                                                                  |
+| `maxRetries`          | Número de reintentos del nodo RPC (`bigint`).                                                                      |
+| `minContextSlot`      | Slot en el que se sabe que existe cualquier blockhash o nonce de la transacción; enviar antes puede ser rechazado. |
+| `preflightCommitment` | Commitment usado para la simulación de preflight.                                                                  |
+
+Formas de retorno:
+
+- `useSignMessage().execute(bytes)` resuelve a `{ signedMessage, signature }`, ambos `Uint8Array`.
+- `useSignTransactions().execute(transactions)` resuelve al `Uint8Array[]` firmado (también expuesto como `signedTransactions`); pasa un array de un solo elemento para una transacción.
+- `useSignAndSendTransaction().execute(transaction)` resuelve a la `signature` enviada como string; con `confirm: true` también rellena `confirmation`.
+- `useSignAndSendTransactions().execute(transactions)` resuelve a un `string[]` de firmas (también expuesto como `signatures`).
+
+Una wallet puede modificar el mensaje o la transacción antes de firmar — por ejemplo para añadir su propia instrucción o cambiar el pagador de comisiones — y el Wallet Standard lo permite explícitamente. Vuelve a leer el `signedMessage` devuelto o los bytes de la transacción firmada en lugar de asumir que coinciden byte a byte con tu entrada.
+
 ## Transacciones en lote
 
 ```ts
@@ -11309,6 +11566,28 @@ createApp(App).use(
 );
 ```
 
+### Client와 Plugin 수명 주기
+
+`createSolanaPlugin()`는 `install()` 동안 Kit client를 한 번 빌드합니다. Plugin을 module scope에서 만들고 instance를 재사용하세요:
+
+```ts
+// solana.ts
+import { createSolanaPlugin } from "@vue-solana/vue";
+
+export const solana = createSolanaPlugin({ cluster: "devnet" });
+```
+
+`createSolanaPlugin()`를 다시 호출하면 새 client와 context가 만들어지고 기존 wallet 선택과 RPC 상태는 버려집니다. 설정이 reactive하다면 — 예를 들어 cluster 전환 — 값이 실제로 바뀔 때만 새 plugin(과 client)이 만들어지도록 설정에 memoize하세요. 매 render마다 만들지 마세요:
+
+```ts
+import { computed, ref } from "vue";
+
+const cluster = ref<SolanaCluster>("devnet");
+const plugin = computed(() => createSolanaPlugin({ cluster: cluster.value }));
+```
+
+Kit client는 생성 중에 `createClient().use(...)` plugin을 실행합니다. 그중 하나가 async이면 client — 그리고 그로부터 만들어진 context — 는 그 promise가 resolve된 뒤에야 활성화됩니다. 실제 RPC와 wallet 작업은 setup이나 SSR 중에 실행하지 말고 hydration 이후 client lifecycle hook이나 사용자 동작으로 미루세요.
+
 ## 컴포저블
 
 Root export는 계속 지원됩니다. 컴포저블은 새 코드에서 direct subpath import를 선호하세요. 이렇게 하면 bundler가 관련 없는 package entry 코드를 평가하지 않아도 됩니다.
@@ -11322,6 +11601,7 @@ Direct package subpath:
 
 - `@vue-solana/vue/buffer-polyfill`
 - `@vue-solana/vue/useAction`
+- `@vue-solana/vue/useAirdrop`
 - `@vue-solana/vue/useRequest`
 - `@vue-solana/vue/useSubscription`
 - `@vue-solana/vue/useTrackedData`
@@ -11364,6 +11644,7 @@ Buffer polyfill이 필요한 브라우저 트랜잭션 코드에는 `@vue-solana
 - `useWallet()`: active wallet ref, computed connection state, wallet action을 반환합니다.
 - `useWallets()`: 발견된 browser extension wallet, Android Mobile Wallet Adapter wallet, 지원되는 iOS browser wallet entry, wallet 선택 action을 반환합니다.
 - `useBalance(address, commitment?)`: address string의 lamport balance를 로드합니다.
+- `useAirdrop()`: 테스트 네트워크와 로컬 validator에서 계정에 SOL을 에어드랍합니다.
 - `useTokenAccounts(owner, options?)`: 기본적으로 Token과 Token-2022 program 모두를 쿼리하여 owner의 모든 SPL token account를 로드합니다.
 - `useTokenBalance(mint, owner)`: associated token account를 통해 mint/owner 쌍의 SPL token balance와 decimals를 로드합니다.
 - `useTransaction(handler, options?)`: optional timeout 설정을 지원하는 generic async transaction state helper입니다.
@@ -11871,6 +12152,35 @@ await execute(transaction, {
 
 `useSignAndSendTransaction()`은 wallet adapter가 결과를 반환하지 않는 경우에도 `loading`을 clear합니다. 이 stale case에서는 `error`가 설정되고 chain status를 알 수 없을 수 있으므로 retry 전에 연결된 wallet 또는 explorer를 확인하세요.
 
+### 지갑 요청 입력과 반환값
+
+Wallet 서명 흐름은 트랜잭션 입력으로 Solana 트랜잭션 스키마를 따르는 raw `Uint8Array` wire bytes를 받습니다. `@solana/kit`으로 만들거나 base64/base58 RPC 응답에서 decode하세요. base64 문자열, 트랜잭션 객체, instruction 목록은 여기서 허용되지 않습니다.
+
+```ts
+import { compileTransaction, getTransactionEncoder } from "@solana/kit";
+
+const transaction: Uint8Array = getTransactionEncoder().encode(compileTransaction(message));
+await execute(transaction);
+```
+
+`useSignMessage()`는 서명할 raw message bytes를 받습니다. 모든 wallet send 요청은 Kit `SendTransactionOptions`도 받습니다:
+
+| Option                | Description                                                                                      |
+| --------------------- | ------------------------------------------------------------------------------------------------ |
+| `skipPreflight`       | 전송 전 preflight simulation을 건너뜁니다.                                                       |
+| `maxRetries`          | RPC node retry 횟수 (`bigint`).                                                                  |
+| `minContextSlot`      | 트랜잭션의 blockhash 또는 nonce가 존재한다고 알려진 slot. 이보다 먼저 보내면 거부될 수 있습니다. |
+| `preflightCommitment` | Preflight simulation에 사용하는 commitment.                                                      |
+
+반환 형태:
+
+- `useSignMessage().execute(bytes)`는 `{ signedMessage, signature }`로 resolve되며 둘 다 `Uint8Array`입니다.
+- `useSignTransactions().execute(transactions)`는 서명된 `Uint8Array[]`로 resolve됩니다(`signedTransactions`로도 노출). 트랜잭션 하나에는 단일 요소 array를 전달하세요.
+- `useSignAndSendTransaction().execute(transaction)`는 제출된 `signature` 문자열로 resolve됩니다. `confirm: true`이면 `confirmation`도 채웁니다.
+- `useSignAndSendTransactions().execute(transactions)`는 signature의 `string[]`로 resolve됩니다(`signatures`로도 노출).
+
+Wallet은 서명 전에 메시지나 트랜잭션을 수정할 수 있습니다 — 예를 들어 자체 instruction을 추가하거나 fee payer를 변경 — Wallet Standard는 이를 명시적으로 허용합니다. 반환된 `signedMessage`나 서명된 트랜잭션 bytes를 다시 읽고 입력과 byte 단위로 일치한다고 가정하지 마세요.
+
 ## 배치 트랜잭션
 
 ```ts
@@ -12035,6 +12345,28 @@ createApp(App).use(
 );
 ```
 
+### Client and Plugin Lifecycle
+
+`createSolanaPlugin()` builds the Kit client once, during `install()`. Create the plugin at module scope and reuse the instance:
+
+```ts
+// solana.ts
+import { createSolanaPlugin } from "@vue-solana/vue";
+
+export const solana = createSolanaPlugin({ cluster: "devnet" });
+```
+
+Calling `createSolanaPlugin()` again builds a new client and context, discarding the existing wallet selection and RPC state. If your config is reactive — a cluster toggle, for example — memoize on the config so a new plugin (and client) is built only when the value actually changes, not on every render:
+
+```ts
+import { computed, ref } from "vue";
+
+const cluster = ref<SolanaCluster>("devnet");
+const plugin = computed(() => createSolanaPlugin({ cluster: cluster.value }));
+```
+
+A Kit client runs its `createClient().use(...)` plugins during construction. When one of those plugins is async, the client — and any context built from it — only activates after that promise resolves. Defer real RPC and wallet work to client lifecycle hooks or user actions after hydration rather than running it during setup or SSR.
+
 ## Composables
 
 The root export remains supported. For composables, prefer direct subpath imports in new code so bundlers can avoid evaluating unrelated package entry code:
@@ -12048,6 +12380,7 @@ Direct package subpaths:
 
 - `@vue-solana/vue/buffer-polyfill`
 - `@vue-solana/vue/useAction`
+- `@vue-solana/vue/useAirdrop`
 - `@vue-solana/vue/useRequest`
 - `@vue-solana/vue/useSubscription`
 - `@vue-solana/vue/useTrackedData`
@@ -12060,6 +12393,8 @@ Direct package subpaths:
 - `@vue-solana/vue/useIdentity`
 - `@vue-solana/vue/usePlanTransaction`
 - `@vue-solana/vue/usePlanTransactions`
+- `@vue-solana/vue/useSendTransaction`
+- `@vue-solana/vue/useSendTransactions`
 - `@vue-solana/vue/swr`
 - `@vue-solana/vue/useSolana`
 - `@vue-solana/vue/useSolanaClient`
@@ -12090,6 +12425,7 @@ Use `@vue-solana/vue/buffer-polyfill` for browser transaction code that needs th
 - `useWallet()`: returns active wallet refs, computed connection state, and wallet actions.
 - `useWallets()`: returns discovered browser extension wallets, Android Mobile Wallet Adapter wallets, supported iOS browser wallet entries, and wallet selection actions.
 - `useBalance(address, commitment?)`: loads lamport balance for an address string.
+- `useAirdrop()`: airdrops SOL into an account on test networks and local validators.
 - `useTokenAccounts(owner, options?)`: loads all SPL token accounts for an owner, querying both Token and Token-2022 programs by default.
 - `useTokenBalance(mint, owner)`: loads the SPL token balance and decimals for a mint/owner pair via the associated token account.
 - `useTransaction(handler, options?)`: generic async transaction state helper with optional timeout settings.
@@ -12108,6 +12444,7 @@ Use `@vue-solana/vue/buffer-polyfill` for browser transaction code that needs th
 - `useClientCapability(capability)`: asserts a capability is installed on the Kit client, failing fast with a clear error.
 - `usePayer()` / `useIdentity()`: reactively track the fee payer / acting identity signer from the Kit client.
 - `usePlanTransaction()` / `usePlanTransactions()`: plan transaction messages from instruction inputs without sending.
+- `useSendTransaction()` / `useSendTransactions()`: plan, sign with the client's signers (payer/identity), submit, and confirm transactions with no wallet popup; requires `rpcTransactionPlanner()` and `rpcTransactionPlanSendingExecutor()`.
 
 ## Related Guides
 
@@ -12596,6 +12933,35 @@ Without `confirm: true`, `execute()` returns after submission and sets `status` 
 
 `useSignAndSendTransaction()` also clears `loading` if a wallet adapter never returns a result. In that stale case, `error` is set and the chain status may be unknown, so check the connected wallet or an explorer before retrying.
 
+### Wallet Request Inputs and Returns
+
+Wallet signing flows accept transaction input as raw `Uint8Array` wire bytes that conform to the Solana transaction schema. Build them with `@solana/kit` (or decode them from a base64/base58 RPC response); base64 strings, transaction objects, and instruction lists are not accepted here.
+
+```ts
+import { compileTransaction, getTransactionEncoder } from "@solana/kit";
+
+const transaction: Uint8Array = getTransactionEncoder().encode(compileTransaction(message));
+await execute(transaction);
+```
+
+`useSignMessage()` takes the raw message bytes to sign. Every wallet send request also accepts the Kit `SendTransactionOptions`:
+
+| Option                | Description                                                                                                   |
+| --------------------- | ------------------------------------------------------------------------------------------------------------- |
+| `skipPreflight`       | Skip preflight simulation before sending.                                                                     |
+| `maxRetries`          | RPC node retry count (`bigint`).                                                                              |
+| `minContextSlot`      | Slot at which any blockhash or nonce in the transaction is known to exist; sending before it can be rejected. |
+| `preflightCommitment` | Commitment used for preflight simulation.                                                                     |
+
+Return shapes:
+
+- `useSignMessage().execute(bytes)` resolves to `{ signedMessage, signature }`, both `Uint8Array`.
+- `useSignTransactions().execute(transactions)` resolves to the signed `Uint8Array[]` (also exposed as `signedTransactions`); pass a single-element array for one transaction.
+- `useSignAndSendTransaction().execute(transaction)` resolves to the submitted `signature` string; with `confirm: true` it also fills `confirmation`.
+- `useSignAndSendTransactions().execute(transactions)` resolves to a `string[]` of signatures (also exposed as `signatures`).
+
+A wallet may modify the message or transaction before signing — for example to add its own instruction or change the fee payer — and the Wallet Standard explicitly allows it. Re-read the returned `signedMessage` or signed transaction bytes instead of assuming they match your input byte-for-byte.
+
 ## Batch Transactions
 
 ```ts
@@ -12760,6 +13126,28 @@ createApp(App).use(
 );
 ```
 
+### 客户端与插件生命周期
+
+`createSolanaPlugin()` 会在 `install()` 期间构建一次 Kit client。请在模块作用域创建插件并复用该实例：
+
+```ts
+// solana.ts
+import { createSolanaPlugin } from "@vue-solana/vue";
+
+export const solana = createSolanaPlugin({ cluster: "devnet" });
+```
+
+再次调用 `createSolanaPlugin()` 会构建新的 client 和 context，并丢弃现有的钱包选择和 RPC 状态。如果你的配置是响应式的——例如 cluster 切换——请基于配置做 memoize，只在值真正变化时构建新的插件（和 client），而不是每次渲染都构建：
+
+```ts
+import { computed, ref } from "vue";
+
+const cluster = ref<SolanaCluster>("devnet");
+const plugin = computed(() => createSolanaPlugin({ cluster: cluster.value }));
+```
+
+Kit client 会在构建期间运行其 `createClient().use(...)` 插件。当其中某个插件是异步的，client——以及由它构建的任何 context——只会在该 promise resolve 后才激活。请把真正的 RPC 和钱包工作推迟到 hydration 之后的客户端生命周期钩子或用户操作，而不要在 setup 或 SSR 期间运行。
+
 ## Composables
 
 根导出仍然受支持。对于 composable，新代码优先使用直接 subpath 导入，这样 bundler 可以避免执行无关的包入口代码：
@@ -12773,6 +13161,7 @@ import { useWallet } from "@vue-solana/vue/useWallet";
 
 - `@vue-solana/vue/buffer-polyfill`
 - `@vue-solana/vue/useAction`
+- `@vue-solana/vue/useAirdrop`
 - `@vue-solana/vue/useRequest`
 - `@vue-solana/vue/useSubscription`
 - `@vue-solana/vue/useTrackedData`
@@ -12815,6 +13204,7 @@ import { useWallet } from "@vue-solana/vue/useWallet";
 - `useWallet()`：返回活跃钱包 ref、计算出的连接状态和钱包操作。
 - `useWallets()`：返回已发现的浏览器扩展钱包、Android Mobile Wallet Adapter 钱包、受支持的 iOS 浏览器钱包条目和钱包选择操作。
 - `useBalance(address, commitment?)`：加载地址字符串的 lamport 余额。
+- `useAirdrop()`：在测试网络和本地验证器上将 SOL 空投到账户。
 - `useTokenAccounts(owner, options?)`：加载某个所有者的所有 SPL token 账户，默认同时查询 Token 和 Token-2022 program。
 - `useTokenBalance(mint, owner)`：通过关联 token 账户加载 mint/owner 对的 SPL token 余额和小数位数。
 - `useTransaction(handler, options?)`：通用异步交易状态 helper，带可选超时设置。
@@ -13321,6 +13711,35 @@ await execute(transaction, {
 没有 `confirm: true` 时，`execute()` 会在提交后返回，并把 `status` 设置为 `sent`。启用确认后，状态会经过 `sending`、`confirming`，然后变为 `processed`、`confirmed` 或 `finalized`，以匹配请求的 commitment。如果确认超时或失败，已提交的 `signature` 仍然可用，因此应用可以链接到 explorer。
 
 如果钱包 adapter 从不返回结果，`useSignAndSendTransaction()` 也会清除 `loading`。这种 stale 情况下会设置 `error`，链上状态可能未知，因此重试前请检查连接的钱包或 explorer。
+
+### 钱包请求的输入与返回值
+
+钱包签名流程接受符合 Solana 交易 schema 的原始 `Uint8Array` wire bytes 作为交易输入。请用 `@solana/kit` 构建它们（或从 base64/base58 RPC 响应中解码）；这里不接受 base64 字符串、交易对象和指令列表。
+
+```ts
+import { compileTransaction, getTransactionEncoder } from "@solana/kit";
+
+const transaction: Uint8Array = getTransactionEncoder().encode(compileTransaction(message));
+await execute(transaction);
+```
+
+`useSignMessage()` 接受要签名的原始消息 bytes。每个钱包发送请求也都接受 Kit 的 `SendTransactionOptions`：
+
+| Option                | Description                                                                 |
+| --------------------- | --------------------------------------------------------------------------- |
+| `skipPreflight`       | 发送前跳过 preflight 模拟。                                                 |
+| `maxRetries`          | RPC 节点重试次数（`bigint`）。                                              |
+| `minContextSlot`      | 交易中任何 blockhash 或 nonce 已知存在的最早 slot；在此之前发送可能被拒绝。 |
+| `preflightCommitment` | 用于 preflight 模拟的 commitment。                                          |
+
+返回值形式：
+
+- `useSignMessage().execute(bytes)` resolve 为 `{ signedMessage, signature }`，两者都是 `Uint8Array`。
+- `useSignTransactions().execute(transactions)` resolve 为已签名的 `Uint8Array[]`（也以 `signedTransactions` 暴露）；单个交易请传入单元素数组。
+- `useSignAndSendTransaction().execute(transaction)` resolve 为已提交的 `signature` 字符串；使用 `confirm: true` 时还会填充 `confirmation`。
+- `useSignAndSendTransactions().execute(transactions)` resolve 为签名的 `string[]`（也以 `signatures` 暴露）。
+
+钱包可能在签名前修改消息或交易——例如添加自己的指令或更改 fee payer——Wallet Standard 明确允许这样做。请重新读取返回的 `signedMessage` 或已签名交易 bytes，而不要假设它们与你的输入逐字节一致。
 
 ## 批量交易
 
@@ -14474,6 +14893,7 @@ The module auto-imports these composables from direct `@vue-solana/vue/*` subpat
 - `useSolanaRpc()`: returns cluster, endpoint, RPC status, latest blockhash, the injected Kit `client`, and `checkConnection()`.
 - `useSolanaConnection()`: returns the injected Kit `client` (deprecated in favor of `useSolanaClient()`).
 - `useSolanaAccountInfo(address, options?)`: reads account info and can subscribe to account changes.
+- `useSolanaAirdrop()`: airdrops SOL into an account on test networks and local validators.
 - `useSolanaWallet()`: returns selected wallet state, connection state, capabilities, and wallet actions.
 - `useSolanaWallets()`: returns discovered wallets and wallet selection/refresh actions.
 - `useSolanaBalance(address, commitment?)`: reads lamport balance for a public key or address.
@@ -14505,6 +14925,7 @@ See [Data Fetching Composables](/packages/vue#data-fetching-composables) for the
 - `useSolanaSignAndSendTransactions()`: signs and sends multiple transactions in one wallet request.
 - `useSolanaPayer()` / `useSolanaIdentity()`: reactive Kit client signers (requires a signer plugin).
 - `useSolanaPlanTransaction()` / `useSolanaPlanTransactions()`: plan transaction messages from instruction inputs.
+- `useSolanaSendTransaction()` / `useSolanaSendTransactions()`: plan, sign, submit, and confirm transactions entirely through the Kit client's transaction-sending capability (no wallet popup). Use these when the client owns the fee payer and signing keys; use `useSolanaSignAndSendTransaction(s)` when a connected wallet must approve each transaction.
 
 These are Nuxt aliases for the Vue composables.
 
@@ -16035,21 +16456,45 @@ The packages are stable for production use with RPC reads, wallet discovery and 
 
 ## Transactions
 
-- Transaction simulation helpers.
+### Transaction Simulation Helpers
+
+Simulate transactions before submission so apps can preview fees, account changes, and likely failures without spending SOL.
 
 ## Ecosystem Integrations
 
-- Desktop native wallet support via protocol links through the unified wallet flows.
-- Additional iOS wallet providers.
-- Anchor provider and program helpers.
-- A dedicated wallet modal or UI package.
-- Nuxt server RPC utilities for server-side reads.
-- Versioned docs: an archived legacy docs build under `/v1/` with a `v1 | latest` dropdown and old-URL redirects, for users who have not yet migrated to the Kit path.
+### Desktop Native Wallet Support
+
+Desktop native wallet support through protocol links via the unified wallet flows.
+
+### Additional iOS Wallet Providers
+
+Support more iOS browser wallets beyond the current Phantom, Solflare, and Backpack universal links.
+
+### Anchor Provider And Program Helpers
+
+An Anchor provider and helpers for Anchor program accounts and instructions.
+
+### Wallet Modal Or UI Package
+
+A dedicated wallet modal or UI package with prebuilt connect and sign flows.
+
+### Nuxt Server RPC Utilities
+
+Nuxt server utilities for server-side Solana RPC reads.
+
+### Versioned Docs
+
+Versioned docs: an archived legacy docs build under `/v1/` with a `v1 | latest` dropdown and old-URL redirects, for users who have not yet migrated to the Kit path.
 
 ## Resilience And Advanced Patterns
 
-- RPC provider failover and rate-limit handling.
-- Advanced program account indexing patterns and caching.
+### RPC Provider Failover
+
+RPC provider failover and rate-limit handling.
+
+### Advanced Account Indexing
+
+Advanced program account indexing patterns and caching.
 
 ---
 

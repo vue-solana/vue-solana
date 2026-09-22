@@ -137,6 +137,12 @@ export default defineNuxtConfig({
     ],
   },
   routeRules: {
+    "/openapi.json": {
+      headers: {
+        vary: "Accept, Accept-Encoding",
+        "cache-control": "public, max-age=3600",
+      },
+    },
     "/demo": { ssr: false, prerender: false },
     "/es/demo": { ssr: false, prerender: false },
     "/ko/demo": { ssr: false, prerender: false },
@@ -145,7 +151,14 @@ export default defineNuxtConfig({
     "/es/concepts/wallets": { redirect: "/es/guides/wallets" },
     "/ko/concepts/wallets": { redirect: "/ko/guides/wallets" },
     "/zh/concepts/wallets": { redirect: "/zh/guides/wallets" },
-    "/**": { prerender: true },
+    "/**": {
+      prerender: true,
+      headers: {
+        // Pages are content-negotiated (Accept: text/markdown vs HTML), so
+        // caches must key on Accept (acceptmarkdown.com contract).
+        vary: "Accept, Accept-Encoding",
+      },
+    },
   },
   vite: {
     optimizeDeps: {
