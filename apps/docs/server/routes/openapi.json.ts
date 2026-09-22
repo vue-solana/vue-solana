@@ -23,6 +23,17 @@ const spec = {
     },
   },
   servers: [{ url: SITE_URL }],
+  tags: [
+    {
+      name: "Agent",
+      description:
+        "Machine-readable resources for AI agents: page index, full corpus, sitemap, and this spec.",
+    },
+    {
+      name: "Docs",
+      description: "Human documentation pages, served as HTML or negotiated markdown.",
+    },
+  ],
   "x-accept-markdown": {
     markdown_variants: [
       "Append .md to any documentation page URL (for example /getting-started.md).",
@@ -40,7 +51,13 @@ const spec = {
         responses: {
           "200": {
             description: "Markdown index",
-            content: { "text/markdown": { schema: { type: "string" } } },
+            content: {
+              "text/markdown": {
+                schema: { type: "string" },
+                example:
+                  "# Vue Solana\n\n> Vue and Nuxt libraries that help developers use Solana.\n\n## When To Use\n\n- ...",
+              },
+            },
           },
         },
       },
@@ -54,7 +71,12 @@ const spec = {
         responses: {
           "200": {
             description: "Markdown corpus",
-            content: { "text/markdown": { schema: { type: "string" } } },
+            content: {
+              "text/markdown": {
+                schema: { type: "string" },
+                example: "# Vue Solana Full Documentation\n\n# Getting Started\n\n...",
+              },
+            },
           },
         },
       },
@@ -66,8 +88,13 @@ const spec = {
         tags: ["Agent"],
         responses: {
           "200": {
-            description: "Sitemap XML",
-            content: { "application/xml": { schema: { type: "string" } } },
+            description: "Sitemap index XML referencing per-locale child sitemaps",
+            content: {
+              "application/xml": {
+                schema: { type: "string" },
+                example: '<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex>...</sitemapindex>',
+              },
+            },
           },
         },
       },
@@ -76,6 +103,10 @@ const spec = {
       get: {
         operationId: "getOpenApiSpec",
         summary: "This OpenAPI specification",
+        description:
+          "Returns the OpenAPI 3.1 document describing this site's machine-readable surface. " +
+          "Agents can fetch it to discover the llms.txt index, the full corpus, the sitemap, " +
+          "and the Accept-based markdown negotiation contract.",
         tags: ["Agent"],
         responses: {
           "200": {
@@ -115,8 +146,15 @@ const spec = {
           "200": {
             description: "Documentation page",
             content: {
-              "text/html": { schema: { type: "string" } },
-              "text/markdown": { schema: { type: "string" } },
+              "text/html": {
+                schema: { type: "string" },
+                example: "<!DOCTYPE html><html>...server-rendered page...</html>",
+              },
+              "text/markdown": {
+                schema: { type: "string" },
+                example:
+                  "This guide covers installing the Vue Solana packages...\n\n## Before You Start\n\n...",
+              },
             },
           },
           "404": {

@@ -16402,21 +16402,45 @@ Los paquetes son estables para producción con lecturas RPC, descubrimiento y co
 
 ## Transacciones
 
-- Helpers de simulación de transacciones.
+### Helpers de simulación de transacciones
+
+Simule las transacciones antes de enviarlas para previsualizar comisiones, cambios de cuentas y posibles fallos sin gastar SOL.
 
 ## Integraciones con el ecosistema
 
-- Soporte de wallets nativas de escritorio mediante enlaces de protocolo a través de los flujos de wallet unificados.
-- Más proveedores de wallets iOS.
-- Provider de Anchor y helpers de programas.
-- Un modal de wallet o paquete de UI dedicado.
-- Utilidades RPC de servidor en Nuxt para lecturas del lado del servidor.
-- Documentación versionada: una build de docs antigua archivada bajo `/v1/` con un desplegable `v1 | latest` y redirecciones de URLs antiguas, para usuarios que aún no han migrado a la ruta Kit.
+### Soporte de wallets nativas de escritorio
+
+Soporte de wallets nativas de escritorio mediante enlaces de protocolo a través de los flujos de wallet unificados.
+
+### Más proveedores de wallets iOS
+
+Soporte para más wallets de navegadores iOS además de los enlaces universales actuales de Phantom, Solflare y Backpack.
+
+### Provider de Anchor y helpers de programas
+
+Un provider de Anchor y helpers para cuentas e instrucciones de programas de Anchor.
+
+### Modal de wallet o paquete de UI
+
+Un modal de wallet o paquete de UI dedicado con flujos de conexión y firma preconstruidos.
+
+### Utilidades RPC de servidor en Nuxt
+
+Utilidades RPC de servidor en Nuxt para lecturas del lado del servidor.
+
+### Documentación versionada
+
+Documentación versionada: una build de docs antigua archivada bajo `/v1/` con un desplegable `v1 | latest` y redirecciones de URLs antiguas, para usuarios que aún no han migrado a la ruta Kit.
 
 ## Resiliencia y patrones avanzados
 
-- Conmutación por error del proveedor RPC y manejo de límites de tasa.
-- Patrones avanzados de indexación y caché de cuentas de programas.
+### Conmutación por error del proveedor RPC
+
+Conmutación por error del proveedor RPC y manejo de límites de tasa.
+
+### Indexación avanzada de cuentas
+
+Patrones avanzados de indexación y caché de cuentas de programas.
 
 ---
 
@@ -16429,21 +16453,45 @@ Description: Vue Solana의 계획된 기능과 개선 사항.
 
 ## 트랜잭션
 
-- 트랜잭션 시뮬레이션 헬퍼.
+### 트랜잭션 시뮬레이션 헬퍼
+
+SOL을 소비하지 않고 수수료, 계정 변경 및 예상 실패를 미리 확인할 수 있도록 제출 전에 트랜잭션을 시뮬레이션합니다.
 
 ## 생태계 통합
 
-- 통합 지갑 플로우를 통한 프로토콜 링크 방식의 데스크톱 네이티브 지갑 지원.
-- 추가 iOS 지갑 제공자.
-- Anchor provider와 프로그램 헬퍼.
-- 전용 지갑 모달 또는 UI 패키지.
-- 서버 측 읽기를 위한 Nuxt 서버 RPC 유틸리티.
-- 버전 관리된 문서: 아직 Kit 경로로 마이그레이션하지 않은 사용자를 위해 `/v1/` 아래에 보관된 레거시 문서 빌드와 `v1 | latest` 드롭다운, 이전 URL 리다이렉트 제공.
+### 데스크톱 네이티브 지갑 지원
+
+통합 지갑 플로우를 통한 프로토콜 링크 방식의 데스크톱 네이티브 지갑 지원.
+
+### 추가 iOS 지갑 제공자
+
+현재 Phantom, Solflare, Backpack 유니버설 링크 외에 더 많은 iOS 브라우저 지갑을 지원합니다.
+
+### Anchor provider와 프로그램 헬퍼
+
+Anchor 프로그램 계정 및 인스트럭션을 위한 Anchor provider와 헬퍼.
+
+### 전용 지갑 모달 또는 UI 패키지
+
+연결 및 서명 플로우가 미리 구축된 전용 지갑 모달 또는 UI 패키지.
+
+### Nuxt 서버 RPC 유틸리티
+
+서버 측 Solana RPC 읽기를 위한 Nuxt 서버 유틸리티.
+
+### 버전 관리된 문서
+
+아직 Kit 경로로 마이그레이션하지 않은 사용자를 위해 `/v1/` 아래에 보관된 레거시 문서 빌드와 `v1 | latest` 드롭다운, 이전 URL 리다이렉트 제공.
 
 ## 복원력과 고급 패턴
 
-- RPC 제공자 장애 조치와 레이트 리밋 처리.
-- 고급 프로그램 account 인덱싱 패턴과 캐싱.
+### RPC 제공자 장애 조치
+
+RPC 제공자 장애 조치와 레이트 리밋 처리.
+
+### 고급 계정 인덱싱
+
+고급 프로그램 account 인덱싱 패턴과 캐싱.
 
 ---
 
@@ -16507,18 +16555,42 @@ Description: Vue Solana 规划中的功能与改进。
 
 ## 交易
 
-- 交易模拟辅助函数。
+### 交易模拟辅助函数
+
+提交前模拟交易，预览手续费、账户变化和可能的失败，而无需花费 SOL。
 
 ## 生态集成
 
-- 通过统一钱包流程的协议链接支持的桌面原生钱包。
-- 更多 iOS 钱包提供方。
-- Anchor provider 与程序辅助函数。
-- 专属钱包弹窗或 UI 包。
-- 用于服务端读取的 Nuxt 服务器 RPC 工具。
-- 版本化文档：在 `/v1/` 下归档的旧版文档构建，带 `v1 | latest` 下拉与旧 URL 重定向，服务尚未迁移到 Kit 路径的用户。
+### 桌面原生钱包支持
+
+通过统一钱包流程的协议链接支持的桌面原生钱包。
+
+### 更多 iOS 钱包提供方
+
+在现有 Phantom、Solflare 和 Backpack 通用链接之外，支持更多 iOS 浏览器钱包。
+
+### Anchor provider 与程序辅助函数
+
+面向 Anchor 程序账户与指令的 provider 及辅助函数。
+
+### 专属钱包弹窗或 UI 包
+
+带预置连接与签名流程的专属钱包弹窗或 UI 包。
+
+### Nuxt 服务器 RPC 工具
+
+用于服务端 Solana RPC 读取的 Nuxt 服务器工具。
+
+### 版本化文档
+
+在 `/v1/` 下归档的旧版文档构建，带 `v1 | latest` 下拉与旧 URL 重定向，服务尚未迁移到 Kit 路径的用户。
 
 ## 韧性与高级模式
 
-- RPC 提供方故障转移与速率限制处理。
-- 高级程序账户索引模式与缓存。
+### RPC 提供方故障转移
+
+RPC 提供方故障转移与速率限制处理。
+
+### 高级账户索引
+
+高级程序账户索引模式与缓存。

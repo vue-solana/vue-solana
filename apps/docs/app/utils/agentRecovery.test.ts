@@ -61,15 +61,23 @@ describe("isMachineReadablePath", () => {
       "/site.webmanifest",
       "/api/anything",
       "/_payload.json",
-      "/__nuxt",
+      "/__nuxt_content/content/query",
       "/specs.yml",
     ]) {
       expect(isMachineReadablePath(path)).toBe(true);
     }
   });
 
-  it("treats documentation pages as negotiable", () => {
-    for (const path of ["/", "/getting-started", "/guides/wallets", "/agent-skill", "/roadmap"]) {
+  it("treats documentation pages and audit probes as negotiable", () => {
+    for (const path of [
+      "/",
+      "/getting-started",
+      "/guides/wallets",
+      "/agent-skill",
+      "/roadmap",
+      "/__ora-404-probe-pe3wy5tm",
+      "/__ora-probe-not-machine-readable",
+    ]) {
       expect(isMachineReadablePath(path)).toBe(false);
     }
   });

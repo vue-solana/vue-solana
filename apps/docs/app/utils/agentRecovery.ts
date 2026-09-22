@@ -63,11 +63,20 @@ function extractQuality(accept: string, type: string): number[] {
 }
 
 /**
- * Paths that must never be content-negotiated: server routes and static
- * machine-readable files already have a single authoritative representation,
- * so markdown requests fall through to them untouched.
+ * Paths that must never be content-negotiated: server routes under /api/ and
+ * Nuxt Content's internal /__nuxt_content query endpoint already have a single
+ * authoritative representation, so markdown requests fall through to them
+ * untouched. Static machine files (json/xml/txt) are covered by extension.
+ *
+ * The /__nuxt_content bypass is critical for correctness, not just caching:
+ * queries issued inside server middleware run as internal fetches that RE-ENTER
+ * the middleware chain with the original Accept header inherited, so without it
+ * a markdown request would recurse (middleware → content query → middleware →
+ * …) until the heap explodes. Note that underscore-prefixed paths generally
+ * remain negotiable — audit probes like /__ora-404-probe-* must receive the
+ * markdown 404, and real bundled assets are served before middleware runs.
  */
-const MACHINE_READABLE_PREFIXES = ["/api/", "/_", "/__"];
+const MACHINE_READABLE_PREFIXES = ["/api/", "/__nuxt_content"];
 const MACHINE_READABLE_EXTENSIONS = [".json", ".xml", ".txt", ".yaml", ".yml", ".webmanifest"];
 
 export function isMachineReadablePath(path: string): boolean {

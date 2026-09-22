@@ -17,7 +17,8 @@ import {
  * answer every request (middleware cannot observe that the renderer would
  * later 404, nor that a later middleware would have found the page).
  *
- * Every documentation page can be requested as markdown, two ways:
+ * Every documentation page — including the homepage — can be requested as
+ * markdown, two ways:
  * - `Accept: text/markdown` header (acceptmarkdown.com contract)
  * - appending `.md` to the page URL (e.g. `/getting-started.md`)
  *
@@ -43,10 +44,6 @@ export default defineEventHandler(async (event) => {
   }
 
   setResponseHeader(event, "Vary", markdownNegotiationVary(getResponseHeader(event, "Vary")));
-
-  if (path === "/") {
-    return;
-  }
 
   const page = await queryCollection(event, "content").path(path).first();
 
