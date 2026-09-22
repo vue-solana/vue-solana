@@ -8,6 +8,8 @@
     "dev": "TMPDIR=/tmp nuxt dev",
     "generate": "pnpm llms && nuxt generate",
     "llms": "node scripts/generate-llms.mjs",
+    "postinstall": "nuxt prepare",
+    "prepare": "nuxt prepare",
     "preview": "nuxt preview"
   },
   "dependencies": {
