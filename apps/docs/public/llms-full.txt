@@ -16594,3 +16594,534 @@ RPC 提供方故障转移与速率限制处理。
 ### 高级账户索引
 
 高级程序账户索引模式与缓存。
+
+---
+
+# About
+
+Source: https://vue-solana-docs.vercel.app/about
+Description: What Vue Solana is, who maintains it, and how the project is run.
+
+Vue Solana is an open-source project that publishes Vue and Nuxt libraries for building Solana applications. It wraps the official Solana JavaScript SDK (Solana Kit) in typed, reactive composables so Vue 3 and Nuxt developers can read balances, discover wallets, sign messages, and send transactions without hand-rolling RPC plumbing.
+
+The project is maintained by the Vue Solana team and accepts contributions from the community on GitHub. All source code lives at `https://github.com/vue-solana/vue-solana` under the MIT license, and every package is published to npm under the `@vue-solana` scope.
+
+## What The Packages Do
+
+- `@vue-solana/core`: framework-agnostic Solana config, endpoint helpers, wallet types, and transaction helpers.
+- `@vue-solana/vue`: the Vue plugin and composables for RPC reads, wallets, balances, messages, signatures, and transactions.
+- `@vue-solana/nuxt`: a Nuxt module that installs the Vue plugin and auto-imports the composables.
+
+## How The Project Is Run
+
+Development happens in the open on GitHub: issues track bugs and feature requests, pull requests go through review, and releases are published to npm. The documentation you are reading is built from the Markdown in this repository and deployed on Vercel.
+
+## Roadmap And Governance
+
+Planned features are tracked publicly on the [Roadmap](/roadmap) page. Breaking changes to the packages follow semver, and machine-readable surfaces of this site (llms.txt, openapi.json) are documented in the [OpenAPI spec](/openapi.json) with an explicit versioning policy.
+
+## Contact
+
+For questions, bug reports, or security issues, see the [Contact](/contact) page.
+
+---
+
+# Acerca de
+
+Source: https://vue-solana-docs.vercel.app/es/about
+Description: Que es Vue Solana, quien lo mantiene y como se gestiona el proyecto.
+
+Vue Solana es un proyecto de codigo abierto que publica librerias Vue y Nuxt para construir aplicaciones Solana. Envuelve el SDK oficial de JavaScript de Solana (Solana Kit) en composables tipados y reactivos para que los desarrolladores de Vue 3 y Nuxt puedan leer balances, descubrir wallets, firmar mensajes y enviar transacciones sin construir la infraestructura RPC a mano.
+
+El proyecto lo mantiene el equipo de Vue Solana y acepta contribuciones de la comunidad en GitHub. Todo el codigo fuente vive en `https://github.com/vue-solana/vue-solana` bajo la licencia MIT, y cada paquete se publica en npm bajo el scope `@vue-solana`.
+
+## Que Hacen Los Paquetes
+
+- `@vue-solana/core`: configuracion de Solana agnostica del framework, helpers de endpoints, tipos de wallets y helpers de transacciones.
+- `@vue-solana/vue`: el plugin de Vue y los composables para lecturas RPC, wallets, balances, mensajes, firmas y transacciones.
+- `@vue-solana/nuxt`: un modulo de Nuxt que instala el plugin de Vue y autoimporta los composables.
+
+## Como Se Gestiona El Proyecto
+
+El desarrollo ocurre de forma abierta en GitHub: los issues rastrean bugs y peticiones de funcionalidades, los pull requests pasan por revision, y las versiones se publican en npm. La documentacion que estas leyendo se construye a partir del Markdown de este repositorio y se despliega en Vercel.
+
+## Hoja De Ruta Y Gobernanza
+
+Las funcionalidades planificadas se rastrean publicamente en la pagina de [Hoja de ruta](/es/roadmap). Los cambios que rompen compatibilidad en los paquetes siguen semver, y las superficies legibles por maquina de este sitio (llms.txt, openapi.json) estan documentadas en la [especificacion OpenAPI](/es/openapi.json) con una politica de versionado explicita.
+
+## Contacto
+
+Para preguntas, reportes de bugs o problemas de seguridad, consulta la pagina de [Contacto](/es/contact).
+
+---
+
+# 소개
+
+Source: https://vue-solana-docs.vercel.app/ko/about
+Description: Vue Solana가 무엇인지, 누가 유지보수하는지, 프로젝트가 어떻게 운영되는지 설명합니다.
+
+Vue Solana는 Solana 애플리케이션 구축을 위한 Vue 및 Nuxt 라이브러리를 공개하는 오픈 소스 프로젝트입니다. 공식 Solana JavaScript SDK(Solana Kit)를 타입이 지정된 반응형 컴포저블로 감싸서 Vue 3 및 Nuxt 개발자가 RPC 배관을 직접 만들지 않고도 잔액 조회, 지갑 검색, 메시지 서명, 트랜잭션 전송을 할 수 있게 해줍니다.
+
+이 프로젝트는 Vue Solana 팀이 유지보수하며 GitHub에서 커뮤니티의 기여를 받습니다. 모든 소스 코드는 `https://github.com/vue-solana/vue-solana`에 MIT 라이선스로 공개되어 있으며, 모든 패키지는 npm의 `@vue-solana` 스코프로 배포됩니다.
+
+## 패키지의 역할
+
+- `@vue-solana/core`: 프레임워크에 종속되지 않는 Solana 설정, 엔드포인트 헬퍼, 지갑 타입, 트랜잭션 헬퍼.
+- `@vue-solana/vue`: RPC 읽기, 지갑, 잔액, 메시지, 서명, 트랜잭션을 위한 Vue 플러그인과 컴포저블.
+- `@vue-solana/nuxt`: Vue 플러그인을 설치하고 컴포저블을 자동 임포트하는 Nuxt 모듈.
+
+## 프로젝트 운영 방식
+
+개발은 GitHub에서 공개적으로 이루어집니다: 이슈에서 버그와 기능 요청을 추적하고, 풀 리퀘스트는 리뷰를 거치며, 릴리스는 npm에 배포됩니다. 지금 보고 있는 문서는 이 저장소의 Markdown으로부터 빌드되어 Vercel에 배포됩니다.
+
+## 로드맵과 거버넌스
+
+계획된 기능은 [로드맵](/ko/roadmap) 페이지에서 공개적으로 추적됩니다. 패키지의 호환성을 깨는 변경은 semver를 따르며, 이 사이트의 기계 판독 가능 표면(llms.txt, openapi.json)은 명시적인 버저닝 정책과 함께 [OpenAPI 스펙](/ko/openapi.json)에 문서화되어 있습니다.
+
+## 연락처
+
+질문, 버그 보고, 보안 문제는 [문의](/ko/contact) 페이지를 참고하세요.
+
+---
+
+# 关于
+
+Source: https://vue-solana-docs.vercel.app/zh/about
+Description: Vue Solana 是什么、由谁维护，以及项目的运作方式。
+
+Vue Solana 是一个开源项目，发布用于构建 Solana 应用的 Vue 和 Nuxt 库。它将官方 Solana JavaScript SDK（Solana Kit）封装为带类型的响应式 composables，让 Vue 3 和 Nuxt 开发者无需手写 RPC 基础设施即可读取余额、发现钱包、签名消息和发送交易。
+
+本项目由 Vue Solana 团队维护，并在 GitHub 上接受社区贡献。所有源代码位于 `https://github.com/vue-solana/vue-solana`，采用 MIT 许可证；每个包都以 `@vue-solana` scope 发布到 npm。
+
+## 各包的功能
+
+- `@vue-solana/core`：与框架无关的 Solana 配置、端点辅助函数、钱包类型和交易辅助函数。
+- `@vue-solana/vue`：用于 RPC 读取、钱包、余额、消息、签名和交易的 Vue 插件与 composables。
+- `@vue-solana/nuxt`：安装 Vue 插件并自动导入 composables 的 Nuxt 模块。
+
+## 项目如何运作
+
+开发在 GitHub 上公开进行：issue 跟踪缺陷和功能请求，pull request 经过审查，版本发布到 npm。你正在阅读的文档由该仓库中的 Markdown 构建，并部署在 Vercel 上。
+
+## 路线图与治理
+
+计划中的功能在[路线图](/zh/roadmap)页面公开跟踪。包的破坏性变更遵循 semver，本站的机器可读表面（llms.txt、openapi.json）在 [OpenAPI 规范](/zh/openapi.json)中以明确的版本策略进行了文档化。
+
+## 联系方式
+
+如有问题、缺陷报告或安全问题，请参阅[联系](/zh/contact)页面。
+
+---
+
+# Contact
+
+Source: https://vue-solana-docs.vercel.app/contact
+Description: How to reach the Vue Solana team for support, security reports, and press.
+
+There is no paid support desk or phone line: Vue Solana is an open-source project, and every channel below is public or free to use. Pick the channel that matches what you need.
+
+## Bug Reports And Feature Requests
+
+Open a GitHub issue at `https://github.com/vue-solana/vue-solana/issues`. Include the package and version (`@vue-solana/core`, `@vue-solana/vue`, or `@vue-solana/nuxt`), your Vue or Nuxt version, a minimal reproduction, and the full error text. Issues are triaged by the maintainers, usually within a few days.
+
+## Usage Questions
+
+For "how do I do X" questions, read the [Troubleshooting](/troubleshooting) page first — it covers the most common setup and wallet problems. If your question is not answered there, open a GitHub discussion or issue with the details above.
+
+## Security Reports
+
+Do not open public issues for security vulnerabilities. Report them privately through GitHub's security advisory feature at `https://github.com/vue-solana/vue-solana/security/advisories/new`, or contact the maintainers through the repository profile. We will acknowledge reports within 72 hours and coordinate a fix and disclosure timeline with you.
+
+## Press And Branding
+
+For interviews, logo usage, or ecosystem listings, open a regular GitHub issue with the "press" label, or reach the maintainers through the repository. The project name is "Vue Solana"; the canonical domain is `https://vue-solana-docs.vercel.app` and the source of truth is the GitHub organization at `https://github.com/vue-solana`.
+
+## Response Expectations
+
+This is a volunteer-maintained open-source project. There is no SLA, but maintainers respond to triaged issues and security reports as time allows, and security reports are treated with priority.
+
+---
+
+# Contacto
+
+Source: https://vue-solana-docs.vercel.app/es/contact
+Description: Como contactar al equipo de Vue Solana para soporte, reportes de seguridad y prensa.
+
+No hay mesa de soporte de pago ni telefono: Vue Solana es un proyecto de codigo abierto, y todos los canales siguientes son publicos o gratuitos. Elige el canal que se ajuste a lo que necesitas.
+
+## Reportes De Bugs Y Peticiones De Funcionalidades
+
+Abre un issue de GitHub en `https://github.com/vue-solana/vue-solana/issues`. Incluye el paquete y la version (`@vue-solana/core`, `@vue-solana/vue` o `@vue-solana/nuxt`), tu version de Vue o Nuxt, una reproduccion minima y el texto completo del error. Los issues son triados por los mantenedores, normalmente en pocos dias.
+
+## Preguntas De Uso
+
+Para preguntas de "como hago X", lee primero la pagina de [Solucion de problemas](/es/troubleshooting) — cubre los problemas mas comunes de configuracion y wallets. Si tu pregunta no aparece ahi, abre una discusion o issue de GitHub con los detalles indicados arriba.
+
+## Reportes De Seguridad
+
+No abras issues publicos para vulnerabilidades de seguridad. Reportalas de forma privada mediante la funcion de avisos de seguridad de GitHub en `https://github.com/vue-solana/vue-solana/security/advisories/new`, o contacta a los mantenedores a traves del perfil del repositorio. Confirmaremos los reportes en un plazo de 72 horas y coordinaremos contigo la solucion y el calendario de divulgacion.
+
+## Prensa Y Marca
+
+Para entrevistas, uso del logo o listados en ecosistemas, abre un issue de GitHub normal con la etiqueta "press", o contacta a los mantenedores a traves del repositorio. El nombre del proyecto es "Vue Solana"; el dominio canonico es `https://vue-solana-docs.vercel.app` y la fuente de verdad es la organizacion de GitHub en `https://github.com/vue-solana`.
+
+## Expectativas De Respuesta
+
+Este es un proyecto de codigo abierto mantenido por voluntarios. No hay SLA, pero los mantenedores responden a los issues triados y a los reportes de seguridad segun lo permite el tiempo, y los reportes de seguridad se tratan con prioridad.
+
+---
+
+# 문의
+
+Source: https://vue-solana-docs.vercel.app/ko/contact
+Description: 지원, 보안 보고, 언론 문의를 위해 Vue Solana 팀에 연락하는 방법.
+
+유료 지원 센터나 전화 번호는 없습니다: Vue Solana는 오픈 소스 프로젝트이며 아래의 모든 채널은 공개되어 있거나 무료입니다. 필요한 것에 맞는 채널을 선택하세요.
+
+## 버그 보고 및 기능 요청
+
+`https://github.com/vue-solana/vue-solana/issues`에서 GitHub 이슈를 열어주세요. 패키지와 버전(`@vue-solana/core`, `@vue-solana/vue` 또는 `@vue-solana/nuxt`), Vue 또는 Nuxt 버전, 최소 재현 코드, 전체 오류 메시지를 포함해 주세요. 이슈는 보통 며칠 안에 메인테이너가 분류합니다.
+
+## 사용 질문
+
+"X를 어떻게 하나요" 류의 질문은 먼저 [문제 해결](/ko/troubleshooting) 페이지를 읽어보세요 — 가장 흔한 설정 및 지갑 문제를 다룹니다. 거기에 답이 없다면 위의 내용과 함께 GitHub 토론이나 이슈를 열어주세요.
+
+## 보안 보고
+
+보안 취약점은 공개 이슈로 열지 마세요. `https://github.com/vue-solana/vue-solana/security/advisories/new`의 GitHub 보안 자문 기능을 통해 비공개로 보고하거나, 저장소 프로필을 통해 메인테이너에게 연락해 주세요. 72시간 이내에 보고를 확인하고 수정 및 공개 일정을 조율하겠습니다.
+
+## 언론 및 브랜딩
+
+인터뷰, 로고 사용, 생태계 등재 문의는 "press" 라벨과 함께 일반 GitHub 이슈를 열거나 저장소를 통해 메인테이너에게 연락해 주세요. 프로젝트 이름은 "Vue Solana"이며, 공식 도메인은 `https://vue-solana-docs.vercel.app`이고, 신뢰할 수 있는 출처는 `https://github.com/vue-solana`의 GitHub 조직입니다.
+
+## 응답 기대치
+
+이 프로젝트는 자원봉사자가 유지보수하는 오픈 소스입니다. SLA는 없지만, 메인테이너는 시간이 허락하는 대로 분류된 이슈와 보안 보고에 응답하며, 보안 보고는 우선순위로 처리합니다.
+
+---
+
+# 联系
+
+Source: https://vue-solana-docs.vercel.app/zh/contact
+Description: 如何就支持、安全报告和媒体事务联系 Vue Solana 团队。
+
+本项目没有付费支持热线或电话：Vue Solana 是一个开源项目，以下所有渠道都是公开或免费的。请根据需求选择对应的渠道。
+
+## 缺陷报告与功能请求
+
+在 `https://github.com/vue-solana/vue-solana/issues` 提交 GitHub issue。请附上包名和版本（`@vue-solana/core`、`@vue-solana/vue` 或 `@vue-solana/nuxt`）、你的 Vue 或 Nuxt 版本、最小复现步骤以及完整的错误文本。维护者通常会在几天内对 issue 进行分诊。
+
+## 使用问题
+
+对于"如何做 X"类问题，请先阅读[故障排查](/zh/troubleshooting)页面——它涵盖了最常见的配置和钱包问题。如果那里没有答案，请附上上述信息并提交 GitHub 讨论或 issue。
+
+## 安全报告
+
+安全漏洞请勿提交公开 issue。请通过 GitHub 的安全公告功能 `https://github.com/vue-solana/vue-solana/security/advisories/new` 私下报告，或通过仓库主页联系维护者。我们会在 72 小时内确认报告，并与你协调修复和披露时间表。
+
+## 媒体与品牌
+
+如需访谈、Logo 使用或生态系统收录，请提交带有 "press" 标签的普通 GitHub issue，或通过仓库联系维护者。项目名称为 "Vue Solana"；规范域名为 `https://vue-solana-docs.vercel.app`，权威来源是 `https://github.com/vue-solana` 的 GitHub 组织。
+
+## 响应预期
+
+这是一个由志愿者维护的开源项目。没有 SLA，但维护者会尽力响应已分诊的 issue 和安全报告，安全报告会被优先处理。
+
+---
+
+# Privacidad
+
+Source: https://vue-solana-docs.vercel.app/es/privacy
+Description: Que recoge este sitio de documentacion, que no recoge, y como se gestionan las analiticas.
+
+Este sitio es una web de documentacion. No tiene cuentas, ni inicio de sesion, ni base de datos de visitantes, y no solicita ni procesa datos personales directamente.
+
+## Que Se Recoge
+
+El sitio usa Vercel Analytics para contar vistas de pagina. Vercel Analytics no usa cookies ni identificadores persistentes que puedan singularizar a un visitante individual: registra agregados como la ruta de la pagina, el referrer, el pais y la clase de dispositivo, sin construir perfiles de usuario.
+
+La infraestructura del servidor web (Vercel y su CDN) procesa metadatos de peticion estandar como la direccion IP, el user agent y la URL solicitada con los fines tecnicos de servir contenido, seguridad y prevencion de abusos, segun describe la documentacion de privacidad de Vercel. Los operadores del sitio no ejecutan registro ni analiticas adicionales mas alla de Vercel Analytics.
+
+## Que No Se Recoge
+
+- Este sitio no establece cookies con fines de rastreo.
+- Sin formularios: este sitio no tiene formularios de comentarios, suscripciones ni introduccion de datos, asi que nada de lo que escribas se almacena aqui.
+- Sin publicidad, sin rastreadores entre sitios y sin scripts de fingerprinting.
+- No se venden ni comparten datos de visitantes con intermediarios de datos.
+
+## Contenido De Terceros
+
+Las paginas de documentacion incluyen ejemplos de codigo pero no cargan publicidad de terceros ni widgets sociales. Los enlaces externos (GitHub, npm, la pagina de demo) se rigen por las politicas de privacidad de esos destinos.
+
+## Agentes Automaticos
+
+Los agentes y crawlers automaticos son bienvenidos dentro de las convenciones de rate limit documentadas en `/es/openapi.json`. El trafico de agentes se trata igual que cualquier otro metadato de peticion: puede aparecer en analiticas agregadas y no se correlaciona con ningun individuo.
+
+## Cambios
+
+Si las practicas de recopilacion de datos cambian, esta pagina se actualizara antes de que esos cambios entren en vigor. Esta pagina es la descripcion autoritativa de la postura de privacidad del sitio.
+
+Para preguntas de privacidad, consulta la pagina de [Contacto](/es/contact).
+
+---
+
+# 개인정보
+
+Source: https://vue-solana-docs.vercel.app/ko/privacy
+Description: 이 문서 사이트가 수집하는 것, 수집하지 않는 것, 애널리틱스 처리 방식.
+
+이 사이트는 문서 웹사이트입니다. 계정도, 로그인도, 방문자 데이터베이스도 없으며, 개인 데이터를 직접 요청하거나 처리하지 않습니다.
+
+## 수집하는 것
+
+이 사이트는 페이지 조회수를 세기 위해 Vercel Analytics를 사용합니다. Vercel Analytics는 쿠키가 없고 개인 방문자를 식별할 수 있는 영속 식별자를 사용하지 않습니다: 페이지 경로, 리퍼러, 국가, 기기 클래스 같은 집계만 기록하며 사용자 프로필을 만들지 않습니다.
+
+웹 서버 인프라(Vercel과 그 CDN)는 콘텐츠 제공, 보안, 어뷰즈 방지라는 기술적 목적을 위해 IP 주소, 사용자 에이전트, 요청된 URL 같은 표준 요청 메타데이터를 처리합니다. 이는 Vercel 자체의 개인정보 문서에 설명되어 있습니다. 사이트 운영자는 Vercel Analytics 외에 추가 로깅이나 애널리틱스를 운영하지 않습니다.
+
+## 수집하지 않는 것
+
+- 이 사이트는 추적 목적의 쿠키를 설정하지 않습니다.
+- 폼 없음: 이 사이트에는 댓글 폼, 뉴스레터 구독, 데이터 입력 필드가 없으므로 입력한 어떤 것도 여기에 저장되지 않습니다.
+- 광고, 교차 사이트 트래커, 핑거프린팅 스크립트가 없습니다.
+- 방문자 데이터를 데이터 브로커에게 판매하거나 공유하지 않습니다.
+
+## 제3자 콘텐츠
+
+문서 페이지는 코드 예제를 포함하지만 제3자 광고나 소셜 위젯을 로드하지 않습니다. 외부 링크(GitHub, npm, 데모 페이지)는 해당 목적지의 개인정보 처리방침의 적용을 받습니다.
+
+## 기계 에이전트
+
+자동화된 에이전트와 크롤러는 `/ko/openapi.json`에 문서화된 rate limit 규약 범위 내에서 환영받습니다. 에이전트 트래픽은 다른 모든 요청 메타데이터와 동일하게 취급됩니다: 집계 애널리틱스에는 나타날 수 있지만 개인과 연관되지는 않습니다.
+
+## 변경 사항
+
+데이터 수집 관행이 변경되면 이 페이지는 해당 변경이 적용되기 전에 업데이트됩니다. 현재 페이지가 사이트 개인정보 태세에 대한 권위 있는 설명입니다.
+
+개인정보 관련 질문은 [문의](/ko/contact) 페이지를 참고하세요.
+
+---
+
+# Privacy
+
+Source: https://vue-solana-docs.vercel.app/privacy
+Description: What this documentation site collects, what it does not, and how analytics are handled.
+
+This site is a documentation website. It has no accounts, no login, no database of visitors, and it does not ask for or process personal data directly.
+
+## What Is Collected
+
+The site uses Vercel Analytics to count page views. Vercel Analytics is cookieless and does not use persistent identifiers that could single out an individual visitor: it records aggregates such as page path, referrer, country, and device class, without building user profiles.
+
+Web server infrastructure (Vercel and its CDN) processes standard request metadata such as IP address, user agent, and requested URL for the technical purposes of serving content, security, and abuse prevention, as described in Vercel's own privacy documentation. The site's operators do not run additional logging or analytics beyond Vercel Analytics.
+
+## What Is Not Collected
+
+- No cookies are set by this site for tracking purposes.
+- No forms: this site has no comment forms, newsletter signups, or data-entry fields, so nothing you type is stored here.
+- No advertising, no cross-site trackers, and no fingerprinting scripts.
+- No sale or sharing of visitor data with data brokers.
+
+## Third-Party Content
+
+Documentation pages embed code examples but do not load third-party advertising or social widgets. External links (GitHub, npm, the demo page) are governed by the privacy policies of those destinations.
+
+## Machine Agents
+
+Automated agents and crawlers are welcome within the rate-limit conventions documented in `/openapi.json`. Agent traffic is treated the same as any other request metadata: it may appear in aggregate analytics, and it is not correlated with any individual.
+
+## Changes
+
+If data collection practices change, this page will be updated before those changes take effect. The current page is the authoritative description of the site's privacy posture.
+
+For privacy questions, see the [Contact](/contact) page.
+
+---
+
+# 隐私
+
+Source: https://vue-solana-docs.vercel.app/zh/privacy
+Description: 本文档网站收集什么、不收集什么，以及分析数据的处理方式。
+
+本站是一个文档网站。它没有账号、没有登录、没有访客数据库，也不会直接索取或处理个人数据。
+
+## 我们收集什么
+
+本站使用 Vercel Analytics 统计页面浏览量。Vercel Analytics 不使用 cookie，也不使用能够识别单个访客的持久标识符：它只记录页面路径、来源、国家、设备类型等聚合信息，不会建立用户画像。
+
+Web 服务器基础设施（Vercel 及其 CDN）会处理 IP 地址、用户代理、请求 URL 等标准请求元数据，用于提供内容、安全和防滥用等技术目的，详见 Vercel 自己的隐私文档。本站运营者不运行 Vercel Analytics 之外的额外日志或分析。
+
+## 我们不收集什么
+
+- 本站不设置用于跟踪的 cookie。
+- 无表单：本站没有评论表单、订阅登记或数据输入字段，因此你输入的任何内容都不会在此存储。
+- 无广告、无跨站跟踪器、无指纹识别脚本。
+- 不向数据经纪商出售或共享访客数据。
+
+## 第三方内容
+
+文档页面内嵌代码示例，但不会加载第三方广告或社交小部件。外部链接（GitHub、npm、演示页）受这些目标站点自身隐私政策的约束。
+
+## 机器代理
+
+欢迎自动化代理和爬虫在 `/zh/openapi.json` 中记载的速率限制约定范围内访问。代理流量与其他请求元数据一视同仁：可能出现在聚合分析中，但不会与任何个人相关联。
+
+## 变更
+
+如果数据收集做法发生变化，本页面将在变更生效之前更新。当前页面是本站隐私态势的权威描述。
+
+如有隐私问题，请参阅[联系](/zh/contact)页面。
+
+---
+
+# Developer Portal
+
+Source: https://vue-solana-docs.vercel.app/developers
+Description: Quickstart, machine-readable endpoints, and integration conventions for building against Vue Solana.
+
+This portal is the entry point for developers and AI agents integrating with Vue Solana — both the Vue/Nuxt libraries themselves and the machine-readable surface of this documentation site.
+
+## Quickstart: Build A Solana App With Vue
+
+1. Install the package for your stack: `pnpm add @vue-solana/nuxt` for Nuxt, or `pnpm add @vue-solana/vue @vue-solana/core` for plain Vue 3.
+2. Register the plugin or module (see [Getting Started](/getting-started)) and point it at a cluster — devnet by default.
+3. Read data with composables: `useSolanaClient`, `useBalance`, `useTokenAccounts`.
+4. Connect a wallet with `useWallets` and `useWallet` (browser extensions, Mobile Wallet Adapter, and iOS wallet links).
+5. Sign and send with `useSignMessage` and `useSignAndSendTransaction`.
+
+
+## Machine-Readable Surface Of This Site
+
+This documentation site exposes a documented machine surface, no signup or keys required:
+
+- `/llms.txt` — index of every documentation page for agents.
+- `/llms-full.txt` — the complete documentation corpus as one markdown document.
+- `/openapi.json` — OpenAPI 3.1 spec covering all endpoints, the RFC 9457 error model, the versioning policy, and rate-limit conventions.
+- `Accept: text/markdown` negotiation on every documentation page (or append `.md` to the URL).
+- `/sitemap.xml` — full URL list.
+
+Errors follow RFC 9457 (`application/problem+json`) with a `recovery` extension object; 404s for unknown paths return a markdown recovery body when requested with `Accept: text/markdown`.
+
+## Sandbox
+
+The Solana [devnet cluster](/concepts/clusters) is the shared sandbox: it is free, it needs no credentials, and airdrops let you test transfers without real funds. The demo page is configured for devnet, and every guide's examples run against it.
+
+## API Keys And Authentication
+
+There are none to manage. The packages are client libraries you run in your own app, and this site's machine endpoints are public. If a future feature requires keys, they will be announced on the [Roadmap](/roadmap) page first.
+
+---
+
+# Portal De Desarrolladores
+
+Source: https://vue-solana-docs.vercel.app/es/developers
+Description: Quickstart, endpoints legibles por maquina y convenciones de integracion para construir sobre Vue Solana.
+
+Este portal es el punto de entrada para desarrolladores y agentes de IA que integren con Vue Solana, tanto con las librerias Vue/Nuxt como con la superficie legible por maquina de este sitio de documentacion.
+
+## Quickstart: Construye Una App Solana Con Vue
+
+1. Instala el paquete para tu stack: `pnpm add @vue-solana/nuxt` para Nuxt, o `pnpm add @vue-solana/vue @vue-solana/core` para Vue 3 puro.
+2. Registra el plugin o modulo (ver [Comenzar](/es/getting-started)) y apuntalo a un cluster — devnet por defecto.
+3. Lee datos con composables: `useSolanaClient`, `useBalance`, `useTokenAccounts`.
+4. Conecta una wallet con `useWallets` y `useWallet` (extensiones de navegador, Mobile Wallet Adapter y enlaces de wallet iOS).
+5. Firma y envia con `useSignMessage` y `useSignAndSendTransaction`.
+
+No hay claves de API para el RPC de Solana: los composables hablan con endpoints publicos de devnet/mainnet, y puedes cambiar a tu propio proveedor de RPC. La [demo en vivo](/es/demo) ejecuta los paquetes publicados contra devnet en tu navegador — sin registro.
+
+## Superficie Legible Por Maquina De Este Sitio
+
+Este sitio de documentacion expone una superficie de maquina documentada, sin registro ni claves:
+
+- `/llms.txt` — indice de todas las paginas de documentacion para agentes.
+- `/llms-full.txt` — el corpus completo de documentacion como un unico documento markdown.
+- `/openapi.json` — especificacion OpenAPI 3.1 que cubre todos los endpoints, el modelo de errores RFC 9457, la politica de versionado y las convenciones de rate limit.
+- Negociacion con `Accept: text/markdown` en todas las paginas de documentacion (o anade `.md` a la URL).
+- `/sitemap.xml` — lista completa de URLs.
+
+Los errores siguen RFC 9457 (`application/problem+json`) con un objeto de extension `recovery`; los 404 de rutas desconocidas devuelven un cuerpo de recuperacion en markdown cuando se piden con `Accept: text/markdown`.
+
+## Sandbox
+
+El cluster de [devnet](/es/concepts/clusters) es el sandbox compartido: es gratuito, no requiere credenciales, y los airdrops permiten probar transferencias sin fondos reales. La pagina de demo esta configurada para devnet, y los ejemplos de todas las guias se ejecutan contra ella.
+
+## Claves De API Y Autenticacion
+
+No hay ninguna que gestionar. Los paquetes son librerias cliente que ejecutas en tu propia app, y los endpoints de maquina de este sitio son publicos. Si una funcionalidad futura requiere claves, se anunciaran primero en la pagina de [Hoja de ruta](/es/roadmap).
+
+---
+
+# 개발자 포털
+
+Source: https://vue-solana-docs.vercel.app/ko/developers
+Description: Vue Solana로 빌드하기 위한 퀵스타트, 기계 판독 가능 엔드포인트, 통합 규약.
+
+이 포털은 Vue/Nuxt 라이브러리 자체와 이 문서 사이트의 기계 판독 가능 표면 모두를 대상으로 Vue Solana와 통합하는 개발자와 AI 에이전트를 위한 시작점입니다.
+
+## 퀵스타트: Vue로 Solana 앱 만들기
+
+1. 스택에 맞는 패키지를 설치하세요: Nuxt는 `pnpm add @vue-solana/nuxt`, 순수 Vue 3는 `pnpm add @vue-solana/vue @vue-solana/core`.
+2. 플러그인 또는 모듈을 등록하고([시작하기](/ko/getting-started) 참고) 클러스터를 지정하세요 — 기본값은 devnet입니다.
+3. 컴포저블로 데이터를 읽으세요: `useSolanaClient`, `useBalance`, `useTokenAccounts`.
+4. `useWallets`와 `useWallet`으로 지갑을 연결하세요 (브라우저 확장, Mobile Wallet Adapter, iOS 지갑 링크).
+5. `useSignMessage`와 `useSignAndSendTransaction`으로 서명하고 전송하세요.
+
+Solana RPC에는 API 키가 없습니다: 컴포저블은 공개 devnet/mainnet 엔드포인트와 통신하며, 자체 RPC 공급자로 교체할 수 있습니다. [라이브 데모](/ko/demo)는 브라우저에서 배포된 패키지를 devnet 대상으로 실행합니다 — 가입이 필요 없습니다.
+
+## 이 사이트의 기계 판독 가능 표면
+
+이 문서 사이트는 가입이나 키 없이 문서화된 기계 표면을 노출합니다:
+
+- `/llms.txt` — 에이전트를 위한 모든 문서 페이지의 인덱스.
+- `/llms-full.txt` — 전체 문서 코퍼스를 하나의 마크다운 문서로.
+- `/openapi.json` — 모든 엔드포인트, RFC 9457 오류 모델, 버저닝 정책, rate limit 규약을 다루는 OpenAPI 3.1 스펙.
+- 모든 문서 페이지에서 `Accept: text/markdown` 협상 (또는 URL에 `.md` 추가).
+- `/sitemap.xml` — 전체 URL 목록.
+
+오류는 `recovery` 확장 객체와 함께 RFC 9457(`application/problem+json`)을 따릅니다; 알 수 없는 경로의 404는 `Accept: text/markdown`으로 요청하면 마크다운 복구 본문을 반환합니다.
+
+## 샌드박스
+
+Solana [devnet 클러스터](/ko/concepts/clusters)가 공유 샌드박스입니다: 무료이고, 자격 증명이 필요 없으며, 에어드랍으로 실제 자금 없이 전송을 테스트할 수 있습니다. 데모 페이지는 devnet으로 설정되어 있으며 모든 가이드의 예제도 devnet 대상으로 실행됩니다.
+
+## API 키와 인증
+
+관리할 것이 없습니다. 패키지는 자신의 앱에서 실행하는 클라이언트 라이브러리이고, 이 사이트의 기계 엔드포인트는 공개입니다. 향후 키가 필요한 기능이 생기면 [로드맵](/ko/roadmap) 페이지에서 먼저 공지됩니다.
+
+---
+
+# 开发者门户
+
+Source: https://vue-solana-docs.vercel.app/zh/developers
+Description: 构建 Vue Solana 集成的快速上手、机器可读端点与集成约定。
+
+本门户是开发者和 AI 代理与 Vue Solana 集成的入口——既包括 Vue/Nuxt 库本身，也包括本文档网站的机器可读表面。
+
+## 快速上手：用 Vue 构建 Solana 应用
+
+1. 安装适合你技术栈的包：Nuxt 使用 `pnpm add @vue-solana/nuxt`，纯 Vue 3 使用 `pnpm add @vue-solana/vue @vue-solana/core`。
+2. 注册插件或模块（参见[快速开始](/zh/getting-started)）并指向一个集群——默认为 devnet。
+3. 使用 composables 读取数据：`useSolanaClient`、`useBalance`、`useTokenAccounts`。
+4. 使用 `useWallets` 和 `useWallet` 连接钱包（浏览器扩展、Mobile Wallet Adapter 和 iOS 钱包链接）。
+5. 使用 `useSignMessage` 和 `useSignAndSendTransaction` 签名并发送。
+
+Solana RPC 没有 API 密钥：composables 直接与公开的 devnet/mainnet 端点通信，你也可以换成自己的 RPC 提供商。[在线演示](/zh/demo)在浏览器中针对 devnet 运行已发布的包——无需注册。
+
+## 本站的机器可读表面
+
+本文档网站公开一个已文档化的机器表面，无需注册或密钥：
+
+- `/llms.txt` — 面向代理的全部文档页面索引。
+- `/llms-full.txt` — 作为单一 Markdown 文档的完整文档语料库。
+- `/openapi.json` — 覆盖所有端点、RFC 9457 错误模型、版本策略和速率限制约定的 OpenAPI 3.1 规范。
+- 每个文档页面均支持 `Accept: text/markdown` 内容协商（或在 URL 后附加 `.md`）。
+- `/sitemap.xml` — 完整 URL 列表。
+
+错误遵循 RFC 9457（`application/problem+json`），并带有 `recovery` 扩展对象；未知路径的 404 在以 `Accept: text/markdown` 请求时返回 Markdown 恢复正文。
+
+## 沙箱
+
+Solana [devnet 集群](/zh/concepts/clusters)是共享沙箱：免费、无需凭据，通过空投即可在不使用真实资金的情况下测试转账。演示页配置为 devnet，所有指南的示例均针对它运行。
+
+## API 密钥与身份验证
+
+无需管理任何密钥。这些包是在你自己的应用中运行的客户端库，本站的机器端点均为公开。如果未来的功能需要密钥，会先在[路线图](/zh/roadmap)页面公告。
