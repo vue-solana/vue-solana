@@ -37,6 +37,11 @@ export default {
       nuxt: "Nuxt",
       roadmap: "Hoja de ruta",
       roadmapPage: "Hoja de ruta",
+      developers: "Desarrolladores",
+      project: "Proyecto",
+      about: "Acerca de",
+      contact: "Contacto",
+      privacy: "Privacidad",
     },
     external: {
       ariaLabel: "Enlaces externos",

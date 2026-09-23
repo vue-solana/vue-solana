@@ -63,6 +63,7 @@ export const docsNavSections: DocsNavSection[] = [
         labelKey: "navigation.sidebar.troubleshooting",
         to: "/troubleshooting",
       },
+      { label: "Developers", labelKey: "navigation.sidebar.developers", to: "/developers" },
     ],
   },
   {
@@ -140,6 +141,15 @@ export const docsNavSections: DocsNavSection[] = [
     title: "Roadmap",
     titleKey: "navigation.sidebar.roadmap",
     links: [{ label: "Roadmap", labelKey: "navigation.sidebar.roadmapPage", to: "/roadmap" }],
+  },
+  {
+    title: "Project",
+    titleKey: "navigation.sidebar.project",
+    links: [
+      { label: "About", labelKey: "navigation.sidebar.about", to: "/about" },
+      { label: "Contact", labelKey: "navigation.sidebar.contact", to: "/contact" },
+      { label: "Privacy", labelKey: "navigation.sidebar.privacy", to: "/privacy" },
+    ],
   },
 ];
 

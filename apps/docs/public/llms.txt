@@ -122,6 +122,22 @@ How an agent should use this site:
 - [로드맵](https://vue-solana-docs.vercel.app/ko/roadmap): Vue Solana의 계획된 기능과 개선 사항.
 - [Roadmap](https://vue-solana-docs.vercel.app/roadmap): Planned features and improvements for Vue Solana.
 - [路线图](https://vue-solana-docs.vercel.app/zh/roadmap): Vue Solana 规划中的功能与改进。
+- [About](https://vue-solana-docs.vercel.app/about): What Vue Solana is, who maintains it, and how the project is run.
+- [Acerca de](https://vue-solana-docs.vercel.app/es/about): Que es Vue Solana, quien lo mantiene y como se gestiona el proyecto.
+- [소개](https://vue-solana-docs.vercel.app/ko/about): Vue Solana가 무엇인지, 누가 유지보수하는지, 프로젝트가 어떻게 운영되는지 설명합니다.
+- [关于](https://vue-solana-docs.vercel.app/zh/about): Vue Solana 是什么、由谁维护，以及项目的运作方式。
+- [Contact](https://vue-solana-docs.vercel.app/contact): How to reach the Vue Solana team for support, security reports, and press.
+- [Contacto](https://vue-solana-docs.vercel.app/es/contact): Como contactar al equipo de Vue Solana para soporte, reportes de seguridad y prensa.
+- [문의](https://vue-solana-docs.vercel.app/ko/contact): 지원, 보안 보고, 언론 문의를 위해 Vue Solana 팀에 연락하는 방법.
+- [联系](https://vue-solana-docs.vercel.app/zh/contact): 如何就支持、安全报告和媒体事务联系 Vue Solana 团队。
+- [Privacidad](https://vue-solana-docs.vercel.app/es/privacy): Que recoge este sitio de documentacion, que no recoge, y como se gestionan las analiticas.
+- [개인정보](https://vue-solana-docs.vercel.app/ko/privacy): 이 문서 사이트가 수집하는 것, 수집하지 않는 것, 애널리틱스 처리 방식.
+- [Privacy](https://vue-solana-docs.vercel.app/privacy): What this documentation site collects, what it does not, and how analytics are handled.
+- [隐私](https://vue-solana-docs.vercel.app/zh/privacy): 本文档网站收集什么、不收集什么，以及分析数据的处理方式。
+- [Developer Portal](https://vue-solana-docs.vercel.app/developers): Quickstart, machine-readable endpoints, and integration conventions for building against Vue Solana.
+- [Portal De Desarrolladores](https://vue-solana-docs.vercel.app/es/developers): Quickstart, endpoints legibles por maquina y convenciones de integracion para construir sobre Vue Solana.
+- [개발자 포털](https://vue-solana-docs.vercel.app/ko/developers): Vue Solana로 빌드하기 위한 퀵스타트, 기계 판독 가능 엔드포인트, 통합 규약.
+- [开发者门户](https://vue-solana-docs.vercel.app/zh/developers): 构建 Vue Solana 集成的快速上手、机器可读端点与集成约定。
 
 ## Crawling Notes
 
