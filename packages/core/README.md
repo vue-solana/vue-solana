@@ -28,7 +28,7 @@ Full Vue Solana docs:
 ## Features
 
 - Cluster-aware RPC helpers with HTTP and WebSocket endpoint defaults.
-- A Kit `client` with lazy `rpc` and `rpcSubscriptions` through `createSolanaClient()` / `createSolanaContext()`.
+- A Kit `client` with lazy `rpc` and `rpcSubscriptions` plus the official transaction planner and RPC plan-sending executor through `createSolanaClient()` / `createSolanaContext()`.
 - Shared `SolanaConfig`, `SolanaContext`, and `SolanaWallet` types for framework integrations.
 - Wallet capability assertions for connection, message signing, and transaction signing flows.
 - Browser Wallet Standard adaptation primitives.
@@ -40,12 +40,12 @@ Full Vue Solana docs:
 
 ## Compatibility
 
-| Requirement   | Supported                                           |
-| ------------- | --------------------------------------------------- |
-| Runtime       | Modern ESM or CommonJS bundlers                     |
-| TypeScript    | TypeScript 5.x recommended                          |
-| Solana client | `@solana/kit@^8.3.0` (and `@solana/kit-plugin-rpc`) |
-| Clusters      | `mainnet-beta`, `devnet`, `testnet`, `localnet`     |
+| Requirement   | Supported                                                         |
+| ------------- | ----------------------------------------------------------------- |
+| Runtime       | Modern ESM or CommonJS bundlers                                   |
+| TypeScript    | TypeScript 5.x recommended                                        |
+| Solana client | `@solana/kit@^8.3.0` (and `@solana/kit-plugin-rpc`)               |
+| Clusters      | `mainnet` (alias `mainnet-beta`), `devnet`, `testnet`, `localnet` |
 
 This package no longer depends on `@solana/web3-compat`. It depends on `@solana/kit` and `@solana/kit-plugin-rpc`, so apps do not need to install either directly for normal Vue Solana usage.
 
@@ -104,19 +104,25 @@ const config: SolanaConfig = {
 };
 ```
 
-| Option        | Type                                                    | Default                       | Description                                                                             |
-| ------------- | ------------------------------------------------------- | ----------------------------- | --------------------------------------------------------------------------------------- |
-| `cluster`     | `"mainnet-beta" \| "devnet" \| "testnet" \| "localnet"` | `"devnet"`                    | Solana cluster used when `endpoint` is omitted.                                         |
-| `endpoint`    | `string`                                                | Public endpoint for `cluster` | HTTP RPC endpoint. Use a dedicated RPC provider for production apps.                    |
-| `wsEndpoint`  | `string`                                                | Derived from `endpoint`       | WebSocket RPC endpoint.                                                                 |
-| `commitment`  | Solana commitment                                       | Solana client default         | Default commitment for RPC calls.                                                       |
-| `autoConnect` | `boolean`                                               | `false`                       | Consumed by Vue/Nuxt integrations to reconnect a previously selected discovered wallet. |
+| Option           | Type                                                                 | Default                       | Description                                                                             |
+| ---------------- | -------------------------------------------------------------------- | ----------------------------- | --------------------------------------------------------------------------------------- |
+| `cluster`        | `"mainnet-beta" \| "mainnet" \| "devnet" \| "testnet" \| "localnet"` | `"devnet"`                    | Solana cluster used when `endpoint` is omitted.                                         |
+| `endpoint`       | `string`                                                             | Public endpoint for `cluster` | HTTP RPC endpoint. Use a dedicated RPC provider for production apps.                    |
+| `wsEndpoint`     | `string`                                                             | Derived from `endpoint`       | WebSocket RPC endpoint.                                                                 |
+| `commitment`     | Solana commitment                                                    | Solana client default         | Default commitment for RPC calls.                                                       |
+| `autoConnect`    | `boolean`                                                            | `false`                       | Consumed by Vue/Nuxt integrations to reconnect a previously selected discovered wallet. |
+| `payer`          | `TransactionSigner`                                                  | None                          | Kit client fee payer and signer for client-sent transactions.                           |
+| `payerSecretKey` | `string`                                                             | None                          | Base64 64-byte Ed25519 keypair, secret key first, resolved at client creation.          |
 
-Supported clusters are `mainnet-beta`, `testnet`, `devnet`, and `localnet`. If `endpoint` is omitted, the package uses the public Solana RPC endpoint for the selected cluster. If `wsEndpoint` is omitted, it is derived from the RPC endpoint.
+Supported clusters are `mainnet` (legacy alias `mainnet-beta`), `testnet`, `devnet`, and `localnet`. If `endpoint` is omitted, the package uses the public Solana RPC endpoint for the selected cluster. If `wsEndpoint` is omitted, it is derived from the RPC endpoint.
 
 `autoConnect` is consumed by the Vue plugin and Nuxt module. It defaults to `false`; when set to `true`, Vue Solana reconnects only a previously selected wallet identity that is discovered again on the client.
 
-Use `mainnet-beta` for Solana mainnet. This is Solana's official cluster name; the package intentionally does not use `mainnet` as an alias.
+`payer` is a Kit `TransactionSigner`; `payerSecretKey` is its serializable base64 64-byte Ed25519 keypair form. Both are supported by direct core/Vue clients. A client-sent transaction needs a payer or an embedded signer. Never put a raw secret or `payerSecretKey` in Nuxt public runtime config, and never ship a funded keypair to an end-user browser.
+
+`createSolanaClient()` composes the official `@solana/kit-plugin-rpc` stack by default: `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()`. The old custom fallback sender is removed. The official sender adds a fresh blockhash, resource-limit and preflight handling, signs, submits, and waits for `confirmed` commitment before the send resolves.
+
+Use `mainnet` for Solana mainnet. This is Solana's official mainnet cluster name. The legacy `mainnet-beta` spelling is still accepted and redirects to the same endpoint.
 
 For development, use `devnet` and request free test SOL from the official faucet:
 
@@ -148,7 +154,7 @@ Direct subpaths:
 | --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `DEFAULT_CLUSTER`                                               | Default cluster, currently `devnet`.                                                                                                                                       |
 | `parseAddress(value)`                                           | Parses an `Address`, address string, ref-like `{ value }`, getter, `null`, or `undefined` into an `Address \| null`. Invalid strings throw `INVALID_ADDRESS`.              |
-| `createSolanaClient(config?)`                                   | Creates a Kit client exposing lazy `rpc` and `rpcSubscriptions`.                                                                                                           |
+| `createSolanaClient(config?)`                                   | Creates a Kit client exposing `rpc`, `rpcSubscriptions`, the official transaction planner, and the official RPC transaction-sending executor.                              |
 | `createSolanaContext(config?)`                                  | Creates `{ cluster, endpoint, wsEndpoint, client }`.                                                                                                                       |
 | `getClusterEndpoint(cluster?)`                                  | Returns the HTTP RPC endpoint for a cluster.                                                                                                                               |
 | `getClusterWebSocketEndpoint(cluster?)`                         | Returns the WebSocket endpoint for a cluster.                                                                                                                              |
@@ -163,7 +169,9 @@ Direct subpaths:
 | `getTokenAccount(client, address, commitment?)`                 | Reads a single token account, returning `null` when it does not exist.                                                                                                     |
 | `getTokenBalance(client, mint, owner, commitment?)`             | Reads the token balance for an owner's associated token account as `{ amount, decimals }`.                                                                                 |
 | `createSolanaActionStore(fn)`                                   | Wraps an async `(signal, ...args) => Promise` function into a `{ getState, subscribe, dispatch, reset, withSignal }` store; each dispatch aborts the prior in-flight call. |
-| `isSolanaActionAborted(error)`                                  | Detects abort errors from superseded action dispatches.                                                                                                                    |
+
+The client-sent API is the official Kit `ClientWithTransactionSending` capability installed by `createSolanaClient()`. It does not use a wallet popup; `sent` is reached after the RPC executor completes its send-and-confirm operation at `confirmed` commitment. Use a `payer` or a message with an embedded signer, and keep funded keys in a trusted server or relayer context.
+| `isSolanaActionAborted(error)` | Detects abort errors from superseded action dispatches. |
 
 ## Wallet Interface
 
@@ -217,7 +225,7 @@ Docs: [Vue Solana Agent Skill](https://vue-solana-docs.vercel.app/agent-skill)
 ## Caveats
 
 - Public Solana RPC endpoints are useful for development, but production apps should use dedicated RPC infrastructure.
-- Use `mainnet-beta` for Solana mainnet. `mainnet` is intentionally not accepted as a cluster alias.
+- Use `mainnet` for Solana mainnet. This is Solana's official mainnet cluster name; the legacy `mainnet-beta` spelling is still accepted and redirects to the same endpoint.
 - Transactions are raw wire bytes. Build transaction messages with `@solana/kit` (`createTransactionMessage()`, `compileTransaction()`) and serialize them before passing them to wallet flows.
 - v2.0.0 removed `@solana/web3-compat` and the `web3` subpaths. See the [Kit Migration guide](https://vue-solana-docs.vercel.app/guides/kit-migration) for migrating from v1.
 - Desktop native app wallets are planned but not implemented yet.

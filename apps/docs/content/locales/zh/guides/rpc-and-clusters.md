@@ -15,10 +15,11 @@ Vue Solana 在 `@vue-solana/core`、`@vue-solana/vue` 和 `@vue-solana/nuxt` 之
 
 - `devnet`
 - `testnet`
-- `mainnet-beta`
+- `mainnet`
+- `mainnet-beta`（`mainnet` 的旧别名）
 - `localnet`
 
-Solana 主网请使用 `mainnet-beta`。Vue Solana 有意遵循 Solana 官方集群名称，并且不使用 `mainnet` 作为别名。
+Solana 主网请使用 `mainnet`。这是 Solana 官方的主网集群名称。旧的 `mainnet-beta` 写法仍然被接受，并重定向到相同的端点。
 
 `devnet` 是默认值，因为它是示例和开发中最安全的集群。
 
@@ -49,7 +50,7 @@ console.log(solana.endpoint, latestBlockhash.blockhash);
 import { createSolanaContext } from "@vue-solana/core/rpc";
 
 const solana = createSolanaContext({
-  cluster: "mainnet-beta",
+  cluster: "mainnet",
   endpoint: "https://your-rpc.example.com",
   commitment: "confirmed",
 });
@@ -117,7 +118,9 @@ export default defineNuxtConfig({
 });
 ```
 
-Nuxt 会将模块选项存储在公共运行时配置中，因此选项必须可 JSON 序列化。
+Nuxt 会将模块选项存储在公共运行时配置中，因此选项必须可 JSON 序列化。Nuxt module 有意省略 `payer` 和 `payerSecretKey`；永远不要把 raw secret 放入 public runtime config。请在 client-only plugin 中创建 ephemeral signer，或使用带有 connected-wallet embedded signer 的消息。
+
+direct core 和 Vue client 可以向 `createSolanaClient()` / `createSolanaPlugin()` 传入 `payer` 或 `payerSecretKey`。默认 client 对 client-sent 交易使用官方 `solanaRpc()`、`rpcTransactionPlanner()` 和 `rpcTransactionPlanSendingExecutor()` 组合。
 
 在 Nuxt 页面和组件中使用自动导入的 `useSolanaRpc()` 组合式函数。
 

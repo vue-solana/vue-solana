@@ -47,7 +47,7 @@ The table below maps every legacy symbol to its Kit replacement.
 | `connection.confirmTransaction` / `getSignatureStatuses`                    | `confirmTransactionSignature(client, ...)` (polls `client.rpc.getSignatureStatuses(...).send()`)                                                    |
 | wallet-standard flows                                                       | unchanged — wallet-standard discovery and adaptation still power `useWallets()` / `useWallet()`                                                     |
 
-> Some rows reference upstream `@solana/kit` plugins (signer, planner, system program). Vue Solana does not bundle those; install them directly from the `@solana/kit` ecosystem when you need them.
+> Some rows reference upstream `@solana/kit` plugins (signer, planner, system program). The default client from `createSolanaClient()` already installs the official planner and RPC plan-sending executor from `@solana/kit-plugin-rpc`; install the rest (signer, system program) directly from the `@solana/kit` ecosystem when you need them.
 
 What the helpers map to after v2:
 

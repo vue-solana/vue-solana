@@ -26,12 +26,18 @@ Use [`@vue-solana/nuxt`](https://www.npmjs.com/package/@vue-solana/nuxt) in Nuxt
 
 Supported clusters:
 
-- `mainnet-beta`: Solana mainnet. This is Solana's official mainnet cluster name. Use it for production apps and real SOL.
+- `mainnet`: Solana's production cluster. This is Solana's official mainnet cluster name. Use it for production apps and real SOL. The legacy `mainnet-beta` spelling is still accepted and redirects to the same endpoint.
 - `devnet`: developer network with free test SOL.
 - `testnet`: validator and protocol testing network.
 - `localnet`: local validator, usually `http://127.0.0.1:8899`.
 
-Use `mainnet-beta` rather than `mainnet`. See [Solana Concepts For Vue Developers](./knowledge-bundle/concepts/solana-for-vue-developers.md) for more background.
+Use `mainnet` in Vue Solana code. This is Solana's official mainnet cluster name. The legacy `mainnet-beta` spelling is still accepted and redirects to the same endpoint. See [Solana Concepts For Vue Developers](./knowledge-bundle/concepts/solana-for-vue-developers.md) for more background.
+
+## Client-Sent Transactions
+
+`createSolanaClient()` composes the official `@solana/kit-plugin-rpc` stack by default: `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()`. The old custom fallback sender is not used. Vue's `useSendTransaction()` and `useSendTransactions()` composables use this official sender, wait for `confirmed` commitment, and expose the submitted signature in the result without a wallet popup.
+
+Direct core/Vue clients accept `payer` as a Kit `TransactionSigner` or `payerSecretKey` as a base64 64-byte Ed25519 keypair. Nuxt's `ModuleOptions` intentionally omits both and does not forward them through public runtime config. Never put a raw secret or `payerSecretKey` in Nuxt public runtime config; use a client-only ephemeral signer or a message with an embedded connected-wallet signer. Keep funded production keys on a trusted server or relayer.
 
 ## Install
 

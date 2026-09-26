@@ -42,6 +42,16 @@ console.log(confirmation.signature, confirmation.commitment);
 
 Confirmation defaults to `confirmed` commitment and a 60 second timeout. It polls `client.rpc.getSignatureStatuses([signature]).send()`, so the transaction must already be submitted.
 
+## Client-Sent Transactions
+
+`createSolanaClient()` composes the official `@solana/kit-plugin-rpc` transaction stack by default: `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()`. The old custom fallback sender is not used.
+
+Use `useSendTransaction()` or `useSendTransactions()` when the client should plan, sign, submit, and confirm without a wallet popup. The official executor fetches a fresh blockhash, handles resource limits and preflight simulation, signs with the client signers, submits through RPC, and waits for `confirmed` commitment. The composable sets `status` to `sent` only after that send-and-confirm operation completes. A single result exposes `data.context.signature`; a batch result contains the plan result tree.
+
+Configure a direct core or Vue client with `payer` or `payerSecretKey`, or provide a transaction message with an embedded signer. `payerSecretKey` is a base64-encoded 64-byte Ed25519 keypair and is only appropriate for trusted development or server-side flows. Never put a raw secret or `payerSecretKey` in Nuxt public runtime config, and never expose a funded signing key to an end-user browser.
+
+The wallet flow is separate: `useSignAndSendTransaction()` can return after RPC submission by default, or wait for a selected commitment with `confirm: true`. Keep that behavior when a connected user must approve a transaction in their wallet.
+
 ## Build A Real Devnet Transfer
 
 This example creates a tiny system transfer on devnet. It builds a Kit v0 transaction message and serializes it to wire bytes that Vue Solana hands to the wallet for signing.
@@ -199,12 +209,12 @@ Explorer links should match the cluster your app is using.
 
 ```ts
 function explorerUrl(signature: string, cluster: string) {
-  const suffix = cluster === "mainnet-beta" ? "" : `?cluster=${cluster}`;
+  const suffix = cluster === "mainnet" || cluster === "mainnet-beta" ? "" : `?cluster=${cluster}`;
   return `https://explorer.solana.com/tx/${signature}${suffix}`;
 }
 ```
 
-For devnet, links should look like `https://explorer.solana.com/tx/SIGNATURE?cluster=devnet`. Mainnet links intentionally omit the cluster query.
+For devnet, links should look like `https://explorer.solana.com/tx/SIGNATURE?cluster=devnet`. Both `mainnet` and the legacy `mainnet-beta` alias intentionally omit the cluster query.
 
 ## Generic Transaction State
 
@@ -225,6 +235,8 @@ const { status, error, execute } = useTransaction(async () => {
 Nuxt exposes:
 
 - `useSolanaSignAndSendTransaction()`
+- `useSolanaSendTransaction()`
+- `useSolanaSendTransactions()`
 - `useSolanaTransactionConfirmation()`
 - `useSolanaSignatureStatus()`
 
@@ -238,7 +250,7 @@ async function submit(transaction: Uint8Array) {
 </script>
 ```
 
-Call transaction methods from user actions on the client. Do not trigger wallet signing during SSR.
+Call transaction methods from user actions on the client. Do not trigger wallet signing during SSR. Nuxt module options intentionally omit `payer` and `payerSecretKey`; configure a signer in a client-only Vue plugin or use an embedded connected-wallet signer instead of placing a secret in public runtime config.
 
 Use `useSolanaTransactionConfirmation({ commitment: "confirmed" })` and call `confirm(signature)` when you need to confirm a signature returned by another flow. Use `useSolanaSignatureStatus(signature, { pollIntervalMs: 2_000 })` when you want to keep checking status after a timeout or redirect.
 
@@ -278,6 +290,7 @@ try {
 
 ## Safety Checklist
 
+- Keep client-sent signing keys on a trusted server or in an explicitly ephemeral demo signer; never expose funded secrets through Nuxt public runtime config.
 - Show users what they are about to sign before opening a wallet prompt.
 - Never sign or send transactions without explicit user action.
 - Never request or handle private keys.

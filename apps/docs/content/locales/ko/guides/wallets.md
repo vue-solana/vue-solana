@@ -257,7 +257,7 @@ iOS core helper를 직접 사용한다면 redirect 후 반환된 iOS wallet conn
 - wallet name, icon, metadata는 신뢰할 수 없는 display data로 취급하세요.
 - 메시지 또는 트랜잭션에 서명하기 전에 명시적인 사용자 액션을 요구하세요.
 - 지원되지 않는 capability에 대해서는 blind wallet call을 시도하지 말고 disabled 또는 explanatory UI를 보여 주세요.
-- 예제와 튜토리얼은 devnet을 기본값으로 유지하세요. 실제 자금이 의도된 경우에만 `mainnet-beta`를 사용합니다.
+- 예제와 튜토리얼은 devnet을 기본값으로 유지하세요. 실제 자금이 의도된 경우에만 `mainnet`을 사용합니다.
 
 공식 reference:
 

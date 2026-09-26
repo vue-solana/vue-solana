@@ -26,7 +26,9 @@ Vue Vite 예제는 `@vue-solana/vue`를 위한 실행 가능한 Vue 3 앱입니�
 - 연결된 지갑이 지원할 때 `useSignMessage()`로 인증 메시지에 서명합니다.
 - `useSignAndSendTransaction()`으로 실제 전송을 보내고 제출 상태와 확인 상태를 보여 줍니다. 예제는 안전한 테스트를 위해 기본적으로 devnet을 사용합니다.
 - 제출된 signature에 대해 클러스터를 반영한 Solana Explorer 링크를 만듭니다.
-- Live Data Panels에서 Kit 반응형 데이터 레이어를 사용합니다: 일회성 요청에는 `useRequest()`, websocket을 통한 실시간 slot 알림에는 `useSubscription()`, 계정 알림으로 업데이트되는 fetch 기반 계정 데이터에는 `useTrackedData()`, Sign In With Solana에는 `useSignIn()`, 그리고 remount 전반에 걸친 cache-keyed stale-while-revalidate에는 `@vue-solana/vue/swr`의 `useRequestSwr()`를 사용합니다.
+- Live Data Panels에서 Kit 반응형 데이터 레이어를 사용합니다: 일회성 요청에는 `useRequest()`, websocket을 통한 실시간 slot 알림에는 `useSubscription()`, 계정 알림으로 업데이트되는 fetch 기반 계정 데이터에는 `useTrackedData()`, Sign In With Solana에는 `useSignIn()`, devnet faucet 요청에는 `useAirdrop()`, client fee-payer signer 확인에는 `usePayer()`, wallet popup 없는 client-sent SPL Memo 트랜잭션에는 `useSendTransaction()`과 `useSendTransactions()`, remount 전반에 걸친 cache-keyed stale-while-revalidate에는 `@vue-solana/vue/swr`의 `useRequestSwr()`를 사용합니다.
+- `main.ts`에서 demo `payer` signer(`@solana/kit`의 `generateKeyPairSigner()`)를 설정해 client-sent transaction이 fee를 지불하게 합니다. payer는 처음에 unfunded이며 `usePayer` panel이 devnet SOL 1개를 airdrop합니다.
+- default client의 official `solanaRpc()`, `rpcTransactionPlanner()`, `rpcTransactionPlanSendingExecutor()` 구성을 사용합니다. client-send demo는 `sent`를 표시하기 전에 `confirmed`를 기다리며 custom fallback sender를 사용하지 않습니다.
 
 앱은 기본적으로 `devnet`을 사용합니다. Devnet SOL은 실제 가치가 없습니다.
 
@@ -57,7 +59,10 @@ pnpm dev:vue
 - 트랜잭션이 submitted signature에서 confirmation status로 이동하는지 확인합니다.
 - Explorer 링크를 열고 `?cluster=devnet`이 포함되어 있는지 확인합니다.
 - Live Data Panels에서 추적 주소를 바꾸고 request, subscription, tracked-data 패널이 다시 실행되는지 확인합니다.
+- Live Data Panels에서 `usePayer` panel로 demo payer에 1 SOL을 에어드랍한 뒤 `useSendTransaction()`(wallet popup 없음)으로 client-signed SPL Memo를 보내거나 `useSendTransactions()`로 두 건을 batch로 보내고, official executor가 `confirmed`에 도달한 뒤 status가 `sending`에서 `sent`로 이동하는지 확인합니다.
 - SWR 카드를 껐다 켜고 stale 캐시 값이 즉시 나타난 뒤 revalidate된 요청이 이를 대체하는지 확인합니다.
+
+생성된 demo payer는 browser session에만 존재하며 `nuxt.config.ts`나 public runtime config에 설정되지 않습니다. production relayer에는 server-held signer를 사용하고, end-user browser에 funded keypair를 보내지 마세요.
 
 전송 예제는 `@vue-solana/vue/buffer-polyfill`의 `installSolanaBufferPolyfill()`로 브라우저 `Buffer` polyfill을 초기화합니다. Vite가 이전에 externalized Buffer import를 캐시했다면 Vite dev server를 재시작하세요.
 

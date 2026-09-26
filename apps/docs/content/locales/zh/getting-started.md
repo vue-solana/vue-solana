@@ -13,12 +13,12 @@ surroundOrder: 2
 
 支持的集群：
 
-- `mainnet-beta`: Solana 主网。这是 Solana 官方主网集群名称。
+- `mainnet`: Solana 的生产集群。这是 Solana 官方的主网集群名称。
 - `devnet`: 应用开发的最佳默认值。
 - `testnet`: 验证者和协议测试网络。
 - `localnet`: 本地验证者。
 
-学习和测试时使用 `devnet`。只有准备好与真实 SOL 交互时才使用 `mainnet-beta`。
+学习和测试时使用 `devnet`。只有准备好与真实 SOL 交互时才使用 `mainnet`。
 
 当前钱包支持：
 
@@ -139,6 +139,8 @@ export default defineNuxtConfig({
 ```
 
 Nuxt 模块只在客户端安装运行时插件，并从直接的 `@vue-solana/vue/*` 子路径自动导入 composable。Composable 可以在 SSR 期间安全调用，但真实 RPC 和钱包操作应在 hydration 后运行，例如在 `onMounted()` 或用户操作中。Nuxt `solana` 选项位于 public runtime config 中，因此应保持 JSON 可序列化。
+
+direct Vue/core client 支持用于 client-sent 交易的 `payer` 和 `payerSecretKey`。`payerSecretKey` 是 base64 编码的 64 字节 Ed25519 keypair，因此不要把它放入 Nuxt public runtime config，也不要把有资金的 key 发送到浏览器。Nuxt `ModuleOptions` 省略这两个字段；请在 client-only plugin 中创建 ephemeral signer，或使用带有 connected-wallet embedded signer 的消息。
 
 ## 无钱包测试 RPC
 
@@ -264,7 +266,7 @@ pnpm build:packages
 
 `pnpm dev:nuxt`
 
-示例演示插件/模块设置、RPC 状态、直接 connection 调用、余额读取、统一钱包发现、持久化钱包选择、钱包状态、消息签名、通用交易状态、交易转账流程、确认状态、explorer 链接，以及不支持能力的 UI。它们默认使用 devnet，便于安全测试。
+示例演示插件/模块设置、RPC 状态、直接 connection 调用、余额读取、统一钱包发现、持久化钱包选择、钱包状态、消息签名、通用交易状态、交易转账流程、通过官方 Kit planner 和 RPC plan-sending executor 执行的 client-sent 交易、确认状态、explorer 链接，以及不支持能力的 UI。它们默认使用 devnet，便于安全测试。
 
 ## 连接钱包
 
@@ -356,7 +358,7 @@ const challenge = new TextEncoder().encode(
 
 ## 发送转账
 
-Vue 和 Nuxt 示例包含用于真实转账的收款地址和金额字段。它们默认使用 devnet，因此你可以用没有真实价值的 SOL 测试。对于 mainnet，请配置 `mainnet-beta` 或 mainnet RPC 端点，并使用有真实 SOL 支付费用的钱包。
+Vue 和 Nuxt 示例包含用于真实转账的收款地址和金额字段。它们默认使用 devnet，因此你可以用没有真实价值的 SOL 测试。对于 mainnet，请配置 `mainnet` 或 mainnet RPC 端点，并使用有真实 SOL 支付费用的钱包。
 
 测试时从 `0.000001` SOL 这样的小金额开始。
 
@@ -384,12 +386,14 @@ Explorer URL 应感知集群：
 
 ```ts
 function explorerUrl(signature: string, cluster: string) {
-  const suffix = cluster === "mainnet-beta" ? "" : `?cluster=${cluster}`;
+  const suffix = cluster === "mainnet" || cluster === "mainnet-beta" ? "" : `?cluster=${cluster}`;
   return `https://explorer.solana.com/tx/${signature}${suffix}`;
 }
 ```
 
 如果返回签名后确认超时，不要立即重新提交。先检查签名状态或 explorer；交易可能仍会确认。
+
+client-send 演示使用默认 client 安装的官方 `rpcTransactionPlanSendingExecutor()`。连接支持 `signTransaction` 的钱包，在示例需要时为 demo payer 充值，然后使用 `useSendTransaction()` 或 `useSendTransactions()`。executor 提交交易并等待 `confirmed` commitment，随后 composable 才显示 `sent`；没有单独的发送弹窗。在 Nuxt 中，请在 client-only plugin 中创建 demo payer，而不是放在 `nuxt.config.ts`。
 
 ## 最终验证
 
@@ -402,8 +406,9 @@ function explorerUrl(signature: string, cluster: string) {
 - UI 中禁用不支持的消息签名或交易签名能力。
 - 消息签名返回签名而不提交链上交易。
 - 转账提交返回签名和确认状态。
+- Client-sent 交易使用官方 planner 和 RPC plan-sending executor，需要配置 payer 或 embedded signer，并且只有达到 `confirmed` 后才会进入 `sent`。
 - Explorer 链接指向和应用相同的集群。
-- 只有在你明确配置 mainnet 并理解真实 SOL 风险时才使用 `mainnet-beta`。
+- 只有在你明确配置 mainnet 并理解真实 SOL 风险时才使用 `mainnet`。
 
 ## 更多阅读
 

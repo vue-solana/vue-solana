@@ -15,10 +15,11 @@ Supported cluster names are:
 
 - `devnet`
 - `testnet`
-- `mainnet-beta`
+- `mainnet`
+- `mainnet-beta` (legacy alias for `mainnet`)
 - `localnet`
 
-Use `mainnet-beta` for Solana mainnet. Vue Solana intentionally follows Solana's official cluster name and does not use `mainnet` as an alias.
+Use `mainnet` for Solana mainnet. This is Solana's official mainnet cluster name. The legacy `mainnet-beta` spelling is still accepted and redirects to the same endpoint.
 
 `devnet` is the default because it is the safest cluster for examples and development.
 
@@ -49,7 +50,7 @@ Production apps should usually use a dedicated RPC provider instead of public cl
 import { createSolanaContext } from "@vue-solana/core/rpc";
 
 const solana = createSolanaContext({
-  cluster: "mainnet-beta",
+  cluster: "mainnet",
   endpoint: "https://your-rpc.example.com",
   commitment: "confirmed",
 });
@@ -117,7 +118,9 @@ export default defineNuxtConfig({
 });
 ```
 
-Nuxt stores module options in public runtime config, so options must be JSON-serializable.
+Nuxt stores module options in public runtime config, so options must be JSON-serializable. The Nuxt module intentionally omits `payer` and `payerSecretKey`; never place a raw secret in public runtime config. Use a client-only plugin for an ephemeral signer, or use a message with an embedded connected-wallet signer.
+
+Direct core and Vue clients can pass `payer` or `payerSecretKey` to `createSolanaClient()` / `createSolanaPlugin()`. The default client uses the official `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()` composition for client-sent transactions.
 
 Use the auto-imported `useSolanaRpc()` composable in Nuxt pages and components.
 

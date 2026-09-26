@@ -11,12 +11,13 @@ Un cluster de Solana es una red de validadores. Las apps eligen a qué cluster c
 
 Vue Solana soporta estos nombres de cluster:
 
-- `mainnet-beta`: mainnet de Solana. Este es el nombre oficial del cluster mainnet de Solana. Úsalo para apps de producción y SOL real.
+- `mainnet`: el cluster de producción de Solana. Este es el nombre oficial del mainnet de Solana. Úsalo para apps de producción y SOL real.
+- `mainnet-beta`: grafía heredada de `mainnet`. Sigue siendo aceptada y redirige al mismo endpoint `https://api.mainnet.solana.com`.
 - `devnet`: red para desarrolladores. Úsala mientras construyes apps. El SOL de devnet no tiene valor real.
 - `testnet`: red de pruebas de validadores y protocolo. Es menos común para desarrollo de apps que devnet.
 - `localnet`: un validador local ejecutándose en tu máquina, normalmente en `http://127.0.0.1:8899`.
 
-Usa `mainnet-beta` en lugar de `mainnet`. Vue Solana intencionalmente no agrega un alias `mainnet`.
+Usa `mainnet` en código Vue Solana. La documentación de Solana se refiere al cluster de producción como Mainnet, y `mainnet` es el nombre de cluster que las herramientas de Solana esperan. La grafía heredada `mainnet-beta` sigue siendo aceptada: ambos nombres resuelven al endpoint oficial `https://api.mainnet.solana.com`.
 
 Referencia oficial: [Solana Clusters](https://solana.com/docs/references/clusters)
 
@@ -27,7 +28,7 @@ Un endpoint RPC es la URL HTTP que tu app usa para leer o escribir en Solana.
 Ejemplos:
 
 - `https://api.devnet.solana.com`
-- `https://api.mainnet-beta.solana.com`
+- `https://api.mainnet.solana.com`
 - `http://127.0.0.1:8899`
 
 Las peticiones RPC pasan por `client.rpc` desde `useSolanaClient()` o `useSolanaRpc()`, o desde `createSolanaClient()` / `createSolanaContext()` en `@vue-solana/core`. La clase legacy `Connection` y los subpaths `web3` se eliminaron en v2.0.0. Los endpoints públicos son útiles para empezar, pero las apps de producción normalmente usan un proveedor RPC dedicado por fiabilidad y límites de tasa.
@@ -41,7 +42,7 @@ Los endpoints WebSocket se usan para suscripciones y actualizaciones en tiempo r
 Ejemplos:
 
 - `wss://api.devnet.solana.com`
-- `wss://api.mainnet-beta.solana.com`
+- `wss://api.mainnet.solana.com`
 - `ws://127.0.0.1:8900`
 
 ## Configurar un cluster
@@ -69,7 +70,7 @@ También puedes pasar un endpoint personalizado:
 
 ```ts
 createSolanaPlugin({
-  cluster: "mainnet-beta",
+  cluster: "mainnet",
   endpoint: "https://your-rpc.example.com",
   commitment: "confirmed",
 });

@@ -47,7 +47,7 @@ Kit 还带来模块化的好处：只导入你使用的部分。在 v2 中，旧
 | `connection.confirmTransaction` / `getSignatureStatuses`                     | `confirmTransactionSignature(client, ...)`（轮询 `client.rpc.getSignatureStatuses(...).send()`）                                           |
 | wallet-standard 流程                                                         | 不变 —— wallet-standard 发现和适配仍然驱动 `useWallets()` / `useWallet()`                                                                  |
 
-> 部分行引用了上游 `@solana/kit` 插件（signer、planner、system program）。Vue Solana 不打包这些插件；需要时请直接从 `@solana/kit` 生态安装。
+> 部分行引用了上游 `@solana/kit` 插件（signer、planner、system program）。`createSolanaClient()` 创建的默认客户端已安装 `@solana/kit-plugin-rpc` 的官方 planner 和 RPC 计划发送执行器；其余插件（signer、system program）需要时请直接从 `@solana/kit` 生态安装。
 
 v2 之后辅助函数的对应关系：
 

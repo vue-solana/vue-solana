@@ -26,7 +26,9 @@ Demo en vivo: [vue-solana-docs.vercel.app/demo](/demo)
 - Firmar un mensaje de autenticación con `useSignMessage()` cuando la wallet conectada lo soporta.
 - Enviar una transferencia real con `useSignAndSendTransaction()` y mostrar estado de transacción enviada vs confirmada. El ejemplo usa devnet por defecto para pruebas seguras.
 - Construir links a Solana Explorer conscientes del cluster para firmas enviadas.
-- Ejercitar la capa de datos reactiva de Kit en los Live Data Panels: `useRequest()` para peticiones de un solo uso, `useSubscription()` para notificaciones de slot en vivo por websocket, `useTrackedData()` para datos de cuenta sembrados por fetch y actualizados por notificaciones de cuenta, `useSignIn()` para Sign In With Solana, y `useRequestSwr()` desde `@vue-solana/vue/swr` para stale-while-revalidate cacheada por clave entre remounts.
+- Ejercitar la capa de datos reactiva de Kit en los Live Data Panels: `useRequest()` para peticiones de un solo uso, `useSubscription()` para notificaciones de slot en vivo por websocket, `useTrackedData()` para datos de cuenta sembrados por fetch y actualizados por notificaciones de cuenta, `useSignIn()` para Sign In With Solana, `useAirdrop()` para solicitudes del faucet de devnet, `usePayer()` para inspeccionar el signer de payer del cliente, `useSendTransaction()` y `useSendTransactions()` para transacciones SPL Memo enviadas por el cliente sin popup de wallet, y `useRequestSwr()` desde `@vue-solana/vue/swr` para stale-while-revalidate cacheada por clave entre remounts.
+- Configurar un signer `payer` de demo (`generateKeyPairSigner()` de `@solana/kit`) en `main.ts` para que las transacciones enviadas por el cliente paguen fees. El payer empieza sin fondos; el panel `usePayer` hace un airdrop de 1 devnet SOL.
+- Usar la composicion oficial por defecto del cliente `solanaRpc()`, `rpcTransactionPlanner()` y `rpcTransactionPlanSendingExecutor()`. El demo de envio del cliente espera `confirmed` antes de mostrar `sent`; no usa un fallback sender custom.
 
 La app usa `devnet` por defecto. El SOL de devnet no tiene valor real.
 
@@ -57,7 +59,10 @@ Abre la URL de Vite impresa en la terminal, normalmente `http://localhost:5173`.
 - Observa cómo la transacción avanza desde firma enviada hasta estado de confirmación.
 - Abre el link del explorador y verifica que incluya `?cluster=devnet`.
 - En los Live Data Panels, cambia la dirección rastreada y observa cómo los paneles request, subscription y tracked-data se vuelven a disparar.
+- En los Live Data Panels, haz un airdrop de 1 SOL al payer de demo con el panel `usePayer`, luego envia un SPL Memo firmado por el cliente con `useSendTransaction()` (sin popup de wallet) o un lote de dos con `useSendTransactions()`, y observa que el estado pasa de `sending` a `sent` despues de que el executor oficial alcanza `confirmed`.
 - Alterna la tarjeta SWR entre apagado y encendido y observa que el valor cacheado aparece de inmediato (stale) antes de que la peticion revalidada lo reemplace.
+
+El payer de demo generado existe solo durante la sesion del navegador y no se configura en `nuxt.config.ts` ni en ninguna configuracion runtime publica. Usa un signer guardado en el servidor para relayers de produccion, y nunca envíes una keypair con fondos al navegador de un usuario final.
 
 El ejemplo de transferencia inicializa el polyfill de navegador `Buffer` con `installSolanaBufferPolyfill()` desde `@vue-solana/vue/buffer-polyfill`. Reinicia el servidor de desarrollo de Vite si Vite cacheó previamente un import externalizado de Buffer.
 

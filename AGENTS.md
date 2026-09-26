@@ -17,9 +17,10 @@ The repository is a pnpm workspace with three initial packages:
 Workspace files:
 
 - `package.json`: root scripts and shared dev dependencies.
-- `pnpm-workspace.yaml`: includes `packages/*` and `examples/*`.
+- `pnpm-workspace.yaml`: includes `packages/*`, `apps/*`, and `examples/*`.
 - `tsconfig.base.json`: shared strict TypeScript config and workspace path aliases.
 - `.gitignore`: ignores dependencies, build outputs, logs, env files, editor files, and temp files.
+- `e2e/`: Playwright suite that drives both example apps.
 
 ## Implemented Packages
 
@@ -28,10 +29,20 @@ Workspace files:
 Implemented files:
 
 - `src/types.ts`: shared `SolanaConfig`, `SolanaContext`, `SolanaWallet`, and transaction types.
-- `src/clusters.ts`: cluster names and endpoint resolution.
+- `src/clusters.ts`: cluster names and endpoint resolution (`mainnet` with a `mainnet-beta` alias).
+- `src/kit.ts`: `createSolanaClient()` — the official Kit stack (`solanaRpc`, `rpcTransactionPlanner`, `rpcTransactionPlanSendingExecutor`, `rpcAirdrop`) plus `payer` / `payerSecretKey` resolution.
 - `src/rpc.ts`: `createSolanaContext()`.
 - `src/wallet.ts`: wallet connection assertions.
-- `src/transaction.ts`: `signAndSendTransaction()` helper.
+- `src/transaction.ts`: `signAndSendTransaction()` and `confirmTransactionSignature()` helpers.
+- `src/action.ts`: reactive async action store shared by the Vue composables.
+- `src/address.ts`: address input parsing helpers.
+- `src/errors.ts`: `SolanaError` codes shared by the packages.
+- `src/timeout.ts`: `withTimeout()` helper.
+- `src/token-accounts.ts`: token account info types.
+- `src/buffer-polyfill.ts`: `installSolanaBufferPolyfill()`.
+- `src/wallet-standard.ts` + `src/wallet-standard/*`: Wallet Standard discovery, chain support, and adapter.
+- `src/mobile-wallet.ts`: Android MWA registration via `@solana-mobile/wallet-standard-mobile`.
+- `src/ios-wallet.ts` + `src/ios-wallet/*`: iOS browser wallet adapter, deep links, and callback handling.
 - `src/index.ts`: package exports.
 
 ### `packages/vue`
@@ -40,13 +51,23 @@ Implemented files:
 
 - `src/plugin.ts`: `createSolanaPlugin()` and `VueSolana` alias.
 - `src/injection.ts`: Vue injection key and context type.
+- `src/kit.ts`: re-export of the core Kit helpers.
 - `src/composables/useSolana.ts`: access injected Solana context.
+- `src/composables/useSolanaClient.ts`: the active Kit client and its `rpc` surface.
 - `src/composables/useRpc.ts`: expose cluster, endpoint, and client.
 - `src/composables/useConnection.ts`: deprecated alias returning the Kit client.
 - `src/composables/useWallet.ts`: expose wallet state, connect, disconnect, and `setWallet()`.
+- `src/composables/useWallets.ts`: wallet discovery list, selection, and refresh.
 - `src/composables/useBalance.ts`: read lamport balance for a public key/address.
+- `src/composables/useAccountInfo.ts`: read account data through the context RPC.
+- `src/composables/useProgramAccounts.ts`: read program-owned accounts.
+- `src/composables/useTokenAccounts.ts` / `useTokenBalance.ts`: SPL token account reads.
+- `src/composables/useSignatureStatus.ts`: poll a signature's confirmation status.
+- `src/composables/useTransactionConfirmation.ts`: map a Kit confirmation to a display status.
+- `src/composables/useAirdrop.ts`: devnet airdrop action.
 - `src/composables/useTransaction.ts`: generic async transaction state helper (built on `createSolanaActionStore`).
 - `src/composables/useSignAndSendTransaction.ts`: sign/send via current wallet.
+- `src/composables/useSignMessage.ts`: sign an arbitrary message via the current wallet.
 - `src/composables/useAction.ts`: generic async action state machine over `@vue-solana/core/action`.
 - `src/composables/useRequest.ts`: one-shot request with stale-while-revalidate and source watching.
 - `src/composables/useSubscription.ts`: live data over Kit reactive stream stores.
@@ -57,32 +78,34 @@ Implemented files:
 - `src/composables/useClientCapability.ts`: fail-fast client capability assertions.
 - `src/composables/usePayer.ts`: `usePayer()` / `useIdentity()` reactive Kit client signers.
 - `src/composables/usePlanTransaction.ts`: `usePlanTransaction()` / `usePlanTransactions()` over the client planning capability.
+- `src/composables/useSendTransaction.ts`: `useSendTransaction()` / `useSendTransactions()` over the official Kit RPC plan-sending executor.
+- `src/composables/decode-base64.ts`: shared base64 decoding helper.
 - `src/swr.ts`: SWR cache-keyed adapters over `useRequest` / `useSubscription` / `useTrackedData`.
 - `src/index.ts`: package exports.
+
+Every composable in `src/composables/` also has a top-level subpath re-export in `src/` (for example `src/useSendTransactions.ts`) so Nuxt can auto-import it by name.
 
 Kit 8 reactive-store note: the stores from `@solana/subscribable` call Node's `setMaxListeners` on `AbortSignal`, so tests exercising them (or composables built on them) must run under the `node` vitest environment — tag those files with `// @vitest-environment node`.
 
 ### `packages/nuxt`
 
-### `packages/nuxt`
-
 Implemented files:
 
-- `src/module.ts`: Nuxt module with `solana` config key.
+- `src/module.ts`: Nuxt module with `solana` config key. It deliberately omits `wallet`, `payer`, and `payerSecretKey` from `ModuleOptions` and strips them from public runtime config.
+- `src/imports.ts`: maps every composable to its `useSolana*` auto-import alias.
 - `src/runtime/plugin.ts`: installs the Vue Solana plugin using public runtime config.
+- `src/runtime/kit.ts`: re-export of the core Kit helpers.
 - `src/runtime/types.ts`: augments Nuxt public runtime config.
 
-Auto-imported Nuxt composables:
+Auto-imported Nuxt composables (source of truth: `packages/nuxt/src/imports.ts`):
 
-- `useSolana()`
-- `useSolanaRpc()`
-- `useSolanaConnection()`
-- `useSolanaBalance()`
-- `useSolanaWallet()`
-- `useSolanaSignAndSendTransaction()`
-- `useSolanaAction()`, `useSolanaRequest()`, `useSolanaSubscription()`, `useSolanaTrackedData()`
-- `useSolanaSignIn()`, `useSolanaSelectedWalletAccount()`
-- `useSolanaSignTransactions()`, `useSolanaSignAndSendTransactions()`
+- `useSolana()`, `useSolanaClient()`, `useSolanaRpc()`, `useSolanaConnection()`
+- `useSolanaBalance()`, `useSolanaAccountInfo()`, `useSolanaProgramAccounts()`
+- `useSolanaTokenAccounts()`, `useSolanaTokenBalance()`, `useSolanaSignatureStatus()`, `useSolanaTransactionConfirmation()`
+- `useSolanaWallet()`, `useSolanaWallets()`, `useSolanaSignMessage()`, `useSolanaSignIn()`
+- `useSolanaAirdrop()`, `useSolanaAction()`, `useSolanaRequest()`, `useSolanaSubscription()`, `useSolanaTrackedData()`
+- `useSolanaSelectedWalletAccount()`
+- `useSolanaSignTransactions()`, `useSolanaSignAndSendTransaction()`, `useSolanaSignAndSendTransactions()`
 - `useSolanaPayer()`, `useSolanaIdentity()`
 - `useSolanaPlanTransaction()`, `useSolanaPlanTransactions()`
 - `useSolanaSendTransaction()`, `useSolanaSendTransactions()`
@@ -96,6 +119,16 @@ The code switched from `@solana/web3.js` to `@solana/web3-compat` in v1, then to
 Current package dependency:
 
 - `@solana/kit@^8.3.0` (with `@solana/kit-plugin-rpc` in `packages/core`)
+
+Client transaction stack:
+
+- `createSolanaClient()` composes `solanaRpc()`, `rpcTransactionPlanner()`, `rpcTransactionPlanSendingExecutor()`, and `rpcAirdrop()` from `@solana/kit-plugin-rpc`. The default client therefore already exposes `planTransaction(s)` and `sendTransaction(s)`; the send-and-confirm path settles at `confirmed` commitment.
+- Clients built by hand (for example inside `apps/docs/app/plugins/`) do not get those capabilities for free. `useClientCapability()` fails fast when a composable is called against a client missing `payer`, `planTransaction`, `sendTransaction`, and friends.
+
+Signer configuration and security:
+
+- `payer` (a Kit `TransactionSigner`) and `payerSecretKey` (base64-encoded 64-byte Ed25519 keypair, secret key first) stay available on direct core/Vue `createSolanaClient()` calls. `resolvePayerFromSecretKey()` validates the length, derives the public half, and throws when the pair is inconsistent.
+- Nuxt never accepts or forwards `payer` or `payerSecretKey`: they are omitted from `ModuleOptions` and stripped from public runtime config. Never put a raw secret or a funded key in browser-visible Nuxt config; use a trusted server/relayer boundary, or a client-only ephemeral signer for demos (`examples/nuxt/app/plugins/demo-payer.client.ts`).
 
 Development-time type shim:
 
@@ -118,8 +151,7 @@ Updated docs:
 - `knowledge-bundle/`: OKF-formatted knowledge files for AI agents (concepts, guides, package references).
 - `knowledge-bundle/guides/getting-started.md`: install snippets, Vue setup, Nuxt setup, and detailed manual devnet testing guide.
 - `plans/native-wallet-plan.md`: implementation tracker for mobile native wallet and desktop native wallet support on top of browser extension wallets.
-- `examples/vue-vite/README.md`: placeholder for a future Vue Vite example.
-- `examples/nuxt/README.md`: placeholder for a future Nuxt example.
+- `examples/vue-vite/README.md` and `examples/nuxt/README.md`: runnable example app walkthroughs.
 
 The manual testing guide explains:
 
@@ -136,28 +168,29 @@ The manual testing guide explains:
 
 ## Verification Status
 
-All CI gates pass as of v1.0.0 release:
+All CI gates pass as of the v2.3.0 packages:
 
 ```sh
-pnpm lint
 pnpm format
+pnpm lint
 pnpm test
 pnpm typecheck
 pnpm build:packages
+pnpm build:examples
 pnpm smoke:standalone-installs
+pnpm test:e2e
 ```
 
 ## Known Limitations
 
-### Native Wallet Adapters Missing
+### Desktop Native Wallets Deferred
 
-The current packages discover browser extension wallets through the Solana Wallet Standard and expose them through `useWallets()` and `useWallet()`, but they do not yet support mobile native wallets or desktop native wallets.
+Browser extension wallets, Android native wallets (MWA), and iOS browser wallets are all implemented in core and surfaced through the unified `useWallets()` / `useWallet()` API. Desktop native wallets are deliberately deferred: no desktop app protocols, install flows, or native adapter coverage ship yet.
 
-Why this matters:
+Known limitations:
 
-- Mobile users often connect through native wallet apps instead of browser extensions.
-- Desktop users may connect through native wallet apps or protocol links instead of injected extension APIs.
-- Native wallet support must be added without splitting the public wallet flow into separate composables.
+- iOS browser wallet support has a narrower tested wallet set than Android; Trust Wallet research is still open.
+- Desktop native wallet support is a post-v1 follow-up; keep any new work inside the unified wallet flow.
 
 Recommended next step:
 
@@ -165,7 +198,7 @@ Recommended next step:
 
 ### Example Apps
 
-The `examples/vue-vite` and `examples/nuxt` directories contain runnable example apps wired to the workspace packages. They demonstrate plugin/module setup, RPC state, direct connection calls, balance reads, wallet state, and mock transaction flows.
+The `examples/vue-vite` and `examples/nuxt` directories contain runnable example apps wired to the workspace packages. They demonstrate plugin/module setup, RPC state, direct connection calls, balance reads, wallet state, mock transaction flows, and the client-sent flow (`usePayer()` plus `usePlanTransaction()` / `useSendTransaction()`). The Nuxt example installs a client-only ephemeral payer in `app/plugins/demo-payer.client.ts` because Nuxt never accepts `payer` / `payerSecretKey`.
 
 Both apps also mount Live Data Panels exercising the Kit-reactive composables (`useRequest`, `useSubscription`, `useTrackedData`, `useSignIn`, and the `swr` cache adapters) against devnet.
 

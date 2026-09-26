@@ -257,7 +257,7 @@ Si usas helpers core de iOS directamente, llama `handleSolanaIosWalletCallback()
 - Trata nombres, iconos y metadata de wallets como datos de visualización no confiables.
 - Pide una acción explícita del usuario antes de firmar mensajes o transacciones.
 - Muestra UI deshabilitada o explicativa para capacidades no admitidas en lugar de intentar llamadas de wallet a ciegas.
-- Mantén devnet como predeterminado para ejemplos y tutoriales; usa `mainnet-beta` solo cuando se pretendan fondos reales.
+- Mantén devnet como predeterminado para ejemplos y tutoriales; usa `mainnet` solo cuando se pretendan fondos reales.
 
 Referencias oficiales:
 

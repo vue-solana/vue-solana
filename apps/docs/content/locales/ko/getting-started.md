@@ -13,12 +13,12 @@ Vue/Nuxt 통합 없이 Solana primitive가 필요하면 `@vue-solana/core`를 �
 
 지원 클러스터:
 
-- `mainnet-beta`: Solana 메인넷. Solana의 공식 메인넷 클러스터 이름입니다.
+- `mainnet`: Solana의 프로덕션 클러스터입니다. Solana의 공식 mainnet 클러스터 이름입니다.
 - `devnet`: 앱 개발에 가장 적합한 기본값입니다.
 - `testnet`: validator와 프로토콜 테스트 네트워크입니다.
 - `localnet`: 로컬 validator입니다.
 
-학습과 테스트 중에는 `devnet`을 사용하세요. 실제 SOL과 상호작용할 준비가 되었을 때만 `mainnet-beta`를 사용합니다.
+학습과 테스트 중에는 `devnet`을 사용하세요. 실제 SOL과 상호작용할 준비가 되었을 때만 `mainnet`을 사용합니다.
 
 현재 지갑 지원:
 
@@ -139,6 +139,8 @@ export default defineNuxtConfig({
 ```
 
 Nuxt module은 runtime plugin을 client 전용으로 설치하고 `@vue-solana/vue/*` direct subpath에서 컴포저블을 자동 import합니다. 컴포저블은 SSR 중 호출해도 안전하지만 실제 RPC와 지갑 작업은 `onMounted()` 또는 사용자 액션처럼 hydration 이후 실행하세요. Nuxt `solana` option은 public runtime config에 있으므로 JSON 직렬화가 가능해야 합니다.
+
+direct Vue/core client는 client-sent transaction을 위해 `payer`와 `payerSecretKey`를 지원합니다. `payerSecretKey`는 base64 64-byte Ed25519 keypair이므로 Nuxt public runtime config에 넣거나 funded key를 browser에 보내지 마세요. Nuxt `ModuleOptions`는 두 필드를 모두 제외하므로 client-only plugin에서 ephemeral signer를 만들거나 connected wallet의 embedded signer가 있는 message를 사용하세요.
 
 ## 지갑 없이 RPC 테스트
 
@@ -264,7 +266,7 @@ Nuxt 예제를 시작합니다.
 
 `pnpm dev:nuxt`
 
-예제는 plugin/module setup, RPC state, direct connection call, balance read, unified wallet discovery, persisted wallet selection, wallet state, message signing, generic transaction state, transaction transfer flow, confirmation status, explorer link, unsupported capability UI를 보여 줍니다. 안전한 테스트를 위해 기본적으로 devnet을 사용합니다.
+예제는 plugin/module setup, RPC state, direct connection call, balance read, unified wallet discovery, persisted wallet selection, wallet state, message signing, generic transaction state, transaction transfer flow, official Kit planner와 RPC plan-sending executor를 사용하는 client-sent transaction, confirmation status, explorer link, unsupported capability UI를 보여 줍니다. 안전한 테스트를 위해 기본적으로 devnet을 사용합니다.
 
 ## 지갑 연결
 
@@ -356,7 +358,7 @@ const challenge = new TextEncoder().encode(
 
 ## 전송 보내기
 
-Vue와 Nuxt 예제에는 실제 전송을 위한 recipient address와 amount field가 포함되어 있습니다. 기본적으로 devnet을 사용하므로 실제 가치가 없는 SOL로 테스트할 수 있습니다. Mainnet에서는 `mainnet-beta` 또는 mainnet RPC endpoint를 설정하고 fee를 낼 실제 SOL이 있는 지갑을 사용합니다.
+Vue와 Nuxt 예제에는 실제 전송을 위한 recipient address와 amount field가 포함되어 있습니다. 기본적으로 devnet을 사용하므로 실제 가치가 없는 SOL로 테스트할 수 있습니다. Mainnet에서는 `mainnet` 또는 mainnet RPC endpoint를 설정하고 fee를 낼 실제 SOL이 있는 지갑을 사용합니다.
 
 테스트 중에는 `0.000001` SOL 같은 아주 작은 금액으로 시작하세요.
 
@@ -384,12 +386,14 @@ Explorer URL은 cluster-aware여야 합니다.
 
 ```ts
 function explorerUrl(signature: string, cluster: string) {
-  const suffix = cluster === "mainnet-beta" ? "" : `?cluster=${cluster}`;
+  const suffix = cluster === "mainnet" || cluster === "mainnet-beta" ? "" : `?cluster=${cluster}`;
   return `https://explorer.solana.com/tx/${signature}${suffix}`;
 }
 ```
 
 Signature가 반환된 뒤 confirmation이 timeout되면 즉시 다시 제출하지 마세요. 먼저 signature status 또는 explorer를 확인하세요. 트랜잭션이 여전히 confirm될 수 있습니다.
+
+client-send demo는 default client에 설치된 official `rpcTransactionPlanSendingExecutor()`를 사용합니다. `signTransaction`을 지원하는 wallet을 연결하고 예제에 필요한 demo payer를 funding한 뒤 `useSendTransaction()` 또는 `useSendTransactions()`를 사용하세요. executor는 transaction을 제출하고 `confirmed` commitment을 기다린 뒤 composable이 `sent`를 표시하므로 별도 send popup이 없습니다. Nuxt에서는 demo payer를 `nuxt.config.ts`가 아니라 client-only plugin에서 만드세요.
 
 ## 최종 검증
 
@@ -402,8 +406,9 @@ Signature가 반환된 뒤 confirmation이 timeout되면 즉시 다시 제출하
 - 지원되지 않는 message signing 또는 transaction signing capability는 UI에서 disabled됩니다.
 - Message signing은 on-chain transaction을 제출하지 않고 signature를 반환합니다.
 - Transfer submission은 signature와 confirmation status를 반환합니다.
+- Client-sent transaction은 official planner와 RPC plan-sending executor를 사용하고, configured payer 또는 embedded signer가 필요하며, `confirmed` 이후에만 `sent`에 도달합니다.
 - Explorer link는 앱과 같은 cluster를 가리킵니다.
-- 실제 자금 위험을 이해하고 의도적으로 mainnet을 설정할 때만 `mainnet-beta`를 사용합니다.
+- 실제 자금 위험을 이해하고 의도적으로 mainnet을 설정할 때만 `mainnet`을 사용합니다.
 
 ## 더 읽기
 

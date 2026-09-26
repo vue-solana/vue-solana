@@ -81,7 +81,7 @@ Direct subpath:
 ## 설정
 
 ```ts
-type SolanaCluster = "mainnet-beta" | "testnet" | "devnet" | "localnet";
+type SolanaCluster = "mainnet-beta" | "mainnet" | "testnet" | "devnet" | "localnet";
 
 interface SolanaConfig {
   cluster?: SolanaCluster;
@@ -89,14 +89,22 @@ interface SolanaConfig {
   wsEndpoint?: string;
   commitment?: Commitment;
   autoConnect?: boolean;
+  payer?: TransactionSigner;
+  payerSecretKey?: string;
 }
 ```
 
-지원 cluster는 `mainnet-beta`, `testnet`, `devnet`, `localnet`입니다. Wallet helper는 `getSolanaChain()`이 cluster에서 파생하는 `solana:devnet` 같은 Wallet Standard chain identifier를 사용합니다. `endpoint`를 생략하면 선택한 cluster의 공개 Solana RPC endpoint를 사용합니다. `wsEndpoint`를 생략하면 RPC endpoint에서 파생됩니다.
+지원 cluster는 `mainnet`(이전 별칭 `mainnet-beta`), `testnet`, `devnet`, `localnet`입니다. Wallet helper는 `getSolanaChain()`이 cluster에서 파생하는 `solana:devnet` 같은 Wallet Standard chain identifier를 사용합니다. `endpoint`를 생략하면 선택한 cluster의 공개 Solana RPC endpoint를 사용합니다. `wsEndpoint`를 생략하면 RPC endpoint에서 파생됩니다.
 
 `autoConnect` 기본값은 `false`입니다. Vue plugin 또는 Nuxt module에서 활성화하면 Vue Solana는 사용자가 이전에 선택했고 client에서 다시 discovery된 wallet identity만 reconnect합니다. `localStorage["vue-solana:selected-wallet"]`에는 `name`, 가능한 경우 `platform`/`source` 같은 wallet identity metadata만 저장합니다. private key, session data, transaction data를 저장하지 않으며 임의로 설치된 wallet에 연결하지 않습니다.
 
-Solana mainnet에는 `mainnet-beta`를 사용하세요. 이는 Solana의 공식 cluster name이며, package는 의도적으로 `mainnet` alias를 사용하지 않습니다.
+`payer`는 client fee payer와 client-sent transaction signer로 사용하는 Kit `TransactionSigner`입니다. `payerSecretKey`는 secret key가 먼저 오는 base64 64-byte Ed25519 keypair이며 client 생성 시 signer로 resolve됩니다. 두 옵션 모두 direct core/Vue client에서 지원됩니다.
+
+`createSolanaClient()`은 기본적으로 `@solana/kit-plugin-rpc`의 official `solanaRpc()`, `rpcTransactionPlanner()`, `rpcTransactionPlanSendingExecutor()` 스택을 compose합니다. 기존 custom fallback sender는 사용하지 않습니다. client는 RPC read/subscription과 `planTransaction(s)`, `sendTransaction(s)`를 노출합니다. official executor는 새 blockhash, resource limit와 preflight 처리, client signer를 이용한 서명, RPC 제출을 수행하고 send가 resolve되기 전에 `confirmed` commitment을 기다립니다. client send에는 `payer` 또는 이미 embedded signer가 있는 message가 필요합니다.
+
+Nuxt public runtime config에 raw secret이나 `payerSecretKey`를 넣지 마세요. end-user browser에 funded signing key를 배포하지 말고 server/relayer 경계 또는 demo용 ephemeral signer를 사용하세요.
+
+Solana mainnet에는 `mainnet`을 사용하세요. 이는 Solana의 공식 mainnet 클러스터 이름입니다. 이전 표기법인 `mainnet-beta`는 여전히 허용되며 같은 `https://api.mainnet.solana.com` 엔드포인트로 리다이렉트됩니다.
 
 ## Context
 
@@ -109,7 +117,7 @@ interface SolanaContext {
 }
 ```
 
-`client`는 `createSolanaClient()`가 만든 [`@solana/kit`](https://www.npmjs.com/package/@solana/kit) client이며 `client.rpc`와 `client.rpcSubscriptions`를 노출합니다.
+`client`는 `createSolanaClient()`가 만든 [`@solana/kit`](https://www.npmjs.com/package/@solana/kit) client이며 `client.rpc`, `client.rpcSubscriptions`, `planTransaction(s)`, `sendTransaction(s)`를 노출합니다.
 
 ## Wallet Interface
 
@@ -179,7 +187,7 @@ type SolanaChain = "solana:mainnet" | "solana:testnet" | "solana:devnet" | "sola
 
 `SolanaChain`은 wallet discovery, mobile wallet registration, iOS wallet link, wallet adapter signing option에서 사용하는 Wallet Standard chain identifier입니다. 설정된 Solana cluster에서 이를 파생해야 하면 `getSolanaChain(cluster)`를 사용하세요.
 
-- `getSolanaChain(cluster)`: `mainnet-beta`, `devnet`, `testnet`, `localnet`을 Solana Wallet Standard chain ID로 매핑합니다.
+- `getSolanaChain(cluster)`: `mainnet-beta` 또는 `mainnet`, `devnet`, `testnet`, `localnet`을 Solana Wallet Standard chain ID로 매핑합니다.
 - `isSolanaStandardWallet(wallet)`: Wallet Standard wallet이 Solana를 지원하는지 확인합니다.
 - `getRegisteredSolanaWallets()`: browser 환경에서 발견된 Solana Wallet Standard wallet을 반환합니다. 지원 client에서 등록된 Android Mobile Wallet Adapter도 포함됩니다.
 - `subscribeSolanaWallets(listener)`: Wallet Standard register/unregister event를 구독합니다.
@@ -201,21 +209,21 @@ type SolanaChain = "solana:mainnet" | "solana:testnet" | "solana:devnet" | "sola
 
 Root `@vue-solana/core` export는 아래 public helper를 다시 export합니다. 더 좁은 import나 명확한 module boundary가 필요하면 direct subpath를 사용하세요.
 
-| Import path                        | 포함 내용                                                                                                           | 사용할 때                                                                                              |
-| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| `@vue-solana/core/address`         | `parseAddress()`와 address input type.                                                                              | Solana 주소를 string, ref-like object, getter로 받고 검증되고 정규화된 `Address`가 필요할 때.          |
-| `@vue-solana/core/clusters`        | 기본 cluster 및 endpoint helper.                                                                                    | `mainnet-beta`, `testnet`, `devnet`, `localnet`의 built-in RPC 또는 WebSocket endpoint가 필요할 때.    |
-| `@vue-solana/core/errors`          | `SolanaError`, error factory, error guard.                                                                          | 지갑, RPC, 주소, 트랜잭션, timeout, storage 실패에 대한 안정적인 error code가 필요할 때.               |
-| `@vue-solana/core/ios-wallet`      | iOS browser wallet discovery, deep-link adapter, callback handling.                                                 | Vue plugin의 unified wallet flow 없이 iOS wallet link를 직접 wiring할 때.                              |
-| `@vue-solana/core/kit`             | `createSolanaClient()`와 `@solana/kit` re-export(`Address`, `address`, `lamports`, `SolanaRpcApi`, `SolanaClient`). | 전체 `@solana/kit` dependency graph 없이 현대 Kit API를 원할 때.                                       |
-| `@vue-solana/core/mobile-wallet`   | Android Mobile Wallet Adapter registration helper.                                                                  | Wallet Standard wallet을 읽기 전에 Android MWA를 등록해야 할 때.                                       |
-| `@vue-solana/core/rpc`             | `createSolanaContext()`.                                                                                            | Vue plugin 없이 configured Kit client와 resolved cluster endpoint가 필요할 때.                         |
-| `@vue-solana/core/timeout`         | Solana timeout error를 만드는 Promise timeout helper.                                                               | transaction confirmation helper와 일관된 timeout behavior가 필요할 때.                                 |
-| `@vue-solana/core/transaction`     | Transaction send 및 confirmation helper.                                                                            | Wallet-aware send path 또는 기존 signature의 confirmation result가 필요할 때.                          |
-| `@vue-solana/core/token-accounts`  | 무상태 SPL Token account 읽기(`getTokenAccountsByOwner`, `getTokenAccount`, `getTokenBalance`).                     | Kit RPC `jsonParsed` API를 통해 token account 또는 balance 읽기가 필요할 때.                           |
-| `@vue-solana/core/types`           | 공유 TypeScript type.                                                                                               | `SolanaConfig`, `SolanaContext`, `SolanaWallet`, wallet metadata, transaction option type이 필요할 때. |
-| `@vue-solana/core/wallet`          | Wallet state assertion 및 wallet capability error.                                                                  | 선택된 wallet이 연결되어 있거나 signing을 지원하는지 wallet method 호출 전에 검증해야 할 때.           |
-| `@vue-solana/core/wallet-standard` | Wallet Standard chain mapping, discovery, subscription, adapter helper.                                             | Solana Wallet Standard 위에 자체 wallet discovery layer를 만들 때.                                     |
+| Import path                        | 포함 내용                                                                                                           | 사용할 때                                                                                                      |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `@vue-solana/core/address`         | `parseAddress()`와 address input type.                                                                              | Solana 주소를 string, ref-like object, getter로 받고 검증되고 정규화된 `Address`가 필요할 때.                  |
+| `@vue-solana/core/clusters`        | 기본 cluster 및 endpoint helper.                                                                                    | `mainnet`, `mainnet-beta`, `testnet`, `devnet`, `localnet`의 built-in RPC 또는 WebSocket endpoint가 필요할 때. |
+| `@vue-solana/core/errors`          | `SolanaError`, error factory, error guard.                                                                          | 지갑, RPC, 주소, 트랜잭션, timeout, storage 실패에 대한 안정적인 error code가 필요할 때.                       |
+| `@vue-solana/core/ios-wallet`      | iOS browser wallet discovery, deep-link adapter, callback handling.                                                 | Vue plugin의 unified wallet flow 없이 iOS wallet link를 직접 wiring할 때.                                      |
+| `@vue-solana/core/kit`             | `createSolanaClient()`와 `@solana/kit` re-export(`Address`, `address`, `lamports`, `SolanaRpcApi`, `SolanaClient`). | 전체 `@solana/kit` dependency graph 없이 현대 Kit API를 원할 때.                                               |
+| `@vue-solana/core/mobile-wallet`   | Android Mobile Wallet Adapter registration helper.                                                                  | Wallet Standard wallet을 읽기 전에 Android MWA를 등록해야 할 때.                                               |
+| `@vue-solana/core/rpc`             | `createSolanaContext()`.                                                                                            | Vue plugin 없이 configured Kit client와 resolved cluster endpoint가 필요할 때.                                 |
+| `@vue-solana/core/timeout`         | Solana timeout error를 만드는 Promise timeout helper.                                                               | transaction confirmation helper와 일관된 timeout behavior가 필요할 때.                                         |
+| `@vue-solana/core/transaction`     | Transaction send 및 confirmation helper.                                                                            | Wallet-aware send path 또는 기존 signature의 confirmation result가 필요할 때.                                  |
+| `@vue-solana/core/token-accounts`  | 무상태 SPL Token account 읽기(`getTokenAccountsByOwner`, `getTokenAccount`, `getTokenBalance`).                     | Kit RPC `jsonParsed` API를 통해 token account 또는 balance 읽기가 필요할 때.                                   |
+| `@vue-solana/core/types`           | 공유 TypeScript type.                                                                                               | `SolanaConfig`, `SolanaContext`, `SolanaWallet`, wallet metadata, transaction option type이 필요할 때.         |
+| `@vue-solana/core/wallet`          | Wallet state assertion 및 wallet capability error.                                                                  | 선택된 wallet이 연결되어 있거나 signing을 지원하는지 wallet method 호출 전에 검증해야 할 때.                   |
+| `@vue-solana/core/wallet-standard` | Wallet Standard chain mapping, discovery, subscription, adapter helper.                                             | Solana Wallet Standard 위에 자체 wallet discovery layer를 만들 때.                                             |
 
 ### 클러스터와 RPC
 
@@ -223,7 +231,7 @@ Root `@vue-solana/core` export는 아래 public helper를 다시 export합니다
 - `getClusterEndpoint(cluster?)`: cluster의 HTTP RPC endpoint를 반환합니다.
 - `getClusterWebSocketEndpoint(cluster?)`: cluster의 WebSocket endpoint를 반환합니다.
 - `getWebSocketEndpoint(endpoint)`: `http`/`https` RPC URL을 `ws`/`wss` URL로 변환합니다.
-- `createSolanaClient(config?)`: resolved endpoint와 WebSocket subscription에 `rpc`가 연결된 `@solana/kit` client를 만듭니다.
+- `createSolanaClient(config?)`: resolved endpoint와 WebSocket subscription에 `rpc`가 연결된 `@solana/kit` client를 만들고, official planner와 transaction-sending executor를 기본적으로 설치합니다.
 - `createSolanaContext(config?)`: 프레임워크 독립 app setup을 위해 `{ cluster, endpoint, wsEndpoint, client }`을 만듭니다.
 
 ```ts
@@ -253,7 +261,7 @@ import { address, lamports } from "@vue-solana/core/kit";
 import type { Address, Commitment, Lamports, Signature, SolanaRpcApi } from "@vue-solana/core/kit";
 ```
 
-- `createSolanaClient(config?)`: 주어진 `SolanaConfig`로 Kit client를 만듭니다. `clusters.ts` endpoint resolution을 재사용하고 resolved WebSocket endpoint에서 `rpcSubscriptionsUrl`을 연결합니다.
+- `createSolanaClient(config?)`: 주어진 `SolanaConfig`로 Kit client를 만듭니다. `clusters.ts` endpoint resolution을 재사용하고 resolved WebSocket endpoint에서 `rpcSubscriptionsUrl`을 연결하며 official transaction planner와 RPC transaction-sending executor를 기본적으로 설치합니다.
 - `client.rpc`는 전체 Solana read API(`getSlot`, `getBalance`, `getBlockHeight`, `getSignatureStatuses` 등)를 `.send()`로 호출하는 RPC function으로 노출합니다.
 - `address(value)`: `Address`(base58 string brand)를 검증하고 반환합니다 - `new PublicKey(...)`의 Kit 대체입니다.
 - `lamports(value: bigint)`: `Lamports` 값을 반환합니다 - raw lamport number의 Kit 대체입니다.
@@ -294,6 +302,8 @@ const signedTransaction = await wallet.signTransaction(transaction);
 
 - `signAndSendTransaction(client, wallet, transaction, options?)`: configured wallet로 raw wire transaction byte에 서명하고 전송한 뒤 RPC signature를 반환합니다. `signAndSendTransaction`을 노출하는 wallet은 해당 기능에 위임되고, 그렇지 않으면 트랜잭션은 `wallet.signTransaction`으로 서명된 뒤 `client.rpc.sendTransaction(...).send()`로 제출됩니다. Android Mobile Wallet Adapter wallet은 앱이 제출을 소유하고 wallet handoff 후 RPC signature를 안정적으로 반환할 수 있도록 서명과 app-side RPC 제출을 선호합니다.
 - `confirmTransactionSignature(client, signature, options?)`: 제출된 signature가 요청한 commitment에 도달할 때까지 기다립니다. 기본값은 `confirmed` commitment, 60초 timeout, `client.rpc.getSignatureStatuses([signature]).send()` 폴링입니다.
+
+wallet-aware helper와 client-sent flow는 별개입니다. client는 `createSolanaClient()`가 설치한 official `rpcTransactionPlanSendingExecutor()`를 통해 `sendTransaction()`과 `sendTransactions()`를 노출하고 Vue composable이 이 method들을 감쌉니다. plan, sign, submit 후 `confirmed` commitment을 기다리며, send-and-confirm가 완료된 뒤에만 `sent` 상태가 됩니다. 단일 결과의 `data.context.signature`에서 제출된 signature를 확인할 수 있고, batch 결과에는 전체 plan result tree가 포함됩니다. official sender는 wallet popup을 표시하지 않습니다.
 
 ```ts
 import { confirmTransactionSignature, signAndSendTransaction } from "@vue-solana/core/transaction";

@@ -34,16 +34,18 @@ export default defineNuxtConfig({
 export default defineNuxtConfig({
   modules: ["@vue-solana/nuxt"],
   solana: {
-    cluster: "mainnet-beta",
+    cluster: "mainnet",
     endpoint: "https://your-rpc.example.com",
     commitment: "confirmed",
   },
 });
 ```
 
-지원되는 클러스터는 `mainnet-beta`, `devnet`, `testnet`, `localnet`입니다. Solana mainnet에는 Solana의 공식 클러스터 이름인 `mainnet-beta`를 사용하세요.
+지원되는 클러스터는 `mainnet`(이전 별칭 `mainnet-beta`), `devnet`, `testnet`, `localnet`입니다. Solana mainnet에는 `mainnet`을 사용하세요. 이는 Solana의 공식 mainnet 클러스터 이름입니다.
 
 Nuxt module option은 public runtime config에 저장되므로 JSON 직렬화가 가능해야 합니다. Custom `wallet` adapter object는 의도적으로 Nuxt config에서 제외됩니다. Custom wallet object를 inject해야 한다면 client-only Vue 코드에서 Vue plugin을 직접 사용하세요.
+
+`ModuleOptions`는 `payer`와 `payerSecretKey`도 의도적으로 제외합니다. 두 옵션은 direct `@vue-solana/core`와 `@vue-solana/vue` client에서는 지원되지만, Nuxt module은 둘 다 전달하지 않고 public runtime config에서 제거합니다. raw secret, seed phrase, `payerSecretKey`를 `nuxt.config.ts` 또는 `runtimeConfig.public`에 넣지 마세요. browser에서 visible하기 때문입니다. client-owned signer가 필요하면 client-only plugin에서 `generateKeyPairSigner()`로 ephemeral signer를 만들거나 connected wallet의 embedded signer가 있는 message를 사용하세요.
 
 이 모듈의 client runtime plugin은 app-wide selected wallet account context도 자동으로 설치하므로 provider를 mount하지 않아도 모든 컴포넌트에서 `useSolanaSelectedWalletAccount()`가 작동합니다. persistence(`stateSync`)나 filtering(`filterWallet`)을 customize하려면 tree에서 더 깊은 곳에 `@vue-solana/vue/useSelectedWalletAccount`의 `SelectedWalletAccountProvider`를 mount하여 기본 context를 덮어쓰세요.
 
@@ -113,8 +115,11 @@ request, subscription, tracked-data, SWR-cache composable의 전체 semantics는
 - `useSolanaSignAndSendTransactions()`: 여러 transaction을 한 번의 wallet request로 서명하고 전송합니다.
 - `useSolanaPayer()` / `useSolanaIdentity()`: reactive Kit client signer입니다(signer plugin 필요).
 - `useSolanaPlanTransaction()` / `useSolanaPlanTransactions()`: instruction input에서 transaction message를 plan합니다.
+- `useSolanaSendTransaction()` / `useSolanaSendTransactions()`: default client의 official planner와 executor를 사용해 plan, sign, submit 후 `confirmed`를 기다리며 wallet popup이 없습니다. client-only Vue plugin에서 signer를 설정하거나 embedded signer를 사용하세요. connected wallet이 각 트랜잭션을 승인해야 할 때는 `useSolanaSignAndSendTransaction(s)`를 사용하세요.
 
 이들은 Vue composable의 Nuxt alias입니다.
+
+module이 만드는 default client는 official `solanaRpc()`, `rpcTransactionPlanner()`, `rpcTransactionPlanSendingExecutor()` plugin을 compose합니다. 기존 custom fallback sender는 사용하지 않습니다. `useSolanaSendTransaction()`과 `useSolanaSendTransactions()`는 official client-sending capability를 사용하지만, `ModuleOptions`에서 `payer`와 `payerSecretKey`를 제외하므로 module이 payer를 설정하지는 않습니다. `sent` 상태는 official executor가 `confirmed` commitment에서 send-and-confirm을 완료한 뒤에 도달합니다.
 
 Vue package는 caller가 `@vue-solana/vue/useRpc`에서 명시적으로 import하므로 `useRpc()` 같은 짧은 이름을 사용합니다.
 
@@ -414,6 +419,8 @@ async function submitTransaction(transaction: SolanaTransaction) {
 
 Status는 RPC 제출 후 `sending`에서 `sent`로 이동합니다. Confirmation이 활성화되면 `confirming`을 거쳐 `confirmed` 또는 `finalized` 같은 도달한 commitment에서 끝납니다. 제출 후 confirmation timeout이 발생해도 `signature`는 유지되므로 앱은 explorer link를 표시하거나 retry 전에 signature status를 polling할 수 있습니다.
 
+client-sent transaction은 다릅니다. `useSolanaSendTransaction()`과 `useSolanaSendTransactions()`는 official RPC plan-sending executor를 사용합니다. executor는 `execute()`가 resolve되기 전에 `confirmed`를 기다리므로 `sent`는 client send-and-confirm이 완료됐다는 뜻입니다. wallet popup은 없으며 connected wallet의 embedded signer가 있는 message를 사용하거나 client-only Vue plugin에 signer를 설치하세요. Nuxt public runtime config에 raw `payerSecretKey`를 설정하려고 하지 마세요.
+
 Wallet prompt는 hydration 이후 사용자 interaction으로 트리거되어야 합니다. SSR, server route, page load 시 자동으로 `execute()`를 호출하지 마세요.
 
 ## 기존 Signature Confirm
@@ -464,11 +471,11 @@ onBeforeUnmount(() => {
 </script>
 ```
 
-Explorer link에는 설정된 cluster를 사용하세요. Devnet link에는 `?cluster=devnet`을 포함하고, mainnet link에는 cluster query를 포함하지 않아야 합니다.
+Explorer link에는 설정된 cluster를 사용하세요. Devnet link에는 `?cluster=devnet`을 포함하고, `mainnet`과 이전 별칭 `mainnet-beta` link에는 cluster query를 포함하지 않아야 합니다.
 
 ```ts
 function explorerUrl(signature: string, cluster: string) {
-  const suffix = cluster === "mainnet-beta" ? "" : `?cluster=${cluster}`;
+  const suffix = cluster === "mainnet" || cluster === "mainnet-beta" ? "" : `?cluster=${cluster}`;
   return `https://explorer.solana.com/tx/${signature}${suffix}`;
 }
 ```

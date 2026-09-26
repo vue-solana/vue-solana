@@ -33,16 +33,17 @@ New to Solana? Start with the official docs and the project concepts guide:
 - Live data composables over Kit reactive stores (`useRequest`, `useSubscription`, `useTrackedData`) plus SWR cache adapters.
 - A generic async action state machine (`useAction`) built on `@vue-solana/core/action`.
 - Reactive Kit client signers (`usePayer`, `useIdentity`) and transaction planning (`usePlanTransaction`, `usePlanTransactions`) with fail-fast client capability assertions.
+- Client-sent transactions through the official Kit planner and RPC plan-sending executor installed by the default client.
 - Direct subpath exports for narrower imports.
 
 ## Compatibility
 
-| Requirement   | Supported                                       |
-| ------------- | ----------------------------------------------- |
-| Vue           | `^3.5.0`                                        |
-| TypeScript    | TypeScript 5.x recommended                      |
-| Solana client | Provided through `@vue-solana/core`             |
-| Clusters      | `mainnet-beta`, `devnet`, `testnet`, `localnet` |
+| Requirement   | Supported                                                         |
+| ------------- | ----------------------------------------------------------------- |
+| Vue           | `^3.5.0`                                                          |
+| TypeScript    | TypeScript 5.x recommended                                        |
+| Solana client | Provided through `@vue-solana/core`                               |
+| Clusters      | `mainnet` (alias `mainnet-beta`), `devnet`, `testnet`, `localnet` |
 
 ## Install
 
@@ -86,27 +87,31 @@ You can also pass a custom RPC endpoint:
 ```ts
 createApp(App).use(
   createSolanaPlugin({
-    cluster: "mainnet-beta",
+    cluster: "mainnet",
     endpoint: "https://your-rpc.example.com",
     commitment: "confirmed",
   }),
 );
 ```
 
-Supported clusters are `mainnet-beta`, `devnet`, `testnet`, and `localnet`. Use `mainnet-beta` for Solana mainnet; this is Solana's official cluster name.
+Supported clusters are `mainnet` (legacy alias `mainnet-beta`), `devnet`, `testnet`, and `localnet`. Use `mainnet` for Solana mainnet; this is Solana's official mainnet cluster name.
+
+`payer` and `payerSecretKey` are supported by direct Vue/core clients. A client-sent transaction needs a payer or an embedded signer. Never put a raw secret or `payerSecretKey` in Nuxt public runtime config, and never ship a funded signing key to an end-user browser. The default `createSolanaPlugin()` client composes the official `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()` stack; the old custom fallback sender is not used.
 
 ### Plugin Options
 
-| Option         | Type                                                    | Default                              | Description                                                                                   |
-| -------------- | ------------------------------------------------------- | ------------------------------------ | --------------------------------------------------------------------------------------------- |
-| `cluster`      | `"mainnet-beta" \| "devnet" \| "testnet" \| "localnet"` | `"devnet"`                           | Solana cluster used when `endpoint` is omitted.                                               |
-| `endpoint`     | `string`                                                | Public endpoint for `cluster`        | HTTP RPC endpoint. Use a dedicated RPC provider for production apps.                          |
-| `wsEndpoint`   | `string`                                                | Derived from `endpoint`              | WebSocket RPC endpoint.                                                                       |
-| `commitment`   | Solana commitment                                       | Solana client default                | Default commitment for created connections.                                                   |
-| `autoConnect`  | `boolean`                                               | `false`                              | Reconnects only a previously selected discovered wallet identity when it is discovered again. |
-| `wallet`       | `SolanaWallet`                                          | Disabled                             | Custom wallet adapter, useful for tests or custom integrations.                               |
-| `mobileWallet` | `MobileWalletOptions \| false`                          | Enabled on supported Android clients | Configures or disables Android Mobile Wallet Adapter registration.                            |
-| `iosWallet`    | `iOSWalletOptions \| false`                             | Enabled on iOS browsers              | Configures or disables iOS browser wallet universal links (Phantom, Solflare, Backpack).      |
+| Option           | Type                                                                 | Default                              | Description                                                                                   |
+| ---------------- | -------------------------------------------------------------------- | ------------------------------------ | --------------------------------------------------------------------------------------------- |
+| `cluster`        | `"mainnet-beta" \| "mainnet" \| "devnet" \| "testnet" \| "localnet"` | `"devnet"`                           | Solana cluster used when `endpoint` is omitted.                                               |
+| `endpoint`       | `string`                                                             | Public endpoint for `cluster`        | HTTP RPC endpoint. Use a dedicated RPC provider for production apps.                          |
+| `wsEndpoint`     | `string`                                                             | Derived from `endpoint`              | WebSocket RPC endpoint.                                                                       |
+| `commitment`     | Solana commitment                                                    | Solana client default                | Default commitment for created connections.                                                   |
+| `autoConnect`    | `boolean`                                                            | `false`                              | Reconnects only a previously selected discovered wallet identity when it is discovered again. |
+| `payer`          | `TransactionSigner`                                                  | None                                 | Client fee payer and signer for client-sent transactions.                                     |
+| `payerSecretKey` | `string`                                                             | None                                 | Base64 64-byte Ed25519 keypair, secret key first, resolved at client creation.                |
+| `wallet`         | `SolanaWallet`                                                       | Disabled                             | Custom wallet adapter, useful for tests or custom integrations.                               |
+| `mobileWallet`   | `MobileWalletOptions \| false`                                       | Enabled on supported Android clients | Configures or disables Android Mobile Wallet Adapter registration.                            |
+| `iosWallet`      | `iOSWalletOptions \| false`                                          | Enabled on iOS browsers              | Configures or disables iOS browser wallet universal links (Phantom, Solflare, Backpack).      |
 
 The root export remains supported. For composables, prefer direct subpath imports in new code so bundlers can avoid evaluating unrelated package entry code:
 
@@ -188,7 +193,7 @@ const { balance, loading, error, refresh } = useBalance(address);
 
 ### Airdrop on Test Networks
 
-`useAirdrop()` sends SOL to an account on devnet, testnet, or a local validator. It requires an airdrop capability on the Kit client, installed with `createClient().use(solanaRpcConnection({ ... })).use(rpcAirdrop())` from `@solana/kit-plugin-rpc`.
+`useAirdrop()` sends SOL to an account on devnet, testnet, or a local validator. The default Vue client includes the RPC and airdrop capabilities; a custom client can install them with `createClient().use(solanaRpc({ ... })).use(rpcAirdrop())` from `@solana/kit-plugin-rpc`.
 
 ```ts
 import { lamports } from "@solana/kit";
@@ -368,7 +373,9 @@ A wallet may modify the message or transaction before signing — for example to
 
 ### Sending with the Client (no wallet popup)
 
-`useSendTransaction()` and `useSendTransactions()` send through the Kit client's transaction-sending capability (`ClientWithTransactionSending`) instead of the connected wallet. The client plans the transaction from your input, signs it with its own signers — typically the client identity or `payer` keypair, e.g. a relayer — submits it, and returns the result. There is no wallet extension and no approval popup.
+`useSendTransaction()` and `useSendTransactions()` send through the Kit client's transaction-sending capability (`ClientWithTransactionSending`) instead of the connected wallet. The client plans the transaction from your input, signs it with its own signers — typically the client identity or `payer` keypair, e.g. a relayer — submits it, and returns the result. There is no wallet extension and no approval popup. The official executor waits for `confirmed` commitment before resolving.
+
+Configure a direct client with `payer` or `payerSecretKey`, or pass a message with an embedded signer. `payerSecretKey` is a base64 64-byte Ed25519 keypair and must stay in a trusted server or development context. Never put it in Nuxt public runtime config or ship a funded key to an end-user browser.
 
 **Which to use:**
 
@@ -382,7 +389,7 @@ A wallet may modify the message or transaction before signing — for example to
 
 Use the client flow for automated or server-backed signing (airdrop faucet, cron jobs, relayer fees paid by your keypair), and the wallet flow when the end user must own and approve each transaction.
 
-**Prerequisite.** Your Kit client must install a transaction planner and a transaction-sending executor, e.g. `rpcTransactionPlanner()` and `rpcTransactionPlanSendingExecutor()` from `@solana/kit-plugin-rpc`. The default client built by `createSolanaPlugin()` installs only RPC and airdrop plugins, so without a capable client both composables fail fast at setup with a clear capability error naming what to install. Plan first with `usePlanTransaction()` / `usePlanTransactions()` when you need separate planning and sending steps.
+**Default client composition.** `createSolanaPlugin()` and `createSolanaClient()` install the official `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()` plugins by default. The old custom fallback sender is not used, so `useSendTransaction()` and `useSendTransactions()` do not need a second manual plugin installation. The official executor waits for `confirmed` commitment before `execute()` resolves and the composable reports `sent`. A custom client must still provide the planner and sending executor; use a `payer` or an embedded signer.
 
 ```ts
 import { useSendTransaction } from "@vue-solana/vue/useSendTransaction";
@@ -579,45 +586,45 @@ Docs: [Vue Solana Agent Skill](https://vue-solana-docs.vercel.app/agent-skill)
 
 ## API
 
-| API                                                                                        | Description                                                                                                                |
-| ------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
-| `createSolanaPlugin(options?)`                                                             | Installs the Vue Solana context.                                                                                           |
-| `VueSolana`                                                                                | Alias for `createSolanaPlugin`.                                                                                            |
-| `useSolana()`                                                                              | Returns the full injected Solana context.                                                                                  |
-| `useRpc()`                                                                                 | Returns cluster, endpoint, connection status, latest blockhash, the Kit `client`, and `checkConnection()`.                 |
-| `useSolanaClient()`                                                                        | Returns the injected Kit client as `{ client, rpc }`. The recommended RPC path.                                            |
-| `useConnection()`                                                                          | Returns the Kit `client`. Deprecated in favor of `useSolanaClient()`.                                                      |
-| `useWallet()`                                                                              | Returns wallet refs, computed connection state, and wallet actions.                                                        |
-| `useWallets()`                                                                             | Returns discovered browser extension wallets, Android MWA wallets, iOS browser wallet links, and wallet selection actions. |
-| `useSignMessage()`                                                                         | Signs arbitrary message bytes through the connected wallet when message signing is supported.                              |
-| `useBalance(address, commitment?)`                                                         | Loads lamport balance for an address string.                                                                               |
-| `useAirdrop()`                                                                             | Airdrops SOL on devnet/testnet/localnets; `data` is the `Signature`, or `undefined` when applied directly.                 |
-| `useAccountInfo(address, options?)`                                                        | Loads normalized account info (executable, lamports, owner, space, data bytes).                                            |
-| `useProgramAccounts(programId, config?)`                                                   | Loads accounts owned by a program with optional filters, commitment, and `dataSlice`.                                      |
-| `useTransaction(handler, options?)`                                                        | Generic async transaction state helper with optional timeout settings.                                                     |
-| `useTransactionConfirmation(options?)`                                                     | Confirms a submitted signature with reactive status and timeout/error state.                                               |
-| `useSignatureStatus(signature, options?)`                                                  | Reads a transaction signature status with optional polling.                                                                |
-| `useSignAndSendTransaction()`                                                              | Signs and sends a transaction through the configured wallet, with optional confirmation waiting.                           |
-| `useTokenAccounts(owner, options?)`                                                        | Reads SPL token accounts for an owner.                                                                                     |
-| `useTokenBalance(mint, owner, commitment?)`                                                | Reads the token balance for a mint/owner pair.                                                                             |
-| `useAction(handler, options?)`                                                             | Generic async action state machine; each dispatch aborts the prior in-flight call.                                         |
-| `useRequest(source, options?)`                                                             | One-shot Kit request that re-fires when its source changes, preserving the previous `data` while revalidating.             |
-| `useSubscription(source, options?)`                                                        | Live data over a Kit reactive stream store (e.g. RPC subscriptions), torn down on unmount.                                 |
-| `useTrackedData(source, options?)`                                                         | Slot-deduplicated fetch plus subscription over Kit's slot-tracking store.                                                  |
-| `useRequestSwr(key, ...)` / `useSubscriptionSwr(key, ...)` / `useTrackedDataSwr(key, ...)` | Cache-keyed SWR adapters seeding fresh mounts from the last-known result.                                                  |
-| `clearSwrCache()`                                                                          | Clears every cached SWR entry.                                                                                             |
-| `useSignIn(input?)`                                                                        | Sign In With Solana (SIWS) trigger returning `{ account, signedMessage, signature }` for server-side verification.         |
-| `useSelectedWalletAccount()`                                                               | App-wide selected wallet account context: `[selectedAccount, setSelectedAccount, filteredWallets]`.                        |
-| `SelectedWalletAccountProvider`                                                            | Component that provides the selected wallet account context to its subtree.                                                |
-| `useSignTransactions()`                                                                    | Batch-signs transactions through the wallet, preferring `signTransactions` and falling back to `signAllTransactions`.      |
-| `useSignAndSendTransactions()`                                                             | Signs and sends multiple transactions, returning one signature each, with a singular sequential fallback.                  |
-| `useClientCapability(capability, options?)`                                                | Fails fast with a clear error when the configured Solana client lacks a requested capability.                              |
-| `usePayer()`                                                                               | Reactive Kit client `payer` signer ref (requires a signer plugin on the client).                                           |
-| `useIdentity()`                                                                            | Reactive Kit client `identity` signer ref (requires a signer plugin on the client).                                        |
-| `usePlanTransaction()`                                                                     | Plans a single transaction message from instruction inputs without signing or sending.                                     |
-| `usePlanTransactions()`                                                                    | Plans a batch of transaction messages from instruction inputs.                                                             |
-| `useSendTransaction()`                                                                     | Plans, signs, submits, and confirms one transaction through the client's transaction-sending capability (no wallet).       |
-| `useSendTransactions()`                                                                    | Sends a batch of transactions (parallel or sequential) through the client's transaction-sending capability.                |
+| API                                                                                        | Description                                                                                                                              |
+| ------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `createSolanaPlugin(options?)`                                                             | Installs the Vue Solana context.                                                                                                         |
+| `VueSolana`                                                                                | Alias for `createSolanaPlugin`.                                                                                                          |
+| `useSolana()`                                                                              | Returns the full injected Solana context.                                                                                                |
+| `useRpc()`                                                                                 | Returns cluster, endpoint, connection status, latest blockhash, the Kit `client`, and `checkConnection()`.                               |
+| `useSolanaClient()`                                                                        | Returns the injected Kit client as `{ client, rpc }`. The recommended RPC path.                                                          |
+| `useConnection()`                                                                          | Returns the Kit `client`. Deprecated in favor of `useSolanaClient()`.                                                                    |
+| `useWallet()`                                                                              | Returns wallet refs, computed connection state, and wallet actions.                                                                      |
+| `useWallets()`                                                                             | Returns discovered browser extension wallets, Android MWA wallets, iOS browser wallet links, and wallet selection actions.               |
+| `useSignMessage()`                                                                         | Signs arbitrary message bytes through the connected wallet when message signing is supported.                                            |
+| `useBalance(address, commitment?)`                                                         | Loads lamport balance for an address string.                                                                                             |
+| `useAirdrop()`                                                                             | Airdrops SOL on devnet/testnet/localnets; `data` is the `Signature`, or `undefined` when applied directly.                               |
+| `useAccountInfo(address, options?)`                                                        | Loads normalized account info (executable, lamports, owner, space, data bytes).                                                          |
+| `useProgramAccounts(programId, config?)`                                                   | Loads accounts owned by a program with optional filters, commitment, and `dataSlice`.                                                    |
+| `useTransaction(handler, options?)`                                                        | Generic async transaction state helper with optional timeout settings.                                                                   |
+| `useTransactionConfirmation(options?)`                                                     | Confirms a submitted signature with reactive status and timeout/error state.                                                             |
+| `useSignatureStatus(signature, options?)`                                                  | Reads a transaction signature status with optional polling.                                                                              |
+| `useSignAndSendTransaction()`                                                              | Signs and sends a transaction through the configured wallet, with optional confirmation waiting.                                         |
+| `useTokenAccounts(owner, options?)`                                                        | Reads SPL token accounts for an owner.                                                                                                   |
+| `useTokenBalance(mint, owner, commitment?)`                                                | Reads the token balance for a mint/owner pair.                                                                                           |
+| `useAction(handler, options?)`                                                             | Generic async action state machine; each dispatch aborts the prior in-flight call.                                                       |
+| `useRequest(source, options?)`                                                             | One-shot Kit request that re-fires when its source changes, preserving the previous `data` while revalidating.                           |
+| `useSubscription(source, options?)`                                                        | Live data over a Kit reactive stream store (e.g. RPC subscriptions), torn down on unmount.                                               |
+| `useTrackedData(source, options?)`                                                         | Slot-deduplicated fetch plus subscription over Kit's slot-tracking store.                                                                |
+| `useRequestSwr(key, ...)` / `useSubscriptionSwr(key, ...)` / `useTrackedDataSwr(key, ...)` | Cache-keyed SWR adapters seeding fresh mounts from the last-known result.                                                                |
+| `clearSwrCache()`                                                                          | Clears every cached SWR entry.                                                                                                           |
+| `useSignIn(input?)`                                                                        | Sign In With Solana (SIWS) trigger returning `{ account, signedMessage, signature }` for server-side verification.                       |
+| `useSelectedWalletAccount()`                                                               | App-wide selected wallet account context: `[selectedAccount, setSelectedAccount, filteredWallets]`.                                      |
+| `SelectedWalletAccountProvider`                                                            | Component that provides the selected wallet account context to its subtree.                                                              |
+| `useSignTransactions()`                                                                    | Batch-signs transactions through the wallet, preferring `signTransactions` and falling back to `signAllTransactions`.                    |
+| `useSignAndSendTransactions()`                                                             | Signs and sends multiple transactions, returning one signature each, with a singular sequential fallback.                                |
+| `useClientCapability(capability, options?)`                                                | Fails fast with a clear error when the configured Solana client lacks a requested capability.                                            |
+| `usePayer()`                                                                               | Reactive Kit client `payer` signer ref. The default client exposes a configured payer when supplied.                                     |
+| `useIdentity()`                                                                            | Reactive Kit client `identity` signer ref (requires an identity signer on a custom client).                                              |
+| `usePlanTransaction()`                                                                     | Plans a single transaction message from instruction inputs without signing or sending; the default client includes the official planner. |
+| `usePlanTransactions()`                                                                    | Plans a batch of transaction messages from instruction inputs.                                                                           |
+| `useSendTransaction()`                                                                     | Uses the official client transaction-sending capability to plan, sign, submit, and wait for `confirmed` commitment (no wallet).          |
+| `useSendTransactions()`                                                                    | Sends a batch through the same official capability, waiting for `confirmed` commitment.                                                  |
 
 Direct composable subpaths:
 
@@ -665,7 +672,7 @@ Other direct subpaths:
 - Wallet and RPC operations require the plugin-provided client context. Composables are SSR-safe, but real wallet work should run after hydration or in user actions.
 - Public Solana RPC endpoints are useful for development, but production apps should use dedicated RPC infrastructure.
 - Broad `useProgramAccounts()` scans can be expensive or blocked on public RPC nodes. Prefer narrow filters and `dataSlice`.
-- Use `mainnet-beta` for Solana mainnet. `mainnet` is intentionally not accepted as a cluster alias.
+- Use `mainnet` for Solana mainnet. This is Solana's official mainnet cluster name; the legacy `mainnet-beta` spelling is still accepted and redirects to the same endpoint.
 - v2.0.0 removed `@solana/web3-compat` and the `web3` subpaths. Build transaction messages with `@solana/kit` and pass raw `Uint8Array` wire bytes to wallet flows. See the [Kit Migration guide](https://vue-solana-docs.vercel.app/guides/kit-migration) for migrating from v1.
 - Desktop native app wallets are planned but not implemented yet.
 

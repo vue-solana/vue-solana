@@ -47,7 +47,7 @@ La tabla siguiente asigna cada símbolo legacy a su reemplazo de Kit.
 | `connection.confirmTransaction` / `getSignatureStatuses`                       | `confirmTransactionSignature(client, ...)` (polls `client.rpc.getSignatureStatuses(...).send()`)                                                                   |
 | flujos wallet-standard                                                         | sin cambios — la adaptación del discovery de wallet-standard sigue siendo la base de `useWallets()` / `useWallet()`                                                |
 
-> Algunas filas referencian plugins upstream de `@solana/kit` (signer, planner, system program). Vue Solana no los incluye; instálalos directamente desde el ecosistema de `@solana/kit` cuando los necesites.
+> Algunas filas referencian plugins upstream de `@solana/kit` (signer, planner, system program). El cliente por defecto de `createSolanaClient()` ya instala el planner oficial y el executor de envio de planes de `@solana/kit-plugin-rpc`; instala el resto (signer, system program) directamente desde el ecosistema de `@solana/kit` cuando los necesites.
 
 A qué se corresponden los helpers después de v2:
 

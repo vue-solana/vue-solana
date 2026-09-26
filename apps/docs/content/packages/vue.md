@@ -47,12 +47,33 @@ You can also pass a custom RPC endpoint:
 ```ts
 createApp(App).use(
   createSolanaPlugin({
-    cluster: "mainnet-beta",
+    cluster: "mainnet",
     endpoint: "https://your-rpc.example.com",
     commitment: "confirmed",
   }),
 );
 ```
+
+Supported clusters are `mainnet` (legacy alias `mainnet-beta`), `devnet`, `testnet`, and `localnet`. Use `mainnet` for Solana mainnet; this is Solana's official mainnet cluster name.
+
+### Plugin Options
+
+| Option           | Type                           | Default            | Description                                                                                          |
+| ---------------- | ------------------------------ | ------------------ | ---------------------------------------------------------------------------------------------------- |
+| `cluster`        | Solana cluster                 | `devnet`           | Cluster used when `endpoint` is omitted. `mainnet-beta` is accepted as a legacy alias for `mainnet`. |
+| `endpoint`       | `string`                       | Cluster endpoint   | HTTP RPC endpoint.                                                                                   |
+| `wsEndpoint`     | `string`                       | Derived endpoint   | WebSocket RPC endpoint.                                                                              |
+| `commitment`     | Commitment                     | Kit default        | Default commitment for RPC calls.                                                                    |
+| `autoConnect`    | `boolean`                      | `false`            | Reconnect only a previously selected discovered wallet.                                              |
+| `payer`          | `TransactionSigner`            | None               | Client fee payer and signer for client-sent transactions.                                            |
+| `payerSecretKey` | `string`                       | None               | Base64 64-byte Ed25519 keypair, secret key first, resolved as a signer at client creation.           |
+| `wallet`         | `SolanaWallet`                 | Disabled           | Custom wallet adapter.                                                                               |
+| `mobileWallet`   | `MobileWalletOptions \| false` | Enabled on Android | Android Mobile Wallet Adapter options.                                                               |
+| `iosWallet`      | `iOSWalletOptions \| false`    | Enabled on iOS     | iOS wallet universal-link options.                                                                   |
+
+`payer` and `payerSecretKey` are supported by direct Vue plugin/core clients. A client-sent transaction needs a `payer` or a message with an embedded signer. Never put a raw secret or `payerSecretKey` in Nuxt public runtime config, and never ship a funded signing key to an end-user browser.
+
+The default client created by `createSolanaPlugin()` uses the official `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()` composition. The old custom fallback sender is not used. The official sending executor waits for `confirmed` commitment before `execute()` resolves and sets `status` to `sent`.
 
 ### Client and Plugin Lifecycle
 
@@ -153,7 +174,7 @@ Use `@vue-solana/vue/buffer-polyfill` for browser transaction code that needs th
 - `useClientCapability(capability)`: asserts a capability is installed on the Kit client, failing fast with a clear error.
 - `usePayer()` / `useIdentity()`: reactively track the fee payer / acting identity signer from the Kit client.
 - `usePlanTransaction()` / `usePlanTransactions()`: plan transaction messages from instruction inputs without sending.
-- `useSendTransaction()` / `useSendTransactions()`: plan, sign with the client's signers (payer/identity), submit, and confirm transactions with no wallet popup; requires `rpcTransactionPlanner()` and `rpcTransactionPlanSendingExecutor()`.
+- `useSendTransaction()` / `useSendTransactions()`: use the official Kit planner and RPC plan-sending executor installed by `createSolanaClient()`; they plan, sign, submit, and wait for `confirmed` commitment with no wallet popup. Configure `payer` or provide an embedded signer.
 
 ## Related Guides
 
@@ -671,6 +692,16 @@ Return shapes:
 
 A wallet may modify the message or transaction before signing — for example to add its own instruction or change the fee payer — and the Wallet Standard explicitly allows it. Re-read the returned `signedMessage` or signed transaction bytes instead of assuming they match your input byte-for-byte.
 
+### Client-Sent Transactions
+
+`useSendTransaction()` and `useSendTransactions()` use the client's transaction-sending capability instead of the connected wallet. `createSolanaClient()` and `createSolanaPlugin()` install the official `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()` stack by default, so these composables do not require a custom fallback or a second manual plugin installation.
+
+The executor reads a fresh blockhash, estimates or respects resource limits, performs preflight simulation unless configured otherwise, signs with the client signers, submits over RPC, and waits for `confirmed` commitment. `status` changes from `sending` to `sent` only after that send-and-confirm operation completes. A single result exposes `data.context.signature`; a batch result contains the plan result tree. There is no wallet popup, so use this path only when the client owns an appropriate signer.
+
+Configure a signer directly in a Vue/core client with `payer` or `payerSecretKey`. If the client has no payer, pass a transaction message that already contains an embedded signer. A server or relayer should own funded production keys. Do not put a raw secret or `payerSecretKey` in Nuxt public runtime config, and do not ship a funded keypair to an end-user browser.
+
+The wallet composables remain separate: `useSignAndSendTransaction()` can return after RPC submission, or wait for a selected commitment when `confirm: true` is passed. Client-sent transactions always use the official executor's `confirmed` send-and-confirm behavior.
+
 ## Batch Transactions
 
 ```ts
@@ -740,7 +771,7 @@ const { transactionMessage, execute } = usePlanTransaction();
 const message = await execute(instructions);
 ```
 
-`useClientCapability("payer")` asserts a capability is installed on the client and throws a descriptive error (naming the hook and how to install it) during setup when it is missing. `usePlanTransaction()` / `usePlanTransactions()` require the planning capability, e.g. `rpcTransactionPlanner()` from `@solana/kit-plugin-rpc`.
+`useClientCapability("payer")` asserts a capability is installed on the client and throws a descriptive error (naming the hook and how to install it) during setup when it is missing. The default Vue client already installs the official planner and transaction-sending executor; custom clients must install `rpcTransactionPlanner()` and `rpcTransactionPlanSendingExecutor()` themselves.
 
 ## Confirm an Existing Signature
 

@@ -13,7 +13,7 @@ surroundOrder: 5
 - [Solana RPC Methods](https://solana.com/docs/rpc)
 - [Solana Clusters](https://solana.com/docs/references/clusters)
 - [Solana Transactions](https://solana.com/docs/core/transactions)
-- [Solana Cookbook](https://solana.com/developers/cookbook) — 常见 Solana 模式的实用食谱
+- [Solana 核心概念](https://solana.com/docs/core) — 账户、程序、交易等 Solana 核心概念
 
 ## 连接和 RPC
 
@@ -79,6 +79,8 @@ Vue Solana 会通过统一的 `useWallets()` 流程发现 Solana Wallet Standard
 
 签名证明钱包所有者批准该交易。前端应用应该请求用户的钱包进行签名，而不应该持有私钥。
 
+默认 `createSolanaClient()` 还会组合 Solana Kit 官方的 RPC planner 和 transaction-sending executor，因此可信 client context 可以不显示 wallet popup 地 plan 和 send。请为该路径提供 `payer` 或 embedded signer。将有资金的 signer 保存在 server 或 relayer 中；Nuxt public runtime config 不得包含 raw `payerSecretKey` 或其他 secret。
+
 ## Commitment 级别
 
 Commitment 控制返回的数据应该达到什么最终确定程度。
@@ -103,4 +105,4 @@ createSolanaPlugin({
 - 构建和测试时使用 `devnet`。
 - 开发时不要使用包含真实资金的钱包。
 - 不要在前端应用中硬编码私钥。
-- 只有在准备好与真实 SOL 和生产程序交互时，才使用 `mainnet-beta`。
+- 只有在准备好与真实 SOL 和生产程序交互时，才使用 `mainnet`。

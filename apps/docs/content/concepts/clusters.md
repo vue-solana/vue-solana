@@ -11,12 +11,13 @@ A Solana cluster is a network of validators. Apps choose which cluster to connec
 
 Vue Solana supports these cluster names:
 
-- `mainnet-beta`: Solana mainnet. This is Solana's official mainnet cluster name. Use this for production apps and real SOL.
+- `mainnet`: Solana's production cluster. This is Solana's official mainnet cluster name. Use this for production apps and real SOL.
+- `mainnet-beta`: legacy spelling of `mainnet`. Still accepted and redirects to the same `https://api.mainnet.solana.com` endpoint.
 - `devnet`: developer network. Use this while building apps. Devnet SOL has no real value.
 - `testnet`: validator and protocol testing network. It is less common for app development than devnet.
 - `localnet`: a local validator running on your machine, usually at `http://127.0.0.1:8899`.
 
-Use `mainnet-beta` rather than `mainnet`. Vue Solana intentionally does not add a `mainnet` alias.
+Use `mainnet` in Vue Solana code. Solana's documentation refers to the production cluster as Mainnet, and `mainnet` is the cluster name Solana tooling expects. The legacy `mainnet-beta` spelling is still accepted: both names resolve to the official `https://api.mainnet.solana.com` endpoint.
 
 Official reference: [Solana Clusters](https://solana.com/docs/references/clusters)
 
@@ -27,7 +28,7 @@ An RPC endpoint is the HTTP URL your app uses to read from or write to Solana.
 Examples:
 
 - `https://api.devnet.solana.com`
-- `https://api.mainnet-beta.solana.com`
+- `https://api.mainnet.solana.com`
 - `http://127.0.0.1:8899`
 
 RPC requests go through `client.rpc` from `useSolanaClient()` or `useSolanaRpc()`, or from `createSolanaClient()` / `createSolanaContext()` in `@vue-solana/core`. The legacy `Connection` class and the `web3` subpaths were removed in v2.0.0. Public endpoints are useful for getting started, but production apps usually use a dedicated RPC provider for reliability and rate limits.
@@ -41,7 +42,7 @@ WebSocket endpoints are used for subscriptions and real-time updates. Vue Solana
 Examples:
 
 - `wss://api.devnet.solana.com`
-- `wss://api.mainnet-beta.solana.com`
+- `wss://api.mainnet.solana.com`
 - `ws://127.0.0.1:8900`
 
 ## Configure A Cluster
@@ -69,7 +70,7 @@ You can also pass a custom endpoint:
 
 ```ts
 createSolanaPlugin({
-  cluster: "mainnet-beta",
+  cluster: "mainnet",
   endpoint: "https://your-rpc.example.com",
   commitment: "confirmed",
 });

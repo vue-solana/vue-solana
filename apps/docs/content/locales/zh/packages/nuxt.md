@@ -34,16 +34,18 @@ export default defineNuxtConfig({
 export default defineNuxtConfig({
   modules: ["@vue-solana/nuxt"],
   solana: {
-    cluster: "mainnet-beta",
+    cluster: "mainnet",
     endpoint: "https://your-rpc.example.com",
     commitment: "confirmed",
   },
 });
 ```
 
-支持的 cluster 是 `mainnet-beta`、`devnet`、`testnet` 和 `localnet`。Solana mainnet 请使用 `mainnet-beta`；这是 Solana 的官方 cluster 名称。
+支持的 cluster 是 `mainnet`（旧别名 `mainnet-beta`）、`devnet`、`testnet` 和 `localnet`。Solana mainnet 请使用 `mainnet`；这是 Solana 官方的主网集群名称。
 
 Nuxt 模块选项存储在 public runtime config 中，因此必须可 JSON 序列化。自定义 `wallet` adapter 对象有意不包含在 Nuxt 配置中；如果需要注入自定义钱包对象，请在 client-only Vue 代码中直接使用 Vue 插件。
+
+`ModuleOptions` 也有意省略 `payer` 和 `payerSecretKey`。direct `@vue-solana/core` 和 `@vue-solana/vue` client 仍支持这两个字段，但 Nuxt module 不会转发它们，并会从 public runtime config 中删除。永远不要把 raw secret、seed phrase 或 `payerSecretKey` 放入 `nuxt.config.ts` 或 `runtimeConfig.public`：这些值对 browser 可见。如果需要 client-owned signer，请在 client-only plugin 中用 `generateKeyPairSigner()` 创建 ephemeral signer，或使用带有 connected-wallet embedded signer 的交易消息。
 
 模块的客户端运行时插件还会自动安装应用级选定钱包账户上下文，因此无需挂载 provider，`useSolanaSelectedWalletAccount()` 就能在每个组件中工作。若要自定义持久化（`stateSync`）或过滤（`filterWallet`），请在组件树更深处挂载来自 `@vue-solana/vue/useSelectedWalletAccount` 的 `SelectedWalletAccountProvider` 来覆盖默认上下文。
 
@@ -113,8 +115,11 @@ request、subscription、tracked-data 和 SWR-cache composable 的完整语义�
 - `useSolanaSignAndSendTransactions()`：在一次钱包请求中签名并发送多笔交易。
 - `useSolanaPayer()` / `useSolanaIdentity()`：响应式 Kit client signer（需要 signer 插件）。
 - `useSolanaPlanTransaction()` / `useSolanaPlanTransactions()`：根据 instruction input 规划交易消息。
+- `useSolanaSendTransaction()` / `useSolanaSendTransactions()`：使用默认 client 安装的官方 planner 和 executor，进行 plan、sign、submit 并等待 `confirmed`，不显示 wallet popup。请在 client-only Vue plugin 中配置 signer 或提供 embedded signer；当 connected wallet 必须批准每笔交易时，使用 `useSolanaSignAndSendTransaction(s)`。
 
 这些是 Vue composable 的 Nuxt alias。
+
+模块创建的默认 client 会组合官方 `solanaRpc()`、`rpcTransactionPlanner()` 和 `rpcTransactionPlanSendingExecutor()` plugin。旧的 custom fallback sender 不再使用。`useSolanaSendTransaction()` 和 `useSolanaSendTransactions()` 暴露官方 client-sending capability，但由于 `ModuleOptions` 省略了 `payer` 和 `payerSecretKey`，模块不会配置 payer。只有官方 executor 在 `confirmed` commitment 完成 send-and-confirm 后，状态才会变为 `sent`。
 
 Vue 包使用 `useRpc()` 这样的短名称，因为调用方会从 `@vue-solana/vue/useRpc` 显式导入。
 
@@ -414,6 +419,8 @@ async function submitTransaction(transaction: SolanaTransaction) {
 
 状态会在 RPC 提交后从 `sending` 变为 `sent`。启用确认后，状态会继续经过 `confirming`，并最终到达获得的 commitment，例如 `confirmed` 或 `finalized`。如果提交后确认超时，`signature` 仍然可用，因此应用可以展示 explorer 链接或在重试前轮询签名状态。
 
+client-sent 交易不同：`useSolanaSendTransaction()` 和 `useSolanaSendTransactions()` 使用官方 RPC plan-sending executor。executor 会在 `execute()` resolve 前等待 `confirmed`，因此 `sent` 表示客户端 send-and-confirm 已完成。它们不显示 wallet popup；请使用带有 connected-wallet embedded signer 的消息，或在 client-only Vue plugin 中安装 signer。不要尝试把 raw `payerSecretKey` 配置到 Nuxt public runtime config。
+
 钱包提示必须由 hydration 后的用户交互触发。不要在 SSR、server route 或页面加载时自动调用 `execute()`。
 
 ## 确认现有签名
@@ -464,11 +471,11 @@ onBeforeUnmount(() => {
 </script>
 ```
 
-Explorer 链接请使用配置的 cluster。Devnet 链接应包含 `?cluster=devnet`；mainnet 链接不应包含 cluster query。
+Explorer 链接请使用配置的 cluster。Devnet 链接应包含 `?cluster=devnet`；`mainnet` 和旧别名 `mainnet-beta` 链接都不应包含 cluster query。
 
 ```ts
 function explorerUrl(signature: string, cluster: string) {
-  const suffix = cluster === "mainnet-beta" ? "" : `?cluster=${cluster}`;
+  const suffix = cluster === "mainnet" || cluster === "mainnet-beta" ? "" : `?cluster=${cluster}`;
   return `https://explorer.solana.com/tx/${signature}${suffix}`;
 }
 ```

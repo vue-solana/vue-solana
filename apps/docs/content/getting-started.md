@@ -13,12 +13,12 @@ Use `@vue-solana/core` directly if you need Solana primitives without Vue/Nuxt i
 
 Supported clusters:
 
-- `mainnet-beta`: Solana mainnet. This is Solana's official mainnet cluster name.
+- `mainnet`: Solana's production cluster. This is Solana's official mainnet cluster name.
 - `devnet`: best default for app development.
 - `testnet`: validator and protocol testing network.
 - `localnet`: local validator.
 
-Use `devnet` while learning and testing. Use `mainnet-beta` only when you are ready to interact with real SOL.
+Use `devnet` while learning and testing. Use `mainnet` only when you are ready to interact with real SOL.
 
 Current wallet support:
 
@@ -139,6 +139,8 @@ export default defineNuxtConfig({
 ```
 
 The Nuxt module installs the runtime plugin on the client only and auto-imports composables from direct `@vue-solana/vue/*` subpaths. Composables are safe to call during SSR, but real RPC and wallet operations should run after hydration, such as from `onMounted()` or user actions. Nuxt `solana` options live in public runtime config, so keep them JSON-serializable.
+
+Direct Vue and core clients accept `payer` and `payerSecretKey` for client-sent transactions. `payerSecretKey` is a base64 64-byte Ed25519 keypair, so never put it in Nuxt public runtime config or ship a funded key to a browser. Nuxt `ModuleOptions` intentionally omits both fields; create an ephemeral signer in a client-only plugin or use a transaction message with an embedded connected-wallet signer instead.
 
 ## Test RPC Without A Wallet
 
@@ -264,7 +266,7 @@ Start the Nuxt example:
 
 `pnpm dev:nuxt`
 
-The examples demonstrate plugin/module setup, RPC state, direct connection calls, balance reads, unified wallet discovery, persisted wallet selection, wallet state, message signing, generic transaction state, transaction transfer flows, confirmation status, explorer links, and unsupported capability UI. They use devnet by default for safe testing.
+The examples demonstrate plugin/module setup, RPC state, direct connection calls, balance reads, unified wallet discovery, persisted wallet selection, wallet state, message signing, generic transaction state, transaction transfer flows, client-sent transactions through the official Kit planner and RPC plan-sending executor, confirmation status, explorer links, and unsupported capability UI. They use devnet by default for safe testing.
 
 ## Connect A Wallet
 
@@ -356,7 +358,7 @@ After signing, verify that the UI shows the returned signature bytes and does no
 
 ## Send A Transfer
 
-The Vue and Nuxt examples include recipient address and amount fields for a real transfer. They use devnet by default so you can test with SOL that has no real value. For mainnet, configure `mainnet-beta` or a mainnet RPC endpoint and use a wallet with real SOL for fees.
+The Vue and Nuxt examples include recipient address and amount fields for a real transfer. They use devnet by default so you can test with SOL that has no real value. For mainnet, configure `mainnet` or a mainnet RPC endpoint and use a wallet with real SOL for fees.
 
 Start with a tiny amount such as `0.000001` SOL while testing.
 
@@ -384,12 +386,14 @@ Explorer URLs should be cluster-aware:
 
 ```ts
 function explorerUrl(signature: string, cluster: string) {
-  const suffix = cluster === "mainnet-beta" ? "" : `?cluster=${cluster}`;
+  const suffix = cluster === "mainnet" || cluster === "mainnet-beta" ? "" : `?cluster=${cluster}`;
   return `https://explorer.solana.com/tx/${signature}${suffix}`;
 }
 ```
 
 If confirmation times out after a signature is returned, do not immediately resubmit. Check the signature status or explorer first; the transaction may still confirm.
+
+The client-send demo uses the official `rpcTransactionPlanSendingExecutor()` installed by the default client. Connect a wallet that supports `signTransaction`, fund the demo payer where the example requires it, and use `useSolanaSendTransaction()` or `useSolanaSendTransactions()`. The executor submits the transaction and waits for `confirmed` commitment before the composable reports `sent`; there is no separate wallet send popup. In Nuxt, create any demo payer in a client-only plugin rather than `nuxt.config.ts`.
 
 ## Final Verification
 
@@ -402,8 +406,9 @@ Before relying on an app flow, verify these behaviors on devnet:
 - Unsupported message signing or transaction signing capabilities are disabled in the UI.
 - Message signing returns a signature without submitting an on-chain transaction.
 - Transfer submission returns a signature and confirmation status.
+- Client-sent transactions use the official planner and RPC plan-sending executor, require a configured payer or embedded signer, and reach `sent` only after `confirmed` commitment.
 - Explorer links point to the same cluster as the app.
-- `mainnet-beta` is used only when you intentionally configure mainnet and understand that real SOL is at risk.
+- `mainnet` is used only when you intentionally configure mainnet and understand that real SOL is at risk.
 
 ## More Reading
 

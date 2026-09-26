@@ -47,12 +47,33 @@ iOS 浏览器钱包链接会在 iOS 浏览器上为 Phantom、Solflare 和 Backp
 ```ts
 createApp(App).use(
   createSolanaPlugin({
-    cluster: "mainnet-beta",
+    cluster: "mainnet",
     endpoint: "https://your-rpc.example.com",
     commitment: "confirmed",
   }),
 );
 ```
+
+支持的 cluster 是 `mainnet`（旧别名 `mainnet-beta`）、`devnet`、`testnet` 和 `localnet`。Solana mainnet 请使用 `mainnet`；这是 Solana 官方的主网集群名称。
+
+### 插件选项
+
+| 选项             | 类型                           | 默认值             | 说明                                                                                 |
+| ---------------- | ------------------------------ | ------------------ | ------------------------------------------------------------------------------------ |
+| `cluster`        | Solana cluster                 | `devnet`           | 省略 `endpoint` 时使用的 cluster。`mainnet-beta` 作为 `mainnet` 的旧别名仍然被接受。 |
+| `endpoint`       | `string`                       | Cluster endpoint   | HTTP RPC endpoint。                                                                  |
+| `wsEndpoint`     | `string`                       | Derived endpoint   | WebSocket RPC endpoint。                                                             |
+| `commitment`     | Commitment                     | Kit default        | RPC 调用的默认 commitment。                                                          |
+| `autoConnect`    | `boolean`                      | `false`            | 只重新连接之前选择且再次发现的已发现钱包。                                           |
+| `payer`          | `TransactionSigner`            | None               | 客户端发送交易时的费用支付方和签名者。                                               |
+| `payerSecretKey` | `string`                       | None               | base64 编码的 64 字节 Ed25519 keypair，secret key 在前，在创建客户端时解析。         |
+| `wallet`         | `SolanaWallet`                 | Disabled           | 自定义钱包 adapter。                                                                 |
+| `mobileWallet`   | `MobileWalletOptions \| false` | Enabled on Android | Android Mobile Wallet Adapter 选项。                                                 |
+| `iosWallet`      | `iOSWalletOptions \| false`    | Enabled on iOS     | iOS 钱包 universal-link 选项。                                                       |
+
+`payer` 和 `payerSecretKey` 支持 direct Vue/core client。client-sent 交易需要 payer，或交易消息中已有 embedded signer。永远不要把 raw secret 或 `payerSecretKey` 放入 Nuxt public runtime config，也不要把有资金的 signing key 发送到 end-user browser。
+
+`createSolanaPlugin()` 的默认 client 使用官方 `solanaRpc()`、`rpcTransactionPlanner()` 和 `rpcTransactionPlanSendingExecutor()` 组合。旧的 custom fallback sender 不再使用。官方 executor 会在 `execute()` resolve、`status` 变为 `sent` 之前等待 `confirmed` commitment。
 
 ### 客户端与插件生命周期
 
@@ -147,8 +168,9 @@ import { useWallet } from "@vue-solana/vue/useWallet";
 - `useSignIn()`：触发钱包的 Sign In With Solana（SIWS）功能。
 - `useSelectedWalletAccount()`：读取应用级选中钱包账户 context，带持久化和过滤。
 - `useSignTransactions()` / `useSignAndSendTransactions()`：在一次钱包请求中签署（或签署并发送）多笔交易。
-- `usePayer()` / `useIdentity()`：Kit client 的响应式 signer（需要 signer 插件）。
+- `usePayer()` / `useIdentity()`：Kit client 的响应式 signer。默认 Vue client 会暴露配置的 payer，custom client 可以安装 signer。
 - `usePlanTransaction()` / `usePlanTransactions()`：从 instruction 输入规划交易消息。
+- `useSendTransaction()` / `useSendTransactions()`：使用 `createSolanaClient()` 安装的官方 planner 和 executor，进行 plan、sign、submit 并等待 `confirmed`，不显示 wallet popup。请配置 payer 或提供 embedded signer。
 - `useClientCapability(name)`：断言某能力已安装在 client 上，缺失时抛出描述性错误。
 
 ## 相关指南
@@ -669,6 +691,16 @@ await execute(transaction);
 
 钱包可能在签名前修改消息或交易——例如添加自己的指令或更改 fee payer——Wallet Standard 明确允许这样做。请重新读取返回的 `signedMessage` 或已签名交易 bytes，而不要假设它们与你的输入逐字节一致。
 
+### 客户端发送交易
+
+`useSendTransaction()` 和 `useSendTransactions()` 使用客户端的 transaction-sending capability，而不是已连接的钱包。`createSolanaClient()` 和 `createSolanaPlugin()` 默认安装官方 `solanaRpc()`、`rpcTransactionPlanner()` 和 `rpcTransactionPlanSendingExecutor()` stack，因此这些 composable 不需要 custom fallback，也不需要再次手动安装 plugin。
+
+executor 会获取新的 blockhash，估计或保留 resource limit，除非另有配置否则执行 preflight simulation，使用客户端 signer 签名，通过 RPC 提交并等待 `confirmed` commitment。只有 send-and-confirm 操作完成后，`status` 才会从 `sending` 变为 `sent`。单笔结果在 `data.context.signature` 提供已提交的签名，batch 结果包含 plan result tree。没有钱包弹窗，因此只应在客户端拥有适当 signer 的可信上下文中使用此流程。
+
+在 direct Vue/core client 中使用 `payer` 或 `payerSecretKey` 配置 signer。如果客户端没有 payer，请传入带有 embedded signer 的交易消息。生产环境的有资金 key 应保留在 server 或 relayer 中。永远不要把 raw secret 或 `payerSecretKey` 放入 Nuxt public runtime config，也不要把有资金的 keypair 发送到 end-user browser。
+
+钱包 composable 是分开的：`useSignAndSendTransaction()` 默认在 RPC submission 后返回，或在传入 `confirm: true` 时等待所选 commitment。客户端发送交易始终使用官方 executor 的 `confirmed` send-and-confirm 行为。
+
 ## 批量交易
 
 ```ts
@@ -738,7 +770,7 @@ const { transactionMessage, execute } = usePlanTransaction();
 const message = await execute(instructions);
 ```
 
-`useClientCapability("payer")` 会断言某项能力已安装在客户端上，缺失时在 setup 阶段抛出描述性错误（指出钩子名称及安装方式）。`usePlanTransaction()` / `usePlanTransactions()` 需要规划能力，例如 `@solana/kit-plugin-rpc` 的 `rpcTransactionPlanner()`。
+`useClientCapability("payer")` 会断言某项能力已安装在客户端上，缺失时在 setup 阶段抛出描述性错误（指出钩子名称及安装方式）。默认 Vue client 已安装官方 planner 和 transaction-sending executor；custom client 必须自行安装 `rpcTransactionPlanner()` 和 `rpcTransactionPlanSendingExecutor()`。
 
 ## 确认现有签名
 

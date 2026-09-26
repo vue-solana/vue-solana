@@ -16,7 +16,7 @@ timestamp: 2025-07-17T00:00:00Z
 
 This section summarizes the public APIs exported by the Vue Solana packages.
 
-`@vue-solana/core` builds on [`@solana/kit`](https://solana.com/docs/kit). It exposes `createSolanaClient()` and re-exports Kit primitives (`address`, `lamports`, and types) from `@vue-solana/core/kit`. Vue apps use `@vue-solana/vue/kit`, and Nuxt apps use `@vue-solana/nuxt/kit`. The legacy `@solana/web3-compat` surface and the `web3` subpaths were removed in v2.0.0.
+`@vue-solana/core` builds on [`@solana/kit`](https://solana.com/docs/kit). It exposes `createSolanaClient()` and re-exports Kit primitives (`address`, `lamports`, and types) from `@vue-solana/core/kit`. The default client composes the official `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()` stack. Direct core/Vue clients may configure `payer` or `payerSecretKey`; Nuxt intentionally omits both from public runtime config, so raw secrets must never be placed there. Vue apps use `@vue-solana/vue/kit`, and Nuxt apps use `@vue-solana/nuxt/kit`. The legacy `@solana/web3-compat` surface and the `web3` subpaths were removed in v2.0.0.
 
 Package references:
 
