@@ -103,13 +103,13 @@ const MEMO_PROGRAM_ADDRESS = address("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcH
  * valid on any cluster and succeeds whenever the client's payer signer has
  * enough lamports for the fee.
  */
-function buildMemoInstruction(): Instruction {
+function buildMemoInstruction(note: string): Instruction {
   // `@solana/kit` re-exports no instruction encoder, so the memo shape is
   // asserted once here instead of at every use site.
   return {
     programAddress: MEMO_PROGRAM_ADDRESS,
     accounts: [],
-    data: new TextEncoder().encode("Hello from @vue-solana"),
+    data: new TextEncoder().encode(note),
   } as Instruction;
 }
 
@@ -163,12 +163,19 @@ async function runFundPayer() {
 }
 
 async function runClientSend() {
-  await runExclusiveClientAction(() => sendTransaction.execute([buildMemoInstruction()]));
+  await runExclusiveClientAction(() =>
+    sendTransaction.execute([buildMemoInstruction("Hello from @vue-solana")]),
+  );
 }
 
 async function runClientSendBatch() {
   await runExclusiveClientAction(() =>
-    sendTransactions.execute([buildMemoInstruction(), buildMemoInstruction()]),
+    sendTransactions.execute([
+      // Distinct notes, or both transactions serialize to the same bytes and
+      // the duplicate signature gets rejected.
+      buildMemoInstruction("Hello from @vue-solana (1 of 2)"),
+      buildMemoInstruction("Hello from @vue-solana (2 of 2)"),
+    ]),
   );
 }
 

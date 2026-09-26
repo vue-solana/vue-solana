@@ -21,10 +21,10 @@ function withPayer(payer: TransactionSigner) {
  * transaction, and the module can never carry one: Nuxt strips `payer` and
  * `payerSecretKey` from both module options and `runtimeConfig.public`, so no
  * secret reaches the browser. The demo therefore generates an ephemeral
- * in-memory signer and funds it through the airdrop card. Once a release whose
- * `createSolanaClient()` accepts a `payer` is published, this plugin only has to
- * keep the planner and executor. Track with the `official-transaction-stack`
- * changeset.
+ * in-memory signer and funds it through the airdrop card. When the docs move to
+ * a `@vue-solana/nuxt` release whose `createSolanaClient()` accepts a `payer`,
+ * the fallback below starts picking up that signer and this plugin only has to
+ * keep the planner and executor.
  *
  * Nuxt runs `app/` plugins after module plugins, so the module's provider has
  * already run when this executes.
