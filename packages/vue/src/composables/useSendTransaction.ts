@@ -35,9 +35,8 @@ interface SendingClient {
 }
 
 const SENDING_PROVIDER_HINT =
-  "Install a transaction planner and a transaction-sending executor plugin, e.g. " +
-  "`createClient().use(rpcTransactionPlanner()).use(rpcTransactionPlanSendingExecutor())` " +
-  "from `@solana/kit-plugin-rpc`.";
+  "Use a client created by `createSolanaClient()` with a `payer` signer, or pass a transaction " +
+  "message whose fee payer already has an embedded signer.";
 
 /**
  * Plan, sign with the client's signers (payer/identity), submit, and confirm

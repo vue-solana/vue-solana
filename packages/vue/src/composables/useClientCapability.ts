@@ -61,7 +61,9 @@ export function useClientCapability(
   const { client } = useSolanaClient();
 
   for (const name of capabilities) {
-    if (typeof (client as Record<string, unknown>)[name] === "undefined") {
+    const value = (client as Record<string, unknown>)[name];
+
+    if (typeof value !== "function" && typeof value !== "object") {
       throw new MissingClientCapabilityError(hookName, [name], providerHint);
     }
   }
