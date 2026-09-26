@@ -233,6 +233,19 @@ describe("Nuxt module", () => {
     });
   });
 
+  it("omits client signer options from public runtime config", async () => {
+    const module = (await import("./module")).default as unknown as ModuleUnderTest;
+    const publicConfig: Record<string, unknown> = {};
+
+    setupModule(
+      module,
+      { cluster: "devnet", payer: { address: "signer" }, payerSecretKey: "secret" },
+      { publicConfig },
+    );
+
+    expect(publicConfig.solana).toEqual({ cluster: "devnet" });
+  });
+
   it("serializes reconnect and native wallet options into public runtime config", async () => {
     const module = (await import("./module")).default as unknown as ModuleUnderTest;
     const publicConfig: Record<string, unknown> = {};

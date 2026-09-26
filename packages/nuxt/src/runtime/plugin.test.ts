@@ -68,6 +68,31 @@ describe("Nuxt runtime plugin", () => {
     expect(vueApp.use).toHaveBeenCalledWith(createSolanaPlugin.mock.results[0]?.value);
   });
 
+  it("does not forward client signer secrets from runtime config", () => {
+    runtimeConfig.public.solana = {
+      cluster: "devnet",
+      payerSecretKey: "secret",
+    } as never;
+    const vueApp = {
+      use: vi.fn(),
+      provide: vi.fn(),
+    };
+
+    const runPlugin = plugin as (nuxtApp: { vueApp: typeof vueApp }) => void;
+
+    runPlugin({ vueApp });
+
+    expect(createSolanaPlugin).toHaveBeenCalledWith({
+      cluster: "devnet",
+      endpoint: undefined,
+      wsEndpoint: undefined,
+      commitment: undefined,
+      autoConnect: undefined,
+      mobileWallet: undefined,
+      iosWallet: undefined,
+    });
+  });
+
   it("installs the app-wide selected wallet account context", () => {
     const vueApp = {
       use: vi.fn(),

@@ -2,7 +2,7 @@ import { addImports, addPlugin, createResolver, defineNuxtModule } from "@nuxt/k
 import type { VueSolanaPluginOptions } from "@vue-solana/vue";
 import { SOLANA_IMPORTS } from "./imports";
 
-export type ModuleOptions = Omit<VueSolanaPluginOptions, "wallet">;
+export type ModuleOptions = Omit<VueSolanaPluginOptions, "wallet" | "payer" | "payerSecretKey">;
 
 type DefinedNuxtModule = ReturnType<ReturnType<typeof defineNuxtModule<ModuleOptions>>["with"]>;
 
@@ -78,6 +78,8 @@ function toPublicSolanaConfig(options: ModuleOptions): ModuleOptions {
   const runtimeOptions = { ...options } as VueSolanaPluginOptions;
 
   delete runtimeOptions.wallet;
+  delete runtimeOptions.payer;
+  delete runtimeOptions.payerSecretKey;
 
   return runtimeOptions;
 }
