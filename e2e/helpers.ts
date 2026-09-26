@@ -1,6 +1,8 @@
 import { expect, type Page } from "@playwright/test";
 
 const MOCK_BLOCKHASH = "5v2p4R5H6J7K8L9M1N2P3Q4R5S6T7U8V9W1X2Y3Z4a5b";
+const MOCK_SIGNATURE =
+  "2Ana1pUpv2ZbMVkwF5FXapYeBEjdxDatLn7nvJkhgTSXbs59SyZSx866bXirPgj8QQVB57uxHJBG1YFvkRbFj4T";
 
 export function isRealRpcRun() {
   return process.env.E2E_REAL_RPC === "true";
@@ -36,7 +38,21 @@ export async function waitForRpcConnected(page: Page) {
   await expect(status).toHaveText("connected");
 }
 
-export async function mockSolanaRpc(page: Page) {
+interface RpcMockHarness {
+  methodCalls(): readonly string[];
+}
+
+const rpcMockHarnesses = new WeakMap<Page, RpcMockHarness>();
+
+export async function mockSolanaRpc(page: Page): Promise<RpcMockHarness> {
+  const existingHarness = rpcMockHarnesses.get(page);
+
+  if (existingHarness) {
+    return existingHarness;
+  }
+
+  const methodCalls: string[] = [];
+
   await page.route("https://api.devnet.solana.com/**", async (route) => {
     const request = route.request();
 
@@ -45,8 +61,15 @@ export async function mockSolanaRpc(page: Page) {
       return;
     }
 
-    const body = request.postDataJSON() as { id?: string | number; method?: string } | undefined;
-    const response = createRpcResponse(body?.id ?? 1, body?.method);
+    const body = request.postDataJSON() as
+      | { id?: string | number; method?: string; params?: unknown }
+      | undefined;
+
+    if (body?.method) {
+      methodCalls.push(body.method);
+    }
+
+    const response = createRpcResponse(body?.id ?? 1, body?.method, body?.params);
 
     await route.fulfill({
       status: 200,
@@ -55,12 +78,18 @@ export async function mockSolanaRpc(page: Page) {
       body: JSON.stringify(response),
     });
   });
+
+  const harness: RpcMockHarness = { methodCalls: () => methodCalls };
+  rpcMockHarnesses.set(page, harness);
+
+  return harness;
 }
 
 /**
  * Drives notifications into open mocked subscription sockets.
  */
 export interface SubscriptionHarness {
+  rpcMethodCalls(): readonly string[];
   /**
    * Push an `accountNotification` (lamports changed) to every open account
    * subscription, as if the tracked account just received SOL.
@@ -87,7 +116,7 @@ export interface SubscriptionHarness {
  * and are ignored.
  */
 export async function mockSolanaSubscriptions(page: Page): Promise<SubscriptionHarness> {
-  await mockSolanaRpc(page);
+  const rpc = await mockSolanaRpc(page);
 
   interface OpenSocket {
     send(message: string): unknown;
@@ -144,6 +173,7 @@ export async function mockSolanaSubscriptions(page: Page): Promise<SubscriptionH
   });
 
   return {
+    rpcMethodCalls: rpc.methodCalls,
     pushAccountNotification(lamports: number, slot: number) {
       const notification = {
         context: { slot },
@@ -235,7 +265,7 @@ export async function expectNoPageErrors(page: Page, run: () => Promise<void>) {
   expect(consoleErrors).toEqual([]);
 }
 
-function createRpcResponse(id: string | number, method?: string) {
+function createRpcResponse(id: string | number, method?: string, params?: unknown) {
   if (method === "getLatestBlockhash") {
     return {
       jsonrpc: "2.0",
@@ -246,6 +276,21 @@ function createRpcResponse(id: string | number, method?: string) {
           blockhash: MOCK_BLOCKHASH,
           lastValidBlockHeight: 654321,
         },
+      },
+    };
+  }
+
+  if (method === "getEpochInfo") {
+    return {
+      jsonrpc: "2.0",
+      id,
+      result: {
+        absoluteSlot: 123456,
+        blockHeight: 120000,
+        epoch: 500,
+        slotIndex: 1000,
+        slotsInEpoch: 432000,
+        transactionCount: null,
       },
     };
   }
@@ -283,6 +328,57 @@ function createRpcResponse(id: string | number, method?: string) {
           rentEpoch: "18446744073709551615",
           space: 0,
         },
+      },
+    };
+  }
+
+  if (method === "simulateTransaction") {
+    return {
+      jsonrpc: "2.0",
+      id,
+      result: {
+        context: { slot: 123457 },
+        value: {
+          err: null,
+          fee: 5000,
+          loadedAccountsDataSize: 0,
+          loadedAddresses: { readonly: [], writable: [] },
+          logs: ["Program Memo invoke [1]"],
+          postBalances: [1000000000],
+          postTokenBalances: null,
+          preBalances: [1000000000],
+          preTokenBalances: null,
+          replacementBlockhash: {
+            blockhash: MOCK_BLOCKHASH,
+            lastValidBlockHeight: 654321,
+          },
+          returnData: null,
+          unitsConsumed: 150,
+        },
+      },
+    };
+  }
+
+  if (method === "sendTransaction" || method === "requestAirdrop") {
+    return { jsonrpc: "2.0", id, result: MOCK_SIGNATURE };
+  }
+
+  if (method === "getSignatureStatuses") {
+    const signatures =
+      Array.isArray(params) && Array.isArray(params[0]) ? (params[0] as unknown[]) : [];
+
+    return {
+      jsonrpc: "2.0",
+      id,
+      result: {
+        context: { slot: 123457 },
+        value: signatures.map(() => ({
+          slot: 123457,
+          confirmations: 1,
+          err: null,
+          confirmationStatus: "finalized",
+          status: { Ok: null },
+        })),
       },
     };
   }

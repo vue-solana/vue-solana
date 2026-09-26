@@ -86,6 +86,21 @@ const {
   tracked: liveTracked,
   trackedAddressInput,
   trackedText,
+  airdrop,
+  airdropErrorText,
+  airdropSignature,
+  clientSendPayerAddress,
+  clientSendTransaction,
+  clientSendTransactionError,
+  clientSendTransactionStatus,
+  clientSendTransactions,
+  clientSendTransactionsError,
+  clientSendTransactionsStatus,
+  runAirdrop,
+  runClientSend,
+  runClientSendBatch,
+  sendTransactionText,
+  sendTransactionsText,
 } = useDemoPage();
 
 const sections = computed(() => [
@@ -242,6 +257,22 @@ const sections = computed(() => [
           :error="mockTransactionError"
           @run="runMockTransaction"
         />
+
+        <DemoClientSendCard
+          :wallet-ready="wallet.connected.value"
+          :can-sign-transaction="wallet.canSignTransaction.value"
+          :loading="clientSendTransaction.loading.value"
+          :single-status="clientSendTransactionStatus"
+          :single-text="sendTransactionText"
+          :single-error="clientSendTransactionError"
+          :batch-loading="clientSendTransactions.loading.value"
+          :batch-status="clientSendTransactionsStatus"
+          :batch-text="sendTransactionsText"
+          :batch-error="clientSendTransactionsError"
+          :payer-address="clientSendPayerAddress"
+          @send-single="runClientSend"
+          @send-batch="runClientSendBatch"
+        />
       </DemoSection>
 
       <DemoSection
@@ -287,6 +318,15 @@ const sections = computed(() => [
         />
 
         <DemoSwrCard />
+
+        <DemoAirdropCard
+          :wallet-ready="wallet.connected.value"
+          :loading="airdrop.isRunning.value"
+          :status="airdrop.status.value"
+          :signature="airdropSignature"
+          :error="airdropErrorText"
+          @airdrop="runAirdrop"
+        />
       </DemoSection>
     </div>
   </main>

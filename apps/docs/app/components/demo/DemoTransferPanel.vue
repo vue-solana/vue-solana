@@ -42,6 +42,13 @@ const translatedConfirmationState = computed(() =>
       </i18n-t>
     </p>
 
+    <p
+      class="mb-4 rounded-lg border border-violet-200 bg-violet-50 px-3 py-2 text-sm font-bold leading-6 text-violet-900 dark:border-violet-900/60 dark:bg-violet-950/40 dark:text-violet-200"
+      data-testid="transfer-when-to-use"
+    >
+      {{ $t("demo.transfer.whenToUse") }}
+    </p>
+
     <DemoDataGrid
       compact
       :items="[

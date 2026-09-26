@@ -1,9 +1,17 @@
 <script setup lang="ts">
 import { computed, ref } from "vue";
-import { address, lamports } from "@solana/kit";
+import {
+  address,
+  lamports,
+  summarizeTransactionPlanResult,
+  type TransactionPlanResult,
+} from "@solana/kit";
 import {
   useAirdrop,
+  usePayer,
   useRequest,
+  useSendTransaction,
+  useSendTransactions,
   useSignIn,
   useSolanaClient,
   useSubscription,
@@ -16,6 +24,11 @@ const { client } = useSolanaClient();
 const wallet = useWallet();
 const signIn = useSignIn();
 const airdrop = useAirdrop();
+const payer = usePayer();
+const sendTransaction = useSendTransaction();
+const sendTransactions = useSendTransactions();
+const payerFundingAction = useAirdrop();
+const clientActionBusy = ref(false);
 
 /** Account whose live data the panels track; re-typing it re-fires everything. */
 const trackedAddressInput = ref("HN7cABqLq46Es1jh92dQQisAq662SmxELLLsHHe4YWrH");
@@ -91,6 +104,125 @@ const tracked = useTrackedData<{ lamports: bigint } | null, { lamports: bigint }
 /** Toggling remounts `SwrCard`, demonstrating stale-while-revalidate on mount. */
 const swrPanelVisible = ref(true);
 
+const MEMO_PROGRAM_ADDRESS = address("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr");
+
+/**
+ * A SPL Memo instruction — no accounts, no funds moved — so the demo send is
+ * valid on any cluster and succeeds whenever the client's payer signer has
+ * enough lamports for the fee.
+ */
+function buildMemoInstruction() {
+  return {
+    programAddress: MEMO_PROGRAM_ADDRESS,
+    accounts: [],
+    data: new TextEncoder().encode("Hello from @vue-solana"),
+  };
+}
+
+const payerStatusText = computed(() => {
+  const status = payerFundingAction.isRunning.value
+    ? "funding"
+    : payerFundingAction.error.value
+      ? "failed"
+      : payerFundingAction.data.value
+        ? "funded"
+        : "funding required";
+
+  return `${status} · ${payer.value.address.slice(0, 8)}…`;
+});
+const payerFundText = computed(() => {
+  if (payerFundingAction.isRunning.value) {
+    return "Funding payer...";
+  }
+
+  if (payerFundingAction.error.value) {
+    return "Payer funding failed";
+  }
+
+  return payerFundingAction.data.value
+    ? `Payer funded · Signature ${payerFundingAction.data.value}`
+    : "Payer not funded";
+});
+const payerFundError = computed(() => formatError(payerFundingAction.error.value));
+
+async function runExclusiveClientAction(action: () => Promise<unknown>) {
+  if (clientActionBusy.value) {
+    return;
+  }
+
+  clientActionBusy.value = true;
+
+  try {
+    await action();
+  } catch {
+    return;
+  } finally {
+    clientActionBusy.value = false;
+  }
+}
+
+async function runFundPayer() {
+  await runExclusiveClientAction(async () => {
+    payerFundingAction.reset();
+    await payerFundingAction.dispatch(payer.value.address, lamports(1_000_000_000n));
+  });
+}
+
+async function runClientSend() {
+  await runExclusiveClientAction(() => sendTransaction.execute([buildMemoInstruction()] as never));
+}
+
+async function runClientSendBatch() {
+  await runExclusiveClientAction(() =>
+    sendTransactions.execute([buildMemoInstruction(), buildMemoInstruction()] as never),
+  );
+}
+
+const sendTransactionSignatureText = computed(() => {
+  const data = sendTransaction.data.value;
+
+  return data ? formatPlanResult(data, "No client send yet") : "No client send yet";
+});
+const sendTransactionsText = computed(() => {
+  const data = sendTransactions.data.value;
+
+  return data ? formatPlanResult(data, "No batch send yet") : "No batch send yet";
+});
+const sendTransactionErrorText = computed(() => formatError(sendTransaction.error.value));
+const sendTransactionsErrorText = computed(() => formatError(sendTransactions.error.value));
+
+function formatPlanResult(result: TransactionPlanResult, emptyText: string): string {
+  const summary = summarizeTransactionPlanResult(result);
+  const successful = summary.successfulTransactions[0];
+  const hasFailures = summary.failedTransactions.length + summary.canceledTransactions.length > 0;
+
+  if (successful && !hasFailures) {
+    return summary.successfulTransactions.length === 1
+      ? `Signature ${successful.context.signature}`
+      : `Batch of ${summary.successfulTransactions.length} sent`;
+  }
+
+  const states: string[] = [];
+
+  if (summary.successfulTransactions.length > 0) {
+    states.push(`${summary.successfulTransactions.length} sent`);
+  }
+
+  if (summary.failedTransactions.length > 0) {
+    states.push(`${summary.failedTransactions.length} failed`);
+  }
+
+  if (summary.canceledTransactions.length > 0) {
+    states.push(`${summary.canceledTransactions.length} canceled`);
+  }
+
+  return states.join(" · ") || emptyText;
+}
+
+function formatError(error: unknown): string {
+  return error ? (error instanceof Error ? error.message : String(error)) : "";
+}
+
 const requestText = computed(() => {
   const data = request.data.value;
 
@@ -106,12 +238,8 @@ const trackedText = computed(() => {
 
   return response ? `Lamports ${response.value} · slot ${response.context.slot}` : "No data yet";
 });
-const signInErrorText = computed(() =>
-  signIn.error.value instanceof Error ? signIn.error.value.message : "",
-);
-const airdropErrorText = computed(() =>
-  airdrop.error.value instanceof Error ? airdrop.error.value.message : "",
-);
+const signInErrorText = computed(() => formatError(signIn.error.value));
+const airdropErrorText = computed(() => formatError(airdrop.error.value));
 </script>
 
 <template>
@@ -125,8 +253,9 @@ const airdropErrorText = computed(() =>
 
     <p>
       These panels exercise <code>useRequest</code>, <code>useSubscription</code>,
-      <code>useTrackedData</code>, <code>useSignIn</code>, and the SWR cache adapters against
-      devnet. Changing the tracked address re-fires the request, subscription, and tracked data.
+      <code>useTrackedData</code>, <code>useSignIn</code>, <code>useAirdrop</code>,
+      <code>usePayer</code>, and the client-sent transaction composables against devnet. Changing
+      the tracked address re-fires the request, subscription, and tracked data.
     </p>
 
     <label>
@@ -138,10 +267,18 @@ const airdropErrorText = computed(() =>
       <article class="subpanel">
         <header>
           <h3>useRequest</h3>
-          <span class="status-pill" data-testid="request-status">{{ request.status.value }}</span>
+          <span class="status-pill" role="status" aria-live="polite" data-testid="request-status">{{
+            request.status.value
+          }}</span>
         </header>
-        <p class="result" data-testid="request-data">{{ requestText }}</p>
-        <p v-if="request.error.value" class="error" data-testid="request-error">
+        <p class="result" aria-live="polite" data-testid="request-data">{{ requestText }}</p>
+        <p
+          v-if="request.error.value"
+          class="error"
+          role="alert"
+          aria-live="assertive"
+          data-testid="request-error"
+        >
           {{ request.error.value.message }}
         </p>
       </article>
@@ -149,12 +286,22 @@ const airdropErrorText = computed(() =>
       <article class="subpanel">
         <header>
           <h3>useSubscription</h3>
-          <span class="status-pill" data-testid="subscription-status">{{
-            slots.status.value
-          }}</span>
+          <span
+            class="status-pill"
+            role="status"
+            aria-live="polite"
+            data-testid="subscription-status"
+            >{{ slots.status.value }}</span
+          >
         </header>
-        <p class="result" data-testid="subscription-data">{{ slotsText }}</p>
-        <p v-if="slots.error.value" class="error" data-testid="subscription-error">
+        <p class="result" aria-live="polite" data-testid="subscription-data">{{ slotsText }}</p>
+        <p
+          v-if="slots.error.value"
+          class="error"
+          role="alert"
+          aria-live="assertive"
+          data-testid="subscription-error"
+        >
           {{ slots.error.value.message }}
         </p>
       </article>
@@ -162,10 +309,18 @@ const airdropErrorText = computed(() =>
       <article class="subpanel">
         <header>
           <h3>useTrackedData</h3>
-          <span class="status-pill" data-testid="tracked-status">{{ tracked.status.value }}</span>
+          <span class="status-pill" role="status" aria-live="polite" data-testid="tracked-status">{{
+            tracked.status.value
+          }}</span>
         </header>
-        <p class="result" data-testid="tracked-data">{{ trackedText }}</p>
-        <p v-if="tracked.error.value" class="error" data-testid="tracked-error">
+        <p class="result" aria-live="polite" data-testid="tracked-data">{{ trackedText }}</p>
+        <p
+          v-if="tracked.error.value"
+          class="error"
+          role="alert"
+          aria-live="assertive"
+          data-testid="tracked-error"
+        >
           {{ tracked.error.value.message }}
         </p>
       </article>
@@ -173,7 +328,9 @@ const airdropErrorText = computed(() =>
       <article class="subpanel">
         <header>
           <h3>useSignIn</h3>
-          <span class="status-pill" data-testid="sign-in-status">{{ signIn.status.value }}</span>
+          <span class="status-pill" role="status" aria-live="polite" data-testid="sign-in-status">{{
+            signIn.status.value
+          }}</span>
         </header>
         <p>
           Triggers the wallet's Sign In With Solana feature. The result must be verified on a server
@@ -189,14 +346,20 @@ const airdropErrorText = computed(() =>
             {{ signIn.loading.value ? "Signing in..." : "Sign In With Wallet" }}
           </button>
         </div>
-        <p class="result" data-testid="sign-in-result">
+        <p class="result" aria-live="polite" data-testid="sign-in-result">
           {{
             signIn.signInResult.value
               ? `Signed in as ${signIn.signInResult.value.account.address}`
               : "Not signed in"
           }}
         </p>
-        <p v-if="signInErrorText" class="error" data-testid="sign-in-error">
+        <p
+          v-if="signInErrorText"
+          class="error"
+          role="alert"
+          aria-live="assertive"
+          data-testid="sign-in-error"
+        >
           {{ signInErrorText }}
         </p>
       </article>
@@ -204,7 +367,9 @@ const airdropErrorText = computed(() =>
       <article class="subpanel">
         <header>
           <h3>useAirdrop</h3>
-          <span class="status-pill" data-testid="airdrop-status">{{ airdrop.status.value }}</span>
+          <span class="status-pill" role="status" aria-live="polite" data-testid="airdrop-status">{{
+            airdrop.status.value
+          }}</span>
         </header>
         <p>
           Airdrops 1 SOL into the connected wallet. Requires an airdrop-capable RPC client such as
@@ -223,11 +388,130 @@ const airdropErrorText = computed(() =>
             {{ airdrop.isRunning.value ? "Airdropping..." : "Airdrop 1 SOL" }}
           </button>
         </div>
-        <p class="result" data-testid="airdrop-data">
+        <p class="result" aria-live="polite" data-testid="airdrop-data">
           {{ airdrop.data.value ? `Signature ${airdrop.data.value}` : "No airdrop yet" }}
         </p>
-        <p v-if="airdropErrorText" class="error" data-testid="airdrop-error">
+        <p
+          v-if="airdropErrorText"
+          class="error"
+          role="alert"
+          aria-live="assertive"
+          data-testid="airdrop-error"
+        >
           {{ airdropErrorText }}
+        </p>
+      </article>
+
+      <article class="subpanel">
+        <header>
+          <h3>useSendTransaction</h3>
+          <span
+            class="status-pill"
+            role="status"
+            aria-live="polite"
+            data-testid="send-transaction-status"
+            >{{ sendTransaction.status.value }}</span
+          >
+        </header>
+        <p>
+          Sends a SPL Memo through the client's transaction-sending capability — no wallet popup.
+          The client payer signer covers the fee, so it must hold lamports: fund it first via the
+          airdrop panel below.
+        </p>
+        <div class="actions">
+          <button
+            type="button"
+            data-testid="send-transaction-button"
+            :disabled="clientActionBusy"
+            @click="runClientSend"
+          >
+            {{ sendTransaction.loading.value ? "Sending..." : "Send Via Client" }}
+          </button>
+        </div>
+        <p class="result" aria-live="polite" data-testid="send-transaction-data">
+          {{ sendTransactionSignatureText }}
+        </p>
+        <p
+          v-if="sendTransactionErrorText"
+          class="error"
+          role="alert"
+          aria-live="assertive"
+          data-testid="send-transaction-error"
+        >
+          {{ sendTransactionErrorText }}
+        </p>
+      </article>
+
+      <article class="subpanel">
+        <header>
+          <h3>useSendTransactions</h3>
+          <span
+            class="status-pill"
+            role="status"
+            aria-live="polite"
+            data-testid="send-transactions-status"
+            >{{ sendTransactions.status.value }}</span
+          >
+        </header>
+        <p>
+          Sends a batch of two memos in one call. The plan executes sequentially and resolves to the
+          full plan result tree. Requires a funded client payer.
+        </p>
+        <div class="actions">
+          <button
+            type="button"
+            data-testid="send-transactions-button"
+            :disabled="clientActionBusy"
+            @click="runClientSendBatch"
+          >
+            {{ sendTransactions.loading.value ? "Sending..." : "Send 2 Via Client" }}
+          </button>
+        </div>
+        <p class="result" aria-live="polite" data-testid="send-transactions-data">
+          {{ sendTransactionsText }}
+        </p>
+        <p
+          v-if="sendTransactionsErrorText"
+          class="error"
+          role="alert"
+          aria-live="assertive"
+          data-testid="send-transactions-error"
+        >
+          {{ sendTransactionsErrorText }}
+        </p>
+      </article>
+
+      <article class="subpanel">
+        <header>
+          <h3>usePayer</h3>
+          <span class="status-pill" role="status" aria-live="polite" data-testid="payer-status">{{
+            payerStatusText
+          }}</span>
+        </header>
+        <p>
+          The client's fee-payer signer (<code>{{ payer.address }}</code
+          >), generated fresh per session. Airdrop 1 SOL into it so the client-sent transaction
+          panels can pay fees.
+        </p>
+        <div class="actions">
+          <button
+            type="button"
+            data-testid="payer-fund-button"
+            :disabled="clientActionBusy"
+            @click="runFundPayer"
+          >
+            {{ payerFundingAction.isRunning.value ? "Funding..." : "Airdrop 1 SOL to payer" }}
+          </button>
+        </div>
+        <p class="result" aria-live="polite" data-testid="payer-fund-result">{{ payerFundText }}</p>
+        <p
+          v-if="payerFundError"
+          class="error"
+          role="alert"
+          aria-live="assertive"
+          data-testid="payer-fund-error"
+        >
+          {{ payerFundError }}
         </p>
       </article>
 

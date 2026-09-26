@@ -81,18 +81,22 @@ export default {
       error: "错误",
       idle: "空闲",
       loading: "加载中",
+      planned: "已规划",
+      planning: "规划中",
       ready: "就绪",
+      running: "执行中",
       sent: "已发送",
       sending: "发送中",
       signed: "已签名",
       signing: "签名中",
+      success: "已完成",
       waiting: "等待中",
     },
     hero: {
       eyebrow: "Devnet 实时演示",
       title: "真实 Nuxt 应用中的 Vue Solana",
       description:
-        "此页面使用已发布的 Vue Solana 包运行。你可以尝试 RPC 读取、余额查询、Wallet Standard 发现、连接/断开、消息签名，以及一个很小的真实 devnet 转账。",
+        "此页面使用最新发布的 Vue Solana 包运行。你可以尝试 RPC 读取、余额查询、Wallet Standard 发现、连接/断开、消息签名、一个很小的真实 devnet 转账、客户端发送的交易以及 devnet 空投。",
       versionsLabel: "Vue Solana 包版本",
     },
     rpc: {
@@ -213,6 +217,8 @@ export default {
       send: "发送 Devnet 转账",
       signature: "签名：",
       explorer: "Explorer:",
+      whenToUse:
+        "何时使用：由用户支付费用并在钱包中批准——适用于个人转账以及代表已连接用户执行的任何操作。",
       viewTransaction: "查看交易",
       labels: {
         walletReady: "钱包就绪",
@@ -249,7 +255,7 @@ export default {
       signing: {
         eyebrow: "签名",
         title: "签名和交易",
-        description: "消息签名、Sign In With Solana、转账和通用交易状态。",
+        description: "消息签名、Sign In With Solana、转账、客户端发送的交易和通用交易状态。",
       },
       live: {
         eyebrow: "Kit 响应式",
@@ -290,6 +296,33 @@ export default {
       signingIn: "登录中...",
       notSignedIn: "未登录",
       signedInAs: "已以 {address} 登录",
+    },
+    clientSend: {
+      title: "通过客户端发送",
+      description:
+        "通过客户端的交易发送能力规划并提交 SPL Memo 交易，规划与提交环节无需弹窗。已连接的钱包是手续费支付方，因此会在其签名对话框中逐笔审核并批准交易。",
+      payer: "手续费支付方（已连接钱包）",
+      noPayer: "未连接",
+      connectHint: "在连接钱包之前，客户端发送功能已被禁用——请先在上方选择并连接钱包。",
+      single: "useSolanaSendTransaction",
+      batch: "useSolanaSendTransactions",
+      sendSingle: "通过客户端发送 1 笔",
+      sendBatch: "通过客户端发送 2 笔",
+      noSend: "暂无客户端发送",
+      disabled: {
+        unsupported: "已连接的钱包不支持 signTransaction。",
+      },
+      whenToUse:
+        "何时使用：应用持有签名密钥（中继/服务器流程），或需要由已连接钱包签名的程序化发送——除签名批准外，没有逐条指令的钱包弹窗。",
+    },
+    airdrop: {
+      title: "SOL 空投",
+      description:
+        "通过客户端的空投功能向已连接钱包请求 devnet 空投。devnet 水龙头有速率限制，因此出错通常是暂时的。",
+      request: "空投 1 SOL",
+      connectHint: "连接钱包以接收 SOL 空投。",
+      signature: "签名：{signature}",
+      noSignature: "暂无空投",
     },
   },
 };

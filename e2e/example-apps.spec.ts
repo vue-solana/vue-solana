@@ -190,6 +190,52 @@ test("seeds tracked data from the fetch and updates it from notifications", asyn
   await expect(page.getByTestId("tracked-data")).toContainText("slot 123457");
 });
 
+test("funds the client payer and sends single and batch transactions", async ({ page }) => {
+  if (isRealRpcRun()) {
+    test.skip(true, "Client action coverage requires the deterministic RPC and socket mocks");
+  }
+
+  const rpc = await mockSolanaSubscriptions(page);
+  await page.goto("/");
+
+  await expect(page.getByTestId("payer-status")).toHaveText(/^funding required · /);
+  await expect(page.getByTestId("payer-fund-result")).toHaveText("Payer not funded");
+
+  await page.getByTestId("payer-fund-button").click();
+  await expect(page.getByTestId("payer-status")).toHaveText(/^funded · /);
+  await expect(page.getByTestId("payer-fund-result")).toHaveText(/^Payer funded · Signature /);
+
+  await page.getByTestId("send-transaction-button").click();
+  await expect(page.getByTestId("send-transaction-status")).toHaveText("sent");
+  await expect(page.getByTestId("send-transaction-data")).toHaveText(/^Signature /);
+  await expect(page.getByTestId("send-transaction-error")).toHaveCount(0);
+
+  await page.getByTestId("send-transactions-button").click();
+  await expect(page.getByTestId("send-transactions-status")).toHaveText("sent");
+  await expect(page.getByTestId("send-transactions-data")).toHaveText(/^Signature /);
+  await expect(page.getByTestId("send-transactions-error")).toHaveCount(0);
+
+  const calls = rpc.rpcMethodCalls();
+  const callCount = (method: string) => calls.filter((call) => call === method).length;
+
+  expect(calls).toEqual(
+    expect.arrayContaining([
+      "requestAirdrop",
+      "getEpochInfo",
+      "getLatestBlockhash",
+      "getSignatureStatuses",
+      "sendTransaction",
+      "simulateTransaction",
+    ]),
+  );
+  expect(callCount("requestAirdrop")).toBe(1);
+  expect(callCount("getEpochInfo")).toBeGreaterThanOrEqual(2);
+  expect(callCount("getLatestBlockhash")).toBeGreaterThanOrEqual(2);
+  expect(callCount("getSignatureStatuses")).toBeGreaterThanOrEqual(3);
+  expect(callCount("sendTransaction")).toBeGreaterThanOrEqual(2);
+  expect(callCount("simulateTransaction")).toBeGreaterThanOrEqual(2);
+});
+
 test("signs in with the mocked SIWS wallet and surfaces the account", async ({ page }) => {
   if (isRealRpcRun()) {
     test.skip(true, "SIWS panel requires the mock wallet");

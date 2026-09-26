@@ -82,18 +82,22 @@ export default {
       error: "error",
       idle: "idle",
       loading: "loading",
+      planned: "planned",
+      planning: "planning",
       ready: "ready",
+      running: "running",
       sent: "sent",
       sending: "sending",
       signed: "signed",
       signing: "signing",
+      success: "success",
       waiting: "waiting",
     },
     hero: {
       eyebrow: "Live Devnet Demo",
       title: "Vue Solana in a real Nuxt app",
       description:
-        "This page runs against the published Vue Solana packages. Try RPC reads, balance lookup, Wallet Standard discovery, connect/disconnect, message signing, and a tiny real devnet transfer.",
+        "This page runs the latest published Vue Solana packages. Try RPC reads, balance lookup, Wallet Standard discovery, connect/disconnect, message signing, a tiny real devnet transfer, client-sent transactions, and devnet airdrops.",
       versionsLabel: "Vue Solana package versions",
     },
     rpc: {
@@ -215,6 +219,8 @@ export default {
       send: "Send Devnet Transfer",
       signature: "Signature:",
       explorer: "Explorer:",
+      whenToUse:
+        "When to use: the user pays and must approve in their wallet — personal transfers and any action performed on behalf of a connected user.",
       viewTransaction: "View transaction",
       labels: {
         walletReady: "Wallet ready",
@@ -252,7 +258,7 @@ export default {
         eyebrow: "Signing",
         title: "Signing & Transactions",
         description:
-          "Message signing, Sign In With Solana, transfers, and generic transaction state.",
+          "Message signing, Sign In With Solana, transfers, client-sent transactions, and generic transaction state.",
       },
       live: {
         eyebrow: "Kit reactive",
@@ -295,6 +301,34 @@ export default {
       signingIn: "Signing in...",
       notSignedIn: "Not signed in",
       signedInAs: "Signed in as {address}",
+    },
+    clientSend: {
+      title: "Send Through The Client",
+      description:
+        "Plans and submits SPL Memo transactions through the client's transaction-sending capability — no popup to plan or submit. The connected wallet is the fee payer, so it reviews and approves each transaction through its signature dialog.",
+      payer: "Fee payer (connected wallet)",
+      noPayer: "not connected",
+      connectHint:
+        "Client-sent transactions are disabled until a wallet is connected — select a wallet above and connect it first.",
+      single: "useSolanaSendTransaction",
+      batch: "useSolanaSendTransactions",
+      sendSingle: "Send 1 Via Client",
+      sendBatch: "Send 2 Via Client",
+      noSend: "No client send yet",
+      disabled: {
+        unsupported: "The connected wallet does not support signTransaction.",
+      },
+      whenToUse:
+        "When to use: your app owns the signing keys (relayer/server flows), or you want programmatic sends with the connected wallet signing — no per-instruction wallet prompt beyond the signature approval.",
+    },
+    airdrop: {
+      title: "Airdrop SOL",
+      description:
+        "Requests a devnet airdrop into the connected wallet through the client's airdrop capability. Devnet faucets are rate-limited, so errors here are usually temporary.",
+      request: "Airdrop 1 SOL",
+      connectHint: "Connect a wallet to airdrop SOL into it.",
+      signature: "Signature: {signature}",
+      noSignature: "No airdrop yet",
     },
   },
 };
