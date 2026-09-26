@@ -77,6 +77,24 @@ describe("createSolanaClient", () => {
     });
   });
 
+  it("derives the WebSocket endpoint from a custom RPC endpoint", () => {
+    createSolanaClient({ endpoint: "https://rpc.example.com/path" });
+
+    expect(solanaRpcMock).toHaveBeenCalledWith({
+      rpcUrl: "https://rpc.example.com/path",
+      rpcSubscriptionsUrl: "wss://rpc.example.com/path",
+    });
+  });
+
+  it("prefers an explicit payer over payerSecretKey, without validating the secret", () => {
+    const client = createSolanaClient({
+      payer: signer,
+      payerSecretKey: "not-valid-base64!!",
+    });
+
+    expect(client.payer).toBe(signer);
+  });
+
   it("resolves and validates a base64 payerSecretKey", async () => {
     const { publicKey, secretKey } = nacl.sign.keyPair();
     const base64Secret = Buffer.from(secretKey).toString("base64");

@@ -356,7 +356,7 @@ export default defineNuxtConfig({
 
 El modulo Nuxt instala el plugin de runtime solo en el cliente y autoimporta composables desde subpaths directos `@vue-solana/vue/*`. Los composables se pueden llamar de forma segura durante SSR, pero las operaciones RPC y de wallet reales deberian ejecutarse despues de la hidratacion, por ejemplo desde `onMounted()` o acciones del usuario. Las opciones `solana` de Nuxt viven en la configuracion publica de runtime, asi que mantenlas serializables como JSON.
 
-Los clientes Vue/core directos aceptan `payer` y `payerSecretKey` para transacciones enviadas por el cliente. `payerSecretKey` es un keypair Ed25519 de 64 bytes en base64, asi que nunca lo pongas en la configuracion runtime publica de Nuxt ni envíes una clave con fondos al navegador. `ModuleOptions` de Nuxt omite ambos campos; crea un signer efimero en un plugin solo de cliente e instalalo como `payer`.
+Los clientes Vue/core directos aceptan `payer` y `payerSecretKey` para transacciones enviadas por el cliente. `payerSecretKey` es un keypair Ed25519 de 64 bytes en base64, asi que nunca lo pongas en la configuracion runtime publica de Nuxt ni envíes una clave con fondos al navegador. `ModuleOptions` de Nuxt omite ambos campos; crea un signer efimero en un plugin solo de cliente, instalalo como `payer` y define `clientPlugin: false` para que el modulo no instale un segundo plugin.
 
 ## Probar RPC sin wallet
 
@@ -609,7 +609,7 @@ function explorerUrl(signature: string, cluster: string) {
 
 Si la confirmacion agota el tiempo despues de devolver una firma, no reenvies inmediatamente. Comprueba primero el estado de la firma o el explorer; la transaccion todavia puede confirmarse.
 
-El demo de envio del cliente usa el `rpcTransactionPlanSendingExecutor()` oficial instalado por el cliente por defecto. Conecta una wallet compatible con `signTransaction`, fondea el payer de demo cuando el ejemplo lo requiera y usa `useSendTransaction()` o `useSendTransactions()`. El executor envia la transaccion y espera `confirmed` antes de que el composable muestre `sent`; no hay un popup de envio separado. En Nuxt, crea cualquier payer de demo en un plugin solo de cliente, no en `nuxt.config.ts`.
+El demo de envio del cliente usa el `rpcTransactionPlanSendingExecutor()` oficial instalado por el cliente por defecto. Conecta una wallet compatible con `signTransaction`, fondea el payer de demo cuando el ejemplo lo requiera y usa `useSendTransaction()` o `useSendTransactions()`. El executor envia la transaccion y espera `confirmed` antes de que el composable muestre `sent`; no hay un popup de envio separado. En Nuxt, crea cualquier payer de demo en un plugin solo de cliente, no en `nuxt.config.ts`, y define `clientPlugin: false` para que el modulo omita su propio plugin.
 
 ## Verificacion final
 
@@ -779,7 +779,7 @@ export default defineNuxtConfig({
 
 The Nuxt module installs the runtime plugin on the client only and auto-imports composables from direct `@vue-solana/vue/*` subpaths. Composables are safe to call during SSR, but real RPC and wallet operations should run after hydration, such as from `onMounted()` or user actions. Nuxt `solana` options live in public runtime config, so keep them JSON-serializable.
 
-Direct Vue and core clients accept `payer` and `payerSecretKey` for client-sent transactions. `payerSecretKey` is a base64 64-byte Ed25519 keypair, so never put it in Nuxt public runtime config or ship a funded key to a browser. Nuxt `ModuleOptions` intentionally omits both fields, so install a client-owned `payer` in a client-only plugin.
+Direct Vue and core clients accept `payer` and `payerSecretKey` for client-sent transactions. `payerSecretKey` is a base64 64-byte Ed25519 keypair, so never put it in Nuxt public runtime config or ship a funded key to a browser. Nuxt `ModuleOptions` intentionally omits both fields, so install a client-owned `payer` in a client-only plugin with `clientPlugin: false` so the module does not install a second plugin.
 
 ## Test RPC Without A Wallet
 
@@ -1032,7 +1032,7 @@ function explorerUrl(signature: string, cluster: string) {
 
 If confirmation times out after a signature is returned, do not immediately resubmit. Check the signature status or explorer first; the transaction may still confirm.
 
-The client-send demo uses the official `rpcTransactionPlanSendingExecutor()` installed by the default client. Connect a wallet that supports `signTransaction`, fund the demo payer where the example requires it, and use `useSolanaSendTransaction()` or `useSolanaSendTransactions()`. The executor submits the transaction and waits for `confirmed` commitment before the composable reports `sent`; there is no separate wallet send popup. In Nuxt, create any demo payer in a client-only plugin rather than `nuxt.config.ts`.
+The client-send demo uses the official `rpcTransactionPlanSendingExecutor()` installed by the default client. Connect a wallet that supports `signTransaction`, fund the demo payer where the example requires it, and use `useSolanaSendTransaction()` or `useSolanaSendTransactions()`. The executor submits the transaction and waits for `confirmed` commitment before the composable reports `sent`; there is no separate wallet send popup. In Nuxt, create any demo payer in a client-only plugin rather than `nuxt.config.ts`, and set `clientPlugin: false` so the module skips its own plugin.
 
 ## Final Verification
 
@@ -1202,7 +1202,7 @@ export default defineNuxtConfig({
 
 Nuxt module은 runtime plugin을 client 전용으로 설치하고 `@vue-solana/vue/*` direct subpath에서 컴포저블을 자동 import합니다. 컴포저블은 SSR 중 호출해도 안전하지만 실제 RPC와 지갑 작업은 `onMounted()` 또는 사용자 액션처럼 hydration 이후 실행하세요. Nuxt `solana` option은 public runtime config에 있으므로 JSON 직렬화가 가능해야 합니다.
 
-direct Vue/core client는 client-sent transaction을 위해 `payer`와 `payerSecretKey`를 지원합니다. `payerSecretKey`는 base64 64-byte Ed25519 keypair이므로 Nuxt public runtime config에 넣거나 funded key를 browser에 보내지 마세요. Nuxt `ModuleOptions`는 두 필드를 모두 제외하므로 client-only plugin에서 ephemeral `payer`를 만들어 Vue plugin을 install하세요.
+direct Vue/core client는 client-sent transaction을 위해 `payer`와 `payerSecretKey`를 지원합니다. `payerSecretKey`는 base64 64-byte Ed25519 keypair이므로 Nuxt public runtime config에 넣거나 funded key를 browser에 보내지 마세요. Nuxt `ModuleOptions`는 두 필드를 모두 제외하므로 client-only plugin에서 ephemeral `payer`를 만들어 Vue plugin을 install하고 `clientPlugin: false`를 설정해 module이 두 번째 plugin을 설치하지 않도록 하세요.
 
 ## 지갑 없이 RPC 테스트
 
@@ -1455,7 +1455,7 @@ function explorerUrl(signature: string, cluster: string) {
 
 Signature가 반환된 뒤 confirmation이 timeout되면 즉시 다시 제출하지 마세요. 먼저 signature status 또는 explorer를 확인하세요. 트랜잭션이 여전히 confirm될 수 있습니다.
 
-client-send demo는 default client에 설치된 official `rpcTransactionPlanSendingExecutor()`를 사용합니다. `signTransaction`을 지원하는 wallet을 연결하고 예제에 필요한 demo payer를 funding한 뒤 `useSendTransaction()` 또는 `useSendTransactions()`를 사용하세요. executor는 transaction을 제출하고 `confirmed` commitment을 기다린 뒤 composable이 `sent`를 표시하므로 별도 send popup이 없습니다. Nuxt에서는 demo payer를 `nuxt.config.ts`가 아니라 client-only plugin에서 만드세요.
+client-send demo는 default client에 설치된 official `rpcTransactionPlanSendingExecutor()`를 사용합니다. `signTransaction`을 지원하는 wallet을 연결하고 예제에 필요한 demo payer를 funding한 뒤 `useSendTransaction()` 또는 `useSendTransactions()`를 사용하세요. executor는 transaction을 제출하고 `confirmed` commitment을 기다린 뒤 composable이 `sent`를 표시하므로 별도 send popup이 없습니다. Nuxt에서는 demo payer를 `nuxt.config.ts`가 아니라 client-only plugin에서 만들고 `clientPlugin: false`를 설정해 module이 자체 plugin을 건너뛰게 하세요.
 
 ## 최종 검증
 
@@ -1625,7 +1625,7 @@ export default defineNuxtConfig({
 
 Nuxt 模块只在客户端安装运行时插件，并从直接的 `@vue-solana/vue/*` 子路径自动导入 composable。Composable 可以在 SSR 期间安全调用，但真实 RPC 和钱包操作应在 hydration 后运行，例如在 `onMounted()` 或用户操作中。Nuxt `solana` 选项位于 public runtime config 中，因此应保持 JSON 可序列化。
 
-direct Vue/core client 支持用于 client-sent 交易的 `payer` 和 `payerSecretKey`。`payerSecretKey` 是 base64 编码的 64 字节 Ed25519 keypair，因此不要把它放入 Nuxt public runtime config，也不要把有资金的 key 发送到浏览器。Nuxt `ModuleOptions` 省略这两个字段；请在 client-only plugin 中创建 ephemeral `payer` 并 install Vue plugin。
+direct Vue/core client 支持用于 client-sent 交易的 `payer` 和 `payerSecretKey`。`payerSecretKey` 是 base64 编码的 64 字节 Ed25519 keypair，因此不要把它放入 Nuxt public runtime config，也不要把有资金的 key 发送到浏览器。Nuxt `ModuleOptions` 省略这两个字段；请在 client-only plugin 中创建 ephemeral `payer` 并 install Vue plugin，同时设置 `clientPlugin: false`，使模块不再安装第二个 plugin。
 
 ## 无钱包测试 RPC
 
@@ -1878,7 +1878,7 @@ function explorerUrl(signature: string, cluster: string) {
 
 如果返回签名后确认超时，不要立即重新提交。先检查签名状态或 explorer；交易可能仍会确认。
 
-client-send 演示使用默认 client 安装的官方 `rpcTransactionPlanSendingExecutor()`。连接支持 `signTransaction` 的钱包，在示例需要时为 demo payer 充值，然后使用 `useSendTransaction()` 或 `useSendTransactions()`。executor 提交交易并等待 `confirmed` commitment，随后 composable 才显示 `sent`；没有单独的发送弹窗。在 Nuxt 中，请在 client-only plugin 中创建 demo payer，而不是放在 `nuxt.config.ts`。
+client-send 演示使用默认 client 安装的官方 `rpcTransactionPlanSendingExecutor()`。连接支持 `signTransaction` 的钱包，在示例需要时为 demo payer 充值，然后使用 `useSendTransaction()` 或 `useSendTransactions()`。executor 提交交易并等待 `confirmed` commitment，随后 composable 才显示 `sent`；没有单独的发送弹窗。在 Nuxt 中，请在 client-only plugin 中创建 demo payer，而不是放在 `nuxt.config.ts`，并设置 `clientPlugin: false` 使模块跳过自己的 plugin。
 
 ## 最终验证
 
@@ -4362,7 +4362,7 @@ export default defineNuxtConfig({
 });
 ```
 
-Nuxt guarda las opciones del módulo en runtime config público, así que las opciones deben ser serializables como JSON. El módulo Nuxt omite intencionalmente `payer` y `payerSecretKey`; nunca pongas un secreto crudo en la configuración runtime pública. Instala un `payer` efimero en un plugin solo de cliente.
+Nuxt guarda las opciones del módulo en runtime config público, así que las opciones deben ser serializables como JSON. El módulo Nuxt omite intencionalmente `payer` y `payerSecretKey`; nunca pongas un secreto crudo en la configuración runtime pública. Instala un `payer` efimero en un plugin solo de cliente con `clientPlugin: false`.
 
 Los clientes directos core y Vue pueden pasar `payer` o `payerSecretKey` a `createSolanaClient()` / `createSolanaPlugin()`. El cliente por defecto usa la composición oficial `solanaRpc()`, `rpcTransactionPlanner()` y `rpcTransactionPlanSendingExecutor()` para las transacciones enviadas por el cliente.
 
@@ -4518,7 +4518,7 @@ export default defineNuxtConfig({
 });
 ```
 
-Nuxt stores module options in public runtime config, so options must be JSON-serializable. The Nuxt module intentionally omits `payer` and `payerSecretKey`; never place a raw secret in public runtime config. Install an ephemeral `payer` in a client-only plugin.
+Nuxt stores module options in public runtime config, so options must be JSON-serializable. The Nuxt module intentionally omits `payer` and `payerSecretKey`; never place a raw secret in public runtime config. Install an ephemeral `payer` in a client-only plugin with `clientPlugin: false`.
 
 Direct core and Vue clients can pass `payer` or `payerSecretKey` to `createSolanaClient()` / `createSolanaPlugin()`. The default client uses the official `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()` composition for client-sent transactions.
 
@@ -4674,7 +4674,7 @@ export default defineNuxtConfig({
 });
 ```
 
-Nuxt는 모듈 옵션을 public runtime config에 저장하므로 옵션은 JSON 직렬화가 가능해야 합니다. Nuxt module은 `payer`와 `payerSecretKey`를 의도적으로 제외하므로 public runtime config에 raw secret을 넣지 마세요. ephemeral `payer`는 client-only plugin에서 만들어 Vue plugin을 install하세요.
+Nuxt는 모듈 옵션을 public runtime config에 저장하므로 옵션은 JSON 직렬화가 가능해야 합니다. Nuxt module은 `payer`와 `payerSecretKey`를 의도적으로 제외하므로 public runtime config에 raw secret을 넣지 마세요. ephemeral `payer`는 client-only plugin에서 만들고 `clientPlugin: false`를 설정한 뒤 Vue plugin을 install하세요.
 
 direct core와 Vue client는 `createSolanaClient()` / `createSolanaPlugin()`에 `payer` 또는 `payerSecretKey`를 전달할 수 있습니다. default client는 client-sent transaction에 official `solanaRpc()`, `rpcTransactionPlanner()`, `rpcTransactionPlanSendingExecutor()` 구성을 사용합니다.
 
@@ -4830,7 +4830,7 @@ export default defineNuxtConfig({
 });
 ```
 
-Nuxt 会将模块选项存储在公共运行时配置中，因此选项必须可 JSON 序列化。Nuxt module 有意省略 `payer` 和 `payerSecretKey`；永远不要把 raw secret 放入 public runtime config。请在 client-only plugin 中创建 ephemeral `payer` 并 install Vue plugin。
+Nuxt 会将模块选项存储在公共运行时配置中，因此选项必须可 JSON 序列化。Nuxt module 有意省略 `payer` 和 `payerSecretKey`；永远不要把 raw secret 放入 public runtime config。请在 client-only plugin 中创建 ephemeral `payer`，设置 `clientPlugin: false`，然后 install Vue plugin。
 
 direct core 和 Vue client 可以向 `createSolanaClient()` / `createSolanaPlugin()` 传入 `payer` 或 `payerSecretKey`。默认 client 对 client-sent 交易使用官方 `solanaRpc()`、`rpcTransactionPlanner()` 和 `rpcTransactionPlanSendingExecutor()` 组合。
 
@@ -6790,7 +6790,7 @@ async function submit(transaction: Uint8Array) {
 </script>
 ```
 
-Llama métodos de transacción desde acciones del usuario en el cliente. No dispares firma de wallet durante SSR. Las opciones del modulo Nuxt omiten `payer` y `payerSecretKey`; configura un `payer` en un plugin Vue solo de cliente en vez de poner un secreto en la configuracion runtime publica.
+Llama métodos de transacción desde acciones del usuario en el cliente. No dispares firma de wallet durante SSR. Las opciones del modulo Nuxt omiten `payer` y `payerSecretKey`; configura un `payer` en un plugin Vue solo de cliente con `clientPlugin: false` en vez de poner un secreto en la configuracion runtime publica.
 
 Usa `useSolanaTransactionConfirmation({ commitment: "confirmed" })` y llama `confirm(signature)` cuando necesites confirmar una firma devuelta por otro flujo. Usa `useSolanaSignatureStatus(signature, { pollIntervalMs: 2_000 })` cuando quieras seguir comprobando el estado después de un timeout o redirección.
 
@@ -7092,7 +7092,7 @@ async function submit(transaction: Uint8Array) {
 </script>
 ```
 
-Call transaction methods from user actions on the client. Do not trigger wallet signing during SSR. Nuxt module options intentionally omit `payer` and `payerSecretKey`; configure a `payer` in a client-only Vue plugin instead of placing a secret in public runtime config.
+Call transaction methods from user actions on the client. Do not trigger wallet signing during SSR. Nuxt module options intentionally omit `payer` and `payerSecretKey`; configure a `payer` in a client-only Vue plugin with `clientPlugin: false` instead of placing a secret in public runtime config.
 
 Use `useSolanaTransactionConfirmation({ commitment: "confirmed" })` and call `confirm(signature)` when you need to confirm a signature returned by another flow. Use `useSolanaSignatureStatus(signature, { pollIntervalMs: 2_000 })` when you want to keep checking status after a timeout or redirect.
 
@@ -7394,7 +7394,7 @@ async function submit(transaction: Uint8Array) {
 </script>
 ```
 
-트랜잭션 메서드는 클라이언트의 사용자 액션에서 호출하세요. SSR 중 wallet signing을 트리거하지 마세요. Nuxt module option은 `payer`와 `payerSecretKey`를 제외하므로, public runtime config에 secret을 넣지 말고 client-only Vue plugin에서 `payer`를 설정하세요.
+트랜잭션 메서드는 클라이언트의 사용자 액션에서 호출하세요. SSR 중 wallet signing을 트리거하지 마세요. Nuxt module option은 `payer`와 `payerSecretKey`를 제외하므로, public runtime config에 secret을 넣지 말고 `clientPlugin: false`와 함께 client-only Vue plugin에서 `payer`를 설정하세요.
 
 다른 flow에서 반환된 signature를 확인해야 하면 `useSolanaTransactionConfirmation({ commitment: "confirmed" })`를 사용하고 `confirm(signature)`를 호출하세요. timeout 또는 redirect 이후 상태를 계속 확인하려면 `useSolanaSignatureStatus(signature, { pollIntervalMs: 2_000 })`를 사용합니다.
 
@@ -7696,7 +7696,7 @@ async function submit(transaction: Uint8Array) {
 </script>
 ```
 
-请从客户端的用户操作调用交易方法。不要在 SSR 期间触发钱包签名。Nuxt module option 省略了 `payer` 和 `payerSecretKey`；不要把 secret 放入 public runtime config，而应在 client-only Vue plugin 中配置 `payer`。
+请从客户端的用户操作调用交易方法。不要在 SSR 期间触发钱包签名。Nuxt module option 省略了 `payer` 和 `payerSecretKey`；不要把 secret 放入 public runtime config，而应在设置 `clientPlugin: false` 的 client-only Vue plugin 中配置 `payer`。
 
 当你需要确认另一个流程返回的签名时，使用 `useSolanaTransactionConfirmation({ commitment: "confirmed" })` 并调用 `confirm(signature)`。当你希望在超时或重定向后继续检查状态时，使用 `useSolanaSignatureStatus(signature, { pollIntervalMs: 2_000 })`。
 
@@ -9100,7 +9100,7 @@ Subpaths directos:
 ## Configuración
 
 ```ts
-type SolanaCluster = "mainnet-beta" | "mainnet" | "testnet" | "devnet" | "localnet";
+type SolanaCluster = "mainnet" | "mainnet-beta" | "testnet" | "devnet" | "localnet";
 
 interface SolanaConfig {
   cluster?: SolanaCluster;
@@ -9682,7 +9682,7 @@ Direct subpath:
 ## 설정
 
 ```ts
-type SolanaCluster = "mainnet-beta" | "mainnet" | "testnet" | "devnet" | "localnet";
+type SolanaCluster = "mainnet" | "mainnet-beta" | "testnet" | "devnet" | "localnet";
 
 interface SolanaConfig {
   cluster?: SolanaCluster;
@@ -10067,7 +10067,7 @@ Direct subpaths:
 ## Configuration
 
 ```ts
-type SolanaCluster = "mainnet-beta" | "mainnet" | "testnet" | "devnet" | "localnet";
+type SolanaCluster = "mainnet" | "mainnet-beta" | "testnet" | "devnet" | "localnet";
 
 interface SolanaConfig {
   cluster?: SolanaCluster;
@@ -10566,7 +10566,7 @@ import type { SolanaConfig } from "@vue-solana/core/types";
 ## 配置
 
 ```ts
-type SolanaCluster = "mainnet-beta" | "mainnet" | "testnet" | "devnet" | "localnet";
+type SolanaCluster = "mainnet" | "mainnet-beta" | "testnet" | "devnet" | "localnet";
 
 interface SolanaConfig {
   cluster?: SolanaCluster;
@@ -15208,7 +15208,7 @@ See [Data Fetching Composables](/packages/vue#data-fetching-composables) for the
 
 These are Nuxt aliases for the Vue composables.
 
-The default client created by the Nuxt module composes the official `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()` plugins. The old custom fallback sender is not used. `useSolanaSendTransaction()` and `useSolanaSendTransactions()` therefore expose the official client-sending capability, but the module does not configure a payer because `payer` and `payerSecretKey` are intentionally omitted from `ModuleOptions`, so a client-sent transaction needs a `payer` installed in a client-only plugin. Their `sent` status is reached after the official executor completes its send-and-confirm operation at `confirmed` commitment.
+The default client created by the Nuxt module composes the official `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()` plugins. The old custom fallback sender is not used. `useSolanaSendTransaction()` and `useSolanaSendTransactions()` therefore expose the official client-sending capability, but the module does not configure a payer because `payer` and `payerSecretKey` are intentionally omitted from `ModuleOptions`, so a client-sent transaction needs a `payer` installed in a client-only plugin with `clientPlugin: false`, as described in [Module Setup](#module-setup). Their `sent` status is reached after the official executor completes its send-and-confirm operation at `confirmed` commitment.
 
 The Vue package uses short names such as `useRpc()` because callers import them explicitly from `@vue-solana/vue/useRpc`.
 
@@ -16453,7 +16453,7 @@ Abre la URL de Nuxt impresa en la terminal, normalmente `http://localhost:3000`.
 - Abre el link del explorador y verifica que incluya `?cluster=devnet`.
 - En los Live Data Panels, haz un airdrop de 1 SOL al payer de demo con el panel `useSolanaPayer`, luego envia un SPL Memo firmado por el cliente con `useSolanaSendTransaction()` (sin popup de wallet) o un lote de dos con `useSolanaSendTransactions()`, y observa que el estado pasa de `sending` a `sent` despues de que el executor oficial alcanza `confirmed`.
 
-El payer de demo se genera en un plugin solo de cliente y no se configura en `nuxt.config.ts` ni en la configuracion runtime publica. El cliente por defecto del modulo aun usa el stack oficial `solanaRpc()`, `rpcTransactionPlanner()` y `rpcTransactionPlanSendingExecutor()`; el fallback custom anterior no se usa. Nunca pongas un secreto con fondos en un valor runtime publico de Nuxt.
+El payer de demo se genera en un plugin solo de cliente y no se configura en `nuxt.config.ts` ni en la configuracion runtime publica. El ejemplo define `solana.clientPlugin: false` para que el modulo omita su propio plugin; instalar ambos crearia dos contextos de Solana. El cliente por defecto del modulo aun usa el stack oficial `solanaRpc()`, `rpcTransactionPlanner()` y `rpcTransactionPlanSendingExecutor()`; el fallback custom anterior no se usa. Nunca pongas un secreto con fondos en un valor runtime publico de Nuxt.
 
 El ejemplo de transferencia inicializa el polyfill de navegador `Buffer` con `installSolanaBufferPolyfill()` desde `@vue-solana/nuxt/buffer-polyfill`. Reinicia el servidor de desarrollo de Nuxt si Vite cacheó previamente un import externalizado de Buffer.
 
@@ -16534,7 +16534,7 @@ Open the Nuxt URL printed in the terminal, usually `http://localhost:3000`.
 - Open the explorer link and verify it includes `?cluster=devnet`.
 - In the Live Data Panels, airdrop 1 SOL to the demo payer with the `useSolanaPayer` panel, then send a client-signed SPL Memo with `useSolanaSendTransaction()` (no wallet popup) or a batch of two with `useSolanaSendTransactions()`, and watch the status move from `sending` to `sent` after the official executor reaches `confirmed` commitment.
 
-The demo payer is generated in a client-only plugin and is not configured in `nuxt.config.ts` or public runtime config. The module's default client still uses the official `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()` stack; the old custom fallback sender is not used. Never put a funded secret in a Nuxt public runtime value.
+The demo payer is generated in a client-only plugin and is not configured in `nuxt.config.ts` or public runtime config. The example sets `solana.clientPlugin: false` so the module skips its own plugin; installing both would create two Solana contexts. The module's default client still uses the official `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()` stack; the old custom fallback sender is not used. Never put a funded secret in a Nuxt public runtime value.
 
 The transfer example initializes the browser `Buffer` polyfill with `installSolanaBufferPolyfill()` from `@vue-solana/nuxt/buffer-polyfill`. Restart the Nuxt dev server if Vite previously cached an externalized Buffer import.
 
@@ -16615,7 +16615,7 @@ pnpm dev:nuxt
 - Explorer 링크를 열고 `?cluster=devnet`이 포함되어 있는지 확인합니다.
 - Live Data Panels에서 `useSolanaPayer` panel로 demo payer에 1 SOL을 에어드랍한 뒤 `useSolanaSendTransaction()`(wallet popup 없음)으로 client-signed SPL Memo를 보내거나 `useSolanaSendTransactions()`로 두 건을 batch로 보내고, official executor가 `confirmed`에 도달한 뒤 status가 `sending`에서 `sent`로 이동하는지 확인합니다.
 
-demo payer는 client-only plugin에서 생성되며 `nuxt.config.ts`나 public runtime config에 설정되지 않습니다. module의 default client도 official `solanaRpc()`, `rpcTransactionPlanner()`, `rpcTransactionPlanSendingExecutor()` stack을 사용하며, 기존 custom fallback sender는 사용하지 않습니다. Nuxt public runtime value에 funded secret을 넣지 마세요.
+demo payer는 client-only plugin에서 생성되며 `nuxt.config.ts`나 public runtime config에 설정되지 않습니다. 예제는 `solana.clientPlugin: false`를 설정해 module이 자체 plugin을 건너뛰도록 하며, 둘 다 설치하면 Solana context가 두 개 생깁니다. module의 default client도 official `solanaRpc()`, `rpcTransactionPlanner()`, `rpcTransactionPlanSendingExecutor()` stack을 사용하며, 기존 custom fallback sender는 사용하지 않습니다. Nuxt public runtime value에 funded secret을 넣지 마세요.
 
 전송 예제는 `@vue-solana/nuxt/buffer-polyfill`의 `installSolanaBufferPolyfill()`로 브라우저 `Buffer` polyfill을 초기화합니다. Vite가 이전에 externalized Buffer import를 캐시했다면 Nuxt dev server를 재시작하세요.
 
@@ -16697,7 +16697,7 @@ pnpm dev:nuxt
 - 打开 explorer 链接，并确认其中包含 `?cluster=devnet`。
 - 在 Live Data Panels 中用 `useSolanaPayer` panel 向 demo payer 空投 1 SOL，然后使用 `useSolanaSendTransaction()`（不显示 wallet popup）发送 client-signed SPL Memo，或使用 `useSolanaSendTransactions()` 批量发送两笔，并观察官方 executor 达到 `confirmed` 后 status 从 `sending` 变为 `sent`。
 
-demo payer 在 client-only plugin 中生成，不配置在 `nuxt.config.ts` 或 public runtime config 中。模块的默认 client 也使用官方 `solanaRpc()`、`rpcTransactionPlanner()` 和 `rpcTransactionPlanSendingExecutor()` stack，旧的 custom fallback sender 不再使用。永远不要把有资金的 secret 放入 Nuxt public runtime value。
+demo payer 在 client-only plugin 中生成，不配置在 `nuxt.config.ts` 或 public runtime config 中。示例设置了 `solana.clientPlugin: false` 使模块跳过自己的 plugin；两者同时安装会产生两个 Solana context。模块的默认 client 也使用官方 `solanaRpc()`、`rpcTransactionPlanner()` 和 `rpcTransactionPlanSendingExecutor()` stack，旧的 custom fallback sender 不再使用。永远不要把有资金的 secret 放入 Nuxt public runtime value。
 
 转账示例使用来自 `@vue-solana/nuxt/buffer-polyfill` 的 `installSolanaBufferPolyfill()` 初始化浏览器 `Buffer` polyfill。如果 Vite 之前缓存了 externalized Buffer import，请重启 Nuxt 开发服务器。
 

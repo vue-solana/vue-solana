@@ -118,7 +118,7 @@ export default defineNuxtConfig({
 });
 ```
 
-Nuxt 会将模块选项存储在公共运行时配置中，因此选项必须可 JSON 序列化。Nuxt module 有意省略 `payer` 和 `payerSecretKey`；永远不要把 raw secret 放入 public runtime config。请在 client-only plugin 中创建 ephemeral `payer` 并 install Vue plugin。
+Nuxt 会将模块选项存储在公共运行时配置中，因此选项必须可 JSON 序列化。Nuxt module 有意省略 `payer` 和 `payerSecretKey`；永远不要把 raw secret 放入 public runtime config。请在 client-only plugin 中创建 ephemeral `payer`，设置 `clientPlugin: false`，然后 install Vue plugin。
 
 direct core 和 Vue client 可以向 `createSolanaClient()` / `createSolanaPlugin()` 传入 `payer` 或 `payerSecretKey`。默认 client 对 client-sent 交易使用官方 `solanaRpc()`、`rpcTransactionPlanner()` 和 `rpcTransactionPlanSendingExecutor()` 组合。
 

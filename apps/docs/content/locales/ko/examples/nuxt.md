@@ -60,7 +60,7 @@ pnpm dev:nuxt
 - Explorer 링크를 열고 `?cluster=devnet`이 포함되어 있는지 확인합니다.
 - Live Data Panels에서 `useSolanaPayer` panel로 demo payer에 1 SOL을 에어드랍한 뒤 `useSolanaSendTransaction()`(wallet popup 없음)으로 client-signed SPL Memo를 보내거나 `useSolanaSendTransactions()`로 두 건을 batch로 보내고, official executor가 `confirmed`에 도달한 뒤 status가 `sending`에서 `sent`로 이동하는지 확인합니다.
 
-demo payer는 client-only plugin에서 생성되며 `nuxt.config.ts`나 public runtime config에 설정되지 않습니다. module의 default client도 official `solanaRpc()`, `rpcTransactionPlanner()`, `rpcTransactionPlanSendingExecutor()` stack을 사용하며, 기존 custom fallback sender는 사용하지 않습니다. Nuxt public runtime value에 funded secret을 넣지 마세요.
+demo payer는 client-only plugin에서 생성되며 `nuxt.config.ts`나 public runtime config에 설정되지 않습니다. 예제는 `solana.clientPlugin: false`를 설정해 module이 자체 plugin을 건너뛰도록 하며, 둘 다 설치하면 Solana context가 두 개 생깁니다. module의 default client도 official `solanaRpc()`, `rpcTransactionPlanner()`, `rpcTransactionPlanSendingExecutor()` stack을 사용하며, 기존 custom fallback sender는 사용하지 않습니다. Nuxt public runtime value에 funded secret을 넣지 마세요.
 
 전송 예제는 `@vue-solana/nuxt/buffer-polyfill`의 `installSolanaBufferPolyfill()`로 브라우저 `Buffer` polyfill을 초기화합니다. Vite가 이전에 externalized Buffer import를 캐시했다면 Nuxt dev server를 재시작하세요.
 

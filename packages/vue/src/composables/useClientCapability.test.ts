@@ -115,6 +115,18 @@ describe("useClientCapability", () => {
     expect(captured.error).toBeInstanceOf(MissingClientCapabilityError);
     expect((captured.error as MissingClientCapabilityError).capabilities).toEqual(["payer"]);
   });
+
+  it.each([[0], [""], [false], ["signer"]])(
+    "treats a primitive `%o` capability as missing",
+    (value) => {
+      const captured = mountWithClient({ rpc: {}, payer: value }, () =>
+        useClientCapability("payer", { hookName: "usePayer" }),
+      );
+
+      expect(captured.error).toBeInstanceOf(MissingClientCapabilityError);
+      expect((captured.error as MissingClientCapabilityError).capabilities).toEqual(["payer"]);
+    },
+  );
 });
 
 describe("useIdentity", () => {

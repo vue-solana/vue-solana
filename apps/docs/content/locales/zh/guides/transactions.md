@@ -250,7 +250,7 @@ async function submit(transaction: Uint8Array) {
 </script>
 ```
 
-请从客户端的用户操作调用交易方法。不要在 SSR 期间触发钱包签名。Nuxt module option 省略了 `payer` 和 `payerSecretKey`；不要把 secret 放入 public runtime config，而应在 client-only Vue plugin 中配置 `payer`。
+请从客户端的用户操作调用交易方法。不要在 SSR 期间触发钱包签名。Nuxt module option 省略了 `payer` 和 `payerSecretKey`；不要把 secret 放入 public runtime config，而应在设置 `clientPlugin: false` 的 client-only Vue plugin 中配置 `payer`。
 
 当你需要确认另一个流程返回的签名时，使用 `useSolanaTransactionConfirmation({ commitment: "confirmed" })` 并调用 `confirm(signature)`。当你希望在超时或重定向后继续检查状态时，使用 `useSolanaSignatureStatus(signature, { pollIntervalMs: 2_000 })`。
 

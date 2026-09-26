@@ -140,7 +140,7 @@ export default defineNuxtConfig({
 
 Nuxt module은 runtime plugin을 client 전용으로 설치하고 `@vue-solana/vue/*` direct subpath에서 컴포저블을 자동 import합니다. 컴포저블은 SSR 중 호출해도 안전하지만 실제 RPC와 지갑 작업은 `onMounted()` 또는 사용자 액션처럼 hydration 이후 실행하세요. Nuxt `solana` option은 public runtime config에 있으므로 JSON 직렬화가 가능해야 합니다.
 
-direct Vue/core client는 client-sent transaction을 위해 `payer`와 `payerSecretKey`를 지원합니다. `payerSecretKey`는 base64 64-byte Ed25519 keypair이므로 Nuxt public runtime config에 넣거나 funded key를 browser에 보내지 마세요. Nuxt `ModuleOptions`는 두 필드를 모두 제외하므로 client-only plugin에서 ephemeral `payer`를 만들어 Vue plugin을 install하세요.
+direct Vue/core client는 client-sent transaction을 위해 `payer`와 `payerSecretKey`를 지원합니다. `payerSecretKey`는 base64 64-byte Ed25519 keypair이므로 Nuxt public runtime config에 넣거나 funded key를 browser에 보내지 마세요. Nuxt `ModuleOptions`는 두 필드를 모두 제외하므로 client-only plugin에서 ephemeral `payer`를 만들어 Vue plugin을 install하고 `clientPlugin: false`를 설정해 module이 두 번째 plugin을 설치하지 않도록 하세요.
 
 ## 지갑 없이 RPC 테스트
 
@@ -393,7 +393,7 @@ function explorerUrl(signature: string, cluster: string) {
 
 Signature가 반환된 뒤 confirmation이 timeout되면 즉시 다시 제출하지 마세요. 먼저 signature status 또는 explorer를 확인하세요. 트랜잭션이 여전히 confirm될 수 있습니다.
 
-client-send demo는 default client에 설치된 official `rpcTransactionPlanSendingExecutor()`를 사용합니다. `signTransaction`을 지원하는 wallet을 연결하고 예제에 필요한 demo payer를 funding한 뒤 `useSendTransaction()` 또는 `useSendTransactions()`를 사용하세요. executor는 transaction을 제출하고 `confirmed` commitment을 기다린 뒤 composable이 `sent`를 표시하므로 별도 send popup이 없습니다. Nuxt에서는 demo payer를 `nuxt.config.ts`가 아니라 client-only plugin에서 만드세요.
+client-send demo는 default client에 설치된 official `rpcTransactionPlanSendingExecutor()`를 사용합니다. `signTransaction`을 지원하는 wallet을 연결하고 예제에 필요한 demo payer를 funding한 뒤 `useSendTransaction()` 또는 `useSendTransactions()`를 사용하세요. executor는 transaction을 제출하고 `confirmed` commitment을 기다린 뒤 composable이 `sent`를 표시하므로 별도 send popup이 없습니다. Nuxt에서는 demo payer를 `nuxt.config.ts`가 아니라 client-only plugin에서 만들고 `clientPlugin: false`를 설정해 module이 자체 plugin을 건너뛰게 하세요.
 
 ## 최종 검증
 

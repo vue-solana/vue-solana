@@ -60,7 +60,7 @@ Abre la URL de Nuxt impresa en la terminal, normalmente `http://localhost:3000`.
 - Abre el link del explorador y verifica que incluya `?cluster=devnet`.
 - En los Live Data Panels, haz un airdrop de 1 SOL al payer de demo con el panel `useSolanaPayer`, luego envia un SPL Memo firmado por el cliente con `useSolanaSendTransaction()` (sin popup de wallet) o un lote de dos con `useSolanaSendTransactions()`, y observa que el estado pasa de `sending` a `sent` despues de que el executor oficial alcanza `confirmed`.
 
-El payer de demo se genera en un plugin solo de cliente y no se configura en `nuxt.config.ts` ni en la configuracion runtime publica. El cliente por defecto del modulo aun usa el stack oficial `solanaRpc()`, `rpcTransactionPlanner()` y `rpcTransactionPlanSendingExecutor()`; el fallback custom anterior no se usa. Nunca pongas un secreto con fondos en un valor runtime publico de Nuxt.
+El payer de demo se genera en un plugin solo de cliente y no se configura en `nuxt.config.ts` ni en la configuracion runtime publica. El ejemplo define `solana.clientPlugin: false` para que el modulo omita su propio plugin; instalar ambos crearia dos contextos de Solana. El cliente por defecto del modulo aun usa el stack oficial `solanaRpc()`, `rpcTransactionPlanner()` y `rpcTransactionPlanSendingExecutor()`; el fallback custom anterior no se usa. Nunca pongas un secreto con fondos en un valor runtime publico de Nuxt.
 
 El ejemplo de transferencia inicializa el polyfill de navegador `Buffer` con `installSolanaBufferPolyfill()` desde `@vue-solana/nuxt/buffer-polyfill`. Reinicia el servidor de desarrollo de Nuxt si Vite cacheó previamente un import externalizado de Buffer.
 

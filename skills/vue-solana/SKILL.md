@@ -101,7 +101,7 @@ Nuxt auto-imports these composables:
 
 The Nuxt runtime plugin is client-only. Composables are SSR-safe and may return inert state during SSR; run real RPC and wallet work after hydration, in client lifecycle hooks, or from user actions.
 
-Nuxt `ModuleOptions` intentionally omits `payer` and `payerSecretKey`. Direct `@vue-solana/core` and `@vue-solana/vue` clients accept both: `payer` is a Kit `TransactionSigner`, and `payerSecretKey` is a base64 64-byte Ed25519 keypair. Never put a raw secret or `payerSecretKey` in Nuxt public runtime config. Install a client-owned `payer` in a client-only plugin; a client-sent transaction always needs one.
+Nuxt `ModuleOptions` intentionally omits `payer` and `payerSecretKey`. Direct `@vue-solana/core` and `@vue-solana/vue` clients accept both: `payer` is a Kit `TransactionSigner`, and `payerSecretKey` is a base64 64-byte Ed25519 keypair. Never put a raw secret or `payerSecretKey` in Nuxt public runtime config. Install a client-owned `payer` in a client-only plugin with `clientPlugin: false` so the module does not install a second plugin; a client-sent transaction always needs one.
 
 ## Wallet Flow
 
@@ -226,7 +226,8 @@ Do not assign the Buffer global manually in public examples.
 
 - `useClientCapability(methods, options?)` fails fast when the installed Solana client does not expose a named capability, throwing `MissingClientCapabilityError`. Not auto-imported in Nuxt.
 - `usePayer()` / `useIdentity()` (or `useSolanaPayer()` / `useSolanaIdentity()`) expose the Kit client's `payer` / `identity` `TransactionSigner`, re-read on change when the client advertises `subscribeToPayer` / `subscribeToIdentity`. A direct Vue/core client can receive `payer` through plugin options; custom clients can install signer plugins (e.g. `generatedPayer()` / `generatedIdentity()` from `@solana/kit-plugin-signer`). Nuxt does not forward payer options through public runtime config.
-- `usePlanTransaction()` / `usePlanTransactions()` (or `useSolanaPlanTransaction()` / `useSolanaPlanTransactions()`) expose the client's transaction planning capability. `usePlanTransaction` only requires `planTransaction`; `usePlanTransactions` only requires `planTransactions`.
+- `usePlanTransaction()` / `usePlanTransactions()` (or `useSolanaPlanTransaction()` / `useSolanaPlanTransactions()`) expose the client's transaction planning capability. `usePlanTransaction` requires `planTransaction` and `payer`; `usePlanTransactions` requires `planTransactions` and `payer`. Kit reads `client.payer` to set the fee payer, so a client-sent transaction always needs one.
+- `useSendTransaction()` / `useSendTransactions()` (or `useSolanaSendTransaction()` / `useSolanaSendTransactions()`) plan, sign, submit, and confirm through the client's sending executor. Same rule: they require `sendTransaction`/`sendTransactions` **and** `payer`.
 
 ## Common Gotchas
 
@@ -234,7 +235,7 @@ Do not assign the Buffer global manually in public examples.
 - v2.0.0 removed `@solana/web3-compat` from every package, deleted the `web3` subpaths, dropped the `connection` field from the context, and removed the declaration shims v1 published for the broken `web3-compat` metadata. Do not suggest local `types/web3-compat.d.ts` shims; upgrade examples to `@vue-solana/*@^2` instead.
 - Do not split browser, Android mobile, iOS browser, and future desktop native wallet sources into separate public flows. Keep them unified through `useWallets()` and `useWallet()`.
 - Do not mark a discovered wallet as connected just because accounts are visible. Connection state begins after `connect()` succeeds.
-- In Nuxt, avoid server-side RPC and wallet actions unless the app explicitly provides server-safe behavior. Keep `payerSecretKey` and all raw secrets out of public runtime config; create client-owned signers in a client-only plugin.
+- In Nuxt, avoid server-side RPC and wallet actions unless the app explicitly provides server-safe behavior. Keep `payerSecretKey` and all raw secrets out of public runtime config; create client-owned signers in a client-only plugin and set `clientPlugin: false`.
 - Public Solana RPC endpoints can be rate-limited. For production, suggest a dedicated RPC provider and custom `endpoint`.
 - When example-app behavior changes, extend the Playwright e2e suite (`e2e/`) rather than relying on unit tests alone. `mockSolanaSubscriptions(page)` fakes the Kit RPC-subscriptions websocket protocol (subscribe, id-correlated result, then `<method>Notification` frames keyed on `params.subscription`); see the E2E Testing guide.
 

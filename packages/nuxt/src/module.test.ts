@@ -142,6 +142,18 @@ describe("Nuxt module", () => {
     expect(kit.addImports).toHaveBeenCalledWith(expect.arrayContaining(SOLANA_IMPORTS));
   });
 
+  it("skips the runtime plugin but keeps composable imports when clientPlugin is false", async () => {
+    const module = (await import("./module")).default as unknown as ModuleUnderTest;
+    const publicConfig: Record<string, unknown> = {};
+
+    setupModule(module, { cluster: "devnet", clientPlugin: false }, { publicConfig });
+
+    expect(kit.addPlugin).not.toHaveBeenCalled();
+    expect(kit.addImports).toHaveBeenCalledWith(expect.arrayContaining(SOLANA_IMPORTS));
+    // `clientPlugin` is build-time only and must not reach the client bundle.
+    expect(publicConfig.solana).toEqual({ cluster: "devnet" });
+  });
+
   it("adds Vite dependency optimization for mobile wallet dev interop", async () => {
     const module = (await import("./module")).default as unknown as ModuleUnderTest;
     const vite: TestViteOptions = {

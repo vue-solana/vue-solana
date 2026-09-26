@@ -2,6 +2,15 @@
 
 All notable changes to the knowledge bundle are documented here.
 
+## 2026-09-26
+
+### Updated
+
+- Documented the official Kit transaction stack in `packages/core.md`: `createSolanaClient()` installs `solanaRpc()` plus `rpcAirdrop()`, bundles the transaction planner and RPC plan-sending executor, and accepts a `payer` (`TransactionSigner`) or a base64 `payerSecretKey`. An explicit `payer` wins over `payerSecretKey`.
+- Added the `mainnet` cluster name (with `mainnet-beta` as a legacy alias) to `concepts/clusters.md`, `guides/rpc-and-clusters.md`, and `packages/core.md`.
+- Updated `packages/vue.md` and `packages/nuxt.md` for the new `usePayer`/`useIdentity`, `usePlanTransaction(s)`, and `useSendTransaction(s)` composables: each requires a `payer` on the client, and a `null` capability counts as missing.
+- Documented `solana.clientPlugin: false` for Nuxt apps that install their own payer plugin, so the module does not add a second Solana context.
+
 ## 2026-09-19
 
 ### Updated

@@ -118,7 +118,7 @@ export default defineNuxtConfig({
 });
 ```
 
-Nuxt stores module options in public runtime config, so options must be JSON-serializable. The Nuxt module intentionally omits `payer` and `payerSecretKey`; never place a raw secret in public runtime config. Install an ephemeral `payer` in a client-only plugin.
+Nuxt stores module options in public runtime config, so options must be JSON-serializable. The Nuxt module intentionally omits `payer` and `payerSecretKey`; never place a raw secret in public runtime config. Install an ephemeral `payer` in a client-only plugin with `clientPlugin: false`.
 
 Direct core and Vue clients can pass `payer` or `payerSecretKey` to `createSolanaClient()` / `createSolanaPlugin()`. The default client uses the official `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()` composition for client-sent transactions.
 

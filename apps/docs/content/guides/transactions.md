@@ -250,7 +250,7 @@ async function submit(transaction: Uint8Array) {
 </script>
 ```
 
-Call transaction methods from user actions on the client. Do not trigger wallet signing during SSR. Nuxt module options intentionally omit `payer` and `payerSecretKey`; configure a `payer` in a client-only Vue plugin instead of placing a secret in public runtime config.
+Call transaction methods from user actions on the client. Do not trigger wallet signing during SSR. Nuxt module options intentionally omit `payer` and `payerSecretKey`; configure a `payer` in a client-only Vue plugin with `clientPlugin: false` instead of placing a secret in public runtime config.
 
 Use `useSolanaTransactionConfirmation({ commitment: "confirmed" })` and call `confirm(signature)` when you need to confirm a signature returned by another flow. Use `useSolanaSignatureStatus(signature, { pollIntervalMs: 2_000 })` when you want to keep checking status after a timeout or redirect.
 

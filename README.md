@@ -37,7 +37,7 @@ Use `mainnet` in Vue Solana code. This is Solana's official mainnet cluster name
 
 `createSolanaClient()` composes the official `@solana/kit-plugin-rpc` stack by default: `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()`. The old custom fallback sender is not used. Vue's `useSendTransaction()` and `useSendTransactions()` composables use this official sender, wait for `confirmed` commitment, and expose the submitted signature in the result without a wallet popup.
 
-Direct core/Vue clients accept `payer` as a Kit `TransactionSigner` or `payerSecretKey` as a base64 64-byte Ed25519 keypair. Nuxt's `ModuleOptions` intentionally omits both and does not forward them through public runtime config. Never put a raw secret or `payerSecretKey` in Nuxt public runtime config; use a client-only ephemeral signer or a message with an embedded connected-wallet signer. Keep funded production keys on a trusted server or relayer.
+Direct core/Vue clients accept `payer` as a Kit `TransactionSigner` or `payerSecretKey` as a base64 64-byte Ed25519 keypair. Nuxt's `ModuleOptions` intentionally omits both and does not forward them through public runtime config. Never put a raw secret or `payerSecretKey` in Nuxt public runtime config; use a client-only ephemeral signer installed with `solana.clientPlugin: false`. A client-sent transaction always requires a `payer` on the client, so a message carrying its own embedded signer is not a substitute. Keep funded production keys on a trusted server or relayer.
 
 ## Install
 

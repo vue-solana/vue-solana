@@ -140,7 +140,7 @@ export default defineNuxtConfig({
 
 The Nuxt module installs the runtime plugin on the client only and auto-imports composables from direct `@vue-solana/vue/*` subpaths. Composables are safe to call during SSR, but real RPC and wallet operations should run after hydration, such as from `onMounted()` or user actions. Nuxt `solana` options live in public runtime config, so keep them JSON-serializable.
 
-Direct Vue and core clients accept `payer` and `payerSecretKey` for client-sent transactions. `payerSecretKey` is a base64 64-byte Ed25519 keypair, so never put it in Nuxt public runtime config or ship a funded key to a browser. Nuxt `ModuleOptions` intentionally omits both fields, so install a client-owned `payer` in a client-only plugin.
+Direct Vue and core clients accept `payer` and `payerSecretKey` for client-sent transactions. `payerSecretKey` is a base64 64-byte Ed25519 keypair, so never put it in Nuxt public runtime config or ship a funded key to a browser. Nuxt `ModuleOptions` intentionally omits both fields, so install a client-owned `payer` in a client-only plugin with `clientPlugin: false` so the module does not install a second plugin.
 
 ## Test RPC Without A Wallet
 
@@ -393,7 +393,7 @@ function explorerUrl(signature: string, cluster: string) {
 
 If confirmation times out after a signature is returned, do not immediately resubmit. Check the signature status or explorer first; the transaction may still confirm.
 
-The client-send demo uses the official `rpcTransactionPlanSendingExecutor()` installed by the default client. Connect a wallet that supports `signTransaction`, fund the demo payer where the example requires it, and use `useSolanaSendTransaction()` or `useSolanaSendTransactions()`. The executor submits the transaction and waits for `confirmed` commitment before the composable reports `sent`; there is no separate wallet send popup. In Nuxt, create any demo payer in a client-only plugin rather than `nuxt.config.ts`.
+The client-send demo uses the official `rpcTransactionPlanSendingExecutor()` installed by the default client. Connect a wallet that supports `signTransaction`, fund the demo payer where the example requires it, and use `useSolanaSendTransaction()` or `useSolanaSendTransactions()`. The executor submits the transaction and waits for `confirmed` commitment before the composable reports `sent`; there is no separate wallet send popup. In Nuxt, create any demo payer in a client-only plugin rather than `nuxt.config.ts`, and set `clientPlugin: false` so the module skips its own plugin.
 
 ## Final Verification
 
