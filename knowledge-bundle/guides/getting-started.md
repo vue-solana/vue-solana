@@ -35,12 +35,12 @@ Use `@vue-solana/core` directly if you need framework-agnostic Solana helpers su
 
 Supported clusters:
 
-- `mainnet-beta`: Solana mainnet. This is Solana's official mainnet cluster name.
+- `mainnet`: Solana's production cluster. This is Solana's official mainnet cluster name.
 - `devnet`: best default for app development.
 - `testnet`: validator and protocol testing network.
 - `localnet`: local validator.
 
-Use `devnet` while learning and testing. Use `mainnet-beta` only when you are ready to interact with real SOL.
+Use `devnet` while learning and testing. Use `mainnet` only when you are ready to interact with real SOL.
 
 Current wallet support:
 
@@ -134,6 +134,8 @@ export default defineNuxtConfig({
 ```
 
 The Nuxt module installs the runtime plugin on the client only and auto-imports composables from direct `@vue-solana/vue/*` subpaths. Composables are safe to call during SSR, but real RPC and wallet operations should run after hydration, such as from `onMounted()` or user actions.
+
+Direct core/Vue clients accept `payer` and `payerSecretKey` for client-sent transactions. Nuxt `ModuleOptions` intentionally omits both, and public runtime config must never contain a raw secret or funded keypair. Install a client-owned `payer` in a client-only plugin with `clientPlugin: false`; a client-sent transaction always needs one. The default client uses the official `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()` stack.
 
 ## Manual Dev Testing
 
@@ -667,6 +669,8 @@ Expected result:
 - The example displays a submitted transaction signature and confirmation status.
 - The example shows a Solana Explorer link after receiving a signature.
 - The sender balance decreases by the transfer amount plus fees.
+
+The client-send flow is different: `useSendTransaction()` and `useSendTransactions()` use the official RPC plan-sending executor, wait for `confirmed` commitment, and report `sent` without a wallet popup. Configure a payer only in a trusted direct client or ephemeral client-only plugin installed with `clientPlugin: false`.
 
 ### 12. Final Verification
 

@@ -11,6 +11,5 @@ export function getSolanaChain(cluster: SolanaCluster): SolanaChain {
   if (cluster === "mainnet-beta") {
     return "solana:mainnet";
   }
-
   return `solana:${cluster}`;
 }

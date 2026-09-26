@@ -44,5 +44,5 @@ export default defineBuildConfig({
   rollup: {
     emitCJS: true,
   },
-  externals: ["@solana/kit", "vue", /^@vue-solana\/core(?:\/.*)?$/],
+  externals: ["@solana/kit", "@solana/kit-plugin-rpc", "vue", /^@vue-solana\/core(?:\/.*)?$/],
 });

@@ -14,11 +14,13 @@ describe("clusters", () => {
   });
 
   it("returns known HTTP and WebSocket endpoints", () => {
-    expect(getClusterEndpoint("mainnet-beta")).toBe("https://api.mainnet-beta.solana.com");
+    expect(getClusterEndpoint("mainnet-beta")).toBe("https://api.mainnet.solana.com");
+    expect(getClusterEndpoint("mainnet")).toBe("https://api.mainnet.solana.com");
     expect(getClusterEndpoint("testnet")).toBe("https://api.testnet.solana.com");
     expect(getClusterEndpoint("localnet")).toBe("http://127.0.0.1:8899");
 
-    expect(getClusterWebSocketEndpoint("mainnet-beta")).toBe("wss://api.mainnet-beta.solana.com");
+    expect(getClusterWebSocketEndpoint("mainnet-beta")).toBe("wss://api.mainnet.solana.com");
+    expect(getClusterWebSocketEndpoint("mainnet")).toBe("wss://api.mainnet.solana.com");
     expect(getClusterWebSocketEndpoint("testnet")).toBe("wss://api.testnet.solana.com");
     expect(getClusterWebSocketEndpoint("localnet")).toBe("ws://127.0.0.1:8900");
   });

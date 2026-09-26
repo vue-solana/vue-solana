@@ -257,7 +257,7 @@ const wallets = getRegisteredSolanaWallets();
 - 将钱包名称、图标和元数据视为不可信显示数据。
 - 签署消息或交易前要求明确的用户操作。
 - 对不支持的能力显示禁用或解释性 UI，而不是盲目尝试钱包调用。
-- 示例和教程默认保持使用 devnet；只有在明确涉及真实资金时才使用 `mainnet-beta`。
+- 示例和教程默认保持使用 devnet；只有在明确涉及真实资金时才使用 `mainnet`。
 
 官方参考：
 

@@ -13,12 +13,12 @@ Usa `@vue-solana/core` directamente si necesitas primitivas de Solana sin integr
 
 Clusters compatibles:
 
-- `mainnet-beta`: mainnet de Solana. Este es el nombre oficial del cluster mainnet de Solana.
+- `mainnet`: el cluster de producción de Solana. Este es el nombre oficial del mainnet de Solana.
 - `devnet`: mejor opcion por defecto para desarrollo de apps.
 - `testnet`: red para pruebas de validadores y protocolo.
 - `localnet`: validador local.
 
-Usa `devnet` mientras aprendes y pruebas. Usa `mainnet-beta` solo cuando estes listo para interactuar con SOL real.
+Usa `devnet` mientras aprendes y pruebas. Usa `mainnet` solo cuando estes listo para interactuar con SOL real.
 
 Soporte actual de wallets:
 
@@ -139,6 +139,8 @@ export default defineNuxtConfig({
 ```
 
 El modulo Nuxt instala el plugin de runtime solo en el cliente y autoimporta composables desde subpaths directos `@vue-solana/vue/*`. Los composables se pueden llamar de forma segura durante SSR, pero las operaciones RPC y de wallet reales deberian ejecutarse despues de la hidratacion, por ejemplo desde `onMounted()` o acciones del usuario. Las opciones `solana` de Nuxt viven en la configuracion publica de runtime, asi que mantenlas serializables como JSON.
+
+Los clientes Vue/core directos aceptan `payer` y `payerSecretKey` para transacciones enviadas por el cliente. `payerSecretKey` es un keypair Ed25519 de 64 bytes en base64, asi que nunca lo pongas en la configuracion runtime publica de Nuxt ni envíes una clave con fondos al navegador. `ModuleOptions` de Nuxt omite ambos campos; crea un signer efimero en un plugin solo de cliente, instalalo como `payer` y define `clientPlugin: false` para que el modulo no instale un segundo plugin.
 
 ## Probar RPC sin wallet
 
@@ -264,7 +266,7 @@ Inicia el ejemplo Nuxt:
 
 `pnpm dev:nuxt`
 
-Los ejemplos demuestran configuracion de plugin/modulo, estado RPC, llamadas directas de conexion, lecturas de balance, descubrimiento unificado de wallets, seleccion persistida de wallet, estado de wallet, firma de mensajes, estado generico de transaccion, flujos de transferencia de transacciones, estado de confirmacion, enlaces de explorer y UI para capacidades no compatibles. Usan devnet por defecto para pruebas seguras.
+Los ejemplos demuestran configuracion de plugin/modulo, estado RPC, llamadas directas de conexion, lecturas de balance, descubrimiento unificado de wallets, seleccion persistida de wallet, estado de wallet, firma de mensajes, estado generico de transaccion, flujos de transferencia de transacciones, transacciones enviadas por el cliente mediante el planner y executor oficiales de Kit, estado de confirmacion, enlaces de explorer y UI para capacidades no compatibles. Usan devnet por defecto para pruebas seguras.
 
 ## Conectar una wallet
 
@@ -356,7 +358,7 @@ Despues de firmar, verifica que la UI muestre los bytes de la firma devuelta y n
 
 ## Enviar una transferencia
 
-Los ejemplos de Vue y Nuxt incluyen campos de direccion de destinatario y cantidad para una transferencia real. Usan devnet por defecto para que puedas probar con SOL que no tiene valor real. Para mainnet, configura `mainnet-beta` o un endpoint RPC de mainnet y usa una wallet con SOL real para fees.
+Los ejemplos de Vue y Nuxt incluyen campos de direccion de destinatario y cantidad para una transferencia real. Usan devnet por defecto para que puedas probar con SOL que no tiene valor real. Para mainnet, configura `mainnet` o un endpoint RPC de mainnet y usa una wallet con SOL real para fees.
 
 Empieza con una cantidad diminuta como `0.000001` SOL mientras pruebas.
 
@@ -384,12 +386,14 @@ Las URLs de explorer deberian ser conscientes del cluster:
 
 ```ts
 function explorerUrl(signature: string, cluster: string) {
-  const suffix = cluster === "mainnet-beta" ? "" : `?cluster=${cluster}`;
+  const suffix = cluster === "mainnet" || cluster === "mainnet-beta" ? "" : `?cluster=${cluster}`;
   return `https://explorer.solana.com/tx/${signature}${suffix}`;
 }
 ```
 
 Si la confirmacion agota el tiempo despues de devolver una firma, no reenvies inmediatamente. Comprueba primero el estado de la firma o el explorer; la transaccion todavia puede confirmarse.
+
+El demo de envio del cliente usa el `rpcTransactionPlanSendingExecutor()` oficial instalado por el cliente por defecto. Conecta una wallet compatible con `signTransaction`, fondea el payer de demo cuando el ejemplo lo requiera y usa `useSendTransaction()` o `useSendTransactions()`. El executor envia la transaccion y espera `confirmed` antes de que el composable muestre `sent`; no hay un popup de envio separado. En Nuxt, crea cualquier payer de demo en un plugin solo de cliente, no en `nuxt.config.ts`, y define `clientPlugin: false` para que el modulo omita su propio plugin.
 
 ## Verificacion final
 
@@ -402,8 +406,9 @@ Antes de confiar en un flujo de app, verifica estos comportamientos en devnet:
 - Las capacidades no compatibles de firma de mensajes o firma de transacciones estan deshabilitadas en la UI.
 - La firma de mensajes devuelve una firma sin enviar una transaccion on-chain.
 - El envio de transferencia devuelve una firma y estado de confirmacion.
+- Los envios del cliente usan el planner y el executor oficiales, requieren un signer `payer` configurado, y solo alcanzan `sent` despues de `confirmed`.
 - Los enlaces de explorer apuntan al mismo cluster que la app.
-- `mainnet-beta` se usa solo cuando configuras mainnet intencionalmente y entiendes que SOL real esta en riesgo.
+- `mainnet` se usa solo cuando configuras mainnet intencionalmente y entiendes que SOL real esta en riesgo.
 
 ## Mas lectura
 

@@ -42,6 +42,16 @@ console.log(confirmation.signature, confirmation.commitment);
 
 confirmation 기본값은 `confirmed` commitment와 60초 timeout입니다. 이는 `client.rpc.getSignatureStatuses([signature]).send()`를 폴링하므로, 트랜잭션이 이미 제출되어 있어야 합니다.
 
+## 클라이언트 전송 트랜잭션
+
+`createSolanaClient()`은 기본적으로 `@solana/kit-plugin-rpc` official transaction stack인 `solanaRpc()`, `rpcTransactionPlanner()`, `rpcTransactionPlanSendingExecutor()`를 compose합니다. 기존 custom fallback sender는 사용하지 않습니다.
+
+client가 wallet popup 없이 plan, sign, submit, confirm해야 할 때 `useSendTransaction()` 또는 `useSendTransactions()`를 사용하세요. official executor는 새 blockhash를 가져오고 resource limit과 preflight를 처리하며 client signer로 서명하고 RPC로 제출한 뒤 `confirmed`를 기다립니다. send-and-confirm 작업이 완료된 뒤에만 composable의 `status`가 `sent`가 됩니다. 단일 결과는 `data.context.signature`를 제공하고 batch 결과는 plan result tree를 포함합니다.
+
+direct core/Vue client를 `payer` 또는 `payerSecretKey`로 설정하세요. client-sent 경로에는 `payer`가 필요합니다. `payerSecretKey`는 base64 64-byte Ed25519 keypair이며 trusted development 또는 server flow에만 적합합니다. Nuxt public runtime config에 raw secret이나 `payerSecretKey`를 넣지 말고 funded keypair를 end-user browser에 노출하지 마세요.
+
+wallet flow는 별개입니다. `useSignAndSendTransaction()`는 기본적으로 RPC submission 뒤에 반환하거나 `confirm: true`로 선택한 commitment을 기다릴 수 있습니다. connected user가 wallet에서 각 트랜잭션을 승인해야 한다면 이 동작을 유지하세요.
+
 ## 실제 Devnet 전송 만들기
 
 이 예제는 devnet에서 아주 작은 system transfer를 만듭니다. Kit v0 transaction message를 만들고, Vue Solana가 서명을 위해 wallet에 넘겨주는 wire bytes로 serialize합니다.
@@ -199,12 +209,12 @@ Explorer 링크는 앱이 사용하는 cluster와 일치해야 합니다.
 
 ```ts
 function explorerUrl(signature: string, cluster: string) {
-  const suffix = cluster === "mainnet-beta" ? "" : `?cluster=${cluster}`;
+  const suffix = cluster === "mainnet" || cluster === "mainnet-beta" ? "" : `?cluster=${cluster}`;
   return `https://explorer.solana.com/tx/${signature}${suffix}`;
 }
 ```
 
-devnet 링크는 `https://explorer.solana.com/tx/SIGNATURE?cluster=devnet` 형태여야 합니다. Mainnet 링크는 의도적으로 cluster query를 생략합니다.
+devnet 링크는 `https://explorer.solana.com/tx/SIGNATURE?cluster=devnet` 형태여야 합니다. `mainnet`과 이전 별칭 `mainnet-beta` 링크는 의도적으로 cluster query를 생략합니다.
 
 ## 일반 트랜잭션 상태
 
@@ -225,6 +235,8 @@ const { status, error, execute } = useTransaction(async () => {
 Nuxt는 다음을 노출합니다.
 
 - `useSolanaSignAndSendTransaction()`
+- `useSolanaSendTransaction()`
+- `useSolanaSendTransactions()`
 - `useSolanaTransactionConfirmation()`
 - `useSolanaSignatureStatus()`
 
@@ -238,7 +250,7 @@ async function submit(transaction: Uint8Array) {
 </script>
 ```
 
-트랜잭션 메서드는 클라이언트의 사용자 액션에서 호출하세요. SSR 중 wallet signing을 트리거하지 마세요.
+트랜잭션 메서드는 클라이언트의 사용자 액션에서 호출하세요. SSR 중 wallet signing을 트리거하지 마세요. Nuxt module option은 `payer`와 `payerSecretKey`를 제외하므로, public runtime config에 secret을 넣지 말고 `clientPlugin: false`와 함께 client-only Vue plugin에서 `payer`를 설정하세요.
 
 다른 flow에서 반환된 signature를 확인해야 하면 `useSolanaTransactionConfirmation({ commitment: "confirmed" })`를 사용하고 `confirm(signature)`를 호출하세요. timeout 또는 redirect 이후 상태를 계속 확인하려면 `useSolanaSignatureStatus(signature, { pollIntervalMs: 2_000 })`를 사용합니다.
 
@@ -278,6 +290,7 @@ try {
 
 ## 안전 체크리스트
 
+- client-sent signing key는 trusted server 또는 명시적인 ephemeral demo signer에 두고, Nuxt public runtime config를 통해 funded secret을 노출하지 마세요.
 - wallet prompt를 열기 전에 사용자가 무엇에 서명하려는지 보여 주세요.
 - 명시적 사용자 액션 없이 트랜잭션에 서명하거나 전송하지 마세요.
 - private key를 요청하거나 처리하지 마세요.

@@ -89,6 +89,8 @@ createApp(App).use(
 
 `iosWallet` controls iOS browser wallet universal-link entries. It defaults to enabled on iOS browser clients, accepts app identity and redirect URL options, and can be disabled with `iosWallet: false`.
 
+The plugin accepts `payer` as a Kit `TransactionSigner` and `payerSecretKey` as a base64 64-byte Ed25519 keypair (secret key first). A client-sent transaction requires one of those signers. These options are for direct Vue/core clients only: Nuxt's public runtime config must never receive a raw secret or `payerSecretKey`. The default client uses the official `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()` composition; the old custom fallback sender is not used.
+
 ## `useSolana()`
 
 Returns the full injected Vue Solana context. If the plugin has not been installed, such as during Nuxt SSR before the client-only plugin runs, it returns inert SSR-safe state instead of throwing. Runtime RPC and wallet actions still require the plugin-provided client context.
@@ -359,7 +361,7 @@ Returns:
 - `confirm(signature, options?)`
 - `reset()`
 
-For explorer links, render after `signature` is set. For devnet, use a URL such as `https://explorer.solana.com/tx/${signature}?cluster=devnet`. Use `mainnet-beta`, `testnet`, or `localnet` to match the app cluster.
+For explorer links, render after `signature` is set. For devnet, use a URL such as `https://explorer.solana.com/tx/${signature}?cluster=devnet`. Treat both `mainnet` and the legacy `mainnet-beta` alias as the mainnet explorer cluster; use `testnet` or `localnet` to match the app cluster.
 
 ## `useSignatureStatus(signature, options?)`
 
@@ -423,14 +425,14 @@ The default `providerHint` points at adding the corresponding `@solana/kit` plug
 
 Return the client's signers as `Ref<TransactionSigner>`.
 
-- `usePayer()`: the signer that pays transaction fees and storage costs. Requires the client `payer` capability (e.g. `createClient().use(generatedPayer())` from `@solana/kit-plugin-signer`).
+- `usePayer()`: the signer that pays transaction fees and storage costs. The default Vue client exposes a `payer` when it is supplied through plugin options; a custom client can install a signer plugin (e.g. `createClient().use(generatedPayer())` from `@solana/kit-plugin-signer`).
 - `useIdentity()`: the acting identity signer — the wallet whose assets the application acts upon. Requires the client `identity` capability (e.g. `createClient().use(generatedIdentity())`).
 
 Both throw `MissingClientCapabilityError` with a signer-plugin hint when the capability is missing, and re-read the current signer on change when the client advertises `subscribeToPayer` / `subscribeToIdentity`.
 
 ## `usePlanTransaction()` / `usePlanTransactions()`
 
-Plan a transaction message (or full transaction plan) from instruction inputs without signing or sending, using the client's transaction planning capability (`rpcTransactionPlanner` from `@solana/kit-plugin-rpc`).
+Plan a transaction message (or full transaction plan) from instruction inputs without signing or sending, using the official planner installed by the default client. Custom clients must provide `rpcTransactionPlanner()` from `@solana/kit-plugin-rpc`.
 
 ```ts
 const { transactionMessage, status, loading, error, execute } = usePlanTransaction();
@@ -444,9 +446,9 @@ await execute(instructionInput, { abortSignal });
 
 ## `useSendTransaction()` / `useSendTransactions()`
 
-Plan, sign with the client's signers (payer/identity), submit, and confirm transactions through the client's transaction-sending capability (`ClientWithTransactionSending`), with no wallet popup. Requires `rpcTransactionPlanner()` and `rpcTransactionPlanSendingExecutor()` from `@solana/kit-plugin-rpc`; the default plugin client installs only RPC and airdrop plugins, so both composables fail fast at setup with a clear capability error naming what to install.
+Plan, sign, submit, and confirm transactions through the official `ClientWithTransactionSending` capability installed by `createSolanaClient()` and `createSolanaPlugin()`. The default composition uses `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()`; the old custom fallback sender is not used. The official executor waits for `confirmed` commitment before `execute()` resolves, so `status` becomes `sent` only after send-and-confirm completes. There is no wallet popup.
 
-Reserve these for trusted contexts (relayer, automated flows): the client signs with its own keypairs, so do not register app-signing keypairs on a client exposed to end-user browsers.
+Reserve these for trusted contexts (relayer, automated flows): the client signs with its own keypairs, so do not register app-signing keypairs on a client exposed to end-user browsers. Configure `payer` directly for a Vue/core client, but never put `payerSecretKey` or a raw secret in Nuxt public runtime config.
 
 ```ts
 const single = useSendTransaction(); // data.context.signature is the submitted Signature

@@ -35,7 +35,7 @@ The root export remains supported. Direct subpath exports are also available whe
 ## Configuration
 
 ```ts
-type SolanaCluster = "mainnet-beta" | "testnet" | "devnet" | "localnet";
+type SolanaCluster = "mainnet" | "mainnet-beta" | "testnet" | "devnet" | "localnet";
 type SolanaChain = "solana:mainnet" | "solana:testnet" | "solana:devnet" | "solana:localnet";
 
 interface SolanaConfig {
@@ -44,12 +44,18 @@ interface SolanaConfig {
   wsEndpoint?: string;
   commitment?: Commitment;
   autoConnect?: boolean;
+  payer?: TransactionSigner;
+  payerSecretKey?: string;
 }
 ```
 
 If `endpoint` is omitted, the default public endpoint for the selected cluster is used. If `wsEndpoint` is omitted, it is derived from the selected cluster or custom endpoint.
 
 `autoConnect` defaults to `false`. When enabled in the Vue plugin or Nuxt module, Vue Solana reconnects only a wallet identity that the user previously selected and that is discovered again on the client. It stores only wallet identity metadata under `localStorage["vue-solana:selected-wallet"]`: `name`, and `platform`/`source` when available. It never stores private keys, session data, or transaction data, and it never connects an arbitrary installed wallet. Calling `selectWallet(null)` or `setWallet(customWallet)` clears the stored selection.
+
+`payer` is a Kit `TransactionSigner` used as the client fee payer and signer. `payerSecretKey` is its base64-encoded 64-byte Ed25519 keypair form, with the secret key first, and is resolved at client creation. Both are supported by direct core/Vue clients. A client-sent transaction requires a payer. Never put a raw secret or `payerSecretKey` in Nuxt public runtime config, and never expose a funded keypair to an end-user browser.
+
+`createSolanaClient()` composes the official `@solana/kit-plugin-rpc` stack by default: `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()`. The old custom fallback sender is removed. The official executor adds a fresh blockhash, resource-limit and preflight handling, signs, submits, and waits for `confirmed` commitment before the send resolves.
 
 ## `@solana/kit` Client
 
@@ -60,7 +66,7 @@ import { createSolanaClient, address, lamports } from "@vue-solana/core/kit";
 import type { Address, SolanaClient } from "@vue-solana/core/kit";
 ```
 
-`createSolanaClient(config?)` builds a `@solana/kit` client (with `rpc` and `rpcSubscriptions`) from `SolanaConfig`.
+`createSolanaClient(config?)` builds a `@solana/kit` client (with `rpc`, `rpcSubscriptions`, `planTransaction(s)`, and `sendTransaction(s)`) from `SolanaConfig`. The official RPC planner and transaction-sending executor are installed by default.
 
 ```ts
 const client = createSolanaClient({ cluster: "devnet" });
@@ -83,12 +89,13 @@ installSolanaBufferPolyfill();
 
 Supported clusters:
 
-- `mainnet-beta`: Solana mainnet. This is the official Solana cluster name.
+- `mainnet`: Solana's production cluster. This is the official Solana mainnet cluster name.
+- `mainnet-beta`: legacy spelling of `mainnet`. Still accepted and redirects to the same endpoint.
 - `devnet`: developer network with free test SOL from the [Solana Faucet](https://faucet.solana.com).
 - `testnet`: validator and protocol testing network. Testnet SOL is also available from the [Solana Faucet](https://faucet.solana.com).
 - `localnet`: local validator, usually `http://127.0.0.1:8899`.
 
-Use `mainnet-beta` rather than `mainnet`.
+Use `mainnet` in Vue Solana code. The legacy `mainnet-beta` spelling is still accepted and redirects to the same endpoint.
 
 ## Context
 
@@ -239,7 +246,7 @@ interface TransactionConfirmation {
 - `getClusterWebSocketEndpoint(cluster?)`: returns the WebSocket endpoint for a cluster.
 - `getWebSocketEndpoint(endpoint)`: converts `http`/`https` endpoints to `ws`/`wss` endpoints.
 - `createSolanaContext(config?)`: resolves cluster, endpoint, and WebSocket endpoint into a `SolanaContext` with the `@solana/kit` `client`.
-- `createSolanaClient(config?)`: creates a `@solana/kit` client with `rpc` and `rpcSubscriptions` from `@vue-solana/core/kit`.
+- `createSolanaClient(config?)`: creates a `@solana/kit` client with `rpc`, `rpcSubscriptions`, the official transaction planner, and the official RPC transaction-sending executor.
 - `createSolanaError(code, message, options?)`: creates a normalized `SolanaError` with optional original `cause` and wallet `feature` metadata.
 - `isSolanaError(error)`: checks whether an unknown thrown value is a `SolanaError`.
 - `normalizeSolanaError(cause, fallbackCode, fallbackMessage?, options?)`: preserves existing `SolanaError` values, maps wallet rejection values to `USER_REJECTED`, and otherwise wraps the original cause in a fallback `SolanaError`.
@@ -250,6 +257,7 @@ interface TransactionConfirmation {
 - `parseAddress(value)`: validates and returns an `Address` from an `Address`, address string, ref-like object, getter, `null`, or `undefined`. Invalid address strings throw `INVALID_ADDRESS`.
 - `signAndSendTransaction(client, wallet, transaction, options?)`: signs and sends a transaction using wallet capabilities (raw wire bytes). Android Mobile Wallet Adapter wallets prefer `signTransaction` plus app-side RPC submission when available so the app can reliably return the submitted signature. Serializes signed bytes and calls `client.rpc.sendTransaction(...)`.
 - `confirmTransactionSignature(client, signature, options?)`: waits for a submitted signature to reach the requested commitment by polling `client.rpc.getSignatureStatuses([signature]).send()`. Defaults to `confirmed` commitment and a 60 second timeout. Returns `TransactionConfirmation` and throws a clear timeout or failed-confirmation error.
+- Client-sent transactions use the official `ClientWithTransactionSending` capability installed by `createSolanaClient()`. The sender waits for `confirmed` commitment, exposes a single result signature at `data.context.signature`, and has no wallet popup.
 - `getSolanaChain(cluster)`: maps a package cluster to a Wallet Standard chain ID.
 - `isSolanaStandardWallet(wallet)`: checks whether a Wallet Standard wallet supports Solana.
 - `getRegisteredSolanaWallets()`: returns discovered Solana Wallet Standard wallets in browser environments, including Android Mobile Wallet Adapter after it is registered on supported clients.

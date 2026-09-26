@@ -26,7 +26,9 @@ Live demo: [vue-solana-docs.vercel.app/demo](/demo)
 - Signing an authentication message with `useSignMessage()` when the connected wallet supports it.
 - Sending a real transfer with `useSignAndSendTransaction()` and showing submitted vs confirmed transaction status. The example uses devnet by default for safe testing.
 - Building cluster-aware Solana Explorer links for submitted signatures.
-- Exercising the Kit-reactive data layer in the Live Data Panels: `useRequest()` for one-shot requests, `useSubscription()` for live slot notifications over websocket, `useTrackedData()` for fetch-seeded account data updated by account notifications, `useSignIn()` for Sign In With Solana, and `useRequestSwr()` from `@vue-solana/vue/swr` for cache-keyed stale-while-revalidate across remounts.
+- Exercising the Kit-reactive data layer in the Live Data Panels: `useRequest()` for one-shot requests, `useSubscription()` for live slot notifications over websocket, `useTrackedData()` for fetch-seeded account data updated by account notifications, `useSignIn()` for Sign In With Solana, `useAirdrop()` for devnet faucet requests, `usePayer()` to inspect the client's fee-payer signer, `useSendTransaction()` and `useSendTransactions()` for client-sent SPL Memo transactions with no wallet popup, and `useRequestSwr()` from `@vue-solana/vue/swr` for cache-keyed stale-while-revalidate across remounts.
+- Configuring a demo `payer` signer (`generateKeyPairSigner()` from `@solana/kit`) in `main.ts` so client-sent transactions can pay fees. The payer starts unfunded; the `usePayer` panel airdrops 1 devnet SOL into it.
+- Using the default official `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()` client composition. The client-send demo waits for `confirmed` commitment before showing `sent`; it does not use a custom fallback sender.
 
 The app uses `devnet` by default. Devnet SOL has no real value.
 
@@ -57,7 +59,10 @@ Open the Vite URL printed in the terminal, usually `http://localhost:5173`.
 - Watch the transaction move from submitted signature to confirmation status.
 - Open the explorer link and verify it includes `?cluster=devnet`.
 - In the Live Data Panels, change the tracked address and watch the request, subscription, and tracked-data panels re-fire.
+- In the Live Data Panels, airdrop 1 SOL to the demo payer with the `usePayer` panel, then send a client-signed SPL Memo with `useSendTransaction()` (no wallet popup) or a batch of two with `useSendTransactions()`, and watch the status move from `sending` to `sent` after the official executor reaches `confirmed` commitment.
 - Toggle the SWR card off and on and observe the cached value appear immediately (stale) before the revalidated request replaces it.
+
+The generated demo payer exists only in the browser session and is not configured in `nuxt.config.ts` or any public runtime config. Use a server-held signer for production relayers, and never ship a funded keypair to an end-user browser.
 
 The transfer example initializes the browser `Buffer` polyfill with `installSolanaBufferPolyfill()` from `@vue-solana/vue/buffer-polyfill`. Restart the Vite dev server if Vite previously cached an externalized Buffer import.
 

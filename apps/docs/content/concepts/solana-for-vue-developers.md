@@ -13,7 +13,7 @@ Official references:
 - [Solana RPC Methods](https://solana.com/docs/rpc)
 - [Solana Clusters](https://solana.com/docs/references/clusters)
 - [Solana Transactions](https://solana.com/docs/core/transactions)
-- [Solana Cookbook](https://solana.com/developers/cookbook) — practical recipes for common Solana patterns
+- [Solana Core Concepts](https://solana.com/docs/core) — core Solana concepts such as accounts, programs, and transactions
 
 ## Connections And RPC
 
@@ -79,6 +79,8 @@ A transaction is a set of instructions that changes Solana state. Examples inclu
 
 Signing proves that the wallet owner approves the transaction. Frontend apps should ask the user's wallet to sign. They should not hold private keys.
 
+The default `createSolanaClient()` also composes Solana Kit's official RPC planner and transaction-sending executor, so trusted client contexts can plan and send without a wallet popup. That path requires a `payer` signer. Keep funded signers on a server or relayer; Nuxt's public runtime config must not contain a raw `payerSecretKey` or other secret.
+
 ## Commitment Levels
 
 Commitment controls how finalized returned data should be.
@@ -103,4 +105,4 @@ Official reference: [Commitment Status](https://solana.com/docs/rpc#configuring-
 - Use `devnet` while building and testing.
 - Do not use a wallet with real funds for development.
 - Do not hardcode private keys in frontend apps.
-- Use `mainnet-beta` only when you are ready to interact with real SOL and production programs.
+- Use `mainnet` only when you are ready to interact with real SOL and production programs.

@@ -82,18 +82,22 @@ export default {
       error: "error",
       idle: "inactivo",
       loading: "cargando",
+      planned: "planificada",
+      planning: "planificando",
       ready: "lista",
+      running: "ejecutando",
       sent: "enviada",
       sending: "enviando",
       signed: "firmado",
       signing: "firmando",
+      success: "completado",
       waiting: "esperando",
     },
     hero: {
       eyebrow: "Demo en vivo en devnet",
       title: "Vue Solana en una app Nuxt real",
       description:
-        "Esta página usa los paquetes publicados de Vue Solana. Prueba lecturas RPC, consulta de balance, descubrimiento con Wallet Standard, conexión/desconexión, firma de mensajes y una pequeña transferencia real en devnet.",
+        "Esta pagina usa los paquetes publicados mas recientes de Vue Solana. Prueba lecturas RPC, consulta de balance, descubrimiento con Wallet Standard, conexion/desconexion, firma de mensajes, una pequena transferencia real en devnet, transacciones enviadas por el cliente y airdrops de devnet.",
       versionsLabel: "Versiones de paquetes Vue Solana",
     },
     rpc: {
@@ -216,6 +220,8 @@ export default {
       send: "Enviar transferencia en devnet",
       signature: "Firma:",
       explorer: "Explorer:",
+      whenToUse:
+        "Cuando usarla: el usuario paga y debe aprobar en su wallet, ideal para transferencias personales y cualquier accion en nombre de un usuario conectado.",
       viewTransaction: "Ver transacción",
       labels: {
         walletReady: "Wallet lista",
@@ -254,7 +260,7 @@ export default {
         eyebrow: "Firma",
         title: "Firma y transacciones",
         description:
-          "Firma de mensajes, Sign In With Solana, transferencias y estado generico de transaccion.",
+          "Firma de mensajes, Sign In With Solana, transferencias, transacciones enviadas por el cliente y estado generico de transaccion.",
       },
       live: {
         eyebrow: "Reactivo a Kit",
@@ -297,6 +303,31 @@ export default {
       signingIn: "Iniciando sesion...",
       notSignedIn: "Sesion no iniciada",
       signedInAs: "Sesion iniciada como {address}",
+    },
+    clientSend: {
+      title: "Enviar a traves del cliente",
+      description:
+        "Planifica, firma y envia transacciones SPL Memo mediante la capacidad de envio del cliente, sin popup y sin intervencion de la wallet. El signer payer del propio cliente es la payer de comisiones, asi que la app firma y paga por su cuenta.",
+      payer: "Payer de comisiones (signer del cliente)",
+      noPayer: "no disponible",
+      payerHint:
+        "El signer del cliente aun esta cargando. Ademas empieza con saldo cero: usa la tarjeta de airdrop de abajo para financiarlo antes de enviar.",
+      single: "useSolanaSendTransaction",
+      batch: "useSolanaSendTransactions",
+      sendSingle: "Enviar 1 via cliente",
+      sendBatch: "Enviar 2 via cliente",
+      noSend: "Aun no hay envio del cliente",
+      whenToUse:
+        "Cuando usarla: tu app posee las claves de firma, es decir flujos de relayer, de servidor o de backend donde el cliente firma y paga sin una wallet en el medio.",
+    },
+    airdrop: {
+      title: "Airdrop de SOL",
+      description:
+        "Solicita un airdrop en devnet hacia el signer payer del cliente mediante la capacidad de airdrop del cliente. Los faucets de devnet limitan la tasa, asi que los errores suelen ser temporales.",
+      request: "Airdrop de 1 SOL",
+      payerHint: "El signer del cliente aun esta cargando.",
+      signature: "Firma: {signature}",
+      noSignature: "Aun no hay airdrop",
     },
   },
 };

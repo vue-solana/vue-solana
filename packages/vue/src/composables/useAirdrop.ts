@@ -47,8 +47,10 @@ function toReadableAirdropError(error: unknown): never {
  *
  * Requires the client to expose an `airdrop` capability, typically installed
  * with the RPC airdrop plugin, e.g.
- * `createClient().use(solanaRpcConnection({ ... })).use(rpcAirdrop())` from
- * `@solana/kit-plugin-rpc`. The capability is commonly available on test
+ * `createClient().use(solanaRpc({ ... })).use(rpcAirdrop())` from
+ * `@solana/kit-plugin-rpc`. `solanaRpc()` is required rather than the
+ * read-only `solanaRpcConnection()`: an airdrop signs a request, so the
+ * client needs a `payer`. The capability is commonly available on test
  * networks (devnet, testnet) and local validators.
  *
  * Some implementations (e.g. LiteSVM) update balances directly without sending
@@ -62,7 +64,7 @@ export function useAirdrop(): UseActionReturn<
   useClientCapability("airdrop", {
     hookName: "useAirdrop",
     providerHint:
-      "Install it by adding the airdrop capability with `createClient().use(solanaRpcConnection({ ... })).use(rpcAirdrop())` from `@solana/kit-plugin-rpc`.",
+      "Install it by adding the airdrop capability with `createClient().use(solanaRpc({ ... })).use(rpcAirdrop())` from `@solana/kit-plugin-rpc`, on a client that has a `payer` signer to sign the request.",
   });
 
   const { client } = useSolanaClient();

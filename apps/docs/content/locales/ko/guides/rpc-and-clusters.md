@@ -15,10 +15,11 @@ Vue Solana는 `@vue-solana/core`, `@vue-solana/vue`, `@vue-solana/nuxt` 전반�
 
 - `devnet`
 - `testnet`
-- `mainnet-beta`
+- `mainnet`
+- `mainnet-beta` (`mainnet`의 이전 별칭)
 - `localnet`
 
-Solana mainnet에는 `mainnet-beta`를 사용하세요. Vue Solana는 Solana의 공식 클러스터 이름을 의도적으로 따르며 `mainnet` alias를 사용하지 않습니다.
+Solana mainnet에는 `mainnet`을 사용하세요. 이는 Solana의 공식 mainnet 클러스터 이름입니다. 이전 표기법인 `mainnet-beta`는 여전히 허용되며 같은 엔드포인트로 리다이렉트됩니다.
 
 예제와 개발에 가장 안전한 클러스터이므로 `devnet`이 기본값입니다.
 
@@ -49,7 +50,7 @@ console.log(solana.endpoint, latestBlockhash.blockhash);
 import { createSolanaContext } from "@vue-solana/core/rpc";
 
 const solana = createSolanaContext({
-  cluster: "mainnet-beta",
+  cluster: "mainnet",
   endpoint: "https://your-rpc.example.com",
   commitment: "confirmed",
 });
@@ -117,7 +118,9 @@ export default defineNuxtConfig({
 });
 ```
 
-Nuxt는 모듈 옵션을 public runtime config에 저장하므로 옵션은 JSON 직렬화가 가능해야 합니다.
+Nuxt는 모듈 옵션을 public runtime config에 저장하므로 옵션은 JSON 직렬화가 가능해야 합니다. Nuxt module은 `payer`와 `payerSecretKey`를 의도적으로 제외하므로 public runtime config에 raw secret을 넣지 마세요. ephemeral `payer`는 client-only plugin에서 만들고 `clientPlugin: false`를 설정한 뒤 Vue plugin을 install하세요.
+
+direct core와 Vue client는 `createSolanaClient()` / `createSolanaPlugin()`에 `payer` 또는 `payerSecretKey`를 전달할 수 있습니다. default client는 client-sent transaction에 official `solanaRpc()`, `rpcTransactionPlanner()`, `rpcTransactionPlanSendingExecutor()` 구성을 사용합니다.
 
 Nuxt 페이지와 컴포넌트에서는 자동 import되는 `useSolanaRpc()` 컴포저블을 사용하세요.
 

@@ -47,12 +47,33 @@ iOS browser wallet link는 iOS 브라우저에서 Phantom, Solflare, Backpack에
 ```ts
 createApp(App).use(
   createSolanaPlugin({
-    cluster: "mainnet-beta",
+    cluster: "mainnet",
     endpoint: "https://your-rpc.example.com",
     commitment: "confirmed",
   }),
 );
 ```
+
+지원 cluster는 `mainnet`(이전 별칭 `mainnet-beta`), `devnet`, `testnet`, `localnet`입니다. Solana mainnet에는 `mainnet`을 사용하세요. 이는 Solana의 공식 mainnet 클러스터 이름입니다.
+
+### Plugin 옵션
+
+| 옵션             | Type                           | Default            | Description                                                                                         |
+| ---------------- | ------------------------------ | ------------------ | --------------------------------------------------------------------------------------------------- |
+| `cluster`        | Solana cluster                 | `devnet`           | `endpoint`를 생략할 때 사용할 cluster입니다. `mainnet-beta`는 `mainnet`의 이전 별칭으로 허용됩니다. |
+| `endpoint`       | `string`                       | Cluster endpoint   | HTTP RPC endpoint입니다.                                                                            |
+| `wsEndpoint`     | `string`                       | Derived endpoint   | WebSocket RPC endpoint입니다.                                                                       |
+| `commitment`     | Commitment                     | Kit default        | RPC call의 default commitment입니다.                                                                |
+| `autoConnect`    | `boolean`                      | `false`            | 이전에 선택한 discovered wallet만 reconnect합니다.                                                  |
+| `payer`          | `TransactionSigner`            | None               | client-sent transaction의 fee payer와 signer입니다.                                                 |
+| `payerSecretKey` | `string`                       | None               | secret key가 먼저 오는 base64 64-byte Ed25519 keypair이며 client 생성 시 resolve됩니다.             |
+| `wallet`         | `SolanaWallet`                 | Disabled           | Custom wallet adapter입니다.                                                                        |
+| `mobileWallet`   | `MobileWalletOptions \| false` | Enabled on Android | Android Mobile Wallet Adapter 옵션입니다.                                                           |
+| `iosWallet`      | `iOSWalletOptions \| false`    | Enabled on iOS     | iOS wallet universal-link 옵션입니다.                                                               |
+
+`payer`와 `payerSecretKey`는 direct Vue/core client에서 지원됩니다. client-sent transaction에는 `payer`가 필요합니다. Nuxt public runtime config에 raw secret이나 `payerSecretKey`를 넣지 말고, funded signing key를 end-user browser에 보내지 마세요.
+
+`createSolanaPlugin()`의 default client는 official `solanaRpc()`, `rpcTransactionPlanner()`, `rpcTransactionPlanSendingExecutor()` 구성을 사용합니다. 기존 custom fallback sender는 사용하지 않습니다. official executor는 `execute()`가 resolve되고 `status`가 `sent`가 되기 전에 `confirmed` commitment을 기다립니다.
 
 ### Client와 Plugin 수명 주기
 
@@ -147,8 +168,9 @@ Buffer polyfill이 필요한 브라우저 트랜잭션 코드에는 `@vue-solana
 - `useSignIn()`: 지갑의 Sign In With Solana(SIWS) 기능을 트리거합니다.
 - `useSelectedWalletAccount()`: 지속성과 필터링이 있는 앱 전역 selected wallet account context를 읽습니다.
 - `useSignTransactions()` / `useSignAndSendTransactions()`: 지갑 요청 한 번으로 여러 transaction을 서명하거나 서명 후 전송합니다.
-- `usePayer()` / `useIdentity()`: Kit client의 reactive signer입니다(signer plugin 필요).
+- `usePayer()` / `useIdentity()`: Kit client의 reactive signer입니다. default Vue client는 설정된 payer를 노출하고, custom client는 signer를 설치할 수 있습니다.
 - `usePlanTransaction()` / `usePlanTransactions()`: instruction 입력에서 transaction message를 계획합니다.
+- `useSendTransaction()` / `useSendTransactions()`: `createSolanaClient()`가 설치한 official planner와 executor를 사용해 plan, sign, submit 후 `confirmed`를 기다리며 wallet popup이 없습니다. payer를 설정하세요.
 - `useClientCapability(name)`: 클라이언트에 capability가 설치되어 있음을 단언하고, 없으면 설명적인 오류를 던집니다.
 
 ## 관련 가이드
@@ -669,6 +691,16 @@ await execute(transaction);
 
 Wallet은 서명 전에 메시지나 트랜잭션을 수정할 수 있습니다 — 예를 들어 자체 instruction을 추가하거나 fee payer를 변경 — Wallet Standard는 이를 명시적으로 허용합니다. 반환된 `signedMessage`나 서명된 트랜잭션 bytes를 다시 읽고 입력과 byte 단위로 일치한다고 가정하지 마세요.
 
+### 클라이언트 전송 트랜잭션
+
+`useSendTransaction()`과 `useSendTransactions()`는 연결된 wallet 대신 client의 transaction-sending capability를 사용합니다. `createSolanaClient()`와 `createSolanaPlugin()`은 official `solanaRpc()`, `rpcTransactionPlanner()`, `rpcTransactionPlanSendingExecutor()` stack을 기본적으로 설치하므로 custom fallback이나 추가 수동 plugin 설치가 필요하지 않습니다.
+
+executor는 새 blockhash를 가져오고 resource limit을 추정하거나 유지하며, 설정이 있지 않으면 preflight simulation을 수행하고, client signer로 서명한 뒤 RPC로 제출하고 `confirmed` commitment을 기다립니다. `status`는 send-and-confirm 작업이 완료된 뒤에만 `sending`에서 `sent`로 바뀝니다. 단일 결과의 `data.context.signature`에서 submitted signature를 확인할 수 있고 batch 결과에는 plan result tree가 포함됩니다. wallet popup이 없으므로 client가 적절한 signer를 소유한 trusted context에서만 사용하세요.
+
+direct Vue/core client에서 `payer` 또는 `payerSecretKey`로 payer를 설정하세요. payer가 없으면 plan과 send가 불가능합니다. production funded key는 server 또는 relayer에 두어야 합니다. Nuxt public runtime config에 raw secret이나 `payerSecretKey`를 넣지 말고 end-user browser에 funded keypair를 보내지 마세요.
+
+wallet composable은 별개입니다. `useSignAndSendTransaction()`는 기본적으로 RPC submission 뒤에 반환하거나 `confirm: true`를 전달하면 선택한 commitment까지 기다립니다. client-sent transaction은 항상 official executor의 `confirmed` send-and-confirm 동작을 사용합니다.
+
 ## 배치 트랜잭션
 
 ```ts
@@ -738,7 +770,7 @@ const { transactionMessage, execute } = usePlanTransaction();
 const message = await execute(instructions);
 ```
 
-`useClientCapability("payer")`는 클라이언트에 capability가 설치되어 있는지 확인하고, 없으면 setup 중에 설명적인 오류(훅 이름과 설치 방법 명시)를 throw합니다. `usePlanTransaction()` / `usePlanTransactions()`는 계획 capability가 필요합니다. 예: `@solana/kit-plugin-rpc`의 `rpcTransactionPlanner()`.
+`useClientCapability("payer")`는 클라이언트에 capability가 설치되어 있는지 확인하고, 없으면 setup 중에 설명적인 오류(훅 이름과 설치 방법 명시)를 throw합니다. default Vue client는 official planner와 transaction-sending executor를 이미 설치합니다. custom client는 `rpcTransactionPlanner()`와 `rpcTransactionPlanSendingExecutor()`를 직접 설치해야 합니다.
 
 ## 기존 Signature Confirm
 

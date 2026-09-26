@@ -27,7 +27,8 @@ Live demo: [vue-solana-docs.vercel.app/demo](/zh/demo)
 - 使用 `useSolanaSignAndSendTransaction()` 发送真实转账，并显示已提交和已确认的交易状态。示例默认使用 devnet，以便安全测试。
 - 为已提交的签名构建带有集群信息的 Solana Explorer 链接。
 - 使用来自 `@vue-solana/vue/useTransaction` 的 `useTransaction()` 处理通用异步交易状态。
-- 在 Live Data Panels 中使用自动导入的组合式函数演练基于 Kit 的响应式数据层：`useSolanaRequest()` 用于一次性请求，`useSolanaSubscription()` 用于实时 slot 通知，`useSolanaTrackedData()` 用于基于 fetch 种子的账户数据，`useSolanaSignIn()` 用于 Sign In With Solana，以及跨重新挂载使用的 `@vue-solana/vue/swr` 缓存适配器。
+- 在 Live Data Panels 中使用自动导入的组合式函数演练基于 Kit 的响应式数据层：`useSolanaRequest()` 用于一次性请求，`useSolanaSubscription()` 用于实时 slot 通知，`useSolanaTrackedData()` 用于基于 fetch 种子的账户数据，`useSolanaSignIn()` 用于 Sign In With Solana，`useSolanaAirdrop()` 用于 devnet faucet 请求，`useSolanaPayer()` 用于检查客户端的 fee-payer signer，`useSolanaSendTransaction()` 和 `useSolanaSendTransactions()` 用于不显示 wallet popup 的 client-sent SPL Memo 交易，以及跨重新挂载使用的 `@vue-solana/vue/swr` 缓存适配器。
+- 在 client-only `app/plugins/demo-payer.client.ts` plugin 中使用 `generateKeyPairSigner()` 生成 ephemeral demo fee payer。payer 初始没有资金，`useSolanaPayer` panel 会空投 1 devnet SOL。Nuxt module 有意省略 `payer` 和 `payerSecretKey`，raw secret 不得放入 public runtime config。
 
 该应用默认使用 `devnet`。Devnet SOL 没有真实价值。
 
@@ -57,6 +58,9 @@ pnpm dev:nuxt
 - 输入收款地址和金额，然后发送真实转账。测试时请让示例保持在 devnet。
 - 观察交易从已提交签名移动到确认状态。
 - 打开 explorer 链接，并确认其中包含 `?cluster=devnet`。
+- 在 Live Data Panels 中用 `useSolanaPayer` panel 向 demo payer 空投 1 SOL，然后使用 `useSolanaSendTransaction()`（不显示 wallet popup）发送 client-signed SPL Memo，或使用 `useSolanaSendTransactions()` 批量发送两笔，并观察官方 executor 达到 `confirmed` 后 status 从 `sending` 变为 `sent`。
+
+demo payer 在 client-only plugin 中生成，不配置在 `nuxt.config.ts` 或 public runtime config 中。示例设置了 `solana.clientPlugin: false` 使模块跳过自己的 plugin；两者同时安装会产生两个 Solana context。模块的默认 client 也使用官方 `solanaRpc()`、`rpcTransactionPlanner()` 和 `rpcTransactionPlanSendingExecutor()` stack，旧的 custom fallback sender 不再使用。永远不要把有资金的 secret 放入 Nuxt public runtime value。
 
 转账示例使用来自 `@vue-solana/nuxt/buffer-polyfill` 的 `installSolanaBufferPolyfill()` 初始化浏览器 `Buffer` polyfill。如果 Vite 之前缓存了 externalized Buffer import，请重启 Nuxt 开发服务器。
 

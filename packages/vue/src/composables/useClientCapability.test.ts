@@ -106,6 +106,27 @@ describe("useClientCapability", () => {
 
     expect(captured.error).toBeUndefined();
   });
+
+  it("treats a `null` capability as missing", () => {
+    const captured = mountWithClient({ rpc: {}, payer: null }, () =>
+      useClientCapability("payer", { hookName: "usePayer" }),
+    );
+
+    expect(captured.error).toBeInstanceOf(MissingClientCapabilityError);
+    expect((captured.error as MissingClientCapabilityError).capabilities).toEqual(["payer"]);
+  });
+
+  it.each([[0], [""], [false], ["signer"]])(
+    "treats a primitive `%o` capability as missing",
+    (value) => {
+      const captured = mountWithClient({ rpc: {}, payer: value }, () =>
+        useClientCapability("payer", { hookName: "usePayer" }),
+      );
+
+      expect(captured.error).toBeInstanceOf(MissingClientCapabilityError);
+      expect((captured.error as MissingClientCapabilityError).capabilities).toEqual(["payer"]);
+    },
+  );
 });
 
 describe("useIdentity", () => {
@@ -214,6 +235,16 @@ describe("usePlanTransaction", () => {
     expect(result.status.value).toBe("error");
     expect(result.error.value?.cause).toBe(rejection);
   });
+
+  it("names `payer` when the client can plan but has no payer to plan with", () => {
+    const client = { rpc: {}, planTransaction: vi.fn(async () => ({}) as never) };
+    const captured = mountWithClient(client, () => usePlanTransaction());
+
+    expect(captured.error).toBeInstanceOf(MissingClientCapabilityError);
+    expect((captured.error as MissingClientCapabilityError).capabilities).toEqual(["payer"]);
+    expect((captured.error as Error).message).toContain("`payer`");
+    expect(client.planTransaction).not.toHaveBeenCalled();
+  });
 });
 
 describe("usePlanTransactions", () => {
@@ -244,8 +275,16 @@ describe("planning capability errors", () => {
   });
 
   it("only asserts the method each planning hook actually calls", () => {
-    const singleOnly = { rpc: {}, planTransaction: vi.fn(async () => ({}) as never) };
-    const multiOnly = { rpc: {}, planTransactions: vi.fn(async () => ({}) as never) };
+    const singleOnly = {
+      rpc: {},
+      payer: payerSigner,
+      planTransaction: vi.fn(async () => ({}) as never),
+    };
+    const multiOnly = {
+      rpc: {},
+      payer: payerSigner,
+      planTransactions: vi.fn(async () => ({}) as never),
+    };
 
     const single = mountWithClient(singleOnly, () => usePlanTransaction());
     expect(single.error).toBeUndefined();

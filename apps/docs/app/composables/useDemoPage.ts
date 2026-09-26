@@ -6,6 +6,7 @@ import { useDemoLiveData } from "./demo/useDemoLiveData";
 import { useDemoTransfer } from "./demo/useDemoTransfer";
 import { useDemoTokenAccounts } from "./demo/useDemoTokenAccounts";
 import { useDemoWallet } from "./demo/useDemoWallet";
+import { useDemoClientSend } from "./demo/useDemoClientSend";
 import { useDirectBlockhash } from "./demo/useDirectBlockhash";
 import { useMockTransactionDemo } from "./demo/useMockTransactionDemo";
 
@@ -22,6 +23,7 @@ export function useDemoPage() {
   const demoWallet = useDemoWallet();
   const tokenAccounts = useDemoTokenAccounts();
   const liveData = useDemoLiveData();
+  const clientSend = useDemoClientSend();
   const signIn = useSolanaSignIn();
 
   const pluginInstalled = computed(() => Boolean(solana.client && solana.endpoint));
@@ -54,5 +56,6 @@ export function useDemoPage() {
     signInErrorText,
     ...tokenAccounts,
     ...transfer,
+    ...clientSend,
   };
 }

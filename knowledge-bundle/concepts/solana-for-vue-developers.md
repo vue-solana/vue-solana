@@ -30,7 +30,7 @@ An RPC endpoint is the HTTP URL your app uses to read from or write to Solana.
 Examples:
 
 - `https://api.devnet.solana.com`
-- `https://api.mainnet-beta.solana.com`
+- `https://api.mainnet.solana.com`
 - `http://127.0.0.1:8899`
 
 RPC requests go through `client.rpc` from `useSolanaClient()` / `useSolanaRpc()`, or from `createSolanaClient()` / `createSolanaContext()` in `@vue-solana/core`. The legacy `Connection` class and the `web3` subpaths were removed in v2.0.0. Public endpoints are useful for getting started, but production apps usually use a dedicated RPC provider for reliability and rate limits.
@@ -44,7 +44,7 @@ WebSocket endpoints are used for subscriptions and real-time updates. Vue Solana
 Examples:
 
 - `wss://api.devnet.solana.com`
-- `wss://api.mainnet-beta.solana.com`
+- `wss://api.mainnet.solana.com`
 - `ws://127.0.0.1:8900`
 
 ## Public Keys And Addresses
@@ -145,4 +145,4 @@ Official references:
 - Use `devnet` while building and testing.
 - Do not use a wallet with real funds for development.
 - Do not hardcode private keys in frontend apps.
-- Use `mainnet-beta` only when you are ready to interact with real SOL and production programs.
+- Use `mainnet` only when you are ready to interact with real SOL and production programs.

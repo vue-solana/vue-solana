@@ -42,6 +42,16 @@ console.log(confirmation.signature, confirmation.commitment);
 
 La confirmación usa `confirmed` y un timeout de 60 segundos por defecto. Hace polling de `client.rpc.getSignatureStatuses([signature]).send()`, por lo que la transacción ya debe haber sido enviada.
 
+## Transacciones Enviadas Por El Cliente
+
+`createSolanaClient()` compone por defecto el stack oficial de transacciones de `@solana/kit-plugin-rpc`: `solanaRpc()`, `rpcTransactionPlanner()` y `rpcTransactionPlanSendingExecutor()`. El fallback custom anterior no se usa.
+
+Usa `useSendTransaction()` o `useSendTransactions()` cuando el cliente debe planificar, firmar, enviar y confirmar sin popup de wallet. El executor oficial obtiene un blockhash nuevo, maneja limites de recursos y preflight, firma con los signers del cliente, envia por RPC y espera `confirmed`. El composable establece `status` en `sent` solo cuando termina la operacion de envio y confirmacion. El resultado simple expone `data.context.signature`; el resultado batch contiene el arbol del plan.
+
+Configura un cliente core/Vue directo con `payer` o `payerSecretKey`; el envio del cliente requiere un `payer`. `payerSecretKey` es un keypair Ed25519 de 64 bytes codificado en base64 y solo es apropiado para desarrollo confiable o flows del servidor. Nunca pongas un secreto crudo o `payerSecretKey` en la configuracion runtime publica de Nuxt, y nunca expongas una keypair con fondos al navegador de un usuario final.
+
+El flujo de wallet es separado: `useSignAndSendTransaction()` puede devolver despues del envio RPC por defecto, o esperar un commitment seleccionado con `confirm: true`. Mantén ese comportamiento cuando un usuario conectado debe aprobar una transaccion en su wallet.
+
 ## Construir Una Transferencia Real En Devnet
 
 Este ejemplo crea una pequeña transferencia de sistema en devnet. Construye un mensaje de transacción Kit v0 y lo serializa a bytes de la red que Vue Solana pasa a la wallet para firma.
@@ -199,12 +209,12 @@ Los enlaces de Explorer deben coincidir con el cluster que usa tu app.
 
 ```ts
 function explorerUrl(signature: string, cluster: string) {
-  const suffix = cluster === "mainnet-beta" ? "" : `?cluster=${cluster}`;
+  const suffix = cluster === "mainnet" || cluster === "mainnet-beta" ? "" : `?cluster=${cluster}`;
   return `https://explorer.solana.com/tx/${signature}${suffix}`;
 }
 ```
 
-Para devnet, los enlaces deben verse como `https://explorer.solana.com/tx/SIGNATURE?cluster=devnet`. Los enlaces de mainnet omiten intencionalmente el query de cluster.
+Para devnet, los enlaces deben verse como `https://explorer.solana.com/tx/SIGNATURE?cluster=devnet`. Tanto `mainnet` como el alias heredado `mainnet-beta` omiten intencionalmente el query de cluster.
 
 ## Estado Genérico De Transacción
 
@@ -225,6 +235,8 @@ const { status, error, execute } = useTransaction(async () => {
 Nuxt expone:
 
 - `useSolanaSignAndSendTransaction()`
+- `useSolanaSendTransaction()`
+- `useSolanaSendTransactions()`
 - `useSolanaTransactionConfirmation()`
 - `useSolanaSignatureStatus()`
 
@@ -238,7 +250,7 @@ async function submit(transaction: Uint8Array) {
 </script>
 ```
 
-Llama métodos de transacción desde acciones del usuario en el cliente. No dispares firma de wallet durante SSR.
+Llama métodos de transacción desde acciones del usuario en el cliente. No dispares firma de wallet durante SSR. Las opciones del modulo Nuxt omiten `payer` y `payerSecretKey`; configura un `payer` en un plugin Vue solo de cliente con `clientPlugin: false` en vez de poner un secreto en la configuracion runtime publica.
 
 Usa `useSolanaTransactionConfirmation({ commitment: "confirmed" })` y llama `confirm(signature)` cuando necesites confirmar una firma devuelta por otro flujo. Usa `useSolanaSignatureStatus(signature, { pollIntervalMs: 2_000 })` cuando quieras seguir comprobando el estado después de un timeout o redirección.
 
@@ -278,6 +290,7 @@ try {
 
 ## Lista De Seguridad
 
+- Mantén las claves de firma de transacciones del cliente en un servidor confiable o en un signer efimero de demo explicito; nunca expongas secretos con fondos mediante la configuracion runtime publica de Nuxt.
 - Muestra a los usuarios lo que están a punto de firmar antes de abrir un prompt de wallet.
 - Nunca firmes ni envíes transacciones sin una acción explícita del usuario.
 - Nunca solicites ni manejes claves privadas.

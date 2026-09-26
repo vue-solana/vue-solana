@@ -30,7 +30,7 @@ export default defineNuxtConfig({
 });
 ```
 
-Nuxt module options are written to public runtime config, so they must be JSON-serializable. Use `wallet` only with the Vue plugin in client-only Vue code; Nuxt config intentionally omits custom wallet adapter objects.
+Nuxt module options are written to public runtime config, so they must be JSON-serializable. Use `wallet` only with the Vue plugin in client-only Vue code; Nuxt config intentionally omits custom wallet adapter objects. `ModuleOptions` also intentionally omits `payer` and `payerSecretKey`: direct core/Vue clients support them, but the module strips them and never forwards a raw secret to public runtime config. Install a client-owned `payer` in a client-only plugin with `clientPlugin: false`.
 
 ## Auto-Imports
 
@@ -67,6 +67,8 @@ The Nuxt module installs the runtime plugin on the client only and auto-imports 
 - `useSolanaWallets()`
 
 The Nuxt runtime plugin also installs the selected wallet account context app-wide (via `createSelectedWalletAccountContext`), so `useSolanaSelectedWalletAccount()` works in any component without an explicit provider. Apps that need a custom filter or storage can mount `SelectedWalletAccountProvider` deeper in the component tree to shadow the default context.
+
+The default client uses the official `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()` composition. The old custom fallback sender is not used. `useSolanaSendTransaction()` and `useSolanaSendTransactions()` use that official sender, which waits for `confirmed` commitment before reporting `sent`; the module does not provide a payer, so install a client-owned `payer` in a client-only plugin with `clientPlugin: false`.
 
 ## Explicit Solana Imports
 

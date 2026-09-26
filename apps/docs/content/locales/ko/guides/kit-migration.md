@@ -47,7 +47,7 @@ Kit는 또한 모듈성 이점을 제공합니다: 사용하는 부분만 가져
 | `connection.confirmTransaction` / `getSignatureStatuses`                 | `confirmTransactionSignature(client, ...)` (`client.rpc.getSignatureStatuses(...).send()` 폴링)                                           |
 | wallet-standard 흐름                                                     | 변경 없음 — wallet-standard 탐색과 적응이 여전히 `useWallets()` / `useWallet()`을 구동합니다                                              |
 
-> 일부 행은 업스트림 `@solana/kit` 플러그인(signer, planner, system program)을 참조합니다. Vue Solana는 이를 번들하지 않습니다; 필요할 때 `@solana/kit` 생태계에서 직접 설치하세요.
+> 일부 행은 업스트림 `@solana/kit` 플러그인(signer, planner, system program)을 참조합니다. `createSolanaClient()`의 기본 클라이언트는 `@solana/kit-plugin-rpc`의 공식 planner와 RPC plan executor를 이미 설치합니다. 나머지 플러그인(signer, system program)은 필요할 때 `@solana/kit` 생태계에서 직접 설치하세요.
 
 v2 이후 헬퍼의 대응:
 

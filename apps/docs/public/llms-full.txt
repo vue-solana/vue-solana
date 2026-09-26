@@ -229,12 +229,12 @@ Usa `@vue-solana/core` directamente si necesitas primitivas de Solana sin integr
 
 Clusters compatibles:
 
-- `mainnet-beta`: mainnet de Solana. Este es el nombre oficial del cluster mainnet de Solana.
+- `mainnet`: el cluster de producción de Solana. Este es el nombre oficial del mainnet de Solana.
 - `devnet`: mejor opcion por defecto para desarrollo de apps.
 - `testnet`: red para pruebas de validadores y protocolo.
 - `localnet`: validador local.
 
-Usa `devnet` mientras aprendes y pruebas. Usa `mainnet-beta` solo cuando estes listo para interactuar con SOL real.
+Usa `devnet` mientras aprendes y pruebas. Usa `mainnet` solo cuando estes listo para interactuar con SOL real.
 
 Soporte actual de wallets:
 
@@ -355,6 +355,8 @@ export default defineNuxtConfig({
 ```
 
 El modulo Nuxt instala el plugin de runtime solo en el cliente y autoimporta composables desde subpaths directos `@vue-solana/vue/*`. Los composables se pueden llamar de forma segura durante SSR, pero las operaciones RPC y de wallet reales deberian ejecutarse despues de la hidratacion, por ejemplo desde `onMounted()` o acciones del usuario. Las opciones `solana` de Nuxt viven en la configuracion publica de runtime, asi que mantenlas serializables como JSON.
+
+Los clientes Vue/core directos aceptan `payer` y `payerSecretKey` para transacciones enviadas por el cliente. `payerSecretKey` es un keypair Ed25519 de 64 bytes en base64, asi que nunca lo pongas en la configuracion runtime publica de Nuxt ni envíes una clave con fondos al navegador. `ModuleOptions` de Nuxt omite ambos campos; crea un signer efimero en un plugin solo de cliente, instalalo como `payer` y define `clientPlugin: false` para que el modulo no instale un segundo plugin.
 
 ## Probar RPC sin wallet
 
@@ -480,7 +482,7 @@ Inicia el ejemplo Nuxt:
 
 `pnpm dev:nuxt`
 
-Los ejemplos demuestran configuracion de plugin/modulo, estado RPC, llamadas directas de conexion, lecturas de balance, descubrimiento unificado de wallets, seleccion persistida de wallet, estado de wallet, firma de mensajes, estado generico de transaccion, flujos de transferencia de transacciones, estado de confirmacion, enlaces de explorer y UI para capacidades no compatibles. Usan devnet por defecto para pruebas seguras.
+Los ejemplos demuestran configuracion de plugin/modulo, estado RPC, llamadas directas de conexion, lecturas de balance, descubrimiento unificado de wallets, seleccion persistida de wallet, estado de wallet, firma de mensajes, estado generico de transaccion, flujos de transferencia de transacciones, transacciones enviadas por el cliente mediante el planner y executor oficiales de Kit, estado de confirmacion, enlaces de explorer y UI para capacidades no compatibles. Usan devnet por defecto para pruebas seguras.
 
 ## Conectar una wallet
 
@@ -572,7 +574,7 @@ Despues de firmar, verifica que la UI muestre los bytes de la firma devuelta y n
 
 ## Enviar una transferencia
 
-Los ejemplos de Vue y Nuxt incluyen campos de direccion de destinatario y cantidad para una transferencia real. Usan devnet por defecto para que puedas probar con SOL que no tiene valor real. Para mainnet, configura `mainnet-beta` o un endpoint RPC de mainnet y usa una wallet con SOL real para fees.
+Los ejemplos de Vue y Nuxt incluyen campos de direccion de destinatario y cantidad para una transferencia real. Usan devnet por defecto para que puedas probar con SOL que no tiene valor real. Para mainnet, configura `mainnet` o un endpoint RPC de mainnet y usa una wallet con SOL real para fees.
 
 Empieza con una cantidad diminuta como `0.000001` SOL mientras pruebas.
 
@@ -600,12 +602,14 @@ Las URLs de explorer deberian ser conscientes del cluster:
 
 ```ts
 function explorerUrl(signature: string, cluster: string) {
-  const suffix = cluster === "mainnet-beta" ? "" : `?cluster=${cluster}`;
+  const suffix = cluster === "mainnet" || cluster === "mainnet-beta" ? "" : `?cluster=${cluster}`;
   return `https://explorer.solana.com/tx/${signature}${suffix}`;
 }
 ```
 
 Si la confirmacion agota el tiempo despues de devolver una firma, no reenvies inmediatamente. Comprueba primero el estado de la firma o el explorer; la transaccion todavia puede confirmarse.
+
+El demo de envio del cliente usa el `rpcTransactionPlanSendingExecutor()` oficial instalado por el cliente por defecto. Conecta una wallet compatible con `signTransaction`, fondea el payer de demo cuando el ejemplo lo requiera y usa `useSendTransaction()` o `useSendTransactions()`. El executor envia la transaccion y espera `confirmed` antes de que el composable muestre `sent`; no hay un popup de envio separado. En Nuxt, crea cualquier payer de demo en un plugin solo de cliente, no en `nuxt.config.ts`, y define `clientPlugin: false` para que el modulo omita su propio plugin.
 
 ## Verificacion final
 
@@ -618,8 +622,9 @@ Antes de confiar en un flujo de app, verifica estos comportamientos en devnet:
 - Las capacidades no compatibles de firma de mensajes o firma de transacciones estan deshabilitadas en la UI.
 - La firma de mensajes devuelve una firma sin enviar una transaccion on-chain.
 - El envio de transferencia devuelve una firma y estado de confirmacion.
+- Los envios del cliente usan el planner y el executor oficiales, requieren un signer `payer` configurado, y solo alcanzan `sent` despues de `confirmed`.
 - Los enlaces de explorer apuntan al mismo cluster que la app.
-- `mainnet-beta` se usa solo cuando configuras mainnet intencionalmente y entiendes que SOL real esta en riesgo.
+- `mainnet` se usa solo cuando configuras mainnet intencionalmente y entiendes que SOL real esta en riesgo.
 
 ## Mas lectura
 
@@ -647,12 +652,12 @@ Use `@vue-solana/core` directly if you need Solana primitives without Vue/Nuxt i
 
 Supported clusters:
 
-- `mainnet-beta`: Solana mainnet. This is Solana's official mainnet cluster name.
+- `mainnet`: Solana's production cluster. This is Solana's official mainnet cluster name.
 - `devnet`: best default for app development.
 - `testnet`: validator and protocol testing network.
 - `localnet`: local validator.
 
-Use `devnet` while learning and testing. Use `mainnet-beta` only when you are ready to interact with real SOL.
+Use `devnet` while learning and testing. Use `mainnet` only when you are ready to interact with real SOL.
 
 Current wallet support:
 
@@ -773,6 +778,8 @@ export default defineNuxtConfig({
 ```
 
 The Nuxt module installs the runtime plugin on the client only and auto-imports composables from direct `@vue-solana/vue/*` subpaths. Composables are safe to call during SSR, but real RPC and wallet operations should run after hydration, such as from `onMounted()` or user actions. Nuxt `solana` options live in public runtime config, so keep them JSON-serializable.
+
+Direct Vue and core clients accept `payer` and `payerSecretKey` for client-sent transactions. `payerSecretKey` is a base64 64-byte Ed25519 keypair, so never put it in Nuxt public runtime config or ship a funded key to a browser. Nuxt `ModuleOptions` intentionally omits both fields, so install a client-owned `payer` in a client-only plugin with `clientPlugin: false` so the module does not install a second plugin.
 
 ## Test RPC Without A Wallet
 
@@ -898,7 +905,7 @@ Start the Nuxt example:
 
 `pnpm dev:nuxt`
 
-The examples demonstrate plugin/module setup, RPC state, direct connection calls, balance reads, unified wallet discovery, persisted wallet selection, wallet state, message signing, generic transaction state, transaction transfer flows, confirmation status, explorer links, and unsupported capability UI. They use devnet by default for safe testing.
+The examples demonstrate plugin/module setup, RPC state, direct connection calls, balance reads, unified wallet discovery, persisted wallet selection, wallet state, message signing, generic transaction state, transaction transfer flows, client-sent transactions through the official Kit planner and RPC plan-sending executor, confirmation status, explorer links, and unsupported capability UI. They use devnet by default for safe testing.
 
 ## Connect A Wallet
 
@@ -990,7 +997,7 @@ After signing, verify that the UI shows the returned signature bytes and does no
 
 ## Send A Transfer
 
-The Vue and Nuxt examples include recipient address and amount fields for a real transfer. They use devnet by default so you can test with SOL that has no real value. For mainnet, configure `mainnet-beta` or a mainnet RPC endpoint and use a wallet with real SOL for fees.
+The Vue and Nuxt examples include recipient address and amount fields for a real transfer. They use devnet by default so you can test with SOL that has no real value. For mainnet, configure `mainnet` or a mainnet RPC endpoint and use a wallet with real SOL for fees.
 
 Start with a tiny amount such as `0.000001` SOL while testing.
 
@@ -1018,12 +1025,14 @@ Explorer URLs should be cluster-aware:
 
 ```ts
 function explorerUrl(signature: string, cluster: string) {
-  const suffix = cluster === "mainnet-beta" ? "" : `?cluster=${cluster}`;
+  const suffix = cluster === "mainnet" || cluster === "mainnet-beta" ? "" : `?cluster=${cluster}`;
   return `https://explorer.solana.com/tx/${signature}${suffix}`;
 }
 ```
 
 If confirmation times out after a signature is returned, do not immediately resubmit. Check the signature status or explorer first; the transaction may still confirm.
+
+The client-send demo uses the official `rpcTransactionPlanSendingExecutor()` installed by the default client. Connect a wallet that supports `signTransaction`, fund the demo payer where the example requires it, and use `useSolanaSendTransaction()` or `useSolanaSendTransactions()`. The executor submits the transaction and waits for `confirmed` commitment before the composable reports `sent`; there is no separate wallet send popup. In Nuxt, create any demo payer in a client-only plugin rather than `nuxt.config.ts`, and set `clientPlugin: false` so the module skips its own plugin.
 
 ## Final Verification
 
@@ -1036,8 +1045,9 @@ Before relying on an app flow, verify these behaviors on devnet:
 - Unsupported message signing or transaction signing capabilities are disabled in the UI.
 - Message signing returns a signature without submitting an on-chain transaction.
 - Transfer submission returns a signature and confirmation status.
+- Client-sent transactions use the official planner and RPC plan-sending executor, require a configured `payer` signer, and reach `sent` only after `confirmed` commitment.
 - Explorer links point to the same cluster as the app.
-- `mainnet-beta` is used only when you intentionally configure mainnet and understand that real SOL is at risk.
+- `mainnet` is used only when you intentionally configure mainnet and understand that real SOL is at risk.
 
 ## More Reading
 
@@ -1065,12 +1075,12 @@ Vue/Nuxt 통합 없이 Solana primitive가 필요하면 `@vue-solana/core`를 �
 
 지원 클러스터:
 
-- `mainnet-beta`: Solana 메인넷. Solana의 공식 메인넷 클러스터 이름입니다.
+- `mainnet`: Solana의 프로덕션 클러스터입니다. Solana의 공식 mainnet 클러스터 이름입니다.
 - `devnet`: 앱 개발에 가장 적합한 기본값입니다.
 - `testnet`: validator와 프로토콜 테스트 네트워크입니다.
 - `localnet`: 로컬 validator입니다.
 
-학습과 테스트 중에는 `devnet`을 사용하세요. 실제 SOL과 상호작용할 준비가 되었을 때만 `mainnet-beta`를 사용합니다.
+학습과 테스트 중에는 `devnet`을 사용하세요. 실제 SOL과 상호작용할 준비가 되었을 때만 `mainnet`을 사용합니다.
 
 현재 지갑 지원:
 
@@ -1191,6 +1201,8 @@ export default defineNuxtConfig({
 ```
 
 Nuxt module은 runtime plugin을 client 전용으로 설치하고 `@vue-solana/vue/*` direct subpath에서 컴포저블을 자동 import합니다. 컴포저블은 SSR 중 호출해도 안전하지만 실제 RPC와 지갑 작업은 `onMounted()` 또는 사용자 액션처럼 hydration 이후 실행하세요. Nuxt `solana` option은 public runtime config에 있으므로 JSON 직렬화가 가능해야 합니다.
+
+direct Vue/core client는 client-sent transaction을 위해 `payer`와 `payerSecretKey`를 지원합니다. `payerSecretKey`는 base64 64-byte Ed25519 keypair이므로 Nuxt public runtime config에 넣거나 funded key를 browser에 보내지 마세요. Nuxt `ModuleOptions`는 두 필드를 모두 제외하므로 client-only plugin에서 ephemeral `payer`를 만들어 Vue plugin을 install하고 `clientPlugin: false`를 설정해 module이 두 번째 plugin을 설치하지 않도록 하세요.
 
 ## 지갑 없이 RPC 테스트
 
@@ -1316,7 +1328,7 @@ Nuxt 예제를 시작합니다.
 
 `pnpm dev:nuxt`
 
-예제는 plugin/module setup, RPC state, direct connection call, balance read, unified wallet discovery, persisted wallet selection, wallet state, message signing, generic transaction state, transaction transfer flow, confirmation status, explorer link, unsupported capability UI를 보여 줍니다. 안전한 테스트를 위해 기본적으로 devnet을 사용합니다.
+예제는 plugin/module setup, RPC state, direct connection call, balance read, unified wallet discovery, persisted wallet selection, wallet state, message signing, generic transaction state, transaction transfer flow, official Kit planner와 RPC plan-sending executor를 사용하는 client-sent transaction, confirmation status, explorer link, unsupported capability UI를 보여 줍니다. 안전한 테스트를 위해 기본적으로 devnet을 사용합니다.
 
 ## 지갑 연결
 
@@ -1408,7 +1420,7 @@ const challenge = new TextEncoder().encode(
 
 ## 전송 보내기
 
-Vue와 Nuxt 예제에는 실제 전송을 위한 recipient address와 amount field가 포함되어 있습니다. 기본적으로 devnet을 사용하므로 실제 가치가 없는 SOL로 테스트할 수 있습니다. Mainnet에서는 `mainnet-beta` 또는 mainnet RPC endpoint를 설정하고 fee를 낼 실제 SOL이 있는 지갑을 사용합니다.
+Vue와 Nuxt 예제에는 실제 전송을 위한 recipient address와 amount field가 포함되어 있습니다. 기본적으로 devnet을 사용하므로 실제 가치가 없는 SOL로 테스트할 수 있습니다. Mainnet에서는 `mainnet` 또는 mainnet RPC endpoint를 설정하고 fee를 낼 실제 SOL이 있는 지갑을 사용합니다.
 
 테스트 중에는 `0.000001` SOL 같은 아주 작은 금액으로 시작하세요.
 
@@ -1436,12 +1448,14 @@ Explorer URL은 cluster-aware여야 합니다.
 
 ```ts
 function explorerUrl(signature: string, cluster: string) {
-  const suffix = cluster === "mainnet-beta" ? "" : `?cluster=${cluster}`;
+  const suffix = cluster === "mainnet" || cluster === "mainnet-beta" ? "" : `?cluster=${cluster}`;
   return `https://explorer.solana.com/tx/${signature}${suffix}`;
 }
 ```
 
 Signature가 반환된 뒤 confirmation이 timeout되면 즉시 다시 제출하지 마세요. 먼저 signature status 또는 explorer를 확인하세요. 트랜잭션이 여전히 confirm될 수 있습니다.
+
+client-send demo는 default client에 설치된 official `rpcTransactionPlanSendingExecutor()`를 사용합니다. `signTransaction`을 지원하는 wallet을 연결하고 예제에 필요한 demo payer를 funding한 뒤 `useSendTransaction()` 또는 `useSendTransactions()`를 사용하세요. executor는 transaction을 제출하고 `confirmed` commitment을 기다린 뒤 composable이 `sent`를 표시하므로 별도 send popup이 없습니다. Nuxt에서는 demo payer를 `nuxt.config.ts`가 아니라 client-only plugin에서 만들고 `clientPlugin: false`를 설정해 module이 자체 plugin을 건너뛰게 하세요.
 
 ## 최종 검증
 
@@ -1454,8 +1468,9 @@ Signature가 반환된 뒤 confirmation이 timeout되면 즉시 다시 제출하
 - 지원되지 않는 message signing 또는 transaction signing capability는 UI에서 disabled됩니다.
 - Message signing은 on-chain transaction을 제출하지 않고 signature를 반환합니다.
 - Transfer submission은 signature와 confirmation status를 반환합니다.
+- Client-sent transaction은 official planner와 RPC plan-sending executor를 사용하고, configured `payer` signer가 필요하며, `confirmed` 이후에만 `sent`에 도달합니다.
 - Explorer link는 앱과 같은 cluster를 가리킵니다.
-- 실제 자금 위험을 이해하고 의도적으로 mainnet을 설정할 때만 `mainnet-beta`를 사용합니다.
+- 실제 자금 위험을 이해하고 의도적으로 mainnet을 설정할 때만 `mainnet`을 사용합니다.
 
 ## 더 읽기
 
@@ -1483,12 +1498,12 @@ Description: 安装 Vue Solana 包、配置 Vue 或 Nuxt，并在 devnet 上测�
 
 支持的集群：
 
-- `mainnet-beta`: Solana 主网。这是 Solana 官方主网集群名称。
+- `mainnet`: Solana 的生产集群。这是 Solana 官方的主网集群名称。
 - `devnet`: 应用开发的最佳默认值。
 - `testnet`: 验证者和协议测试网络。
 - `localnet`: 本地验证者。
 
-学习和测试时使用 `devnet`。只有准备好与真实 SOL 交互时才使用 `mainnet-beta`。
+学习和测试时使用 `devnet`。只有准备好与真实 SOL 交互时才使用 `mainnet`。
 
 当前钱包支持：
 
@@ -1609,6 +1624,8 @@ export default defineNuxtConfig({
 ```
 
 Nuxt 模块只在客户端安装运行时插件，并从直接的 `@vue-solana/vue/*` 子路径自动导入 composable。Composable 可以在 SSR 期间安全调用，但真实 RPC 和钱包操作应在 hydration 后运行，例如在 `onMounted()` 或用户操作中。Nuxt `solana` 选项位于 public runtime config 中，因此应保持 JSON 可序列化。
+
+direct Vue/core client 支持用于 client-sent 交易的 `payer` 和 `payerSecretKey`。`payerSecretKey` 是 base64 编码的 64 字节 Ed25519 keypair，因此不要把它放入 Nuxt public runtime config，也不要把有资金的 key 发送到浏览器。Nuxt `ModuleOptions` 省略这两个字段；请在 client-only plugin 中创建 ephemeral `payer` 并 install Vue plugin，同时设置 `clientPlugin: false`，使模块不再安装第二个 plugin。
 
 ## 无钱包测试 RPC
 
@@ -1734,7 +1751,7 @@ pnpm build:packages
 
 `pnpm dev:nuxt`
 
-示例演示插件/模块设置、RPC 状态、直接 connection 调用、余额读取、统一钱包发现、持久化钱包选择、钱包状态、消息签名、通用交易状态、交易转账流程、确认状态、explorer 链接，以及不支持能力的 UI。它们默认使用 devnet，便于安全测试。
+示例演示插件/模块设置、RPC 状态、直接 connection 调用、余额读取、统一钱包发现、持久化钱包选择、钱包状态、消息签名、通用交易状态、交易转账流程、通过官方 Kit planner 和 RPC plan-sending executor 执行的 client-sent 交易、确认状态、explorer 链接，以及不支持能力的 UI。它们默认使用 devnet，便于安全测试。
 
 ## 连接钱包
 
@@ -1826,7 +1843,7 @@ const challenge = new TextEncoder().encode(
 
 ## 发送转账
 
-Vue 和 Nuxt 示例包含用于真实转账的收款地址和金额字段。它们默认使用 devnet，因此你可以用没有真实价值的 SOL 测试。对于 mainnet，请配置 `mainnet-beta` 或 mainnet RPC 端点，并使用有真实 SOL 支付费用的钱包。
+Vue 和 Nuxt 示例包含用于真实转账的收款地址和金额字段。它们默认使用 devnet，因此你可以用没有真实价值的 SOL 测试。对于 mainnet，请配置 `mainnet` 或 mainnet RPC 端点，并使用有真实 SOL 支付费用的钱包。
 
 测试时从 `0.000001` SOL 这样的小金额开始。
 
@@ -1854,12 +1871,14 @@ Explorer URL 应感知集群：
 
 ```ts
 function explorerUrl(signature: string, cluster: string) {
-  const suffix = cluster === "mainnet-beta" ? "" : `?cluster=${cluster}`;
+  const suffix = cluster === "mainnet" || cluster === "mainnet-beta" ? "" : `?cluster=${cluster}`;
   return `https://explorer.solana.com/tx/${signature}${suffix}`;
 }
 ```
 
 如果返回签名后确认超时，不要立即重新提交。先检查签名状态或 explorer；交易可能仍会确认。
+
+client-send 演示使用默认 client 安装的官方 `rpcTransactionPlanSendingExecutor()`。连接支持 `signTransaction` 的钱包，在示例需要时为 demo payer 充值，然后使用 `useSendTransaction()` 或 `useSendTransactions()`。executor 提交交易并等待 `confirmed` commitment，随后 composable 才显示 `sent`；没有单独的发送弹窗。在 Nuxt 中，请在 client-only plugin 中创建 demo payer，而不是放在 `nuxt.config.ts`，并设置 `clientPlugin: false` 使模块跳过自己的 plugin。
 
 ## 最终验证
 
@@ -1872,8 +1891,9 @@ function explorerUrl(signature: string, cluster: string) {
 - UI 中禁用不支持的消息签名或交易签名能力。
 - 消息签名返回签名而不提交链上交易。
 - 转账提交返回签名和确认状态。
+- Client-sent 交易使用官方 planner 和 RPC plan-sending executor，需要配置 `payer` signer，并且只有达到 `confirmed` 后才会进入 `sent`。
 - Explorer 链接指向和应用相同的集群。
-- 只有在你明确配置 mainnet 并理解真实 SOL 风险时才使用 `mainnet-beta`。
+- 只有在你明确配置 mainnet 并理解真实 SOL 风险时才使用 `mainnet`。
 
 ## 更多阅读
 
@@ -2721,7 +2741,7 @@ Official references:
 - [Solana RPC Methods](https://solana.com/docs/rpc)
 - [Solana Clusters](https://solana.com/docs/references/clusters)
 - [Solana Transactions](https://solana.com/docs/core/transactions)
-- [Solana Cookbook](https://solana.com/developers/cookbook) — practical recipes for common Solana patterns
+- [Solana Core Concepts](https://solana.com/docs/core) — core Solana concepts such as accounts, programs, and transactions
 
 ## Connections And RPC
 
@@ -2787,6 +2807,8 @@ A transaction is a set of instructions that changes Solana state. Examples inclu
 
 Signing proves that the wallet owner approves the transaction. Frontend apps should ask the user's wallet to sign. They should not hold private keys.
 
+The default `createSolanaClient()` also composes Solana Kit's official RPC planner and transaction-sending executor, so trusted client contexts can plan and send without a wallet popup. That path requires a `payer` signer. Keep funded signers on a server or relayer; Nuxt's public runtime config must not contain a raw `payerSecretKey` or other secret.
+
 ## Commitment Levels
 
 Commitment controls how finalized returned data should be.
@@ -2811,7 +2833,7 @@ Official reference: [Commitment Status](https://solana.com/docs/rpc#configuring-
 - Use `devnet` while building and testing.
 - Do not use a wallet with real funds for development.
 - Do not hardcode private keys in frontend apps.
-- Use `mainnet-beta` only when you are ready to interact with real SOL and production programs.
+- Use `mainnet` only when you are ready to interact with real SOL and production programs.
 
 ---
 
@@ -2828,7 +2850,7 @@ Referencias oficiales:
 - [Solana RPC Methods](https://solana.com/docs/rpc)
 - [Solana Clusters](https://solana.com/docs/references/clusters)
 - [Solana Transactions](https://solana.com/docs/core/transactions)
-- [Solana Cookbook](https://solana.com/developers/cookbook) — recetas practicas para patrones comunes de Solana
+- [Conceptos básicos de Solana](https://solana.com/docs/core) — conceptos básicos de Solana como cuentas, programas y transacciones
 
 ## Conexiones y RPC
 
@@ -2894,6 +2916,8 @@ Una transacción es un conjunto de instrucciones que cambia el estado de Solana.
 
 La firma prueba que el propietario de la wallet aprueba la transacción. Las apps frontend deben pedir a la wallet del usuario que firme. No deben contener claves privadas.
 
+El `createSolanaClient()` por defecto también compone el planner y el executor de envio de transacciones oficiales de Solana Kit, para que los contextos confiables puedan planificar y enviar sin popup de wallet. Ese flujo requiere un signer `payer`. Mantén los signers con fondos en un servidor o relayer; la configuracion runtime publica de Nuxt no debe contener un `payerSecretKey` crudo ni otro secreto.
+
 ## Niveles de commitment
 
 El commitment controla qué tan finalizados deben estar los datos devueltos.
@@ -2918,7 +2942,7 @@ Referencia oficial: [Commitment Status](https://solana.com/docs/rpc#configuring-
 - Usa `devnet` mientras construyes y pruebas.
 - No uses una wallet con fondos reales para desarrollo.
 - No hardcodees claves privadas en apps frontend.
-- Usa `mainnet-beta` solo cuando estés listo para interactuar con SOL real y programas de producción.
+- Usa `mainnet` solo cuando estés listo para interactuar con SOL real y programas de producción.
 
 ---
 
@@ -2935,7 +2959,7 @@ Description: Vue와 Nuxt 개발자를 위한 실용적인 Solana 개념입니다
 - [Solana RPC Methods](https://solana.com/docs/rpc)
 - [Solana Clusters](https://solana.com/docs/references/clusters)
 - [Solana Transactions](https://solana.com/docs/core/transactions)
-- [Solana Cookbook](https://solana.com/developers/cookbook) — 일반적인 Solana 패턴을 위한 실용 레시피
+- [Solana 핵심 개념](https://solana.com/docs/core) — 계정, 프로그램, 트랜잭션 등 Solana 핵심 개념
 
 ## Connection과 RPC
 
@@ -3001,6 +3025,8 @@ Vue Solana는 통합 `useWallets()` 플로를 통해 Solana Wallet Standard 브�
 
 서명은 지갑 소유자가 트랜잭션을 승인했음을 증명합니다. 프런트엔드 앱은 사용자의 지갑에 서명을 요청해야 하며 private key를 보관해서는 안 됩니다.
 
+기본 `createSolanaClient()`는 Solana Kit official RPC planner와 transaction-sending executor도 compose하므로 trusted client context가 wallet popup 없이 plan하고 send할 수 있습니다. 이 경로에는 `payer` signer가 필요합니다. funded signer는 server 또는 relayer에 유지하고, Nuxt public runtime config에는 raw `payerSecretKey`나 다른 secret을 넣지 마세요.
+
 ## Commitment 레벨
 
 Commitment는 반환 데이터가 어느 정도 final 상태여야 하는지 제어합니다.
@@ -3025,7 +3051,7 @@ createSolanaPlugin({
 - 빌드와 테스트 중에는 `devnet`을 사용하세요.
 - 개발용으로 실제 자금이 있는 지갑을 사용하지 마세요.
 - 프런트엔드 앱에 private key를 하드코딩하지 마세요.
-- 실제 SOL과 프로덕션 프로그램을 다룰 준비가 되었을 때만 `mainnet-beta`를 사용하세요.
+- 실제 SOL과 프로덕션 프로그램을 다룰 준비가 되었을 때만 `mainnet`을 사용하세요.
 
 ---
 
@@ -3042,7 +3068,7 @@ Description: 面向 Vue 和 Nuxt 开发者的实用 Solana 概念。
 - [Solana RPC Methods](https://solana.com/docs/rpc)
 - [Solana Clusters](https://solana.com/docs/references/clusters)
 - [Solana Transactions](https://solana.com/docs/core/transactions)
-- [Solana Cookbook](https://solana.com/developers/cookbook) — 常见 Solana 模式的实用食谱
+- [Solana 核心概念](https://solana.com/docs/core) — 账户、程序、交易等 Solana 核心概念
 
 ## 连接和 RPC
 
@@ -3108,6 +3134,8 @@ Vue Solana 会通过统一的 `useWallets()` 流程发现 Solana Wallet Standard
 
 签名证明钱包所有者批准该交易。前端应用应该请求用户的钱包进行签名，而不应该持有私钥。
 
+默认 `createSolanaClient()` 还会组合 Solana Kit 官方的 RPC planner 和 transaction-sending executor，因此可信 client context 可以不显示 wallet popup 地 plan 和 send。该路径需要 `payer` signer。将有资金的 signer 保存在 server 或 relayer 中；Nuxt public runtime config 不得包含 raw `payerSecretKey` 或其他 secret。
+
 ## Commitment 级别
 
 Commitment 控制返回的数据应该达到什么最终确定程度。
@@ -3132,7 +3160,7 @@ createSolanaPlugin({
 - 构建和测试时使用 `devnet`。
 - 开发时不要使用包含真实资金的钱包。
 - 不要在前端应用中硬编码私钥。
-- 只有在准备好与真实 SOL 和生产程序交互时，才使用 `mainnet-beta`。
+- 只有在准备好与真实 SOL 和生产程序交互时，才使用 `mainnet`。
 
 ---
 
@@ -3147,12 +3175,13 @@ A Solana cluster is a network of validators. Apps choose which cluster to connec
 
 Vue Solana supports these cluster names:
 
-- `mainnet-beta`: Solana mainnet. This is Solana's official mainnet cluster name. Use this for production apps and real SOL.
+- `mainnet`: Solana's production cluster. This is Solana's official mainnet cluster name. Use this for production apps and real SOL.
+- `mainnet-beta`: legacy spelling of `mainnet`. Still accepted and redirects to the same `https://api.mainnet.solana.com` endpoint.
 - `devnet`: developer network. Use this while building apps. Devnet SOL has no real value.
 - `testnet`: validator and protocol testing network. It is less common for app development than devnet.
 - `localnet`: a local validator running on your machine, usually at `http://127.0.0.1:8899`.
 
-Use `mainnet-beta` rather than `mainnet`. Vue Solana intentionally does not add a `mainnet` alias.
+Use `mainnet` in Vue Solana code. Solana's documentation refers to the production cluster as Mainnet, and `mainnet` is the cluster name Solana tooling expects. The legacy `mainnet-beta` spelling is still accepted: both names resolve to the official `https://api.mainnet.solana.com` endpoint.
 
 Official reference: [Solana Clusters](https://solana.com/docs/references/clusters)
 
@@ -3163,7 +3192,7 @@ An RPC endpoint is the HTTP URL your app uses to read from or write to Solana.
 Examples:
 
 - `https://api.devnet.solana.com`
-- `https://api.mainnet-beta.solana.com`
+- `https://api.mainnet.solana.com`
 - `http://127.0.0.1:8899`
 
 RPC requests go through `client.rpc` from `useSolanaClient()` or `useSolanaRpc()`, or from `createSolanaClient()` / `createSolanaContext()` in `@vue-solana/core`. The legacy `Connection` class and the `web3` subpaths were removed in v2.0.0. Public endpoints are useful for getting started, but production apps usually use a dedicated RPC provider for reliability and rate limits.
@@ -3177,7 +3206,7 @@ WebSocket endpoints are used for subscriptions and real-time updates. Vue Solana
 Examples:
 
 - `wss://api.devnet.solana.com`
-- `wss://api.mainnet-beta.solana.com`
+- `wss://api.mainnet.solana.com`
 - `ws://127.0.0.1:8900`
 
 ## Configure A Cluster
@@ -3205,7 +3234,7 @@ You can also pass a custom endpoint:
 
 ```ts
 createSolanaPlugin({
-  cluster: "mainnet-beta",
+  cluster: "mainnet",
   endpoint: "https://your-rpc.example.com",
   commitment: "confirmed",
 });
@@ -3246,12 +3275,13 @@ Un cluster de Solana es una red de validadores. Las apps eligen a qué cluster c
 
 Vue Solana soporta estos nombres de cluster:
 
-- `mainnet-beta`: mainnet de Solana. Este es el nombre oficial del cluster mainnet de Solana. Úsalo para apps de producción y SOL real.
+- `mainnet`: el cluster de producción de Solana. Este es el nombre oficial del mainnet de Solana. Úsalo para apps de producción y SOL real.
+- `mainnet-beta`: grafía heredada de `mainnet`. Sigue siendo aceptada y redirige al mismo endpoint `https://api.mainnet.solana.com`.
 - `devnet`: red para desarrolladores. Úsala mientras construyes apps. El SOL de devnet no tiene valor real.
 - `testnet`: red de pruebas de validadores y protocolo. Es menos común para desarrollo de apps que devnet.
 - `localnet`: un validador local ejecutándose en tu máquina, normalmente en `http://127.0.0.1:8899`.
 
-Usa `mainnet-beta` en lugar de `mainnet`. Vue Solana intencionalmente no agrega un alias `mainnet`.
+Usa `mainnet` en código Vue Solana. La documentación de Solana se refiere al cluster de producción como Mainnet, y `mainnet` es el nombre de cluster que las herramientas de Solana esperan. La grafía heredada `mainnet-beta` sigue siendo aceptada: ambos nombres resuelven al endpoint oficial `https://api.mainnet.solana.com`.
 
 Referencia oficial: [Solana Clusters](https://solana.com/docs/references/clusters)
 
@@ -3262,7 +3292,7 @@ Un endpoint RPC es la URL HTTP que tu app usa para leer o escribir en Solana.
 Ejemplos:
 
 - `https://api.devnet.solana.com`
-- `https://api.mainnet-beta.solana.com`
+- `https://api.mainnet.solana.com`
 - `http://127.0.0.1:8899`
 
 Las peticiones RPC pasan por `client.rpc` desde `useSolanaClient()` o `useSolanaRpc()`, o desde `createSolanaClient()` / `createSolanaContext()` en `@vue-solana/core`. La clase legacy `Connection` y los subpaths `web3` se eliminaron en v2.0.0. Los endpoints públicos son útiles para empezar, pero las apps de producción normalmente usan un proveedor RPC dedicado por fiabilidad y límites de tasa.
@@ -3276,7 +3306,7 @@ Los endpoints WebSocket se usan para suscripciones y actualizaciones en tiempo r
 Ejemplos:
 
 - `wss://api.devnet.solana.com`
-- `wss://api.mainnet-beta.solana.com`
+- `wss://api.mainnet.solana.com`
 - `ws://127.0.0.1:8900`
 
 ## Configurar un cluster
@@ -3304,7 +3334,7 @@ También puedes pasar un endpoint personalizado:
 
 ```ts
 createSolanaPlugin({
-  cluster: "mainnet-beta",
+  cluster: "mainnet",
   endpoint: "https://your-rpc.example.com",
   commitment: "confirmed",
 });
@@ -3345,12 +3375,13 @@ Solana 클러스터는 validator 네트워크입니다. 앱은 연결할 클러�
 
 Vue Solana는 다음 클러스터 이름을 지원합니다.
 
-- `mainnet-beta`: Solana mainnet입니다. Solana의 공식 mainnet 클러스터 이름입니다. 프로덕션 앱과 실제 SOL에 사용합니다.
+- `mainnet`: Solana의 프로덕션 클러스터입니다. Solana의 공식 mainnet 클러스터 이름입니다. 프로덕션 앱과 실제 SOL에 사용합니다.
+- `mainnet-beta`: `mainnet`의 이전 표기법입니다. 여전히 허용되며 같은 `https://api.mainnet.solana.com` 엔드포인트로 리다이렉트됩니다.
 - `devnet`: 개발자 네트워크입니다. 앱을 개발할 때 사용합니다. Devnet SOL은 실제 가치가 없습니다.
 - `testnet`: validator와 프로토콜 테스트 네트워크입니다. 앱 개발에서는 devnet보다 덜 일반적입니다.
 - `localnet`: 보통 `http://127.0.0.1:8899`에서 실행되는 로컬 validator입니다.
 
-`mainnet`이 아니라 `mainnet-beta`를 사용하세요. Vue Solana는 의도적으로 `mainnet` 별칭을 추가하지 않습니다.
+Vue Solana 코드에서는 `mainnet`을 사용하세요. Solana 공식 문서는 프로덕션 클러스터를 Mainnet이라고 부르며, `mainnet`은 Solana 도구가 기대하는 클러스터 이름입니다. 이전 표기법인 `mainnet-beta`는 여전히 허용되며, 두 이름 모두 공식 `https://api.mainnet.solana.com` 엔드포인트로 확인됩니다.
 
 공식 참고 자료: [Solana Clusters](https://solana.com/docs/references/clusters)
 
@@ -3361,7 +3392,7 @@ RPC 엔드포인트는 앱이 Solana를 읽거나 쓰는 데 사용하는 HTTP U
 예시:
 
 - `https://api.devnet.solana.com`
-- `https://api.mainnet-beta.solana.com`
+- `https://api.mainnet.solana.com`
 - `http://127.0.0.1:8899`
 
 RPC 요청은 `useSolanaClient()` 또는 `useSolanaRpc()`의 `client.rpc`, 또는 `@vue-solana/core`의 `createSolanaClient()` / `createSolanaContext()`를 통해 전송됩니다. 레거시 `Connection` 클래스와 `web3` 하위 경로는 v2.0.0에서 제거되었습니다. 공개 엔드포인트는 시작하기에 유용하지만, 프로덕션 앱은 일반적으로 안정성과 rate limit 때문에 전용 RPC provider를 사용합니다.
@@ -3375,7 +3406,7 @@ WebSocket 엔드포인트는 subscription과 실시간 업데이트에 사용됩
 예시:
 
 - `wss://api.devnet.solana.com`
-- `wss://api.mainnet-beta.solana.com`
+- `wss://api.mainnet.solana.com`
 - `ws://127.0.0.1:8900`
 
 ## 클러스터 설정
@@ -3403,7 +3434,7 @@ export default defineNuxtConfig({
 
 ```ts
 createSolanaPlugin({
-  cluster: "mainnet-beta",
+  cluster: "mainnet",
   endpoint: "https://your-rpc.example.com",
   commitment: "confirmed",
 });
@@ -3444,12 +3475,13 @@ Solana 集群是由一组验证者组成的网络。应用需要选择要连接�
 
 Vue Solana 支持这些集群名称：
 
-- `mainnet-beta`: Solana 主网。这是 Solana 官方的主网集群名称。生产应用和真实 SOL 请使用它。
+- `mainnet`: Solana 的生产集群。这是 Solana 官方的主网集群名称。生产应用和真实 SOL 请使用它。
+- `mainnet-beta`: `mainnet` 的旧写法。仍然被接受，并重定向到相同的 `https://api.mainnet.solana.com` 端点。
 - `devnet`: 开发者网络。构建应用时使用它。Devnet SOL 没有真实价值。
 - `testnet`: 验证者和协议测试网络。与 devnet 相比，它在应用开发中不太常用。
 - `localnet`: 运行在你机器上的本地验证者，通常位于 `http://127.0.0.1:8899`。
 
-请使用 `mainnet-beta`，而不是 `mainnet`。Vue Solana 有意不添加 `mainnet` 这个别名。
+在 Vue Solana 代码中请使用 `mainnet`。Solana 官方文档将生产集群称为 Mainnet，`mainnet` 是 Solana 工具链所期望的集群名称。旧的 `mainnet-beta` 写法仍然被接受：两个名称都解析到官方 `https://api.mainnet.solana.com` 端点。
 
 官方参考：[Solana Clusters](https://solana.com/docs/references/clusters)
 
@@ -3460,7 +3492,7 @@ RPC 端点是应用用来从 Solana 读取数据或向 Solana 写入数据的 HT
 示例：
 
 - `https://api.devnet.solana.com`
-- `https://api.mainnet-beta.solana.com`
+- `https://api.mainnet.solana.com`
 - `http://127.0.0.1:8899`
 
 RPC 请求通过 `useSolanaClient()` 或 `useSolanaRpc()` 的 `client.rpc` 发送，或通过 `@vue-solana/core` 中的 `createSolanaClient()` / `createSolanaContext()` 发送。旧版 `Connection` 类和 `web3` 子路径已在 v2.0.0 中被移除。公共端点适合入门，但生产应用通常会使用专用 RPC provider，以获得更好的可靠性和速率限制。
@@ -3474,7 +3506,7 @@ WebSocket 端点用于订阅和实时更新。除非你显式传入 `wsEndpoint`
 示例：
 
 - `wss://api.devnet.solana.com`
-- `wss://api.mainnet-beta.solana.com`
+- `wss://api.mainnet.solana.com`
 - `ws://127.0.0.1:8900`
 
 ## 配置集群
@@ -3502,7 +3534,7 @@ export default defineNuxtConfig({
 
 ```ts
 createSolanaPlugin({
-  cluster: "mainnet-beta",
+  cluster: "mainnet",
   endpoint: "https://your-rpc.example.com",
   commitment: "confirmed",
 });
@@ -3579,7 +3611,7 @@ La tabla siguiente asigna cada símbolo legacy a su reemplazo de Kit.
 | `connection.confirmTransaction` / `getSignatureStatuses`                       | `confirmTransactionSignature(client, ...)` (polls `client.rpc.getSignatureStatuses(...).send()`)                                                                   |
 | flujos wallet-standard                                                         | sin cambios — la adaptación del discovery de wallet-standard sigue siendo la base de `useWallets()` / `useWallet()`                                                |
 
-> Algunas filas referencian plugins upstream de `@solana/kit` (signer, planner, system program). Vue Solana no los incluye; instálalos directamente desde el ecosistema de `@solana/kit` cuando los necesites.
+> Algunas filas referencian plugins upstream de `@solana/kit` (signer, planner, system program). El cliente por defecto de `createSolanaClient()` ya instala el planner oficial y el executor de envio de planes de `@solana/kit-plugin-rpc`; instala el resto (signer, system program) directamente desde el ecosistema de `@solana/kit` cuando los necesites.
 
 A qué se corresponden los helpers después de v2:
 
@@ -3749,7 +3781,7 @@ The table below maps every legacy symbol to its Kit replacement.
 | `connection.confirmTransaction` / `getSignatureStatuses`                    | `confirmTransactionSignature(client, ...)` (polls `client.rpc.getSignatureStatuses(...).send()`)                                                    |
 | wallet-standard flows                                                       | unchanged — wallet-standard discovery and adaptation still power `useWallets()` / `useWallet()`                                                     |
 
-> Some rows reference upstream `@solana/kit` plugins (signer, planner, system program). Vue Solana does not bundle those; install them directly from the `@solana/kit` ecosystem when you need them.
+> Some rows reference upstream `@solana/kit` plugins (signer, planner, system program). The default client from `createSolanaClient()` already installs the official planner and RPC plan-sending executor from `@solana/kit-plugin-rpc`; install the rest (signer, system program) directly from the `@solana/kit` ecosystem when you need them.
 
 What the helpers map to after v2:
 
@@ -3919,7 +3951,7 @@ Kit는 또한 모듈성 이점을 제공합니다: 사용하는 부분만 가져
 | `connection.confirmTransaction` / `getSignatureStatuses`                 | `confirmTransactionSignature(client, ...)` (`client.rpc.getSignatureStatuses(...).send()` 폴링)                                           |
 | wallet-standard 흐름                                                     | 변경 없음 — wallet-standard 탐색과 적응이 여전히 `useWallets()` / `useWallet()`을 구동합니다                                              |
 
-> 일부 행은 업스트림 `@solana/kit` 플러그인(signer, planner, system program)을 참조합니다. Vue Solana는 이를 번들하지 않습니다; 필요할 때 `@solana/kit` 생태계에서 직접 설치하세요.
+> 일부 행은 업스트림 `@solana/kit` 플러그인(signer, planner, system program)을 참조합니다. `createSolanaClient()`의 기본 클라이언트는 `@solana/kit-plugin-rpc`의 공식 planner와 RPC plan executor를 이미 설치합니다. 나머지 플러그인(signer, system program)은 필요할 때 `@solana/kit` 생태계에서 직접 설치하세요.
 
 v2 이후 헬퍼의 대응:
 
@@ -4089,7 +4121,7 @@ Kit 还带来模块化的好处：只导入你使用的部分。在 v2 中，旧
 | `connection.confirmTransaction` / `getSignatureStatuses`                     | `confirmTransactionSignature(client, ...)`（轮询 `client.rpc.getSignatureStatuses(...).send()`）                                           |
 | wallet-standard 流程                                                         | 不变 —— wallet-standard 发现和适配仍然驱动 `useWallets()` / `useWallet()`                                                                  |
 
-> 部分行引用了上游 `@solana/kit` 插件（signer、planner、system program）。Vue Solana 不打包这些插件；需要时请直接从 `@solana/kit` 生态安装。
+> 部分行引用了上游 `@solana/kit` 插件（signer、planner、system program）。`createSolanaClient()` 创建的默认客户端已安装 `@solana/kit-plugin-rpc` 的官方 planner 和 RPC 计划发送执行器；其余插件（signer、system program）需要时请直接从 `@solana/kit` 生态安装。
 
 v2 之后辅助函数的对应关系：
 
@@ -4227,10 +4259,11 @@ Los nombres de cluster admitidos son:
 
 - `devnet`
 - `testnet`
-- `mainnet-beta`
+- `mainnet`
+- `mainnet-beta` (alias heredado de `mainnet`)
 - `localnet`
 
-Usa `mainnet-beta` para la mainnet de Solana. Vue Solana sigue intencionalmente el nombre oficial de cluster de Solana y no usa `mainnet` como alias.
+Usa `mainnet` para la mainnet de Solana. Este es el nombre oficial del mainnet de Solana. La grafía heredada `mainnet-beta` sigue siendo aceptada y redirige al mismo endpoint.
 
 `devnet` es el valor predeterminado porque es el cluster más seguro para ejemplos y desarrollo.
 
@@ -4261,7 +4294,7 @@ Las aplicaciones de producción normalmente deberían usar un proveedor RPC dedi
 import { createSolanaContext } from "@vue-solana/core/rpc";
 
 const solana = createSolanaContext({
-  cluster: "mainnet-beta",
+  cluster: "mainnet",
   endpoint: "https://your-rpc.example.com",
   commitment: "confirmed",
 });
@@ -4329,7 +4362,9 @@ export default defineNuxtConfig({
 });
 ```
 
-Nuxt guarda las opciones del módulo en runtime config público, así que las opciones deben ser serializables como JSON.
+Nuxt guarda las opciones del módulo en runtime config público, así que las opciones deben ser serializables como JSON. El módulo Nuxt omite intencionalmente `payer` y `payerSecretKey`; nunca pongas un secreto crudo en la configuración runtime pública. Instala un `payer` efimero en un plugin solo de cliente con `clientPlugin: false`.
+
+Los clientes directos core y Vue pueden pasar `payer` o `payerSecretKey` a `createSolanaClient()` / `createSolanaPlugin()`. El cliente por defecto usa la composición oficial `solanaRpc()`, `rpcTransactionPlanner()` y `rpcTransactionPlanSendingExecutor()` para las transacciones enviadas por el cliente.
 
 Usa el composable autoimportado `useSolanaRpc()` en páginas y componentes Nuxt.
 
@@ -4380,10 +4415,11 @@ Supported cluster names are:
 
 - `devnet`
 - `testnet`
-- `mainnet-beta`
+- `mainnet`
+- `mainnet-beta` (legacy alias for `mainnet`)
 - `localnet`
 
-Use `mainnet-beta` for Solana mainnet. Vue Solana intentionally follows Solana's official cluster name and does not use `mainnet` as an alias.
+Use `mainnet` for Solana mainnet. This is Solana's official mainnet cluster name. The legacy `mainnet-beta` spelling is still accepted and redirects to the same endpoint.
 
 `devnet` is the default because it is the safest cluster for examples and development.
 
@@ -4414,7 +4450,7 @@ Production apps should usually use a dedicated RPC provider instead of public cl
 import { createSolanaContext } from "@vue-solana/core/rpc";
 
 const solana = createSolanaContext({
-  cluster: "mainnet-beta",
+  cluster: "mainnet",
   endpoint: "https://your-rpc.example.com",
   commitment: "confirmed",
 });
@@ -4482,7 +4518,9 @@ export default defineNuxtConfig({
 });
 ```
 
-Nuxt stores module options in public runtime config, so options must be JSON-serializable.
+Nuxt stores module options in public runtime config, so options must be JSON-serializable. The Nuxt module intentionally omits `payer` and `payerSecretKey`; never place a raw secret in public runtime config. Install an ephemeral `payer` in a client-only plugin with `clientPlugin: false`.
+
+Direct core and Vue clients can pass `payer` or `payerSecretKey` to `createSolanaClient()` / `createSolanaPlugin()`. The default client uses the official `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()` composition for client-sent transactions.
 
 Use the auto-imported `useSolanaRpc()` composable in Nuxt pages and components.
 
@@ -4533,10 +4571,11 @@ Vue Solana는 `@vue-solana/core`, `@vue-solana/vue`, `@vue-solana/nuxt` 전반�
 
 - `devnet`
 - `testnet`
-- `mainnet-beta`
+- `mainnet`
+- `mainnet-beta` (`mainnet`의 이전 별칭)
 - `localnet`
 
-Solana mainnet에는 `mainnet-beta`를 사용하세요. Vue Solana는 Solana의 공식 클러스터 이름을 의도적으로 따르며 `mainnet` alias를 사용하지 않습니다.
+Solana mainnet에는 `mainnet`을 사용하세요. 이는 Solana의 공식 mainnet 클러스터 이름입니다. 이전 표기법인 `mainnet-beta`는 여전히 허용되며 같은 엔드포인트로 리다이렉트됩니다.
 
 예제와 개발에 가장 안전한 클러스터이므로 `devnet`이 기본값입니다.
 
@@ -4567,7 +4606,7 @@ console.log(solana.endpoint, latestBlockhash.blockhash);
 import { createSolanaContext } from "@vue-solana/core/rpc";
 
 const solana = createSolanaContext({
-  cluster: "mainnet-beta",
+  cluster: "mainnet",
   endpoint: "https://your-rpc.example.com",
   commitment: "confirmed",
 });
@@ -4635,7 +4674,9 @@ export default defineNuxtConfig({
 });
 ```
 
-Nuxt는 모듈 옵션을 public runtime config에 저장하므로 옵션은 JSON 직렬화가 가능해야 합니다.
+Nuxt는 모듈 옵션을 public runtime config에 저장하므로 옵션은 JSON 직렬화가 가능해야 합니다. Nuxt module은 `payer`와 `payerSecretKey`를 의도적으로 제외하므로 public runtime config에 raw secret을 넣지 마세요. ephemeral `payer`는 client-only plugin에서 만들고 `clientPlugin: false`를 설정한 뒤 Vue plugin을 install하세요.
+
+direct core와 Vue client는 `createSolanaClient()` / `createSolanaPlugin()`에 `payer` 또는 `payerSecretKey`를 전달할 수 있습니다. default client는 client-sent transaction에 official `solanaRpc()`, `rpcTransactionPlanner()`, `rpcTransactionPlanSendingExecutor()` 구성을 사용합니다.
 
 Nuxt 페이지와 컴포넌트에서는 자동 import되는 `useSolanaRpc()` 컴포저블을 사용하세요.
 
@@ -4686,10 +4727,11 @@ Vue Solana 在 `@vue-solana/core`、`@vue-solana/vue` 和 `@vue-solana/nuxt` 之
 
 - `devnet`
 - `testnet`
-- `mainnet-beta`
+- `mainnet`
+- `mainnet-beta`（`mainnet` 的旧别名）
 - `localnet`
 
-Solana 主网请使用 `mainnet-beta`。Vue Solana 有意遵循 Solana 官方集群名称，并且不使用 `mainnet` 作为别名。
+Solana 主网请使用 `mainnet`。这是 Solana 官方的主网集群名称。旧的 `mainnet-beta` 写法仍然被接受，并重定向到相同的端点。
 
 `devnet` 是默认值，因为它是示例和开发中最安全的集群。
 
@@ -4720,7 +4762,7 @@ console.log(solana.endpoint, latestBlockhash.blockhash);
 import { createSolanaContext } from "@vue-solana/core/rpc";
 
 const solana = createSolanaContext({
-  cluster: "mainnet-beta",
+  cluster: "mainnet",
   endpoint: "https://your-rpc.example.com",
   commitment: "confirmed",
 });
@@ -4788,7 +4830,9 @@ export default defineNuxtConfig({
 });
 ```
 
-Nuxt 会将模块选项存储在公共运行时配置中，因此选项必须可 JSON 序列化。
+Nuxt 会将模块选项存储在公共运行时配置中，因此选项必须可 JSON 序列化。Nuxt module 有意省略 `payer` 和 `payerSecretKey`；永远不要把 raw secret 放入 public runtime config。请在 client-only plugin 中创建 ephemeral `payer`，设置 `clientPlugin: false`，然后 install Vue plugin。
+
+direct core 和 Vue client 可以向 `createSolanaClient()` / `createSolanaPlugin()` 传入 `payer` 或 `payerSecretKey`。默认 client 对 client-sent 交易使用官方 `solanaRpc()`、`rpcTransactionPlanner()` 和 `rpcTransactionPlanSendingExecutor()` 组合。
 
 在 Nuxt 页面和组件中使用自动导入的 `useSolanaRpc()` 组合式函数。
 
@@ -5081,7 +5125,7 @@ Si usas helpers core de iOS directamente, llama `handleSolanaIosWalletCallback()
 - Trata nombres, iconos y metadata de wallets como datos de visualización no confiables.
 - Pide una acción explícita del usuario antes de firmar mensajes o transacciones.
 - Muestra UI deshabilitada o explicativa para capacidades no admitidas en lugar de intentar llamadas de wallet a ciegas.
-- Mantén devnet como predeterminado para ejemplos y tutoriales; usa `mainnet-beta` solo cuando se pretendan fondos reales.
+- Mantén devnet como predeterminado para ejemplos y tutoriales; usa `mainnet` solo cuando se pretendan fondos reales.
 
 Referencias oficiales:
 
@@ -5348,7 +5392,7 @@ If you use iOS core helpers directly, call `handleSolanaIosWalletCallback()` bef
 - Treat wallet names, icons, and metadata as untrusted display data.
 - Ask for explicit user action before signing messages or transactions.
 - Show disabled or explanatory UI for unsupported capabilities instead of attempting wallet calls blindly.
-- Keep devnet as the default for examples and tutorials; use `mainnet-beta` only when real funds are intended.
+- Keep devnet as the default for examples and tutorials; use `mainnet` only when real funds are intended.
 
 Official references:
 
@@ -5615,7 +5659,7 @@ iOS core helper를 직접 사용한다면 redirect 후 반환된 iOS wallet conn
 - wallet name, icon, metadata는 신뢰할 수 없는 display data로 취급하세요.
 - 메시지 또는 트랜잭션에 서명하기 전에 명시적인 사용자 액션을 요구하세요.
 - 지원되지 않는 capability에 대해서는 blind wallet call을 시도하지 말고 disabled 또는 explanatory UI를 보여 주세요.
-- 예제와 튜토리얼은 devnet을 기본값으로 유지하세요. 실제 자금이 의도된 경우에만 `mainnet-beta`를 사용합니다.
+- 예제와 튜토리얼은 devnet을 기본값으로 유지하세요. 실제 자금이 의도된 경우에만 `mainnet`을 사용합니다.
 
 공식 reference:
 
@@ -5882,7 +5926,7 @@ const wallets = getRegisteredSolanaWallets();
 - 将钱包名称、图标和元数据视为不可信显示数据。
 - 签署消息或交易前要求明确的用户操作。
 - 对不支持的能力显示禁用或解释性 UI，而不是盲目尝试钱包调用。
-- 示例和教程默认保持使用 devnet；只有在明确涉及真实资金时才使用 `mainnet-beta`。
+- 示例和教程默认保持使用 devnet；只有在明确涉及真实资金时才使用 `mainnet`。
 
 官方参考：
 
@@ -6538,6 +6582,16 @@ console.log(confirmation.signature, confirmation.commitment);
 
 La confirmación usa `confirmed` y un timeout de 60 segundos por defecto. Hace polling de `client.rpc.getSignatureStatuses([signature]).send()`, por lo que la transacción ya debe haber sido enviada.
 
+## Transacciones Enviadas Por El Cliente
+
+`createSolanaClient()` compone por defecto el stack oficial de transacciones de `@solana/kit-plugin-rpc`: `solanaRpc()`, `rpcTransactionPlanner()` y `rpcTransactionPlanSendingExecutor()`. El fallback custom anterior no se usa.
+
+Usa `useSendTransaction()` o `useSendTransactions()` cuando el cliente debe planificar, firmar, enviar y confirmar sin popup de wallet. El executor oficial obtiene un blockhash nuevo, maneja limites de recursos y preflight, firma con los signers del cliente, envia por RPC y espera `confirmed`. El composable establece `status` en `sent` solo cuando termina la operacion de envio y confirmacion. El resultado simple expone `data.context.signature`; el resultado batch contiene el arbol del plan.
+
+Configura un cliente core/Vue directo con `payer` o `payerSecretKey`; el envio del cliente requiere un `payer`. `payerSecretKey` es un keypair Ed25519 de 64 bytes codificado en base64 y solo es apropiado para desarrollo confiable o flows del servidor. Nunca pongas un secreto crudo o `payerSecretKey` en la configuracion runtime publica de Nuxt, y nunca expongas una keypair con fondos al navegador de un usuario final.
+
+El flujo de wallet es separado: `useSignAndSendTransaction()` puede devolver despues del envio RPC por defecto, o esperar un commitment seleccionado con `confirm: true`. Mantén ese comportamiento cuando un usuario conectado debe aprobar una transaccion en su wallet.
+
 ## Construir Una Transferencia Real En Devnet
 
 Este ejemplo crea una pequeña transferencia de sistema en devnet. Construye un mensaje de transacción Kit v0 y lo serializa a bytes de la red que Vue Solana pasa a la wallet para firma.
@@ -6695,12 +6749,12 @@ Los enlaces de Explorer deben coincidir con el cluster que usa tu app.
 
 ```ts
 function explorerUrl(signature: string, cluster: string) {
-  const suffix = cluster === "mainnet-beta" ? "" : `?cluster=${cluster}`;
+  const suffix = cluster === "mainnet" || cluster === "mainnet-beta" ? "" : `?cluster=${cluster}`;
   return `https://explorer.solana.com/tx/${signature}${suffix}`;
 }
 ```
 
-Para devnet, los enlaces deben verse como `https://explorer.solana.com/tx/SIGNATURE?cluster=devnet`. Los enlaces de mainnet omiten intencionalmente el query de cluster.
+Para devnet, los enlaces deben verse como `https://explorer.solana.com/tx/SIGNATURE?cluster=devnet`. Tanto `mainnet` como el alias heredado `mainnet-beta` omiten intencionalmente el query de cluster.
 
 ## Estado Genérico De Transacción
 
@@ -6721,6 +6775,8 @@ const { status, error, execute } = useTransaction(async () => {
 Nuxt expone:
 
 - `useSolanaSignAndSendTransaction()`
+- `useSolanaSendTransaction()`
+- `useSolanaSendTransactions()`
 - `useSolanaTransactionConfirmation()`
 - `useSolanaSignatureStatus()`
 
@@ -6734,7 +6790,7 @@ async function submit(transaction: Uint8Array) {
 </script>
 ```
 
-Llama métodos de transacción desde acciones del usuario en el cliente. No dispares firma de wallet durante SSR.
+Llama métodos de transacción desde acciones del usuario en el cliente. No dispares firma de wallet durante SSR. Las opciones del modulo Nuxt omiten `payer` y `payerSecretKey`; configura un `payer` en un plugin Vue solo de cliente con `clientPlugin: false` en vez de poner un secreto en la configuracion runtime publica.
 
 Usa `useSolanaTransactionConfirmation({ commitment: "confirmed" })` y llama `confirm(signature)` cuando necesites confirmar una firma devuelta por otro flujo. Usa `useSolanaSignatureStatus(signature, { pollIntervalMs: 2_000 })` cuando quieras seguir comprobando el estado después de un timeout o redirección.
 
@@ -6774,6 +6830,7 @@ try {
 
 ## Lista De Seguridad
 
+- Mantén las claves de firma de transacciones del cliente en un servidor confiable o en un signer efimero de demo explicito; nunca expongas secretos con fondos mediante la configuracion runtime publica de Nuxt.
 - Muestra a los usuarios lo que están a punto de firmar antes de abrir un prompt de wallet.
 - Nunca firmes ni envíes transacciones sin una acción explícita del usuario.
 - Nunca solicites ni manejes claves privadas.
@@ -6826,6 +6883,16 @@ console.log(confirmation.signature, confirmation.commitment);
 ```
 
 Confirmation defaults to `confirmed` commitment and a 60 second timeout. It polls `client.rpc.getSignatureStatuses([signature]).send()`, so the transaction must already be submitted.
+
+## Client-Sent Transactions
+
+`createSolanaClient()` composes the official `@solana/kit-plugin-rpc` transaction stack by default: `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()`. The old custom fallback sender is not used.
+
+Use `useSendTransaction()` or `useSendTransactions()` when the client should plan, sign, submit, and confirm without a wallet popup. The official executor fetches a fresh blockhash, handles resource limits and preflight simulation, signs with the client signers, submits through RPC, and waits for `confirmed` commitment. The composable sets `status` to `sent` only after that send-and-confirm operation completes. A single result exposes `data.context.signature`; a batch result contains the plan result tree.
+
+Configure a direct core or Vue client with `payer` or `payerSecretKey`; the client-sent path requires a `payer`. `payerSecretKey` is a base64-encoded 64-byte Ed25519 keypair and is only appropriate for trusted development or server-side flows. Never put a raw secret or `payerSecretKey` in Nuxt public runtime config, and never expose a funded signing key to an end-user browser.
+
+The wallet flow is separate: `useSignAndSendTransaction()` can return after RPC submission by default, or wait for a selected commitment with `confirm: true`. Keep that behavior when a connected user must approve a transaction in their wallet.
 
 ## Build A Real Devnet Transfer
 
@@ -6984,12 +7051,12 @@ Explorer links should match the cluster your app is using.
 
 ```ts
 function explorerUrl(signature: string, cluster: string) {
-  const suffix = cluster === "mainnet-beta" ? "" : `?cluster=${cluster}`;
+  const suffix = cluster === "mainnet" || cluster === "mainnet-beta" ? "" : `?cluster=${cluster}`;
   return `https://explorer.solana.com/tx/${signature}${suffix}`;
 }
 ```
 
-For devnet, links should look like `https://explorer.solana.com/tx/SIGNATURE?cluster=devnet`. Mainnet links intentionally omit the cluster query.
+For devnet, links should look like `https://explorer.solana.com/tx/SIGNATURE?cluster=devnet`. Both `mainnet` and the legacy `mainnet-beta` alias intentionally omit the cluster query.
 
 ## Generic Transaction State
 
@@ -7010,6 +7077,8 @@ const { status, error, execute } = useTransaction(async () => {
 Nuxt exposes:
 
 - `useSolanaSignAndSendTransaction()`
+- `useSolanaSendTransaction()`
+- `useSolanaSendTransactions()`
 - `useSolanaTransactionConfirmation()`
 - `useSolanaSignatureStatus()`
 
@@ -7023,7 +7092,7 @@ async function submit(transaction: Uint8Array) {
 </script>
 ```
 
-Call transaction methods from user actions on the client. Do not trigger wallet signing during SSR.
+Call transaction methods from user actions on the client. Do not trigger wallet signing during SSR. Nuxt module options intentionally omit `payer` and `payerSecretKey`; configure a `payer` in a client-only Vue plugin with `clientPlugin: false` instead of placing a secret in public runtime config.
 
 Use `useSolanaTransactionConfirmation({ commitment: "confirmed" })` and call `confirm(signature)` when you need to confirm a signature returned by another flow. Use `useSolanaSignatureStatus(signature, { pollIntervalMs: 2_000 })` when you want to keep checking status after a timeout or redirect.
 
@@ -7063,6 +7132,7 @@ try {
 
 ## Safety Checklist
 
+- Keep client-sent signing keys on a trusted server or in an explicitly ephemeral demo signer; never expose funded secrets through Nuxt public runtime config.
 - Show users what they are about to sign before opening a wallet prompt.
 - Never sign or send transactions without explicit user action.
 - Never request or handle private keys.
@@ -7115,6 +7185,16 @@ console.log(confirmation.signature, confirmation.commitment);
 ```
 
 confirmation 기본값은 `confirmed` commitment와 60초 timeout입니다. 이는 `client.rpc.getSignatureStatuses([signature]).send()`를 폴링하므로, 트랜잭션이 이미 제출되어 있어야 합니다.
+
+## 클라이언트 전송 트랜잭션
+
+`createSolanaClient()`은 기본적으로 `@solana/kit-plugin-rpc` official transaction stack인 `solanaRpc()`, `rpcTransactionPlanner()`, `rpcTransactionPlanSendingExecutor()`를 compose합니다. 기존 custom fallback sender는 사용하지 않습니다.
+
+client가 wallet popup 없이 plan, sign, submit, confirm해야 할 때 `useSendTransaction()` 또는 `useSendTransactions()`를 사용하세요. official executor는 새 blockhash를 가져오고 resource limit과 preflight를 처리하며 client signer로 서명하고 RPC로 제출한 뒤 `confirmed`를 기다립니다. send-and-confirm 작업이 완료된 뒤에만 composable의 `status`가 `sent`가 됩니다. 단일 결과는 `data.context.signature`를 제공하고 batch 결과는 plan result tree를 포함합니다.
+
+direct core/Vue client를 `payer` 또는 `payerSecretKey`로 설정하세요. client-sent 경로에는 `payer`가 필요합니다. `payerSecretKey`는 base64 64-byte Ed25519 keypair이며 trusted development 또는 server flow에만 적합합니다. Nuxt public runtime config에 raw secret이나 `payerSecretKey`를 넣지 말고 funded keypair를 end-user browser에 노출하지 마세요.
+
+wallet flow는 별개입니다. `useSignAndSendTransaction()`는 기본적으로 RPC submission 뒤에 반환하거나 `confirm: true`로 선택한 commitment을 기다릴 수 있습니다. connected user가 wallet에서 각 트랜잭션을 승인해야 한다면 이 동작을 유지하세요.
 
 ## 실제 Devnet 전송 만들기
 
@@ -7273,12 +7353,12 @@ Explorer 링크는 앱이 사용하는 cluster와 일치해야 합니다.
 
 ```ts
 function explorerUrl(signature: string, cluster: string) {
-  const suffix = cluster === "mainnet-beta" ? "" : `?cluster=${cluster}`;
+  const suffix = cluster === "mainnet" || cluster === "mainnet-beta" ? "" : `?cluster=${cluster}`;
   return `https://explorer.solana.com/tx/${signature}${suffix}`;
 }
 ```
 
-devnet 링크는 `https://explorer.solana.com/tx/SIGNATURE?cluster=devnet` 형태여야 합니다. Mainnet 링크는 의도적으로 cluster query를 생략합니다.
+devnet 링크는 `https://explorer.solana.com/tx/SIGNATURE?cluster=devnet` 형태여야 합니다. `mainnet`과 이전 별칭 `mainnet-beta` 링크는 의도적으로 cluster query를 생략합니다.
 
 ## 일반 트랜잭션 상태
 
@@ -7299,6 +7379,8 @@ const { status, error, execute } = useTransaction(async () => {
 Nuxt는 다음을 노출합니다.
 
 - `useSolanaSignAndSendTransaction()`
+- `useSolanaSendTransaction()`
+- `useSolanaSendTransactions()`
 - `useSolanaTransactionConfirmation()`
 - `useSolanaSignatureStatus()`
 
@@ -7312,7 +7394,7 @@ async function submit(transaction: Uint8Array) {
 </script>
 ```
 
-트랜잭션 메서드는 클라이언트의 사용자 액션에서 호출하세요. SSR 중 wallet signing을 트리거하지 마세요.
+트랜잭션 메서드는 클라이언트의 사용자 액션에서 호출하세요. SSR 중 wallet signing을 트리거하지 마세요. Nuxt module option은 `payer`와 `payerSecretKey`를 제외하므로, public runtime config에 secret을 넣지 말고 `clientPlugin: false`와 함께 client-only Vue plugin에서 `payer`를 설정하세요.
 
 다른 flow에서 반환된 signature를 확인해야 하면 `useSolanaTransactionConfirmation({ commitment: "confirmed" })`를 사용하고 `confirm(signature)`를 호출하세요. timeout 또는 redirect 이후 상태를 계속 확인하려면 `useSolanaSignatureStatus(signature, { pollIntervalMs: 2_000 })`를 사용합니다.
 
@@ -7352,6 +7434,7 @@ try {
 
 ## 안전 체크리스트
 
+- client-sent signing key는 trusted server 또는 명시적인 ephemeral demo signer에 두고, Nuxt public runtime config를 통해 funded secret을 노출하지 마세요.
 - wallet prompt를 열기 전에 사용자가 무엇에 서명하려는지 보여 주세요.
 - 명시적 사용자 액션 없이 트랜잭션에 서명하거나 전송하지 마세요.
 - private key를 요청하거나 처리하지 마세요.
@@ -7404,6 +7487,16 @@ console.log(confirmation.signature, confirmation.commitment);
 ```
 
 确认默认使用 `confirmed` commitment 和 60 秒超时。它会轮询 `client.rpc.getSignatureStatuses([signature]).send()`，因此交易必须已经提交。
+
+## 客户端发送交易
+
+`createSolanaClient()` 默认组合 `@solana/kit-plugin-rpc` 的官方交易 stack：`solanaRpc()`、`rpcTransactionPlanner()` 和 `rpcTransactionPlanSendingExecutor()`。旧的 custom fallback sender 不再使用。
+
+当 client 应在不显示 wallet popup 的情况下 plan、sign、submit 和 confirm 时，使用 `useSendTransaction()` 或 `useSendTransactions()`。官方 executor 会获取新的 blockhash、处理 resource limit 和 preflight、使用 client signer 签名、通过 RPC 提交并等待 `confirmed`。只有 send-and-confirm 操作完成后，composable 才会将 `status` 设为 `sent`。单笔结果在 `data.context.signature` 提供签名，batch 结果包含 plan result tree。
+
+使用 `payer` 或 `payerSecretKey` 配置 direct core/Vue client；client-sent 路径需要 `payer`。`payerSecretKey` 是 base64 编码的 64 字节 Ed25519 keypair，只适合 trusted development 或 server flow。永远不要把 raw secret 或 `payerSecretKey` 放入 Nuxt public runtime config，也不要把有资金的 keypair 暴露给 end-user browser。
+
+钱包流程是分开的：`useSignAndSendTransaction()` 默认在 RPC submission 后返回，也可以在传入 `confirm: true` 时等待所选 commitment。当 connected user 必须在 wallet 中批准每笔交易时，请保持这种行为。
 
 ## 构建真实的 Devnet 转账
 
@@ -7562,12 +7655,12 @@ await execute(transaction);
 
 ```ts
 function explorerUrl(signature: string, cluster: string) {
-  const suffix = cluster === "mainnet-beta" ? "" : `?cluster=${cluster}`;
+  const suffix = cluster === "mainnet" || cluster === "mainnet-beta" ? "" : `?cluster=${cluster}`;
   return `https://explorer.solana.com/tx/${signature}${suffix}`;
 }
 ```
 
-对于 devnet，链接应类似 `https://explorer.solana.com/tx/SIGNATURE?cluster=devnet`。主网链接会有意省略 cluster 查询参数。
+对于 devnet，链接应类似 `https://explorer.solana.com/tx/SIGNATURE?cluster=devnet`。`mainnet` 和旧别名 `mainnet-beta` 链接都会有意省略 cluster 查询参数。
 
 ## 通用交易状态
 
@@ -7588,6 +7681,8 @@ const { status, error, execute } = useTransaction(async () => {
 Nuxt 暴露：
 
 - `useSolanaSignAndSendTransaction()`
+- `useSolanaSendTransaction()`
+- `useSolanaSendTransactions()`
 - `useSolanaTransactionConfirmation()`
 - `useSolanaSignatureStatus()`
 
@@ -7601,7 +7696,7 @@ async function submit(transaction: Uint8Array) {
 </script>
 ```
 
-请从客户端的用户操作调用交易方法。不要在 SSR 期间触发钱包签名。
+请从客户端的用户操作调用交易方法。不要在 SSR 期间触发钱包签名。Nuxt module option 省略了 `payer` 和 `payerSecretKey`；不要把 secret 放入 public runtime config，而应在设置 `clientPlugin: false` 的 client-only Vue plugin 中配置 `payer`。
 
 当你需要确认另一个流程返回的签名时，使用 `useSolanaTransactionConfirmation({ commitment: "confirmed" })` 并调用 `confirm(signature)`。当你希望在超时或重定向后继续检查状态时，使用 `useSolanaSignatureStatus(signature, { pollIntervalMs: 2_000 })`。
 
@@ -7641,6 +7736,7 @@ try {
 
 ## 安全检查清单
 
+- 将 client-sent signing key 保存在 trusted server 或明确的 ephemeral demo signer 中；永远不要通过 Nuxt public runtime config 暴露有资金的 secret。
 - 打开钱包提示前，向用户展示他们即将签署的内容。
 - 没有明确的用户操作时，永远不要签署或发送交易。
 - 永远不要请求或处理私钥。
@@ -9004,7 +9100,7 @@ Subpaths directos:
 ## Configuración
 
 ```ts
-type SolanaCluster = "mainnet-beta" | "testnet" | "devnet" | "localnet";
+type SolanaCluster = "mainnet" | "mainnet-beta" | "testnet" | "devnet" | "localnet";
 
 interface SolanaConfig {
   cluster?: SolanaCluster;
@@ -9012,14 +9108,22 @@ interface SolanaConfig {
   wsEndpoint?: string;
   commitment?: Commitment;
   autoConnect?: boolean;
+  payer?: TransactionSigner;
+  payerSecretKey?: string;
 }
 ```
 
-Los clusters soportados son `mainnet-beta`, `testnet`, `devnet` y `localnet`. Los helpers de wallet usan identificadores de cadena Wallet Standard como `solana:devnet`, derivados de los clusters por `getSolanaChain()`. Si se omite `endpoint`, el paquete usa el endpoint RPC público de Solana para el cluster seleccionado. Si se omite `wsEndpoint`, se deriva del endpoint RPC.
+Los clusters soportados son `mainnet` (alias heredado `mainnet-beta`), `testnet`, `devnet` y `localnet`. Los helpers de wallet usan identificadores de cadena Wallet Standard como `solana:devnet`, derivados de los clusters por `getSolanaChain()`. Si se omite `endpoint`, el paquete usa el endpoint RPC público de Solana para el cluster seleccionado. Si se omite `wsEndpoint`, se deriva del endpoint RPC.
 
 `autoConnect` usa `false` por defecto. Cuando se activa mediante el plugin de Vue o el módulo Nuxt, Vue Solana reconecta solo una identidad de wallet que el usuario seleccionó antes y que se descubre otra vez en el cliente. Solo guarda metadatos de identidad de wallet en `localStorage["vue-solana:selected-wallet"]`: `name`, y `platform`/`source` cuando están disponibles. Nunca guarda claves privadas, datos de sesión ni datos de transacción, y nunca conecta una wallet instalada arbitraria.
 
-Usa `mainnet-beta` para la mainnet de Solana. Este es el nombre oficial del cluster de Solana; el paquete intencionalmente no usa `mainnet` como alias.
+`payer` es un `TransactionSigner` de Kit que se usa como payer de comisiones y signer del cliente para transacciones enviadas por el cliente. `payerSecretKey` es un keypair Ed25519 de 64 bytes codificado en base64, con la secret key primero, y se resuelve como signer al crear el cliente. Ambos son compatibles con clientes core/Vue directos.
+
+`createSolanaClient()` compone por defecto el stack oficial de `@solana/kit-plugin-rpc`: `solanaRpc()`, `rpcTransactionPlanner()` y `rpcTransactionPlanSendingExecutor()`. El fallback custom anterior no se usa. El cliente expone lecturas y suscripciones RPC, `planTransaction(s)` y `sendTransaction(s)`. El executor oficial agrega un blockhash nuevo, maneja limites de recursos y preflight, firma con los signers disponibles, envia la transaccion y espera al commitment `confirmed` antes de resolver el envio. Un envio del cliente requiere un signer `payer`.
+
+Nunca pongas un secreto crudo o `payerSecretKey` en la configuracion runtime publica de Nuxt. No envíes una clave de firma con fondos al navegador de un usuario final; usa un servidor o relayer, o un signer efimero sin fondos para demos.
+
+Usa `mainnet` para la mainnet de Solana. Este es el nombre oficial del mainnet de Solana. La grafía heredada `mainnet-beta` sigue siendo aceptada y redirige al mismo endpoint `https://api.mainnet.solana.com`.
 
 ## Contexto
 
@@ -9032,7 +9136,7 @@ interface SolanaContext {
 }
 ```
 
-`client` es un cliente de [`@solana/kit`](https://www.npmjs.com/package/@solana/kit) creado por `createSolanaClient()` y expone `client.rpc` y `client.rpcSubscriptions`.
+`client` es un cliente de [`@solana/kit`](https://www.npmjs.com/package/@solana/kit) creado por `createSolanaClient()` y expone `client.rpc`, `client.rpcSubscriptions`, `planTransaction(s)` y `sendTransaction(s)`.
 
 ## Interfaz de wallet
 
@@ -9102,7 +9206,7 @@ type SolanaChain = "solana:mainnet" | "solana:testnet" | "solana:devnet" | "sola
 
 `SolanaChain` es el identificador de cadena Wallet Standard usado por el descubrimiento de wallets, el registro de wallets móviles, los enlaces de wallet iOS y las opciones de firma del adaptador de wallet. Usa `getSolanaChain(cluster)` cuando necesites derivarlo desde un cluster Solana configurado.
 
-- `getSolanaChain(cluster)`: asigna `mainnet-beta`, `devnet`, `testnet` o `localnet` a un ID de cadena Solana Wallet Standard.
+- `getSolanaChain(cluster)`: asigna `mainnet-beta` o `mainnet`, `devnet`, `testnet` o `localnet` a un ID de cadena Solana Wallet Standard.
 - `isSolanaStandardWallet(wallet)`: comprueba si una wallet Wallet Standard soporta Solana.
 - `getRegisteredSolanaWallets()`: devuelve wallets Solana Wallet Standard descubiertas en entornos de navegador, incluido Android Mobile Wallet Adapter después de registrarlo en clientes soportados.
 - `subscribeSolanaWallets(listener)`: se suscribe a eventos de registro/anulación de registro de Wallet Standard.
@@ -9127,7 +9231,7 @@ La exportación raíz `@vue-solana/core` reexporta los helpers públicos siguien
 | Import path                        | Qué contiene                                                                                                                      | Úsalo cuando                                                                                                                     |
 | ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
 | `@vue-solana/core/address`         | `parseAddress()` y tipos de entrada de dirección.                                                                                 | Aceptas una dirección Solana como string, objeto tipo ref o getter y necesitas un `Address` validado y normalizado.              |
-| `@vue-solana/core/clusters`        | Helpers de cluster y endpoint por defecto.                                                                                        | Necesitas el endpoint RPC o WebSocket integrado del paquete para `mainnet-beta`, `testnet`, `devnet` o `localnet`.               |
+| `@vue-solana/core/clusters`        | Helpers de cluster y endpoint por defecto.                                                                                        | Necesitas el endpoint RPC o WebSocket integrado del paquete para `mainnet`, `mainnet-beta`, `testnet`, `devnet` o `localnet`.    |
 | `@vue-solana/core/errors`          | `SolanaError`, fábricas de error y guards de error.                                                                               | Necesitas códigos de error estables para fallos de wallet, RPC, dirección, transacción, timeout o storage orientados al usuario. |
 | `@vue-solana/core/ios-wallet`      | Descubrimiento de wallets de navegador iOS, adaptadores deep-link y callbacks.                                                    | Estás conectando enlaces de wallet iOS sin el flujo unificado de wallets del plugin de Vue.                                      |
 | `@vue-solana/core/kit`             | `createSolanaClient()` y las reexportaciones de `@solana/kit` (`Address`, `address`, `lamports`, `SolanaRpcApi`, `SolanaClient`). | Quieres la API Kit moderna sin el grafo completo de dependencias de `@solana/kit`.                                               |
@@ -9146,7 +9250,7 @@ La exportación raíz `@vue-solana/core` reexporta los helpers públicos siguien
 - `getClusterEndpoint(cluster?)`: devuelve el endpoint HTTP RPC para un cluster.
 - `getClusterWebSocketEndpoint(cluster?)`: devuelve el endpoint WebSocket para un cluster.
 - `getWebSocketEndpoint(endpoint)`: convierte URLs RPC `http`/`https` a URLs `ws`/`wss`.
-- `createSolanaClient(config?)`: crea un cliente de `@solana/kit` cuyo `rpc` está conectado al endpoint resuelto y a las suscripciones WebSocket.
+- `createSolanaClient(config?)`: crea un cliente de `@solana/kit` cuyo `rpc` está conectado al endpoint resuelto y a las suscripciones WebSocket, con el planner y el executor de envio de transacciones oficiales instalados por defecto.
 - `createSolanaContext(config?)`: crea `{ cluster, endpoint, wsEndpoint, client }` para configuración de app independiente del framework.
 
 ```ts
@@ -9176,7 +9280,7 @@ import { address, lamports } from "@vue-solana/core/kit";
 import type { Address, Commitment, Lamports, Signature, SolanaRpcApi } from "@vue-solana/core/kit";
 ```
 
-- `createSolanaClient(config?)`: construye un cliente Kit para el `SolanaConfig` dado. Reutiliza la resolución de endpoint de `clusters.ts` y conecta `rpcSubscriptionsUrl` desde el endpoint WebSocket resuelto.
+- `createSolanaClient(config?)`: construye un cliente Kit para el `SolanaConfig` dado. Reutiliza la resolución de endpoint de `clusters.ts`, conecta `rpcSubscriptionsUrl` desde el endpoint WebSocket resuelto e instala por defecto el planner y el executor oficiales de envio de transacciones RPC.
 - `client.rpc` expone la API completa de lectura de Solana (`getSlot`, `getBalance`, `getBlockHeight`, `getSignatureStatuses` y más) como funciones RPC llamadas con `.send()`.
 - `address(value)`: valida y devuelve un `Address` (marca de string base58) — el reemplazo de Kit para `new PublicKey(...)`.
 - `lamports(value: bigint)`: devuelve un valor `Lamports` — el reemplazo de Kit para números de lamports sin procesar.
@@ -9217,6 +9321,8 @@ const signedTransaction = await wallet.signTransaction(transaction);
 
 - `signAndSendTransaction(client, wallet, transaction, options?)`: firma y envía bytes de transacción en la red (wire) usando una wallet configurada y devuelve la firma RPC. Se delega en las wallets que exponen `signAndSendTransaction`; en caso contrario, la transacción se firma con `wallet.signTransaction` y se envía mediante `client.rpc.sendTransaction(...).send()`. Las wallets Android Mobile Wallet Adapter prefieren firma más envío RPC del lado de la app para que la app controle el envío y devuelva de forma fiable la firma RPC después del traspaso a la wallet.
 - `confirmTransactionSignature(client, signature, options?)`: espera a que una firma enviada alcance un commitment solicitado. Usa por defecto commitment `confirmed`, timeout de 60 segundos y sondeo de `client.rpc.getSignatureStatuses([signature]).send()`.
+
+El flujo de envio del cliente es separado de este helper consciente de wallet. El cliente expone `sendTransaction()` y `sendTransactions()` mediante el `rpcTransactionPlanSendingExecutor()` oficial instalado por `createSolanaClient()`; los composables de Vue envuelven esos metodos. Planifican, firman, envian y esperan `confirmed`; el estado `sent` se establece solo cuando termina la operacion de envio y confirmacion. El resultado simple expone la firma en `data.context.signature`, y el resultado batch contiene el arbol completo del plan. El sender oficial no muestra popup de wallet.
 
 ```ts
 import { confirmTransactionSignature, signAndSendTransaction } from "@vue-solana/core/transaction";
@@ -9576,7 +9682,7 @@ Direct subpath:
 ## 설정
 
 ```ts
-type SolanaCluster = "mainnet-beta" | "testnet" | "devnet" | "localnet";
+type SolanaCluster = "mainnet" | "mainnet-beta" | "testnet" | "devnet" | "localnet";
 
 interface SolanaConfig {
   cluster?: SolanaCluster;
@@ -9584,14 +9690,22 @@ interface SolanaConfig {
   wsEndpoint?: string;
   commitment?: Commitment;
   autoConnect?: boolean;
+  payer?: TransactionSigner;
+  payerSecretKey?: string;
 }
 ```
 
-지원 cluster는 `mainnet-beta`, `testnet`, `devnet`, `localnet`입니다. Wallet helper는 `getSolanaChain()`이 cluster에서 파생하는 `solana:devnet` 같은 Wallet Standard chain identifier를 사용합니다. `endpoint`를 생략하면 선택한 cluster의 공개 Solana RPC endpoint를 사용합니다. `wsEndpoint`를 생략하면 RPC endpoint에서 파생됩니다.
+지원 cluster는 `mainnet`(이전 별칭 `mainnet-beta`), `testnet`, `devnet`, `localnet`입니다. Wallet helper는 `getSolanaChain()`이 cluster에서 파생하는 `solana:devnet` 같은 Wallet Standard chain identifier를 사용합니다. `endpoint`를 생략하면 선택한 cluster의 공개 Solana RPC endpoint를 사용합니다. `wsEndpoint`를 생략하면 RPC endpoint에서 파생됩니다.
 
 `autoConnect` 기본값은 `false`입니다. Vue plugin 또는 Nuxt module에서 활성화하면 Vue Solana는 사용자가 이전에 선택했고 client에서 다시 discovery된 wallet identity만 reconnect합니다. `localStorage["vue-solana:selected-wallet"]`에는 `name`, 가능한 경우 `platform`/`source` 같은 wallet identity metadata만 저장합니다. private key, session data, transaction data를 저장하지 않으며 임의로 설치된 wallet에 연결하지 않습니다.
 
-Solana mainnet에는 `mainnet-beta`를 사용하세요. 이는 Solana의 공식 cluster name이며, package는 의도적으로 `mainnet` alias를 사용하지 않습니다.
+`payer`는 client fee payer와 client-sent transaction signer로 사용하는 Kit `TransactionSigner`입니다. `payerSecretKey`는 secret key가 먼저 오는 base64 64-byte Ed25519 keypair이며 client 생성 시 signer로 resolve됩니다. 두 옵션 모두 direct core/Vue client에서 지원됩니다.
+
+`createSolanaClient()`은 기본적으로 `@solana/kit-plugin-rpc`의 official `solanaRpc()`, `rpcTransactionPlanner()`, `rpcTransactionPlanSendingExecutor()` 스택을 compose합니다. 기존 custom fallback sender는 사용하지 않습니다. client는 RPC read/subscription과 `planTransaction(s)`, `sendTransaction(s)`를 노출합니다. official executor는 새 blockhash, resource limit와 preflight 처리, client signer를 이용한 서명, RPC 제출을 수행하고 send가 resolve되기 전에 `confirmed` commitment을 기다립니다. client send에는 `payer` signer가 필요합니다.
+
+Nuxt public runtime config에 raw secret이나 `payerSecretKey`를 넣지 마세요. end-user browser에 funded signing key를 배포하지 말고 server/relayer 경계 또는 demo용 ephemeral signer를 사용하세요.
+
+Solana mainnet에는 `mainnet`을 사용하세요. 이는 Solana의 공식 mainnet 클러스터 이름입니다. 이전 표기법인 `mainnet-beta`는 여전히 허용되며 같은 `https://api.mainnet.solana.com` 엔드포인트로 리다이렉트됩니다.
 
 ## Context
 
@@ -9604,7 +9718,7 @@ interface SolanaContext {
 }
 ```
 
-`client`는 `createSolanaClient()`가 만든 [`@solana/kit`](https://www.npmjs.com/package/@solana/kit) client이며 `client.rpc`와 `client.rpcSubscriptions`를 노출합니다.
+`client`는 `createSolanaClient()`가 만든 [`@solana/kit`](https://www.npmjs.com/package/@solana/kit) client이며 `client.rpc`, `client.rpcSubscriptions`, `planTransaction(s)`, `sendTransaction(s)`를 노출합니다.
 
 ## Wallet Interface
 
@@ -9674,7 +9788,7 @@ type SolanaChain = "solana:mainnet" | "solana:testnet" | "solana:devnet" | "sola
 
 `SolanaChain`은 wallet discovery, mobile wallet registration, iOS wallet link, wallet adapter signing option에서 사용하는 Wallet Standard chain identifier입니다. 설정된 Solana cluster에서 이를 파생해야 하면 `getSolanaChain(cluster)`를 사용하세요.
 
-- `getSolanaChain(cluster)`: `mainnet-beta`, `devnet`, `testnet`, `localnet`을 Solana Wallet Standard chain ID로 매핑합니다.
+- `getSolanaChain(cluster)`: `mainnet-beta` 또는 `mainnet`, `devnet`, `testnet`, `localnet`을 Solana Wallet Standard chain ID로 매핑합니다.
 - `isSolanaStandardWallet(wallet)`: Wallet Standard wallet이 Solana를 지원하는지 확인합니다.
 - `getRegisteredSolanaWallets()`: browser 환경에서 발견된 Solana Wallet Standard wallet을 반환합니다. 지원 client에서 등록된 Android Mobile Wallet Adapter도 포함됩니다.
 - `subscribeSolanaWallets(listener)`: Wallet Standard register/unregister event를 구독합니다.
@@ -9696,21 +9810,21 @@ type SolanaChain = "solana:mainnet" | "solana:testnet" | "solana:devnet" | "sola
 
 Root `@vue-solana/core` export는 아래 public helper를 다시 export합니다. 더 좁은 import나 명확한 module boundary가 필요하면 direct subpath를 사용하세요.
 
-| Import path                        | 포함 내용                                                                                                           | 사용할 때                                                                                              |
-| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
-| `@vue-solana/core/address`         | `parseAddress()`와 address input type.                                                                              | Solana 주소를 string, ref-like object, getter로 받고 검증되고 정규화된 `Address`가 필요할 때.          |
-| `@vue-solana/core/clusters`        | 기본 cluster 및 endpoint helper.                                                                                    | `mainnet-beta`, `testnet`, `devnet`, `localnet`의 built-in RPC 또는 WebSocket endpoint가 필요할 때.    |
-| `@vue-solana/core/errors`          | `SolanaError`, error factory, error guard.                                                                          | 지갑, RPC, 주소, 트랜잭션, timeout, storage 실패에 대한 안정적인 error code가 필요할 때.               |
-| `@vue-solana/core/ios-wallet`      | iOS browser wallet discovery, deep-link adapter, callback handling.                                                 | Vue plugin의 unified wallet flow 없이 iOS wallet link를 직접 wiring할 때.                              |
-| `@vue-solana/core/kit`             | `createSolanaClient()`와 `@solana/kit` re-export(`Address`, `address`, `lamports`, `SolanaRpcApi`, `SolanaClient`). | 전체 `@solana/kit` dependency graph 없이 현대 Kit API를 원할 때.                                       |
-| `@vue-solana/core/mobile-wallet`   | Android Mobile Wallet Adapter registration helper.                                                                  | Wallet Standard wallet을 읽기 전에 Android MWA를 등록해야 할 때.                                       |
-| `@vue-solana/core/rpc`             | `createSolanaContext()`.                                                                                            | Vue plugin 없이 configured Kit client와 resolved cluster endpoint가 필요할 때.                         |
-| `@vue-solana/core/timeout`         | Solana timeout error를 만드는 Promise timeout helper.                                                               | transaction confirmation helper와 일관된 timeout behavior가 필요할 때.                                 |
-| `@vue-solana/core/transaction`     | Transaction send 및 confirmation helper.                                                                            | Wallet-aware send path 또는 기존 signature의 confirmation result가 필요할 때.                          |
-| `@vue-solana/core/token-accounts`  | 무상태 SPL Token account 읽기(`getTokenAccountsByOwner`, `getTokenAccount`, `getTokenBalance`).                     | Kit RPC `jsonParsed` API를 통해 token account 또는 balance 읽기가 필요할 때.                           |
-| `@vue-solana/core/types`           | 공유 TypeScript type.                                                                                               | `SolanaConfig`, `SolanaContext`, `SolanaWallet`, wallet metadata, transaction option type이 필요할 때. |
-| `@vue-solana/core/wallet`          | Wallet state assertion 및 wallet capability error.                                                                  | 선택된 wallet이 연결되어 있거나 signing을 지원하는지 wallet method 호출 전에 검증해야 할 때.           |
-| `@vue-solana/core/wallet-standard` | Wallet Standard chain mapping, discovery, subscription, adapter helper.                                             | Solana Wallet Standard 위에 자체 wallet discovery layer를 만들 때.                                     |
+| Import path                        | 포함 내용                                                                                                           | 사용할 때                                                                                                      |
+| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `@vue-solana/core/address`         | `parseAddress()`와 address input type.                                                                              | Solana 주소를 string, ref-like object, getter로 받고 검증되고 정규화된 `Address`가 필요할 때.                  |
+| `@vue-solana/core/clusters`        | 기본 cluster 및 endpoint helper.                                                                                    | `mainnet`, `mainnet-beta`, `testnet`, `devnet`, `localnet`의 built-in RPC 또는 WebSocket endpoint가 필요할 때. |
+| `@vue-solana/core/errors`          | `SolanaError`, error factory, error guard.                                                                          | 지갑, RPC, 주소, 트랜잭션, timeout, storage 실패에 대한 안정적인 error code가 필요할 때.                       |
+| `@vue-solana/core/ios-wallet`      | iOS browser wallet discovery, deep-link adapter, callback handling.                                                 | Vue plugin의 unified wallet flow 없이 iOS wallet link를 직접 wiring할 때.                                      |
+| `@vue-solana/core/kit`             | `createSolanaClient()`와 `@solana/kit` re-export(`Address`, `address`, `lamports`, `SolanaRpcApi`, `SolanaClient`). | 전체 `@solana/kit` dependency graph 없이 현대 Kit API를 원할 때.                                               |
+| `@vue-solana/core/mobile-wallet`   | Android Mobile Wallet Adapter registration helper.                                                                  | Wallet Standard wallet을 읽기 전에 Android MWA를 등록해야 할 때.                                               |
+| `@vue-solana/core/rpc`             | `createSolanaContext()`.                                                                                            | Vue plugin 없이 configured Kit client와 resolved cluster endpoint가 필요할 때.                                 |
+| `@vue-solana/core/timeout`         | Solana timeout error를 만드는 Promise timeout helper.                                                               | transaction confirmation helper와 일관된 timeout behavior가 필요할 때.                                         |
+| `@vue-solana/core/transaction`     | Transaction send 및 confirmation helper.                                                                            | Wallet-aware send path 또는 기존 signature의 confirmation result가 필요할 때.                                  |
+| `@vue-solana/core/token-accounts`  | 무상태 SPL Token account 읽기(`getTokenAccountsByOwner`, `getTokenAccount`, `getTokenBalance`).                     | Kit RPC `jsonParsed` API를 통해 token account 또는 balance 읽기가 필요할 때.                                   |
+| `@vue-solana/core/types`           | 공유 TypeScript type.                                                                                               | `SolanaConfig`, `SolanaContext`, `SolanaWallet`, wallet metadata, transaction option type이 필요할 때.         |
+| `@vue-solana/core/wallet`          | Wallet state assertion 및 wallet capability error.                                                                  | 선택된 wallet이 연결되어 있거나 signing을 지원하는지 wallet method 호출 전에 검증해야 할 때.                   |
+| `@vue-solana/core/wallet-standard` | Wallet Standard chain mapping, discovery, subscription, adapter helper.                                             | Solana Wallet Standard 위에 자체 wallet discovery layer를 만들 때.                                             |
 
 ### 클러스터와 RPC
 
@@ -9718,7 +9832,7 @@ Root `@vue-solana/core` export는 아래 public helper를 다시 export합니다
 - `getClusterEndpoint(cluster?)`: cluster의 HTTP RPC endpoint를 반환합니다.
 - `getClusterWebSocketEndpoint(cluster?)`: cluster의 WebSocket endpoint를 반환합니다.
 - `getWebSocketEndpoint(endpoint)`: `http`/`https` RPC URL을 `ws`/`wss` URL로 변환합니다.
-- `createSolanaClient(config?)`: resolved endpoint와 WebSocket subscription에 `rpc`가 연결된 `@solana/kit` client를 만듭니다.
+- `createSolanaClient(config?)`: resolved endpoint와 WebSocket subscription에 `rpc`가 연결된 `@solana/kit` client를 만들고, official planner와 transaction-sending executor를 기본적으로 설치합니다.
 - `createSolanaContext(config?)`: 프레임워크 독립 app setup을 위해 `{ cluster, endpoint, wsEndpoint, client }`을 만듭니다.
 
 ```ts
@@ -9748,7 +9862,7 @@ import { address, lamports } from "@vue-solana/core/kit";
 import type { Address, Commitment, Lamports, Signature, SolanaRpcApi } from "@vue-solana/core/kit";
 ```
 
-- `createSolanaClient(config?)`: 주어진 `SolanaConfig`로 Kit client를 만듭니다. `clusters.ts` endpoint resolution을 재사용하고 resolved WebSocket endpoint에서 `rpcSubscriptionsUrl`을 연결합니다.
+- `createSolanaClient(config?)`: 주어진 `SolanaConfig`로 Kit client를 만듭니다. `clusters.ts` endpoint resolution을 재사용하고 resolved WebSocket endpoint에서 `rpcSubscriptionsUrl`을 연결하며 official transaction planner와 RPC transaction-sending executor를 기본적으로 설치합니다.
 - `client.rpc`는 전체 Solana read API(`getSlot`, `getBalance`, `getBlockHeight`, `getSignatureStatuses` 등)를 `.send()`로 호출하는 RPC function으로 노출합니다.
 - `address(value)`: `Address`(base58 string brand)를 검증하고 반환합니다 - `new PublicKey(...)`의 Kit 대체입니다.
 - `lamports(value: bigint)`: `Lamports` 값을 반환합니다 - raw lamport number의 Kit 대체입니다.
@@ -9789,6 +9903,8 @@ const signedTransaction = await wallet.signTransaction(transaction);
 
 - `signAndSendTransaction(client, wallet, transaction, options?)`: configured wallet로 raw wire transaction byte에 서명하고 전송한 뒤 RPC signature를 반환합니다. `signAndSendTransaction`을 노출하는 wallet은 해당 기능에 위임되고, 그렇지 않으면 트랜잭션은 `wallet.signTransaction`으로 서명된 뒤 `client.rpc.sendTransaction(...).send()`로 제출됩니다. Android Mobile Wallet Adapter wallet은 앱이 제출을 소유하고 wallet handoff 후 RPC signature를 안정적으로 반환할 수 있도록 서명과 app-side RPC 제출을 선호합니다.
 - `confirmTransactionSignature(client, signature, options?)`: 제출된 signature가 요청한 commitment에 도달할 때까지 기다립니다. 기본값은 `confirmed` commitment, 60초 timeout, `client.rpc.getSignatureStatuses([signature]).send()` 폴링입니다.
+
+wallet-aware helper와 client-sent flow는 별개입니다. client는 `createSolanaClient()`가 설치한 official `rpcTransactionPlanSendingExecutor()`를 통해 `sendTransaction()`과 `sendTransactions()`를 노출하고 Vue composable이 이 method들을 감쌉니다. plan, sign, submit 후 `confirmed` commitment을 기다리며, send-and-confirm가 완료된 뒤에만 `sent` 상태가 됩니다. 단일 결과의 `data.context.signature`에서 제출된 signature를 확인할 수 있고, batch 결과에는 전체 plan result tree가 포함됩니다. official sender는 wallet popup을 표시하지 않습니다.
 
 ```ts
 import { confirmTransactionSignature, signAndSendTransaction } from "@vue-solana/core/transaction";
@@ -9951,7 +10067,7 @@ Direct subpaths:
 ## Configuration
 
 ```ts
-type SolanaCluster = "mainnet-beta" | "testnet" | "devnet" | "localnet";
+type SolanaCluster = "mainnet" | "mainnet-beta" | "testnet" | "devnet" | "localnet";
 
 interface SolanaConfig {
   cluster?: SolanaCluster;
@@ -9959,14 +10075,22 @@ interface SolanaConfig {
   wsEndpoint?: string;
   commitment?: Commitment;
   autoConnect?: boolean;
+  payer?: TransactionSigner;
+  payerSecretKey?: string;
 }
 ```
 
-Supported clusters are `mainnet-beta`, `testnet`, `devnet`, and `localnet`. Wallet helpers use Wallet Standard chain identifiers such as `solana:devnet`, which are derived from clusters by `getSolanaChain()`. If `endpoint` is omitted, the package uses the public Solana RPC endpoint for the selected cluster. If `wsEndpoint` is omitted, it is derived from the RPC endpoint.
+Supported clusters are `mainnet` (legacy alias `mainnet-beta`), `testnet`, `devnet`, and `localnet`. Wallet helpers use Wallet Standard chain identifiers such as `solana:devnet`, which are derived from clusters by `getSolanaChain()`. If `endpoint` is omitted, the package uses the public Solana RPC endpoint for the selected cluster. If `wsEndpoint` is omitted, it is derived from the RPC endpoint.
 
 `autoConnect` defaults to `false`. When enabled through the Vue plugin or Nuxt module, Vue Solana reconnects only a wallet identity that the user previously selected and that is discovered again on the client. It stores only wallet identity metadata under `localStorage["vue-solana:selected-wallet"]`: `name`, and `platform`/`source` when available. It never stores private keys, session data, or transaction data, and it never connects an arbitrary installed wallet.
 
-Use `mainnet-beta` for Solana mainnet. This is Solana's official cluster name; the package intentionally does not use `mainnet` as an alias.
+`payer` is a Kit `TransactionSigner` used as the client's fee payer and signer for client-sent transactions. `payerSecretKey` is a base64-encoded 64-byte Ed25519 keypair with the secret key first; it is resolved to a signer when the client is created. Both options are supported by direct core and Vue clients.
+
+`createSolanaClient()` composes the official `@solana/kit-plugin-rpc` stack by default: `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()`. The old custom fallback sender is not used. The client exposes RPC reads and subscriptions plus `planTransaction(s)` and `sendTransaction(s)`. Its official sending executor adds a fresh blockhash, resource-limit and preflight handling, signs with the available client signers, submits the transaction, and waits for `confirmed` commitment before the send resolves. A client send requires a `payer` signer.
+
+Never put a raw secret or `payerSecretKey` in Nuxt public runtime config. Do not ship a funded signing key to an end-user browser; use a server or relayer boundary, or an ephemeral unfunded signer for demos.
+
+Use `mainnet` for Solana mainnet. This is Solana's official mainnet cluster name. The legacy `mainnet-beta` spelling is still accepted and redirects to the same `https://api.mainnet.solana.com` endpoint.
 
 ## Context
 
@@ -9979,7 +10103,7 @@ interface SolanaContext {
 }
 ```
 
-`client` is a [`@solana/kit`](https://www.npmjs.com/package/@solana/kit) client built by `createSolanaClient()` and exposes `client.rpc` and `client.rpcSubscriptions`.
+`client` is a [`@solana/kit`](https://www.npmjs.com/package/@solana/kit) client built by `createSolanaClient()` and exposes `client.rpc`, `client.rpcSubscriptions`, `planTransaction(s)`, and `sendTransaction(s)`.
 
 ## Wallet Interface
 
@@ -10049,7 +10173,7 @@ type SolanaChain = "solana:mainnet" | "solana:testnet" | "solana:devnet" | "sola
 
 `SolanaChain` is the Wallet Standard chain identifier used by wallet discovery, mobile wallet registration, iOS wallet links, and wallet adapter signing options. Use `getSolanaChain(cluster)` when you need to derive one from a configured Solana cluster.
 
-- `getSolanaChain(cluster)`: maps `mainnet-beta`, `devnet`, `testnet`, or `localnet` to a Solana Wallet Standard chain ID.
+- `getSolanaChain(cluster)`: maps `mainnet-beta` or `mainnet`, `devnet`, `testnet`, or `localnet` to a Solana Wallet Standard chain ID.
 - `isSolanaStandardWallet(wallet)`: checks whether a Wallet Standard wallet supports Solana.
 - `getRegisteredSolanaWallets()`: returns discovered Solana Wallet Standard wallets in browser environments, including Android Mobile Wallet Adapter after it is registered on supported clients.
 - `subscribeSolanaWallets(listener)`: subscribes to Wallet Standard register/unregister events.
@@ -10071,22 +10195,22 @@ These helpers are SSR-safe. Android registration returns without registering whe
 
 The root `@vue-solana/core` export re-exports the public helpers below. Use direct subpaths when you want narrower imports or clearer module boundaries.
 
-| Import path                        | What it contains                                                                                                            | Use it when                                                                                                       |
-| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| `@vue-solana/core/action`          | `createSolanaActionStore()`, `SolanaActionState`, and `isSolanaActionAborted()`.                                            | You need a framework-agnostic async action state machine with abort-on-redispatch for Solana work.                |
-| `@vue-solana/core/address`         | `parseAddress()` and address input types.                                                                                   | You accept a Solana address as a string, ref-like object, or getter and need a validated, normalized `Address`.   |
-| `@vue-solana/core/clusters`        | Default cluster and endpoint helpers.                                                                                       | You need the package's built-in RPC or WebSocket endpoint for `mainnet-beta`, `testnet`, `devnet`, or `localnet`. |
-| `@vue-solana/core/errors`          | `SolanaError`, error factories, and error guards.                                                                           | You need stable error codes for user-facing wallet, RPC, address, transaction, timeout, or storage failures.      |
-| `@vue-solana/core/ios-wallet`      | iOS browser wallet discovery, deep-link adapters, and callback handling.                                                    | You are wiring iOS wallet links without the Vue plugin's unified wallet flow.                                     |
-| `@vue-solana/core/kit`             | `createSolanaClient()` and the `@solana/kit` re-exports (`Address`, `address`, `lamports`, `SolanaRpcApi`, `SolanaClient`). | You want the modern Kit API without the full `@solana/kit` dependency graph.                                      |
-| `@vue-solana/core/mobile-wallet`   | Android Mobile Wallet Adapter registration helpers.                                                                         | You need to register Android MWA before reading Wallet Standard wallets.                                          |
-| `@vue-solana/core/rpc`             | `createSolanaContext()`.                                                                                                    | You want a configured Kit client and resolved cluster endpoints without installing the Vue plugin.                |
-| `@vue-solana/core/timeout`         | Promise timeout helpers that produce Solana timeout errors.                                                                 | You need timeout behavior consistent with transaction confirmation helpers.                                       |
-| `@vue-solana/core/transaction`     | Transaction send and confirmation helpers.                                                                                  | You need a wallet-aware send path or a confirmation result for an existing signature.                             |
-| `@vue-solana/core/token-accounts`  | Stateless SPL Token account reads (`getTokenAccountsByOwner`, `getTokenAccount`, `getTokenBalance`).                        | You need token account or balance reads through the Kit RPC `jsonParsed` API.                                     |
-| `@vue-solana/core/types`           | Shared TypeScript types.                                                                                                    | You need `SolanaConfig`, `SolanaContext`, `SolanaWallet`, wallet metadata, or transaction option types.           |
-| `@vue-solana/core/wallet`          | Wallet state assertions and wallet capability errors.                                                                       | You need to validate that a selected wallet is connected or supports signing before calling wallet methods.       |
-| `@vue-solana/core/wallet-standard` | Wallet Standard chain mapping, discovery, subscriptions, and adapter helpers.                                               | You are building your own wallet discovery layer on top of Solana Wallet Standard.                                |
+| Import path                        | What it contains                                                                                                            | Use it when                                                                                                                  |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `@vue-solana/core/action`          | `createSolanaActionStore()`, `SolanaActionState`, and `isSolanaActionAborted()`.                                            | You need a framework-agnostic async action state machine with abort-on-redispatch for Solana work.                           |
+| `@vue-solana/core/address`         | `parseAddress()` and address input types.                                                                                   | You accept a Solana address as a string, ref-like object, or getter and need a validated, normalized `Address`.              |
+| `@vue-solana/core/clusters`        | Default cluster and endpoint helpers.                                                                                       | You need the package's built-in RPC or WebSocket endpoint for `mainnet`, `mainnet-beta`, `testnet`, `devnet`, or `localnet`. |
+| `@vue-solana/core/errors`          | `SolanaError`, error factories, and error guards.                                                                           | You need stable error codes for user-facing wallet, RPC, address, transaction, timeout, or storage failures.                 |
+| `@vue-solana/core/ios-wallet`      | iOS browser wallet discovery, deep-link adapters, and callback handling.                                                    | You are wiring iOS wallet links without the Vue plugin's unified wallet flow.                                                |
+| `@vue-solana/core/kit`             | `createSolanaClient()` and the `@solana/kit` re-exports (`Address`, `address`, `lamports`, `SolanaRpcApi`, `SolanaClient`). | You want the modern Kit API without the full `@solana/kit` dependency graph.                                                 |
+| `@vue-solana/core/mobile-wallet`   | Android Mobile Wallet Adapter registration helpers.                                                                         | You need to register Android MWA before reading Wallet Standard wallets.                                                     |
+| `@vue-solana/core/rpc`             | `createSolanaContext()`.                                                                                                    | You want a configured Kit client and resolved cluster endpoints without installing the Vue plugin.                           |
+| `@vue-solana/core/timeout`         | Promise timeout helpers that produce Solana timeout errors.                                                                 | You need timeout behavior consistent with transaction confirmation helpers.                                                  |
+| `@vue-solana/core/transaction`     | Transaction send and confirmation helpers.                                                                                  | You need a wallet-aware send path or a confirmation result for an existing signature.                                        |
+| `@vue-solana/core/token-accounts`  | Stateless SPL Token account reads (`getTokenAccountsByOwner`, `getTokenAccount`, `getTokenBalance`).                        | You need token account or balance reads through the Kit RPC `jsonParsed` API.                                                |
+| `@vue-solana/core/types`           | Shared TypeScript types.                                                                                                    | You need `SolanaConfig`, `SolanaContext`, `SolanaWallet`, wallet metadata, or transaction option types.                      |
+| `@vue-solana/core/wallet`          | Wallet state assertions and wallet capability errors.                                                                       | You need to validate that a selected wallet is connected or supports signing before calling wallet methods.                  |
+| `@vue-solana/core/wallet-standard` | Wallet Standard chain mapping, discovery, subscriptions, and adapter helpers.                                               | You are building your own wallet discovery layer on top of Solana Wallet Standard.                                           |
 
 ### Clusters and RPC
 
@@ -10094,7 +10218,7 @@ The root `@vue-solana/core` export re-exports the public helpers below. Use dire
 - `getClusterEndpoint(cluster?)`: returns the HTTP RPC endpoint for a cluster.
 - `getClusterWebSocketEndpoint(cluster?)`: returns the WebSocket endpoint for a cluster.
 - `getWebSocketEndpoint(endpoint)`: converts `http`/`https` RPC URLs to `ws`/`wss` URLs.
-- `createSolanaClient(config?)`: creates a `@solana/kit` client whose `rpc` is wired to the resolved endpoint and WebSocket subscriptions.
+- `createSolanaClient(config?)`: creates a `@solana/kit` client whose `rpc` is wired to the resolved endpoint and WebSocket subscriptions, with the official planner and transaction-sending executor installed by default.
 - `createSolanaContext(config?)`: creates `{ cluster, endpoint, wsEndpoint, client }` for framework-agnostic app setup.
 
 ```ts
@@ -10124,7 +10248,7 @@ import { address, lamports } from "@vue-solana/core/kit";
 import type { Address, Commitment, Lamports, Signature, SolanaRpcApi } from "@vue-solana/core/kit";
 ```
 
-- `createSolanaClient(config?)`: builds a Kit client for the given `SolanaConfig`. Reuses `clusters.ts` endpoint resolution and wires `rpcSubscriptionsUrl` from the resolved WebSocket endpoint.
+- `createSolanaClient(config?)`: builds a Kit client for the given `SolanaConfig`. Reuses `clusters.ts` endpoint resolution, wires `rpcSubscriptionsUrl` from the resolved WebSocket endpoint, and installs the official RPC planner and transaction-sending executor by default.
 - `client.rpc` exposes the full Solana read API (`getSlot`, `getBalance`, `getBlockHeight`, `getSignatureStatuses`, and more) as RPC functions called with `.send()`.
 - `address(value)`: validates and returns an `Address` (base58 string brand) — the Kit replacement for `new PublicKey(...)`.
 - `lamports(value: bigint)`: returns a `Lamports` value — the Kit replacement for raw lamport numbers.
@@ -10180,6 +10304,8 @@ const signedTransaction = await wallet.signTransaction(transaction);
 
 - `signAndSendTransaction(client, wallet, transaction, options?)`: signs and sends raw wire transaction bytes using a configured wallet and returns the RPC signature. Wallets that expose `signAndSendTransaction` are delegated to; otherwise the transaction is signed with `wallet.signTransaction` and submitted through `client.rpc.sendTransaction(...).send()`. Android Mobile Wallet Adapter wallets prefer signing plus app-side RPC submission so the app owns submission and reliably returns the RPC signature after the wallet handoff.
 - `confirmTransactionSignature(client, signature, options?)`: waits for a submitted signature to reach a requested commitment. Defaults to `confirmed` commitment, a 60 second timeout, and polling `client.rpc.getSignatureStatuses([signature]).send()`.
+
+The client-sent flow is separate from this wallet-aware helper. The client exposes `sendTransaction()` and `sendTransactions()` through the official `rpcTransactionPlanSendingExecutor()` installed by `createSolanaClient()`; the Vue composables wrap those methods. They plan, sign, submit, and wait for `confirmed` commitment; the `sent` status is set only after that send-and-confirm operation completes. A single result exposes the submitted signature at `data.context.signature`, while a batch result contains the full plan result tree. The official sender does not show a wallet popup.
 
 ```ts
 import { confirmTransactionSignature, signAndSendTransaction } from "@vue-solana/core/transaction";
@@ -10440,7 +10566,7 @@ import type { SolanaConfig } from "@vue-solana/core/types";
 ## 配置
 
 ```ts
-type SolanaCluster = "mainnet-beta" | "testnet" | "devnet" | "localnet";
+type SolanaCluster = "mainnet" | "mainnet-beta" | "testnet" | "devnet" | "localnet";
 
 interface SolanaConfig {
   cluster?: SolanaCluster;
@@ -10448,14 +10574,22 @@ interface SolanaConfig {
   wsEndpoint?: string;
   commitment?: Commitment;
   autoConnect?: boolean;
+  payer?: TransactionSigner;
+  payerSecretKey?: string;
 }
 ```
 
-支持的 cluster 是 `mainnet-beta`、`testnet`、`devnet` 和 `localnet`。钱包 helper 使用 Wallet Standard chain identifier，例如 `solana:devnet`，这些 identifier 由 `getSolanaChain()` 从 cluster 派生。如果省略 `endpoint`，包会使用所选 cluster 的公共 Solana RPC endpoint。如果省略 `wsEndpoint`，它会从 RPC endpoint 派生。
+支持的 cluster 是 `mainnet`（旧别名 `mainnet-beta`）、`testnet`、`devnet` 和 `localnet`。钱包 helper 使用 Wallet Standard chain identifier，例如 `solana:devnet`，这些 identifier 由 `getSolanaChain()` 从 cluster 派生。如果省略 `endpoint`，包会使用所选 cluster 的公共 Solana RPC endpoint。如果省略 `wsEndpoint`，它会从 RPC endpoint 派生。
 
 `autoConnect` 默认为 `false`。通过 Vue 插件或 Nuxt 模块启用后，Vue Solana 只会重新连接用户之前选择、并且在客户端再次发现的钱包身份。它只在 `localStorage["vue-solana:selected-wallet"]` 下存储钱包身份元数据：`name`，以及可用时的 `platform`/`source`。它永远不会存储私钥、session 数据或交易数据，也不会连接任意已安装钱包。
 
-Solana mainnet 请使用 `mainnet-beta`。这是 Solana 的官方 cluster 名称；该包有意不把 `mainnet` 作为 alias。
+`payer` 是 Kit `TransactionSigner`，用作客户端发送交易时的费用支付方和签名者。`payerSecretKey` 是 base64 编码的 64 字节 Ed25519 keypair，secret key 在前，并会在创建客户端时解析为 signer。两个选项都支持 direct core/Vue client。
+
+`createSolanaClient()` 默认组合 `@solana/kit-plugin-rpc` 的官方 `solanaRpc()`、`rpcTransactionPlanner()` 和 `rpcTransactionPlanSendingExecutor()`。旧的 custom fallback sender 不再使用。客户端暴露 RPC 读取和订阅，以及 `planTransaction(s)` 和 `sendTransaction(s)`。官方 executor 会获取新的 blockhash、处理 resource limit 和 preflight、使用可用 signer 签名、提交 RPC 交易，并在 send resolve 前等待 `confirmed` commitment。client-sent 交易需要 `payer` signer。
+
+永远不要把 raw secret 或 `payerSecretKey` 放入 Nuxt public runtime config。不要把有资金的 signing key 发送到 end-user browser；请使用 server 或 relayer 边界，demo 则使用未充值的 ephemeral signer。
+
+Solana mainnet 请使用 `mainnet`。这是 Solana 官方的主网集群名称。旧的 `mainnet-beta` 写法仍然被接受，并重定向到相同的 `https://api.mainnet.solana.com` 端点。
 
 ## Context
 
@@ -10468,7 +10602,7 @@ interface SolanaContext {
 }
 ```
 
-`client` 是由 `createSolanaClient()` 构建的 [`@solana/kit`](https://www.npmjs.com/package/@solana/kit) 客户端，暴露 `client.rpc` 和 `client.rpcSubscriptions`。
+`client` 是由 `createSolanaClient()` 构建的 [`@solana/kit`](https://www.npmjs.com/package/@solana/kit) 客户端，暴露 `client.rpc`、`client.rpcSubscriptions`、`planTransaction(s)` 和 `sendTransaction(s)`。
 
 ## 钱包接口
 
@@ -10538,7 +10672,7 @@ type SolanaChain = "solana:mainnet" | "solana:testnet" | "solana:devnet" | "sola
 
 `SolanaChain` 是钱包发现、移动钱包注册、iOS 钱包链接和钱包 adapter 签名选项使用的 Wallet Standard chain identifier。需要从配置的 Solana cluster 派生时，请使用 `getSolanaChain(cluster)`。
 
-- `getSolanaChain(cluster)`：把 `mainnet-beta`、`devnet`、`testnet` 或 `localnet` 映射为 Solana Wallet Standard chain ID。
+- `getSolanaChain(cluster)`：把 `mainnet-beta` 或 `mainnet`、`devnet`、`testnet` 或 `localnet` 映射为 Solana Wallet Standard chain ID。
 - `isSolanaStandardWallet(wallet)`：检查 Wallet Standard 钱包是否支持 Solana。
 - `getRegisteredSolanaWallets()`：在浏览器环境返回已发现的 Solana Wallet Standard 钱包，包括在支持客户端注册后的 Android Mobile Wallet Adapter。
 - `subscribeSolanaWallets(listener)`：订阅 Wallet Standard register/unregister 事件。
@@ -10560,21 +10694,21 @@ type SolanaChain = "solana:mainnet" | "solana:testnet" | "solana:devnet" | "sola
 
 根 `@vue-solana/core` 导出会重新导出下面的公共 helper。需要更窄导入或更清晰模块边界时，请使用直接 subpath。
 
-| Import path                        | 包含内容                                                                                                             | 何时使用                                                                                            |
-| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| `@vue-solana/core/address`         | `parseAddress()` 和地址输入类型。                                                                                    | 你以字符串、类似 ref 的对象或 getter 形式接受 Solana 地址，并需要一个经过验证和规范化的 `Address`。 |
-| `@vue-solana/core/clusters`        | 默认 cluster 和 endpoint helper。                                                                                    | 你需要包内置的 `mainnet-beta`、`testnet`、`devnet` 或 `localnet` RPC/WebSocket endpoint。           |
-| `@vue-solana/core/errors`          | `SolanaError`、错误工厂和错误 guard。                                                                                | 你需要稳定错误 code 来处理面向用户的钱包、RPC、地址、交易、超时或存储失败。                         |
-| `@vue-solana/core/ios-wallet`      | iOS 浏览器钱包发现、deep-link adapter 和回调处理。                                                                   | 你在不使用 Vue 插件统一钱包流程的情况下接入 iOS 钱包链接。                                          |
-| `@vue-solana/core/kit`             | `createSolanaClient()` 和 `@solana/kit` 重导出（`Address`、`address`、`lamports`、`SolanaRpcApi`、`SolanaClient`）。 | 你想要现代 Kit API，但不涉及完整的 `@solana/kit` 依赖图。                                           |
-| `@vue-solana/core/mobile-wallet`   | Android Mobile Wallet Adapter 注册 helper。                                                                          | 你需要在读取 Wallet Standard 钱包前注册 Android MWA。                                               |
-| `@vue-solana/core/rpc`             | `createSolanaContext()`。                                                                                            | 你想在不安装 Vue 插件的情况下获得已配置的 Kit 客户端和解析后的 cluster endpoint。                   |
-| `@vue-solana/core/timeout`         | 生成 Solana 超时错误的 Promise timeout helper。                                                                      | 你需要与交易确认 helper 一致的超时行为。                                                            |
-| `@vue-solana/core/transaction`     | 交易发送和确认 helper。                                                                                              | 你需要感知钱包的发送路径，或需要为现有签名获取确认结果。                                            |
-| `@vue-solana/core/token-accounts`  | 无状态 SPL Token 账户读取（`getTokenAccountsByOwner`、`getTokenAccount`、`getTokenBalance`）。                       | 你需要通过 Kit RPC `jsonParsed` API 读取 token 账户或余额。                                         |
-| `@vue-solana/core/types`           | 共享 TypeScript 类型。                                                                                               | 你需要 `SolanaConfig`、`SolanaContext`、`SolanaWallet`、钱包元数据或交易选项类型。                  |
-| `@vue-solana/core/wallet`          | 钱包状态断言和钱包能力错误。                                                                                         | 你需要在调用钱包方法前验证所选钱包已连接或支持签名。                                                |
-| `@vue-solana/core/wallet-standard` | Wallet Standard chain 映射、发现、订阅和 adapter helper。                                                            | 你正在 Solana Wallet Standard 之上构建自己的钱包发现层。                                            |
+| Import path                        | 包含内容                                                                                                             | 何时使用                                                                                             |
+| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `@vue-solana/core/address`         | `parseAddress()` 和地址输入类型。                                                                                    | 你以字符串、类似 ref 的对象或 getter 形式接受 Solana 地址，并需要一个经过验证和规范化的 `Address`。  |
+| `@vue-solana/core/clusters`        | 默认 cluster 和 endpoint helper。                                                                                    | 你需要包内置的 `mainnet`、`mainnet-beta`、`testnet`、`devnet` 或 `localnet` RPC/WebSocket endpoint。 |
+| `@vue-solana/core/errors`          | `SolanaError`、错误工厂和错误 guard。                                                                                | 你需要稳定错误 code 来处理面向用户的钱包、RPC、地址、交易、超时或存储失败。                          |
+| `@vue-solana/core/ios-wallet`      | iOS 浏览器钱包发现、deep-link adapter 和回调处理。                                                                   | 你在不使用 Vue 插件统一钱包流程的情况下接入 iOS 钱包链接。                                           |
+| `@vue-solana/core/kit`             | `createSolanaClient()` 和 `@solana/kit` 重导出（`Address`、`address`、`lamports`、`SolanaRpcApi`、`SolanaClient`）。 | 你想要现代 Kit API，但不涉及完整的 `@solana/kit` 依赖图。                                            |
+| `@vue-solana/core/mobile-wallet`   | Android Mobile Wallet Adapter 注册 helper。                                                                          | 你需要在读取 Wallet Standard 钱包前注册 Android MWA。                                                |
+| `@vue-solana/core/rpc`             | `createSolanaContext()`。                                                                                            | 你想在不安装 Vue 插件的情况下获得已配置的 Kit 客户端和解析后的 cluster endpoint。                    |
+| `@vue-solana/core/timeout`         | 生成 Solana 超时错误的 Promise timeout helper。                                                                      | 你需要与交易确认 helper 一致的超时行为。                                                             |
+| `@vue-solana/core/transaction`     | 交易发送和确认 helper。                                                                                              | 你需要感知钱包的发送路径，或需要为现有签名获取确认结果。                                             |
+| `@vue-solana/core/token-accounts`  | 无状态 SPL Token 账户读取（`getTokenAccountsByOwner`、`getTokenAccount`、`getTokenBalance`）。                       | 你需要通过 Kit RPC `jsonParsed` API 读取 token 账户或余额。                                          |
+| `@vue-solana/core/types`           | 共享 TypeScript 类型。                                                                                               | 你需要 `SolanaConfig`、`SolanaContext`、`SolanaWallet`、钱包元数据或交易选项类型。                   |
+| `@vue-solana/core/wallet`          | 钱包状态断言和钱包能力错误。                                                                                         | 你需要在调用钱包方法前验证所选钱包已连接或支持签名。                                                 |
+| `@vue-solana/core/wallet-standard` | Wallet Standard chain 映射、发现、订阅和 adapter helper。                                                            | 你正在 Solana Wallet Standard 之上构建自己的钱包发现层。                                             |
 
 ### Clusters 和 RPC
 
@@ -10582,7 +10716,7 @@ type SolanaChain = "solana:mainnet" | "solana:testnet" | "solana:devnet" | "sola
 - `getClusterEndpoint(cluster?)`：返回 cluster 的 HTTP RPC endpoint。
 - `getClusterWebSocketEndpoint(cluster?)`：返回 cluster 的 WebSocket endpoint。
 - `getWebSocketEndpoint(endpoint)`：把 `http`/`https` RPC URL 转换为 `ws`/`wss` URL。
-- `createSolanaClient(config?)`：创建 `@solana/kit` 客户端，其 `rpc` 连接到解析后的 endpoint 和 WebSocket 订阅。
+- `createSolanaClient(config?)`：创建 `@solana/kit` 客户端，其 `rpc` 连接到解析后的 endpoint 和 WebSocket 订阅，并默认安装官方 transaction planner 和 transaction-sending executor。
 - `createSolanaContext(config?)`：为框架无关应用的设置创建 `{ cluster, endpoint, wsEndpoint, client }`。
 
 ```ts
@@ -10612,7 +10746,7 @@ import { address, lamports } from "@vue-solana/core/kit";
 import type { Address, Commitment, Lamports, Signature, SolanaRpcApi } from "@vue-solana/core/kit";
 ```
 
-- `createSolanaClient(config?)`：为给定的 `SolanaConfig` 构建 Kit 客户端。复用 `clusters.ts` 的 endpoint 解析，并从解析后的 WebSocket endpoint 连接 `rpcSubscriptionsUrl`。
+- `createSolanaClient(config?)`：为给定的 `SolanaConfig` 构建 Kit 客户端。复用 `clusters.ts` 的 endpoint 解析，从解析后的 WebSocket endpoint 连接 `rpcSubscriptionsUrl`，并默认安装官方 transaction planner 和 RPC transaction-sending executor。
 - `client.rpc`：以 RPC 函数形式暴露完整的 Solana 读取 API（`getSlot`、`getBalance`、`getBlockHeight`、`getSignatureStatuses` 等），通过 `.send()` 调用。
 - `address(value)`：验证并返回 `Address`（base58 字符串 brand）——替代 `new PublicKey(...)` 的 Kit 版本。
 - `lamports(value: bigint)`：返回 `Lamports` 值——替代原始 lamport 数字的 Kit 版本。
@@ -10653,6 +10787,8 @@ const signedTransaction = await wallet.signTransaction(transaction);
 
 - `signAndSendTransaction(client, wallet, transaction, options?)`：使用配置的钱包签名并发送原始 wire 交易字节，返回 RPC signature。暴露 `signAndSendTransaction` 的钱包会委托给它；否则交易用 `wallet.signTransaction` 签名，并通过 `client.rpc.sendTransaction(...).send()` 提交。Android Mobile Wallet Adapter 钱包优先使用签名加应用侧 RPC 提交，让应用拥有提交过程，并能在钱包 handoff 后可靠返回 RPC signature。
 - `confirmTransactionSignature(client, signature, options?)`：等待已提交签名达到请求的 commitment。默认使用 `confirmed` commitment、60 秒超时，并轮询 `client.rpc.getSignatureStatuses([signature]).send()`。
+
+client-sent flow 与这个感知钱包的 helper 分开。client 通过 `createSolanaClient()` 安装的官方 `rpcTransactionPlanSendingExecutor()` 暴露 `sendTransaction()` 和 `sendTransactions()`，Vue composable 包装这些方法。它们会 plan、sign、submit 并等待 `confirmed` commitment；只有 send-and-confirm 操作完成后状态才会变为 `sent`。单笔结果在 `data.context.signature` 提供已提交的签名，batch 结果包含完整的 plan result tree。官方 sender 不显示钱包弹窗。
 
 ```ts
 import { confirmTransactionSignature, signAndSendTransaction } from "@vue-solana/core/transaction";
@@ -10780,12 +10916,33 @@ También puedes pasar un endpoint RPC personalizado:
 ```ts
 createApp(App).use(
   createSolanaPlugin({
-    cluster: "mainnet-beta",
+    cluster: "mainnet",
     endpoint: "https://your-rpc.example.com",
     commitment: "confirmed",
   }),
 );
 ```
+
+Los clusters soportados son `mainnet` (alias heredado `mainnet-beta`), `devnet`, `testnet` y `localnet`. Usa `mainnet` para la mainnet de Solana; este es el nombre oficial del mainnet de Solana.
+
+### Opciones del plugin
+
+| Opcion           | Tipo                           | Default               | Descripcion                                                                                          |
+| ---------------- | ------------------------------ | --------------------- | ---------------------------------------------------------------------------------------------------- |
+| `cluster`        | Solana cluster                 | `devnet`              | Cluster usado cuando se omite `endpoint`. `mainnet-beta` se acepta como alias heredado de `mainnet`. |
+| `endpoint`       | `string`                       | Endpoint del cluster  | Endpoint RPC HTTP.                                                                                   |
+| `wsEndpoint`     | `string`                       | Endpoint derivado     | Endpoint RPC WebSocket.                                                                              |
+| `commitment`     | Commitment                     | Default de Kit        | Commitment por defecto para llamadas RPC.                                                            |
+| `autoConnect`    | `boolean`                      | `false`               | Reconecta solo una wallet descubierta seleccionada previamente.                                      |
+| `payer`          | `TransactionSigner`            | None                  | Payer de comisiones y signer del cliente para transacciones enviadas por el cliente.                 |
+| `payerSecretKey` | `string`                       | None                  | Keypair Ed25519 de 64 bytes en base64, secret key primero, resuelto al crear el cliente.             |
+| `wallet`         | `SolanaWallet`                 | Deshabilitado         | Adaptador de wallet personalizado.                                                                   |
+| `mobileWallet`   | `MobileWalletOptions \| false` | Habilitado en Android | Opciones de Android Mobile Wallet Adapter.                                                           |
+| `iosWallet`      | `iOSWalletOptions \| false`    | Habilitado en iOS     | Opciones de universal links de wallets iOS.                                                          |
+
+`payer` y `payerSecretKey` son compatibles con clientes Vue/core directos. Un envio del cliente requiere un `payer`. Nunca pongas un secreto crudo o `payerSecretKey` en la configuracion runtime publica de Nuxt, y nunca envíes una clave de firma con fondos al navegador de un usuario final.
+
+El cliente por defecto de `createSolanaPlugin()` usa la composicion oficial `solanaRpc()`, `rpcTransactionPlanner()` y `rpcTransactionPlanSendingExecutor()`. El fallback custom anterior no se usa. El executor oficial espera el commitment `confirmed` antes de que `execute()` resuelva y `status` sea `sent`.
 
 ### Ciclo de vida del cliente y del plugin
 
@@ -10880,8 +11037,9 @@ Usa `@vue-solana/vue/buffer-polyfill` para código de transacciones en navegador
 - `useSignIn()`: dispara la funcionalidad Sign In With Solana (SIWS) de la wallet.
 - `useSelectedWalletAccount()`: lee el contexto de cuenta de wallet seleccionada a nivel de app con persistencia y filtrado.
 - `useSignTransactions()` / `useSignAndSendTransactions()`: firma, o firma y envía, múltiples transacciones en una sola petición de wallet.
-- `usePayer()` / `useIdentity()`: signers reactivos del cliente Kit (requiere un plugin de signer).
+- `usePayer()` / `useIdentity()`: signers reactivos del cliente Kit. El cliente Vue por defecto expone el `payer` configurado; un cliente custom puede instalar un signer.
 - `usePlanTransaction()` / `usePlanTransactions()`: planifica mensajes de transacción a partir de instrucciones.
+- `useSendTransaction()` / `useSendTransactions()`: usa el planner y el executor oficial instalados por `createSolanaClient()`; planifica, firma, envia y espera `confirmed` sin popup de wallet. Configura `payer`.
 - `useClientCapability(nombre)`: afirma que una capacidad está instalada en el cliente y lanza un error descriptivo si falta.
 
 ## Guías relacionadas
@@ -11402,6 +11560,16 @@ Formas de retorno:
 
 Una wallet puede modificar el mensaje o la transacción antes de firmar — por ejemplo para añadir su propia instrucción o cambiar el pagador de comisiones — y el Wallet Standard lo permite explícitamente. Vuelve a leer el `signedMessage` devuelto o los bytes de la transacción firmada en lugar de asumir que coinciden byte a byte con tu entrada.
 
+### Transacciones enviadas por el cliente
+
+`useSendTransaction()` y `useSendTransactions()` usan la capacidad de envio del cliente en vez de la wallet conectada. `createSolanaClient()` y `createSolanaPlugin()` instalan por defecto el stack oficial `solanaRpc()`, `rpcTransactionPlanner()` y `rpcTransactionPlanSendingExecutor()`, asi que estos composables no necesitan un fallback custom ni instalar plugins manualmente otra vez.
+
+El executor obtiene un blockhash nuevo, estima o respeta los limites de recursos, ejecuta preflight salvo que se configure lo contrario, firma con los signers del cliente, envia por RPC y espera el commitment `confirmed`. `status` cambia de `sending` a `sent` solo cuando termina la operacion de envio y confirmacion. El resultado simple expone `data.context.signature`; el resultado batch contiene el arbol del plan. No hay popup de wallet, asi que usa este flujo solo cuando el cliente tenga un signer apropiado.
+
+Configura un `payer` directamente en un cliente Vue/core con `payer` o `payerSecretKey`; un cliente sin payer no puede planificar ni enviar. Las claves de produccion con fondos deben permanecer en un servidor o relayer. No pongas un secreto crudo o `payerSecretKey` en la configuracion runtime publica de Nuxt, y no envíes una keypair con fondos al navegador de un usuario final.
+
+Los composables de wallet son separados: `useSignAndSendTransaction()` puede devolver despues del envio RPC, o esperar el commitment seleccionado cuando se pasa `confirm: true`. Los envios del cliente siempre usan el comportamiento send-and-confirm del executor oficial en `confirmed`.
+
 ## Transacciones en lote
 
 ```ts
@@ -11471,7 +11639,7 @@ const { transactionMessage, execute } = usePlanTransaction();
 const message = await execute(instructions);
 ```
 
-`useClientCapability("payer")` comprueba que una capacidad está instalada en el cliente y lanza un error descriptivo (indicando el hook y cómo instalarla) durante el setup cuando falta. `usePlanTransaction()` / `usePlanTransactions()` requieren la capacidad de planificación, p.ej. `rpcTransactionPlanner()` de `@solana/kit-plugin-rpc`.
+`useClientCapability("payer")` comprueba que una capacidad está instalada en el cliente y lanza un error descriptivo (indicando el hook y cómo instalarla) durante el setup cuando falta. El cliente Vue por defecto ya instala el planner y el executor de envio oficiales; los clientes custom deben instalar `rpcTransactionPlanner()` y `rpcTransactionPlanSendingExecutor()`.
 
 ## Confirmar una firma existente
 
@@ -11559,12 +11727,33 @@ iOS browser wallet link는 iOS 브라우저에서 Phantom, Solflare, Backpack에
 ```ts
 createApp(App).use(
   createSolanaPlugin({
-    cluster: "mainnet-beta",
+    cluster: "mainnet",
     endpoint: "https://your-rpc.example.com",
     commitment: "confirmed",
   }),
 );
 ```
+
+지원 cluster는 `mainnet`(이전 별칭 `mainnet-beta`), `devnet`, `testnet`, `localnet`입니다. Solana mainnet에는 `mainnet`을 사용하세요. 이는 Solana의 공식 mainnet 클러스터 이름입니다.
+
+### Plugin 옵션
+
+| 옵션             | Type                           | Default            | Description                                                                                         |
+| ---------------- | ------------------------------ | ------------------ | --------------------------------------------------------------------------------------------------- |
+| `cluster`        | Solana cluster                 | `devnet`           | `endpoint`를 생략할 때 사용할 cluster입니다. `mainnet-beta`는 `mainnet`의 이전 별칭으로 허용됩니다. |
+| `endpoint`       | `string`                       | Cluster endpoint   | HTTP RPC endpoint입니다.                                                                            |
+| `wsEndpoint`     | `string`                       | Derived endpoint   | WebSocket RPC endpoint입니다.                                                                       |
+| `commitment`     | Commitment                     | Kit default        | RPC call의 default commitment입니다.                                                                |
+| `autoConnect`    | `boolean`                      | `false`            | 이전에 선택한 discovered wallet만 reconnect합니다.                                                  |
+| `payer`          | `TransactionSigner`            | None               | client-sent transaction의 fee payer와 signer입니다.                                                 |
+| `payerSecretKey` | `string`                       | None               | secret key가 먼저 오는 base64 64-byte Ed25519 keypair이며 client 생성 시 resolve됩니다.             |
+| `wallet`         | `SolanaWallet`                 | Disabled           | Custom wallet adapter입니다.                                                                        |
+| `mobileWallet`   | `MobileWalletOptions \| false` | Enabled on Android | Android Mobile Wallet Adapter 옵션입니다.                                                           |
+| `iosWallet`      | `iOSWalletOptions \| false`    | Enabled on iOS     | iOS wallet universal-link 옵션입니다.                                                               |
+
+`payer`와 `payerSecretKey`는 direct Vue/core client에서 지원됩니다. client-sent transaction에는 `payer`가 필요합니다. Nuxt public runtime config에 raw secret이나 `payerSecretKey`를 넣지 말고, funded signing key를 end-user browser에 보내지 마세요.
+
+`createSolanaPlugin()`의 default client는 official `solanaRpc()`, `rpcTransactionPlanner()`, `rpcTransactionPlanSendingExecutor()` 구성을 사용합니다. 기존 custom fallback sender는 사용하지 않습니다. official executor는 `execute()`가 resolve되고 `status`가 `sent`가 되기 전에 `confirmed` commitment을 기다립니다.
 
 ### Client와 Plugin 수명 주기
 
@@ -11659,8 +11848,9 @@ Buffer polyfill이 필요한 브라우저 트랜잭션 코드에는 `@vue-solana
 - `useSignIn()`: 지갑의 Sign In With Solana(SIWS) 기능을 트리거합니다.
 - `useSelectedWalletAccount()`: 지속성과 필터링이 있는 앱 전역 selected wallet account context를 읽습니다.
 - `useSignTransactions()` / `useSignAndSendTransactions()`: 지갑 요청 한 번으로 여러 transaction을 서명하거나 서명 후 전송합니다.
-- `usePayer()` / `useIdentity()`: Kit client의 reactive signer입니다(signer plugin 필요).
+- `usePayer()` / `useIdentity()`: Kit client의 reactive signer입니다. default Vue client는 설정된 payer를 노출하고, custom client는 signer를 설치할 수 있습니다.
 - `usePlanTransaction()` / `usePlanTransactions()`: instruction 입력에서 transaction message를 계획합니다.
+- `useSendTransaction()` / `useSendTransactions()`: `createSolanaClient()`가 설치한 official planner와 executor를 사용해 plan, sign, submit 후 `confirmed`를 기다리며 wallet popup이 없습니다. payer를 설정하세요.
 - `useClientCapability(name)`: 클라이언트에 capability가 설치되어 있음을 단언하고, 없으면 설명적인 오류를 던집니다.
 
 ## 관련 가이드
@@ -12181,6 +12371,16 @@ await execute(transaction);
 
 Wallet은 서명 전에 메시지나 트랜잭션을 수정할 수 있습니다 — 예를 들어 자체 instruction을 추가하거나 fee payer를 변경 — Wallet Standard는 이를 명시적으로 허용합니다. 반환된 `signedMessage`나 서명된 트랜잭션 bytes를 다시 읽고 입력과 byte 단위로 일치한다고 가정하지 마세요.
 
+### 클라이언트 전송 트랜잭션
+
+`useSendTransaction()`과 `useSendTransactions()`는 연결된 wallet 대신 client의 transaction-sending capability를 사용합니다. `createSolanaClient()`와 `createSolanaPlugin()`은 official `solanaRpc()`, `rpcTransactionPlanner()`, `rpcTransactionPlanSendingExecutor()` stack을 기본적으로 설치하므로 custom fallback이나 추가 수동 plugin 설치가 필요하지 않습니다.
+
+executor는 새 blockhash를 가져오고 resource limit을 추정하거나 유지하며, 설정이 있지 않으면 preflight simulation을 수행하고, client signer로 서명한 뒤 RPC로 제출하고 `confirmed` commitment을 기다립니다. `status`는 send-and-confirm 작업이 완료된 뒤에만 `sending`에서 `sent`로 바뀝니다. 단일 결과의 `data.context.signature`에서 submitted signature를 확인할 수 있고 batch 결과에는 plan result tree가 포함됩니다. wallet popup이 없으므로 client가 적절한 signer를 소유한 trusted context에서만 사용하세요.
+
+direct Vue/core client에서 `payer` 또는 `payerSecretKey`로 payer를 설정하세요. payer가 없으면 plan과 send가 불가능합니다. production funded key는 server 또는 relayer에 두어야 합니다. Nuxt public runtime config에 raw secret이나 `payerSecretKey`를 넣지 말고 end-user browser에 funded keypair를 보내지 마세요.
+
+wallet composable은 별개입니다. `useSignAndSendTransaction()`는 기본적으로 RPC submission 뒤에 반환하거나 `confirm: true`를 전달하면 선택한 commitment까지 기다립니다. client-sent transaction은 항상 official executor의 `confirmed` send-and-confirm 동작을 사용합니다.
+
 ## 배치 트랜잭션
 
 ```ts
@@ -12250,7 +12450,7 @@ const { transactionMessage, execute } = usePlanTransaction();
 const message = await execute(instructions);
 ```
 
-`useClientCapability("payer")`는 클라이언트에 capability가 설치되어 있는지 확인하고, 없으면 setup 중에 설명적인 오류(훅 이름과 설치 방법 명시)를 throw합니다. `usePlanTransaction()` / `usePlanTransactions()`는 계획 capability가 필요합니다. 예: `@solana/kit-plugin-rpc`의 `rpcTransactionPlanner()`.
+`useClientCapability("payer")`는 클라이언트에 capability가 설치되어 있는지 확인하고, 없으면 setup 중에 설명적인 오류(훅 이름과 설치 방법 명시)를 throw합니다. default Vue client는 official planner와 transaction-sending executor를 이미 설치합니다. custom client는 `rpcTransactionPlanner()`와 `rpcTransactionPlanSendingExecutor()`를 직접 설치해야 합니다.
 
 ## 기존 Signature Confirm
 
@@ -12338,12 +12538,33 @@ You can also pass a custom RPC endpoint:
 ```ts
 createApp(App).use(
   createSolanaPlugin({
-    cluster: "mainnet-beta",
+    cluster: "mainnet",
     endpoint: "https://your-rpc.example.com",
     commitment: "confirmed",
   }),
 );
 ```
+
+Supported clusters are `mainnet` (legacy alias `mainnet-beta`), `devnet`, `testnet`, and `localnet`. Use `mainnet` for Solana mainnet; this is Solana's official mainnet cluster name.
+
+### Plugin Options
+
+| Option           | Type                           | Default            | Description                                                                                          |
+| ---------------- | ------------------------------ | ------------------ | ---------------------------------------------------------------------------------------------------- |
+| `cluster`        | Solana cluster                 | `devnet`           | Cluster used when `endpoint` is omitted. `mainnet-beta` is accepted as a legacy alias for `mainnet`. |
+| `endpoint`       | `string`                       | Cluster endpoint   | HTTP RPC endpoint.                                                                                   |
+| `wsEndpoint`     | `string`                       | Derived endpoint   | WebSocket RPC endpoint.                                                                              |
+| `commitment`     | Commitment                     | Kit default        | Default commitment for RPC calls.                                                                    |
+| `autoConnect`    | `boolean`                      | `false`            | Reconnect only a previously selected discovered wallet.                                              |
+| `payer`          | `TransactionSigner`            | None               | Client fee payer and signer for client-sent transactions.                                            |
+| `payerSecretKey` | `string`                       | None               | Base64 64-byte Ed25519 keypair, secret key first, resolved as a signer at client creation.           |
+| `wallet`         | `SolanaWallet`                 | Disabled           | Custom wallet adapter.                                                                               |
+| `mobileWallet`   | `MobileWalletOptions \| false` | Enabled on Android | Android Mobile Wallet Adapter options.                                                               |
+| `iosWallet`      | `iOSWalletOptions \| false`    | Enabled on iOS     | iOS wallet universal-link options.                                                                   |
+
+`payer` and `payerSecretKey` are supported by direct Vue plugin/core clients. A client-sent transaction requires a `payer`. Never put a raw secret or `payerSecretKey` in Nuxt public runtime config, and never ship a funded signing key to an end-user browser.
+
+The default client created by `createSolanaPlugin()` uses the official `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()` composition. The old custom fallback sender is not used. The official sending executor waits for `confirmed` commitment before `execute()` resolves and sets `status` to `sent`.
 
 ### Client and Plugin Lifecycle
 
@@ -12444,7 +12665,7 @@ Use `@vue-solana/vue/buffer-polyfill` for browser transaction code that needs th
 - `useClientCapability(capability)`: asserts a capability is installed on the Kit client, failing fast with a clear error.
 - `usePayer()` / `useIdentity()`: reactively track the fee payer / acting identity signer from the Kit client.
 - `usePlanTransaction()` / `usePlanTransactions()`: plan transaction messages from instruction inputs without sending.
-- `useSendTransaction()` / `useSendTransactions()`: plan, sign with the client's signers (payer/identity), submit, and confirm transactions with no wallet popup; requires `rpcTransactionPlanner()` and `rpcTransactionPlanSendingExecutor()`.
+- `useSendTransaction()` / `useSendTransactions()`: use the official Kit planner and RPC plan-sending executor installed by `createSolanaClient()`; they plan, sign, submit, and wait for `confirmed` commitment with no wallet popup. Configure `payer`.
 
 ## Related Guides
 
@@ -12962,6 +13183,16 @@ Return shapes:
 
 A wallet may modify the message or transaction before signing — for example to add its own instruction or change the fee payer — and the Wallet Standard explicitly allows it. Re-read the returned `signedMessage` or signed transaction bytes instead of assuming they match your input byte-for-byte.
 
+### Client-Sent Transactions
+
+`useSendTransaction()` and `useSendTransactions()` use the client's transaction-sending capability instead of the connected wallet. `createSolanaClient()` and `createSolanaPlugin()` install the official `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()` stack by default, so these composables do not require a custom fallback or a second manual plugin installation.
+
+The executor reads a fresh blockhash, estimates or respects resource limits, performs preflight simulation unless configured otherwise, signs with the client signers, submits over RPC, and waits for `confirmed` commitment. `status` changes from `sending` to `sent` only after that send-and-confirm operation completes. A single result exposes `data.context.signature`; a batch result contains the plan result tree. There is no wallet popup, so use this path only when the client owns an appropriate signer.
+
+Configure a `payer` directly in a Vue/core client with `payer` or `payerSecretKey`; a client with no payer cannot plan or send. A server or relayer should own funded production keys. Do not put a raw secret or `payerSecretKey` in Nuxt public runtime config, and do not ship a funded keypair to an end-user browser.
+
+The wallet composables remain separate: `useSignAndSendTransaction()` can return after RPC submission, or wait for a selected commitment when `confirm: true` is passed. Client-sent transactions always use the official executor's `confirmed` send-and-confirm behavior.
+
 ## Batch Transactions
 
 ```ts
@@ -13031,7 +13262,7 @@ const { transactionMessage, execute } = usePlanTransaction();
 const message = await execute(instructions);
 ```
 
-`useClientCapability("payer")` asserts a capability is installed on the client and throws a descriptive error (naming the hook and how to install it) during setup when it is missing. `usePlanTransaction()` / `usePlanTransactions()` require the planning capability, e.g. `rpcTransactionPlanner()` from `@solana/kit-plugin-rpc`.
+`useClientCapability("payer")` asserts a capability is installed on the client and throws a descriptive error (naming the hook and how to install it) during setup when it is missing. The default Vue client already installs the official planner and transaction-sending executor; custom clients must install `rpcTransactionPlanner()` and `rpcTransactionPlanSendingExecutor()` themselves.
 
 ## Confirm an Existing Signature
 
@@ -13119,12 +13350,33 @@ iOS 浏览器钱包链接会在 iOS 浏览器上为 Phantom、Solflare 和 Backp
 ```ts
 createApp(App).use(
   createSolanaPlugin({
-    cluster: "mainnet-beta",
+    cluster: "mainnet",
     endpoint: "https://your-rpc.example.com",
     commitment: "confirmed",
   }),
 );
 ```
+
+支持的 cluster 是 `mainnet`（旧别名 `mainnet-beta`）、`devnet`、`testnet` 和 `localnet`。Solana mainnet 请使用 `mainnet`；这是 Solana 官方的主网集群名称。
+
+### 插件选项
+
+| 选项             | 类型                           | 默认值             | 说明                                                                                 |
+| ---------------- | ------------------------------ | ------------------ | ------------------------------------------------------------------------------------ |
+| `cluster`        | Solana cluster                 | `devnet`           | 省略 `endpoint` 时使用的 cluster。`mainnet-beta` 作为 `mainnet` 的旧别名仍然被接受。 |
+| `endpoint`       | `string`                       | Cluster endpoint   | HTTP RPC endpoint。                                                                  |
+| `wsEndpoint`     | `string`                       | Derived endpoint   | WebSocket RPC endpoint。                                                             |
+| `commitment`     | Commitment                     | Kit default        | RPC 调用的默认 commitment。                                                          |
+| `autoConnect`    | `boolean`                      | `false`            | 只重新连接之前选择且再次发现的已发现钱包。                                           |
+| `payer`          | `TransactionSigner`            | None               | 客户端发送交易时的费用支付方和签名者。                                               |
+| `payerSecretKey` | `string`                       | None               | base64 编码的 64 字节 Ed25519 keypair，secret key 在前，在创建客户端时解析。         |
+| `wallet`         | `SolanaWallet`                 | Disabled           | 自定义钱包 adapter。                                                                 |
+| `mobileWallet`   | `MobileWalletOptions \| false` | Enabled on Android | Android Mobile Wallet Adapter 选项。                                                 |
+| `iosWallet`      | `iOSWalletOptions \| false`    | Enabled on iOS     | iOS 钱包 universal-link 选项。                                                       |
+
+`payer` 和 `payerSecretKey` 支持 direct Vue/core client。client-sent 交易需要 `payer`。永远不要把 raw secret 或 `payerSecretKey` 放入 Nuxt public runtime config，也不要把有资金的 signing key 发送到 end-user browser。
+
+`createSolanaPlugin()` 的默认 client 使用官方 `solanaRpc()`、`rpcTransactionPlanner()` 和 `rpcTransactionPlanSendingExecutor()` 组合。旧的 custom fallback sender 不再使用。官方 executor 会在 `execute()` resolve、`status` 变为 `sent` 之前等待 `confirmed` commitment。
 
 ### 客户端与插件生命周期
 
@@ -13219,8 +13471,9 @@ import { useWallet } from "@vue-solana/vue/useWallet";
 - `useSignIn()`：触发钱包的 Sign In With Solana（SIWS）功能。
 - `useSelectedWalletAccount()`：读取应用级选中钱包账户 context，带持久化和过滤。
 - `useSignTransactions()` / `useSignAndSendTransactions()`：在一次钱包请求中签署（或签署并发送）多笔交易。
-- `usePayer()` / `useIdentity()`：Kit client 的响应式 signer（需要 signer 插件）。
+- `usePayer()` / `useIdentity()`：Kit client 的响应式 signer。默认 Vue client 会暴露配置的 payer，custom client 可以安装 signer。
 - `usePlanTransaction()` / `usePlanTransactions()`：从 instruction 输入规划交易消息。
+- `useSendTransaction()` / `useSendTransactions()`：使用 `createSolanaClient()` 安装的官方 planner 和 executor，进行 plan、sign、submit 并等待 `confirmed`，不显示 wallet popup。请配置 payer。
 - `useClientCapability(name)`：断言某能力已安装在 client 上，缺失时抛出描述性错误。
 
 ## 相关指南
@@ -13741,6 +13994,16 @@ await execute(transaction);
 
 钱包可能在签名前修改消息或交易——例如添加自己的指令或更改 fee payer——Wallet Standard 明确允许这样做。请重新读取返回的 `signedMessage` 或已签名交易 bytes，而不要假设它们与你的输入逐字节一致。
 
+### 客户端发送交易
+
+`useSendTransaction()` 和 `useSendTransactions()` 使用客户端的 transaction-sending capability，而不是已连接的钱包。`createSolanaClient()` 和 `createSolanaPlugin()` 默认安装官方 `solanaRpc()`、`rpcTransactionPlanner()` 和 `rpcTransactionPlanSendingExecutor()` stack，因此这些 composable 不需要 custom fallback，也不需要再次手动安装 plugin。
+
+executor 会获取新的 blockhash，估计或保留 resource limit，除非另有配置否则执行 preflight simulation，使用客户端 signer 签名，通过 RPC 提交并等待 `confirmed` commitment。只有 send-and-confirm 操作完成后，`status` 才会从 `sending` 变为 `sent`。单笔结果在 `data.context.signature` 提供已提交的签名，batch 结果包含 plan result tree。没有钱包弹窗，因此只应在客户端拥有适当 signer 的可信上下文中使用此流程。
+
+在 direct Vue/core client 中使用 `payer` 或 `payerSecretKey` 配置 `payer`。没有 payer 的 client 无法 plan 或 send。生产环境的有资金 key 应保留在 server 或 relayer 中。永远不要把 raw secret 或 `payerSecretKey` 放入 Nuxt public runtime config，也不要把有资金的 keypair 发送到 end-user browser。
+
+钱包 composable 是分开的：`useSignAndSendTransaction()` 默认在 RPC submission 后返回，或在传入 `confirm: true` 时等待所选 commitment。客户端发送交易始终使用官方 executor 的 `confirmed` send-and-confirm 行为。
+
 ## 批量交易
 
 ```ts
@@ -13810,7 +14073,7 @@ const { transactionMessage, execute } = usePlanTransaction();
 const message = await execute(instructions);
 ```
 
-`useClientCapability("payer")` 会断言某项能力已安装在客户端上，缺失时在 setup 阶段抛出描述性错误（指出钩子名称及安装方式）。`usePlanTransaction()` / `usePlanTransactions()` 需要规划能力，例如 `@solana/kit-plugin-rpc` 的 `rpcTransactionPlanner()`。
+`useClientCapability("payer")` 会断言某项能力已安装在客户端上，缺失时在 setup 阶段抛出描述性错误（指出钩子名称及安装方式）。默认 Vue client 已安装官方 planner 和 transaction-sending executor；custom client 必须自行安装 `rpcTransactionPlanner()` 和 `rpcTransactionPlanSendingExecutor()`。
 
 ## 确认现有签名
 
@@ -13885,16 +14148,18 @@ También puedes configurar un endpoint RPC personalizado:
 export default defineNuxtConfig({
   modules: ["@vue-solana/nuxt"],
   solana: {
-    cluster: "mainnet-beta",
+    cluster: "mainnet",
     endpoint: "https://your-rpc.example.com",
     commitment: "confirmed",
   },
 });
 ```
 
-Los clusters soportados son `mainnet-beta`, `devnet`, `testnet` y `localnet`. Usa `mainnet-beta` para la mainnet de Solana; este es el nombre oficial del cluster de Solana.
+Los clusters soportados son `mainnet` (alias heredado `mainnet-beta`), `devnet`, `testnet` y `localnet`. Usa `mainnet` para la mainnet de Solana; este es el nombre oficial del mainnet de Solana.
 
 Las opciones del módulo Nuxt se guardan en la configuración runtime pública, así que deben ser serializables a JSON. Los objetos adaptadores `wallet` personalizados se excluyen intencionalmente de la configuración Nuxt; usa el plugin de Vue directamente en código Vue solo de cliente si necesitas inyectar un objeto wallet personalizado.
+
+`ModuleOptions` también omite intencionalmente `payer` y `payerSecretKey`. Ambos siguen soportados por clientes directos de `@vue-solana/core` y `@vue-solana/vue`, pero el módulo Nuxt no reenvía ninguno y los elimina de la configuración runtime pública. Nunca pongas un secreto crudo, una seed phrase o `payerSecretKey` en `nuxt.config.ts` o `runtimeConfig.public`: esos valores son visibles para el navegador. Para un signer propio del cliente, genera un signer efimero en un plugin solo de cliente con `generateKeyPairSigner()`, instala el plugin de Vue ahi y pon `clientPlugin: false` para que el modulo no instale un segundo plugin (dos plugins crean dos contextos, dos suscripciones a wallets y dos comprobaciones de conexion, y solo gana el ultimo `provide`).
 
 El plugin runtime de cliente del módulo también instala automáticamente el contexto de cuenta de wallet seleccionada de toda la app, así que `useSolanaSelectedWalletAccount()` funciona en cada componente sin montar un provider. Para personalizar la persistencia (`stateSync`) o el filtrado (`filterWallet`), monta `SelectedWalletAccountProvider` desde `@vue-solana/vue/useSelectedWalletAccount` más abajo en el árbol para anular el contexto por defecto.
 
@@ -13964,8 +14229,11 @@ Consulta [Data Fetching Composables](/packages/vue#data-fetching-composables) pa
 - `useSolanaSignAndSendTransactions()`: firma y envía múltiples transacciones en una sola solicitud de wallet.
 - `useSolanaPayer()` / `useSolanaIdentity()`: firmantes reactivos del cliente Kit (requiere un plugin signer).
 - `useSolanaPlanTransaction()` / `useSolanaPlanTransactions()`: planifica mensajes de transacción desde inputs de instrucciones.
+- `useSolanaSendTransaction()` / `useSolanaSendTransactions()`: usa el planner y el executor oficial instalados por el cliente por defecto; planifica, firma, envia y espera `confirmed` sin popup de wallet. Configura un `payer` en un plugin Vue solo de cliente; usa `useSolanaSignAndSendTransaction(s)` cuando la wallet conectada deba aprobar cada transaccion.
 
 Estos son aliases Nuxt para los composables de Vue.
+
+El cliente por defecto creado por el módulo compone los plugins oficiales `solanaRpc()`, `rpcTransactionPlanner()` y `rpcTransactionPlanSendingExecutor()`. El fallback custom anterior no se usa. `useSolanaSendTransaction()` y `useSolanaSendTransactions()` exponen la capacidad de envio oficial, pero el módulo no configura un payer porque `payer` y `payerSecretKey` se omiten de `ModuleOptions`. Su estado `sent` se alcanza cuando el executor oficial completa la operacion de envio y confirmacion en `confirmed`.
 
 El paquete Vue usa nombres cortos como `useRpc()` porque los llamadores los importan explícitamente desde `@vue-solana/vue/useRpc`.
 
@@ -14267,6 +14535,8 @@ async function submitTransaction(transaction: SolanaTransaction) {
 
 El estado pasa de `sending` a `sent` después del envío RPC. Cuando la confirmación está activada, luego pasa por `confirming` y termina en el commitment alcanzado, como `confirmed` o `finalized`. Si la confirmación agota el tiempo después del envío, `signature` sigue disponible para que la app pueda mostrar un enlace de explorador o sondear el estado de firma antes de reintentar.
 
+Las transacciones enviadas por el cliente son diferentes: `useSolanaSendTransaction()` y `useSolanaSendTransactions()` usan el executor oficial de planes RPC. El executor espera `confirmed` antes de que `execute()` resuelva, asi que su estado `sent` significa que la operacion de envio y confirmacion del cliente termino. No muestran popup de wallet; instala un `payer` en un plugin Vue solo de cliente. No intentes configurar un `payerSecretKey` crudo en la configuracion runtime publica de Nuxt.
+
 Los prompts de wallet deben activarse mediante interacción del usuario después de la hidratación. No llames a `execute()` durante SSR, en rutas de servidor ni automáticamente al cargar la página.
 
 ## Confirmar una firma existente
@@ -14317,11 +14587,11 @@ onBeforeUnmount(() => {
 </script>
 ```
 
-Para enlaces de explorador, usa el cluster configurado. Los enlaces de devnet deberían incluir `?cluster=devnet`; los enlaces de mainnet no deberían incluir query de cluster.
+Para enlaces de explorador, usa el cluster configurado. Los enlaces de devnet deberían incluir `?cluster=devnet`; tanto `mainnet` como el alias heredado `mainnet-beta` no deberían incluir query de cluster.
 
 ```ts
 function explorerUrl(signature: string, cluster: string) {
-  const suffix = cluster === "mainnet-beta" ? "" : `?cluster=${cluster}`;
+  const suffix = cluster === "mainnet" || cluster === "mainnet-beta" ? "" : `?cluster=${cluster}`;
   return `https://explorer.solana.com/tx/${signature}${suffix}`;
 }
 ```
@@ -14366,16 +14636,18 @@ export default defineNuxtConfig({
 export default defineNuxtConfig({
   modules: ["@vue-solana/nuxt"],
   solana: {
-    cluster: "mainnet-beta",
+    cluster: "mainnet",
     endpoint: "https://your-rpc.example.com",
     commitment: "confirmed",
   },
 });
 ```
 
-지원되는 클러스터는 `mainnet-beta`, `devnet`, `testnet`, `localnet`입니다. Solana mainnet에는 Solana의 공식 클러스터 이름인 `mainnet-beta`를 사용하세요.
+지원되는 클러스터는 `mainnet`(이전 별칭 `mainnet-beta`), `devnet`, `testnet`, `localnet`입니다. Solana mainnet에는 `mainnet`을 사용하세요. 이는 Solana의 공식 mainnet 클러스터 이름입니다.
 
 Nuxt module option은 public runtime config에 저장되므로 JSON 직렬화가 가능해야 합니다. Custom `wallet` adapter object는 의도적으로 Nuxt config에서 제외됩니다. Custom wallet object를 inject해야 한다면 client-only Vue 코드에서 Vue plugin을 직접 사용하세요.
+
+`ModuleOptions`는 `payer`와 `payerSecretKey`도 의도적으로 제외합니다. 두 옵션은 direct `@vue-solana/core`와 `@vue-solana/vue` client에서는 지원되지만, Nuxt module은 둘 다 전달하지 않고 public runtime config에서 제거합니다. raw secret, seed phrase, `payerSecretKey`를 `nuxt.config.ts` 또는 `runtimeConfig.public`에 넣지 마세요. browser에서 visible하기 때문입니다. client-owned signer가 필요하면 client-only plugin에서 `generateKeyPairSigner()`로 ephemeral signer를 만들고 Vue plugin을 install한 뒤 `clientPlugin: false`로 설정해 module이 두 번째 plugin을 install하지 않게 하세요 (두 plugin은 Solana context 두 개, wallet subscription 두 개, connection check 두 개를 만들고 마지막 `provide`만 이깁니다).
 
 이 모듈의 client runtime plugin은 app-wide selected wallet account context도 자동으로 설치하므로 provider를 mount하지 않아도 모든 컴포넌트에서 `useSolanaSelectedWalletAccount()`가 작동합니다. persistence(`stateSync`)나 filtering(`filterWallet`)을 customize하려면 tree에서 더 깊은 곳에 `@vue-solana/vue/useSelectedWalletAccount`의 `SelectedWalletAccountProvider`를 mount하여 기본 context를 덮어쓰세요.
 
@@ -14445,8 +14717,11 @@ request, subscription, tracked-data, SWR-cache composable의 전체 semantics는
 - `useSolanaSignAndSendTransactions()`: 여러 transaction을 한 번의 wallet request로 서명하고 전송합니다.
 - `useSolanaPayer()` / `useSolanaIdentity()`: reactive Kit client signer입니다(signer plugin 필요).
 - `useSolanaPlanTransaction()` / `useSolanaPlanTransactions()`: instruction input에서 transaction message를 plan합니다.
+- `useSolanaSendTransaction()` / `useSolanaSendTransactions()`: default client의 official planner와 executor를 사용해 plan, sign, submit 후 `confirmed`를 기다리며 wallet popup이 없습니다. client-only Vue plugin에서 `payer`를 설정하세요. connected wallet이 각 트랜잭션을 승인해야 할 때는 `useSolanaSignAndSendTransaction(s)`를 사용하세요.
 
 이들은 Vue composable의 Nuxt alias입니다.
+
+module이 만드는 default client는 official `solanaRpc()`, `rpcTransactionPlanner()`, `rpcTransactionPlanSendingExecutor()` plugin을 compose합니다. 기존 custom fallback sender는 사용하지 않습니다. `useSolanaSendTransaction()`과 `useSolanaSendTransactions()`는 official client-sending capability를 사용하지만, `ModuleOptions`에서 `payer`와 `payerSecretKey`를 제외하므로 module이 payer를 설정하지는 않습니다. `sent` 상태는 official executor가 `confirmed` commitment에서 send-and-confirm을 완료한 뒤에 도달합니다.
 
 Vue package는 caller가 `@vue-solana/vue/useRpc`에서 명시적으로 import하므로 `useRpc()` 같은 짧은 이름을 사용합니다.
 
@@ -14746,6 +15021,8 @@ async function submitTransaction(transaction: SolanaTransaction) {
 
 Status는 RPC 제출 후 `sending`에서 `sent`로 이동합니다. Confirmation이 활성화되면 `confirming`을 거쳐 `confirmed` 또는 `finalized` 같은 도달한 commitment에서 끝납니다. 제출 후 confirmation timeout이 발생해도 `signature`는 유지되므로 앱은 explorer link를 표시하거나 retry 전에 signature status를 polling할 수 있습니다.
 
+client-sent transaction은 다릅니다. `useSolanaSendTransaction()`과 `useSolanaSendTransactions()`는 official RPC plan-sending executor를 사용합니다. executor는 `execute()`가 resolve되기 전에 `confirmed`를 기다리므로 `sent`는 client send-and-confirm이 완료됐다는 뜻입니다. wallet popup은 없으며 client-only Vue plugin에 `payer`를 설치하세요. Nuxt public runtime config에 raw `payerSecretKey`를 설정하려고 하지 마세요.
+
 Wallet prompt는 hydration 이후 사용자 interaction으로 트리거되어야 합니다. SSR, server route, page load 시 자동으로 `execute()`를 호출하지 마세요.
 
 ## 기존 Signature Confirm
@@ -14796,11 +15073,11 @@ onBeforeUnmount(() => {
 </script>
 ```
 
-Explorer link에는 설정된 cluster를 사용하세요. Devnet link에는 `?cluster=devnet`을 포함하고, mainnet link에는 cluster query를 포함하지 않아야 합니다.
+Explorer link에는 설정된 cluster를 사용하세요. Devnet link에는 `?cluster=devnet`을 포함하고, `mainnet`과 이전 별칭 `mainnet-beta` link에는 cluster query를 포함하지 않아야 합니다.
 
 ```ts
 function explorerUrl(signature: string, cluster: string) {
-  const suffix = cluster === "mainnet-beta" ? "" : `?cluster=${cluster}`;
+  const suffix = cluster === "mainnet" || cluster === "mainnet-beta" ? "" : `?cluster=${cluster}`;
   return `https://explorer.solana.com/tx/${signature}${suffix}`;
 }
 ```
@@ -14845,16 +15122,18 @@ You can also configure a custom RPC endpoint:
 export default defineNuxtConfig({
   modules: ["@vue-solana/nuxt"],
   solana: {
-    cluster: "mainnet-beta",
+    cluster: "mainnet",
     endpoint: "https://your-rpc.example.com",
     commitment: "confirmed",
   },
 });
 ```
 
-Supported clusters are `mainnet-beta`, `devnet`, `testnet`, and `localnet`. Use `mainnet-beta` for Solana mainnet; this is Solana's official cluster name.
+Supported clusters are `mainnet` (legacy alias `mainnet-beta`), `devnet`, `testnet`, and `localnet`. Use `mainnet` for Solana mainnet; this is Solana's official mainnet cluster name.
 
 Nuxt module options are stored in public runtime config, so they must be JSON-serializable. Custom `wallet` adapter objects are intentionally excluded from Nuxt config; use the Vue plugin directly in client-only Vue code if you need to inject a custom wallet object.
+
+`ModuleOptions` intentionally omits `payer` and `payerSecretKey` as well. They remain supported by direct `@vue-solana/core` and `@vue-solana/vue` clients, but the Nuxt module does not forward either field and strips it from public runtime config. Never put a raw secret, seed phrase, or `payerSecretKey` in `nuxt.config.ts` or `runtimeConfig.public`: those values are visible to the browser. For a client-owned demo or relayer signer, create it in a client-only plugin with `generateKeyPairSigner()` and install the Vue plugin there, setting `clientPlugin: false` so the module skips its own plugin. Installing both would create two Solana contexts, two wallet subscriptions, and two connection checks, and only the last `provide` would win.
 
 The module's client runtime plugin also installs the app-wide selected wallet account context automatically, so `useSolanaSelectedWalletAccount()` works in every component without mounting a provider. To customize persistence (`stateSync`) or filtering (`filterWallet`), mount `SelectedWalletAccountProvider` from `@vue-solana/vue/useSelectedWalletAccount` deeper in the tree to shadow the default context.
 
@@ -14925,9 +15204,11 @@ See [Data Fetching Composables](/packages/vue#data-fetching-composables) for the
 - `useSolanaSignAndSendTransactions()`: signs and sends multiple transactions in one wallet request.
 - `useSolanaPayer()` / `useSolanaIdentity()`: reactive Kit client signers (requires a signer plugin).
 - `useSolanaPlanTransaction()` / `useSolanaPlanTransactions()`: plan transaction messages from instruction inputs.
-- `useSolanaSendTransaction()` / `useSolanaSendTransactions()`: plan, sign, submit, and confirm transactions entirely through the Kit client's transaction-sending capability (no wallet popup). Use these when the client owns the fee payer and signing keys; use `useSolanaSignAndSendTransaction(s)` when a connected wallet must approve each transaction.
+- `useSolanaSendTransaction()` / `useSolanaSendTransactions()`: use the official Kit planner and RPC plan-sending executor installed by the default client; they plan, sign, submit, and wait for `confirmed` commitment with no wallet popup. Configure a `payer` in a client-only Vue plugin; use `useSolanaSignAndSendTransaction(s)` when a connected wallet must approve each transaction.
 
 These are Nuxt aliases for the Vue composables.
+
+The default client created by the Nuxt module composes the official `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()` plugins. The old custom fallback sender is not used. `useSolanaSendTransaction()` and `useSolanaSendTransactions()` therefore expose the official client-sending capability, but the module does not configure a payer because `payer` and `payerSecretKey` are intentionally omitted from `ModuleOptions`, so a client-sent transaction needs a `payer` installed in a client-only plugin with `clientPlugin: false`, as described in [Module Setup](#module-setup). Their `sent` status is reached after the official executor completes its send-and-confirm operation at `confirmed` commitment.
 
 The Vue package uses short names such as `useRpc()` because callers import them explicitly from `@vue-solana/vue/useRpc`.
 
@@ -15227,6 +15508,8 @@ async function submitTransaction(transaction: SolanaTransaction) {
 
 Status moves from `sending` to `sent` after RPC submission. When confirmation is enabled it then moves through `confirming` and ends at the reached commitment, such as `confirmed` or `finalized`. If confirmation times out after submission, `signature` remains available so the app can show an explorer link or poll signature status before retrying.
 
+Client-sent transactions are different: `useSolanaSendTransaction()` and `useSolanaSendTransactions()` use the official RPC plan-sending executor. The executor waits for `confirmed` commitment before `execute()` resolves, so their `sent` status means the client-side send-and-confirm operation completed. They show no wallet popup; install a `payer` in a client-only Vue plugin. Do not try to configure a raw `payerSecretKey` in Nuxt public runtime config.
+
 Wallet prompts must be triggered by user interaction after hydration. Do not call `execute()` during SSR, in server routes, or automatically on page load.
 
 ## Confirm An Existing Signature
@@ -15277,11 +15560,11 @@ onBeforeUnmount(() => {
 </script>
 ```
 
-For explorer links, use the configured cluster. Devnet links should include `?cluster=devnet`; mainnet links should not include a cluster query.
+For explorer links, use the configured cluster. Devnet links should include `?cluster=devnet`; both `mainnet` and the legacy `mainnet-beta` alias should omit the cluster query.
 
 ```ts
 function explorerUrl(signature: string, cluster: string) {
-  const suffix = cluster === "mainnet-beta" ? "" : `?cluster=${cluster}`;
+  const suffix = cluster === "mainnet" || cluster === "mainnet-beta" ? "" : `?cluster=${cluster}`;
   return `https://explorer.solana.com/tx/${signature}${suffix}`;
 }
 ```
@@ -15326,16 +15609,18 @@ export default defineNuxtConfig({
 export default defineNuxtConfig({
   modules: ["@vue-solana/nuxt"],
   solana: {
-    cluster: "mainnet-beta",
+    cluster: "mainnet",
     endpoint: "https://your-rpc.example.com",
     commitment: "confirmed",
   },
 });
 ```
 
-支持的 cluster 是 `mainnet-beta`、`devnet`、`testnet` 和 `localnet`。Solana mainnet 请使用 `mainnet-beta`；这是 Solana 的官方 cluster 名称。
+支持的 cluster 是 `mainnet`（旧别名 `mainnet-beta`）、`devnet`、`testnet` 和 `localnet`。Solana mainnet 请使用 `mainnet`；这是 Solana 官方的主网集群名称。
 
 Nuxt 模块选项存储在 public runtime config 中，因此必须可 JSON 序列化。自定义 `wallet` adapter 对象有意不包含在 Nuxt 配置中；如果需要注入自定义钱包对象，请在 client-only Vue 代码中直接使用 Vue 插件。
+
+`ModuleOptions` 也有意省略 `payer` 和 `payerSecretKey`。direct `@vue-solana/core` 和 `@vue-solana/vue` client 仍支持这两个字段，但 Nuxt module 不会转发它们，并会从 public runtime config 中删除。永远不要把 raw secret、seed phrase 或 `payerSecretKey` 放入 `nuxt.config.ts` 或 `runtimeConfig.public`：这些值对 browser 可见。如果需要 client-owned signer，请在 client-only plugin 中用 `generateKeyPairSigner()` 创建 ephemeral signer，在那里 install Vue plugin 并设置 `clientPlugin: false`，这样 module 就不会再 install 第二个 plugin（两个 plugin 会产生两个 Solana context、两个 wallet subscription 和两次 connection check，而且只有最后一次 `provide` 生效）。
 
 模块的客户端运行时插件还会自动安装应用级选定钱包账户上下文，因此无需挂载 provider，`useSolanaSelectedWalletAccount()` 就能在每个组件中工作。若要自定义持久化（`stateSync`）或过滤（`filterWallet`），请在组件树更深处挂载来自 `@vue-solana/vue/useSelectedWalletAccount` 的 `SelectedWalletAccountProvider` 来覆盖默认上下文。
 
@@ -15405,8 +15690,11 @@ request、subscription、tracked-data 和 SWR-cache composable 的完整语义�
 - `useSolanaSignAndSendTransactions()`：在一次钱包请求中签名并发送多笔交易。
 - `useSolanaPayer()` / `useSolanaIdentity()`：响应式 Kit client signer（需要 signer 插件）。
 - `useSolanaPlanTransaction()` / `useSolanaPlanTransactions()`：根据 instruction input 规划交易消息。
+- `useSolanaSendTransaction()` / `useSolanaSendTransactions()`：使用默认 client 安装的官方 planner 和 executor，进行 plan、sign、submit 并等待 `confirmed`，不显示 wallet popup。请在 client-only Vue plugin 中配置 `payer`；当 connected wallet 必须批准每笔交易时，使用 `useSolanaSignAndSendTransaction(s)`。
 
 这些是 Vue composable 的 Nuxt alias。
+
+模块创建的默认 client 会组合官方 `solanaRpc()`、`rpcTransactionPlanner()` 和 `rpcTransactionPlanSendingExecutor()` plugin。旧的 custom fallback sender 不再使用。`useSolanaSendTransaction()` 和 `useSolanaSendTransactions()` 暴露官方 client-sending capability，但由于 `ModuleOptions` 省略了 `payer` 和 `payerSecretKey`，模块不会配置 payer。只有官方 executor 在 `confirmed` commitment 完成 send-and-confirm 后，状态才会变为 `sent`。
 
 Vue 包使用 `useRpc()` 这样的短名称，因为调用方会从 `@vue-solana/vue/useRpc` 显式导入。
 
@@ -15706,6 +15994,8 @@ async function submitTransaction(transaction: SolanaTransaction) {
 
 状态会在 RPC 提交后从 `sending` 变为 `sent`。启用确认后，状态会继续经过 `confirming`，并最终到达获得的 commitment，例如 `confirmed` 或 `finalized`。如果提交后确认超时，`signature` 仍然可用，因此应用可以展示 explorer 链接或在重试前轮询签名状态。
 
+client-sent 交易不同：`useSolanaSendTransaction()` 和 `useSolanaSendTransactions()` 使用官方 RPC plan-sending executor。executor 会在 `execute()` resolve 前等待 `confirmed`，因此 `sent` 表示客户端 send-and-confirm 已完成。它们不显示 wallet popup；请在 client-only Vue plugin 中安装 `payer`。不要尝试把 raw `payerSecretKey` 配置到 Nuxt public runtime config。
+
 钱包提示必须由 hydration 后的用户交互触发。不要在 SSR、server route 或页面加载时自动调用 `execute()`。
 
 ## 确认现有签名
@@ -15756,11 +16046,11 @@ onBeforeUnmount(() => {
 </script>
 ```
 
-Explorer 链接请使用配置的 cluster。Devnet 链接应包含 `?cluster=devnet`；mainnet 链接不应包含 cluster query。
+Explorer 链接请使用配置的 cluster。Devnet 链接应包含 `?cluster=devnet`；`mainnet` 和旧别名 `mainnet-beta` 链接都不应包含 cluster query。
 
 ```ts
 function explorerUrl(signature: string, cluster: string) {
-  const suffix = cluster === "mainnet-beta" ? "" : `?cluster=${cluster}`;
+  const suffix = cluster === "mainnet" || cluster === "mainnet-beta" ? "" : `?cluster=${cluster}`;
   return `https://explorer.solana.com/tx/${signature}${suffix}`;
 }
 ```
@@ -15796,7 +16086,9 @@ Fuente: <a href="https://github.com/vue-solana/vue-solana/tree/main/examples/vue
 - Firmar un mensaje de autenticación con `useSignMessage()` cuando la wallet conectada lo soporta.
 - Enviar una transferencia real con `useSignAndSendTransaction()` y mostrar estado de transacción enviada vs confirmada. El ejemplo usa devnet por defecto para pruebas seguras.
 - Construir links a Solana Explorer conscientes del cluster para firmas enviadas.
-- Ejercitar la capa de datos reactiva de Kit en los Live Data Panels: `useRequest()` para peticiones de un solo uso, `useSubscription()` para notificaciones de slot en vivo por websocket, `useTrackedData()` para datos de cuenta sembrados por fetch y actualizados por notificaciones de cuenta, `useSignIn()` para Sign In With Solana, y `useRequestSwr()` desde `@vue-solana/vue/swr` para stale-while-revalidate cacheada por clave entre remounts.
+- Ejercitar la capa de datos reactiva de Kit en los Live Data Panels: `useRequest()` para peticiones de un solo uso, `useSubscription()` para notificaciones de slot en vivo por websocket, `useTrackedData()` para datos de cuenta sembrados por fetch y actualizados por notificaciones de cuenta, `useSignIn()` para Sign In With Solana, `useAirdrop()` para solicitudes del faucet de devnet, `usePayer()` para inspeccionar el signer de payer del cliente, `useSendTransaction()` y `useSendTransactions()` para transacciones SPL Memo enviadas por el cliente sin popup de wallet, y `useRequestSwr()` desde `@vue-solana/vue/swr` para stale-while-revalidate cacheada por clave entre remounts.
+- Configurar un signer `payer` de demo (`generateKeyPairSigner()` de `@solana/kit`) en `main.ts` para que las transacciones enviadas por el cliente paguen fees. El payer empieza sin fondos; el panel `usePayer` hace un airdrop de 1 devnet SOL.
+- Usar la composicion oficial por defecto del cliente `solanaRpc()`, `rpcTransactionPlanner()` y `rpcTransactionPlanSendingExecutor()`. El demo de envio del cliente espera `confirmed` antes de mostrar `sent`; no usa un fallback sender custom.
 
 La app usa `devnet` por defecto. El SOL de devnet no tiene valor real.
 
@@ -15827,7 +16119,10 @@ Abre la URL de Vite impresa en la terminal, normalmente `http://localhost:5173`.
 - Observa cómo la transacción avanza desde firma enviada hasta estado de confirmación.
 - Abre el link del explorador y verifica que incluya `?cluster=devnet`.
 - En los Live Data Panels, cambia la dirección rastreada y observa cómo los paneles request, subscription y tracked-data se vuelven a disparar.
+- En los Live Data Panels, haz un airdrop de 1 SOL al payer de demo con el panel `usePayer`, luego envia un SPL Memo firmado por el cliente con `useSendTransaction()` (sin popup de wallet) o un lote de dos con `useSendTransactions()`, y observa que el estado pasa de `sending` a `sent` despues de que el executor oficial alcanza `confirmed`.
 - Alterna la tarjeta SWR entre apagado y encendido y observa que el valor cacheado aparece de inmediato (stale) antes de que la peticion revalidada lo reemplace.
+
+El payer de demo generado existe solo durante la sesion del navegador y no se configura en `nuxt.config.ts` ni en ninguna configuracion runtime publica. Usa un signer guardado en el servidor para relayers de produccion, y nunca envíes una keypair con fondos al navegador de un usuario final.
 
 El ejemplo de transferencia inicializa el polyfill de navegador `Buffer` con `installSolanaBufferPolyfill()` desde `@vue-solana/vue/buffer-polyfill`. Reinicia el servidor de desarrollo de Vite si Vite cacheó previamente un import externalizado de Buffer.
 
@@ -15874,7 +16169,9 @@ Source: <a href="https://github.com/vue-solana/vue-solana/tree/main/examples/vue
 - Signing an authentication message with `useSignMessage()` when the connected wallet supports it.
 - Sending a real transfer with `useSignAndSendTransaction()` and showing submitted vs confirmed transaction status. The example uses devnet by default for safe testing.
 - Building cluster-aware Solana Explorer links for submitted signatures.
-- Exercising the Kit-reactive data layer in the Live Data Panels: `useRequest()` for one-shot requests, `useSubscription()` for live slot notifications over websocket, `useTrackedData()` for fetch-seeded account data updated by account notifications, `useSignIn()` for Sign In With Solana, and `useRequestSwr()` from `@vue-solana/vue/swr` for cache-keyed stale-while-revalidate across remounts.
+- Exercising the Kit-reactive data layer in the Live Data Panels: `useRequest()` for one-shot requests, `useSubscription()` for live slot notifications over websocket, `useTrackedData()` for fetch-seeded account data updated by account notifications, `useSignIn()` for Sign In With Solana, `useAirdrop()` for devnet faucet requests, `usePayer()` to inspect the client's fee-payer signer, `useSendTransaction()` and `useSendTransactions()` for client-sent SPL Memo transactions with no wallet popup, and `useRequestSwr()` from `@vue-solana/vue/swr` for cache-keyed stale-while-revalidate across remounts.
+- Configuring a demo `payer` signer (`generateKeyPairSigner()` from `@solana/kit`) in `main.ts` so client-sent transactions can pay fees. The payer starts unfunded; the `usePayer` panel airdrops 1 devnet SOL into it.
+- Using the default official `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()` client composition. The client-send demo waits for `confirmed` commitment before showing `sent`; it does not use a custom fallback sender.
 
 The app uses `devnet` by default. Devnet SOL has no real value.
 
@@ -15905,7 +16202,10 @@ Open the Vite URL printed in the terminal, usually `http://localhost:5173`.
 - Watch the transaction move from submitted signature to confirmation status.
 - Open the explorer link and verify it includes `?cluster=devnet`.
 - In the Live Data Panels, change the tracked address and watch the request, subscription, and tracked-data panels re-fire.
+- In the Live Data Panels, airdrop 1 SOL to the demo payer with the `usePayer` panel, then send a client-signed SPL Memo with `useSendTransaction()` (no wallet popup) or a batch of two with `useSendTransactions()`, and watch the status move from `sending` to `sent` after the official executor reaches `confirmed` commitment.
 - Toggle the SWR card off and on and observe the cached value appear immediately (stale) before the revalidated request replaces it.
+
+The generated demo payer exists only in the browser session and is not configured in `nuxt.config.ts` or any public runtime config. Use a server-held signer for production relayers, and never ship a funded keypair to an end-user browser.
 
 The transfer example initializes the browser `Buffer` polyfill with `installSolanaBufferPolyfill()` from `@vue-solana/vue/buffer-polyfill`. Restart the Vite dev server if Vite previously cached an externalized Buffer import.
 
@@ -15952,7 +16252,9 @@ Vue Vite 예제는 `@vue-solana/vue`를 위한 실행 가능한 Vue 3 앱입니�
 - 연결된 지갑이 지원할 때 `useSignMessage()`로 인증 메시지에 서명합니다.
 - `useSignAndSendTransaction()`으로 실제 전송을 보내고 제출 상태와 확인 상태를 보여 줍니다. 예제는 안전한 테스트를 위해 기본적으로 devnet을 사용합니다.
 - 제출된 signature에 대해 클러스터를 반영한 Solana Explorer 링크를 만듭니다.
-- Live Data Panels에서 Kit 반응형 데이터 레이어를 사용합니다: 일회성 요청에는 `useRequest()`, websocket을 통한 실시간 slot 알림에는 `useSubscription()`, 계정 알림으로 업데이트되는 fetch 기반 계정 데이터에는 `useTrackedData()`, Sign In With Solana에는 `useSignIn()`, 그리고 remount 전반에 걸친 cache-keyed stale-while-revalidate에는 `@vue-solana/vue/swr`의 `useRequestSwr()`를 사용합니다.
+- Live Data Panels에서 Kit 반응형 데이터 레이어를 사용합니다: 일회성 요청에는 `useRequest()`, websocket을 통한 실시간 slot 알림에는 `useSubscription()`, 계정 알림으로 업데이트되는 fetch 기반 계정 데이터에는 `useTrackedData()`, Sign In With Solana에는 `useSignIn()`, devnet faucet 요청에는 `useAirdrop()`, client fee-payer signer 확인에는 `usePayer()`, wallet popup 없는 client-sent SPL Memo 트랜잭션에는 `useSendTransaction()`과 `useSendTransactions()`, remount 전반에 걸친 cache-keyed stale-while-revalidate에는 `@vue-solana/vue/swr`의 `useRequestSwr()`를 사용합니다.
+- `main.ts`에서 demo `payer` signer(`@solana/kit`의 `generateKeyPairSigner()`)를 설정해 client-sent transaction이 fee를 지불하게 합니다. payer는 처음에 unfunded이며 `usePayer` panel이 devnet SOL 1개를 airdrop합니다.
+- default client의 official `solanaRpc()`, `rpcTransactionPlanner()`, `rpcTransactionPlanSendingExecutor()` 구성을 사용합니다. client-send demo는 `sent`를 표시하기 전에 `confirmed`를 기다리며 custom fallback sender를 사용하지 않습니다.
 
 앱은 기본적으로 `devnet`을 사용합니다. Devnet SOL은 실제 가치가 없습니다.
 
@@ -15983,7 +16285,10 @@ pnpm dev:vue
 - 트랜잭션이 submitted signature에서 confirmation status로 이동하는지 확인합니다.
 - Explorer 링크를 열고 `?cluster=devnet`이 포함되어 있는지 확인합니다.
 - Live Data Panels에서 추적 주소를 바꾸고 request, subscription, tracked-data 패널이 다시 실행되는지 확인합니다.
+- Live Data Panels에서 `usePayer` panel로 demo payer에 1 SOL을 에어드랍한 뒤 `useSendTransaction()`(wallet popup 없음)으로 client-signed SPL Memo를 보내거나 `useSendTransactions()`로 두 건을 batch로 보내고, official executor가 `confirmed`에 도달한 뒤 status가 `sending`에서 `sent`로 이동하는지 확인합니다.
 - SWR 카드를 껐다 켜고 stale 캐시 값이 즉시 나타난 뒤 revalidate된 요청이 이를 대체하는지 확인합니다.
+
+생성된 demo payer는 browser session에만 존재하며 `nuxt.config.ts`나 public runtime config에 설정되지 않습니다. production relayer에는 server-held signer를 사용하고, end-user browser에 funded keypair를 보내지 마세요.
 
 전송 예제는 `@vue-solana/vue/buffer-polyfill`의 `installSolanaBufferPolyfill()`로 브라우저 `Buffer` polyfill을 초기화합니다. Vite가 이전에 externalized Buffer import를 캐시했다면 Vite dev server를 재시작하세요.
 
@@ -16031,7 +16336,9 @@ Live demo: [vue-solana-docs.vercel.app/demo](/zh/demo)
 - 当已连接钱包支持时，使用 `useSignMessage()` 签署认证消息。
 - 使用 `useSignAndSendTransaction()` 发送真实转账，并显示已提交和已确认的交易状态。示例默认使用 devnet，以便安全测试。
 - 为已提交的签名构建带有集群信息的 Solana Explorer 链接。
-- 在 Live Data Panels 中演练基于 Kit 的响应式数据层：`useRequest()` 用于一次性请求，`useSubscription()` 用于通过 websocket 的实时 slot 通知，`useTrackedData()` 用于由账户通知更新的、基于 fetch 种子的账户数据，`useSignIn()` 用于 Sign In With Solana，以及来自 `@vue-solana/vue/swr` 的 `useRequestSwr()` 用于跨重新挂载的缓存键控 stale-while-revalidate。
+- 在 Live Data Panels 中演练基于 Kit 的响应式数据层：`useRequest()` 用于一次性请求，`useSubscription()` 用于通过 websocket 的实时 slot 通知，`useTrackedData()` 用于由账户通知更新的、基于 fetch 种子的账户数据，`useSignIn()` 用于 Sign In With Solana，`useAirdrop()` 用于 devnet faucet 请求，`usePayer()` 用于检查客户端的 fee-payer signer，`useSendTransaction()` 和 `useSendTransactions()` 用于不显示 wallet popup 的 client-sent SPL Memo 交易，以及来自 `@vue-solana/vue/swr` 的 `useRequestSwr()` 用于跨重新挂载的缓存键控 stale-while-revalidate。
+- 在 `main.ts` 中配置 demo `payer` signer（来自 `@solana/kit` 的 `generateKeyPairSigner()`），让 client-sent 交易能够支付费用。payer 初始没有资金，`usePayer` panel 会空投 1 devnet SOL。
+- 使用默认 client 的官方 `solanaRpc()`、`rpcTransactionPlanner()` 和 `rpcTransactionPlanSendingExecutor()` 组合。client-send demo 会等待 `confirmed` 后才显示 `sent`，不使用 custom fallback sender。
 
 该应用默认使用 `devnet`。Devnet SOL 没有真实价值。
 
@@ -16062,7 +16369,10 @@ pnpm dev:vue
 - 观察交易从已提交签名移动到确认状态。
 - 打开 explorer 链接，并确认其中包含 `?cluster=devnet`。
 - 在 Live Data Panels 中更改跟踪的地址，观察 request、subscription 和 tracked-data 面板重新触发。
+- 在 Live Data Panels 中用 `usePayer` panel 向 demo payer 空投 1 SOL，然后使用 `useSendTransaction()`（不显示 wallet popup）发送 client-signed SPL Memo，或使用 `useSendTransactions()` 批量发送两笔，并观察官方 executor 达到 `confirmed` 后 status 从 `sending` 变为 `sent`。
 - 打开再关闭 SWR 卡片，观察缓存值立即出现（过期数据），然后被重新验证的请求替换。
+
+生成的 demo payer 只存在于 browser session 中，不配置在 `nuxt.config.ts` 或任何 public runtime config 中。生产 relayer 请使用 server-held signer，永远不要把有资金的 keypair 发送到 end-user browser。
 
 转账示例使用来自 `@vue-solana/vue/buffer-polyfill` 的 `installSolanaBufferPolyfill()` 初始化浏览器 `Buffer` polyfill。如果 Vite 之前缓存了 externalized Buffer import，请重启 Vite 开发服务器。
 
@@ -16110,7 +16420,8 @@ Fuente: <a href="https://github.com/vue-solana/vue-solana/tree/main/examples/nux
 - Enviar una transferencia real con `useSolanaSignAndSendTransaction()` y mostrar estado de transacción enviada vs confirmada. El ejemplo usa devnet por defecto para pruebas seguras.
 - Construir links a Solana Explorer conscientes del cluster para firmas enviadas.
 - Usar `useTransaction()` desde `@vue-solana/vue/useTransaction` para estado genérico de transacción asíncrona.
-- Ejercitar la capa de datos reactiva de Kit en los Live Data Panels con composables autoimportados: `useSolanaRequest()` para peticiones de un solo uso, `useSolanaSubscription()` para notificaciones de slot en vivo, `useSolanaTrackedData()` para datos de cuenta sembrados por fetch, `useSolanaSignIn()` para Sign In With Solana, y el adaptador de caché `@vue-solana/vue/swr` entre remounts.
+- Ejercitar la capa de datos reactiva de Kit en los Live Data Panels con composables autoimportados: `useSolanaRequest()` para peticiones de un solo uso, `useSolanaSubscription()` para notificaciones de slot en vivo, `useSolanaTrackedData()` para datos de cuenta sembrados por fetch, `useSolanaSignIn()` para Sign In With Solana, `useSolanaAirdrop()` para solicitudes del faucet de devnet, `useSolanaPayer()` para inspeccionar el signer de payer del cliente, `useSolanaSendTransaction()` y `useSolanaSendTransactions()` para transacciones SPL Memo enviadas por el cliente sin popup de wallet, y el adaptador de caché `@vue-solana/vue/swr` entre remounts.
+- Generar un payer de demo efimero con `generateKeyPairSigner()` en el plugin client-only `app/plugins/demo-payer.client.ts`. El payer empieza sin fondos; el panel `useSolanaPayer` hace un airdrop de 1 devnet SOL. El módulo Nuxt omite intencionalmente `payer` y `payerSecretKey`, y los secretos crudos nunca deben estar en la configuracion runtime publica.
 
 La app usa `devnet` por defecto. El SOL de devnet no tiene valor real.
 
@@ -16140,6 +16451,9 @@ Abre la URL de Nuxt impresa en la terminal, normalmente `http://localhost:3000`.
 - Ingresa una dirección destinataria y un monto, luego envía una transferencia real. Mantén el ejemplo en devnet mientras pruebas.
 - Observa cómo la transacción avanza desde firma enviada hasta estado de confirmación.
 - Abre el link del explorador y verifica que incluya `?cluster=devnet`.
+- En los Live Data Panels, haz un airdrop de 1 SOL al payer de demo con el panel `useSolanaPayer`, luego envia un SPL Memo firmado por el cliente con `useSolanaSendTransaction()` (sin popup de wallet) o un lote de dos con `useSolanaSendTransactions()`, y observa que el estado pasa de `sending` a `sent` despues de que el executor oficial alcanza `confirmed`.
+
+El payer de demo se genera en un plugin solo de cliente y no se configura en `nuxt.config.ts` ni en la configuracion runtime publica. El ejemplo define `solana.clientPlugin: false` para que el modulo omita su propio plugin; instalar ambos crearia dos contextos de Solana. El cliente por defecto del modulo aun usa el stack oficial `solanaRpc()`, `rpcTransactionPlanner()` y `rpcTransactionPlanSendingExecutor()`; el fallback custom anterior no se usa. Nunca pongas un secreto con fondos en un valor runtime publico de Nuxt.
 
 El ejemplo de transferencia inicializa el polyfill de navegador `Buffer` con `installSolanaBufferPolyfill()` desde `@vue-solana/nuxt/buffer-polyfill`. Reinicia el servidor de desarrollo de Nuxt si Vite cacheó previamente un import externalizado de Buffer.
 
@@ -16187,7 +16501,8 @@ Source: <a href="https://github.com/vue-solana/vue-solana/tree/main/examples/nux
 - Sending a real transfer with `useSolanaSignAndSendTransaction()` and showing submitted vs confirmed transaction status. The example uses devnet by default for safe testing.
 - Building cluster-aware Solana Explorer links for submitted signatures.
 - Using `useTransaction()` from `@vue-solana/vue/useTransaction` for generic async transaction state.
-- Exercising the Kit-reactive data layer in the Live Data Panels with auto-imported composables: `useSolanaRequest()` for one-shot requests, `useSolanaSubscription()` for live slot notifications, `useSolanaTrackedData()` for fetch-seeded account data, `useSolanaSignIn()` for Sign In With Solana, and the `@vue-solana/vue/swr` cache adapter across remounts.
+- Exercising the Kit-reactive data layer in the Live Data Panels with auto-imported composables: `useSolanaRequest()` for one-shot requests, `useSolanaSubscription()` for live slot notifications, `useSolanaTrackedData()` for fetch-seeded account data, `useSolanaSignIn()` for Sign In With Solana, `useSolanaAirdrop()` for devnet faucet requests, `useSolanaPayer()` to inspect the client's fee-payer signer, `useSolanaSendTransaction()` and `useSolanaSendTransactions()` for client-sent SPL Memo transactions with no wallet popup, and the `@vue-solana/vue/swr` cache adapter across remounts.
+- Generating an ephemeral demo fee payer with `generateKeyPairSigner()` in the client-only `app/plugins/demo-payer.client.ts` plugin. The payer starts unfunded; the `useSolanaPayer` panel airdrops 1 devnet SOL into it. The Nuxt module intentionally omits `payer` and `payerSecretKey`, and raw secrets must never be placed in public runtime config.
 
 The app uses `devnet` by default. Devnet SOL has no real value.
 
@@ -16217,6 +16532,9 @@ Open the Nuxt URL printed in the terminal, usually `http://localhost:3000`.
 - Enter a recipient address and amount, then send a real transfer. Keep the example on devnet while testing.
 - Watch the transaction move from submitted signature to confirmation status.
 - Open the explorer link and verify it includes `?cluster=devnet`.
+- In the Live Data Panels, airdrop 1 SOL to the demo payer with the `useSolanaPayer` panel, then send a client-signed SPL Memo with `useSolanaSendTransaction()` (no wallet popup) or a batch of two with `useSolanaSendTransactions()`, and watch the status move from `sending` to `sent` after the official executor reaches `confirmed` commitment.
+
+The demo payer is generated in a client-only plugin and is not configured in `nuxt.config.ts` or public runtime config. The example sets `solana.clientPlugin: false` so the module skips its own plugin; installing both would create two Solana contexts. The module's default client still uses the official `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()` stack; the old custom fallback sender is not used. Never put a funded secret in a Nuxt public runtime value.
 
 The transfer example initializes the browser `Buffer` polyfill with `installSolanaBufferPolyfill()` from `@vue-solana/nuxt/buffer-polyfill`. Restart the Nuxt dev server if Vite previously cached an externalized Buffer import.
 
@@ -16264,7 +16582,8 @@ Nuxt 예제는 `@vue-solana/nuxt`를 위한 실행 가능한 Nuxt 앱입니다.
 - `useSolanaSignAndSendTransaction()`으로 실제 전송을 보내고 제출 상태와 확인 상태를 보여 줍니다. 예제는 안전한 테스트를 위해 기본적으로 devnet을 사용합니다.
 - 제출된 signature에 대해 클러스터를 반영한 Solana Explorer 링크를 만듭니다.
 - generic async transaction 상태에는 `@vue-solana/vue/useTransaction`의 `useTransaction()`을 사용합니다.
-- Live Data Panels에서 자동 import된 composable로 Kit 반응형 데이터 레이어를 사용합니다: 일회성 요청에는 `useSolanaRequest()`, 실시간 slot 알림에는 `useSolanaSubscription()`, fetch 기반 계정 데이터에는 `useSolanaTrackedData()`, Sign In With Solana에는 `useSolanaSignIn()`, 그리고 remount 전반에 걸친 `@vue-solana/vue/swr` 캐시 어댑터를 사용합니다.
+- Live Data Panels에서 자동 import된 composable로 Kit 반응형 데이터 레이어를 사용합니다: 일회성 요청에는 `useSolanaRequest()`, 실시간 slot 알림에는 `useSolanaSubscription()`, fetch 기반 계정 데이터에는 `useSolanaTrackedData()`, Sign In With Solana에는 `useSolanaSignIn()`, devnet faucet 요청에는 `useSolanaAirdrop()`, client fee-payer signer 확인에는 `useSolanaPayer()`, wallet popup 없는 client-sent SPL Memo 트랜잭션에는 `useSolanaSendTransaction()`과 `useSolanaSendTransactions()`, remount 전반에 걸친 `@vue-solana/vue/swr` 캐시 어댑터를 사용합니다.
+- client-only `app/plugins/demo-payer.client.ts` plugin에서 `generateKeyPairSigner()`로 ephemeral demo fee payer를 생성합니다. payer는 처음에 unfunded이며 `useSolanaPayer` panel이 devnet SOL 1개를 airdrop합니다. Nuxt module은 `payer`와 `payerSecretKey`를 의도적으로 제외하며 raw secret은 public runtime config에 없어야 합니다.
 
 앱은 기본적으로 `devnet`을 사용합니다. Devnet SOL은 실제 가치가 없습니다.
 
@@ -16294,6 +16613,9 @@ pnpm dev:nuxt
 - recipient 주소와 금액을 입력한 뒤 실제 전송을 보냅니다. 테스트 중에는 예제를 devnet으로 유지하세요.
 - 트랜잭션이 submitted signature에서 confirmation status로 이동하는지 확인합니다.
 - Explorer 링크를 열고 `?cluster=devnet`이 포함되어 있는지 확인합니다.
+- Live Data Panels에서 `useSolanaPayer` panel로 demo payer에 1 SOL을 에어드랍한 뒤 `useSolanaSendTransaction()`(wallet popup 없음)으로 client-signed SPL Memo를 보내거나 `useSolanaSendTransactions()`로 두 건을 batch로 보내고, official executor가 `confirmed`에 도달한 뒤 status가 `sending`에서 `sent`로 이동하는지 확인합니다.
+
+demo payer는 client-only plugin에서 생성되며 `nuxt.config.ts`나 public runtime config에 설정되지 않습니다. 예제는 `solana.clientPlugin: false`를 설정해 module이 자체 plugin을 건너뛰도록 하며, 둘 다 설치하면 Solana context가 두 개 생깁니다. module의 default client도 official `solanaRpc()`, `rpcTransactionPlanner()`, `rpcTransactionPlanSendingExecutor()` stack을 사용하며, 기존 custom fallback sender는 사용하지 않습니다. Nuxt public runtime value에 funded secret을 넣지 마세요.
 
 전송 예제는 `@vue-solana/nuxt/buffer-polyfill`의 `installSolanaBufferPolyfill()`로 브라우저 `Buffer` polyfill을 초기화합니다. Vite가 이전에 externalized Buffer import를 캐시했다면 Nuxt dev server를 재시작하세요.
 
@@ -16342,7 +16664,8 @@ Live demo: [vue-solana-docs.vercel.app/demo](/zh/demo)
 - 使用 `useSolanaSignAndSendTransaction()` 发送真实转账，并显示已提交和已确认的交易状态。示例默认使用 devnet，以便安全测试。
 - 为已提交的签名构建带有集群信息的 Solana Explorer 链接。
 - 使用来自 `@vue-solana/vue/useTransaction` 的 `useTransaction()` 处理通用异步交易状态。
-- 在 Live Data Panels 中使用自动导入的组合式函数演练基于 Kit 的响应式数据层：`useSolanaRequest()` 用于一次性请求，`useSolanaSubscription()` 用于实时 slot 通知，`useSolanaTrackedData()` 用于基于 fetch 种子的账户数据，`useSolanaSignIn()` 用于 Sign In With Solana，以及跨重新挂载使用的 `@vue-solana/vue/swr` 缓存适配器。
+- 在 Live Data Panels 中使用自动导入的组合式函数演练基于 Kit 的响应式数据层：`useSolanaRequest()` 用于一次性请求，`useSolanaSubscription()` 用于实时 slot 通知，`useSolanaTrackedData()` 用于基于 fetch 种子的账户数据，`useSolanaSignIn()` 用于 Sign In With Solana，`useSolanaAirdrop()` 用于 devnet faucet 请求，`useSolanaPayer()` 用于检查客户端的 fee-payer signer，`useSolanaSendTransaction()` 和 `useSolanaSendTransactions()` 用于不显示 wallet popup 的 client-sent SPL Memo 交易，以及跨重新挂载使用的 `@vue-solana/vue/swr` 缓存适配器。
+- 在 client-only `app/plugins/demo-payer.client.ts` plugin 中使用 `generateKeyPairSigner()` 生成 ephemeral demo fee payer。payer 初始没有资金，`useSolanaPayer` panel 会空投 1 devnet SOL。Nuxt module 有意省略 `payer` 和 `payerSecretKey`，raw secret 不得放入 public runtime config。
 
 该应用默认使用 `devnet`。Devnet SOL 没有真实价值。
 
@@ -16372,6 +16695,9 @@ pnpm dev:nuxt
 - 输入收款地址和金额，然后发送真实转账。测试时请让示例保持在 devnet。
 - 观察交易从已提交签名移动到确认状态。
 - 打开 explorer 链接，并确认其中包含 `?cluster=devnet`。
+- 在 Live Data Panels 中用 `useSolanaPayer` panel 向 demo payer 空投 1 SOL，然后使用 `useSolanaSendTransaction()`（不显示 wallet popup）发送 client-signed SPL Memo，或使用 `useSolanaSendTransactions()` 批量发送两笔，并观察官方 executor 达到 `confirmed` 后 status 从 `sending` 变为 `sent`。
+
+demo payer 在 client-only plugin 中生成，不配置在 `nuxt.config.ts` 或 public runtime config 中。示例设置了 `solana.clientPlugin: false` 使模块跳过自己的 plugin；两者同时安装会产生两个 Solana context。模块的默认 client 也使用官方 `solanaRpc()`、`rpcTransactionPlanner()` 和 `rpcTransactionPlanSendingExecutor()` stack，旧的 custom fallback sender 不再使用。永远不要把有资金的 secret 放入 Nuxt public runtime value。
 
 转账示例使用来自 `@vue-solana/nuxt/buffer-polyfill` 的 `installSolanaBufferPolyfill()` 初始化浏览器 `Buffer` polyfill。如果 Vite 之前缓存了 externalized Buffer import，请重启 Nuxt 开发服务器。
 

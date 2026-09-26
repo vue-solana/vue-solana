@@ -6,5 +6,9 @@ export default defineNuxtConfig({
   modules: ["@vue-solana/nuxt"],
   solana: {
     cluster: "devnet",
+    // The example needs a client-only `payer`, which module options cannot
+    // carry, so it installs `createSolanaPlugin` itself in
+    // `app/plugins/demo-payer.client.ts`. Keep the module for the auto-imports.
+    clientPlugin: false,
   },
 });

@@ -82,18 +82,22 @@ export default {
       error: "오류",
       idle: "대기",
       loading: "불러오는 중",
+      planned: "계획됨",
+      planning: "계획 중",
       ready: "준비됨",
+      running: "실행 중",
       sent: "전송됨",
       sending: "전송 중",
       signed: "서명됨",
       signing: "서명 중",
+      success: "완료",
       waiting: "대기 중",
     },
     hero: {
       eyebrow: "라이브 Devnet 데모",
       title: "실제 Nuxt 앱에서 사용하는 Vue Solana",
       description:
-        "이 페이지는 배포된 Vue Solana 패키지로 실행됩니다. RPC 읽기, 잔액 조회, Wallet Standard 검색, 연결/해제, 메시지 서명, 작은 실제 devnet 전송을 시도해 보세요.",
+        "이 페이지는 최신 배포된 Vue Solana 패키지로 실행됩니다. RPC 읽기, 잔액 조회, Wallet Standard 검색, 연결/해제, 메시지 서명, 작은 실제 devnet 전송, 클라이언트 전송 트랜잭션, devnet 에어드롭을 시도해 보세요.",
       versionsLabel: "Vue Solana 패키지 버전",
     },
     rpc: {
@@ -215,6 +219,8 @@ export default {
       send: "Devnet 전송 보내기",
       signature: "서명:",
       explorer: "Explorer:",
+      whenToUse:
+        "사용 시기: 사용자가 수수료를 부담하고 지갑에서 승인해야 합니다. 개인 전송 및 연결된 사용자를 대신해 수행하는 모든 작업에 적합합니다.",
       viewTransaction: "트랜잭션 보기",
       labels: {
         walletReady: "지갑 준비됨",
@@ -251,7 +257,8 @@ export default {
       signing: {
         eyebrow: "서명",
         title: "서명 및 트랜잭션",
-        description: "메시지 서명, Sign In With Solana, 전송, 일반 트랜잭션 상태.",
+        description:
+          "메시지 서명, Sign In With Solana, 전송, 클라이언트 전송 트랜잭션, 일반 트랜잭션 상태.",
       },
       live: {
         eyebrow: "Kit reactive",
@@ -294,6 +301,31 @@ export default {
       signingIn: "로그인 중...",
       notSignedIn: "로그인 안 됨",
       signedInAs: "{address}(으)로 로그인됨",
+    },
+    clientSend: {
+      title: "클라이언트를 통해 전송",
+      description:
+        "클라이언트의 트랜잭션 전송 기능으로 SPL Memo 트랜잭션을 계획하고 서명하고 제출합니다. 팝업도 지갑 개입도 없습니다. 클라이언트 자체의 payer 서명자가 수수료를 부담하므로 앱이 알아서 서명하고 결제합니다.",
+      payer: "수수료 payer (클라이언트 서명자)",
+      noPayer: "사용할 수 없음",
+      payerHint:
+        "클라이언트 서명자를 아직 불러오는 중입니다. 잔액도 0으로 시작하므로 아래 에어드랍 카드로 먼저 충전하세요.",
+      single: "useSolanaSendTransaction",
+      batch: "useSolanaSendTransactions",
+      sendSingle: "클라이언트로 1건 전송",
+      sendBatch: "클라이언트로 2건 전송",
+      noSend: "아직 클라이언트 전송 없음",
+      whenToUse:
+        "사용 시기: 앱이 서명 키를 소유한 릴레이어/서버/백엔드 플로우에서, 지갑 없이 클라이언트가 서명하고 결제할 때.",
+    },
+    airdrop: {
+      title: "SOL 에어드랍",
+      description:
+        "클라이언트의 에어드랍 기능으로 클라이언트 payer 서명자에게 devnet 에어드랍을 요청합니다. devnet faucet은 요청 속도를 제한하므로 오류는 대개 일시적입니다.",
+      request: "1 SOL 에어드랍",
+      payerHint: "클라이언트 서명자를 아직 불러오는 중입니다.",
+      signature: "서명: {signature}",
+      noSignature: "아직 에어드랍 없음",
     },
   },
 };
