@@ -6,13 +6,12 @@ const props = defineProps<{
   batchLoading: boolean;
   batchStatus: string;
   batchText?: string | null;
-  canSignTransaction: boolean;
   loading: boolean;
   payerAddress?: string | null;
+  payerReady: boolean;
   singleError?: string | null;
   singleStatus: string;
   singleText?: string | null;
-  walletReady: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -27,12 +26,7 @@ const translatedSingleStatus = computed(() =>
 const translatedBatchStatus = computed(() =>
   t(`demo.status.${props.batchStatus}`, props.batchStatus),
 );
-const unsupportedReason = computed(() =>
-  props.walletReady && !props.canSignTransaction ? t("demo.clientSend.disabled.unsupported") : null,
-);
-const sendsDisabled = computed(
-  () => !props.walletReady || !props.canSignTransaction || props.loading || props.batchLoading,
-);
+const sendsDisabled = computed(() => !props.payerReady || props.loading || props.batchLoading);
 
 function statusColor(status: string) {
   if (status === "error") {
@@ -71,20 +65,11 @@ function statusColor(status: string) {
     </p>
 
     <UAlert
-      v-if="!walletReady"
+      v-if="!payerReady"
       color="warning"
       variant="subtle"
       class="mt-3"
-      :title="$t('demo.clientSend.connectHint')"
-    />
-
-    <UAlert
-      v-if="unsupportedReason"
-      color="warning"
-      variant="subtle"
-      class="mt-3"
-      :title="unsupportedReason"
-      data-testid="client-send-disabled-reason"
+      :title="$t('demo.clientSend.payerHint')"
     />
 
     <div class="mt-4 grid gap-4">

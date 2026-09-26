@@ -81,7 +81,7 @@ import type { SolanaConfig } from "@vue-solana/core/types";
 ## 配置
 
 ```ts
-type SolanaCluster = "mainnet-beta" | "mainnet" | "testnet" | "devnet" | "localnet";
+type SolanaCluster = "mainnet" | "mainnet-beta" | "testnet" | "devnet" | "localnet";
 
 interface SolanaConfig {
   cluster?: SolanaCluster;

@@ -1,17 +1,15 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ref, shallowRef } from "vue";
-import { type Address, type TransactionMessage } from "@solana/kit";
+import type { Address, Instruction } from "@solana/kit";
 import { useDemoClientSend } from "./useDemoClientSend";
 
-const WALLET_ADDRESS = "CBEbds3JhsDmxLbMSXX2GZo4vjd71xAUk4zRM8VbdoAC" as Address;
+const PAYER_ADDRESS = "CBEbds3JhsDmxLbMSXX2GZo4vjd71xAUk4zRM8VbdoAC" as Address;
 
 const execute = vi.fn();
 const executeBatch = vi.fn();
-const publicKey = shallowRef<Address | null>(null);
-const walletValue = shallowRef<{ signTransaction: (t: Uint8Array) => Promise<Uint8Array> } | null>(
-  null,
-);
+const airdropDispatch = vi.fn();
+const payer = shallowRef<{ address: Address } | undefined>({ address: PAYER_ADDRESS });
 
 vi.stubGlobal("useSolanaSendTransaction", () => ({
   data: ref(null),
@@ -27,60 +25,64 @@ vi.stubGlobal("useSolanaSendTransactions", () => ({
 }));
 vi.stubGlobal("useSolanaAirdrop", () => ({
   data: ref(null),
-  dispatch: vi.fn(),
+  dispatch: airdropDispatch,
   error: ref(null),
 }));
-vi.stubGlobal("useSolanaWallet", () => ({
-  publicKey,
-  wallet: walletValue,
-}));
+vi.stubGlobal("useSolanaPayer", () => payer);
 
-/** The memo note carried by a message; it is what makes messages distinct. */
-function memoNote(message: TransactionMessage): string {
-  return new TextDecoder().decode(message.instructions[0]!.data);
+/** The memo note carried by an instruction; it is what makes plans distinct. */
+function memoNote(instruction: Instruction): string {
+  return new TextDecoder().decode(instruction.data!);
 }
 
 describe("useDemoClientSend", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    publicKey.value = WALLET_ADDRESS;
-    // Echo the transaction back unchanged: the demo only cares that the
-    // signature the wallet returns is threaded through.
-    walletValue.value = { signTransaction: async (transaction) => transaction };
+    payer.value = { address: PAYER_ADDRESS };
   });
 
-  it("submits a single memo message", async () => {
+  it("submits a single memo instruction", async () => {
     const demo = useDemoClientSend();
 
     await demo.runClientSend();
 
-    const [input] = execute.mock.calls[0] as [TransactionMessage];
+    const [input] = execute.mock.calls[0] as [Instruction[]];
 
-    expect(memoNote(input)).toBe("Hello from @vue-solana");
+    expect(memoNote(input[0]!)).toBe("Hello from @vue-solana");
   });
 
-  it("submits two distinct messages in the batch", async () => {
+  it("submits two distinct instructions in the batch", async () => {
     const demo = useDemoClientSend();
 
     await demo.runClientSendBatch();
 
-    const [input] = executeBatch.mock.calls[0] as [TransactionMessage[]];
+    const [input] = executeBatch.mock.calls[0] as [Instruction[]];
 
     expect(input).toHaveLength(2);
     // Ed25519 is deterministic: signing the same message twice produces the
     // same signature and the network rejects the duplicate, so the batch must
-    // carry two distinct messages.
+    // carry two distinct instructions.
     expect(memoNote(input[0]!)).not.toBe(memoNote(input[1]!));
   });
 
-  it("does nothing without a connected wallet", async () => {
-    publicKey.value = null;
+  it("does nothing before the client payer resolves", async () => {
+    payer.value = undefined;
     const demo = useDemoClientSend();
 
     await demo.runClientSend();
     await demo.runClientSendBatch();
+    await demo.runAirdrop();
 
     expect(execute).not.toHaveBeenCalled();
     expect(executeBatch).not.toHaveBeenCalled();
+    expect(airdropDispatch).not.toHaveBeenCalled();
+  });
+
+  it("funds the client payer that pays the fee", async () => {
+    const demo = useDemoClientSend();
+
+    await demo.runAirdrop();
+
+    expect(airdropDispatch).toHaveBeenCalledWith(PAYER_ADDRESS, 1_000_000_000n);
   });
 });

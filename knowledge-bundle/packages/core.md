@@ -35,7 +35,7 @@ The root export remains supported. Direct subpath exports are also available whe
 ## Configuration
 
 ```ts
-type SolanaCluster = "mainnet-beta" | "mainnet" | "testnet" | "devnet" | "localnet";
+type SolanaCluster = "mainnet" | "mainnet-beta" | "testnet" | "devnet" | "localnet";
 type SolanaChain = "solana:mainnet" | "solana:testnet" | "solana:devnet" | "solana:localnet";
 
 interface SolanaConfig {

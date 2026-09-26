@@ -82,7 +82,7 @@ Direct subpaths:
 ## Configuration
 
 ```ts
-type SolanaCluster = "mainnet-beta" | "mainnet" | "testnet" | "devnet" | "localnet";
+type SolanaCluster = "mainnet" | "mainnet-beta" | "testnet" | "devnet" | "localnet";
 
 interface SolanaConfig {
   cluster?: SolanaCluster;

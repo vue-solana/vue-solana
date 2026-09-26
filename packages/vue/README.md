@@ -102,7 +102,7 @@ Supported clusters are `mainnet` (legacy alias `mainnet-beta`), `devnet`, `testn
 
 | Option           | Type                                                                 | Default                              | Description                                                                                   |
 | ---------------- | -------------------------------------------------------------------- | ------------------------------------ | --------------------------------------------------------------------------------------------- |
-| `cluster`        | `"mainnet-beta" \| "mainnet" \| "devnet" \| "testnet" \| "localnet"` | `"devnet"`                           | Solana cluster used when `endpoint` is omitted.                                               |
+| `cluster`        | `"mainnet" \| "mainnet-beta" \| "devnet" \| "testnet" \| "localnet"` | `"devnet"`                           | Solana cluster used when `endpoint` is omitted.                                               |
 | `endpoint`       | `string`                                                             | Public endpoint for `cluster`        | HTTP RPC endpoint. Use a dedicated RPC provider for production apps.                          |
 | `wsEndpoint`     | `string`                                                             | Derived from `endpoint`              | WebSocket RPC endpoint.                                                                       |
 | `commitment`     | Solana commitment                                                    | Solana client default                | Default commitment for created connections.                                                   |

@@ -125,6 +125,16 @@ describe("createSolanaClient", () => {
     );
   });
 
+  it("rejects a payerSecretKey that is not 64 bytes (a bare 32-byte seed)", () => {
+    const { secretKey } = nacl.sign.keyPair();
+
+    expect(() =>
+      createSolanaClient({
+        payerSecretKey: Buffer.from(secretKey.slice(0, 32)).toString("base64"),
+      }),
+    ).toThrow(/invalid `payerSecretKey`/i);
+  });
+
   it("rejects a payerSecretKey whose public half does not match its seed", () => {
     const { secretKey } = nacl.sign.keyPair();
     const mismatched = Uint8Array.from(secretKey);

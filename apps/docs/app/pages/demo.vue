@@ -259,8 +259,7 @@ const sections = computed(() => [
         />
 
         <DemoClientSendCard
-          :wallet-ready="wallet.connected.value"
-          :can-sign-transaction="wallet.canSignTransaction.value"
+          :payer-ready="Boolean(clientSendPayerAddress)"
           :loading="clientSendTransaction.loading.value"
           :single-status="clientSendTransactionStatus"
           :single-text="sendTransactionText"
@@ -320,7 +319,7 @@ const sections = computed(() => [
         <DemoSwrCard />
 
         <DemoAirdropCard
-          :wallet-ready="wallet.connected.value"
+          :payer-ready="Boolean(clientSendPayerAddress)"
           :loading="airdrop.isRunning.value"
           :status="airdrop.status.value"
           :signature="airdropSignature"

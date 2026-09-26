@@ -307,28 +307,25 @@ export default {
     clientSend: {
       title: "Enviar a traves del cliente",
       description:
-        "Planifica y envia transacciones SPL Memo mediante la capacidad de envio del cliente, sin popup para planificar ni enviar. La wallet conectada es la payer de comisiones, por lo que revisa y aprueba cada transaccion en su dialogo de firma.",
-      payer: "Payer de comisiones (wallet conectada)",
-      noPayer: "sin conectar",
-      connectHint:
-        "Los envios del cliente estan deshabilitados hasta conectar una wallet: selecciona una wallet arriba y conectala primero.",
+        "Planifica, firma y envia transacciones SPL Memo mediante la capacidad de envio del cliente, sin popup y sin intervencion de la wallet. El signer payer del propio cliente es la payer de comisiones, asi que la app firma y paga por su cuenta.",
+      payer: "Payer de comisiones (signer del cliente)",
+      noPayer: "no disponible",
+      payerHint:
+        "El signer del cliente aun esta cargando. Ademas empieza con saldo cero: usa la tarjeta de airdrop de abajo para financiarlo antes de enviar.",
       single: "useSolanaSendTransaction",
       batch: "useSolanaSendTransactions",
       sendSingle: "Enviar 1 via cliente",
       sendBatch: "Enviar 2 via cliente",
       noSend: "Aun no hay envio del cliente",
-      disabled: {
-        unsupported: "La wallet conectada no admite signTransaction.",
-      },
       whenToUse:
-        "Cuando usarla: tu app posee las claves de firma (flujos de relayer/servidor), o quieres envios programaticos con la firma de la wallet conectada, sin popup por cada instruccion mas alla de la aprobacion de firma.",
+        "Cuando usarla: tu app posee las claves de firma, es decir flujos de relayer, de servidor o de backend donde el cliente firma y paga sin una wallet en el medio.",
     },
     airdrop: {
       title: "Airdrop de SOL",
       description:
-        "Solicita un airdrop en devnet hacia la wallet conectada mediante la capacidad de airdrop del cliente. Los faucets de devnet limitan la tasa, asi que los errores suelen ser temporales.",
+        "Solicita un airdrop en devnet hacia el signer payer del cliente mediante la capacidad de airdrop del cliente. Los faucets de devnet limitan la tasa, asi que los errores suelen ser temporales.",
       request: "Airdrop de 1 SOL",
-      connectHint: "Conecta una wallet para recibir el airdrop de SOL.",
+      payerHint: "El signer del cliente aun esta cargando.",
       signature: "Firma: {signature}",
       noSignature: "Aun no hay airdrop",
     },

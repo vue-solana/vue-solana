@@ -305,28 +305,25 @@ export default {
     clientSend: {
       title: "클라이언트를 통해 전송",
       description:
-        "클라이언트의 트랜잭션 전송 기능으로 SPL Memo 트랜잭션을 계획하고 제출합니다. 계획 및 제출에는 팝업이 없습니다. 연결된 지갑이 수수료를 부담하므로 서명 대화상자에서 각 트랜잭션을 검토하고 승인합니다.",
-      payer: "수수료 payer (연결된 지갑)",
-      noPayer: "연결되지 않음",
-      connectHint:
-        "지갑을 연결하기 전까지는 클라이언트 전송이 비활성화되어 있습니다. 먼저 위에서 지갑을 선택하고 연결하세요.",
+        "클라이언트의 트랜잭션 전송 기능으로 SPL Memo 트랜잭션을 계획하고 서명하고 제출합니다. 팝업도 지갑 개입도 없습니다. 클라이언트 자체의 payer 서명자가 수수료를 부담하므로 앱이 알아서 서명하고 결제합니다.",
+      payer: "수수료 payer (클라이언트 서명자)",
+      noPayer: "사용할 수 없음",
+      payerHint:
+        "클라이언트 서명자를 아직 불러오는 중입니다. 잔액도 0으로 시작하므로 아래 에어드랍 카드로 먼저 충전하세요.",
       single: "useSolanaSendTransaction",
       batch: "useSolanaSendTransactions",
       sendSingle: "클라이언트로 1건 전송",
       sendBatch: "클라이언트로 2건 전송",
       noSend: "아직 클라이언트 전송 없음",
-      disabled: {
-        unsupported: "연결된 지갑은 signTransaction을 지원하지 않습니다.",
-      },
       whenToUse:
-        "사용 시기: 앱이 서명 키를 소유하거나(릴레이어/서버 플로우), 연결된 지갑이 서명하는 프로그래매틱 전송이 필요할 때. 서명 승인 외에는 명령별 지갑 팝업이 없습니다.",
+        "사용 시기: 앱이 서명 키를 소유한 릴레이어/서버/백엔드 플로우에서, 지갑 없이 클라이언트가 서명하고 결제할 때.",
     },
     airdrop: {
       title: "SOL 에어드랍",
       description:
-        "클라이언트의 에어드랍 기능으로 연결된 지갑에 devnet 에어드랍을 요청합니다. devnet faucet은 요청 속도를 제한하므로 오류는 대개 일시적입니다.",
+        "클라이언트의 에어드랍 기능으로 클라이언트 payer 서명자에게 devnet 에어드랍을 요청합니다. devnet faucet은 요청 속도를 제한하므로 오류는 대개 일시적입니다.",
       request: "1 SOL 에어드랍",
-      connectHint: "SOL을 에어드랍받으려면 지갑을 연결하세요.",
+      payerHint: "클라이언트 서명자를 아직 불러오는 중입니다.",
       signature: "서명: {signature}",
       noSignature: "아직 에어드랍 없음",
     },

@@ -13,8 +13,11 @@ import { defineNuxtPlugin } from "#app";
 export default defineNuxtPlugin({
   name: "example-demo-payer",
   async setup(nuxtApp) {
+    // Read the cluster from the same public runtime config the module uses, so
+    // `nuxt.config.ts` stays the single source of truth for it.
+    const { cluster } = useRuntimeConfig().public.solana;
     const payer = await generateKeyPairSigner();
-    const plugin = createSolanaPlugin({ cluster: "devnet", payer });
+    const plugin = createSolanaPlugin({ cluster, payer });
 
     nuxtApp.vueApp.use(plugin);
 

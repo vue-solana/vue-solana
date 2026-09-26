@@ -135,7 +135,7 @@ export default defineNuxtConfig({
 
 The Nuxt module installs the runtime plugin on the client only and auto-imports composables from direct `@vue-solana/vue/*` subpaths. Composables are safe to call during SSR, but real RPC and wallet operations should run after hydration, such as from `onMounted()` or user actions.
 
-Direct core/Vue clients accept `payer` and `payerSecretKey` for client-sent transactions. Nuxt `ModuleOptions` intentionally omits both, and public runtime config must never contain a raw secret or funded keypair. Create an ephemeral signer in a client-only plugin or use a transaction message with an embedded connected-wallet signer. The default client uses the official `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()` stack; the old custom fallback sender is not used.
+Direct core/Vue clients accept `payer` and `payerSecretKey` for client-sent transactions. Nuxt `ModuleOptions` intentionally omits both, and public runtime config must never contain a raw secret or funded keypair. Install a client-owned `payer` in a client-only plugin; a client-sent transaction always needs one. The default client uses the official `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()` stack.
 
 ## Manual Dev Testing
 

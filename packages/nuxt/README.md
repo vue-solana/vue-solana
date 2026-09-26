@@ -75,13 +75,13 @@ Supported clusters are `mainnet` (legacy alias `mainnet-beta`), `devnet`, `testn
 
 Nuxt module options are stored in public runtime config, so they must be JSON-serializable. Custom `wallet` adapter objects are intentionally excluded from Nuxt config; use the Vue plugin directly in client-only Vue code if you need to inject a custom wallet object.
 
-`ModuleOptions` also intentionally omits `payer` and `payerSecretKey`. Direct core/Vue clients support both, but the Nuxt module does not forward either field and strips it from public runtime config. Never put a raw secret, seed phrase, or `payerSecretKey` in `nuxt.config.ts` or `runtimeConfig.public`: those values are visible in the browser. For a client-owned signer, generate an ephemeral `TransactionSigner` in a client-only plugin or use a message with an embedded connected-wallet signer.
+`ModuleOptions` also intentionally omits `payer` and `payerSecretKey`. Direct core/Vue clients support both, but the Nuxt module does not forward either field and strips it from public runtime config. Never put a raw secret, seed phrase, or `payerSecretKey` in `nuxt.config.ts` or `runtimeConfig.public`: those values are visible in the browser. For a client-owned signer, install a `payer` in a client-only plugin; a client-sent transaction always needs one.
 
 ### Module Options
 
 | Option         | Type                                                                 | Default                              | Description                                                                                   |
 | -------------- | -------------------------------------------------------------------- | ------------------------------------ | --------------------------------------------------------------------------------------------- |
-| `cluster`      | `"mainnet-beta" \| "mainnet" \| "devnet" \| "testnet" \| "localnet"` | `"devnet"`                           | Solana cluster used when `endpoint` is omitted.                                               |
+| `cluster`      | `"mainnet" \| "mainnet-beta" \| "devnet" \| "testnet" \| "localnet"` | `"devnet"`                           | Solana cluster used when `endpoint` is omitted.                                               |
 | `endpoint`     | `string`                                                             | Public endpoint for `cluster`        | HTTP RPC endpoint. Use a dedicated RPC provider for production apps.                          |
 | `wsEndpoint`   | `string`                                                             | Derived from `endpoint`              | WebSocket RPC endpoint.                                                                       |
 | `commitment`   | Solana commitment                                                    | Solana client default                | Default commitment for created connections.                                                   |
@@ -293,7 +293,7 @@ Message signing is for wallet ownership or authentication challenges. It is sepa
 
 ## Client-Sent Transactions
 
-`useSolanaSendTransaction()` and `useSolanaSendTransactions()` use the official Kit transaction-sending capability installed by the default module client. The RPC executor plans, signs, submits, and waits for `confirmed` commitment without a wallet popup, so the composable reports `sent` only after send-and-confirm completes. Use a transaction message with an embedded connected-wallet signer or install a client-owned signer in a client-only Vue plugin; do not put `payerSecretKey` or any raw secret in public runtime config.
+`useSolanaSendTransaction()` and `useSolanaSendTransactions()` use the official Kit transaction-sending capability installed by the default module client. The RPC executor plans, signs, submits, and waits for `confirmed` commitment without a wallet popup, so the composable reports `sent` only after send-and-confirm completes. Install a client-owned `payer` in a client-only Vue plugin; do not put `payerSecretKey` or any raw secret in public runtime config.
 
 The wallet flow remains separate: `useSolanaSignAndSendTransaction()` can return after RPC submission by default, or wait for a selected commitment when `confirm: true` is passed. Keep that flow when the connected user must approve each transaction.
 

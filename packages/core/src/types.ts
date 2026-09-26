@@ -6,7 +6,7 @@ import type { SolanaClient } from "./kit";
  * The legacy `mainnet-beta` spelling is still accepted and redirects to the
  * same mainnet endpoint.
  */
-export type SolanaCluster = "mainnet-beta" | "mainnet" | "testnet" | "devnet" | "localnet";
+export type SolanaCluster = "mainnet" | "mainnet-beta" | "testnet" | "devnet" | "localnet";
 
 export type SolanaChain = "solana:mainnet" | "solana:testnet" | "solana:devnet" | "solana:localnet";
 

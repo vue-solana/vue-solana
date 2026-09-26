@@ -305,28 +305,25 @@ export default {
     clientSend: {
       title: "Send Through The Client",
       description:
-        "Plans and submits SPL Memo transactions through the client's transaction-sending capability — no popup to plan or submit. The connected wallet is the fee payer, so it reviews and approves each transaction through its signature dialog.",
-      payer: "Fee payer (connected wallet)",
-      noPayer: "not connected",
-      connectHint:
-        "Client-sent transactions are disabled until a wallet is connected — select a wallet above and connect it first.",
+        "Plans, signs, and submits SPL Memo transactions through the client's transaction-sending capability — no popup and no wallet involvement. The client's own payer signer is the fee payer, so the app signs and pays on its own.",
+      payer: "Fee payer (client signer)",
+      noPayer: "unavailable",
+      payerHint:
+        "The client signer is still loading. It also starts with a zero balance — use the airdrop card below to fund it before sending.",
       single: "useSolanaSendTransaction",
       batch: "useSolanaSendTransactions",
       sendSingle: "Send 1 Via Client",
       sendBatch: "Send 2 Via Client",
       noSend: "No client send yet",
-      disabled: {
-        unsupported: "The connected wallet does not support signTransaction.",
-      },
       whenToUse:
-        "When to use: your app owns the signing keys (relayer/server flows), or you want programmatic sends with the connected wallet signing — no per-instruction wallet prompt beyond the signature approval.",
+        "When to use: your app owns the signing keys — relayer, server-side, or backend signing flows where the client signs and pays without a wallet in the loop.",
     },
     airdrop: {
       title: "Airdrop SOL",
       description:
-        "Requests a devnet airdrop into the connected wallet through the client's airdrop capability. Devnet faucets are rate-limited, so errors here are usually temporary.",
+        "Requests a devnet airdrop into the client's payer signer through the client's airdrop capability. Devnet faucets are rate-limited, so errors here are usually temporary.",
       request: "Airdrop 1 SOL",
-      connectHint: "Connect a wallet to airdrop SOL into it.",
+      payerHint: "The client signer is still loading.",
       signature: "Signature: {signature}",
       noSignature: "No airdrop yet",
     },

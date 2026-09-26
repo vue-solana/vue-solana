@@ -101,7 +101,7 @@ Nuxt auto-imports these composables:
 
 The Nuxt runtime plugin is client-only. Composables are SSR-safe and may return inert state during SSR; run real RPC and wallet work after hydration, in client lifecycle hooks, or from user actions.
 
-Nuxt `ModuleOptions` intentionally omits `payer` and `payerSecretKey`. Direct `@vue-solana/core` and `@vue-solana/vue` clients accept both: `payer` is a Kit `TransactionSigner`, and `payerSecretKey` is a base64 64-byte Ed25519 keypair. Never put a raw secret or `payerSecretKey` in Nuxt public runtime config. Use a client-only plugin with an ephemeral signer or a transaction message with an embedded connected-wallet signer.
+Nuxt `ModuleOptions` intentionally omits `payer` and `payerSecretKey`. Direct `@vue-solana/core` and `@vue-solana/vue` clients accept both: `payer` is a Kit `TransactionSigner`, and `payerSecretKey` is a base64 64-byte Ed25519 keypair. Never put a raw secret or `payerSecretKey` in Nuxt public runtime config. Install a client-owned `payer` in a client-only plugin; a client-sent transaction always needs one.
 
 ## Wallet Flow
 
@@ -202,7 +202,7 @@ const message = computed(() => {
 
 Use `useSignAndSendTransaction()` or `useSolanaSignAndSendTransaction()` after a wallet is selected and connected. This wallet flow can return after RPC submission or wait for a selected commitment with `confirm: true`.
 
-Use `useSendTransaction()` / `useSendTransactions()` (and their Nuxt aliases) for client-owned signing. The default client uses the official `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()` composition; the official executor waits for `confirmed` commitment before the composable reports `sent`, with no wallet popup. Configure `payer` or an embedded signer, and keep funded keys in a trusted server or relayer context.
+Use `useSendTransaction()` / `useSendTransactions()` (and their Nuxt aliases) for client-owned signing. The default client uses the official `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()` composition; the official executor waits for `confirmed` commitment before the composable reports `sent`, with no wallet popup. Configure `payer`, and keep funded keys in a trusted server or relayer context.
 
 The active wallet must support either `signAndSendTransaction` or `signTransaction`. Android Mobile Wallet Adapter wallets prefer `signTransaction` plus app-side RPC submission when available so the app can reliably return the submitted signature.
 

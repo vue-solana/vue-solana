@@ -300,27 +300,24 @@ export default {
     clientSend: {
       title: "通过客户端发送",
       description:
-        "通过客户端的交易发送能力规划并提交 SPL Memo 交易，规划与提交环节无需弹窗。已连接的钱包是手续费支付方，因此会在其签名对话框中逐笔审核并批准交易。",
-      payer: "手续费支付方（已连接钱包）",
-      noPayer: "未连接",
-      connectHint: "在连接钱包之前，客户端发送功能已被禁用——请先在上方选择并连接钱包。",
+        "通过客户端的交易发送能力规划、签名并提交 SPL Memo 交易，全程无需弹窗，也不涉及钱包。客户端自带的 payer 签名者是手续费支付方，因此由应用自行签名与支付。",
+      payer: "手续费支付方（客户端签名者）",
+      noPayer: "不可用",
+      payerHint: "客户端签名者仍在加载中。它的初始余额为 0，请先用下方的空投卡片充值后再发送。",
       single: "useSolanaSendTransaction",
       batch: "useSolanaSendTransactions",
       sendSingle: "通过客户端发送 1 笔",
       sendBatch: "通过客户端发送 2 笔",
       noSend: "暂无客户端发送",
-      disabled: {
-        unsupported: "已连接的钱包不支持 signTransaction。",
-      },
       whenToUse:
-        "何时使用：应用持有签名密钥（中继/服务器流程），或需要由已连接钱包签名的程序化发送——除签名批准外，没有逐条指令的钱包弹窗。",
+        "何时使用：应用持有签名密钥的中继、服务器或后端签名流程，由客户端自行签名与支付，链路中没有钱包。",
     },
     airdrop: {
       title: "SOL 空投",
       description:
-        "通过客户端的空投功能向已连接钱包请求 devnet 空投。devnet 水龙头有速率限制，因此出错通常是暂时的。",
+        "通过客户端的空投功能向客户端 payer 签名者请求 devnet 空投。devnet 水龙头有速率限制，因此出错通常是暂时的。",
       request: "空投 1 SOL",
-      connectHint: "连接钱包以接收 SOL 空投。",
+      payerHint: "客户端签名者仍在加载中。",
       signature: "签名：{signature}",
       noSignature: "暂无空投",
     },

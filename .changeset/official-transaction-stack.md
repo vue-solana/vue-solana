@@ -15,3 +15,5 @@ Accept `mainnet` as Solana's official mainnet cluster name while retaining `main
 This is a behavior change for clients that sent a transaction message carrying its own embedded signer without configuring a `payer`: those clients now have to expose a `payer` too. Kit reads `client.payer` to set the fee payer, so there is no way to plan or send without one.
 
 Add the Nuxt module option `solana.clientPlugin` (`false` skips the module's runtime plugin). Use it when the app installs `createSolanaPlugin` itself to attach a client-only `payer`; installing both creates two Solana contexts, two wallet subscriptions, and two connection checks.
+
+The module also strips `payer` and `payerSecretKey` from a hand-written `runtimeConfig.public.solana`, not just from its own options, so a secret can no longer reach the client bundle by that route.

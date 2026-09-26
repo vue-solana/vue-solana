@@ -246,6 +246,23 @@ describe("Nuxt module", () => {
     expect(publicConfig.solana).toEqual({ cluster: "devnet" });
   });
 
+  it("omits client signer options a user wrote into runtimeConfig.public.solana", async () => {
+    const module = (await import("./module")).default as unknown as ModuleUnderTest;
+    const publicConfig: Record<string, unknown> = {
+      // Nuxt resolves a hand-written `runtimeConfig` before module setup, so it
+      // reaches the same merge as the module options and must be sanitized too.
+      solana: {
+        cluster: "devnet",
+        payerSecretKey: "secret",
+        wallet: { connect: vi.fn() },
+      },
+    };
+
+    setupModule(module, { cluster: "devnet" }, { publicConfig });
+
+    expect(publicConfig.solana).toEqual({ cluster: "devnet" });
+  });
+
   it("serializes reconnect and native wallet options into public runtime config", async () => {
     const module = (await import("./module")).default as unknown as ModuleUnderTest;
     const publicConfig: Record<string, unknown> = {};

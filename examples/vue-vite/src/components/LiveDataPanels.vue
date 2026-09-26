@@ -4,6 +4,7 @@ import {
   address,
   lamports,
   summarizeTransactionPlanResult,
+  type Instruction,
   type TransactionPlanResult,
 } from "@solana/kit";
 import {
@@ -111,12 +112,14 @@ const MEMO_PROGRAM_ADDRESS = address("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcH
  * valid on any cluster and succeeds whenever the client's payer signer has
  * enough lamports for the fee.
  */
-function buildMemoInstruction() {
+function buildMemoInstruction(): Instruction {
+  // `@solana/kit` re-exports no instruction encoder, so the memo shape is
+  // asserted once here instead of at every use site.
   return {
     programAddress: MEMO_PROGRAM_ADDRESS,
     accounts: [],
     data: new TextEncoder().encode("Hello from @vue-solana"),
-  };
+  } as Instruction;
 }
 
 const payerStatusText = computed(() => {
@@ -169,12 +172,12 @@ async function runFundPayer() {
 }
 
 async function runClientSend() {
-  await runExclusiveClientAction(() => sendTransaction.execute([buildMemoInstruction()] as never));
+  await runExclusiveClientAction(() => sendTransaction.execute([buildMemoInstruction()]));
 }
 
 async function runClientSendBatch() {
   await runExclusiveClientAction(() =>
-    sendTransactions.execute([buildMemoInstruction(), buildMemoInstruction()] as never),
+    sendTransactions.execute([buildMemoInstruction(), buildMemoInstruction()]),
   );
 }
 

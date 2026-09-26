@@ -6,7 +6,7 @@ const props = defineProps<{
   loading: boolean;
   signature?: string | null;
   status: string;
-  walletReady: boolean;
+  payerReady: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -48,14 +48,14 @@ const statusColor = computed(() => {
       variant="soft"
       size="sm"
       class="mt-4"
-      :disabled="!walletReady"
+      :disabled="!payerReady"
       :loading="loading"
       @click="emit('airdrop')"
     >
       {{ $t("demo.airdrop.request") }}
     </UButton>
 
-    <p v-if="!walletReady" class="mt-3 text-sm text-slate-500 dark:text-slate-400">
+    <p v-if="!payerReady" class="mt-3 text-sm text-slate-500 dark:text-slate-400">
       {{ $t("demo.airdrop.connectHint") }}
     </p>
 

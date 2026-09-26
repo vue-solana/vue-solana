@@ -143,6 +143,7 @@ export type {
   CreateReactiveStoreWithInitialValueAndSlotTrackingConfig,
   ReactiveActionSource,
   ReactiveActionState,
+  ReactiveActionStatus,
   ReactiveActionStore,
   ReactiveState,
   ReactiveStreamSource,

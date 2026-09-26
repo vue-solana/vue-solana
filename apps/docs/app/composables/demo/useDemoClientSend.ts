@@ -1,83 +1,25 @@
 import { computed, shallowRef, watch } from "vue";
-import {
-  address,
-  appendTransactionMessageInstruction,
-  createTransactionMessage,
-  getTransactionDecoder,
-  getTransactionEncoder,
-  lamports,
-  setTransactionMessageFeePayerSigner,
-  summarizeTransactionPlanResult,
-} from "@solana/kit";
-import type {
-  Address,
-  Instruction,
-  SignatureBytes,
-  TransactionMessage,
-  TransactionPartialSigner,
-  TransactionPlanResult,
-} from "@solana/kit";
+import { address, lamports, summarizeTransactionPlanResult } from "@solana/kit";
+import type { Address, Instruction, TransactionPlanResult } from "@solana/kit";
 import { formatError } from "./errors";
 
 const MEMO_PROGRAM_ADDRESS = address("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr");
 
 /**
- * A Kit message signer backed by the connected wallet adapter. Kit hands the
- * signer compiled transactions; we serialize them to wire format (with a
- * zero-filled signature slot), let the wallet sign, and decode the signature
- * back out of the returned transaction.
- */
-function createWalletMessageSigner(
-  walletAddress: Address,
-  signTransaction: (transaction: Uint8Array) => Promise<Uint8Array>,
-): TransactionPartialSigner {
-  return {
-    address: walletAddress,
-    async signTransactions(transactions, config) {
-      config?.abortSignal?.throwIfAborted();
-
-      return Promise.all(
-        transactions.map(async (transaction) => {
-          const signatures = { ...transaction.signatures };
-
-          if (!signatures[walletAddress]) {
-            signatures[walletAddress] = new Uint8Array(64) as SignatureBytes;
-          }
-
-          const wire = getTransactionEncoder().encode({
-            messageBytes: transaction.messageBytes,
-            signatures,
-          });
-          const signedWire = await signTransaction(wire);
-          const decoded = getTransactionDecoder().decode(signedWire);
-          const signature = decoded.signatures[walletAddress];
-
-          if (!signature) {
-            throw new Error("The connected wallet did not return a fee-payer signature.");
-          }
-
-          return { [walletAddress]: signature };
-        }),
-      );
-    },
-  };
-}
-
-/**
  * Client-sent transaction state for the demo: both send composables submit
  * through the client's transaction-sending capability with no wallet popup.
- * The connected wallet is the fee payer and signs each transaction through its
- * `signTransaction` adapter method — the client only plans, compiles, and
- * submits. Actions are gated on a connected wallet with sign capability.
+ * The client's own `payer` signer is the fee payer, so the app signs and pays
+ * without any wallet involvement — the shape a relayer or server-side signer
+ * would use. Fund that payer with the airdrop below before sending.
  */
 export function useDemoClientSend() {
   const sendTransaction = useSolanaSendTransaction();
   const sendTransactions = useSolanaSendTransactions();
   const airdrop = useSolanaAirdrop();
-  const wallet = useSolanaWallet();
+  const payer = useSolanaPayer();
 
-  /** Address shown as the fee payer; present only when a wallet is connected. */
-  const clientSendPayerAddress = computed(() => wallet.publicKey.value);
+  /** Address shown as the fee payer; null until the client's payer resolves. */
+  const clientSendPayerAddress = computed<Address | null>(() => payer.value?.address ?? null);
   const singleStateAddress = shallowRef<Address | null>(null);
   const batchStateAddress = shallowRef<Address | null>(null);
   let singleAbortController: AbortController | undefined;
@@ -92,7 +34,7 @@ export function useDemoClientSend() {
 
   /**
    * A SPL Memo instruction — no accounts, no funds moved — so the demo send is
-   * valid on any cluster and costs only the fee paid by the connected wallet.
+   * valid on any cluster and costs only the fee paid by the client payer.
    * The note is part of the message bytes, which is what keeps the two batch
    * transactions distinct: Ed25519 is deterministic, so signing the same
    * message twice produces the same signature and the network rejects the
@@ -108,35 +50,10 @@ export function useDemoClientSend() {
     } as Instruction;
   }
 
-  /**
-   * Builds the memo transaction message with the connected wallet installed as
-   * the fee-payer signer, or `null` when no capable wallet is connected. The
-   * blockhash lifetime is added by the client's sender.
-   */
-  function buildWalletMemoMessage(note: string): TransactionMessage | null {
-    const walletAddress = wallet.publicKey.value;
-    const signTransaction = wallet.wallet.value?.signTransaction;
-
-    if (!walletAddress || !signTransaction) {
-      return null;
-    }
-
-    const payerSigner = createWalletMessageSigner(address(walletAddress), signTransaction);
-
-    return setTransactionMessageFeePayerSigner(
-      payerSigner,
-      appendTransactionMessageInstruction(
-        buildMemoInstruction(note),
-        createTransactionMessage({ version: 0 }),
-      ),
-    );
-  }
-
   async function runClientSend() {
-    const message = buildWalletMemoMessage("Hello from @vue-solana");
     const executionAddress = clientSendPayerAddress.value;
 
-    if (!message || !executionAddress) {
+    if (!executionAddress) {
       singleStateAddress.value = null;
       return;
     }
@@ -146,7 +63,9 @@ export function useDemoClientSend() {
     singleStateAddress.value = executionAddress;
 
     try {
-      await sendTransaction.execute(message, {
+      // An instruction plan, not a message: the client sets the fee payer from
+      // `client.payer` and adds the blockhash lifetime.
+      await sendTransaction.execute([buildMemoInstruction("Hello from @vue-solana")], {
         abortSignal: singleAbortController.signal,
       });
     } catch {
@@ -155,11 +74,9 @@ export function useDemoClientSend() {
   }
 
   async function runClientSendBatch() {
-    const first = buildWalletMemoMessage("Hello from @vue-solana (1 of 2)");
-    const second = buildWalletMemoMessage("Hello from @vue-solana (2 of 2)");
     const executionAddress = clientSendPayerAddress.value;
 
-    if (!first || !second || !executionAddress) {
+    if (!executionAddress) {
       batchStateAddress.value = null;
       return;
     }
@@ -169,9 +86,13 @@ export function useDemoClientSend() {
     batchStateAddress.value = executionAddress;
 
     try {
-      await sendTransactions.execute([first, second], {
-        abortSignal: batchAbortController.signal,
-      });
+      await sendTransactions.execute(
+        [
+          buildMemoInstruction("Hello from @vue-solana (1 of 2)"),
+          buildMemoInstruction("Hello from @vue-solana (2 of 2)"),
+        ],
+        { abortSignal: batchAbortController.signal },
+      );
     } catch {
       // Already recorded on the composable and rendered by the card.
     }
@@ -209,12 +130,14 @@ export function useDemoClientSend() {
   const airdropSignature = computed(() => airdrop.data.value ?? null);
 
   async function runAirdrop() {
-    if (!wallet.publicKey.value) {
+    const payerAddress = clientSendPayerAddress.value;
+
+    if (!payerAddress) {
       return;
     }
 
     try {
-      await airdrop.dispatch(wallet.publicKey.value, lamports(1_000_000_000n));
+      await airdrop.dispatch(payerAddress, lamports(1_000_000_000n));
     } catch {
       // Already recorded on the composable and rendered by the card.
     }

@@ -50,12 +50,15 @@ const module: DefinedNuxtModule = defineNuxtModule<ModuleOptions>({
     const resolver = createResolver(import.meta.url);
     const publicConfig = nuxt.options.runtimeConfig.public;
 
-    publicConfig.solana = {
+    // Sanitize after the merge, not before: both inputs are user-controlled and
+    // only the module options were being stripped, so a `runtimeConfig.public.solana`
+    // carrying a `payerSecretKey` (or a `wallet`) reached the client bundle.
+    publicConfig.solana = toPublicSolanaConfig({
       ...(typeof publicConfig.solana === "object" && publicConfig.solana !== null
         ? publicConfig.solana
         : {}),
-      ...toPublicSolanaConfig(options),
-    };
+      ...options,
+    });
 
     mergeViteOptimizeDeps(nuxt.options.vite);
 
@@ -83,13 +86,20 @@ const module: DefinedNuxtModule = defineNuxtModule<ModuleOptions>({
 
 export default module;
 
-function toPublicSolanaConfig(options: ModuleOptions): ModuleOptions {
-  const runtimeOptions = { ...options } as VueSolanaPluginOptions;
+/**
+ * The two user-controlled sources merged into `runtimeConfig.public.solana`
+ * (the module's own options and a hand-written `runtimeConfig.public.solana`).
+ * Both can carry signer/secret fields, so both are sanitized.
+ */
+type SolanaConfigSource = VueSolanaPluginOptions & { clientPlugin?: boolean };
+
+function toPublicSolanaConfig(options: SolanaConfigSource): VueSolanaPluginOptions {
+  const runtimeOptions: SolanaConfigSource = { ...options };
 
   delete runtimeOptions.wallet;
   delete runtimeOptions.payer;
   delete runtimeOptions.payerSecretKey;
-  delete (runtimeOptions as { clientPlugin?: boolean }).clientPlugin;
+  delete runtimeOptions.clientPlugin;
 
   return runtimeOptions;
 }
