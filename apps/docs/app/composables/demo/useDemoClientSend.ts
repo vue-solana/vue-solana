@@ -9,7 +9,14 @@ import {
   setTransactionMessageFeePayerSigner,
   summarizeTransactionPlanResult,
 } from "@solana/kit";
-import type { Address, TransactionPlanResult, TransactionSigner } from "@solana/kit";
+import type {
+  Address,
+  Instruction,
+  SignatureBytes,
+  TransactionMessage,
+  TransactionPartialSigner,
+  TransactionPlanResult,
+} from "@solana/kit";
 import { formatError } from "./errors";
 
 const MEMO_PROGRAM_ADDRESS = address("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr");
@@ -23,20 +30,18 @@ const MEMO_PROGRAM_ADDRESS = address("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcH
 function createWalletMessageSigner(
   walletAddress: Address,
   signTransaction: (transaction: Uint8Array) => Promise<Uint8Array>,
-) {
+): TransactionPartialSigner {
   return {
     address: walletAddress,
-    async signTransactions(
-      ...[transactions]: readonly [
-        readonly { messageBytes: Uint8Array; signatures: Record<string, Uint8Array> }[],
-      ]
-    ) {
+    async signTransactions(transactions, config) {
+      config?.abortSignal?.throwIfAborted();
+
       return Promise.all(
         transactions.map(async (transaction) => {
           const signatures = { ...transaction.signatures };
 
           if (!signatures[walletAddress]) {
-            signatures[walletAddress] = new Uint8Array(64);
+            signatures[walletAddress] = new Uint8Array(64) as SignatureBytes;
           }
 
           const wire = getTransactionEncoder().encode({
@@ -55,7 +60,7 @@ function createWalletMessageSigner(
         }),
       );
     },
-  } as unknown as TransactionSigner;
+  };
 }
 
 /**
@@ -88,13 +93,19 @@ export function useDemoClientSend() {
   /**
    * A SPL Memo instruction — no accounts, no funds moved — so the demo send is
    * valid on any cluster and costs only the fee paid by the connected wallet.
+   * The note is part of the message bytes, which is what keeps the two batch
+   * transactions distinct: Ed25519 is deterministic, so signing the same
+   * message twice produces the same signature and the network rejects the
+   * duplicate.
    */
-  function buildMemoInstruction() {
+  function buildMemoInstruction(note: string): Instruction {
+    // `@solana/kit` re-exports no instruction encoder, so the memo shape is
+    // asserted once here instead of at every use site.
     return {
       programAddress: MEMO_PROGRAM_ADDRESS,
       accounts: [],
-      data: new TextEncoder().encode("Hello from @vue-solana"),
-    };
+      data: new TextEncoder().encode(note),
+    } as Instruction;
   }
 
   /**
@@ -102,7 +113,7 @@ export function useDemoClientSend() {
    * the fee-payer signer, or `null` when no capable wallet is connected. The
    * blockhash lifetime is added by the client's sender.
    */
-  function buildWalletMemoMessage() {
+  function buildWalletMemoMessage(note: string): TransactionMessage | null {
     const walletAddress = wallet.publicKey.value;
     const signTransaction = wallet.wallet.value?.signTransaction;
 
@@ -115,14 +126,14 @@ export function useDemoClientSend() {
     return setTransactionMessageFeePayerSigner(
       payerSigner,
       appendTransactionMessageInstruction(
-        buildMemoInstruction(),
+        buildMemoInstruction(note),
         createTransactionMessage({ version: 0 }),
-      ) as never,
+      ),
     );
   }
 
   async function runClientSend() {
-    const message = buildWalletMemoMessage();
+    const message = buildWalletMemoMessage("Hello from @vue-solana");
     const executionAddress = clientSendPayerAddress.value;
 
     if (!message || !executionAddress) {
@@ -135,7 +146,7 @@ export function useDemoClientSend() {
     singleStateAddress.value = executionAddress;
 
     try {
-      await sendTransaction.execute(message as never, {
+      await sendTransaction.execute(message, {
         abortSignal: singleAbortController.signal,
       });
     } catch {
@@ -144,10 +155,11 @@ export function useDemoClientSend() {
   }
 
   async function runClientSendBatch() {
-    const message = buildWalletMemoMessage();
+    const first = buildWalletMemoMessage("Hello from @vue-solana (1 of 2)");
+    const second = buildWalletMemoMessage("Hello from @vue-solana (2 of 2)");
     const executionAddress = clientSendPayerAddress.value;
 
-    if (!message || !executionAddress) {
+    if (!first || !second || !executionAddress) {
       batchStateAddress.value = null;
       return;
     }
@@ -157,7 +169,7 @@ export function useDemoClientSend() {
     batchStateAddress.value = executionAddress;
 
     try {
-      await sendTransactions.execute([message, message] as never, {
+      await sendTransactions.execute([first, second], {
         abortSignal: batchAbortController.signal,
       });
     } catch {

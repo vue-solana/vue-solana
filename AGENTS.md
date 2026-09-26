@@ -91,7 +91,7 @@ Kit 8 reactive-store note: the stores from `@solana/subscribable` call Node's `s
 
 Implemented files:
 
-- `src/module.ts`: Nuxt module with `solana` config key. It deliberately omits `wallet`, `payer`, and `payerSecretKey` from `ModuleOptions` and strips them from public runtime config.
+- `src/module.ts`: Nuxt module with `solana` config key. It deliberately omits `wallet`, `payer`, and `payerSecretKey` from `ModuleOptions` and strips them from public runtime config. `solana.clientPlugin: false` skips the module's runtime plugin so the app can install `createSolanaPlugin` itself (for example to attach a client-only `payer`); installing both would create two contexts and two wallet subscriptions.
 - `src/imports.ts`: maps every composable to its `useSolana*` auto-import alias.
 - `src/runtime/plugin.ts`: installs the Vue Solana plugin using public runtime config.
 - `src/runtime/kit.ts`: re-export of the core Kit helpers.
@@ -123,7 +123,8 @@ Current package dependency:
 Client transaction stack:
 
 - `createSolanaClient()` composes `solanaRpc()`, `rpcTransactionPlanner()`, `rpcTransactionPlanSendingExecutor()`, and `rpcAirdrop()` from `@solana/kit-plugin-rpc`. The default client therefore already exposes `planTransaction(s)` and `sendTransaction(s)`; the send-and-confirm path settles at `confirmed` commitment.
-- Clients built by hand (for example inside `apps/docs/app/plugins/`) do not get those capabilities for free. `useClientCapability()` fails fast when a composable is called against a client missing `payer`, `planTransaction`, `sendTransaction`, and friends.
+- Clients built by hand (for example inside `apps/docs/app/plugins/`) do not get those capabilities for free. `useClientCapability()` fails fast when a composable is called against a client missing `planTransaction`, `sendTransaction`, and friends.
+- The plan and send hooks also assert `payer` (`["sendTransaction", "payer"]`, `["planTransactions", "payer"]`, …), because Kit reads `client.payer` to set the fee payer. Without a payer they used to die inside Kit with `Cannot read properties of undefined (reading 'address')`; now the hook throws `MissingClientCapabilityError` at setup time. The hooks no longer accept a transaction message that carries its own embedded signer in place of a `payer`.
 
 Signer configuration and security:
 
@@ -198,7 +199,7 @@ Recommended next step:
 
 ### Example Apps
 
-The `examples/vue-vite` and `examples/nuxt` directories contain runnable example apps wired to the workspace packages. They demonstrate plugin/module setup, RPC state, direct connection calls, balance reads, wallet state, mock transaction flows, and the client-sent flow (`usePayer()` plus `usePlanTransaction()` / `useSendTransaction()`). The Nuxt example installs a client-only ephemeral payer in `app/plugins/demo-payer.client.ts` because Nuxt never accepts `payer` / `payerSecretKey`.
+The `examples/vue-vite` and `examples/nuxt` directories contain runnable example apps wired to the workspace packages. They demonstrate plugin/module setup, RPC state, direct connection calls, balance reads, wallet state, mock transaction flows, and the client-sent flow (`usePayer()` plus `usePlanTransaction()` / `useSendTransaction()`). The Nuxt example installs a client-only ephemeral payer in `app/plugins/demo-payer.client.ts` because Nuxt never accepts `payer` / `payerSecretKey`, and sets `solana.clientPlugin: false` in `nuxt.config.ts` so the module does not install a second plugin.
 
 Both apps also mount Live Data Panels exercising the Kit-reactive composables (`useRequest`, `useSubscription`, `useTrackedData`, `useSignIn`, and the `swr` cache adapters) against devnet.
 

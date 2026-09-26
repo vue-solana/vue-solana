@@ -15,7 +15,7 @@ import {
 } from "./useSendTransaction";
 
 const { clientMock } = vi.hoisted(() => ({
-  clientMock: { rpc: {} } as Record<string, unknown>,
+  clientMock: { payer: { address: "payer-address" }, rpc: {} } as Record<string, unknown>,
 }));
 
 vi.mock("./useSolanaClient", () => ({
@@ -367,5 +367,60 @@ describe("capability fail-fast", () => {
     expect(captured).toBeInstanceOf(MissingClientCapabilityError);
     expect((captured as MissingClientCapabilityError).hookName).toBe("useSendTransactions");
     expect((captured as MissingClientCapabilityError).capabilities).toEqual(["sendTransactions"]);
+  });
+});
+
+describe("payer fail-fast", () => {
+  it("throws at setup time and names `payer`", () => {
+    installSendingClient();
+    delete clientMock.payer;
+    let captured: unknown;
+
+    try {
+      setupInScope(() => useSendTransaction());
+    } catch (cause) {
+      captured = cause;
+    }
+
+    expect(captured).toBeInstanceOf(MissingClientCapabilityError);
+    expect((captured as MissingClientCapabilityError).hookName).toBe("useSendTransaction");
+    expect((captured as MissingClientCapabilityError).capabilities).toEqual(["payer"]);
+    expect((captured as Error).message).toContain("`payer`");
+    clientMock.payer = { address: "payer-address" };
+  });
+
+  it("names `payer` for the batch hook too", () => {
+    installSendingClient();
+    delete clientMock.payer;
+    let captured: unknown;
+
+    try {
+      setupInScope(() => useSendTransactions());
+    } catch (cause) {
+      captured = cause;
+    }
+
+    expect(captured).toBeInstanceOf(MissingClientCapabilityError);
+    expect((captured as MissingClientCapabilityError).hookName).toBe("useSendTransactions");
+    expect((captured as MissingClientCapabilityError).capabilities).toEqual(["payer"]);
+    clientMock.payer = { address: "payer-address" };
+  });
+
+  it("rejects a transaction message too, since kit always reads `payer`", () => {
+    const { sendTransaction } = installSendingClient();
+    sendTransaction.mockResolvedValue(singleResult);
+    delete clientMock.payer;
+    let captured: unknown;
+
+    try {
+      setupInScope(() => useSendTransaction());
+    } catch (cause) {
+      captured = cause;
+    }
+
+    expect(captured).toBeInstanceOf(MissingClientCapabilityError);
+    expect((captured as MissingClientCapabilityError).capabilities).toEqual(["payer"]);
+    expect(sendTransaction).not.toHaveBeenCalled();
+    clientMock.payer = { address: "payer-address" };
   });
 });

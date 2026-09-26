@@ -59,6 +59,9 @@ describe("createSolanaClient", () => {
     const client = createSolanaClient();
 
     expect(client.payer).toBeUndefined();
+    // No phantom own key: feature detection with `'payer' in client` must not
+    // report a payer that was never configured.
+    expect("payer" in client).toBe(false);
     expect(typeof client.sendTransaction).toBe("function");
   });
 
@@ -89,8 +92,31 @@ describe("createSolanaClient", () => {
     const signature = signatures[0]?.[payer.address];
 
     expect(payer.address).toBe(bs58.encode(publicKey));
+    expect(client.payer).toBe(payer);
     expect(signature).toBeDefined();
     expect(nacl.sign.detached.verify(messageBytes, signature!, publicKey)).toBe(true);
+  });
+
+  it("rejects an aborted signTransactions call", async () => {
+    const { secretKey } = nacl.sign.keyPair();
+    const client = createSolanaClient({
+      payerSecretKey: Buffer.from(secretKey).toString("base64"),
+    });
+    const payer = client.payer as unknown as {
+      signTransactions: (
+        transactions: readonly unknown[],
+        config?: { abortSignal?: AbortSignal },
+      ) => Promise<unknown>;
+    };
+    const controller = new AbortController();
+
+    controller.abort();
+
+    await expect(
+      payer.signTransactions([{ messageBytes: new Uint8Array([1]) }], {
+        abortSignal: controller.signal,
+      }),
+    ).rejects.toThrow();
   });
 
   it("rejects a malformed payerSecretKey at client creation", () => {

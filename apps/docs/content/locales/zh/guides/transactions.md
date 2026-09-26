@@ -48,7 +48,7 @@ console.log(confirmation.signature, confirmation.commitment);
 
 当 client 应在不显示 wallet popup 的情况下 plan、sign、submit 和 confirm 时，使用 `useSendTransaction()` 或 `useSendTransactions()`。官方 executor 会获取新的 blockhash、处理 resource limit 和 preflight、使用 client signer 签名、通过 RPC 提交并等待 `confirmed`。只有 send-and-confirm 操作完成后，composable 才会将 `status` 设为 `sent`。单笔结果在 `data.context.signature` 提供签名，batch 结果包含 plan result tree。
 
-使用 `payer` 或 `payerSecretKey` 配置 direct core/Vue client，或提供带 embedded signer 的交易消息。`payerSecretKey` 是 base64 编码的 64 字节 Ed25519 keypair，只适合 trusted development 或 server flow。永远不要把 raw secret 或 `payerSecretKey` 放入 Nuxt public runtime config，也不要把有资金的 keypair 暴露给 end-user browser。
+使用 `payer` 或 `payerSecretKey` 配置 direct core/Vue client；client-sent 路径需要 `payer`。`payerSecretKey` 是 base64 编码的 64 字节 Ed25519 keypair，只适合 trusted development 或 server flow。永远不要把 raw secret 或 `payerSecretKey` 放入 Nuxt public runtime config，也不要把有资金的 keypair 暴露给 end-user browser。
 
 钱包流程是分开的：`useSignAndSendTransaction()` 默认在 RPC submission 后返回，也可以在传入 `confirm: true` 时等待所选 commitment。当 connected user 必须在 wallet 中批准每笔交易时，请保持这种行为。
 
@@ -250,7 +250,7 @@ async function submit(transaction: Uint8Array) {
 </script>
 ```
 
-请从客户端的用户操作调用交易方法。不要在 SSR 期间触发钱包签名。Nuxt module option 省略了 `payer` 和 `payerSecretKey`；不要把 secret 放入 public runtime config，而应在 client-only Vue plugin 中配置 signer 或使用 connected wallet 的 embedded signer。
+请从客户端的用户操作调用交易方法。不要在 SSR 期间触发钱包签名。Nuxt module option 省略了 `payer` 和 `payerSecretKey`；不要把 secret 放入 public runtime config，而应在 client-only Vue plugin 中配置 `payer`。
 
 当你需要确认另一个流程返回的签名时，使用 `useSolanaTransactionConfirmation({ commitment: "confirmed" })` 并调用 `confirm(signature)`。当你希望在超时或重定向后继续检查状态时，使用 `useSolanaSignatureStatus(signature, { pollIntervalMs: 2_000 })`。
 

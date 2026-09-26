@@ -71,7 +71,7 @@ createApp(App).use(
 | `mobileWallet`   | `MobileWalletOptions \| false` | Enabled on Android | Android Mobile Wallet Adapter 옵션입니다.                                                           |
 | `iosWallet`      | `iOSWalletOptions \| false`    | Enabled on iOS     | iOS wallet universal-link 옵션입니다.                                                               |
 
-`payer`와 `payerSecretKey`는 direct Vue/core client에서 지원됩니다. client-sent transaction에는 payer 또는 embedded signer가 있는 message가 필요합니다. Nuxt public runtime config에 raw secret이나 `payerSecretKey`를 넣지 말고, funded signing key를 end-user browser에 보내지 마세요.
+`payer`와 `payerSecretKey`는 direct Vue/core client에서 지원됩니다. client-sent transaction에는 `payer`가 필요합니다. Nuxt public runtime config에 raw secret이나 `payerSecretKey`를 넣지 말고, funded signing key를 end-user browser에 보내지 마세요.
 
 `createSolanaPlugin()`의 default client는 official `solanaRpc()`, `rpcTransactionPlanner()`, `rpcTransactionPlanSendingExecutor()` 구성을 사용합니다. 기존 custom fallback sender는 사용하지 않습니다. official executor는 `execute()`가 resolve되고 `status`가 `sent`가 되기 전에 `confirmed` commitment을 기다립니다.
 
@@ -170,7 +170,7 @@ Buffer polyfill이 필요한 브라우저 트랜잭션 코드에는 `@vue-solana
 - `useSignTransactions()` / `useSignAndSendTransactions()`: 지갑 요청 한 번으로 여러 transaction을 서명하거나 서명 후 전송합니다.
 - `usePayer()` / `useIdentity()`: Kit client의 reactive signer입니다. default Vue client는 설정된 payer를 노출하고, custom client는 signer를 설치할 수 있습니다.
 - `usePlanTransaction()` / `usePlanTransactions()`: instruction 입력에서 transaction message를 계획합니다.
-- `useSendTransaction()` / `useSendTransactions()`: `createSolanaClient()`가 설치한 official planner와 executor를 사용해 plan, sign, submit 후 `confirmed`를 기다리며 wallet popup이 없습니다. payer를 설정하거나 embedded signer를 사용하세요.
+- `useSendTransaction()` / `useSendTransactions()`: `createSolanaClient()`가 설치한 official planner와 executor를 사용해 plan, sign, submit 후 `confirmed`를 기다리며 wallet popup이 없습니다. payer를 설정하세요.
 - `useClientCapability(name)`: 클라이언트에 capability가 설치되어 있음을 단언하고, 없으면 설명적인 오류를 던집니다.
 
 ## 관련 가이드
@@ -697,7 +697,7 @@ Wallet은 서명 전에 메시지나 트랜잭션을 수정할 수 있습니다 
 
 executor는 새 blockhash를 가져오고 resource limit을 추정하거나 유지하며, 설정이 있지 않으면 preflight simulation을 수행하고, client signer로 서명한 뒤 RPC로 제출하고 `confirmed` commitment을 기다립니다. `status`는 send-and-confirm 작업이 완료된 뒤에만 `sending`에서 `sent`로 바뀝니다. 단일 결과의 `data.context.signature`에서 submitted signature를 확인할 수 있고 batch 결과에는 plan result tree가 포함됩니다. wallet popup이 없으므로 client가 적절한 signer를 소유한 trusted context에서만 사용하세요.
 
-direct Vue/core client에서 `payer` 또는 `payerSecretKey`로 signer를 설정하세요. payer가 없으면 embedded signer가 있는 message를 전달하세요. production funded key는 server 또는 relayer에 두어야 합니다. Nuxt public runtime config에 raw secret이나 `payerSecretKey`를 넣지 말고 end-user browser에 funded keypair를 보내지 마세요.
+direct Vue/core client에서 `payer` 또는 `payerSecretKey`로 payer를 설정하세요. payer가 없으면 plan과 send가 불가능합니다. production funded key는 server 또는 relayer에 두어야 합니다. Nuxt public runtime config에 raw secret이나 `payerSecretKey`를 넣지 말고 end-user browser에 funded keypair를 보내지 마세요.
 
 wallet composable은 별개입니다. `useSignAndSendTransaction()`는 기본적으로 RPC submission 뒤에 반환하거나 `confirm: true`를 전달하면 선택한 commitment까지 기다립니다. client-sent transaction은 항상 official executor의 `confirmed` send-and-confirm 동작을 사용합니다.
 

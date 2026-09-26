@@ -4,6 +4,8 @@ import {
   getBase58Decoder,
   getBase64Encoder,
   type Address,
+  type SignatureBytes,
+  type TransactionPartialSigner,
   type TransactionSigner,
 } from "@solana/kit";
 import { rpcAirdrop, solanaRpc } from "@solana/kit-plugin-rpc";
@@ -21,10 +23,13 @@ function buildSolanaClient(
   wsEndpoint: string,
   payer: TransactionSigner | undefined,
 ) {
+  // `solanaRpc` is typed as requiring `client.payer`, but the planner only reads
+  // `payer` lazily — and only when it must build a message from an instruction
+  // plan. So a payer-less client extends with nothing: casting the empty
+  // extension keeps the plugin chain typed without installing a phantom
+  // `payer: undefined` own key that `'payer' in client` would report as present.
   const client = createClient().use((current) =>
-    extendClient(current, {
-      payer: payer!,
-    }),
+    extendClient(current, payer ? { payer } : ({} as { payer: TransactionSigner })),
   );
 
   return client
@@ -56,14 +61,12 @@ export function createSolanaClient(
     (config.endpoint ? getWebSocketEndpoint(endpoint) : getClusterWebSocketEndpoint(cluster));
   const payer = config.payer ?? resolvePayerFromSecretKey(config.payerSecretKey);
 
-  return buildSolanaClient(endpoint, wsEndpoint, payer) as
-    | SolanaClientWithPayer
-    | SolanaClientWithOptionalPayer;
+  return buildSolanaClient(endpoint, wsEndpoint, payer);
 }
 
 function resolvePayerFromSecretKey(
   payerSecretKey: string | undefined,
-): TransactionSigner | undefined {
+): TransactionPartialSigner | undefined {
   if (!payerSecretKey) {
     return undefined;
   }
@@ -74,44 +77,39 @@ function resolvePayerFromSecretKey(
     );
 
   let keyPairBytes: Uint8Array;
-  let payerAddress: Address;
 
   try {
     keyPairBytes = Uint8Array.from(getBase64Encoder().encode(payerSecretKey));
-
-    if (keyPairBytes.length !== 64) {
-      throw invalidError();
-    }
-
-    const derivedKeyPair = nacl.sign.keyPair.fromSeed(keyPairBytes.slice(0, 32));
-    const publicKey = keyPairBytes.slice(32);
-
-    if (!publicKey.every((value, index) => value === derivedKeyPair.publicKey[index])) {
-      throw invalidError();
-    }
-
-    payerAddress = getBase58Decoder().decode(publicKey) as Address;
   } catch {
     throw invalidError();
   }
 
+  if (keyPairBytes.length !== 64) {
+    throw invalidError();
+  }
+
+  const derivedKeyPair = nacl.sign.keyPair.fromSeed(keyPairBytes.slice(0, 32));
+  const publicKey = keyPairBytes.slice(32);
+
+  if (!publicKey.every((value, index) => value === derivedKeyPair.publicKey[index])) {
+    throw invalidError();
+  }
+
+  const address = getBase58Decoder().decode(publicKey) as Address;
+
   return {
-    address: payerAddress,
-    async signTransactions(
-      transactions: readonly { messageBytes: Uint8Array }[],
-      config?: { abortSignal?: AbortSignal },
-    ) {
+    address,
+    async signTransactions(transactions, config) {
       config?.abortSignal?.throwIfAborted();
 
       return transactions.map((transaction) => ({
-        [payerAddress]: nacl.sign.detached(transaction.messageBytes, keyPairBytes),
+        [address]: nacl.sign.detached(
+          new Uint8Array(transaction.messageBytes),
+          keyPairBytes,
+        ) as SignatureBytes,
       }));
     },
-  } as unknown as TransactionSigner;
-}
-
-export interface SolanaSendConfig {
-  abortSignal?: AbortSignal;
+  };
 }
 
 export type SolanaClient = SolanaClientWithOptionalPayer;

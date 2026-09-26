@@ -140,7 +140,7 @@ export default defineNuxtConfig({
 
 El modulo Nuxt instala el plugin de runtime solo en el cliente y autoimporta composables desde subpaths directos `@vue-solana/vue/*`. Los composables se pueden llamar de forma segura durante SSR, pero las operaciones RPC y de wallet reales deberian ejecutarse despues de la hidratacion, por ejemplo desde `onMounted()` o acciones del usuario. Las opciones `solana` de Nuxt viven en la configuracion publica de runtime, asi que mantenlas serializables como JSON.
 
-Los clientes Vue/core directos aceptan `payer` y `payerSecretKey` para transacciones enviadas por el cliente. `payerSecretKey` es un keypair Ed25519 de 64 bytes en base64, asi que nunca lo pongas en la configuracion runtime publica de Nuxt ni envíes una clave con fondos al navegador. `ModuleOptions` de Nuxt omite ambos campos; crea un signer efimero en un plugin solo de cliente o usa un mensaje con un signer embebido de la wallet conectada.
+Los clientes Vue/core directos aceptan `payer` y `payerSecretKey` para transacciones enviadas por el cliente. `payerSecretKey` es un keypair Ed25519 de 64 bytes en base64, asi que nunca lo pongas en la configuracion runtime publica de Nuxt ni envíes una clave con fondos al navegador. `ModuleOptions` de Nuxt omite ambos campos; crea un signer efimero en un plugin solo de cliente e instalalo como `payer`.
 
 ## Probar RPC sin wallet
 
@@ -406,7 +406,7 @@ Antes de confiar en un flujo de app, verifica estos comportamientos en devnet:
 - Las capacidades no compatibles de firma de mensajes o firma de transacciones estan deshabilitadas en la UI.
 - La firma de mensajes devuelve una firma sin enviar una transaccion on-chain.
 - El envio de transferencia devuelve una firma y estado de confirmacion.
-- Los envios del cliente usan el planner y el executor oficiales, requieren un payer configurado o un signer embebido, y solo alcanzan `sent` despues de `confirmed`.
+- Los envios del cliente usan el planner y el executor oficiales, requieren un signer `payer` configurado, y solo alcanzan `sent` despues de `confirmed`.
 - Los enlaces de explorer apuntan al mismo cluster que la app.
 - `mainnet` se usa solo cuando configuras mainnet intencionalmente y entiendes que SOL real esta en riesgo.
 

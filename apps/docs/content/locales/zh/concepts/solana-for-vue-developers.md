@@ -79,7 +79,7 @@ Vue Solana 会通过统一的 `useWallets()` 流程发现 Solana Wallet Standard
 
 签名证明钱包所有者批准该交易。前端应用应该请求用户的钱包进行签名，而不应该持有私钥。
 
-默认 `createSolanaClient()` 还会组合 Solana Kit 官方的 RPC planner 和 transaction-sending executor，因此可信 client context 可以不显示 wallet popup 地 plan 和 send。请为该路径提供 `payer` 或 embedded signer。将有资金的 signer 保存在 server 或 relayer 中；Nuxt public runtime config 不得包含 raw `payerSecretKey` 或其他 secret。
+默认 `createSolanaClient()` 还会组合 Solana Kit 官方的 RPC planner 和 transaction-sending executor，因此可信 client context 可以不显示 wallet popup 地 plan 和 send。该路径需要 `payer` signer。将有资金的 signer 保存在 server 或 relayer 中；Nuxt public runtime config 不得包含 raw `payerSecretKey` 或其他 secret。
 
 ## Commitment 级别
 

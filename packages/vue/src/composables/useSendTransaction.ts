@@ -35,8 +35,8 @@ interface SendingClient {
 }
 
 const SENDING_PROVIDER_HINT =
-  "Use a client created by `createSolanaClient()` with a `payer` signer, or pass a transaction " +
-  "message whose fee payer already has an embedded signer.";
+  "Use a client created by `createSolanaClient({ payer })` — or any client with a `payer` signer. " +
+  "Kit reads `client.payer` when it plans a transaction from an instruction plan.";
 
 /**
  * Plan, sign with the client's signers (payer/identity), submit, and confirm
@@ -46,14 +46,16 @@ const SENDING_PROVIDER_HINT =
  * Accepts flexible input: instructions, an instruction plan, a transaction
  * message, or a single transaction plan.
  *
- * Rejects with a clear capability error when the client cannot send.
+ * Throws with a clear capability error when the client cannot send, which
+ * includes a client without a `payer` signer — Kit reads `client.payer` when it
+ * plans a transaction, so one is always required.
  *
  * Calling `execute` while a prior execution is in flight aborts the prior call;
  * the superseded attempt rejects, so check its `error.cause` to tell it apart
  * from a real failure.
  */
 export function useSendTransaction() {
-  useClientCapability(["sendTransaction"], {
+  useClientCapability(["sendTransaction", "payer"], {
     hookName: "useSendTransaction",
     providerHint: SENDING_PROVIDER_HINT,
   });
@@ -127,9 +129,12 @@ export function useSendTransaction() {
  * Plan, sign, submit, and confirm one or more transactions — possibly a batch
  * of messages, executed in parallel or sequentially as the plan dictates —
  * through the client's transaction-sending capability.
+ *
+ * Throws with a clear capability error when the client cannot send, which
+ * includes a client without a `payer` signer.
  */
 export function useSendTransactions() {
-  useClientCapability(["sendTransactions"], {
+  useClientCapability(["sendTransactions", "payer"], {
     hookName: "useSendTransactions",
     providerHint: SENDING_PROVIDER_HINT,
   });

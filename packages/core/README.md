@@ -118,7 +118,7 @@ Supported clusters are `mainnet` (legacy alias `mainnet-beta`), `testnet`, `devn
 
 `autoConnect` is consumed by the Vue plugin and Nuxt module. It defaults to `false`; when set to `true`, Vue Solana reconnects only a previously selected wallet identity that is discovered again on the client.
 
-`payer` is a Kit `TransactionSigner`; `payerSecretKey` is its serializable base64 64-byte Ed25519 keypair form. Both are supported by direct core/Vue clients. A client-sent transaction needs a payer or an embedded signer. Never put a raw secret or `payerSecretKey` in Nuxt public runtime config, and never ship a funded keypair to an end-user browser.
+`payer` is a Kit `TransactionSigner`; `payerSecretKey` is its serializable base64 64-byte Ed25519 keypair form. Both are supported by direct core/Vue clients. A client-sent transaction requires a payer. Never put a raw secret or `payerSecretKey` in Nuxt public runtime config, and never ship a funded keypair to an end-user browser.
 
 `createSolanaClient()` composes the official `@solana/kit-plugin-rpc` stack by default: `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()`. The old custom fallback sender is removed. The official sender adds a fresh blockhash, resource-limit and preflight handling, signs, submits, and waits for `confirmed` commitment before the send resolves.
 
@@ -170,7 +170,7 @@ Direct subpaths:
 | `getTokenBalance(client, mint, owner, commitment?)`             | Reads the token balance for an owner's associated token account as `{ amount, decimals }`.                                                                                 |
 | `createSolanaActionStore(fn)`                                   | Wraps an async `(signal, ...args) => Promise` function into a `{ getState, subscribe, dispatch, reset, withSignal }` store; each dispatch aborts the prior in-flight call. |
 
-The client-sent API is the official Kit `ClientWithTransactionSending` capability installed by `createSolanaClient()`. It does not use a wallet popup; `sent` is reached after the RPC executor completes its send-and-confirm operation at `confirmed` commitment. Use a `payer` or a message with an embedded signer, and keep funded keys in a trusted server or relayer context.
+The client-sent API is the official Kit `ClientWithTransactionSending` capability installed by `createSolanaClient()`. It does not use a wallet popup; `sent` is reached after the RPC executor completes its send-and-confirm operation at `confirmed` commitment. Use a `payer`, and keep funded keys in a trusted server or relayer context.
 | `isSolanaActionAborted(error)` | Detects abort errors from superseded action dispatches. |
 
 ## Wallet Interface

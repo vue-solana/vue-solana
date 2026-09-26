@@ -45,7 +45,7 @@ export default defineNuxtConfig({
 
 Nuxt 模块选项存储在 public runtime config 中，因此必须可 JSON 序列化。自定义 `wallet` adapter 对象有意不包含在 Nuxt 配置中；如果需要注入自定义钱包对象，请在 client-only Vue 代码中直接使用 Vue 插件。
 
-`ModuleOptions` 也有意省略 `payer` 和 `payerSecretKey`。direct `@vue-solana/core` 和 `@vue-solana/vue` client 仍支持这两个字段，但 Nuxt module 不会转发它们，并会从 public runtime config 中删除。永远不要把 raw secret、seed phrase 或 `payerSecretKey` 放入 `nuxt.config.ts` 或 `runtimeConfig.public`：这些值对 browser 可见。如果需要 client-owned signer，请在 client-only plugin 中用 `generateKeyPairSigner()` 创建 ephemeral signer，或使用带有 connected-wallet embedded signer 的交易消息。
+`ModuleOptions` 也有意省略 `payer` 和 `payerSecretKey`。direct `@vue-solana/core` 和 `@vue-solana/vue` client 仍支持这两个字段，但 Nuxt module 不会转发它们，并会从 public runtime config 中删除。永远不要把 raw secret、seed phrase 或 `payerSecretKey` 放入 `nuxt.config.ts` 或 `runtimeConfig.public`：这些值对 browser 可见。如果需要 client-owned signer，请在 client-only plugin 中用 `generateKeyPairSigner()` 创建 ephemeral signer，在那里 install Vue plugin 并设置 `clientPlugin: false`，这样 module 就不会再 install 第二个 plugin（两个 plugin 会产生两个 Solana context、两个 wallet subscription 和两次 connection check，而且只有最后一次 `provide` 生效）。
 
 模块的客户端运行时插件还会自动安装应用级选定钱包账户上下文，因此无需挂载 provider，`useSolanaSelectedWalletAccount()` 就能在每个组件中工作。若要自定义持久化（`stateSync`）或过滤（`filterWallet`），请在组件树更深处挂载来自 `@vue-solana/vue/useSelectedWalletAccount` 的 `SelectedWalletAccountProvider` 来覆盖默认上下文。
 
@@ -115,7 +115,7 @@ request、subscription、tracked-data 和 SWR-cache composable 的完整语义�
 - `useSolanaSignAndSendTransactions()`：在一次钱包请求中签名并发送多笔交易。
 - `useSolanaPayer()` / `useSolanaIdentity()`：响应式 Kit client signer（需要 signer 插件）。
 - `useSolanaPlanTransaction()` / `useSolanaPlanTransactions()`：根据 instruction input 规划交易消息。
-- `useSolanaSendTransaction()` / `useSolanaSendTransactions()`：使用默认 client 安装的官方 planner 和 executor，进行 plan、sign、submit 并等待 `confirmed`，不显示 wallet popup。请在 client-only Vue plugin 中配置 signer 或提供 embedded signer；当 connected wallet 必须批准每笔交易时，使用 `useSolanaSignAndSendTransaction(s)`。
+- `useSolanaSendTransaction()` / `useSolanaSendTransactions()`：使用默认 client 安装的官方 planner 和 executor，进行 plan、sign、submit 并等待 `confirmed`，不显示 wallet popup。请在 client-only Vue plugin 中配置 `payer`；当 connected wallet 必须批准每笔交易时，使用 `useSolanaSignAndSendTransaction(s)`。
 
 这些是 Vue composable 的 Nuxt alias。
 
@@ -419,7 +419,7 @@ async function submitTransaction(transaction: SolanaTransaction) {
 
 状态会在 RPC 提交后从 `sending` 变为 `sent`。启用确认后，状态会继续经过 `confirming`，并最终到达获得的 commitment，例如 `confirmed` 或 `finalized`。如果提交后确认超时，`signature` 仍然可用，因此应用可以展示 explorer 链接或在重试前轮询签名状态。
 
-client-sent 交易不同：`useSolanaSendTransaction()` 和 `useSolanaSendTransactions()` 使用官方 RPC plan-sending executor。executor 会在 `execute()` resolve 前等待 `confirmed`，因此 `sent` 表示客户端 send-and-confirm 已完成。它们不显示 wallet popup；请使用带有 connected-wallet embedded signer 的消息，或在 client-only Vue plugin 中安装 signer。不要尝试把 raw `payerSecretKey` 配置到 Nuxt public runtime config。
+client-sent 交易不同：`useSolanaSendTransaction()` 和 `useSolanaSendTransactions()` 使用官方 RPC plan-sending executor。executor 会在 `execute()` resolve 前等待 `confirmed`，因此 `sent` 表示客户端 send-and-confirm 已完成。它们不显示 wallet popup；请在 client-only Vue plugin 中安装 `payer`。不要尝试把 raw `payerSecretKey` 配置到 Nuxt public runtime config。
 
 钱包提示必须由 hydration 后的用户交互触发。不要在 SSR、server route 或页面加载时自动调用 `execute()`。
 

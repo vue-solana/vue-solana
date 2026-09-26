@@ -71,7 +71,7 @@ createApp(App).use(
 | `mobileWallet`   | `MobileWalletOptions \| false` | Enabled on Android | Android Mobile Wallet Adapter 选项。                                                 |
 | `iosWallet`      | `iOSWalletOptions \| false`    | Enabled on iOS     | iOS 钱包 universal-link 选项。                                                       |
 
-`payer` 和 `payerSecretKey` 支持 direct Vue/core client。client-sent 交易需要 payer，或交易消息中已有 embedded signer。永远不要把 raw secret 或 `payerSecretKey` 放入 Nuxt public runtime config，也不要把有资金的 signing key 发送到 end-user browser。
+`payer` 和 `payerSecretKey` 支持 direct Vue/core client。client-sent 交易需要 `payer`。永远不要把 raw secret 或 `payerSecretKey` 放入 Nuxt public runtime config，也不要把有资金的 signing key 发送到 end-user browser。
 
 `createSolanaPlugin()` 的默认 client 使用官方 `solanaRpc()`、`rpcTransactionPlanner()` 和 `rpcTransactionPlanSendingExecutor()` 组合。旧的 custom fallback sender 不再使用。官方 executor 会在 `execute()` resolve、`status` 变为 `sent` 之前等待 `confirmed` commitment。
 
@@ -170,7 +170,7 @@ import { useWallet } from "@vue-solana/vue/useWallet";
 - `useSignTransactions()` / `useSignAndSendTransactions()`：在一次钱包请求中签署（或签署并发送）多笔交易。
 - `usePayer()` / `useIdentity()`：Kit client 的响应式 signer。默认 Vue client 会暴露配置的 payer，custom client 可以安装 signer。
 - `usePlanTransaction()` / `usePlanTransactions()`：从 instruction 输入规划交易消息。
-- `useSendTransaction()` / `useSendTransactions()`：使用 `createSolanaClient()` 安装的官方 planner 和 executor，进行 plan、sign、submit 并等待 `confirmed`，不显示 wallet popup。请配置 payer 或提供 embedded signer。
+- `useSendTransaction()` / `useSendTransactions()`：使用 `createSolanaClient()` 安装的官方 planner 和 executor，进行 plan、sign、submit 并等待 `confirmed`，不显示 wallet popup。请配置 payer。
 - `useClientCapability(name)`：断言某能力已安装在 client 上，缺失时抛出描述性错误。
 
 ## 相关指南
@@ -697,7 +697,7 @@ await execute(transaction);
 
 executor 会获取新的 blockhash，估计或保留 resource limit，除非另有配置否则执行 preflight simulation，使用客户端 signer 签名，通过 RPC 提交并等待 `confirmed` commitment。只有 send-and-confirm 操作完成后，`status` 才会从 `sending` 变为 `sent`。单笔结果在 `data.context.signature` 提供已提交的签名，batch 结果包含 plan result tree。没有钱包弹窗，因此只应在客户端拥有适当 signer 的可信上下文中使用此流程。
 
-在 direct Vue/core client 中使用 `payer` 或 `payerSecretKey` 配置 signer。如果客户端没有 payer，请传入带有 embedded signer 的交易消息。生产环境的有资金 key 应保留在 server 或 relayer 中。永远不要把 raw secret 或 `payerSecretKey` 放入 Nuxt public runtime config，也不要把有资金的 keypair 发送到 end-user browser。
+在 direct Vue/core client 中使用 `payer` 或 `payerSecretKey` 配置 `payer`。没有 payer 的 client 无法 plan 或 send。生产环境的有资金 key 应保留在 server 或 relayer 中。永远不要把 raw secret 或 `payerSecretKey` 放入 Nuxt public runtime config，也不要把有资金的 keypair 发送到 end-user browser。
 
 钱包 composable 是分开的：`useSignAndSendTransaction()` 默认在 RPC submission 后返回，或在传入 `confirm: true` 时等待所选 commitment。客户端发送交易始终使用官方 executor 的 `confirmed` send-and-confirm 行为。
 

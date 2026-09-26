@@ -140,7 +140,7 @@ export default defineNuxtConfig({
 
 Nuxt 模块只在客户端安装运行时插件，并从直接的 `@vue-solana/vue/*` 子路径自动导入 composable。Composable 可以在 SSR 期间安全调用，但真实 RPC 和钱包操作应在 hydration 后运行，例如在 `onMounted()` 或用户操作中。Nuxt `solana` 选项位于 public runtime config 中，因此应保持 JSON 可序列化。
 
-direct Vue/core client 支持用于 client-sent 交易的 `payer` 和 `payerSecretKey`。`payerSecretKey` 是 base64 编码的 64 字节 Ed25519 keypair，因此不要把它放入 Nuxt public runtime config，也不要把有资金的 key 发送到浏览器。Nuxt `ModuleOptions` 省略这两个字段；请在 client-only plugin 中创建 ephemeral signer，或使用带有 connected-wallet embedded signer 的消息。
+direct Vue/core client 支持用于 client-sent 交易的 `payer` 和 `payerSecretKey`。`payerSecretKey` 是 base64 编码的 64 字节 Ed25519 keypair，因此不要把它放入 Nuxt public runtime config，也不要把有资金的 key 发送到浏览器。Nuxt `ModuleOptions` 省略这两个字段；请在 client-only plugin 中创建 ephemeral `payer` 并 install Vue plugin。
 
 ## 无钱包测试 RPC
 
@@ -406,7 +406,7 @@ client-send 演示使用默认 client 安装的官方 `rpcTransactionPlanSending
 - UI 中禁用不支持的消息签名或交易签名能力。
 - 消息签名返回签名而不提交链上交易。
 - 转账提交返回签名和确认状态。
-- Client-sent 交易使用官方 planner 和 RPC plan-sending executor，需要配置 payer 或 embedded signer，并且只有达到 `confirmed` 后才会进入 `sent`。
+- Client-sent 交易使用官方 planner 和 RPC plan-sending executor，需要配置 `payer` signer，并且只有达到 `confirmed` 后才会进入 `sent`。
 - Explorer 链接指向和应用相同的集群。
 - 只有在你明确配置 mainnet 并理解真实 SOL 风险时才使用 `mainnet`。
 

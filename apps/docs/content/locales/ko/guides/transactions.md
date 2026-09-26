@@ -48,7 +48,7 @@ confirmation 기본값은 `confirmed` commitment와 60초 timeout입니다. 이�
 
 client가 wallet popup 없이 plan, sign, submit, confirm해야 할 때 `useSendTransaction()` 또는 `useSendTransactions()`를 사용하세요. official executor는 새 blockhash를 가져오고 resource limit과 preflight를 처리하며 client signer로 서명하고 RPC로 제출한 뒤 `confirmed`를 기다립니다. send-and-confirm 작업이 완료된 뒤에만 composable의 `status`가 `sent`가 됩니다. 단일 결과는 `data.context.signature`를 제공하고 batch 결과는 plan result tree를 포함합니다.
 
-direct core/Vue client를 `payer` 또는 `payerSecretKey`로 설정하거나 embedded signer가 있는 message를 전달하세요. `payerSecretKey`는 base64 64-byte Ed25519 keypair이며 trusted development 또는 server flow에만 적합합니다. Nuxt public runtime config에 raw secret이나 `payerSecretKey`를 넣지 말고 funded keypair를 end-user browser에 노출하지 마세요.
+direct core/Vue client를 `payer` 또는 `payerSecretKey`로 설정하세요. client-sent 경로에는 `payer`가 필요합니다. `payerSecretKey`는 base64 64-byte Ed25519 keypair이며 trusted development 또는 server flow에만 적합합니다. Nuxt public runtime config에 raw secret이나 `payerSecretKey`를 넣지 말고 funded keypair를 end-user browser에 노출하지 마세요.
 
 wallet flow는 별개입니다. `useSignAndSendTransaction()`는 기본적으로 RPC submission 뒤에 반환하거나 `confirm: true`로 선택한 commitment을 기다릴 수 있습니다. connected user가 wallet에서 각 트랜잭션을 승인해야 한다면 이 동작을 유지하세요.
 
@@ -250,7 +250,7 @@ async function submit(transaction: Uint8Array) {
 </script>
 ```
 
-트랜잭션 메서드는 클라이언트의 사용자 액션에서 호출하세요. SSR 중 wallet signing을 트리거하지 마세요. Nuxt module option은 `payer`와 `payerSecretKey`를 제외하므로, public runtime config에 secret을 넣지 말고 client-only Vue plugin에서 signer를 설정하거나 connected wallet의 embedded signer를 사용하세요.
+트랜잭션 메서드는 클라이언트의 사용자 액션에서 호출하세요. SSR 중 wallet signing을 트리거하지 마세요. Nuxt module option은 `payer`와 `payerSecretKey`를 제외하므로, public runtime config에 secret을 넣지 말고 client-only Vue plugin에서 `payer`를 설정하세요.
 
 다른 flow에서 반환된 signature를 확인해야 하면 `useSolanaTransactionConfirmation({ commitment: "confirmed" })`를 사용하고 `confirm(signature)`를 호출하세요. timeout 또는 redirect 이후 상태를 계속 확인하려면 `useSolanaSignatureStatus(signature, { pollIntervalMs: 2_000 })`를 사용합니다.
 

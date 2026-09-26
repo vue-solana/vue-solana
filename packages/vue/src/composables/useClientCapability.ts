@@ -63,7 +63,7 @@ export function useClientCapability(
   for (const name of capabilities) {
     const value = (client as Record<string, unknown>)[name];
 
-    if (typeof value !== "function" && typeof value !== "object") {
+    if (value === null || (typeof value !== "function" && typeof value !== "object")) {
       throw new MissingClientCapabilityError(hookName, [name], providerHint);
     }
   }

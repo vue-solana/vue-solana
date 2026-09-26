@@ -71,7 +71,7 @@ Supported clusters are `mainnet` (legacy alias `mainnet-beta`), `devnet`, `testn
 | `mobileWallet`   | `MobileWalletOptions \| false` | Enabled on Android | Android Mobile Wallet Adapter options.                                                               |
 | `iosWallet`      | `iOSWalletOptions \| false`    | Enabled on iOS     | iOS wallet universal-link options.                                                                   |
 
-`payer` and `payerSecretKey` are supported by direct Vue plugin/core clients. A client-sent transaction needs a `payer` or a message with an embedded signer. Never put a raw secret or `payerSecretKey` in Nuxt public runtime config, and never ship a funded signing key to an end-user browser.
+`payer` and `payerSecretKey` are supported by direct Vue plugin/core clients. A client-sent transaction requires a `payer`. Never put a raw secret or `payerSecretKey` in Nuxt public runtime config, and never ship a funded signing key to an end-user browser.
 
 The default client created by `createSolanaPlugin()` uses the official `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()` composition. The old custom fallback sender is not used. The official sending executor waits for `confirmed` commitment before `execute()` resolves and sets `status` to `sent`.
 
@@ -174,7 +174,7 @@ Use `@vue-solana/vue/buffer-polyfill` for browser transaction code that needs th
 - `useClientCapability(capability)`: asserts a capability is installed on the Kit client, failing fast with a clear error.
 - `usePayer()` / `useIdentity()`: reactively track the fee payer / acting identity signer from the Kit client.
 - `usePlanTransaction()` / `usePlanTransactions()`: plan transaction messages from instruction inputs without sending.
-- `useSendTransaction()` / `useSendTransactions()`: use the official Kit planner and RPC plan-sending executor installed by `createSolanaClient()`; they plan, sign, submit, and wait for `confirmed` commitment with no wallet popup. Configure `payer` or provide an embedded signer.
+- `useSendTransaction()` / `useSendTransactions()`: use the official Kit planner and RPC plan-sending executor installed by `createSolanaClient()`; they plan, sign, submit, and wait for `confirmed` commitment with no wallet popup. Configure `payer`.
 
 ## Related Guides
 
@@ -698,7 +698,7 @@ A wallet may modify the message or transaction before signing — for example to
 
 The executor reads a fresh blockhash, estimates or respects resource limits, performs preflight simulation unless configured otherwise, signs with the client signers, submits over RPC, and waits for `confirmed` commitment. `status` changes from `sending` to `sent` only after that send-and-confirm operation completes. A single result exposes `data.context.signature`; a batch result contains the plan result tree. There is no wallet popup, so use this path only when the client owns an appropriate signer.
 
-Configure a signer directly in a Vue/core client with `payer` or `payerSecretKey`. If the client has no payer, pass a transaction message that already contains an embedded signer. A server or relayer should own funded production keys. Do not put a raw secret or `payerSecretKey` in Nuxt public runtime config, and do not ship a funded keypair to an end-user browser.
+Configure a `payer` directly in a Vue/core client with `payer` or `payerSecretKey`; a client with no payer cannot plan or send. A server or relayer should own funded production keys. Do not put a raw secret or `payerSecretKey` in Nuxt public runtime config, and do not ship a funded keypair to an end-user browser.
 
 The wallet composables remain separate: `useSignAndSendTransaction()` can return after RPC submission, or wait for a selected commitment when `confirm: true` is passed. Client-sent transactions always use the official executor's `confirmed` send-and-confirm behavior.
 

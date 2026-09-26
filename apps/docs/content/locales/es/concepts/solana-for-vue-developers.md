@@ -79,7 +79,7 @@ Una transacción es un conjunto de instrucciones que cambia el estado de Solana.
 
 La firma prueba que el propietario de la wallet aprueba la transacción. Las apps frontend deben pedir a la wallet del usuario que firme. No deben contener claves privadas.
 
-El `createSolanaClient()` por defecto también compone el planner y el executor de envio de transacciones oficiales de Solana Kit, para que los contextos confiables puedan planificar y enviar sin popup de wallet. Proporciona un `payer` o un signer embebido para ese flujo. Mantén los signers con fondos en un servidor o relayer; la configuracion runtime publica de Nuxt no debe contener un `payerSecretKey` crudo ni otro secreto.
+El `createSolanaClient()` por defecto también compone el planner y el executor de envio de transacciones oficiales de Solana Kit, para que los contextos confiables puedan planificar y enviar sin popup de wallet. Ese flujo requiere un signer `payer`. Mantén los signers con fondos en un servidor o relayer; la configuracion runtime publica de Nuxt no debe contener un `payerSecretKey` crudo ni otro secreto.
 
 ## Niveles de commitment
 

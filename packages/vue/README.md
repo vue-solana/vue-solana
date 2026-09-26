@@ -96,7 +96,7 @@ createApp(App).use(
 
 Supported clusters are `mainnet` (legacy alias `mainnet-beta`), `devnet`, `testnet`, and `localnet`. Use `mainnet` for Solana mainnet; this is Solana's official mainnet cluster name.
 
-`payer` and `payerSecretKey` are supported by direct Vue/core clients. A client-sent transaction needs a payer or an embedded signer. Never put a raw secret or `payerSecretKey` in Nuxt public runtime config, and never ship a funded signing key to an end-user browser. The default `createSolanaPlugin()` client composes the official `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()` stack; the old custom fallback sender is not used.
+`payer` and `payerSecretKey` are supported by direct Vue/core clients. A client-sent transaction requires a payer. Never put a raw secret or `payerSecretKey` in Nuxt public runtime config, and never ship a funded signing key to an end-user browser. The default `createSolanaPlugin()` client composes the official `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()` stack; the old custom fallback sender is not used.
 
 ### Plugin Options
 
@@ -375,7 +375,7 @@ A wallet may modify the message or transaction before signing — for example to
 
 `useSendTransaction()` and `useSendTransactions()` send through the Kit client's transaction-sending capability (`ClientWithTransactionSending`) instead of the connected wallet. The client plans the transaction from your input, signs it with its own signers — typically the client identity or `payer` keypair, e.g. a relayer — submits it, and returns the result. There is no wallet extension and no approval popup. The official executor waits for `confirmed` commitment before resolving.
 
-Configure a direct client with `payer` or `payerSecretKey`, or pass a message with an embedded signer. `payerSecretKey` is a base64 64-byte Ed25519 keypair and must stay in a trusted server or development context. Never put it in Nuxt public runtime config or ship a funded key to an end-user browser.
+Configure a direct client with `payer` or `payerSecretKey`. `payerSecretKey` is a base64 64-byte Ed25519 keypair and must stay in a trusted server or development context. Never put it in Nuxt public runtime config or ship a funded key to an end-user browser.
 
 **Which to use:**
 
@@ -389,7 +389,7 @@ Configure a direct client with `payer` or `payerSecretKey`, or pass a message wi
 
 Use the client flow for automated or server-backed signing (airdrop faucet, cron jobs, relayer fees paid by your keypair), and the wallet flow when the end user must own and approve each transaction.
 
-**Default client composition.** `createSolanaPlugin()` and `createSolanaClient()` install the official `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()` plugins by default. The old custom fallback sender is not used, so `useSendTransaction()` and `useSendTransactions()` do not need a second manual plugin installation. The official executor waits for `confirmed` commitment before `execute()` resolves and the composable reports `sent`. A custom client must still provide the planner and sending executor; use a `payer` or an embedded signer.
+**Default client composition.** `createSolanaPlugin()` and `createSolanaClient()` install the official `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()` plugins by default. The old custom fallback sender is not used, so `useSendTransaction()` and `useSendTransactions()` do not need a second manual plugin installation. The official executor waits for `confirmed` commitment before `execute()` resolves and the composable reports `sent`. A custom client must still provide the planner and sending executor and a `payer`.
 
 ```ts
 import { useSendTransaction } from "@vue-solana/vue/useSendTransaction";

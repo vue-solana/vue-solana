@@ -79,7 +79,7 @@ Vue Solana는 통합 `useWallets()` 플로를 통해 Solana Wallet Standard 브�
 
 서명은 지갑 소유자가 트랜잭션을 승인했음을 증명합니다. 프런트엔드 앱은 사용자의 지갑에 서명을 요청해야 하며 private key를 보관해서는 안 됩니다.
 
-기본 `createSolanaClient()`는 Solana Kit official RPC planner와 transaction-sending executor도 compose하므로 trusted client context가 wallet popup 없이 plan하고 send할 수 있습니다. 이 경로에는 `payer` 또는 embedded signer를 제공하세요. funded signer는 server 또는 relayer에 유지하고, Nuxt public runtime config에는 raw `payerSecretKey`나 다른 secret을 넣지 마세요.
+기본 `createSolanaClient()`는 Solana Kit official RPC planner와 transaction-sending executor도 compose하므로 trusted client context가 wallet popup 없이 plan하고 send할 수 있습니다. 이 경로에는 `payer` signer가 필요합니다. funded signer는 server 또는 relayer에 유지하고, Nuxt public runtime config에는 raw `payerSecretKey`나 다른 secret을 넣지 마세요.
 
 ## Commitment 레벨
 

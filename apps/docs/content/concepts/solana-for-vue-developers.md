@@ -79,7 +79,7 @@ A transaction is a set of instructions that changes Solana state. Examples inclu
 
 Signing proves that the wallet owner approves the transaction. Frontend apps should ask the user's wallet to sign. They should not hold private keys.
 
-The default `createSolanaClient()` also composes Solana Kit's official RPC planner and transaction-sending executor, so trusted client contexts can plan and send without a wallet popup. Provide a `payer` or an embedded signer for that path. Keep funded signers on a server or relayer; Nuxt's public runtime config must not contain a raw `payerSecretKey` or other secret.
+The default `createSolanaClient()` also composes Solana Kit's official RPC planner and transaction-sending executor, so trusted client contexts can plan and send without a wallet popup. That path requires a `payer` signer. Keep funded signers on a server or relayer; Nuxt's public runtime config must not contain a raw `payerSecretKey` or other secret.
 
 ## Commitment Levels
 

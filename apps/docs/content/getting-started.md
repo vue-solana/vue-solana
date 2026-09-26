@@ -140,7 +140,7 @@ export default defineNuxtConfig({
 
 The Nuxt module installs the runtime plugin on the client only and auto-imports composables from direct `@vue-solana/vue/*` subpaths. Composables are safe to call during SSR, but real RPC and wallet operations should run after hydration, such as from `onMounted()` or user actions. Nuxt `solana` options live in public runtime config, so keep them JSON-serializable.
 
-Direct Vue and core clients accept `payer` and `payerSecretKey` for client-sent transactions. `payerSecretKey` is a base64 64-byte Ed25519 keypair, so never put it in Nuxt public runtime config or ship a funded key to a browser. Nuxt `ModuleOptions` intentionally omits both fields; create an ephemeral signer in a client-only plugin or use a transaction message with an embedded connected-wallet signer instead.
+Direct Vue and core clients accept `payer` and `payerSecretKey` for client-sent transactions. `payerSecretKey` is a base64 64-byte Ed25519 keypair, so never put it in Nuxt public runtime config or ship a funded key to a browser. Nuxt `ModuleOptions` intentionally omits both fields, so install a client-owned `payer` in a client-only plugin.
 
 ## Test RPC Without A Wallet
 
@@ -406,7 +406,7 @@ Before relying on an app flow, verify these behaviors on devnet:
 - Unsupported message signing or transaction signing capabilities are disabled in the UI.
 - Message signing returns a signature without submitting an on-chain transaction.
 - Transfer submission returns a signature and confirmation status.
-- Client-sent transactions use the official planner and RPC plan-sending executor, require a configured payer or embedded signer, and reach `sent` only after `confirmed` commitment.
+- Client-sent transactions use the official planner and RPC plan-sending executor, require a configured `payer` signer, and reach `sent` only after `confirmed` commitment.
 - Explorer links point to the same cluster as the app.
 - `mainnet` is used only when you intentionally configure mainnet and understand that real SOL is at risk.
 

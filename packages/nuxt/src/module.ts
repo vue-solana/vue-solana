@@ -2,7 +2,14 @@ import { addImports, addPlugin, createResolver, defineNuxtModule } from "@nuxt/k
 import type { VueSolanaPluginOptions } from "@vue-solana/vue";
 import { SOLANA_IMPORTS } from "./imports";
 
-export type ModuleOptions = Omit<VueSolanaPluginOptions, "wallet" | "payer" | "payerSecretKey">;
+export type ModuleOptions = Omit<VueSolanaPluginOptions, "wallet" | "payer" | "payerSecretKey"> & {
+  /**
+   * Set to `false` to auto-import the composables without installing the Solana
+   * runtime plugin. Use it when the app installs `createSolanaPlugin` itself,
+   * e.g. to attach a client-only `payer` that module options cannot carry.
+   */
+  clientPlugin?: boolean;
+};
 
 type DefinedNuxtModule = ReturnType<ReturnType<typeof defineNuxtModule<ModuleOptions>>["with"]>;
 
@@ -63,10 +70,12 @@ const module: DefinedNuxtModule = defineNuxtModule<ModuleOptions>({
       }
     });
 
-    addPlugin({
-      src: resolver.resolve("./runtime/plugin"),
-      mode: "client",
-    });
+    if (options.clientPlugin !== false) {
+      addPlugin({
+        src: resolver.resolve("./runtime/plugin"),
+        mode: "client",
+      });
+    }
 
     addImports(SOLANA_IMPORTS);
   },
@@ -80,6 +89,7 @@ function toPublicSolanaConfig(options: ModuleOptions): ModuleOptions {
   delete runtimeOptions.wallet;
   delete runtimeOptions.payer;
   delete runtimeOptions.payerSecretKey;
+  delete (runtimeOptions as { clientPlugin?: boolean }).clientPlugin;
 
   return runtimeOptions;
 }

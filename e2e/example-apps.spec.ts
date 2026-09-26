@@ -196,6 +196,14 @@ test("funds the client payer and sends single and batch transactions", async ({ 
   }
 
   const rpc = await mockSolanaSubscriptions(page);
+  const connectionChecks: string[] = [];
+
+  page.on("console", (message) => {
+    if (message.text().includes("[Vue Solana] Checking RPC connection")) {
+      connectionChecks.push(message.text());
+    }
+  });
+
   await page.goto("/");
 
   await expect(page.getByTestId("payer-status")).toHaveText(/^funding required · /);
@@ -234,6 +242,10 @@ test("funds the client payer and sends single and batch transactions", async ({ 
   expect(callCount("getSignatureStatuses")).toBeGreaterThanOrEqual(3);
   expect(callCount("sendTransaction")).toBeGreaterThanOrEqual(2);
   expect(callCount("simulateTransaction")).toBeGreaterThanOrEqual(2);
+  // Each `createSolanaPlugin` install runs one connection check. Two installs
+  // mean two wallet subscriptions and two health checks for a single app, so
+  // pin it to exactly one.
+  expect(connectionChecks).toHaveLength(1);
 });
 
 test("signs in with the mocked SIWS wallet and surfaces the account", async ({ page }) => {

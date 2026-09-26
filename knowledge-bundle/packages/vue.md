@@ -89,7 +89,7 @@ createApp(App).use(
 
 `iosWallet` controls iOS browser wallet universal-link entries. It defaults to enabled on iOS browser clients, accepts app identity and redirect URL options, and can be disabled with `iosWallet: false`.
 
-The plugin accepts `payer` as a Kit `TransactionSigner` and `payerSecretKey` as a base64 64-byte Ed25519 keypair (secret key first). A client-sent transaction needs one of those signers or a message with an embedded signer. These options are for direct Vue/core clients only: Nuxt's public runtime config must never receive a raw secret or `payerSecretKey`. The default client uses the official `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()` composition; the old custom fallback sender is not used.
+The plugin accepts `payer` as a Kit `TransactionSigner` and `payerSecretKey` as a base64 64-byte Ed25519 keypair (secret key first). A client-sent transaction requires one of those signers. These options are for direct Vue/core clients only: Nuxt's public runtime config must never receive a raw secret or `payerSecretKey`. The default client uses the official `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()` composition; the old custom fallback sender is not used.
 
 ## `useSolana()`
 

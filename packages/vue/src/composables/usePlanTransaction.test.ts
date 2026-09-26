@@ -10,7 +10,7 @@ import {
 } from "./usePlanTransaction";
 
 const { clientMock } = vi.hoisted(() => ({
-  clientMock: { rpc: {} } as Record<string, unknown>,
+  clientMock: { payer: { address: "payer-address" }, rpc: {} } as Record<string, unknown>,
 }));
 
 vi.mock("./useSolanaClient", () => ({
@@ -217,5 +217,42 @@ describe("capability fail-fast", () => {
     expect(captured).toBeInstanceOf(MissingClientCapabilityError);
     expect((captured as MissingClientCapabilityError).hookName).toBe("usePlanTransactions");
     expect((captured as MissingClientCapabilityError).capabilities).toEqual(["planTransactions"]);
+  });
+});
+
+describe("payer fail-fast", () => {
+  it("throws at setup time and names `payer`", () => {
+    installPlanningClient();
+    delete clientMock.payer;
+    let captured: unknown;
+
+    try {
+      usePlanTransaction();
+    } catch (cause) {
+      captured = cause;
+    }
+
+    expect(captured).toBeInstanceOf(MissingClientCapabilityError);
+    expect((captured as MissingClientCapabilityError).hookName).toBe("usePlanTransaction");
+    expect((captured as MissingClientCapabilityError).capabilities).toEqual(["payer"]);
+    expect((captured as Error).message).toContain("`payer`");
+    clientMock.payer = { address: "payer-address" };
+  });
+
+  it("names `payer` for the batch hook too", () => {
+    installPlanningClient();
+    delete clientMock.payer;
+    let captured: unknown;
+
+    try {
+      usePlanTransactions();
+    } catch (cause) {
+      captured = cause;
+    }
+
+    expect(captured).toBeInstanceOf(MissingClientCapabilityError);
+    expect((captured as MissingClientCapabilityError).hookName).toBe("usePlanTransactions");
+    expect((captured as MissingClientCapabilityError).capabilities).toEqual(["payer"]);
+    clientMock.payer = { address: "payer-address" };
   });
 });

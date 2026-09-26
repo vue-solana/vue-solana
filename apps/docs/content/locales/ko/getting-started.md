@@ -140,7 +140,7 @@ export default defineNuxtConfig({
 
 Nuxt module은 runtime plugin을 client 전용으로 설치하고 `@vue-solana/vue/*` direct subpath에서 컴포저블을 자동 import합니다. 컴포저블은 SSR 중 호출해도 안전하지만 실제 RPC와 지갑 작업은 `onMounted()` 또는 사용자 액션처럼 hydration 이후 실행하세요. Nuxt `solana` option은 public runtime config에 있으므로 JSON 직렬화가 가능해야 합니다.
 
-direct Vue/core client는 client-sent transaction을 위해 `payer`와 `payerSecretKey`를 지원합니다. `payerSecretKey`는 base64 64-byte Ed25519 keypair이므로 Nuxt public runtime config에 넣거나 funded key를 browser에 보내지 마세요. Nuxt `ModuleOptions`는 두 필드를 모두 제외하므로 client-only plugin에서 ephemeral signer를 만들거나 connected wallet의 embedded signer가 있는 message를 사용하세요.
+direct Vue/core client는 client-sent transaction을 위해 `payer`와 `payerSecretKey`를 지원합니다. `payerSecretKey`는 base64 64-byte Ed25519 keypair이므로 Nuxt public runtime config에 넣거나 funded key를 browser에 보내지 마세요. Nuxt `ModuleOptions`는 두 필드를 모두 제외하므로 client-only plugin에서 ephemeral `payer`를 만들어 Vue plugin을 install하세요.
 
 ## 지갑 없이 RPC 테스트
 
@@ -406,7 +406,7 @@ client-send demo는 default client에 설치된 official `rpcTransactionPlanSend
 - 지원되지 않는 message signing 또는 transaction signing capability는 UI에서 disabled됩니다.
 - Message signing은 on-chain transaction을 제출하지 않고 signature를 반환합니다.
 - Transfer submission은 signature와 confirmation status를 반환합니다.
-- Client-sent transaction은 official planner와 RPC plan-sending executor를 사용하고, configured payer 또는 embedded signer가 필요하며, `confirmed` 이후에만 `sent`에 도달합니다.
+- Client-sent transaction은 official planner와 RPC plan-sending executor를 사용하고, configured `payer` signer가 필요하며, `confirmed` 이후에만 `sent`에 도달합니다.
 - Explorer link는 앱과 같은 cluster를 가리킵니다.
 - 실제 자금 위험을 이해하고 의도적으로 mainnet을 설정할 때만 `mainnet`을 사용합니다.
 

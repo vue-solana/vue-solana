@@ -45,7 +45,7 @@ Los clusters soportados son `mainnet` (alias heredado `mainnet-beta`), `devnet`,
 
 Las opciones del módulo Nuxt se guardan en la configuración runtime pública, así que deben ser serializables a JSON. Los objetos adaptadores `wallet` personalizados se excluyen intencionalmente de la configuración Nuxt; usa el plugin de Vue directamente en código Vue solo de cliente si necesitas inyectar un objeto wallet personalizado.
 
-`ModuleOptions` también omite intencionalmente `payer` y `payerSecretKey`. Ambos siguen soportados por clientes directos de `@vue-solana/core` y `@vue-solana/vue`, pero el módulo Nuxt no reenvía ninguno y los elimina de la configuración runtime pública. Nunca pongas un secreto crudo, una seed phrase o `payerSecretKey` en `nuxt.config.ts` o `runtimeConfig.public`: esos valores son visibles para el navegador. Para un signer propio del cliente, genera un signer efimero en un plugin solo de cliente con `generateKeyPairSigner()` o usa un mensaje con un signer embebido de la wallet conectada.
+`ModuleOptions` también omite intencionalmente `payer` y `payerSecretKey`. Ambos siguen soportados por clientes directos de `@vue-solana/core` y `@vue-solana/vue`, pero el módulo Nuxt no reenvía ninguno y los elimina de la configuración runtime pública. Nunca pongas un secreto crudo, una seed phrase o `payerSecretKey` en `nuxt.config.ts` o `runtimeConfig.public`: esos valores son visibles para el navegador. Para un signer propio del cliente, genera un signer efimero en un plugin solo de cliente con `generateKeyPairSigner()`, instala el plugin de Vue ahi y pon `clientPlugin: false` para que el modulo no instale un segundo plugin (dos plugins crean dos contextos, dos suscripciones a wallets y dos comprobaciones de conexion, y solo gana el ultimo `provide`).
 
 El plugin runtime de cliente del módulo también instala automáticamente el contexto de cuenta de wallet seleccionada de toda la app, así que `useSolanaSelectedWalletAccount()` funciona en cada componente sin montar un provider. Para personalizar la persistencia (`stateSync`) o el filtrado (`filterWallet`), monta `SelectedWalletAccountProvider` desde `@vue-solana/vue/useSelectedWalletAccount` más abajo en el árbol para anular el contexto por defecto.
 
@@ -115,7 +115,7 @@ Consulta [Data Fetching Composables](/packages/vue#data-fetching-composables) pa
 - `useSolanaSignAndSendTransactions()`: firma y envía múltiples transacciones en una sola solicitud de wallet.
 - `useSolanaPayer()` / `useSolanaIdentity()`: firmantes reactivos del cliente Kit (requiere un plugin signer).
 - `useSolanaPlanTransaction()` / `useSolanaPlanTransactions()`: planifica mensajes de transacción desde inputs de instrucciones.
-- `useSolanaSendTransaction()` / `useSolanaSendTransactions()`: usa el planner y el executor oficial instalados por el cliente por defecto; planifica, firma, envia y espera `confirmed` sin popup de wallet. Configura un signer en un plugin Vue solo de cliente o usa un signer embebido; usa `useSolanaSignAndSendTransaction(s)` cuando la wallet conectada deba aprobar cada transaccion.
+- `useSolanaSendTransaction()` / `useSolanaSendTransactions()`: usa el planner y el executor oficial instalados por el cliente por defecto; planifica, firma, envia y espera `confirmed` sin popup de wallet. Configura un `payer` en un plugin Vue solo de cliente; usa `useSolanaSignAndSendTransaction(s)` cuando la wallet conectada deba aprobar cada transaccion.
 
 Estos son aliases Nuxt para los composables de Vue.
 
@@ -421,7 +421,7 @@ async function submitTransaction(transaction: SolanaTransaction) {
 
 El estado pasa de `sending` a `sent` después del envío RPC. Cuando la confirmación está activada, luego pasa por `confirming` y termina en el commitment alcanzado, como `confirmed` o `finalized`. Si la confirmación agota el tiempo después del envío, `signature` sigue disponible para que la app pueda mostrar un enlace de explorador o sondear el estado de firma antes de reintentar.
 
-Las transacciones enviadas por el cliente son diferentes: `useSolanaSendTransaction()` y `useSolanaSendTransactions()` usan el executor oficial de planes RPC. El executor espera `confirmed` antes de que `execute()` resuelva, asi que su estado `sent` significa que la operacion de envio y confirmacion del cliente termino. No muestran popup de wallet; usa un mensaje con signer embebido de la wallet conectada o instala un signer en un plugin Vue solo de cliente. No intentes configurar un `payerSecretKey` crudo en la configuracion runtime publica de Nuxt.
+Las transacciones enviadas por el cliente son diferentes: `useSolanaSendTransaction()` y `useSolanaSendTransactions()` usan el executor oficial de planes RPC. El executor espera `confirmed` antes de que `execute()` resuelva, asi que su estado `sent` significa que la operacion de envio y confirmacion del cliente termino. No muestran popup de wallet; instala un `payer` en un plugin Vue solo de cliente. No intentes configurar un `payerSecretKey` crudo en la configuracion runtime publica de Nuxt.
 
 Los prompts de wallet deben activarse mediante interacción del usuario después de la hidratación. No llames a `execute()` durante SSR, en rutas de servidor ni automáticamente al cargar la página.
 

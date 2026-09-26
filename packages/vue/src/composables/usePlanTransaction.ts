@@ -25,22 +25,27 @@ interface PlanningClient {
   ) => Promise<TransactionPlan>;
 }
 
+const PLANNING_PROVIDER_HINT =
+  "Install a planner plugin, e.g. `createClient().use(rpcTransactionPlanner())` from " +
+  "`@solana/kit-plugin-rpc`, and plan with a client that has a `payer` signer — " +
+  "Kit reads `client.payer` to set the fee payer.";
+
 /**
  * Plan a single transaction message from instruction inputs — without
  * signing or sending — using the client's transaction planning capability
  * (e.g. `rpcTransactionPlanner` from `@solana/kit-plugin-rpc`).
  *
- * Rejects with a clear capability error when the client does not plan.
+ * Throws with a clear capability error when the client does not plan, which
+ * includes a client without a `payer` signer.
  *
  * Calling `execute` while a prior execution is in flight aborts the prior call;
  * the superseded attempt rejects, so check its `error.cause` to tell it apart
  * from a real failure.
  */
 export function usePlanTransaction() {
-  useClientCapability(["planTransaction"], {
+  useClientCapability(["planTransaction", "payer"], {
     hookName: "usePlanTransaction",
-    providerHint:
-      "Install a planner plugin, e.g. `createClient().use(rpcTransactionPlanner())` from `@solana/kit-plugin-rpc`.",
+    providerHint: PLANNING_PROVIDER_HINT,
   });
 
   const { client } = useSolanaClient();
@@ -112,12 +117,14 @@ export function usePlanTransaction() {
  * Plan a full transaction plan — possibly multiple transaction messages —
  * from instruction inputs, using the client's transaction planning
  * capability.
+ *
+ * Throws with a clear capability error when the client does not plan, which
+ * includes a client without a `payer` signer.
  */
 export function usePlanTransactions() {
-  useClientCapability(["planTransactions"], {
+  useClientCapability(["planTransactions", "payer"], {
     hookName: "usePlanTransactions",
-    providerHint:
-      "Install a planner plugin, e.g. `createClient().use(rpcTransactionPlanner())` from `@solana/kit-plugin-rpc`.",
+    providerHint: PLANNING_PROVIDER_HINT,
   });
 
   const { client } = useSolanaClient();

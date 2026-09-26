@@ -48,7 +48,7 @@ Confirmation defaults to `confirmed` commitment and a 60 second timeout. It poll
 
 Use `useSendTransaction()` or `useSendTransactions()` when the client should plan, sign, submit, and confirm without a wallet popup. The official executor fetches a fresh blockhash, handles resource limits and preflight simulation, signs with the client signers, submits through RPC, and waits for `confirmed` commitment. The composable sets `status` to `sent` only after that send-and-confirm operation completes. A single result exposes `data.context.signature`; a batch result contains the plan result tree.
 
-Configure a direct core or Vue client with `payer` or `payerSecretKey`, or provide a transaction message with an embedded signer. `payerSecretKey` is a base64-encoded 64-byte Ed25519 keypair and is only appropriate for trusted development or server-side flows. Never put a raw secret or `payerSecretKey` in Nuxt public runtime config, and never expose a funded signing key to an end-user browser.
+Configure a direct core or Vue client with `payer` or `payerSecretKey`; the client-sent path requires a `payer`. `payerSecretKey` is a base64-encoded 64-byte Ed25519 keypair and is only appropriate for trusted development or server-side flows. Never put a raw secret or `payerSecretKey` in Nuxt public runtime config, and never expose a funded signing key to an end-user browser.
 
 The wallet flow is separate: `useSignAndSendTransaction()` can return after RPC submission by default, or wait for a selected commitment with `confirm: true`. Keep that behavior when a connected user must approve a transaction in their wallet.
 
@@ -250,7 +250,7 @@ async function submit(transaction: Uint8Array) {
 </script>
 ```
 
-Call transaction methods from user actions on the client. Do not trigger wallet signing during SSR. Nuxt module options intentionally omit `payer` and `payerSecretKey`; configure a signer in a client-only Vue plugin or use an embedded connected-wallet signer instead of placing a secret in public runtime config.
+Call transaction methods from user actions on the client. Do not trigger wallet signing during SSR. Nuxt module options intentionally omit `payer` and `payerSecretKey`; configure a `payer` in a client-only Vue plugin instead of placing a secret in public runtime config.
 
 Use `useSolanaTransactionConfirmation({ commitment: "confirmed" })` and call `confirm(signature)` when you need to confirm a signature returned by another flow. Use `useSolanaSignatureStatus(signature, { pollIntervalMs: 2_000 })` when you want to keep checking status after a timeout or redirect.
 
