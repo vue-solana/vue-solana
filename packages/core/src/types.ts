@@ -1,7 +1,12 @@
-import type { Address, Commitment, Signature, Slot } from "@solana/kit";
+import type { Address, Commitment, Signature, Slot, TransactionSigner } from "@solana/kit";
 import type { SolanaClient } from "./kit";
 
-export type SolanaCluster = "mainnet-beta" | "testnet" | "devnet" | "localnet";
+/**
+ * Solana cluster names. `mainnet` is Solana's official mainnet cluster name.
+ * The legacy `mainnet-beta` spelling is still accepted and redirects to the
+ * same mainnet endpoint.
+ */
+export type SolanaCluster = "mainnet-beta" | "mainnet" | "testnet" | "devnet" | "localnet";
 
 export type SolanaChain = "solana:mainnet" | "solana:testnet" | "solana:devnet" | "solana:localnet";
 
@@ -11,6 +16,20 @@ export interface SolanaConfig {
   wsEndpoint?: string;
   commitment?: Commitment;
   autoConnect?: boolean;
+  /**
+   * Kit client signer used to pay fees and sign client-sent transactions
+   * (e.g. `useSendTransaction()`). Install one for demo/relayer flows; never
+   * ship a funded keypair to end-user browsers.
+   */
+  payer?: TransactionSigner;
+  /**
+   * Serializable variant of `payer`: a 64-byte Ed25519 keypair encoded as
+   * base64 (secret key first). Resolved to a Kit `TransactionSigner` when the
+   * client is created. Direct Vue/core demos only; Nuxt does not forward this
+   * value through public runtime config. Dev/demos only; never ship a funded
+   * secret to production browsers.
+   */
+  payerSecretKey?: string;
 }
 
 export interface SolanaContext {
