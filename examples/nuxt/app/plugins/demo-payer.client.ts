@@ -1,9 +1,4 @@
-import { generateKeyPairSigner } from "@solana/kit";
-import {
-  createSelectedWalletAccountContext,
-  createSolanaPlugin,
-  selectedWalletAccountInjectionKey,
-} from "@vue-solana/vue";
+import { generateKeyPairSigner } from "@vue-solana/nuxt/kit";
 import { defineNuxtPlugin } from "#app";
 
 // `solana.clientPlugin: false` in `nuxt.config.ts` keeps the module from

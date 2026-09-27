@@ -1,5 +1,4 @@
-import { stringifyMarkdown } from "@nuxtjs/mdc/runtime";
-import { toHast } from "minimark/hast";
+import { stringify } from "minimark/stringify";
 
 import {
   API_VERSION,
@@ -71,7 +70,13 @@ export default defineEventHandler(async (event) => {
     return;
   }
 
-  setResponseHeader(event, "Vary", markdownNegotiationVary(getResponseHeader(event, "Vary")));
+  // `getResponseHeader` hands back whatever Node stored, so an array Vary arrives
+  // as a string only after coercion; a multi-value Vary joins with "," as it wants.
+  setResponseHeader(
+    event,
+    "Vary",
+    markdownNegotiationVary(String(getResponseHeader(event, "Vary") ?? "")),
+  );
 
   const page = await queryCollection(event, "content").path(path).first();
 
@@ -80,7 +85,10 @@ export default defineEventHandler(async (event) => {
       return;
     }
 
-    const markdown = await stringifyMarkdown(toHast(page.body));
+    // `page.body` is a MinimarkTree, so it goes straight back to markdown. The
+    // previous `stringifyMarkdown(toHast(page.body))` bridged through hast, which
+    // `@nuxtjs/mdc` no longer stringifies from and no longer ships `toHast` for.
+    const markdown = stringify(page.body);
 
     setResponseHeader(event, "Content-Type", "text/markdown; charset=utf-8");
     setResponseStatus(event, 200, "OK");

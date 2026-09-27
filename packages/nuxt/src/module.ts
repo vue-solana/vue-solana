@@ -13,6 +13,14 @@ export type ModuleOptions = Omit<VueSolanaPluginOptions, "wallet" | "payer" | "p
 
 type DefinedNuxtModule = ReturnType<ReturnType<typeof defineNuxtModule<ModuleOptions>>["with"]>;
 
+/**
+ * Types only, so app code can name the public surface (`SolanaWalletInfo`,
+ * `VueSolanaContext`, composable return types) without a direct dependency on
+ * `@vue-solana/vue` or `@vue-solana/core`. A value re-export would pull this
+ * build-time module into the client bundle.
+ */
+export type * from "@vue-solana/vue";
+
 const VITE_OPTIMIZE_DEPS = [
   "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > @solana-mobile/wallet-standard-mobile",
   "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > buffer",

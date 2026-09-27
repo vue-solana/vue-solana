@@ -1,11 +1,3 @@
-export { createSolanaClient } from "@vue-solana/core/kit";
-export type { SolanaClient } from "@vue-solana/core/kit";
-export type {
-  Address,
-  Commitment,
-  Lamports,
-  Rpc,
-  Signature,
-  SolanaRpcApi,
-} from "@vue-solana/core/kit";
-export { address, lamports } from "@vue-solana/core/kit";
+// Re-exported wholesale: `@vue-solana/core/kit` is an explicit list that never
+// collides with the names this package defines, so a wildcard cannot drift.
+export * from "@vue-solana/core/kit";

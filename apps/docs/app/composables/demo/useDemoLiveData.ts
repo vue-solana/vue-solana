@@ -22,11 +22,14 @@ export function useDemoLiveData() {
   });
 
   const request = useSolanaRequest(
-    computed(() =>
-      trackedAddress.value
+    computed(() => {
+      // Bound to a local so the `null` narrowing survives into the async callback.
+      const address = trackedAddress.value;
+
+      return address
         ? async (signal: AbortSignal) => {
             const [balanceResponse, versionResponse] = await Promise.all([
-              client.rpc.getBalance(trackedAddress.value).send({ abortSignal: signal }),
+              client.rpc.getBalance(address).send({ abortSignal: signal }),
               client.rpc.getVersion().send({ abortSignal: signal }),
             ]);
 
@@ -37,8 +40,8 @@ export function useDemoLiveData() {
               core: versionResponse["solana-core"],
             };
           }
-        : null,
-    ),
+        : null;
+    }),
   );
 
   const slots = useSolanaSubscription<SlotNotificationShape>(

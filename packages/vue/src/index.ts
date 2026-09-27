@@ -31,3 +31,4 @@ export * from "./components/SelectedWalletAccountProvider";
 export * from "./injection";
 export * from "./kit";
 export * from "./plugin";
+export * from "@vue-solana/core/types";

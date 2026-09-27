@@ -6,7 +6,7 @@ import {
   summarizeTransactionPlanResult,
   type Instruction,
   type TransactionPlanResult,
-} from "@solana/kit";
+} from "@vue-solana/nuxt/kit";
 
 const { client } = useSolanaClient();
 const wallet = useSolanaWallet();

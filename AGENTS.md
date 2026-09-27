@@ -30,7 +30,7 @@ Implemented files:
 
 - `src/types.ts`: shared `SolanaConfig`, `SolanaContext`, `SolanaWallet`, and transaction types.
 - `src/clusters.ts`: cluster names and endpoint resolution (`mainnet` with a `mainnet-beta` alias).
-- `src/kit.ts`: `createSolanaClient()` — the official Kit stack (`solanaRpc`, `rpcTransactionPlanner`, `rpcTransactionPlanSendingExecutor`, `rpcAirdrop`) plus `payer` / `payerSecretKey` resolution.
+- `src/kit.ts`: `createSolanaClient()` — the official Kit stack (`solanaRpc`, `rpcAirdrop`) plus `payer` / `payerSecretKey` resolution, and the curated list of Kit re-exports.
 - `src/rpc.ts`: `createSolanaContext()`.
 - `src/wallet.ts`: wallet connection assertions.
 - `src/transaction.ts`: `signAndSendTransaction()` and `confirmTransactionSignature()` helpers.
@@ -104,11 +104,14 @@ Auto-imported Nuxt composables (source of truth: `packages/nuxt/src/imports.ts`)
 - `useSolanaTokenAccounts()`, `useSolanaTokenBalance()`, `useSolanaSignatureStatus()`, `useSolanaTransactionConfirmation()`
 - `useSolanaWallet()`, `useSolanaWallets()`, `useSolanaSignMessage()`, `useSolanaSignIn()`
 - `useSolanaAirdrop()`, `useSolanaAction()`, `useSolanaRequest()`, `useSolanaSubscription()`, `useSolanaTrackedData()`
+- `useSolanaTransaction()`, `useSolanaRequestSwr()`, `useSolanaSubscriptionSwr()`, `useSolanaTrackedDataSwr()`
 - `useSolanaSelectedWalletAccount()`
 - `useSolanaSignTransactions()`, `useSolanaSignAndSendTransaction()`, `useSolanaSignAndSendTransactions()`
 - `useSolanaPayer()`, `useSolanaIdentity()`
 - `useSolanaPlanTransaction()`, `useSolanaPlanTransactions()`
 - `useSolanaSendTransaction()`, `useSolanaSendTransactions()`
+
+The module also auto-imports the four values an app needs when it sets `solana.clientPlugin: false` to install a client-only `payer`: `createSolanaPlugin()`, `solanaInjectionKey()`, `selectedWalletAccountInjectionKey()`, and `createSelectedWalletAccountContext()`.
 
 The runtime plugin also installs the selected wallet account context app-wide (`createSelectedWalletAccountContext` + `selectedWalletAccountInjectionKey`).
 
@@ -122,7 +125,7 @@ Current package dependency:
 
 Client transaction stack:
 
-- `createSolanaClient()` composes `solanaRpc()`, `rpcTransactionPlanner()`, `rpcTransactionPlanSendingExecutor()`, and `rpcAirdrop()` from `@solana/kit-plugin-rpc`. The default client therefore already exposes `planTransaction(s)` and `sendTransaction(s)`; the send-and-confirm path settles at `confirmed` commitment.
+- `createSolanaClient()` chains `createClient()`, `solanaRpc()`, and `rpcAirdrop()` from `@solana/kit-plugin-rpc`. It does **not** call `rpcTransactionPlanner()` or `rpcTransactionPlanSendingExecutor()` — `solanaRpc()` already installs `planTransaction(s)` and `sendTransaction(s)` itself (verified against `@solana/kit-plugin-rpc@0.19.0`). The default client therefore exposes those capabilities with no extra plugin; the send-and-confirm path settles at `confirmed` commitment.
 - Clients built by hand (for example inside `apps/docs/app/plugins/`) do not get those capabilities for free. `useClientCapability()` fails fast when a composable is called against a client missing `planTransaction`, `sendTransaction`, and friends.
 - The plan and send hooks also assert `payer` (`["sendTransaction", "payer"]`, `["planTransactions", "payer"]`, …), because Kit reads `client.payer` to set the fee payer. Without a payer they used to die inside Kit with `Cannot read properties of undefined (reading 'address')`; now the hook throws `MissingClientCapabilityError` at setup time. The hooks no longer accept a transaction message that carries its own embedded signer in place of a `payer`.
 
@@ -178,6 +181,7 @@ pnpm test
 pnpm typecheck
 pnpm build:packages
 pnpm build:examples
+pnpm --filter docs build
 pnpm smoke:standalone-installs
 pnpm test:e2e
 ```
@@ -214,9 +218,51 @@ When you add, remove, or restructure sections in an English doc, translate the s
 ### Workspace App Dependency Policy
 
 - `apps/docs` is the live documentation/demo app for the published package. It intentionally depends on the published `@vue-solana/nuxt` version, not `workspace:*`, so it reflects what external users get from npm.
+- It is not the minimal-install case: it also pins `@vue-solana/vue` at `2.4.0` and depends on `@solana/kit`, so every deep import it still uses resolves. The single-package install is asserted by `examples/*` and by `scripts/smoke-standalone-installs.mjs`, not by `apps/docs`.
+- `@vue-solana/core` is deliberately _not_ a dependency of `apps/docs`. A direct `@vue-solana/core/types` import does not resolve from app source, because pnpm only places core as a sibling of the published `@vue-solana/vue` inside the store — so the package's own `.d.ts` files can resolve it and app code cannot. `app/composables/demo/types.ts` derives `SolanaWalletInfo` from the auto-imported `useSolanaWallets()` instead, which stays fully typed. Once `@vue-solana/nuxt` re-exports the public types from its root (already added, unreleased), both importers switch to `@vue-solana/nuxt` and that file is deleted.
+- `apps/docs/docs-import-policy.test.ts` fails on any `@vue-solana/core` import. Its `KNOWN_CORE_IMPORTERS` allowlist is empty, so adding an entry needs a comment saying what release unblocks it.
+- `apps/docs` has a `typecheck` script (`nuxt prepare && vue-tsc --build --noEmit`) and is covered by `pnpm typecheck`. It needs `vue-tsc` as a devDependency. This is the only gate that catches a missing _type-only_ re-export in a published package — `nuxt build` erases those, and Rollup only catches missing value exports.
 - `examples/vue-vite` and `examples/nuxt` are the local development example apps. They should use workspace packages so they exercise unreleased package changes during development.
-- Do not treat `apps/docs/package.json` using a pinned published `@vue-solana/nuxt` version as a bug unless the release/demo policy changes.
+- Do not treat `apps/docs/package.json` using pinned published `@vue-solana/*` versions as a bug unless the release/demo policy changes.
 - When testing unreleased package changes, use the example apps and package tests, not `apps/docs`.
+
+### Docs App Single-Package Migration
+
+Blocked until `pnpm changeset version && pnpm publish` ships the `self-sufficient-single-package-install` changeset as `2.5.0`. `apps/docs/docs-package-policy.test.ts` fails on any `@vue-solana/*` dep that is not an exact published semver, so this must never use `workspace:*`.
+
+Once 2.5.0 is on npm:
+
+```txt
+1. apps/docs/package.json: "@vue-solana/nuxt" 2.4.0 -> 2.5.0
+   (leave @vue-solana/vue 2.4.0 alone; step 7 deletes it.
+    @vue-solana/core is NOT a dep and must stay that way)
+2. pnpm install
+3. Repoint 5 files: @solana/kit -> @vue-solana/nuxt/kit
+   app/composables/demo/{transferInstruction.ts,useDemoClientSend.ts,
+                         useDemoClientSend.test.ts,useDemoLiveData.ts,
+                         useDemoTransfer.ts}
+4. app/plugins/solana-client-capabilities.client.ts: line 1 -> @vue-solana/nuxt/kit
+   (keep extendClient + generateKeyPairSigner + the withPayer body);
+   delete line 2 entirely -- solanaInjectionKey is now a module auto-import
+   and VueSolanaContext a type from @vue-solana/nuxt
+5. app/components/demo/DemoWalletPanel.vue + app/composables/demo/useDemoWallet.ts:
+   import SolanaWalletInfo from "@vue-solana/nuxt" instead of
+   "./types" / "~/composables/demo/types", then DELETE
+   app/composables/demo/types.ts -- the derived alias exists only because
+   2.4.0 has no root type exports
+6. app/components/demo/DemoSwrCardInner.vue      drop import, call -> useSolanaRequestSwr(
+   app/composables/demo/useMockTransactionDemo.ts drop import, call -> useSolanaTransaction(
+7. Drop deps: "@solana/kit" ^8.3.0 and "@vue-solana/vue" 2.4.0
+8. Rewrite the apps/docs bullets in "Workspace App Dependency Policy" above --
+   after this the app installs only @vue-solana/nuxt
+9. Verify: pnpm typecheck   <- catches the type-only re-export gaps
+   pnpm --filter docs build
+   pnpm --filter docs llms
+   pnpm test                <- locale-docs + docs-package-policy + import-policy
+   pnpm test:e2e
+```
+
+`docs-import-policy.test.ts` needs no change: its `KNOWN_CORE_IMPORTERS` allowlist is already empty and no core import survives step 5.
 
 ## Native Wallet Planning
 

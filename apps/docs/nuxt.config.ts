@@ -204,7 +204,6 @@ export default defineNuxtConfig({
     plugins: [
       {
         name: "solana-buffer-polyfill-entry",
-        // @ts-expect-error vite plugin
         transform(code, id) {
           if (id.includes("/nuxt/dist/app/entry.async")) {
             return {

@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import type { SolanaWalletInfo } from "@vue-solana/core/types";
-
+import type { SolanaWalletInfo } from "~/composables/demo/types";
 const props = defineProps<{
   canConnect: boolean;
   canDisconnect: boolean;

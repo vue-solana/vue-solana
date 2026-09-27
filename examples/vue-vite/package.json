@@ -11,7 +11,6 @@
     "type-check": "vue-tsc --build"
   },
   "dependencies": {
-    "@solana/kit": "^8.3.0",
     "@vue-solana/vue": "workspace:*",
     "vue": "^3.5.32"
   },

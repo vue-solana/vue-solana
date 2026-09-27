@@ -133,6 +133,7 @@ try {
 import { installSolanaBufferPolyfill, Buffer } from "@vue-solana/core/buffer-polyfill";
 import { parseAddress } from "@vue-solana/core/address";
 import { address, lamports, type Address, type Commitment, type Rpc, type SolanaClient, type SolanaRpcApi } from "@vue-solana/core/kit";
+import { extendClient, generateKeyPairSigner, summarizeTransactionPlanResult, type AccountRole, type Instruction, type TransactionPlanResult } from "@vue-solana/core/kit";
 import { getTokenAccount, getTokenAccountsByOwner, getTokenBalance, type TokenAccountInfo } from "@vue-solana/core/token-accounts";
 
 installSolanaBufferPolyfill();
@@ -150,6 +151,12 @@ void amount;
 void rpc;
 void parsed;
 void commitment;
+void extendClient;
+void generateKeyPairSigner;
+void summarizeTransactionPlanResult;
+void (null as AccountRole | null);
+void (null as Instruction | null);
+void (null as TransactionPlanResult | null);
 void getTokenAccount;
 void getTokenAccountsByOwner;
 void getTokenBalance;
@@ -171,11 +178,12 @@ void (null as TokenAccountInfo | null);
     },
     source: `import { defineComponent } from "vue";
 import { createSolanaPlugin } from "@vue-solana/vue";
+import type { SolanaWalletInfo } from "@vue-solana/vue";
 import { installSolanaBufferPolyfill, Buffer } from "@vue-solana/vue/buffer-polyfill";
 import { useSolanaClient } from "@vue-solana/vue/useSolanaClient";
 import { useConnection } from "@vue-solana/vue/useConnection";
 import { useWallet } from "@vue-solana/vue/useWallet";
-import { createSolanaClient, address, type Address, type SolanaClient } from "@vue-solana/vue/kit";
+import { createSolanaClient, address, extendClient, generateKeyPairSigner, summarizeTransactionPlanResult, type AccountRole, type Address, type Instruction, type SolanaClient, type TransactionPlanResult } from "@vue-solana/vue/kit";
 
 installSolanaBufferPolyfill();
 
@@ -195,6 +203,13 @@ export default defineComponent({
 void plugin;
 void client;
 void publicKey;
+void extendClient;
+void generateKeyPairSigner;
+void summarizeTransactionPlanResult;
+void (null as SolanaWalletInfo | null);
+void (null as AccountRole | null);
+void (null as Instruction | null);
+void (null as TransactionPlanResult | null);
 `,
   });
 
@@ -215,8 +230,9 @@ void publicKey;
     // skipLibCheck (set for all consumers above) covers this upstream declaration noise.
     tsconfigCompilerOptions: {},
     source: `import VueSolana from "@vue-solana/nuxt";
+import type { SolanaWalletInfo, VueSolanaContext } from "@vue-solana/nuxt";
 import { installSolanaBufferPolyfill, Buffer } from "@vue-solana/nuxt/buffer-polyfill";
-import { createSolanaClient, type SolanaClient } from "@vue-solana/nuxt/kit";
+import { createSolanaClient, extendClient, generateKeyPairSigner, summarizeTransactionPlanResult, type AccountRole, type Instruction, type SolanaClient, type TransactionPlanResult } from "@vue-solana/nuxt/kit";
 
 installSolanaBufferPolyfill();
 
@@ -224,6 +240,14 @@ const client: SolanaClient = createSolanaClient({ cluster: "devnet" });
 
 void VueSolana;
 void client;
+void extendClient;
+void generateKeyPairSigner;
+void summarizeTransactionPlanResult;
+void (null as SolanaWalletInfo | null);
+void (null as VueSolanaContext | null);
+void (null as AccountRole | null);
+void (null as Instruction | null);
+void (null as TransactionPlanResult | null);
 `,
   });
 
