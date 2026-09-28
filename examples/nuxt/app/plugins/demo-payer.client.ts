@@ -1,4 +1,5 @@
 import { generateKeyPairSigner } from "@vue-solana/nuxt/kit";
+import type { ModuleOptions } from "@vue-solana/nuxt";
 import { defineNuxtPlugin } from "#app";
 
 // `solana.clientPlugin: false` in `nuxt.config.ts` keeps the module from
@@ -9,8 +10,10 @@ export default defineNuxtPlugin({
   name: "example-demo-payer",
   async setup(nuxtApp) {
     // Read the cluster from the same public runtime config the module uses, so
-    // `nuxt.config.ts` stays the single source of truth for it.
-    const { cluster } = useRuntimeConfig().public.solana;
+    // `nuxt.config.ts` stays the single source of truth for it. Nuxt generates
+    // the runtime-config type from the resolved value, so `cluster` arrives as
+    // `string`; re-narrow it to the `SolanaCluster` the module guarantees.
+    const { cluster } = useRuntimeConfig().public.solana as ModuleOptions;
     const payer = await generateKeyPairSigner();
     const plugin = createSolanaPlugin({ cluster, payer });
 

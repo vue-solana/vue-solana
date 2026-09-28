@@ -1,4 +1,11 @@
-import type { Address, Commitment, Signature, Slot, TransactionSigner } from "@solana/kit";
+import type {
+  Address,
+  Commitment,
+  ReadonlyUint8Array,
+  Signature,
+  Slot,
+  TransactionSigner,
+} from "@solana/kit";
 import type { SolanaClient } from "./kit";
 
 /**
@@ -39,7 +46,12 @@ export interface SolanaContext {
   client: SolanaClient;
 }
 
-export type SolanaTransaction = Uint8Array;
+/**
+ * Raw serialized wire bytes. Widened to Kit's `ReadonlyUint8Array` because
+ * that is what `getTransactionEncoder().encode()` returns — typing it as
+ * `Uint8Array` rejected the output of the encoder the docs tell you to use.
+ */
+export type SolanaTransaction = ReadonlyUint8Array;
 
 export interface SolanaSignMessageResult {
   signedMessage: Uint8Array;

@@ -1,6 +1,6 @@
 import { addImports, addPlugin, createResolver, defineNuxtModule } from "@nuxt/kit";
 import type { VueSolanaPluginOptions } from "@vue-solana/vue";
-import { SOLANA_IMPORTS } from "./imports";
+import { SOLANA_IMPORTS, SOLANA_SETUP_AUTO_IMPORTS } from "./imports";
 
 export type ModuleOptions = Omit<VueSolanaPluginOptions, "wallet" | "payer" | "payerSecretKey"> & {
   /**
@@ -86,9 +86,14 @@ const module: DefinedNuxtModule = defineNuxtModule<ModuleOptions>({
         src: resolver.resolve("./runtime/plugin"),
         mode: "client",
       });
+
+      addImports(SOLANA_IMPORTS);
+      return;
     }
 
-    addImports(SOLANA_IMPORTS);
+    // Opted out of the runtime plugin, so the app installs the context itself
+    // and needs the setup values too.
+    addImports([...SOLANA_IMPORTS, ...SOLANA_SETUP_AUTO_IMPORTS]);
   },
 });
 

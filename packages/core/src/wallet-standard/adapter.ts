@@ -154,7 +154,7 @@ export function adaptSolanaStandardWallet(
           const activeAccount = getActiveAccount(account);
           const [result] = await wallet.features[SolanaSignTransaction].signTransaction({
             account: activeAccount,
-            transaction,
+            transaction: new Uint8Array(transaction),
             chain: options.chain,
           });
 
@@ -171,7 +171,7 @@ export function adaptSolanaStandardWallet(
           const results = await wallet.features[SolanaSignTransaction].signTransaction(
             ...transactions.map((transaction) => ({
               account: activeAccount,
-              transaction,
+              transaction: new Uint8Array(transaction),
               chain: options.chain,
             })),
           );
@@ -207,7 +207,7 @@ export function adaptSolanaStandardWallet(
             SolanaSignAndSendTransaction
           ].signAndSendTransaction({
             account: activeAccount,
-            transaction,
+            transaction: new Uint8Array(transaction),
             chain: options.chain ?? getSolanaAccountChain(activeAccount),
             options: sendOptions,
           });
@@ -227,7 +227,7 @@ export function adaptSolanaStandardWallet(
           ].signAndSendTransaction(
             ...transactions.map((transaction) => ({
               account: activeAccount,
-              transaction,
+              transaction: new Uint8Array(transaction),
               chain: options.chain ?? getSolanaAccountChain(activeAccount),
               options: sendOptions,
             })),
@@ -261,7 +261,7 @@ async function signAllThroughFeature(
   const results = await wallet.features[SolanaSignTransaction].signTransaction(
     ...transactions.map((transaction) => ({
       account: activeAccount,
-      transaction,
+      transaction: new Uint8Array(transaction),
       chain,
     })),
   );

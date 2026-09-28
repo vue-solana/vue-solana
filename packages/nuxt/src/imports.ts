@@ -41,7 +41,10 @@ const SOLANA_SWR_IMPORTS = [
 /**
  * Values an app touches only when it opts out of the runtime plugin
  * (`solana.clientPlugin: false`) to install the context with a client-only
- * `payer`, which module options cannot carry.
+ * `payer`, which module options cannot carry. Registered for that case only:
+ * an ambient `createSolanaPlugin` in every app would put `payerSecretKey`
+ * construction in global scope, which the module otherwise keeps out of Nuxt
+ * entirely.
  */
 const SOLANA_SETUP_IMPORTS = [
   ["createSelectedWalletAccountContext", "createSelectedWalletAccountContext"],
@@ -57,5 +60,10 @@ export const SOLANA_IMPORTS = [
     from: `@vue-solana/vue/${name}`,
   })),
   ...SOLANA_SWR_IMPORTS.map(([name, as]) => ({ name, as, from: "@vue-solana/vue/swr" })),
-  ...SOLANA_SETUP_IMPORTS.map(([name, as]) => ({ name, as, from: "@vue-solana/vue" })),
 ];
+
+export const SOLANA_SETUP_AUTO_IMPORTS = SOLANA_SETUP_IMPORTS.map(([name, as]) => ({
+  name,
+  as,
+  from: "@vue-solana/vue",
+}));

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { SOLANA_IMPORTS } from "./imports";
+import { SOLANA_IMPORTS, SOLANA_SETUP_AUTO_IMPORTS } from "./imports";
 
 const kit = vi.hoisted(() => ({
   addImports: vi.fn(),
@@ -140,6 +140,11 @@ describe("Nuxt module", () => {
       mode: "client",
     });
     expect(kit.addImports).toHaveBeenCalledWith(expect.arrayContaining(SOLANA_IMPORTS));
+    // `createSolanaPlugin` accepts `payerSecretKey`, so it stays out of global
+    // scope for apps that did not opt out of the runtime plugin.
+    expect(kit.addImports).not.toHaveBeenCalledWith(
+      expect.arrayContaining(SOLANA_SETUP_AUTO_IMPORTS),
+    );
   });
 
   it("skips the runtime plugin but keeps composable imports when clientPlugin is false", async () => {
@@ -149,7 +154,9 @@ describe("Nuxt module", () => {
     setupModule(module, { cluster: "devnet", clientPlugin: false }, { publicConfig });
 
     expect(kit.addPlugin).not.toHaveBeenCalled();
-    expect(kit.addImports).toHaveBeenCalledWith(expect.arrayContaining(SOLANA_IMPORTS));
+    expect(kit.addImports).toHaveBeenCalledWith(
+      expect.arrayContaining([...SOLANA_IMPORTS, ...SOLANA_SETUP_AUTO_IMPORTS]),
+    );
     // `clientPlugin` is build-time only and must not reach the client bundle.
     expect(publicConfig.solana).toEqual({ cluster: "devnet" });
   });
