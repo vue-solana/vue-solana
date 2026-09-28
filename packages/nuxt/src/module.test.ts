@@ -24,7 +24,10 @@ interface ModuleUnderTest {
   setup: (
     options: Record<string, unknown>,
     nuxt: {
-      hook: (name: "vite:extendConfig", callback: ViteExtendConfigHook) => void;
+      hook: (
+        name: "vite:extendConfig" | "prepare:types",
+        callback: ViteExtendConfigHook | PrepareTypesHook,
+      ) => void;
       options: {
         runtimeConfig: {
           public: Record<string, unknown>;
@@ -39,6 +42,10 @@ interface ModuleUnderTest {
     },
   ) => void;
 }
+
+type PrepareTypesHook = (context: {
+  tsConfig: { compilerOptions?: { paths?: Record<string, string[]> } };
+}) => void;
 
 type ViteExtendConfigHook = (
   config: {
@@ -76,11 +83,16 @@ function setupModule(
   const publicConfig = context.publicConfig ?? {};
   const vite = context.vite ?? {};
   const viteExtendConfigHooks: ViteExtendConfigHook[] = [];
+  const prepareTypesHooks: PrepareTypesHook[] = [];
 
   module.setup(options, {
     hook: (name, callback) => {
       if (name === "vite:extendConfig") {
-        viteExtendConfigHooks.push(callback);
+        viteExtendConfigHooks.push(callback as ViteExtendConfigHook);
+      }
+
+      if (name === "prepare:types") {
+        prepareTypesHooks.push(callback as PrepareTypesHook);
       }
     },
     options: {
@@ -91,7 +103,7 @@ function setupModule(
     },
   });
 
-  return { publicConfig, vite, viteExtendConfigHooks };
+  return { prepareTypesHooks, publicConfig, vite, viteExtendConfigHooks };
 }
 
 describe("Nuxt module", () => {
@@ -315,5 +327,35 @@ describe("Nuxt module", () => {
         redirectUrl: "https://example.com/wallet-callback",
       },
     });
+  });
+
+  it("points the app's tsconfig at the module's own vue dependency", async () => {
+    const module = (await import("./module")).default as unknown as ModuleUnderTest;
+    const { prepareTypesHooks } = setupModule(module);
+
+    expect(prepareTypesHooks).toHaveLength(1);
+
+    const tsConfig: { compilerOptions?: { paths?: Record<string, string[]> } } = {};
+    prepareTypesHooks[0]?.({ tsConfig });
+
+    // The app does not depend on `@vue-solana/vue`, so without this the
+    // generated `imports.d.ts` degrades the composables to `any` instead of
+    // failing loudly. The app still installs one package: these paths point at
+    // the copy the module already resolved for itself.
+    const paths = tsConfig.compilerOptions?.paths ?? {};
+    const [entry, subpaths] = [paths["@vue-solana/vue"]?.[0], paths["@vue-solana/vue/*"]?.[0]];
+    expect(entry).toMatch(/vue[/\\]dist[/\\]index\.d\.ts$/);
+    expect(subpaths).toBe(`${entry?.replace(/index\.d\.ts$/, "")}*`);
+  });
+  it("keeps an app-authored vue path mapping", async () => {
+    const module = (await import("./module")).default as unknown as ModuleUnderTest;
+    const { prepareTypesHooks } = setupModule(module);
+
+    const tsConfig: { compilerOptions?: { paths?: Record<string, string[]> } } = {
+      compilerOptions: { paths: { "@vue-solana/vue": ["./my-own/types.d.ts"] } },
+    };
+    prepareTypesHooks[0]?.({ tsConfig });
+
+    expect(tsConfig.compilerOptions?.paths?.["@vue-solana/vue"]).toEqual(["./my-own/types.d.ts"]);
   });
 });

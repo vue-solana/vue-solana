@@ -1,5 +1,8 @@
 import { addImports, addPlugin, createResolver, defineNuxtModule } from "@nuxt/kit";
 import type { VueSolanaPluginOptions } from "@vue-solana/vue";
+import { existsSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { createRequire } from "node:module";
 import { SOLANA_IMPORTS, SOLANA_SETUP_AUTO_IMPORTS } from "./imports";
 
 export type ModuleOptions = Omit<VueSolanaPluginOptions, "wallet" | "payer" | "payerSecretKey"> & {
@@ -70,6 +73,26 @@ const module: DefinedNuxtModule = defineNuxtModule<ModuleOptions>({
 
     mergeViteOptimizeDeps(nuxt.options.vite);
 
+    // An app that installs only `@vue-solana/nuxt` cannot resolve
+    // `@vue-solana/vue` from its own `node_modules`, so Nuxt writes the path
+    // it found into the app's generated `imports.d.ts` — a path relative to
+    // the module, which only resolves while the layout holds. When it does
+    // not, the failure lands inside a `.d.ts`, `skipLibCheck` swallows it, and
+    // every composable silently degrades to `any` in the app. Declaring the
+    // mapping here points the app at the copy this module resolved for
+    // itself, the way the bundler already finds it at runtime.
+    nuxt.hook("prepare:types", ({ tsConfig }) => {
+      const dist = resolveVueDist();
+      if (!dist) {
+        return;
+      }
+
+      const compilerOptions = (tsConfig.compilerOptions ??= {});
+      const paths = (compilerOptions.paths ??= {});
+      paths["@vue-solana/vue"] ??= [join(dist, "index.d.ts")];
+      paths["@vue-solana/vue/*"] ??= [`${dist}/*`];
+    });
+
     nuxt.hook("vite:extendConfig", (config, { isClient }) => {
       if (!isClient) {
         return;
@@ -125,4 +148,31 @@ function mergeViteOptimizeDeps(target: ViteOptimizeDepsTarget): void {
   target.optimizeDeps.needsInterop = Array.from(
     new Set([...(target.optimizeDeps.needsInterop ?? []), ...VITE_NEEDS_INTEROP]),
   );
+}
+
+/**
+ * The `dist` directory of the `@vue-solana/vue` this module resolves, found
+ * through the module's own dependency rather than the app's, so the mapping
+ * follows the installed version. `undefined` when the resolution fails, which
+ * leaves the app's own `paths` untouched instead of writing a broken one.
+ */
+function resolveVueDist(): string | undefined {
+  const require = createRequire(import.meta.url);
+
+  try {
+    // Every entry in the `exports` map sits in `dist`, so the entry's own
+    // directory is the `dist` directory.
+    return dirname(require.resolve("@vue-solana/vue"));
+  } catch {
+    // Unbuilt or not installed yet, so there is no entry to resolve. The
+    // candidate directories are still known, and a not-yet-built `dist` is
+    // exactly the state this mapping has to cover.
+    for (const dir of require.resolve.paths("@vue-solana/vue") ?? []) {
+      if (existsSync(join(dir, "@vue-solana/vue/package.json"))) {
+        return join(dir, "@vue-solana/vue/dist");
+      }
+    }
+
+    return undefined;
+  }
 }
