@@ -28,6 +28,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "typecheck": "pnpm -r typecheck",
+    "pretypecheck": "pnpm build:packages",
     "clean": "pnpm -r clean",
     "changeset": "changeset",
     "version-packages": "changeset version",
