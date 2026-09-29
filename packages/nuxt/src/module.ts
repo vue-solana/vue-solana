@@ -3,8 +3,7 @@ import type { VueSolanaPluginOptions } from "@vue-solana/vue";
 import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { createRequire } from "node:module";
-import { SOLANA_IMPORTS, SOLANA_SETUP_AUTO_IMPORTS } from "./imports";
-
+import { solanaAutoImports, solanaSetupAutoImports } from "./imports";
 export type ModuleOptions = Omit<VueSolanaPluginOptions, "wallet" | "payer" | "payerSecretKey"> & {
   /**
    * Set to `false` to auto-import the composables without installing the Solana
@@ -73,25 +72,10 @@ const module: DefinedNuxtModule = defineNuxtModule<ModuleOptions>({
 
     mergeViteOptimizeDeps(nuxt.options.vite);
 
-    // An app that installs only `@vue-solana/nuxt` cannot resolve
-    // `@vue-solana/vue` from its own `node_modules`, so Nuxt writes the path
-    // it found into the app's generated `imports.d.ts` — a path relative to
-    // the module, which only resolves while the layout holds. When it does
-    // not, the failure lands inside a `.d.ts`, `skipLibCheck` swallows it, and
-    // every composable silently degrades to `any` in the app. Declaring the
-    // mapping here points the app at the copy this module resolved for
-    // itself, the way the bundler already finds it at runtime.
-    nuxt.hook("prepare:types", ({ tsConfig }) => {
-      const dist = resolveVueDist();
-      if (!dist) {
-        return;
-      }
-
-      const compilerOptions = (tsConfig.compilerOptions ??= {});
-      const paths = (compilerOptions.paths ??= {});
-      paths["@vue-solana/vue"] ??= [join(dist, "index.d.ts")];
-      paths["@vue-solana/vue/*"] ??= [`${dist}/*`];
-    });
+    // Resolved from the module's own dependency, so the auto-import sources
+    // point at the copy the bundler will load, and the app keeps installing
+    // just `@vue-solana/nuxt`.
+    const vueDist = resolveVueDist();
 
     nuxt.hook("vite:extendConfig", (config, { isClient }) => {
       if (!isClient) {
@@ -110,13 +94,13 @@ const module: DefinedNuxtModule = defineNuxtModule<ModuleOptions>({
         mode: "client",
       });
 
-      addImports(SOLANA_IMPORTS);
+      addImports(solanaAutoImports(vueDist));
       return;
     }
 
     // Opted out of the runtime plugin, so the app installs the context itself
     // and needs the setup values too.
-    addImports([...SOLANA_IMPORTS, ...SOLANA_SETUP_AUTO_IMPORTS]);
+    addImports([...solanaAutoImports(vueDist), ...solanaSetupAutoImports(vueDist)]);
   },
 });
 
@@ -152,9 +136,9 @@ function mergeViteOptimizeDeps(target: ViteOptimizeDepsTarget): void {
 
 /**
  * The `dist` directory of the `@vue-solana/vue` this module resolves, found
- * through the module's own dependency rather than the app's, so the mapping
- * follows the installed version. `undefined` when the resolution fails, which
- * leaves the app's own `paths` untouched instead of writing a broken one.
+ * through the module's own dependency rather than the app's, so the
+ * auto-import sources follow the installed version. `undefined` when the
+ * resolution fails, which leaves the bare package subpaths in place.
  */
 function resolveVueDist(): string | undefined {
   const require = createRequire(import.meta.url);
