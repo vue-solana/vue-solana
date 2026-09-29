@@ -1,4 +1,4 @@
-import { AccountRole, address, type Address } from "@solana/kit";
+import { AccountRole, address, type Address } from "@vue-solana/nuxt/kit";
 
 const SYSTEM_PROGRAM_ADDRESS = address("11111111111111111111111111111111");
 

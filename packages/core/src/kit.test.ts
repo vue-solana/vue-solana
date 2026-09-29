@@ -153,13 +153,21 @@ describe("createSolanaClient", () => {
     ).toThrow(/invalid `payerSecretKey`/i);
   });
 
-  it("rejects a payerSecretKey whose public half does not match its seed", () => {
+  it("rejects a payerSecretKey whose public half does not match its seed", async () => {
     const { secretKey } = nacl.sign.keyPair();
     const mismatched = Uint8Array.from(secretKey);
     mismatched[63] = (mismatched[63] ?? 0) ^ 1;
+    const client = createSolanaClient({
+      payerSecretKey: Buffer.from(mismatched).toString("base64"),
+    });
+    const payer = client.payer as unknown as {
+      signTransactions: (transactions: readonly unknown[]) => Promise<unknown>;
+    };
 
-    expect(() =>
-      createSolanaClient({ payerSecretKey: Buffer.from(mismatched).toString("base64") }),
-    ).toThrow(/invalid `payerSecretKey`/i);
+    // The consistency check is WebCrypto's, so it runs at first sign rather
+    // than at client creation.
+    await expect(payer.signTransactions([{ messageBytes: new Uint8Array([1]) }])).rejects.toThrow(
+      /invalid `payerSecretKey`/i,
+    );
   });
 });

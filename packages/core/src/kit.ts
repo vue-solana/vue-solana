@@ -1,15 +1,15 @@
 import {
   createClient,
+  createKeyPairFromBytes,
   extendClient,
   getBase58Decoder,
   getBase64Encoder,
+  signBytes,
   type Address,
-  type SignatureBytes,
   type TransactionPartialSigner,
   type TransactionSigner,
 } from "@solana/kit";
 import { rpcAirdrop, solanaRpc } from "@solana/kit-plugin-rpc";
-import nacl from "tweetnacl";
 import {
   DEFAULT_CLUSTER,
   getClusterEndpoint,
@@ -88,26 +88,34 @@ function resolvePayerFromSecretKey(
     throw invalidError();
   }
 
-  const derivedKeyPair = nacl.sign.keyPair.fromSeed(keyPairBytes.slice(0, 32));
-  const publicKey = keyPairBytes.slice(32);
+  const address = getBase58Decoder().decode(keyPairBytes.slice(32)) as Address;
 
-  if (!publicKey.every((value, index) => value === derivedKeyPair.publicKey[index])) {
-    throw invalidError();
-  }
-
-  const address = getBase58Decoder().decode(publicKey) as Address;
+  // ponytail: the key import is lazy because WebCrypto is async, so the
+  // secret/public consistency check happens at first sign rather than at
+  // client creation. Kit's own signer factories import the same way. The only
+  // way a length-checked 64-byte buffer still fails here is a public half that
+  // does not match the seed, so the rejection is the same caller error.
+  let privateKey: Promise<CryptoKey> | undefined;
+  const getPrivateKey = () =>
+    (privateKey ??= createKeyPairFromBytes(keyPairBytes).then(
+      (keyPair) => keyPair.privateKey,
+      () => {
+        throw invalidError();
+      },
+    ));
 
   return {
     address,
     async signTransactions(transactions, config) {
       config?.abortSignal?.throwIfAborted();
 
-      return transactions.map((transaction) => ({
-        [address]: nacl.sign.detached(
-          new Uint8Array(transaction.messageBytes),
-          keyPairBytes,
-        ) as SignatureBytes,
-      }));
+      const key = await getPrivateKey();
+
+      return Promise.all(
+        transactions.map(async (transaction) => ({
+          [address]: await signBytes(key, transaction.messageBytes),
+        })),
+      );
     },
   };
 }

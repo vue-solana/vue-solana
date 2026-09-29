@@ -6,11 +6,10 @@ let swrHit = 0;
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { useRequestSwr } from "@vue-solana/vue/swr";
 
 const client = useSolanaClient();
 
-const { data, error, status } = useRequestSwr<{ hit: number; core: string }>(
+const { data, error, status } = useSolanaRequestSwr<{ hit: number; core: string }>(
   "demo:version",
   async (signal) => {
     const hit = ++swrHit;

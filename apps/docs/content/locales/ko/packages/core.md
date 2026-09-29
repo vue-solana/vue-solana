@@ -98,7 +98,7 @@ interface SolanaConfig {
 
 `autoConnect` 기본값은 `false`입니다. Vue plugin 또는 Nuxt module에서 활성화하면 Vue Solana는 사용자가 이전에 선택했고 client에서 다시 discovery된 wallet identity만 reconnect합니다. `localStorage["vue-solana:selected-wallet"]`에는 `name`, 가능한 경우 `platform`/`source` 같은 wallet identity metadata만 저장합니다. private key, session data, transaction data를 저장하지 않으며 임의로 설치된 wallet에 연결하지 않습니다.
 
-`payer`는 client fee payer와 client-sent transaction signer로 사용하는 Kit `TransactionSigner`입니다. `payerSecretKey`는 secret key가 먼저 오는 base64 64-byte Ed25519 keypair이며 client 생성 시 signer로 resolve됩니다. 두 옵션 모두 direct core/Vue client에서 지원됩니다.
+`payer`는 client fee payer와 client-sent transaction signer로 사용하는 Kit `TransactionSigner`입니다. `payerSecretKey`는 secret key가 먼저 오는 base64 64-byte Ed25519 keypair이며 client 생성 시 address를 파생하고 첫 사용 시 signing key를 import합니다. 그래서 public half가 seed와 맞지 않는 keypair는 client 생성이 아니라 첫 서명 시점에 거부됩니다. 두 옵션 모두 direct core/Vue client에서 지원됩니다.
 
 `createSolanaClient()`은 기본적으로 `@solana/kit-plugin-rpc`의 official `solanaRpc()`, `rpcTransactionPlanner()`, `rpcTransactionPlanSendingExecutor()` 스택을 compose합니다. 기존 custom fallback sender는 사용하지 않습니다. client는 RPC read/subscription과 `planTransaction(s)`, `sendTransaction(s)`를 노출합니다. official executor는 새 blockhash, resource limit와 preflight 처리, client signer를 이용한 서명, RPC 제출을 수행하고 send가 resolve되기 전에 `confirmed` commitment을 기다립니다. client send에는 `payer` signer가 필요합니다.
 

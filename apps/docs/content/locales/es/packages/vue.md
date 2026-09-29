@@ -58,18 +58,18 @@ Los clusters soportados son `mainnet` (alias heredado `mainnet-beta`), `devnet`,
 
 ### Opciones del plugin
 
-| Opcion           | Tipo                           | Default               | Descripcion                                                                                          |
-| ---------------- | ------------------------------ | --------------------- | ---------------------------------------------------------------------------------------------------- |
-| `cluster`        | Solana cluster                 | `devnet`              | Cluster usado cuando se omite `endpoint`. `mainnet-beta` se acepta como alias heredado de `mainnet`. |
-| `endpoint`       | `string`                       | Endpoint del cluster  | Endpoint RPC HTTP.                                                                                   |
-| `wsEndpoint`     | `string`                       | Endpoint derivado     | Endpoint RPC WebSocket.                                                                              |
-| `commitment`     | Commitment                     | Default de Kit        | Commitment por defecto para llamadas RPC.                                                            |
-| `autoConnect`    | `boolean`                      | `false`               | Reconecta solo una wallet descubierta seleccionada previamente.                                      |
-| `payer`          | `TransactionSigner`            | None                  | Payer de comisiones y signer del cliente para transacciones enviadas por el cliente.                 |
-| `payerSecretKey` | `string`                       | None                  | Keypair Ed25519 de 64 bytes en base64, secret key primero, resuelto al crear el cliente.             |
-| `wallet`         | `SolanaWallet`                 | Deshabilitado         | Adaptador de wallet personalizado.                                                                   |
-| `mobileWallet`   | `MobileWalletOptions \| false` | Habilitado en Android | Opciones de Android Mobile Wallet Adapter.                                                           |
-| `iosWallet`      | `iOSWalletOptions \| false`    | Habilitado en iOS     | Opciones de universal links de wallets iOS.                                                          |
+| Opcion           | Tipo                           | Default               | Descripcion                                                                                                                                |
+| ---------------- | ------------------------------ | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `cluster`        | Solana cluster                 | `devnet`              | Cluster usado cuando se omite `endpoint`. `mainnet-beta` se acepta como alias heredado de `mainnet`.                                       |
+| `endpoint`       | `string`                       | Endpoint del cluster  | Endpoint RPC HTTP.                                                                                                                         |
+| `wsEndpoint`     | `string`                       | Endpoint derivado     | Endpoint RPC WebSocket.                                                                                                                    |
+| `commitment`     | Commitment                     | Default de Kit        | Commitment por defecto para llamadas RPC.                                                                                                  |
+| `autoConnect`    | `boolean`                      | `false`               | Reconecta solo una wallet descubierta seleccionada previamente.                                                                            |
+| `payer`          | `TransactionSigner`            | None                  | Payer de comisiones y signer del cliente para transacciones enviadas por el cliente.                                                       |
+| `payerSecretKey` | `string`                       | None                  | Keypair Ed25519 de 64 bytes en base64, secret key primero. Direccion derivada al crear el cliente; signing key importada en el primer uso. |
+| `wallet`         | `SolanaWallet`                 | Deshabilitado         | Adaptador de wallet personalizado.                                                                                                         |
+| `mobileWallet`   | `MobileWalletOptions \| false` | Habilitado en Android | Opciones de Android Mobile Wallet Adapter.                                                                                                 |
+| `iosWallet`      | `iOSWalletOptions \| false`    | Habilitado en iOS     | Opciones de universal links de wallets iOS.                                                                                                |
 
 `payer` y `payerSecretKey` son compatibles con clientes Vue/core directos. Un envio del cliente requiere un `payer`. Nunca pongas un secreto crudo o `payerSecretKey` en la configuracion runtime publica de Nuxt, y nunca envíes una clave de firma con fondos al navegador de un usuario final.
 

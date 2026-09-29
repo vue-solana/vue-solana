@@ -1,5 +1,11 @@
-import { extendClient, generateKeyPairSigner, type TransactionSigner } from "@solana/kit";
-import { solanaInjectionKey, type VueSolanaContext } from "@vue-solana/vue";
+import { extendClient, generateKeyPairSigner, type TransactionSigner } from "@vue-solana/nuxt/kit";
+import type { VueSolanaContext } from "@vue-solana/nuxt";
+
+// The same registry symbol as the package's `solanaInjectionKey`, which Nuxt's
+// import protection keeps out of app code (`@vue-solana/nuxt` root is
+// module-only; the app may import `@vue-solana/nuxt/kit` and
+// `/buffer-polyfill`). `Symbol.for` is global, so identity is guaranteed.
+const solanaInjectionKey = Symbol.for("vue-solana:context");
 
 /** Adds a `payer` signer: the capability Kit's transaction planner requires. */
 function withPayer(payer: TransactionSigner) {

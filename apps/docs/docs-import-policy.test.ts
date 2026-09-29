@@ -4,14 +4,13 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 /**
- * This app is not the minimal-install case: it pins published versions and
- * depends on `@vue-solana/vue` and `@solana/kit` directly so every deep import
- * resolves. `@vue-solana/core` is deliberately *not* a dependency, because a
- * direct `@vue-solana/core/types` import does not resolve from app source even
- * though the published `.d.ts` files can resolve it from their own sibling in
- * the pnpm store. The two former offenders now name the type through
- * `app/composables/demo/types.ts`, which derives it from the auto-imported
- * `useSolanaWallets()`.
+ * This app installs exactly one published package: `@vue-solana/nuxt`, which
+ * re-exports `@vue-solana/vue` (and through it the public types) from its root
+ * and the curated Kit surface from `@vue-solana/nuxt/kit`.
+ * `@vue-solana/core` is deliberately *not* a dependency, because a direct
+ * `@vue-solana/core/types` import does not resolve from app source even though
+ * the published `.d.ts` files can resolve it from their own sibling in the
+ * pnpm store.
  *
  * A new core import is a regression: `nuxt build` erases type-only imports
  * without resolving them, so one that stops resolving stays silent. Kit symbols

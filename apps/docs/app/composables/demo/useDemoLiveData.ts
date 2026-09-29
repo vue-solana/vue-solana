@@ -1,4 +1,4 @@
-import { address } from "@solana/kit";
+import { address } from "@vue-solana/nuxt/kit";
 import { computed, ref } from "vue";
 
 interface SlotNotificationShape {

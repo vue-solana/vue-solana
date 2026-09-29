@@ -1,6 +1,6 @@
 import { computed, shallowRef, watch } from "vue";
-import { address, lamports, summarizeTransactionPlanResult } from "@solana/kit";
-import type { Address, Instruction, TransactionPlanResult } from "@solana/kit";
+import { address, lamports, summarizeTransactionPlanResult } from "@vue-solana/nuxt/kit";
+import type { Address, Instruction, TransactionPlanResult } from "@vue-solana/nuxt/kit";
 import { formatError } from "./errors";
 
 const MEMO_PROGRAM_ADDRESS = address("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr");
@@ -41,7 +41,7 @@ export function useDemoClientSend() {
    * duplicate.
    */
   function buildMemoInstruction(note: string): Instruction {
-    // `@solana/kit` re-exports no instruction encoder, so the memo shape is
+    // The Kit re-export offers no instruction encoder, so the memo shape is
     // asserted once here instead of at every use site.
     return {
       programAddress: MEMO_PROGRAM_ADDRESS,

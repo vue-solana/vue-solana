@@ -1,7 +1,7 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ref, shallowRef } from "vue";
-import type { Address, Instruction } from "@solana/kit";
+import type { Address, Instruction } from "@vue-solana/nuxt/kit";
 import { useDemoClientSend } from "./useDemoClientSend";
 
 const PAYER_ADDRESS = "CBEbds3JhsDmxLbMSXX2GZo4vjd71xAUk4zRM8VbdoAC" as Address;

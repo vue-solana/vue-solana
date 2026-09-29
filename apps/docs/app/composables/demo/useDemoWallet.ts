@@ -1,5 +1,5 @@
 import { computed, shallowRef } from "vue";
-import type { SolanaWalletInfo } from "./types";
+import type { SolanaWalletInfo } from "@vue-solana/nuxt";
 import { formatError } from "./errors";
 
 export function useDemoWallet() {

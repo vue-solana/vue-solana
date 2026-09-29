@@ -58,18 +58,18 @@ createApp(App).use(
 
 ### Plugin 옵션
 
-| 옵션             | Type                           | Default            | Description                                                                                         |
-| ---------------- | ------------------------------ | ------------------ | --------------------------------------------------------------------------------------------------- |
-| `cluster`        | Solana cluster                 | `devnet`           | `endpoint`를 생략할 때 사용할 cluster입니다. `mainnet-beta`는 `mainnet`의 이전 별칭으로 허용됩니다. |
-| `endpoint`       | `string`                       | Cluster endpoint   | HTTP RPC endpoint입니다.                                                                            |
-| `wsEndpoint`     | `string`                       | Derived endpoint   | WebSocket RPC endpoint입니다.                                                                       |
-| `commitment`     | Commitment                     | Kit default        | RPC call의 default commitment입니다.                                                                |
-| `autoConnect`    | `boolean`                      | `false`            | 이전에 선택한 discovered wallet만 reconnect합니다.                                                  |
-| `payer`          | `TransactionSigner`            | None               | client-sent transaction의 fee payer와 signer입니다.                                                 |
-| `payerSecretKey` | `string`                       | None               | secret key가 먼저 오는 base64 64-byte Ed25519 keypair이며 client 생성 시 resolve됩니다.             |
-| `wallet`         | `SolanaWallet`                 | Disabled           | Custom wallet adapter입니다.                                                                        |
-| `mobileWallet`   | `MobileWalletOptions \| false` | Enabled on Android | Android Mobile Wallet Adapter 옵션입니다.                                                           |
-| `iosWallet`      | `iOSWalletOptions \| false`    | Enabled on iOS     | iOS wallet universal-link 옵션입니다.                                                               |
+| 옵션             | Type                           | Default            | Description                                                                                                        |
+| ---------------- | ------------------------------ | ------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| `cluster`        | Solana cluster                 | `devnet`           | `endpoint`를 생략할 때 사용할 cluster입니다. `mainnet-beta`는 `mainnet`의 이전 별칭으로 허용됩니다.                |
+| `endpoint`       | `string`                       | Cluster endpoint   | HTTP RPC endpoint입니다.                                                                                           |
+| `wsEndpoint`     | `string`                       | Derived endpoint   | WebSocket RPC endpoint입니다.                                                                                      |
+| `commitment`     | Commitment                     | Kit default        | RPC call의 default commitment입니다.                                                                               |
+| `autoConnect`    | `boolean`                      | `false`            | 이전에 선택한 discovered wallet만 reconnect합니다.                                                                 |
+| `payer`          | `TransactionSigner`            | None               | client-sent transaction의 fee payer와 signer입니다.                                                                |
+| `payerSecretKey` | `string`                       | None               | secret key가 먼저 오는 base64 64-byte Ed25519 keypair. client 생성 시 address 파생, 첫 사용 시 signing key import. |
+| `wallet`         | `SolanaWallet`                 | Disabled           | Custom wallet adapter입니다.                                                                                       |
+| `mobileWallet`   | `MobileWalletOptions \| false` | Enabled on Android | Android Mobile Wallet Adapter 옵션입니다.                                                                          |
+| `iosWallet`      | `iOSWalletOptions \| false`    | Enabled on iOS     | iOS wallet universal-link 옵션입니다.                                                                              |
 
 `payer`와 `payerSecretKey`는 direct Vue/core client에서 지원됩니다. client-sent transaction에는 `payer`가 필요합니다. Nuxt public runtime config에 raw secret이나 `payerSecretKey`를 넣지 말고, funded signing key를 end-user browser에 보내지 마세요.
 

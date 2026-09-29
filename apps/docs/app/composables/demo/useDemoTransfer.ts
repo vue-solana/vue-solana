@@ -8,7 +8,7 @@ import {
   lamports,
   setTransactionMessageFeePayer,
   setTransactionMessageLifetimeUsingBlockhash,
-} from "@solana/kit";
+} from "@vue-solana/nuxt/kit";
 import { createTransferInstruction } from "./transferInstruction";
 import { formatError } from "./errors";
 

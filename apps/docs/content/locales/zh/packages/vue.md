@@ -58,18 +58,18 @@ createApp(App).use(
 
 ### 插件选项
 
-| 选项             | 类型                           | 默认值             | 说明                                                                                 |
-| ---------------- | ------------------------------ | ------------------ | ------------------------------------------------------------------------------------ |
-| `cluster`        | Solana cluster                 | `devnet`           | 省略 `endpoint` 时使用的 cluster。`mainnet-beta` 作为 `mainnet` 的旧别名仍然被接受。 |
-| `endpoint`       | `string`                       | Cluster endpoint   | HTTP RPC endpoint。                                                                  |
-| `wsEndpoint`     | `string`                       | Derived endpoint   | WebSocket RPC endpoint。                                                             |
-| `commitment`     | Commitment                     | Kit default        | RPC 调用的默认 commitment。                                                          |
-| `autoConnect`    | `boolean`                      | `false`            | 只重新连接之前选择且再次发现的已发现钱包。                                           |
-| `payer`          | `TransactionSigner`            | None               | 客户端发送交易时的费用支付方和签名者。                                               |
-| `payerSecretKey` | `string`                       | None               | base64 编码的 64 字节 Ed25519 keypair，secret key 在前，在创建客户端时解析。         |
-| `wallet`         | `SolanaWallet`                 | Disabled           | 自定义钱包 adapter。                                                                 |
-| `mobileWallet`   | `MobileWalletOptions \| false` | Enabled on Android | Android Mobile Wallet Adapter 选项。                                                 |
-| `iosWallet`      | `iOSWalletOptions \| false`    | Enabled on iOS     | iOS 钱包 universal-link 选项。                                                       |
+| 选项             | 类型                           | 默认值             | 说明                                                                                                             |
+| ---------------- | ------------------------------ | ------------------ | ---------------------------------------------------------------------------------------------------------------- |
+| `cluster`        | Solana cluster                 | `devnet`           | 省略 `endpoint` 时使用的 cluster。`mainnet-beta` 作为 `mainnet` 的旧别名仍然被接受。                             |
+| `endpoint`       | `string`                       | Cluster endpoint   | HTTP RPC endpoint。                                                                                              |
+| `wsEndpoint`     | `string`                       | Derived endpoint   | WebSocket RPC endpoint。                                                                                         |
+| `commitment`     | Commitment                     | Kit default        | RPC 调用的默认 commitment。                                                                                      |
+| `autoConnect`    | `boolean`                      | `false`            | 只重新连接之前选择且再次发现的已发现钱包。                                                                       |
+| `payer`          | `TransactionSigner`            | None               | 客户端发送交易时的费用支付方和签名者。                                                                           |
+| `payerSecretKey` | `string`                       | None               | base64 编码的 64 字节 Ed25519 keypair，secret key 在前。创建 client 时派生 address，首次使用时导入 signing key。 |
+| `wallet`         | `SolanaWallet`                 | Disabled           | 自定义钱包 adapter。                                                                                             |
+| `mobileWallet`   | `MobileWalletOptions \| false` | Enabled on Android | Android Mobile Wallet Adapter 选项。                                                                             |
+| `iosWallet`      | `iOSWalletOptions \| false`    | Enabled on iOS     | iOS 钱包 universal-link 选项。                                                                                   |
 
 `payer` 和 `payerSecretKey` 支持 direct Vue/core client。client-sent 交易需要 `payer`。永远不要把 raw secret 或 `payerSecretKey` 放入 Nuxt public runtime config，也不要把有资金的 signing key 发送到 end-user browser。
 

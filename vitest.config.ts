@@ -51,7 +51,11 @@ export default defineConfig({
       "@vue-solana/nuxt/buffer-polyfill": fileURLToPath(
         new URL("./packages/nuxt/src/runtime/buffer-polyfill.ts", import.meta.url),
       ),
+      "@vue-solana/nuxt/kit": fileURLToPath(
+        new URL("./packages/nuxt/src/runtime/kit.ts", import.meta.url),
+      ),
       "@vue-solana/nuxt": fileURLToPath(new URL("./packages/nuxt/src/module.ts", import.meta.url)),
+      "@vue-solana/vue/kit": fileURLToPath(new URL("./packages/vue/src/kit.ts", import.meta.url)),
       "@vue-solana/vue/buffer-polyfill": fileURLToPath(
         new URL("./packages/vue/src/buffer-polyfill.ts", import.meta.url),
       ),

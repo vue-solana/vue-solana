@@ -5,3 +5,15 @@ packages:
 onlyBuiltDependencies:
   - better-sqlite3
   - vue-demi
+# `@solana-mobile/wallet-standard-mobile` pulls
+# `@solana-mobile/mobile-wallet-adapter-protocol`, which declares
+# `@solana/kit: ^6.0.0`. Without this the workspace installs kit 8.3.0 and
+# 6.9.0 side by side, duplicating every `@solana/*` subpackage (69 KB of
+# error tables alone) in the root-barrel case. The MWA protocol only imports
+# codec helpers from `@solana/kit` — getBase58/Base64/Utf8 Decoder+Encoder —
+# all present and unchanged in 8.3.0.
+#
+# This is a repo-install setting only: it is not published and does not alter
+# the dependency ranges consumers resolve.
+overrides:
+  "@solana/kit": ^8.3.0

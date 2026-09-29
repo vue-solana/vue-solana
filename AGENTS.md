@@ -147,14 +147,12 @@ Published package workaround:
 
 The core build runs `prepare-declarations.mjs` after `unbuild` to add triple-slash references from generated declarations that mention `buffer/`, so fresh consumers do not need a local `buffer/` shim for `@vue-solana/core/buffer-polyfill`.
 
-## Documentation Added
-
-Updated docs:
+## Documentation
 
 - `README.md`: package overview, development commands, v2 Kit migration note, and project TODOs.
 - `knowledge-bundle/`: OKF-formatted knowledge files for AI agents (concepts, guides, package references).
 - `knowledge-bundle/guides/getting-started.md`: install snippets, Vue setup, Nuxt setup, and detailed manual devnet testing guide.
-- `plans/native-wallet-plan.md`: implementation tracker for mobile native wallet and desktop native wallet support on top of browser extension wallets.
+- `plans/`: implementation tracker for the multistep tasks and implementations.
 - `examples/vue-vite/README.md` and `examples/nuxt/README.md`: runnable example app walkthroughs.
 
 The manual testing guide explains:
@@ -188,19 +186,6 @@ pnpm test:e2e
 
 ## Known Limitations
 
-### Desktop Native Wallets Deferred
-
-Browser extension wallets, Android native wallets (MWA), and iOS browser wallets are all implemented in core and surfaced through the unified `useWallets()` / `useWallet()` API. Desktop native wallets are deliberately deferred: no desktop app protocols, install flows, or native adapter coverage ship yet.
-
-Known limitations:
-
-- iOS browser wallet support has a narrower tested wallet set than Android; Trust Wallet research is still open.
-- Desktop native wallet support is a post-v1 follow-up; keep any new work inside the unified wallet flow.
-
-Recommended next step:
-
-- Follow `plans/native-wallet-plan.md` and expose native wallet sources through the existing unified `useWallets()` and `useWallet()` APIs.
-
 ### Example Apps
 
 The `examples/vue-vite` and `examples/nuxt` directories contain runnable example apps wired to the workspace packages. They demonstrate plugin/module setup, RPC state, direct connection calls, balance reads, wallet state, mock transaction flows, and the client-sent flow (`usePayer()` plus `usePlanTransaction()` / `useSendTransaction()`). The Nuxt example installs a client-only ephemeral payer in `app/plugins/demo-payer.client.ts` because Nuxt never accepts `payer` / `payerSecretKey`, and sets `solana.clientPlugin: false` in `nuxt.config.ts` so the module does not install a second plugin.
@@ -218,64 +203,15 @@ When you add, remove, or restructure sections in an English doc, translate the s
 ### Workspace App Dependency Policy
 
 - `apps/docs` is the live documentation/demo app for the published package. It intentionally depends on the published `@vue-solana/nuxt` version, not `workspace:*`, so it reflects what external users get from npm.
-- It is not the minimal-install case: it also pins `@vue-solana/vue` at `2.4.0` and depends on `@solana/kit`, so every deep import it still uses resolves. The single-package install is asserted by `examples/*` and by `scripts/smoke-standalone-installs.mjs`, not by `apps/docs`.
-- `@vue-solana/core` is deliberately _not_ a dependency of `apps/docs`. A direct `@vue-solana/core/types` import does not resolve from app source, because pnpm only places core as a sibling of the published `@vue-solana/vue` inside the store — so the package's own `.d.ts` files can resolve it and app code cannot. `app/composables/demo/types.ts` derives `SolanaWalletInfo` from the auto-imported `useSolanaWallets()` instead, which stays fully typed. Once `@vue-solana/nuxt` re-exports the public types from its root (already added, unreleased), both importers switch to `@vue-solana/nuxt` and that file is deleted.
+- It is the minimal-install case: its only `@vue-solana/*` dependency is `@vue-solana/nuxt` (pinned `2.5.0`). Kit symbols come from `@vue-solana/nuxt/kit`, public types from the `@vue-solana/nuxt` root or the `useSolana*` auto-imports, and composables from the auto-imports.
+- Nuxt's import protection blocks app code from importing the `@vue-solana/nuxt` **root at runtime** (only `/kit` and `/buffer-polyfill` are importable). `app/plugins/solana-client-capabilities.client.ts` therefore rebuilds the injection key with `Symbol.for("vue-solana:context")`, which is the same global registry symbol the package uses. Type-only root imports are fine — they are erased before the build sees them. The alternative (`solana.clientPlugin: false` plus a hand-installed plugin) would create a second context and a second wallet subscription; do not reach for it to get the symbol.
+- `@vue-solana/core` is deliberately _not_ a dependency of `apps/docs`. A direct `@vue-solana/core/types` import does not resolve from app source, because pnpm only places core as a sibling of the published `@vue-solana/vue` inside the store — so the package's own `.d.ts` files can resolve it and app code cannot.
 - `apps/docs/docs-import-policy.test.ts` fails on any `@vue-solana/core` import. Its `KNOWN_CORE_IMPORTERS` allowlist is empty, so adding an entry needs a comment saying what release unblocks it.
 - `apps/docs` has a `typecheck` script (`nuxt prepare && vue-tsc --build --noEmit`) and is covered by `pnpm typecheck`. It needs `vue-tsc` as a devDependency. This is the only gate that catches a missing _type-only_ re-export in a published package — `nuxt build` erases those, and Rollup only catches missing value exports.
+- `apps/docs/app/composables/demo/useDemoClientSend.test.ts` runs from the **root** vitest, which aliases `@vue-solana/*` to workspace sources. `vitest.config.ts` needs an alias for every workspace subpath the app imports; it has `@vue-solana/nuxt/kit` and `@vue-solana/vue/kit`. Vite alias keys are prefix matches, so a subpath alias must be declared _before_ its bare parent.
 - `examples/vue-vite` and `examples/nuxt` are the local development example apps. They should use workspace packages so they exercise unreleased package changes during development.
 - Do not treat `apps/docs/package.json` using pinned published `@vue-solana/*` versions as a bug unless the release/demo policy changes.
 - When testing unreleased package changes, use the example apps and package tests, not `apps/docs`.
-
-### Docs App Single-Package Migration
-
-Blocked until `pnpm changeset version && pnpm publish` ships the `self-sufficient-single-package-install` changeset as `2.5.0`. `apps/docs/docs-package-policy.test.ts` fails on any `@vue-solana/*` dep that is not an exact published semver, so this must never use `workspace:*`.
-
-Once 2.5.0 is on npm:
-
-```txt
-1. apps/docs/package.json: "@vue-solana/nuxt" 2.4.0 -> 2.5.0
-   (leave @vue-solana/vue 2.4.0 alone; step 7 deletes it.
-    @vue-solana/core is NOT a dep and must stay that way)
-2. pnpm install
-3. Repoint 5 files: @solana/kit -> @vue-solana/nuxt/kit
-   app/composables/demo/{transferInstruction.ts,useDemoClientSend.ts,
-                         useDemoClientSend.test.ts,useDemoLiveData.ts,
-                         useDemoTransfer.ts}
-4. app/plugins/solana-client-capabilities.client.ts: line 1 -> @vue-solana/nuxt/kit
-   (keep extendClient + generateKeyPairSigner + the withPayer body);
-   delete line 2 entirely -- solanaInjectionKey is now a module auto-import
-   and VueSolanaContext a type from @vue-solana/nuxt
-5. app/components/demo/DemoWalletPanel.vue + app/composables/demo/useDemoWallet.ts:
-   import SolanaWalletInfo from "@vue-solana/nuxt" instead of
-   "./types" / "~/composables/demo/types", then DELETE
-   app/composables/demo/types.ts -- the derived alias exists only because
-   2.4.0 has no root type exports
-6. app/components/demo/DemoSwrCardInner.vue      drop import, call -> useSolanaRequestSwr(
-   app/composables/demo/useMockTransactionDemo.ts drop import, call -> useSolanaTransaction(
-7. Drop deps: "@solana/kit" ^8.3.0 and "@vue-solana/vue" 2.4.0
-8. Rewrite the apps/docs bullets in "Workspace App Dependency Policy" above --
-   after this the app installs only @vue-solana/nuxt
-9. Verify: pnpm typecheck   <- catches the type-only re-export gaps
-   pnpm --filter docs build
-   pnpm --filter docs llms
-   pnpm test                <- locale-docs + docs-package-policy + import-policy
-   pnpm test:e2e
-```
-
-`docs-import-policy.test.ts` needs no change: its `KNOWN_CORE_IMPORTERS` allowlist is already empty and no core import survives step 5.
-
-## Native Wallet Planning
-
-Use `plans/native-wallet-plan.md` as the source of truth for mobile native wallet and desktop native wallet implementation work.
-
-Important workflow rules:
-
-- Keep mobile native wallets, desktop native wallets, and browser extension wallets exposed through the unified `useWallets()` and `useWallet()` API.
-- Do not introduce separate public composables like `useMobileWallets()` or `useDesktopWallets()` unless the plan is deliberately revised first.
-- Before implementing native wallet work, read `plans/native-wallet-plan.md` and choose the relevant feature section.
-- When a plan item is implemented, strike through that item in `plans/native-wallet-plan.md`.
-- When every item under a feature is implemented, remove that feature's plan items and leave only the checked title, for example `## [x] Mobile Native Wallets`.
-- Keep the plan file current in the same change set as implementation work so future agents can continue from the latest state.
 
 ## Knowledge Bundle
 
@@ -292,6 +228,16 @@ The knowledge bundle covers:
 Plans live in the top-level `plans/` directory, separate from the knowledge bundle.
 
 ## Suggested Next Tasks
+
+- **Pending: the 2.6.0 release follow-up in `apps/docs`.** The 2.6.0 packages are not published yet, so `apps/docs/package.json` still pins `"@vue-solana/nuxt": "2.5.0"`. Once the user confirms 2.6.0 is on npm, run exactly these four steps and nothing else in `apps/docs` needs to change:
+  1. Bump `apps/docs/package.json` to `"@vue-solana/nuxt": "2.6.0"`.
+  2. Run `pnpm install` at the repo root and commit the `pnpm-lock.yaml` change. Without it CI's frozen-lockfile install fails.
+  3. Run `pnpm --filter docs typecheck`. It is the only gate that catches a missing type-only re-export in a published package, and 2.6.0 changed the `packages/core/src/kit.ts` import surface.
+  4. Run `pnpm --filter docs build` and `pnpm smoke:standalone-installs`, then load the demo and confirm no `Buffer is not defined`. This is the first build against a `sideEffects: false` `@vue-solana/nuxt`; both Buffer injection points (`nuxt.config.ts` virtual entry and `app/plugins/buffer-polyfill.client.ts`) bind a named import and call it, so the flag is safe, but the build is what proves it.
+
+  Not needed: `llms.txt` / `llms-full.txt` (the `build` and `generate` scripts run `pnpm llms` first), `content/roadmap.md` (no 2.6.0 roadmap item shipped), `skills-lock.json` (unrelated agent-skill hashes), `vitest.config.ts` aliases (no subpath imports changed), and `pnpm test:e2e` (Playwright only serves `examples/vue-vite` and `examples/nuxt`, per `playwright.config.ts`). The dead `tweetnacl` entries in `apps/docs/nuxt.config.ts` `optimizeDeps` / `needsInterop` are harmless and can wait.
+
+When step 4 passes, **delete this whole bullet** from `AGENTS.md` in the same commit. It is a one-time release checklist, not a standing limitation; a future agent that finds it should assume the follow-up was never done.
 
 - Follow `apps/docs/content/roadmap.md` for upcoming features (core composables, wallet features, Ecosystem integrations, etc.).
 - Follow `plans/native-wallet-plan.md` to add mobile native wallet and desktop native wallet support through the unified `useWallets()` flow.

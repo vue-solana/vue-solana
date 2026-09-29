@@ -1,9 +1,8 @@
 import { computed } from "vue";
-import { useTransaction } from "@vue-solana/vue/useTransaction";
 import { formatError } from "./errors";
 
 export function useMockTransactionDemo() {
-  const mockTransaction = useTransaction(async (label: string) => {
+  const mockTransaction = useSolanaTransaction(async (label: string) => {
     await new Promise((resolve) => window.setTimeout(resolve, 350));
     return `mock-${label}-${Date.now()}`;
   });

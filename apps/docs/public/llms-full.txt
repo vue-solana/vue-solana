@@ -9117,7 +9117,7 @@ Los clusters soportados son `mainnet` (alias heredado `mainnet-beta`), `testnet`
 
 `autoConnect` usa `false` por defecto. Cuando se activa mediante el plugin de Vue o el módulo Nuxt, Vue Solana reconecta solo una identidad de wallet que el usuario seleccionó antes y que se descubre otra vez en el cliente. Solo guarda metadatos de identidad de wallet en `localStorage["vue-solana:selected-wallet"]`: `name`, y `platform`/`source` cuando están disponibles. Nunca guarda claves privadas, datos de sesión ni datos de transacción, y nunca conecta una wallet instalada arbitraria.
 
-`payer` es un `TransactionSigner` de Kit que se usa como payer de comisiones y signer del cliente para transacciones enviadas por el cliente. `payerSecretKey` es un keypair Ed25519 de 64 bytes codificado en base64, con la secret key primero, y se resuelve como signer al crear el cliente. Ambos son compatibles con clientes core/Vue directos.
+`payer` es un `TransactionSigner` de Kit que se usa como payer de comisiones y signer del cliente para transacciones enviadas por el cliente. `payerSecretKey` es un keypair Ed25519 de 64 bytes codificado en base64, con la secret key primero; el cliente deriva su direccion al crearse e importa la signing key en el primer uso, asi que un keypair cuya mitad publica no coincide con su seed se rechaza en la primera firma en vez de al crear el cliente. Ambos son compatibles con clientes core/Vue directos.
 
 `createSolanaClient()` compone por defecto el stack oficial de `@solana/kit-plugin-rpc`: `solanaRpc()`, `rpcTransactionPlanner()` y `rpcTransactionPlanSendingExecutor()`. El fallback custom anterior no se usa. El cliente expone lecturas y suscripciones RPC, `planTransaction(s)` y `sendTransaction(s)`. El executor oficial agrega un blockhash nuevo, maneja limites de recursos y preflight, firma con los signers disponibles, envia la transaccion y espera al commitment `confirmed` antes de resolver el envio. Un envio del cliente requiere un signer `payer`.
 
@@ -9699,7 +9699,7 @@ interface SolanaConfig {
 
 `autoConnect` 기본값은 `false`입니다. Vue plugin 또는 Nuxt module에서 활성화하면 Vue Solana는 사용자가 이전에 선택했고 client에서 다시 discovery된 wallet identity만 reconnect합니다. `localStorage["vue-solana:selected-wallet"]`에는 `name`, 가능한 경우 `platform`/`source` 같은 wallet identity metadata만 저장합니다. private key, session data, transaction data를 저장하지 않으며 임의로 설치된 wallet에 연결하지 않습니다.
 
-`payer`는 client fee payer와 client-sent transaction signer로 사용하는 Kit `TransactionSigner`입니다. `payerSecretKey`는 secret key가 먼저 오는 base64 64-byte Ed25519 keypair이며 client 생성 시 signer로 resolve됩니다. 두 옵션 모두 direct core/Vue client에서 지원됩니다.
+`payer`는 client fee payer와 client-sent transaction signer로 사용하는 Kit `TransactionSigner`입니다. `payerSecretKey`는 secret key가 먼저 오는 base64 64-byte Ed25519 keypair이며 client 생성 시 address를 파생하고 첫 사용 시 signing key를 import합니다. 그래서 public half가 seed와 맞지 않는 keypair는 client 생성이 아니라 첫 서명 시점에 거부됩니다. 두 옵션 모두 direct core/Vue client에서 지원됩니다.
 
 `createSolanaClient()`은 기본적으로 `@solana/kit-plugin-rpc`의 official `solanaRpc()`, `rpcTransactionPlanner()`, `rpcTransactionPlanSendingExecutor()` 스택을 compose합니다. 기존 custom fallback sender는 사용하지 않습니다. client는 RPC read/subscription과 `planTransaction(s)`, `sendTransaction(s)`를 노출합니다. official executor는 새 blockhash, resource limit와 preflight 처리, client signer를 이용한 서명, RPC 제출을 수행하고 send가 resolve되기 전에 `confirmed` commitment을 기다립니다. client send에는 `payer` signer가 필요합니다.
 
@@ -10084,7 +10084,7 @@ Supported clusters are `mainnet` (legacy alias `mainnet-beta`), `testnet`, `devn
 
 `autoConnect` defaults to `false`. When enabled through the Vue plugin or Nuxt module, Vue Solana reconnects only a wallet identity that the user previously selected and that is discovered again on the client. It stores only wallet identity metadata under `localStorage["vue-solana:selected-wallet"]`: `name`, and `platform`/`source` when available. It never stores private keys, session data, or transaction data, and it never connects an arbitrary installed wallet.
 
-`payer` is a Kit `TransactionSigner` used as the client's fee payer and signer for client-sent transactions. `payerSecretKey` is a base64-encoded 64-byte Ed25519 keypair with the secret key first; it is resolved to a signer when the client is created. Both options are supported by direct core and Vue clients.
+`payer` is a Kit `TransactionSigner` used as the client's fee payer and signer for client-sent transactions. `payerSecretKey` is a base64-encoded 64-byte Ed25519 keypair with the secret key first; the client derives its address at creation and imports the signing key on first use, so a keypair whose public half does not match its seed is rejected at the first signature instead of at client creation. Both options are supported by direct core and Vue clients.
 
 `createSolanaClient()` composes the official `@solana/kit-plugin-rpc` stack by default: `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()`. The old custom fallback sender is not used. The client exposes RPC reads and subscriptions plus `planTransaction(s)` and `sendTransaction(s)`. Its official sending executor adds a fresh blockhash, resource-limit and preflight handling, signs with the available client signers, submits the transaction, and waits for `confirmed` commitment before the send resolves. A client send requires a `payer` signer.
 
@@ -10583,7 +10583,7 @@ interface SolanaConfig {
 
 `autoConnect` 默认为 `false`。通过 Vue 插件或 Nuxt 模块启用后，Vue Solana 只会重新连接用户之前选择、并且在客户端再次发现的钱包身份。它只在 `localStorage["vue-solana:selected-wallet"]` 下存储钱包身份元数据：`name`，以及可用时的 `platform`/`source`。它永远不会存储私钥、session 数据或交易数据，也不会连接任意已安装钱包。
 
-`payer` 是 Kit `TransactionSigner`，用作客户端发送交易时的费用支付方和签名者。`payerSecretKey` 是 base64 编码的 64 字节 Ed25519 keypair，secret key 在前，并会在创建客户端时解析为 signer。两个选项都支持 direct core/Vue client。
+`payer` 是 Kit `TransactionSigner`，用作客户端发送交易时的费用支付方和签名者。`payerSecretKey` 是 base64 编码的 64 字节 Ed25519 keypair，secret key 在前；client 会在创建时派生其 address，并在首次使用时导入 signing key，因此 public half 与 seed 不匹配的 keypair 会在第一次签名时被拒绝，而不是在创建 client 时。两个选项都支持 direct core/Vue client。
 
 `createSolanaClient()` 默认组合 `@solana/kit-plugin-rpc` 的官方 `solanaRpc()`、`rpcTransactionPlanner()` 和 `rpcTransactionPlanSendingExecutor()`。旧的 custom fallback sender 不再使用。客户端暴露 RPC 读取和订阅，以及 `planTransaction(s)` 和 `sendTransaction(s)`。官方 executor 会获取新的 blockhash、处理 resource limit 和 preflight、使用可用 signer 签名、提交 RPC 交易，并在 send resolve 前等待 `confirmed` commitment。client-sent 交易需要 `payer` signer。
 
@@ -10927,18 +10927,18 @@ Los clusters soportados son `mainnet` (alias heredado `mainnet-beta`), `devnet`,
 
 ### Opciones del plugin
 
-| Opcion           | Tipo                           | Default               | Descripcion                                                                                          |
-| ---------------- | ------------------------------ | --------------------- | ---------------------------------------------------------------------------------------------------- |
-| `cluster`        | Solana cluster                 | `devnet`              | Cluster usado cuando se omite `endpoint`. `mainnet-beta` se acepta como alias heredado de `mainnet`. |
-| `endpoint`       | `string`                       | Endpoint del cluster  | Endpoint RPC HTTP.                                                                                   |
-| `wsEndpoint`     | `string`                       | Endpoint derivado     | Endpoint RPC WebSocket.                                                                              |
-| `commitment`     | Commitment                     | Default de Kit        | Commitment por defecto para llamadas RPC.                                                            |
-| `autoConnect`    | `boolean`                      | `false`               | Reconecta solo una wallet descubierta seleccionada previamente.                                      |
-| `payer`          | `TransactionSigner`            | None                  | Payer de comisiones y signer del cliente para transacciones enviadas por el cliente.                 |
-| `payerSecretKey` | `string`                       | None                  | Keypair Ed25519 de 64 bytes en base64, secret key primero, resuelto al crear el cliente.             |
-| `wallet`         | `SolanaWallet`                 | Deshabilitado         | Adaptador de wallet personalizado.                                                                   |
-| `mobileWallet`   | `MobileWalletOptions \| false` | Habilitado en Android | Opciones de Android Mobile Wallet Adapter.                                                           |
-| `iosWallet`      | `iOSWalletOptions \| false`    | Habilitado en iOS     | Opciones de universal links de wallets iOS.                                                          |
+| Opcion           | Tipo                           | Default               | Descripcion                                                                                                                                |
+| ---------------- | ------------------------------ | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `cluster`        | Solana cluster                 | `devnet`              | Cluster usado cuando se omite `endpoint`. `mainnet-beta` se acepta como alias heredado de `mainnet`.                                       |
+| `endpoint`       | `string`                       | Endpoint del cluster  | Endpoint RPC HTTP.                                                                                                                         |
+| `wsEndpoint`     | `string`                       | Endpoint derivado     | Endpoint RPC WebSocket.                                                                                                                    |
+| `commitment`     | Commitment                     | Default de Kit        | Commitment por defecto para llamadas RPC.                                                                                                  |
+| `autoConnect`    | `boolean`                      | `false`               | Reconecta solo una wallet descubierta seleccionada previamente.                                                                            |
+| `payer`          | `TransactionSigner`            | None                  | Payer de comisiones y signer del cliente para transacciones enviadas por el cliente.                                                       |
+| `payerSecretKey` | `string`                       | None                  | Keypair Ed25519 de 64 bytes en base64, secret key primero. Direccion derivada al crear el cliente; signing key importada en el primer uso. |
+| `wallet`         | `SolanaWallet`                 | Deshabilitado         | Adaptador de wallet personalizado.                                                                                                         |
+| `mobileWallet`   | `MobileWalletOptions \| false` | Habilitado en Android | Opciones de Android Mobile Wallet Adapter.                                                                                                 |
+| `iosWallet`      | `iOSWalletOptions \| false`    | Habilitado en iOS     | Opciones de universal links de wallets iOS.                                                                                                |
 
 `payer` y `payerSecretKey` son compatibles con clientes Vue/core directos. Un envio del cliente requiere un `payer`. Nunca pongas un secreto crudo o `payerSecretKey` en la configuracion runtime publica de Nuxt, y nunca envíes una clave de firma con fondos al navegador de un usuario final.
 
@@ -11738,18 +11738,18 @@ createApp(App).use(
 
 ### Plugin 옵션
 
-| 옵션             | Type                           | Default            | Description                                                                                         |
-| ---------------- | ------------------------------ | ------------------ | --------------------------------------------------------------------------------------------------- |
-| `cluster`        | Solana cluster                 | `devnet`           | `endpoint`를 생략할 때 사용할 cluster입니다. `mainnet-beta`는 `mainnet`의 이전 별칭으로 허용됩니다. |
-| `endpoint`       | `string`                       | Cluster endpoint   | HTTP RPC endpoint입니다.                                                                            |
-| `wsEndpoint`     | `string`                       | Derived endpoint   | WebSocket RPC endpoint입니다.                                                                       |
-| `commitment`     | Commitment                     | Kit default        | RPC call의 default commitment입니다.                                                                |
-| `autoConnect`    | `boolean`                      | `false`            | 이전에 선택한 discovered wallet만 reconnect합니다.                                                  |
-| `payer`          | `TransactionSigner`            | None               | client-sent transaction의 fee payer와 signer입니다.                                                 |
-| `payerSecretKey` | `string`                       | None               | secret key가 먼저 오는 base64 64-byte Ed25519 keypair이며 client 생성 시 resolve됩니다.             |
-| `wallet`         | `SolanaWallet`                 | Disabled           | Custom wallet adapter입니다.                                                                        |
-| `mobileWallet`   | `MobileWalletOptions \| false` | Enabled on Android | Android Mobile Wallet Adapter 옵션입니다.                                                           |
-| `iosWallet`      | `iOSWalletOptions \| false`    | Enabled on iOS     | iOS wallet universal-link 옵션입니다.                                                               |
+| 옵션             | Type                           | Default            | Description                                                                                                        |
+| ---------------- | ------------------------------ | ------------------ | ------------------------------------------------------------------------------------------------------------------ |
+| `cluster`        | Solana cluster                 | `devnet`           | `endpoint`를 생략할 때 사용할 cluster입니다. `mainnet-beta`는 `mainnet`의 이전 별칭으로 허용됩니다.                |
+| `endpoint`       | `string`                       | Cluster endpoint   | HTTP RPC endpoint입니다.                                                                                           |
+| `wsEndpoint`     | `string`                       | Derived endpoint   | WebSocket RPC endpoint입니다.                                                                                      |
+| `commitment`     | Commitment                     | Kit default        | RPC call의 default commitment입니다.                                                                               |
+| `autoConnect`    | `boolean`                      | `false`            | 이전에 선택한 discovered wallet만 reconnect합니다.                                                                 |
+| `payer`          | `TransactionSigner`            | None               | client-sent transaction의 fee payer와 signer입니다.                                                                |
+| `payerSecretKey` | `string`                       | None               | secret key가 먼저 오는 base64 64-byte Ed25519 keypair. client 생성 시 address 파생, 첫 사용 시 signing key import. |
+| `wallet`         | `SolanaWallet`                 | Disabled           | Custom wallet adapter입니다.                                                                                       |
+| `mobileWallet`   | `MobileWalletOptions \| false` | Enabled on Android | Android Mobile Wallet Adapter 옵션입니다.                                                                          |
+| `iosWallet`      | `iOSWalletOptions \| false`    | Enabled on iOS     | iOS wallet universal-link 옵션입니다.                                                                              |
 
 `payer`와 `payerSecretKey`는 direct Vue/core client에서 지원됩니다. client-sent transaction에는 `payer`가 필요합니다. Nuxt public runtime config에 raw secret이나 `payerSecretKey`를 넣지 말고, funded signing key를 end-user browser에 보내지 마세요.
 
@@ -12549,18 +12549,18 @@ Supported clusters are `mainnet` (legacy alias `mainnet-beta`), `devnet`, `testn
 
 ### Plugin Options
 
-| Option           | Type                           | Default            | Description                                                                                          |
-| ---------------- | ------------------------------ | ------------------ | ---------------------------------------------------------------------------------------------------- |
-| `cluster`        | Solana cluster                 | `devnet`           | Cluster used when `endpoint` is omitted. `mainnet-beta` is accepted as a legacy alias for `mainnet`. |
-| `endpoint`       | `string`                       | Cluster endpoint   | HTTP RPC endpoint.                                                                                   |
-| `wsEndpoint`     | `string`                       | Derived endpoint   | WebSocket RPC endpoint.                                                                              |
-| `commitment`     | Commitment                     | Kit default        | Default commitment for RPC calls.                                                                    |
-| `autoConnect`    | `boolean`                      | `false`            | Reconnect only a previously selected discovered wallet.                                              |
-| `payer`          | `TransactionSigner`            | None               | Client fee payer and signer for client-sent transactions.                                            |
-| `payerSecretKey` | `string`                       | None               | Base64 64-byte Ed25519 keypair, secret key first, resolved as a signer at client creation.           |
-| `wallet`         | `SolanaWallet`                 | Disabled           | Custom wallet adapter.                                                                               |
-| `mobileWallet`   | `MobileWalletOptions \| false` | Enabled on Android | Android Mobile Wallet Adapter options.                                                               |
-| `iosWallet`      | `iOSWalletOptions \| false`    | Enabled on iOS     | iOS wallet universal-link options.                                                                   |
+| Option           | Type                           | Default            | Description                                                                                                              |
+| ---------------- | ------------------------------ | ------------------ | ------------------------------------------------------------------------------------------------------------------------ |
+| `cluster`        | Solana cluster                 | `devnet`           | Cluster used when `endpoint` is omitted. `mainnet-beta` is accepted as a legacy alias for `mainnet`.                     |
+| `endpoint`       | `string`                       | Cluster endpoint   | HTTP RPC endpoint.                                                                                                       |
+| `wsEndpoint`     | `string`                       | Derived endpoint   | WebSocket RPC endpoint.                                                                                                  |
+| `commitment`     | Commitment                     | Kit default        | Default commitment for RPC calls.                                                                                        |
+| `autoConnect`    | `boolean`                      | `false`            | Reconnect only a previously selected discovered wallet.                                                                  |
+| `payer`          | `TransactionSigner`            | None               | Client fee payer and signer for client-sent transactions.                                                                |
+| `payerSecretKey` | `string`                       | None               | Base64 64-byte Ed25519 keypair, secret key first. Address derived at client creation; signing key imported on first use. |
+| `wallet`         | `SolanaWallet`                 | Disabled           | Custom wallet adapter.                                                                                                   |
+| `mobileWallet`   | `MobileWalletOptions \| false` | Enabled on Android | Android Mobile Wallet Adapter options.                                                                                   |
+| `iosWallet`      | `iOSWalletOptions \| false`    | Enabled on iOS     | iOS wallet universal-link options.                                                                                       |
 
 `payer` and `payerSecretKey` are supported by direct Vue plugin/core clients. A client-sent transaction requires a `payer`. Never put a raw secret or `payerSecretKey` in Nuxt public runtime config, and never ship a funded signing key to an end-user browser.
 
@@ -13361,18 +13361,18 @@ createApp(App).use(
 
 ### 插件选项
 
-| 选项             | 类型                           | 默认值             | 说明                                                                                 |
-| ---------------- | ------------------------------ | ------------------ | ------------------------------------------------------------------------------------ |
-| `cluster`        | Solana cluster                 | `devnet`           | 省略 `endpoint` 时使用的 cluster。`mainnet-beta` 作为 `mainnet` 的旧别名仍然被接受。 |
-| `endpoint`       | `string`                       | Cluster endpoint   | HTTP RPC endpoint。                                                                  |
-| `wsEndpoint`     | `string`                       | Derived endpoint   | WebSocket RPC endpoint。                                                             |
-| `commitment`     | Commitment                     | Kit default        | RPC 调用的默认 commitment。                                                          |
-| `autoConnect`    | `boolean`                      | `false`            | 只重新连接之前选择且再次发现的已发现钱包。                                           |
-| `payer`          | `TransactionSigner`            | None               | 客户端发送交易时的费用支付方和签名者。                                               |
-| `payerSecretKey` | `string`                       | None               | base64 编码的 64 字节 Ed25519 keypair，secret key 在前，在创建客户端时解析。         |
-| `wallet`         | `SolanaWallet`                 | Disabled           | 自定义钱包 adapter。                                                                 |
-| `mobileWallet`   | `MobileWalletOptions \| false` | Enabled on Android | Android Mobile Wallet Adapter 选项。                                                 |
-| `iosWallet`      | `iOSWalletOptions \| false`    | Enabled on iOS     | iOS 钱包 universal-link 选项。                                                       |
+| 选项             | 类型                           | 默认值             | 说明                                                                                                             |
+| ---------------- | ------------------------------ | ------------------ | ---------------------------------------------------------------------------------------------------------------- |
+| `cluster`        | Solana cluster                 | `devnet`           | 省略 `endpoint` 时使用的 cluster。`mainnet-beta` 作为 `mainnet` 的旧别名仍然被接受。                             |
+| `endpoint`       | `string`                       | Cluster endpoint   | HTTP RPC endpoint。                                                                                              |
+| `wsEndpoint`     | `string`                       | Derived endpoint   | WebSocket RPC endpoint。                                                                                         |
+| `commitment`     | Commitment                     | Kit default        | RPC 调用的默认 commitment。                                                                                      |
+| `autoConnect`    | `boolean`                      | `false`            | 只重新连接之前选择且再次发现的已发现钱包。                                                                       |
+| `payer`          | `TransactionSigner`            | None               | 客户端发送交易时的费用支付方和签名者。                                                                           |
+| `payerSecretKey` | `string`                       | None               | base64 编码的 64 字节 Ed25519 keypair，secret key 在前。创建 client 时派生 address，首次使用时导入 signing key。 |
+| `wallet`         | `SolanaWallet`                 | Disabled           | 自定义钱包 adapter。                                                                                             |
+| `mobileWallet`   | `MobileWalletOptions \| false` | Enabled on Android | Android Mobile Wallet Adapter 选项。                                                                             |
+| `iosWallet`      | `iOSWalletOptions \| false`    | Enabled on iOS     | iOS 钱包 universal-link 选项。                                                                                   |
 
 `payer` 和 `payerSecretKey` 支持 direct Vue/core client。client-sent 交易需要 `payer`。永远不要把 raw secret 或 `payerSecretKey` 放入 Nuxt public runtime config，也不要把有资金的 signing key 发送到 end-user browser。
 

@@ -20,6 +20,7 @@
     "directory": "packages/nuxt"
   },
   "type": "module",
+  "sideEffects": false,
   "main": "./dist/module.cjs",
   "module": "./dist/module.mjs",
   "types": "./dist/module.d.mts",
