@@ -29,11 +29,7 @@ export function useDemoTransfer() {
       return null;
     }
 
-    try {
-      return lamports(Math.round(amount * 1_000_000_000));
-    } catch {
-      return null;
-    }
+    return lamports(BigInt(Math.round(amount * 1_000_000_000)));
   });
   const recipientAddressValid = computed(() => {
     try {

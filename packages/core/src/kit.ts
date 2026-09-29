@@ -114,9 +114,20 @@ function resolvePayerFromSecretKey(
 
 export type SolanaClient = SolanaClientWithOptionalPayer;
 
+/**
+ * Re-exported so apps need only `@vue-solana/vue` (or `@vue-solana/nuxt`),
+ * never a direct `@solana/kit` install.
+ *
+ * Kept an explicit list on purpose: `index.ts` re-exports this module next to
+ * `./errors` and `./action`, and Kit also exports `SolanaError`, `isSolanaError`
+ * and `isAbortError`. A `export * from "@solana/kit"` would make those three
+ * names ambiguous and silently drop them from the package root. Add names here
+ * as consumers need them.
+ */
 export type {
   Address,
   Commitment,
+  Instruction,
   InstructionPlanInput,
   Lamports,
   Rpc,
@@ -150,9 +161,21 @@ export type {
   ReactiveStreamStore,
 } from "@solana/kit";
 export {
+  AccountRole,
+  address,
+  appendTransactionMessageInstruction,
+  compileTransaction,
   createReactiveActionStore,
   createReactiveStoreWithInitialValueAndSlotTracking,
+  createTransactionMessage,
+  extendClient,
+  generateKeyPairSigner,
   getAbortablePromise,
+  getTransactionEncoder,
   isAbortError,
+  isAddress,
+  lamports,
+  setTransactionMessageFeePayer,
+  setTransactionMessageLifetimeUsingBlockhash,
+  summarizeTransactionPlanResult,
 } from "@solana/kit";
-export { address, lamports } from "@solana/kit";

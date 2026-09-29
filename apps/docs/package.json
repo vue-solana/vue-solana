@@ -10,26 +10,30 @@
     "llms": "node scripts/generate-llms.mjs",
     "postinstall": "nuxt prepare",
     "prepare": "nuxt prepare",
-    "preview": "nuxt preview"
+    "preview": "nuxt preview",
+    "typecheck": "nuxt prepare && vue-tsc --build --noEmit"
   },
   "dependencies": {
     "@nuxt/content": "^3.14.0",
     "@nuxt/image": "2.0.0",
-    "@nuxtjs/mdc": "^0.22.0",
     "@nuxt/ui": "^4.8.1",
     "@nuxtjs/i18n": "^10.4.0",
+    "@nuxtjs/mdc": "^0.22.0",
     "@nuxtjs/seo": "5.3.2",
     "@resvg/resvg-js": "^2.6.2",
     "@solana/kit": "^8.3.0",
-    "@solana/kit-plugin-rpc": "^0.19.0",
     "@vercel/analytics": "^2.0.1",
-    "@vue-solana/nuxt": "2.3.0",
-    "@vue-solana/vue": "2.3.0",
+    "@vue-solana/nuxt": "2.4.0",
+    "@vue-solana/vue": "2.4.0",
+    "minimark": "^0.2.0",
     "nuxt": "^4.4.6",
     "satori": "^0.26.0",
     "tailwindcss": "^4.3.0",
     "typescript": "^5.8.3",
     "vue": "^3.5.34",
     "vue-router": "^5.0.7"
+  },
+  "devDependencies": {
+    "vue-tsc": "^3.2.6"
   }
 }

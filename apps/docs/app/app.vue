@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import { queryCollectionNavigation, useSearchCollection } from "#imports";
-import type { SearchCollectionOptions, SearchResult } from "@nuxt/content/dist/runtime/client.js";
 
 const { locale, locales, t } = useI18n();
 
@@ -20,10 +19,12 @@ const { search, status: searchStatus } = useSearchCollection("content");
 
 const localePrefix = computed(() => (locale.value === "en" ? "" : `/${locale.value}`));
 
-const searchCurrentLocale = async (query: string, opts?: SearchCollectionOptions) => {
-  const results = await search(query, opts);
-  return results.filter((result: SearchResult) => {
-    const segment = result.id.split("#")[0];
+// `SearchCollectionOptions` and `SearchResult` only exist in subpaths `@nuxt/content`
+// does not export, so the signature is taken from `search` instead of imported.
+const searchCurrentLocale = async (...args: Parameters<typeof search>) => {
+  const results = await search(...args);
+  return results.filter((result) => {
+    const [segment = ""] = result.id.split("#");
     return localePrefix.value
       ? segment.startsWith(`${localePrefix.value}/`) || segment === localePrefix.value
       : !/^\/(es|ko|zh)(\/|$)/.test(segment);

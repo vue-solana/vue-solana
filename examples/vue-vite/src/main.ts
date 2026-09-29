@@ -1,7 +1,7 @@
 import "./assets/main.css";
 
 import { createApp } from "vue";
-import { generateKeyPairSigner } from "@solana/kit";
+import { generateKeyPairSigner } from "@vue-solana/vue/kit";
 import { createSolanaPlugin } from "@vue-solana/vue";
 import App from "./App.vue";
 

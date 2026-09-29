@@ -47,7 +47,10 @@ export function useDemoMessageSigning() {
       return null;
     }
 
-    return new TextDecoder().decode(signedMessage);
+    // `signedMessage` is the `buffer` polyfill's Uint8Array, which is missing the
+    // ArrayBuffer members lib.dom's TextDecoder demands. Copying into a real
+    // Uint8Array is the cheapest way to hand the decoder something it accepts.
+    return new TextDecoder().decode(new Uint8Array(signedMessage));
   });
   const messageSigningStatus = computed(() => {
     if (signMessage.status.value !== "idle") {

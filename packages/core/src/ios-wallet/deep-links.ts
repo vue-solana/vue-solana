@@ -37,7 +37,7 @@ export async function launchSignTransaction(
   options: AdaptSolanaIosWalletOptions,
 ): Promise<Uint8Array> {
   const response = await launchEncryptedWalletRequest(definition, "signTransaction", options, {
-    transaction: bs58.encode(transaction),
+    transaction: bs58.encode(new Uint8Array(transaction)),
   });
 
   if (!response.transaction) {
@@ -53,7 +53,7 @@ export async function launchSignAllTransactions(
   options: AdaptSolanaIosWalletOptions,
 ): Promise<Uint8Array[]> {
   const response = await launchEncryptedWalletRequest(definition, "signAllTransactions", options, {
-    transactions: transactions.map((transaction) => bs58.encode(transaction)),
+    transactions: transactions.map((transaction) => bs58.encode(new Uint8Array(transaction))),
   });
 
   if (!response.transactions) {
@@ -74,7 +74,7 @@ export async function launchSignAndSendTransaction(
     "signAndSendTransaction",
     options,
     {
-      transaction: bs58.encode(transaction),
+      transaction: bs58.encode(new Uint8Array(transaction)),
       sendOptions,
     },
   );

@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { SOLANA_IMPORTS } from "./imports";
+
+import { solanaAutoImports, solanaSetupAutoImports } from "./imports";
 
 const kit = vi.hoisted(() => ({
   addImports: vi.fn(),
@@ -80,7 +81,7 @@ function setupModule(
   module.setup(options, {
     hook: (name, callback) => {
       if (name === "vite:extendConfig") {
-        viteExtendConfigHooks.push(callback);
+        viteExtendConfigHooks.push(callback as ViteExtendConfigHook);
       }
     },
     options: {
@@ -139,7 +140,19 @@ describe("Nuxt module", () => {
       src: "resolved:./runtime/plugin",
       mode: "client",
     });
-    expect(kit.addImports).toHaveBeenCalledWith(expect.arrayContaining(SOLANA_IMPORTS));
+    const [imports] = kit.addImports.mock.calls[0] ?? [[]];
+    const asNames = imports.map((entry: { as: string }) => entry.as);
+    // Every source must name a real file, or the app resolves the bare
+    // package subpath relative to itself and misses.
+    expect(imports.every((entry: { from: string }) => entry.from.endsWith(".mjs"))).toBe(true);
+    // `createSolanaPlugin` accepts `payerSecretKey`, so it stays out of global
+    // scope for apps that did not opt out of the runtime plugin.
+    expect(asNames).toEqual(
+      expect.arrayContaining(solanaAutoImports(undefined).map((entry) => entry.as)),
+    );
+    expect(asNames).not.toEqual(
+      expect.arrayContaining(solanaSetupAutoImports(undefined).map((entry) => entry.as)),
+    );
   });
 
   it("skips the runtime plugin but keeps composable imports when clientPlugin is false", async () => {
@@ -149,7 +162,14 @@ describe("Nuxt module", () => {
     setupModule(module, { cluster: "devnet", clientPlugin: false }, { publicConfig });
 
     expect(kit.addPlugin).not.toHaveBeenCalled();
-    expect(kit.addImports).toHaveBeenCalledWith(expect.arrayContaining(SOLANA_IMPORTS));
+    const [imports] = kit.addImports.mock.calls[0] ?? [[]];
+    const names = imports.map((entry: { as: string }) => entry.as);
+    expect(names).toEqual(
+      expect.arrayContaining([
+        ...solanaAutoImports(undefined).map((entry) => entry.as),
+        ...solanaSetupAutoImports(undefined).map((entry) => entry.as),
+      ]),
+    );
     // `clientPlugin` is build-time only and must not reach the client bundle.
     expect(publicConfig.solana).toEqual({ cluster: "devnet" });
   });
@@ -308,5 +328,42 @@ describe("Nuxt module", () => {
         redirectUrl: "https://example.com/wallet-callback",
       },
     });
+  });
+
+  it("points every auto-import source at the module's own vue copy", async () => {
+    const module = (await import("./module")).default as unknown as ModuleUnderTest;
+
+    setupModule(module);
+
+    const [imports] = kit.addImports.mock.calls[0] ?? [[]];
+
+    // A bare `@vue-solana/vue/swr` makes the app resolve `<package root>/swr`,
+    // which is not a file; the miss lands in a `.d.ts` and every composable
+    // degrades to `any` instead of erroring. Nuxt inlines whatever we register,
+    // so the registered source must be the path to the file, not its name.
+    for (const { from } of imports) {
+      expect(from.startsWith("/")).toBe(true);
+      expect(from.endsWith(".mjs")).toBe(true);
+    }
+  });
+
+  it("maps every auto-import to its own file, or the swr entry", () => {
+    const dist = "/pkg/vue/dist";
+
+    for (const { name, from } of solanaAutoImports(dist)) {
+      const isSwr = name.endsWith("Swr");
+      expect(from).toBe(`${dist}/${isSwr ? "swr" : name}.mjs`);
+    }
+
+    // Falls back to the bare subpaths when the module cannot resolve its own
+    // dependency, rather than writing a path that points nowhere.
+    expect(solanaAutoImports(undefined).find(({ name }) => name === "useRequestSwr")?.from).toBe(
+      "@vue-solana/vue/swr",
+    );
+
+    // The setup values all live in the package root, not a subpath of their own.
+    for (const { from } of solanaSetupAutoImports(dist)) {
+      expect(from).toBe(`${dist}/index.mjs`);
+    }
   });
 });

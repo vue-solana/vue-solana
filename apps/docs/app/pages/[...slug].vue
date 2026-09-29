@@ -93,7 +93,7 @@ useSeoMeta({
   twitterDescription: ogDescription,
 });
 
-defineOgImage("Docs", {
+defineOgImage("ImageDocs", {
   title: ogTitle,
   description: ogDescription,
   section: ogSection,

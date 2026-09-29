@@ -6,19 +6,21 @@ let swrHit = 0;
 
 <script setup lang="ts">
 import { computed } from "vue";
-import { useRequestSwr } from "@vue-solana/vue/swr";
 
 const { client } = useSolanaClient();
 
-const swr = useRequestSwr<{ hit: number; core: string }>("example:version", async (signal) => {
-  const hit = ++swrHit;
-  // Simulated latency keeps the stale (cached) value visible long enough to
-  // observe the handoff from stale to fresh data.
-  await new Promise((resolve) => window.setTimeout(resolve, 1_500));
-  const version = await client.rpc.getVersion().send({ abortSignal: signal });
+const swr = useSolanaRequestSwr<{ hit: number; core: string }>(
+  "example:version",
+  async (signal) => {
+    const hit = ++swrHit;
+    // Simulated latency keeps the stale (cached) value visible long enough to
+    // observe the handoff from stale to fresh data.
+    await new Promise((resolve) => window.setTimeout(resolve, 1_500));
+    const version = await client.rpc.getVersion().send({ abortSignal: signal });
 
-  return { hit, core: version["solana-core"] };
-});
+    return { hit, core: version["solana-core"] };
+  },
+);
 
 const swrText = computed(() => {
   const data = swr.data.value;

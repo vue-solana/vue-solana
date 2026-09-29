@@ -12,8 +12,7 @@ import {
   setTransactionMessageFeePayer,
   setTransactionMessageLifetimeUsingBlockhash,
   type Address,
-} from "@solana/kit";
-import { useTransaction } from "@vue-solana/vue/useTransaction";
+} from "@vue-solana/nuxt/kit";
 
 installSolanaBufferPolyfill();
 
@@ -40,7 +39,7 @@ const SYSTEM_PROGRAM_ADDRESS = address("11111111111111111111111111111111");
 
 const balance = useSolanaBalance(balanceAddress);
 
-const mockTransaction = useTransaction(async (label: string) => {
+const mockTransaction = useSolanaTransaction(async (label: string) => {
   await new Promise((resolve) => window.setTimeout(resolve, 350));
   return `mock-${label}-${Date.now()}`;
 });
