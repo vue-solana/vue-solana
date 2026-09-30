@@ -229,16 +229,6 @@ Plans live in the top-level `plans/` directory, separate from the knowledge bund
 
 ## Suggested Next Tasks
 
-- **Pending: the 2.6.0 release follow-up in `apps/docs`.** The 2.6.0 packages are not published yet, so `apps/docs/package.json` still pins `"@vue-solana/nuxt": "2.5.0"`. Once the user confirms 2.6.0 is on npm, run exactly these four steps and nothing else in `apps/docs` needs to change:
-  1. Bump `apps/docs/package.json` to `"@vue-solana/nuxt": "2.6.0"`.
-  2. Run `pnpm install` at the repo root and commit the `pnpm-lock.yaml` change. Without it CI's frozen-lockfile install fails.
-  3. Run `pnpm --filter docs typecheck`. It is the only gate that catches a missing type-only re-export in a published package, and 2.6.0 changed the `packages/core/src/kit.ts` import surface.
-  4. Run `pnpm --filter docs build` and `pnpm smoke:standalone-installs`, then load the demo and confirm no `Buffer is not defined`. This is the first build against a `sideEffects: false` `@vue-solana/nuxt`; both Buffer injection points (`nuxt.config.ts` virtual entry and `app/plugins/buffer-polyfill.client.ts`) bind a named import and call it, so the flag is safe, but the build is what proves it.
-
-  Not needed: `llms.txt` / `llms-full.txt` (the `build` and `generate` scripts run `pnpm llms` first), `content/roadmap.md` (no 2.6.0 roadmap item shipped), `skills-lock.json` (unrelated agent-skill hashes), `vitest.config.ts` aliases (no subpath imports changed), and `pnpm test:e2e` (Playwright only serves `examples/vue-vite` and `examples/nuxt`, per `playwright.config.ts`). The dead `tweetnacl` entries in `apps/docs/nuxt.config.ts` `optimizeDeps` / `needsInterop` are harmless and can wait.
-
-When step 4 passes, **delete this whole bullet** from `AGENTS.md` in the same commit. It is a one-time release checklist, not a standing limitation; a future agent that finds it should assume the follow-up was never done.
-
 - Follow `apps/docs/content/roadmap.md` for upcoming features (core composables, wallet features, Ecosystem integrations, etc.).
 - `plans/native-wallet-plan.md` is complete except for one open item, "Future iOS Wallet Support" (line 19). Mobile native wallets, Android MWA, iOS browser wallets, and desktop native wallets all shipped through the unified `useWallets()` flow.
 - Re-check the `@solana/kit` and `@solana/kit-plugin-rpc` peer versions on every new release.
