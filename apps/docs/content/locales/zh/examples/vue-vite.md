@@ -28,7 +28,7 @@ Live demo: [vue-solana-docs.vercel.app/demo](/zh/demo)
 - 为已提交的签名构建带有集群信息的 Solana Explorer 链接。
 - 在 Live Data Panels 中演练基于 Kit 的响应式数据层：`useRequest()` 用于一次性请求，`useSubscription()` 用于通过 websocket 的实时 slot 通知，`useTrackedData()` 用于由账户通知更新的、基于 fetch 种子的账户数据，`useSignIn()` 用于 Sign In With Solana，`useAirdrop()` 用于 devnet faucet 请求，`usePayer()` 用于检查客户端的 fee-payer signer，`useSendTransaction()` 和 `useSendTransactions()` 用于不显示 wallet popup 的 client-sent SPL Memo 交易，以及来自 `@vue-solana/vue/swr` 的 `useRequestSwr()` 用于跨重新挂载的缓存键控 stale-while-revalidate。
 - 在 `main.ts` 中配置 demo `payer` signer（来自 `@solana/kit` 的 `generateKeyPairSigner()`），让 client-sent 交易能够支付费用。payer 初始没有资金，`usePayer` panel 会空投 1 devnet SOL。
-- 使用默认 client 的官方 `solanaRpc()`、`rpcTransactionPlanner()` 和 `rpcTransactionPlanSendingExecutor()` 组合。client-send demo 会等待 `confirmed` 后才显示 `sent`，不使用 custom fallback sender。
+- 使用默认 client 的官方 `solanaRpc()` 组合，`solanaRpc()` 会自行安装 transaction planner 以及 plan-signing 和 plan-sending executor。client-send demo 会等待 `confirmed` 后才显示 `sent`，不使用 custom fallback sender。
 
 该应用默认使用 `devnet`。Devnet SOL 没有真实价值。
 

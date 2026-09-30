@@ -4,7 +4,9 @@ import {
   extendClient,
   getBase58Decoder,
   getBase64Encoder,
+  isSolanaError,
   signBytes,
+  SOLANA_ERROR__KEYS__PUBLIC_KEY_MUST_MATCH_PRIVATE_KEY,
   type Address,
   type TransactionPartialSigner,
   type TransactionSigner,
@@ -88,21 +90,34 @@ function resolvePayerFromSecretKey(
     throw invalidError();
   }
 
+  // Derived from the *unverified* public half: the consistency check needs
+  // WebCrypto, which is async, so it cannot run here. A keypair whose public
+  // half does not match its seed therefore reports a `payer.address` that no
+  // signature will ever match; `signTransactions` rejects on the first call.
   const address = getBase58Decoder().decode(keyPairBytes.slice(32)) as Address;
 
-  // ponytail: the key import is lazy because WebCrypto is async, so the
-  // secret/public consistency check happens at first sign rather than at
-  // client creation. Kit's own signer factories import the same way. The only
-  // way a length-checked 64-byte buffer still fails here is a public half that
-  // does not match the seed, so the rejection is the same caller error.
+  // ponytail: the import is lazy because WebCrypto is async, which also moves
+  // the secret/public consistency check to the first sign. Kit's own signer
+  // factories import the same way. Only a mismatched pair is remapped to
+  // `invalidError()`; an unavailable `crypto.subtle` keeps its own error so an
+  // insecure context is not misreported as a malformed key.
   let privateKey: Promise<CryptoKey> | undefined;
   const getPrivateKey = () =>
-    (privateKey ??= createKeyPairFromBytes(keyPairBytes).then(
-      (keyPair) => keyPair.privateKey,
-      () => {
+    (privateKey ??= (async () => {
+      if (!globalThis.crypto?.subtle) {
+        throw new Error(
+          "`payerSecretKey` signing needs WebCrypto, which browsers only expose in a secure context (https, or http on localhost).",
+        );
+      }
+
+      return (await createKeyPairFromBytes(keyPairBytes)).privateKey;
+    })().catch((cause: unknown) => {
+      if (isSolanaError(cause, SOLANA_ERROR__KEYS__PUBLIC_KEY_MUST_MATCH_PRIVATE_KEY)) {
         throw invalidError();
-      },
-    ));
+      }
+
+      throw cause;
+    }));
 
   return {
     address,
@@ -110,6 +125,8 @@ function resolvePayerFromSecretKey(
       config?.abortSignal?.throwIfAborted();
 
       const key = await getPrivateKey();
+
+      config?.abortSignal?.throwIfAborted();
 
       return Promise.all(
         transactions.map(async (transaction) => ({

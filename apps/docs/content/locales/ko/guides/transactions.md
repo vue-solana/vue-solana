@@ -44,7 +44,7 @@ confirmation 기본값은 `confirmed` commitment와 60초 timeout입니다. 이�
 
 ## 클라이언트 전송 트랜잭션
 
-`createSolanaClient()`은 기본적으로 `@solana/kit-plugin-rpc` official transaction stack인 `solanaRpc()`, `rpcTransactionPlanner()`, `rpcTransactionPlanSendingExecutor()`를 compose합니다. 기존 custom fallback sender는 사용하지 않습니다.
+`createSolanaClient()`은 기본적으로 `@solana/kit-plugin-rpc` official transaction stack인 `solanaRpc()`와 `rpcAirdrop()`를 compose합니다. `solanaRpc()`가 transaction planner와 plan-signing/plan-sending executor를 직접 설치합니다. 기존 custom fallback sender는 사용하지 않습니다.
 
 client가 wallet popup 없이 plan, sign, submit, confirm해야 할 때 `useSendTransaction()` 또는 `useSendTransactions()`를 사용하세요. official executor는 새 blockhash를 가져오고 resource limit과 preflight를 처리하며 client signer로 서명하고 RPC로 제출한 뒤 `confirmed`를 기다립니다. send-and-confirm 작업이 완료된 뒤에만 composable의 `status`가 `sent`가 됩니다. 단일 결과는 `data.context.signature`를 제공하고 batch 결과는 plan result tree를 포함합니다.
 

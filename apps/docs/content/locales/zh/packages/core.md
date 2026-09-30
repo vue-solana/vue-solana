@@ -98,9 +98,9 @@ interface SolanaConfig {
 
 `autoConnect` 默认为 `false`。通过 Vue 插件或 Nuxt 模块启用后，Vue Solana 只会重新连接用户之前选择、并且在客户端再次发现的钱包身份。它只在 `localStorage["vue-solana:selected-wallet"]` 下存储钱包身份元数据：`name`，以及可用时的 `platform`/`source`。它永远不会存储私钥、session 数据或交易数据，也不会连接任意已安装钱包。
 
-`payer` 是 Kit `TransactionSigner`，用作客户端发送交易时的费用支付方和签名者。`payerSecretKey` 是 base64 编码的 64 字节 Ed25519 keypair，secret key 在前；client 会在创建时派生其 address，并在首次使用时导入 signing key，因此 public half 与 seed 不匹配的 keypair 会在第一次签名时被拒绝，而不是在创建 client 时。两个选项都支持 direct core/Vue client。
+`payer` 是 Kit `TransactionSigner`，用作客户端发送交易时的费用支付方和签名者。`payerSecretKey` 是 base64 编码的 64 字节 Ed25519 keypair，secret key 在前；client 会在创建时派生其 address，并在首次使用时导入 signing key，因此 public half 与 seed 不匹配的 keypair 会在第一次签名时被拒绝，而不是在创建 client 时。address 来自未经校验的 public half，所以在第一次签名成功之前请将 `payer.address` 视为未确认。签名通过 WebCrypto 导入 key，而浏览器只在 secure context（`https`，或 `localhost` 上的 `http`）中暴露 WebCrypto；在此之外，第一次 `signTransactions()` 调用会抛出 WebCrypto 错误，而不是 key 无效的错误。两个选项都支持 direct core/Vue client。
 
-`createSolanaClient()` 默认组合 `@solana/kit-plugin-rpc` 的官方 `solanaRpc()`、`rpcTransactionPlanner()` 和 `rpcTransactionPlanSendingExecutor()`。旧的 custom fallback sender 不再使用。客户端暴露 RPC 读取和订阅，以及 `planTransaction(s)` 和 `sendTransaction(s)`。官方 executor 会获取新的 blockhash、处理 resource limit 和 preflight、使用可用 signer 签名、提交 RPC 交易，并在 send resolve 前等待 `confirmed` commitment。client-sent 交易需要 `payer` signer。
+`createSolanaClient()` 默认组合 `@solana/kit-plugin-rpc` 的官方 `solanaRpc()` 和 `rpcAirdrop()`。`solanaRpc()` 会自行安装 transaction planner 以及 plan-signing 和 plan-sending executor。旧的 custom fallback sender 不再使用。客户端暴露 RPC 读取和订阅，以及 `planTransaction(s)` 和 `sendTransaction(s)`。官方 executor 会获取新的 blockhash、处理 resource limit 和 preflight、使用可用 signer 签名、提交 RPC 交易，并在 send resolve 前等待 `confirmed` commitment。client-sent 交易需要 `payer` signer。
 
 永远不要把 raw secret 或 `payerSecretKey` 放入 Nuxt public runtime config。不要把有资金的 signing key 发送到 end-user browser；请使用 server 或 relayer 边界，demo 则使用未充值的 ephemeral signer。
 
@@ -381,3 +381,5 @@ try {
 ## Buffer Polyfill
 
 序列化 Solana 交易的浏览器代码可能需要 Node 兼容的 `Buffer` 全局。在交易代码之前用 `@vue-solana/core/buffer-polyfill` 的 `installSolanaBufferPolyfill()` 初始化它。仅剩的包自有类型 shim 覆盖此 polyfill 导入的浏览器 `buffer/` subpath。
+
+三个包都标记了 `"sideEffects": false`，因此 bundler 可以删除任何绑定未被使用的导入。请像上面的示例一样以 named import 引入 polyfill 并调用它。像 `import "@vue-solana/core/buffer-polyfill"` 这样的副作用导入不会安装任何东西，因为该 subpath 只导出函数。

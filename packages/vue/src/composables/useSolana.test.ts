@@ -1,7 +1,7 @@
 import { mount } from "@vue/test-utils";
 import { describe, expect, it } from "vitest";
 import { defineComponent, h, type InjectionKey } from "vue";
-import type { VueSolanaContext } from "../injection";
+import { solanaInjectionKey, type VueSolanaContext } from "../injection";
 import { createMockSolanaContext, mountWithSolana } from "../../test-utils";
 import { useSolana } from "./useSolana";
 
@@ -28,6 +28,12 @@ describe("useSolana", () => {
     const context = createMockSolanaContext({ endpoint: "https://rpc.example.com" });
     const duplicatePackageKey = Symbol.for("vue-solana:context") as InjectionKey<VueSolanaContext>;
     let result: ReturnType<typeof useSolana> | undefined;
+
+    // A second copy of the package in the tree must resolve the same key. This
+    // also pins the registry string, which `apps/docs` hardcodes in
+    // `app/plugins/solana-client-capabilities.client.ts` because Nuxt's import
+    // protection blocks it from importing the published root at runtime.
+    expect(solanaInjectionKey).toBe(duplicatePackageKey);
 
     mount(
       defineComponent({

@@ -44,7 +44,7 @@ Confirmation defaults to `confirmed` commitment and a 60 second timeout. It poll
 
 ## Client-Sent Transactions
 
-`createSolanaClient()` composes the official `@solana/kit-plugin-rpc` transaction stack by default: `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()`. The old custom fallback sender is not used.
+`createSolanaClient()` composes the official `@solana/kit-plugin-rpc` transaction stack by default: `solanaRpc()` followed by `rpcAirdrop()`. `solanaRpc()` installs the transaction planner and the plan-signing and plan-sending executors itself. The old custom fallback sender is not used.
 
 Use `useSendTransaction()` or `useSendTransactions()` when the client should plan, sign, submit, and confirm without a wallet popup. The official executor fetches a fresh blockhash, handles resource limits and preflight simulation, signs with the client signers, submits through RPC, and waits for `confirmed` commitment. The composable sets `status` to `sent` only after that send-and-confirm operation completes. A single result exposes `data.context.signature`; a batch result contains the plan result tree.
 

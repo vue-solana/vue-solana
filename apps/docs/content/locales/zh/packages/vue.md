@@ -71,9 +71,9 @@ createApp(App).use(
 | `mobileWallet`   | `MobileWalletOptions \| false` | Enabled on Android | Android Mobile Wallet Adapter 选项。                                                                             |
 | `iosWallet`      | `iOSWalletOptions \| false`    | Enabled on iOS     | iOS 钱包 universal-link 选项。                                                                                   |
 
-`payer` 和 `payerSecretKey` 支持 direct Vue/core client。client-sent 交易需要 `payer`。永远不要把 raw secret 或 `payerSecretKey` 放入 Nuxt public runtime config，也不要把有资金的 signing key 发送到 end-user browser。
+`payer` 和 `payerSecretKey` 支持 direct Vue/core client。client-sent 交易需要 `payer`。`payerSecretKey` 在创建 client 时从未经校验的 public half 派生 address，因此在第一次签名成功之前请将 `payer.address` 视为未确认；不匹配的 keypair 会在第一次签名时被拒绝，而不是在创建时。签名通过 WebCrypto 导入 key，而浏览器只在 secure context（`https`，或 `localhost` 上的 `http`）中暴露 WebCrypto。永远不要把 raw secret 或 `payerSecretKey` 放入 Nuxt public runtime config，也不要把有资金的 signing key 发送到 end-user browser。
 
-`createSolanaPlugin()` 的默认 client 使用官方 `solanaRpc()`、`rpcTransactionPlanner()` 和 `rpcTransactionPlanSendingExecutor()` 组合。旧的 custom fallback sender 不再使用。官方 executor 会在 `execute()` resolve、`status` 变为 `sent` 之前等待 `confirmed` commitment。
+`createSolanaPlugin()` 的默认 client 使用官方 `solanaRpc()` 和 `rpcAirdrop()` 组合，`solanaRpc()` 会自行安装 transaction planner 以及 plan-signing 和 plan-sending executor。旧的 custom fallback sender 不再使用。官方 executor 会在 `execute()` resolve、`status` 变为 `sent` 之前等待 `confirmed` commitment。
 
 ### 客户端与插件生命周期
 
@@ -142,7 +142,7 @@ import { useWallet } from "@vue-solana/vue/useWallet";
 - `@vue-solana/vue/useTokenAccounts`
 - `@vue-solana/vue/kit`
 
-浏览器交易代码需要 Buffer polyfill 时，使用 `@vue-solana/vue/buffer-polyfill`。需要 Kit API（`createSolanaClient`、`address`、`lamports` 和类型）时，使用 `@vue-solana/vue/kit`。较底层 core 用法仍然支持直接 `@vue-solana/core/*` 导入。
+浏览器交易代码需要 Buffer polyfill 时，使用 `@vue-solana/vue/buffer-polyfill`。请以 named import 引入 `installSolanaBufferPolyfill()` 并调用它；像 `import "@vue-solana/vue/buffer-polyfill"` 这样的副作用导入不会安装任何东西，因为所有 `@vue-solana/*` 包都标记了 `"sideEffects": false`，且该 subpath 只导出函数。需要 Kit API（`createSolanaClient`、`address`、`lamports` 和类型）时，使用 `@vue-solana/vue/kit`。较底层 core 用法仍然支持直接 `@vue-solana/core/*` 导入。
 
 - `useSolana()`：返回完整注入的 Solana context。
 - `useSolanaClient()`：返回 context 中的 Kit `{ client, rpc }`。新代码推荐使用。
@@ -693,7 +693,7 @@ await execute(transaction);
 
 ### 客户端发送交易
 
-`useSendTransaction()` 和 `useSendTransactions()` 使用客户端的 transaction-sending capability，而不是已连接的钱包。`createSolanaClient()` 和 `createSolanaPlugin()` 默认安装官方 `solanaRpc()`、`rpcTransactionPlanner()` 和 `rpcTransactionPlanSendingExecutor()` stack，因此这些 composable 不需要 custom fallback，也不需要再次手动安装 plugin。
+`useSendTransaction()` 和 `useSendTransactions()` 使用客户端的 transaction-sending capability，而不是已连接的钱包。`createSolanaClient()` 和 `createSolanaPlugin()` 默认安装官方 `solanaRpc()` 和 `rpcAirdrop()` stack，`solanaRpc()` 会自行安装 transaction planner 以及 plan-signing 和 plan-sending executor，因此这些 composable 不需要 custom fallback，也不需要再次手动安装 plugin。
 
 executor 会获取新的 blockhash，估计或保留 resource limit，除非另有配置否则执行 preflight simulation，使用客户端 signer 签名，通过 RPC 提交并等待 `confirmed` commitment。只有 send-and-confirm 操作完成后，`status` 才会从 `sending` 变为 `sent`。单笔结果在 `data.context.signature` 提供已提交的签名，batch 结果包含 plan result tree。没有钱包弹窗，因此只应在客户端拥有适当 signer 的可信上下文中使用此流程。
 

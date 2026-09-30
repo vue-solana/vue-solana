@@ -4364,7 +4364,7 @@ export default defineNuxtConfig({
 
 Nuxt guarda las opciones del módulo en runtime config público, así que las opciones deben ser serializables como JSON. El módulo Nuxt omite intencionalmente `payer` y `payerSecretKey`; nunca pongas un secreto crudo en la configuración runtime pública. Instala un `payer` efimero en un plugin solo de cliente con `clientPlugin: false`.
 
-Los clientes directos core y Vue pueden pasar `payer` o `payerSecretKey` a `createSolanaClient()` / `createSolanaPlugin()`. El cliente por defecto usa la composición oficial `solanaRpc()`, `rpcTransactionPlanner()` y `rpcTransactionPlanSendingExecutor()` para las transacciones enviadas por el cliente.
+Los clientes directos core y Vue pueden pasar `payer` o `payerSecretKey` a `createSolanaClient()` / `createSolanaPlugin()`. El cliente por defecto usa la composición oficial `solanaRpc()`, que instala por si mismo el planner de transacciones y los ejecutores de firma y envio de planes, para las transacciones enviadas por el cliente.
 
 Usa el composable autoimportado `useSolanaRpc()` en páginas y componentes Nuxt.
 
@@ -4520,7 +4520,7 @@ export default defineNuxtConfig({
 
 Nuxt stores module options in public runtime config, so options must be JSON-serializable. The Nuxt module intentionally omits `payer` and `payerSecretKey`; never place a raw secret in public runtime config. Install an ephemeral `payer` in a client-only plugin with `clientPlugin: false`.
 
-Direct core and Vue clients can pass `payer` or `payerSecretKey` to `createSolanaClient()` / `createSolanaPlugin()`. The default client uses the official `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()` composition for client-sent transactions.
+Direct core and Vue clients can pass `payer` or `payerSecretKey` to `createSolanaClient()` / `createSolanaPlugin()`. The default client uses the official `solanaRpc()` stack for client-sent transactions, and `solanaRpc()` installs the transaction planner and the plan-signing and plan-sending executors itself.
 
 Use the auto-imported `useSolanaRpc()` composable in Nuxt pages and components.
 
@@ -4676,7 +4676,7 @@ export default defineNuxtConfig({
 
 Nuxt는 모듈 옵션을 public runtime config에 저장하므로 옵션은 JSON 직렬화가 가능해야 합니다. Nuxt module은 `payer`와 `payerSecretKey`를 의도적으로 제외하므로 public runtime config에 raw secret을 넣지 마세요. ephemeral `payer`는 client-only plugin에서 만들고 `clientPlugin: false`를 설정한 뒤 Vue plugin을 install하세요.
 
-direct core와 Vue client는 `createSolanaClient()` / `createSolanaPlugin()`에 `payer` 또는 `payerSecretKey`를 전달할 수 있습니다. default client는 client-sent transaction에 official `solanaRpc()`, `rpcTransactionPlanner()`, `rpcTransactionPlanSendingExecutor()` 구성을 사용합니다.
+direct core와 Vue client는 `createSolanaClient()` / `createSolanaPlugin()`에 `payer` 또는 `payerSecretKey`를 전달할 수 있습니다. default client는 client-sent transaction에 official `solanaRpc()` 구성을 사용하며, `solanaRpc()`가 transaction planner와 plan-signing/plan-sending executor를 직접 설치합니다.
 
 Nuxt 페이지와 컴포넌트에서는 자동 import되는 `useSolanaRpc()` 컴포저블을 사용하세요.
 
@@ -4832,7 +4832,7 @@ export default defineNuxtConfig({
 
 Nuxt 会将模块选项存储在公共运行时配置中，因此选项必须可 JSON 序列化。Nuxt module 有意省略 `payer` 和 `payerSecretKey`；永远不要把 raw secret 放入 public runtime config。请在 client-only plugin 中创建 ephemeral `payer`，设置 `clientPlugin: false`，然后 install Vue plugin。
 
-direct core 和 Vue client 可以向 `createSolanaClient()` / `createSolanaPlugin()` 传入 `payer` 或 `payerSecretKey`。默认 client 对 client-sent 交易使用官方 `solanaRpc()`、`rpcTransactionPlanner()` 和 `rpcTransactionPlanSendingExecutor()` 组合。
+direct core 和 Vue client 可以向 `createSolanaClient()` / `createSolanaPlugin()` 传入 `payer` 或 `payerSecretKey`。默认 client 对 client-sent 交易使用官方 `solanaRpc()` 组合，`solanaRpc()` 会自行安装 transaction planner 以及 plan-signing 和 plan-sending executor。
 
 在 Nuxt 页面和组件中使用自动导入的 `useSolanaRpc()` 组合式函数。
 
@@ -6584,7 +6584,7 @@ La confirmación usa `confirmed` y un timeout de 60 segundos por defecto. Hace p
 
 ## Transacciones Enviadas Por El Cliente
 
-`createSolanaClient()` compone por defecto el stack oficial de transacciones de `@solana/kit-plugin-rpc`: `solanaRpc()`, `rpcTransactionPlanner()` y `rpcTransactionPlanSendingExecutor()`. El fallback custom anterior no se usa.
+`createSolanaClient()` compone por defecto el stack oficial de transacciones de `@solana/kit-plugin-rpc`: `solanaRpc()` y `rpcAirdrop()`. `solanaRpc()` instala por si mismo el planner de transacciones y los ejecutores de firma y envio de planes. El fallback custom anterior no se usa.
 
 Usa `useSendTransaction()` o `useSendTransactions()` cuando el cliente debe planificar, firmar, enviar y confirmar sin popup de wallet. El executor oficial obtiene un blockhash nuevo, maneja limites de recursos y preflight, firma con los signers del cliente, envia por RPC y espera `confirmed`. El composable establece `status` en `sent` solo cuando termina la operacion de envio y confirmacion. El resultado simple expone `data.context.signature`; el resultado batch contiene el arbol del plan.
 
@@ -6886,7 +6886,7 @@ Confirmation defaults to `confirmed` commitment and a 60 second timeout. It poll
 
 ## Client-Sent Transactions
 
-`createSolanaClient()` composes the official `@solana/kit-plugin-rpc` transaction stack by default: `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()`. The old custom fallback sender is not used.
+`createSolanaClient()` composes the official `@solana/kit-plugin-rpc` transaction stack by default: `solanaRpc()` followed by `rpcAirdrop()`. `solanaRpc()` installs the transaction planner and the plan-signing and plan-sending executors itself. The old custom fallback sender is not used.
 
 Use `useSendTransaction()` or `useSendTransactions()` when the client should plan, sign, submit, and confirm without a wallet popup. The official executor fetches a fresh blockhash, handles resource limits and preflight simulation, signs with the client signers, submits through RPC, and waits for `confirmed` commitment. The composable sets `status` to `sent` only after that send-and-confirm operation completes. A single result exposes `data.context.signature`; a batch result contains the plan result tree.
 
@@ -7188,7 +7188,7 @@ confirmation 기본값은 `confirmed` commitment와 60초 timeout입니다. 이�
 
 ## 클라이언트 전송 트랜잭션
 
-`createSolanaClient()`은 기본적으로 `@solana/kit-plugin-rpc` official transaction stack인 `solanaRpc()`, `rpcTransactionPlanner()`, `rpcTransactionPlanSendingExecutor()`를 compose합니다. 기존 custom fallback sender는 사용하지 않습니다.
+`createSolanaClient()`은 기본적으로 `@solana/kit-plugin-rpc` official transaction stack인 `solanaRpc()`와 `rpcAirdrop()`를 compose합니다. `solanaRpc()`가 transaction planner와 plan-signing/plan-sending executor를 직접 설치합니다. 기존 custom fallback sender는 사용하지 않습니다.
 
 client가 wallet popup 없이 plan, sign, submit, confirm해야 할 때 `useSendTransaction()` 또는 `useSendTransactions()`를 사용하세요. official executor는 새 blockhash를 가져오고 resource limit과 preflight를 처리하며 client signer로 서명하고 RPC로 제출한 뒤 `confirmed`를 기다립니다. send-and-confirm 작업이 완료된 뒤에만 composable의 `status`가 `sent`가 됩니다. 단일 결과는 `data.context.signature`를 제공하고 batch 결과는 plan result tree를 포함합니다.
 
@@ -7490,7 +7490,7 @@ console.log(confirmation.signature, confirmation.commitment);
 
 ## 客户端发送交易
 
-`createSolanaClient()` 默认组合 `@solana/kit-plugin-rpc` 的官方交易 stack：`solanaRpc()`、`rpcTransactionPlanner()` 和 `rpcTransactionPlanSendingExecutor()`。旧的 custom fallback sender 不再使用。
+`createSolanaClient()` 默认组合 `@solana/kit-plugin-rpc` 的官方交易 stack：`solanaRpc()` 和 `rpcAirdrop()`。`solanaRpc()` 会自行安装 transaction planner 以及 plan-signing 和 plan-sending executor。旧的 custom fallback sender 不再使用。
 
 当 client 应在不显示 wallet popup 的情况下 plan、sign、submit 和 confirm 时，使用 `useSendTransaction()` 或 `useSendTransactions()`。官方 executor 会获取新的 blockhash、处理 resource limit 和 preflight、使用 client signer 签名、通过 RPC 提交并等待 `confirmed`。只有 send-and-confirm 操作完成后，composable 才会将 `status` 设为 `sent`。单笔结果在 `data.context.signature` 提供签名，batch 结果包含 plan result tree。
 
@@ -9117,9 +9117,9 @@ Los clusters soportados son `mainnet` (alias heredado `mainnet-beta`), `testnet`
 
 `autoConnect` usa `false` por defecto. Cuando se activa mediante el plugin de Vue o el módulo Nuxt, Vue Solana reconecta solo una identidad de wallet que el usuario seleccionó antes y que se descubre otra vez en el cliente. Solo guarda metadatos de identidad de wallet en `localStorage["vue-solana:selected-wallet"]`: `name`, y `platform`/`source` cuando están disponibles. Nunca guarda claves privadas, datos de sesión ni datos de transacción, y nunca conecta una wallet instalada arbitraria.
 
-`payer` es un `TransactionSigner` de Kit que se usa como payer de comisiones y signer del cliente para transacciones enviadas por el cliente. `payerSecretKey` es un keypair Ed25519 de 64 bytes codificado en base64, con la secret key primero; el cliente deriva su direccion al crearse e importa la signing key en el primer uso, asi que un keypair cuya mitad publica no coincide con su seed se rechaza en la primera firma en vez de al crear el cliente. Ambos son compatibles con clientes core/Vue directos.
+`payer` es un `TransactionSigner` de Kit que se usa como payer de comisiones y signer del cliente para transacciones enviadas por el cliente. `payerSecretKey` es un keypair Ed25519 de 64 bytes codificado en base64, con la secret key primero; el cliente deriva su direccion al crearse e importa la signing key en el primer uso, asi que un keypair cuya mitad publica no coincide con su seed se rechaza en la primera firma en vez de al crear el cliente. La direccion viene de la mitad publica sin verificar, asi que trata `payer.address` como no confirmado hasta que la primera firma tenga exito. La firma importa la key con WebCrypto, que los navegadores solo exponen en un contexto seguro (`https`, o `http` en `localhost`); fuera de uno, la primera llamada a `signTransactions()` lanza un error de WebCrypto en vez de un error de key invalida. Ambos son compatibles con clientes core/Vue directos.
 
-`createSolanaClient()` compone por defecto el stack oficial de `@solana/kit-plugin-rpc`: `solanaRpc()`, `rpcTransactionPlanner()` y `rpcTransactionPlanSendingExecutor()`. El fallback custom anterior no se usa. El cliente expone lecturas y suscripciones RPC, `planTransaction(s)` y `sendTransaction(s)`. El executor oficial agrega un blockhash nuevo, maneja limites de recursos y preflight, firma con los signers disponibles, envia la transaccion y espera al commitment `confirmed` antes de resolver el envio. Un envio del cliente requiere un signer `payer`.
+`createSolanaClient()` compone por defecto el stack oficial de `@solana/kit-plugin-rpc`: `solanaRpc()` y `rpcAirdrop()`. `solanaRpc()` instala por si mismo el planner de transacciones y los ejecutores de firma y envio de planes. El fallback custom anterior no se usa. El cliente expone lecturas y suscripciones RPC, `planTransaction(s)` y `sendTransaction(s)`. El executor oficial agrega un blockhash nuevo, maneja limites de recursos y preflight, firma con los signers disponibles, envia la transaccion y espera al commitment `confirmed` antes de resolver el envio. Un envio del cliente requiere un signer `payer`.
 
 Nunca pongas un secreto crudo o `payerSecretKey` en la configuracion runtime publica de Nuxt. No envíes una clave de firma con fondos al navegador de un usuario final; usa un servidor o relayer, o un signer efimero sin fondos para demos.
 
@@ -9400,6 +9400,8 @@ Los códigos de error estables son:
 ## Buffer Polyfill
 
 El código de navegador que serializa transacciones Solana puede necesitar un global `Buffer` compatible con Node. Inicialízalo antes del código de transacción con `installSolanaBufferPolyfill()` desde `@vue-solana/core/buffer-polyfill`. El único shim de tipos que queda dentro del paquete cubre el subpath `buffer/` de navegador del que importa este polyfill.
+
+Los tres paquetes están marcados con `"sideEffects": false`, así que un bundler puede descartar cualquier import cuyos bindings no se usen. Importa el polyfill como named import y llámalo, como en el ejemplo de arriba. Un import de efecto secundario como `import "@vue-solana/core/buffer-polyfill"` no instala nada, porque ese subpath solo exporta la función.
 
 ---
 
@@ -9699,9 +9701,9 @@ interface SolanaConfig {
 
 `autoConnect` 기본값은 `false`입니다. Vue plugin 또는 Nuxt module에서 활성화하면 Vue Solana는 사용자가 이전에 선택했고 client에서 다시 discovery된 wallet identity만 reconnect합니다. `localStorage["vue-solana:selected-wallet"]`에는 `name`, 가능한 경우 `platform`/`source` 같은 wallet identity metadata만 저장합니다. private key, session data, transaction data를 저장하지 않으며 임의로 설치된 wallet에 연결하지 않습니다.
 
-`payer`는 client fee payer와 client-sent transaction signer로 사용하는 Kit `TransactionSigner`입니다. `payerSecretKey`는 secret key가 먼저 오는 base64 64-byte Ed25519 keypair이며 client 생성 시 address를 파생하고 첫 사용 시 signing key를 import합니다. 그래서 public half가 seed와 맞지 않는 keypair는 client 생성이 아니라 첫 서명 시점에 거부됩니다. 두 옵션 모두 direct core/Vue client에서 지원됩니다.
+`payer`는 client fee payer와 client-sent transaction signer로 사용하는 Kit `TransactionSigner`입니다. `payerSecretKey`는 secret key가 먼저 오는 base64 64-byte Ed25519 keypair이며 client 생성 시 address를 파생하고 첫 사용 시 signing key를 import합니다. 그래서 public half가 seed와 맞지 않는 keypair는 client 생성이 아니라 첫 서명 시점에 거부됩니다. address는 검증되지 않은 public half에서 나오므로 첫 서명이 성공할 때까지 `payer.address`를 미확정으로 취급하세요. 서명은 WebCrypto로 key를 import하며, 브라우저는 secure context(`https`, 또는 `localhost`의 `http`)에서만 WebCrypto를 노출합니다. 그 밖의 환경에서는 첫 `signTransactions()` 호출이 잘못된 key 오류가 아니라 WebCrypto 오류를 던집니다. 두 옵션 모두 direct core/Vue client에서 지원됩니다.
 
-`createSolanaClient()`은 기본적으로 `@solana/kit-plugin-rpc`의 official `solanaRpc()`, `rpcTransactionPlanner()`, `rpcTransactionPlanSendingExecutor()` 스택을 compose합니다. 기존 custom fallback sender는 사용하지 않습니다. client는 RPC read/subscription과 `planTransaction(s)`, `sendTransaction(s)`를 노출합니다. official executor는 새 blockhash, resource limit와 preflight 처리, client signer를 이용한 서명, RPC 제출을 수행하고 send가 resolve되기 전에 `confirmed` commitment을 기다립니다. client send에는 `payer` signer가 필요합니다.
+`createSolanaClient()`은 기본적으로 `@solana/kit-plugin-rpc`의 official `solanaRpc()`와 `rpcAirdrop()` 스택을 compose합니다. `solanaRpc()`가 transaction planner와 plan-signing/plan-sending executor를 직접 설치합니다. 기존 custom fallback sender는 사용하지 않습니다. client는 RPC read/subscription과 `planTransaction(s)`, `sendTransaction(s)`를 노출합니다. official executor는 새 blockhash, resource limit와 preflight 처리, client signer를 이용한 서명, RPC 제출을 수행하고 send가 resolve되기 전에 `confirmed` commitment을 기다립니다. client send에는 `payer` signer가 필요합니다.
 
 Nuxt public runtime config에 raw secret이나 `payerSecretKey`를 넣지 마세요. end-user browser에 funded signing key를 배포하지 말고 server/relayer 경계 또는 demo용 ephemeral signer를 사용하세요.
 
@@ -9983,6 +9985,8 @@ try {
 
 Solana transaction을 직렬화하는 browser code는 Node 호환 `Buffer` global이 필요할 수 있습니다. transaction code 전에 `@vue-solana/core/buffer-polyfill`의 `installSolanaBufferPolyfill()`로 초기화하세요. 남은 유일한 package-owned type shim은 이 polyfill이 import하는 browser `buffer/` subpath를 다룹니다.
 
+세 package 모두 `"sideEffects": false`로 표시되어 있어서 bundler가 binding을 사용하지 않는 import를 제거할 수 있습니다. 위 예시처럼 polyfill을 named import로 가져와 호출하세요. `import "@vue-solana/core/buffer-polyfill"` 같은 side-effect import는 아무것도 설치하지 않습니다. 해당 subpath는 함수만 export하기 때문입니다.
+
 ---
 
 # @vue-solana/core
@@ -10084,9 +10088,9 @@ Supported clusters are `mainnet` (legacy alias `mainnet-beta`), `testnet`, `devn
 
 `autoConnect` defaults to `false`. When enabled through the Vue plugin or Nuxt module, Vue Solana reconnects only a wallet identity that the user previously selected and that is discovered again on the client. It stores only wallet identity metadata under `localStorage["vue-solana:selected-wallet"]`: `name`, and `platform`/`source` when available. It never stores private keys, session data, or transaction data, and it never connects an arbitrary installed wallet.
 
-`payer` is a Kit `TransactionSigner` used as the client's fee payer and signer for client-sent transactions. `payerSecretKey` is a base64-encoded 64-byte Ed25519 keypair with the secret key first; the client derives its address at creation and imports the signing key on first use, so a keypair whose public half does not match its seed is rejected at the first signature instead of at client creation. Both options are supported by direct core and Vue clients.
+`payer` is a Kit `TransactionSigner` used as the client's fee payer and signer for client-sent transactions. `payerSecretKey` is a base64-encoded 64-byte Ed25519 keypair with the secret key first; the client derives its address at creation and imports the signing key on first use, so a keypair whose public half does not match its seed is rejected at the first signature instead of at client creation. The address comes from the unverified public half, so treat `payer.address` as unconfirmed until the first signature succeeds. Signing imports the key through WebCrypto, which browsers expose only in a secure context (`https`, or `http` on `localhost`); outside one, the first `signTransactions()` call throws rather than returning a generic invalid-key error. Both options are supported by direct core and Vue clients.
 
-`createSolanaClient()` composes the official `@solana/kit-plugin-rpc` stack by default: `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()`. The old custom fallback sender is not used. The client exposes RPC reads and subscriptions plus `planTransaction(s)` and `sendTransaction(s)`. Its official sending executor adds a fresh blockhash, resource-limit and preflight handling, signs with the available client signers, submits the transaction, and waits for `confirmed` commitment before the send resolves. A client send requires a `payer` signer.
+`createSolanaClient()` composes the official `@solana/kit-plugin-rpc` stack by default: `solanaRpc()` followed by `rpcAirdrop()`. `solanaRpc()` installs `rpcTransactionPlanner()`, `rpcTransactionPlanSigningExecutor()`, and `rpcTransactionPlanSendingExecutor()` itself, so the client exposes RPC reads and subscriptions plus `planTransaction(s)`, `signTransaction(s)`, and `sendTransaction(s)` with no extra plugin. The old custom fallback sender is not used. Its official sending executor adds a fresh blockhash, resource-limit and preflight handling, signs with the available client signers, submits the transaction, and waits for `confirmed` commitment before the send resolves. A client send requires a `payer` signer.
 
 Never put a raw secret or `payerSecretKey` in Nuxt public runtime config. Do not ship a funded signing key to an end-user browser; use a server or relayer boundary, or an ephemeral unfunded signer for demos.
 
@@ -10305,7 +10309,7 @@ const signedTransaction = await wallet.signTransaction(transaction);
 - `signAndSendTransaction(client, wallet, transaction, options?)`: signs and sends raw wire transaction bytes using a configured wallet and returns the RPC signature. Wallets that expose `signAndSendTransaction` are delegated to; otherwise the transaction is signed with `wallet.signTransaction` and submitted through `client.rpc.sendTransaction(...).send()`. Android Mobile Wallet Adapter wallets prefer signing plus app-side RPC submission so the app owns submission and reliably returns the RPC signature after the wallet handoff.
 - `confirmTransactionSignature(client, signature, options?)`: waits for a submitted signature to reach a requested commitment. Defaults to `confirmed` commitment, a 60 second timeout, and polling `client.rpc.getSignatureStatuses([signature]).send()`.
 
-The client-sent flow is separate from this wallet-aware helper. The client exposes `sendTransaction()` and `sendTransactions()` through the official `rpcTransactionPlanSendingExecutor()` installed by `createSolanaClient()`; the Vue composables wrap those methods. They plan, sign, submit, and wait for `confirmed` commitment; the `sent` status is set only after that send-and-confirm operation completes. A single result exposes the submitted signature at `data.context.signature`, while a batch result contains the full plan result tree. The official sender does not show a wallet popup.
+The client-sent flow is separate from this wallet-aware helper. The client exposes `sendTransaction()` and `sendTransactions()` through the official `rpcTransactionPlanSendingExecutor()` that `solanaRpc()` installs inside `createSolanaClient()`; the Vue composables wrap those methods. They plan, sign, submit, and wait for `confirmed` commitment; the `sent` status is set only after that send-and-confirm operation completes. A single result exposes the submitted signature at `data.context.signature`, while a batch result contains the full plan result tree. The official sender does not show a wallet popup.
 
 ```ts
 import { confirmTransactionSignature, signAndSendTransaction } from "@vue-solana/core/transaction";
@@ -10383,6 +10387,8 @@ Stable error codes are:
 ## Buffer Polyfill
 
 Browser code that serializes Solana transactions may need a Node-compatible `Buffer` global. Initialize it before transaction code with `installSolanaBufferPolyfill()` from `@vue-solana/core/buffer-polyfill`. The only remaining package-owned type shim covers the browser `buffer/` subpath this polyfill imports from.
+
+All three packages are marked `"sideEffects": false`, so bundlers may drop any import whose bindings are unused. Import the polyfill as a named import and call it, as in the snippet above. A bare side-effect import such as `import "@vue-solana/core/buffer-polyfill"` installs nothing, because the subpath only exports the function.
 
 ---
 
@@ -10583,9 +10589,9 @@ interface SolanaConfig {
 
 `autoConnect` 默认为 `false`。通过 Vue 插件或 Nuxt 模块启用后，Vue Solana 只会重新连接用户之前选择、并且在客户端再次发现的钱包身份。它只在 `localStorage["vue-solana:selected-wallet"]` 下存储钱包身份元数据：`name`，以及可用时的 `platform`/`source`。它永远不会存储私钥、session 数据或交易数据，也不会连接任意已安装钱包。
 
-`payer` 是 Kit `TransactionSigner`，用作客户端发送交易时的费用支付方和签名者。`payerSecretKey` 是 base64 编码的 64 字节 Ed25519 keypair，secret key 在前；client 会在创建时派生其 address，并在首次使用时导入 signing key，因此 public half 与 seed 不匹配的 keypair 会在第一次签名时被拒绝，而不是在创建 client 时。两个选项都支持 direct core/Vue client。
+`payer` 是 Kit `TransactionSigner`，用作客户端发送交易时的费用支付方和签名者。`payerSecretKey` 是 base64 编码的 64 字节 Ed25519 keypair，secret key 在前；client 会在创建时派生其 address，并在首次使用时导入 signing key，因此 public half 与 seed 不匹配的 keypair 会在第一次签名时被拒绝，而不是在创建 client 时。address 来自未经校验的 public half，所以在第一次签名成功之前请将 `payer.address` 视为未确认。签名通过 WebCrypto 导入 key，而浏览器只在 secure context（`https`，或 `localhost` 上的 `http`）中暴露 WebCrypto；在此之外，第一次 `signTransactions()` 调用会抛出 WebCrypto 错误，而不是 key 无效的错误。两个选项都支持 direct core/Vue client。
 
-`createSolanaClient()` 默认组合 `@solana/kit-plugin-rpc` 的官方 `solanaRpc()`、`rpcTransactionPlanner()` 和 `rpcTransactionPlanSendingExecutor()`。旧的 custom fallback sender 不再使用。客户端暴露 RPC 读取和订阅，以及 `planTransaction(s)` 和 `sendTransaction(s)`。官方 executor 会获取新的 blockhash、处理 resource limit 和 preflight、使用可用 signer 签名、提交 RPC 交易，并在 send resolve 前等待 `confirmed` commitment。client-sent 交易需要 `payer` signer。
+`createSolanaClient()` 默认组合 `@solana/kit-plugin-rpc` 的官方 `solanaRpc()` 和 `rpcAirdrop()`。`solanaRpc()` 会自行安装 transaction planner 以及 plan-signing 和 plan-sending executor。旧的 custom fallback sender 不再使用。客户端暴露 RPC 读取和订阅，以及 `planTransaction(s)` 和 `sendTransaction(s)`。官方 executor 会获取新的 blockhash、处理 resource limit 和 preflight、使用可用 signer 签名、提交 RPC 交易，并在 send resolve 前等待 `confirmed` commitment。client-sent 交易需要 `payer` signer。
 
 永远不要把 raw secret 或 `payerSecretKey` 放入 Nuxt public runtime config。不要把有资金的 signing key 发送到 end-user browser；请使用 server 或 relayer 边界，demo 则使用未充值的 ephemeral signer。
 
@@ -10867,6 +10873,8 @@ try {
 
 序列化 Solana 交易的浏览器代码可能需要 Node 兼容的 `Buffer` 全局。在交易代码之前用 `@vue-solana/core/buffer-polyfill` 的 `installSolanaBufferPolyfill()` 初始化它。仅剩的包自有类型 shim 覆盖此 polyfill 导入的浏览器 `buffer/` subpath。
 
+三个包都标记了 `"sideEffects": false`，因此 bundler 可以删除任何绑定未被使用的导入。请像上面的示例一样以 named import 引入 polyfill 并调用它。像 `import "@vue-solana/core/buffer-polyfill"` 这样的副作用导入不会安装任何东西，因为该 subpath 只导出函数。
+
 ---
 
 # @vue-solana/vue
@@ -10940,9 +10948,9 @@ Los clusters soportados son `mainnet` (alias heredado `mainnet-beta`), `devnet`,
 | `mobileWallet`   | `MobileWalletOptions \| false` | Habilitado en Android | Opciones de Android Mobile Wallet Adapter.                                                                                                 |
 | `iosWallet`      | `iOSWalletOptions \| false`    | Habilitado en iOS     | Opciones de universal links de wallets iOS.                                                                                                |
 
-`payer` y `payerSecretKey` son compatibles con clientes Vue/core directos. Un envio del cliente requiere un `payer`. Nunca pongas un secreto crudo o `payerSecretKey` en la configuracion runtime publica de Nuxt, y nunca envíes una clave de firma con fondos al navegador de un usuario final.
+`payer` y `payerSecretKey` son compatibles con clientes Vue/core directos. Un envio del cliente requiere un `payer`. `payerSecretKey` deriva su direccion al crear el cliente desde la mitad publica sin verificar, asi que trata `payer.address` como no confirmado hasta que la primera firma tenga exito, y un keypair que no coincide se rechaza en la primera firma en vez de al crear el cliente. La firma importa la key con WebCrypto, que los navegadores solo exponen en un contexto seguro (`https`, o `http` en `localhost`). Nunca pongas un secreto crudo o `payerSecretKey` en la configuracion runtime publica de Nuxt, y nunca envíes una clave de firma con fondos al navegador de un usuario final.
 
-El cliente por defecto de `createSolanaPlugin()` usa la composicion oficial `solanaRpc()`, `rpcTransactionPlanner()` y `rpcTransactionPlanSendingExecutor()`. El fallback custom anterior no se usa. El executor oficial espera el commitment `confirmed` antes de que `execute()` resuelva y `status` sea `sent`.
+El cliente por defecto de `createSolanaPlugin()` usa la composicion oficial `solanaRpc()` y `rpcAirdrop()`; `solanaRpc()` instala por si mismo el planner de transacciones y los ejecutores de firma y envio de planes. El fallback custom anterior no se usa. El executor oficial espera el commitment `confirmed` antes de que `execute()` resuelva y `status` sea `sent`.
 
 ### Ciclo de vida del cliente y del plugin
 
@@ -11011,7 +11019,7 @@ Subpaths directos del paquete:
 - `@vue-solana/vue/useTokenAccounts`
 - `@vue-solana/vue/kit`
 
-Usa `@vue-solana/vue/buffer-polyfill` para código de transacciones en navegador que necesita el polyfill de Buffer. Usa `@vue-solana/vue/kit` para la API Kit (`createSolanaClient`, `address`, `lamports` y tipos). Los imports directos `@vue-solana/core/*` siguen soportados para uso core de menor nivel.
+Usa `@vue-solana/vue/buffer-polyfill` para código de transacciones en navegador que necesita el polyfill de Buffer. Importa `installSolanaBufferPolyfill()` como named import y llámalo; un import de efecto secundario como `import "@vue-solana/vue/buffer-polyfill"` no instala nada, porque todos los paquetes `@vue-solana/*` están marcados con `"sideEffects": false` y ese subpath solo exporta la función. Usa `@vue-solana/vue/kit` para la API Kit (`createSolanaClient`, `address`, `lamports` y tipos). Los imports directos `@vue-solana/core/*` siguen soportados para uso core de menor nivel.
 
 - `useSolana()`: devuelve el contexto Solana inyectado completo.
 - `useSolanaClient()`: devuelve el `{ client, rpc }` de Kit desde el contexto. Recomendado para código nuevo.
@@ -11562,7 +11570,7 @@ Una wallet puede modificar el mensaje o la transacción antes de firmar — por 
 
 ### Transacciones enviadas por el cliente
 
-`useSendTransaction()` y `useSendTransactions()` usan la capacidad de envio del cliente en vez de la wallet conectada. `createSolanaClient()` y `createSolanaPlugin()` instalan por defecto el stack oficial `solanaRpc()`, `rpcTransactionPlanner()` y `rpcTransactionPlanSendingExecutor()`, asi que estos composables no necesitan un fallback custom ni instalar plugins manualmente otra vez.
+`useSendTransaction()` y `useSendTransactions()` usan la capacidad de envio del cliente en vez de la wallet conectada. `createSolanaClient()` y `createSolanaPlugin()` instalan por defecto el stack oficial `solanaRpc()` y `rpcAirdrop()`, y `solanaRpc()` instala por si mismo el planner de transacciones y los ejecutores de firma y envio de planes, asi que estos composables no necesitan un fallback custom ni instalar plugins manualmente otra vez.
 
 El executor obtiene un blockhash nuevo, estima o respeta los limites de recursos, ejecuta preflight salvo que se configure lo contrario, firma con los signers del cliente, envia por RPC y espera el commitment `confirmed`. `status` cambia de `sending` a `sent` solo cuando termina la operacion de envio y confirmacion. El resultado simple expone `data.context.signature`; el resultado batch contiene el arbol del plan. No hay popup de wallet, asi que usa este flujo solo cuando el cliente tenga un signer apropiado.
 
@@ -11751,9 +11759,9 @@ createApp(App).use(
 | `mobileWallet`   | `MobileWalletOptions \| false` | Enabled on Android | Android Mobile Wallet Adapter 옵션입니다.                                                                          |
 | `iosWallet`      | `iOSWalletOptions \| false`    | Enabled on iOS     | iOS wallet universal-link 옵션입니다.                                                                              |
 
-`payer`와 `payerSecretKey`는 direct Vue/core client에서 지원됩니다. client-sent transaction에는 `payer`가 필요합니다. Nuxt public runtime config에 raw secret이나 `payerSecretKey`를 넣지 말고, funded signing key를 end-user browser에 보내지 마세요.
+`payer`와 `payerSecretKey`는 direct Vue/core client에서 지원됩니다. client-sent transaction에는 `payer`가 필요합니다. `payerSecretKey`는 client 생성 시 검증되지 않은 public half에서 address를 파생하므로 첫 서명이 성공할 때까지 `payer.address`를 미확정으로 취급하세요. 또한 맞지 않는 keypair는 client 생성이 아니라 첫 서명 시점에 거부됩니다. 서명은 WebCrypto로 key를 import하며, 브라우저는 secure context(`https`, 또는 `localhost`의 `http`)에서만 WebCrypto를 노출합니다. Nuxt public runtime config에 raw secret이나 `payerSecretKey`를 넣지 말고, funded signing key를 end-user browser에 보내지 마세요.
 
-`createSolanaPlugin()`의 default client는 official `solanaRpc()`, `rpcTransactionPlanner()`, `rpcTransactionPlanSendingExecutor()` 구성을 사용합니다. 기존 custom fallback sender는 사용하지 않습니다. official executor는 `execute()`가 resolve되고 `status`가 `sent`가 되기 전에 `confirmed` commitment을 기다립니다.
+`createSolanaPlugin()`의 default client는 official `solanaRpc()`와 `rpcAirdrop()` 구성을 사용하고, `solanaRpc()`가 transaction planner와 plan-signing/plan-sending executor를 직접 설치합니다. 기존 custom fallback sender는 사용하지 않습니다. official executor는 `execute()`가 resolve되고 `status`가 `sent`가 되기 전에 `confirmed` commitment을 기다립니다.
 
 ### Client와 Plugin 수명 주기
 
@@ -11822,7 +11830,7 @@ Direct package subpath:
 - `@vue-solana/vue/useTokenAccounts`
 - `@vue-solana/vue/kit`
 
-Buffer polyfill이 필요한 브라우저 트랜잭션 코드에는 `@vue-solana/vue/buffer-polyfill`을 사용하세요. Kit API(`createSolanaClient`, `address`, `lamports` 및 타입)에는 `@vue-solana/vue/kit`을 사용하세요. 더 낮은 수준의 core 사용에는 direct `@vue-solana/core/*` import도 계속 지원됩니다.
+Buffer polyfill이 필요한 브라우저 트랜잭션 코드에는 `@vue-solana/vue/buffer-polyfill`을 사용하세요. `installSolanaBufferPolyfill()`을 named import로 가져와 호출하세요. `import "@vue-solana/vue/buffer-polyfill"` 같은 side-effect import는 아무것도 설치하지 않습니다. 모든 `@vue-solana/*` package가 `"sideEffects": false`로 표시되어 있고 해당 subpath는 함수만 export하기 때문입니다. Kit API(`createSolanaClient`, `address`, `lamports` 및 타입)에는 `@vue-solana/vue/kit`을 사용하세요. 더 낮은 수준의 core 사용에는 direct `@vue-solana/core/*` import도 계속 지원됩니다.
 
 - `useSolana()`: 주입된 전체 Solana context를 반환합니다.
 - `useSolanaClient()`: Kit `{ client, rpc }`를 context에서 반환합니다. 새 코드에 권장됩니다.
@@ -12373,7 +12381,7 @@ Wallet은 서명 전에 메시지나 트랜잭션을 수정할 수 있습니다 
 
 ### 클라이언트 전송 트랜잭션
 
-`useSendTransaction()`과 `useSendTransactions()`는 연결된 wallet 대신 client의 transaction-sending capability를 사용합니다. `createSolanaClient()`와 `createSolanaPlugin()`은 official `solanaRpc()`, `rpcTransactionPlanner()`, `rpcTransactionPlanSendingExecutor()` stack을 기본적으로 설치하므로 custom fallback이나 추가 수동 plugin 설치가 필요하지 않습니다.
+`useSendTransaction()`과 `useSendTransactions()`는 연결된 wallet 대신 client의 transaction-sending capability를 사용합니다. `createSolanaClient()`와 `createSolanaPlugin()`은 official `solanaRpc()`와 `rpcAirdrop()` stack을 기본적으로 설치하며, `solanaRpc()`가 transaction planner와 plan-signing/plan-sending executor를 직접 설치하므로 custom fallback이나 추가 수동 plugin 설치가 필요하지 않습니다.
 
 executor는 새 blockhash를 가져오고 resource limit을 추정하거나 유지하며, 설정이 있지 않으면 preflight simulation을 수행하고, client signer로 서명한 뒤 RPC로 제출하고 `confirmed` commitment을 기다립니다. `status`는 send-and-confirm 작업이 완료된 뒤에만 `sending`에서 `sent`로 바뀝니다. 단일 결과의 `data.context.signature`에서 submitted signature를 확인할 수 있고 batch 결과에는 plan result tree가 포함됩니다. wallet popup이 없으므로 client가 적절한 signer를 소유한 trusted context에서만 사용하세요.
 
@@ -12562,9 +12570,9 @@ Supported clusters are `mainnet` (legacy alias `mainnet-beta`), `devnet`, `testn
 | `mobileWallet`   | `MobileWalletOptions \| false` | Enabled on Android | Android Mobile Wallet Adapter options.                                                                                   |
 | `iosWallet`      | `iOSWalletOptions \| false`    | Enabled on iOS     | iOS wallet universal-link options.                                                                                       |
 
-`payer` and `payerSecretKey` are supported by direct Vue plugin/core clients. A client-sent transaction requires a `payer`. Never put a raw secret or `payerSecretKey` in Nuxt public runtime config, and never ship a funded signing key to an end-user browser.
+`payer` and `payerSecretKey` are supported by direct Vue plugin/core clients. A client-sent transaction requires a `payer`. `payerSecretKey` derives its address at client creation from the unverified public half, so treat `payer.address` as unconfirmed until the first signature succeeds, and a mismatched keypair is rejected at the first signature rather than at creation. Signing imports the key through WebCrypto, which browsers expose only in a secure context (`https`, or `http` on `localhost`). Never put a raw secret or `payerSecretKey` in Nuxt public runtime config, and never ship a funded signing key to an end-user browser.
 
-The default client created by `createSolanaPlugin()` uses the official `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()` composition. The old custom fallback sender is not used. The official sending executor waits for `confirmed` commitment before `execute()` resolves and sets `status` to `sent`.
+The default client created by `createSolanaPlugin()` uses the official `solanaRpc()` + `rpcAirdrop()` composition; `solanaRpc()` itself installs the planner, the plan-signing executor, and the plan-sending executor. The old custom fallback sender is not used. The official sending executor waits for `confirmed` commitment before `execute()` resolves and sets `status` to `sent`.
 
 ### Client and Plugin Lifecycle
 
@@ -12635,7 +12643,7 @@ Direct package subpaths:
 - `@vue-solana/vue/useTokenAccounts`
 - `@vue-solana/vue/kit`
 
-Use `@vue-solana/vue/buffer-polyfill` for browser transaction code that needs the Buffer polyfill. Use `@vue-solana/vue/kit` for the Kit API (`createSolanaClient`, `address`, `lamports`, and types). Direct `@vue-solana/core/*` imports remain supported for lower-level core usage.
+Use `@vue-solana/vue/buffer-polyfill` for browser transaction code that needs the Buffer polyfill. Import `installSolanaBufferPolyfill()` as a named import and call it; a bare side-effect import such as `import "@vue-solana/vue/buffer-polyfill"` installs nothing, because every `@vue-solana/*` package is marked `"sideEffects": false` and the subpath only exports the function. Use `@vue-solana/vue/kit` for the Kit API (`createSolanaClient`, `address`, `lamports`, and types). Direct `@vue-solana/core/*` imports remain supported for lower-level core usage.
 
 - `useSolana()`: returns the full injected Solana context.
 - `useSolanaClient()`: returns the Kit `{ client, rpc }` from the context. Recommended for new code.
@@ -13185,7 +13193,7 @@ A wallet may modify the message or transaction before signing — for example to
 
 ### Client-Sent Transactions
 
-`useSendTransaction()` and `useSendTransactions()` use the client's transaction-sending capability instead of the connected wallet. `createSolanaClient()` and `createSolanaPlugin()` install the official `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()` stack by default, so these composables do not require a custom fallback or a second manual plugin installation.
+`useSendTransaction()` and `useSendTransactions()` use the client's transaction-sending capability instead of the connected wallet. `createSolanaClient()` and `createSolanaPlugin()` install the official `solanaRpc()` stack by default, and `solanaRpc()` installs the planner and the plan-signing and plan-sending executors itself, so these composables do not require a custom fallback or a second manual plugin installation.
 
 The executor reads a fresh blockhash, estimates or respects resource limits, performs preflight simulation unless configured otherwise, signs with the client signers, submits over RPC, and waits for `confirmed` commitment. `status` changes from `sending` to `sent` only after that send-and-confirm operation completes. A single result exposes `data.context.signature`; a batch result contains the plan result tree. There is no wallet popup, so use this path only when the client owns an appropriate signer.
 
@@ -13262,7 +13270,7 @@ const { transactionMessage, execute } = usePlanTransaction();
 const message = await execute(instructions);
 ```
 
-`useClientCapability("payer")` asserts a capability is installed on the client and throws a descriptive error (naming the hook and how to install it) during setup when it is missing. The default Vue client already installs the official planner and transaction-sending executor; custom clients must install `rpcTransactionPlanner()` and `rpcTransactionPlanSendingExecutor()` themselves.
+`useClientCapability("payer")` asserts a capability is installed on the client and throws a descriptive error (naming the hook and how to install it) during setup when it is missing. The default Vue client already gets the planner and the plan-signing and plan-sending executors from `solanaRpc()`; custom clients must install `rpcTransactionPlanner()` and `rpcTransactionPlanSendingExecutor()` themselves.
 
 ## Confirm an Existing Signature
 
@@ -13374,9 +13382,9 @@ createApp(App).use(
 | `mobileWallet`   | `MobileWalletOptions \| false` | Enabled on Android | Android Mobile Wallet Adapter 选项。                                                                             |
 | `iosWallet`      | `iOSWalletOptions \| false`    | Enabled on iOS     | iOS 钱包 universal-link 选项。                                                                                   |
 
-`payer` 和 `payerSecretKey` 支持 direct Vue/core client。client-sent 交易需要 `payer`。永远不要把 raw secret 或 `payerSecretKey` 放入 Nuxt public runtime config，也不要把有资金的 signing key 发送到 end-user browser。
+`payer` 和 `payerSecretKey` 支持 direct Vue/core client。client-sent 交易需要 `payer`。`payerSecretKey` 在创建 client 时从未经校验的 public half 派生 address，因此在第一次签名成功之前请将 `payer.address` 视为未确认；不匹配的 keypair 会在第一次签名时被拒绝，而不是在创建时。签名通过 WebCrypto 导入 key，而浏览器只在 secure context（`https`，或 `localhost` 上的 `http`）中暴露 WebCrypto。永远不要把 raw secret 或 `payerSecretKey` 放入 Nuxt public runtime config，也不要把有资金的 signing key 发送到 end-user browser。
 
-`createSolanaPlugin()` 的默认 client 使用官方 `solanaRpc()`、`rpcTransactionPlanner()` 和 `rpcTransactionPlanSendingExecutor()` 组合。旧的 custom fallback sender 不再使用。官方 executor 会在 `execute()` resolve、`status` 变为 `sent` 之前等待 `confirmed` commitment。
+`createSolanaPlugin()` 的默认 client 使用官方 `solanaRpc()` 和 `rpcAirdrop()` 组合，`solanaRpc()` 会自行安装 transaction planner 以及 plan-signing 和 plan-sending executor。旧的 custom fallback sender 不再使用。官方 executor 会在 `execute()` resolve、`status` 变为 `sent` 之前等待 `confirmed` commitment。
 
 ### 客户端与插件生命周期
 
@@ -13445,7 +13453,7 @@ import { useWallet } from "@vue-solana/vue/useWallet";
 - `@vue-solana/vue/useTokenAccounts`
 - `@vue-solana/vue/kit`
 
-浏览器交易代码需要 Buffer polyfill 时，使用 `@vue-solana/vue/buffer-polyfill`。需要 Kit API（`createSolanaClient`、`address`、`lamports` 和类型）时，使用 `@vue-solana/vue/kit`。较底层 core 用法仍然支持直接 `@vue-solana/core/*` 导入。
+浏览器交易代码需要 Buffer polyfill 时，使用 `@vue-solana/vue/buffer-polyfill`。请以 named import 引入 `installSolanaBufferPolyfill()` 并调用它；像 `import "@vue-solana/vue/buffer-polyfill"` 这样的副作用导入不会安装任何东西，因为所有 `@vue-solana/*` 包都标记了 `"sideEffects": false`，且该 subpath 只导出函数。需要 Kit API（`createSolanaClient`、`address`、`lamports` 和类型）时，使用 `@vue-solana/vue/kit`。较底层 core 用法仍然支持直接 `@vue-solana/core/*` 导入。
 
 - `useSolana()`：返回完整注入的 Solana context。
 - `useSolanaClient()`：返回 context 中的 Kit `{ client, rpc }`。新代码推荐使用。
@@ -13996,7 +14004,7 @@ await execute(transaction);
 
 ### 客户端发送交易
 
-`useSendTransaction()` 和 `useSendTransactions()` 使用客户端的 transaction-sending capability，而不是已连接的钱包。`createSolanaClient()` 和 `createSolanaPlugin()` 默认安装官方 `solanaRpc()`、`rpcTransactionPlanner()` 和 `rpcTransactionPlanSendingExecutor()` stack，因此这些 composable 不需要 custom fallback，也不需要再次手动安装 plugin。
+`useSendTransaction()` 和 `useSendTransactions()` 使用客户端的 transaction-sending capability，而不是已连接的钱包。`createSolanaClient()` 和 `createSolanaPlugin()` 默认安装官方 `solanaRpc()` 和 `rpcAirdrop()` stack，`solanaRpc()` 会自行安装 transaction planner 以及 plan-signing 和 plan-sending executor，因此这些 composable 不需要 custom fallback，也不需要再次手动安装 plugin。
 
 executor 会获取新的 blockhash，估计或保留 resource limit，除非另有配置否则执行 preflight simulation，使用客户端 signer 签名，通过 RPC 提交并等待 `confirmed` commitment。只有 send-and-confirm 操作完成后，`status` 才会从 `sending` 变为 `sent`。单笔结果在 `data.context.signature` 提供已提交的签名，batch 结果包含 plan result tree。没有钱包弹窗，因此只应在客户端拥有适当 signer 的可信上下文中使用此流程。
 
@@ -14233,7 +14241,7 @@ Consulta [Data Fetching Composables](/packages/vue#data-fetching-composables) pa
 
 Estos son aliases Nuxt para los composables de Vue.
 
-El cliente por defecto creado por el módulo compone los plugins oficiales `solanaRpc()`, `rpcTransactionPlanner()` y `rpcTransactionPlanSendingExecutor()`. El fallback custom anterior no se usa. `useSolanaSendTransaction()` y `useSolanaSendTransactions()` exponen la capacidad de envio oficial, pero el módulo no configura un payer porque `payer` y `payerSecretKey` se omiten de `ModuleOptions`. Su estado `sent` se alcanza cuando el executor oficial completa la operacion de envio y confirmacion en `confirmed`.
+El cliente por defecto creado por el módulo compone los plugins oficiales `solanaRpc()` y `rpcAirdrop()`; `solanaRpc()` instala por si mismo el planner de transacciones y los ejecutores de firma y envio de planes. El fallback custom anterior no se usa. `useSolanaSendTransaction()` y `useSolanaSendTransactions()` exponen la capacidad de envio oficial, pero el módulo no configura un payer porque `payer` y `payerSecretKey` se omiten de `ModuleOptions`. Su estado `sent` se alcanza cuando el executor oficial completa la operacion de envio y confirmacion en `confirmed`.
 
 El paquete Vue usa nombres cortos como `useRpc()` porque los llamadores los importan explícitamente desde `@vue-solana/vue/useRpc`.
 
@@ -14721,7 +14729,7 @@ request, subscription, tracked-data, SWR-cache composable의 전체 semantics는
 
 이들은 Vue composable의 Nuxt alias입니다.
 
-module이 만드는 default client는 official `solanaRpc()`, `rpcTransactionPlanner()`, `rpcTransactionPlanSendingExecutor()` plugin을 compose합니다. 기존 custom fallback sender는 사용하지 않습니다. `useSolanaSendTransaction()`과 `useSolanaSendTransactions()`는 official client-sending capability를 사용하지만, `ModuleOptions`에서 `payer`와 `payerSecretKey`를 제외하므로 module이 payer를 설정하지는 않습니다. `sent` 상태는 official executor가 `confirmed` commitment에서 send-and-confirm을 완료한 뒤에 도달합니다.
+module이 만드는 default client는 official `solanaRpc()`와 `rpcAirdrop()` plugin을 compose하며, `solanaRpc()`가 transaction planner와 plan-signing/plan-sending executor를 직접 설치합니다. 기존 custom fallback sender는 사용하지 않습니다. `useSolanaSendTransaction()`과 `useSolanaSendTransactions()`는 official client-sending capability를 사용하지만, `ModuleOptions`에서 `payer`와 `payerSecretKey`를 제외하므로 module이 payer를 설정하지는 않습니다. `sent` 상태는 official executor가 `confirmed` commitment에서 send-and-confirm을 완료한 뒤에 도달합니다.
 
 Vue package는 caller가 `@vue-solana/vue/useRpc`에서 명시적으로 import하므로 `useRpc()` 같은 짧은 이름을 사용합니다.
 
@@ -15208,7 +15216,7 @@ See [Data Fetching Composables](/packages/vue#data-fetching-composables) for the
 
 These are Nuxt aliases for the Vue composables.
 
-The default client created by the Nuxt module composes the official `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()` plugins. The old custom fallback sender is not used. `useSolanaSendTransaction()` and `useSolanaSendTransactions()` therefore expose the official client-sending capability, but the module does not configure a payer because `payer` and `payerSecretKey` are intentionally omitted from `ModuleOptions`, so a client-sent transaction needs a `payer` installed in a client-only plugin with `clientPlugin: false`, as described in [Module Setup](#module-setup). Their `sent` status is reached after the official executor completes its send-and-confirm operation at `confirmed` commitment.
+The default client created by the Nuxt module composes the official `solanaRpc()` and `rpcAirdrop()` plugins; `solanaRpc()` installs the transaction planner and the plan-signing and plan-sending executors itself. The old custom fallback sender is not used. `useSolanaSendTransaction()` and `useSolanaSendTransactions()` therefore expose the official client-sending capability, but the module does not configure a payer because `payer` and `payerSecretKey` are intentionally omitted from `ModuleOptions`, so a client-sent transaction needs a `payer` installed in a client-only plugin with `clientPlugin: false`, as described in [Module Setup](#module-setup). Their `sent` status is reached after the official executor completes its send-and-confirm operation at `confirmed` commitment.
 
 The Vue package uses short names such as `useRpc()` because callers import them explicitly from `@vue-solana/vue/useRpc`.
 
@@ -15694,7 +15702,7 @@ request、subscription、tracked-data 和 SWR-cache composable 的完整语义�
 
 这些是 Vue composable 的 Nuxt alias。
 
-模块创建的默认 client 会组合官方 `solanaRpc()`、`rpcTransactionPlanner()` 和 `rpcTransactionPlanSendingExecutor()` plugin。旧的 custom fallback sender 不再使用。`useSolanaSendTransaction()` 和 `useSolanaSendTransactions()` 暴露官方 client-sending capability，但由于 `ModuleOptions` 省略了 `payer` 和 `payerSecretKey`，模块不会配置 payer。只有官方 executor 在 `confirmed` commitment 完成 send-and-confirm 后，状态才会变为 `sent`。
+模块创建的默认 client 会组合官方 `solanaRpc()` 和 `rpcAirdrop()` plugin；`solanaRpc()` 会自行安装 transaction planner 以及 plan-signing 和 plan-sending executor。旧的 custom fallback sender 不再使用。`useSolanaSendTransaction()` 和 `useSolanaSendTransactions()` 暴露官方 client-sending capability，但由于 `ModuleOptions` 省略了 `payer` 和 `payerSecretKey`，模块不会配置 payer。只有官方 executor 在 `confirmed` commitment 完成 send-and-confirm 后，状态才会变为 `sent`。
 
 Vue 包使用 `useRpc()` 这样的短名称，因为调用方会从 `@vue-solana/vue/useRpc` 显式导入。
 
@@ -16088,7 +16096,7 @@ Fuente: <a href="https://github.com/vue-solana/vue-solana/tree/main/examples/vue
 - Construir links a Solana Explorer conscientes del cluster para firmas enviadas.
 - Ejercitar la capa de datos reactiva de Kit en los Live Data Panels: `useRequest()` para peticiones de un solo uso, `useSubscription()` para notificaciones de slot en vivo por websocket, `useTrackedData()` para datos de cuenta sembrados por fetch y actualizados por notificaciones de cuenta, `useSignIn()` para Sign In With Solana, `useAirdrop()` para solicitudes del faucet de devnet, `usePayer()` para inspeccionar el signer de payer del cliente, `useSendTransaction()` y `useSendTransactions()` para transacciones SPL Memo enviadas por el cliente sin popup de wallet, y `useRequestSwr()` desde `@vue-solana/vue/swr` para stale-while-revalidate cacheada por clave entre remounts.
 - Configurar un signer `payer` de demo (`generateKeyPairSigner()` de `@solana/kit`) en `main.ts` para que las transacciones enviadas por el cliente paguen fees. El payer empieza sin fondos; el panel `usePayer` hace un airdrop de 1 devnet SOL.
-- Usar la composicion oficial por defecto del cliente `solanaRpc()`, `rpcTransactionPlanner()` y `rpcTransactionPlanSendingExecutor()`. El demo de envio del cliente espera `confirmed` antes de mostrar `sent`; no usa un fallback sender custom.
+- Usar la composicion oficial por defecto del cliente `solanaRpc()`, que instala por si mismo el planner de transacciones y los ejecutores de firma y envio de planes. El demo de envio del cliente espera `confirmed` antes de mostrar `sent`; no usa un fallback sender custom.
 
 La app usa `devnet` por defecto. El SOL de devnet no tiene valor real.
 
@@ -16171,7 +16179,7 @@ Source: <a href="https://github.com/vue-solana/vue-solana/tree/main/examples/vue
 - Building cluster-aware Solana Explorer links for submitted signatures.
 - Exercising the Kit-reactive data layer in the Live Data Panels: `useRequest()` for one-shot requests, `useSubscription()` for live slot notifications over websocket, `useTrackedData()` for fetch-seeded account data updated by account notifications, `useSignIn()` for Sign In With Solana, `useAirdrop()` for devnet faucet requests, `usePayer()` to inspect the client's fee-payer signer, `useSendTransaction()` and `useSendTransactions()` for client-sent SPL Memo transactions with no wallet popup, and `useRequestSwr()` from `@vue-solana/vue/swr` for cache-keyed stale-while-revalidate across remounts.
 - Configuring a demo `payer` signer (`generateKeyPairSigner()` from `@solana/kit`) in `main.ts` so client-sent transactions can pay fees. The payer starts unfunded; the `usePayer` panel airdrops 1 devnet SOL into it.
-- Using the default official `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()` client composition. The client-send demo waits for `confirmed` commitment before showing `sent`; it does not use a custom fallback sender.
+- Using the default official `solanaRpc()` client composition, which installs the transaction planner and the plan-signing and plan-sending executors itself. The client-send demo waits for `confirmed` commitment before showing `sent`; it does not use a custom fallback sender.
 
 The app uses `devnet` by default. Devnet SOL has no real value.
 
@@ -16254,7 +16262,7 @@ Vue Vite 예제는 `@vue-solana/vue`를 위한 실행 가능한 Vue 3 앱입니�
 - 제출된 signature에 대해 클러스터를 반영한 Solana Explorer 링크를 만듭니다.
 - Live Data Panels에서 Kit 반응형 데이터 레이어를 사용합니다: 일회성 요청에는 `useRequest()`, websocket을 통한 실시간 slot 알림에는 `useSubscription()`, 계정 알림으로 업데이트되는 fetch 기반 계정 데이터에는 `useTrackedData()`, Sign In With Solana에는 `useSignIn()`, devnet faucet 요청에는 `useAirdrop()`, client fee-payer signer 확인에는 `usePayer()`, wallet popup 없는 client-sent SPL Memo 트랜잭션에는 `useSendTransaction()`과 `useSendTransactions()`, remount 전반에 걸친 cache-keyed stale-while-revalidate에는 `@vue-solana/vue/swr`의 `useRequestSwr()`를 사용합니다.
 - `main.ts`에서 demo `payer` signer(`@solana/kit`의 `generateKeyPairSigner()`)를 설정해 client-sent transaction이 fee를 지불하게 합니다. payer는 처음에 unfunded이며 `usePayer` panel이 devnet SOL 1개를 airdrop합니다.
-- default client의 official `solanaRpc()`, `rpcTransactionPlanner()`, `rpcTransactionPlanSendingExecutor()` 구성을 사용합니다. client-send demo는 `sent`를 표시하기 전에 `confirmed`를 기다리며 custom fallback sender를 사용하지 않습니다.
+- default client의 official `solanaRpc()` 구성을 사용하며, `solanaRpc()`가 transaction planner와 plan-signing/plan-sending executor를 직접 설치합니다. client-send demo는 `sent`를 표시하기 전에 `confirmed`를 기다리며 custom fallback sender를 사용하지 않습니다.
 
 앱은 기본적으로 `devnet`을 사용합니다. Devnet SOL은 실제 가치가 없습니다.
 
@@ -16338,7 +16346,7 @@ Live demo: [vue-solana-docs.vercel.app/demo](/zh/demo)
 - 为已提交的签名构建带有集群信息的 Solana Explorer 链接。
 - 在 Live Data Panels 中演练基于 Kit 的响应式数据层：`useRequest()` 用于一次性请求，`useSubscription()` 用于通过 websocket 的实时 slot 通知，`useTrackedData()` 用于由账户通知更新的、基于 fetch 种子的账户数据，`useSignIn()` 用于 Sign In With Solana，`useAirdrop()` 用于 devnet faucet 请求，`usePayer()` 用于检查客户端的 fee-payer signer，`useSendTransaction()` 和 `useSendTransactions()` 用于不显示 wallet popup 的 client-sent SPL Memo 交易，以及来自 `@vue-solana/vue/swr` 的 `useRequestSwr()` 用于跨重新挂载的缓存键控 stale-while-revalidate。
 - 在 `main.ts` 中配置 demo `payer` signer（来自 `@solana/kit` 的 `generateKeyPairSigner()`），让 client-sent 交易能够支付费用。payer 初始没有资金，`usePayer` panel 会空投 1 devnet SOL。
-- 使用默认 client 的官方 `solanaRpc()`、`rpcTransactionPlanner()` 和 `rpcTransactionPlanSendingExecutor()` 组合。client-send demo 会等待 `confirmed` 后才显示 `sent`，不使用 custom fallback sender。
+- 使用默认 client 的官方 `solanaRpc()` 组合，`solanaRpc()` 会自行安装 transaction planner 以及 plan-signing 和 plan-sending executor。client-send demo 会等待 `confirmed` 后才显示 `sent`，不使用 custom fallback sender。
 
 该应用默认使用 `devnet`。Devnet SOL 没有真实价值。
 
@@ -16453,7 +16461,7 @@ Abre la URL de Nuxt impresa en la terminal, normalmente `http://localhost:3000`.
 - Abre el link del explorador y verifica que incluya `?cluster=devnet`.
 - En los Live Data Panels, haz un airdrop de 1 SOL al payer de demo con el panel `useSolanaPayer`, luego envia un SPL Memo firmado por el cliente con `useSolanaSendTransaction()` (sin popup de wallet) o un lote de dos con `useSolanaSendTransactions()`, y observa que el estado pasa de `sending` a `sent` despues de que el executor oficial alcanza `confirmed`.
 
-El payer de demo se genera en un plugin solo de cliente y no se configura en `nuxt.config.ts` ni en la configuracion runtime publica. El ejemplo define `solana.clientPlugin: false` para que el modulo omita su propio plugin; instalar ambos crearia dos contextos de Solana. El cliente por defecto del modulo aun usa el stack oficial `solanaRpc()`, `rpcTransactionPlanner()` y `rpcTransactionPlanSendingExecutor()`; el fallback custom anterior no se usa. Nunca pongas un secreto con fondos en un valor runtime publico de Nuxt.
+El payer de demo se genera en un plugin solo de cliente y no se configura en `nuxt.config.ts` ni en la configuracion runtime publica. El ejemplo define `solana.clientPlugin: false` para que el modulo omita su propio plugin; instalar ambos crearia dos contextos de Solana. El cliente por defecto del modulo aun usa el stack oficial `solanaRpc()` y `rpcAirdrop()`, que instala por si mismo el planner de transacciones y los ejecutores de firma y envio de planes; el fallback custom anterior no se usa. Nunca pongas un secreto con fondos en un valor runtime publico de Nuxt.
 
 El ejemplo de transferencia inicializa el polyfill de navegador `Buffer` con `installSolanaBufferPolyfill()` desde `@vue-solana/nuxt/buffer-polyfill`. Reinicia el servidor de desarrollo de Nuxt si Vite cacheó previamente un import externalizado de Buffer.
 
@@ -16534,7 +16542,7 @@ Open the Nuxt URL printed in the terminal, usually `http://localhost:3000`.
 - Open the explorer link and verify it includes `?cluster=devnet`.
 - In the Live Data Panels, airdrop 1 SOL to the demo payer with the `useSolanaPayer` panel, then send a client-signed SPL Memo with `useSolanaSendTransaction()` (no wallet popup) or a batch of two with `useSolanaSendTransactions()`, and watch the status move from `sending` to `sent` after the official executor reaches `confirmed` commitment.
 
-The demo payer is generated in a client-only plugin and is not configured in `nuxt.config.ts` or public runtime config. The example sets `solana.clientPlugin: false` so the module skips its own plugin; installing both would create two Solana contexts. The module's default client still uses the official `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()` stack; the old custom fallback sender is not used. Never put a funded secret in a Nuxt public runtime value.
+The demo payer is generated in a client-only plugin and is not configured in `nuxt.config.ts` or public runtime config. The example sets `solana.clientPlugin: false` so the module skips its own plugin; installing both would create two Solana contexts. The module's default client still uses the official `solanaRpc()` stack, which installs the transaction planner and the plan-signing and plan-sending executors itself; the old custom fallback sender is not used. Never put a funded secret in a Nuxt public runtime value.
 
 The transfer example initializes the browser `Buffer` polyfill with `installSolanaBufferPolyfill()` from `@vue-solana/nuxt/buffer-polyfill`. Restart the Nuxt dev server if Vite previously cached an externalized Buffer import.
 
@@ -16615,7 +16623,7 @@ pnpm dev:nuxt
 - Explorer 링크를 열고 `?cluster=devnet`이 포함되어 있는지 확인합니다.
 - Live Data Panels에서 `useSolanaPayer` panel로 demo payer에 1 SOL을 에어드랍한 뒤 `useSolanaSendTransaction()`(wallet popup 없음)으로 client-signed SPL Memo를 보내거나 `useSolanaSendTransactions()`로 두 건을 batch로 보내고, official executor가 `confirmed`에 도달한 뒤 status가 `sending`에서 `sent`로 이동하는지 확인합니다.
 
-demo payer는 client-only plugin에서 생성되며 `nuxt.config.ts`나 public runtime config에 설정되지 않습니다. 예제는 `solana.clientPlugin: false`를 설정해 module이 자체 plugin을 건너뛰도록 하며, 둘 다 설치하면 Solana context가 두 개 생깁니다. module의 default client도 official `solanaRpc()`, `rpcTransactionPlanner()`, `rpcTransactionPlanSendingExecutor()` stack을 사용하며, 기존 custom fallback sender는 사용하지 않습니다. Nuxt public runtime value에 funded secret을 넣지 마세요.
+demo payer는 client-only plugin에서 생성되며 `nuxt.config.ts`나 public runtime config에 설정되지 않습니다. 예제는 `solana.clientPlugin: false`를 설정해 module이 자체 plugin을 건너뛰도록 하며, 둘 다 설치하면 Solana context가 두 개 생깁니다. module의 default client도 official `solanaRpc()`와 `rpcAirdrop()` stack을 사용하며, `solanaRpc()`가 transaction planner와 plan-signing/plan-sending executor를 직접 설치합니다. 기존 custom fallback sender는 사용하지 않습니다. Nuxt public runtime value에 funded secret을 넣지 마세요.
 
 전송 예제는 `@vue-solana/nuxt/buffer-polyfill`의 `installSolanaBufferPolyfill()`로 브라우저 `Buffer` polyfill을 초기화합니다. Vite가 이전에 externalized Buffer import를 캐시했다면 Nuxt dev server를 재시작하세요.
 
@@ -16697,7 +16705,7 @@ pnpm dev:nuxt
 - 打开 explorer 链接，并确认其中包含 `?cluster=devnet`。
 - 在 Live Data Panels 中用 `useSolanaPayer` panel 向 demo payer 空投 1 SOL，然后使用 `useSolanaSendTransaction()`（不显示 wallet popup）发送 client-signed SPL Memo，或使用 `useSolanaSendTransactions()` 批量发送两笔，并观察官方 executor 达到 `confirmed` 后 status 从 `sending` 变为 `sent`。
 
-demo payer 在 client-only plugin 中生成，不配置在 `nuxt.config.ts` 或 public runtime config 中。示例设置了 `solana.clientPlugin: false` 使模块跳过自己的 plugin；两者同时安装会产生两个 Solana context。模块的默认 client 也使用官方 `solanaRpc()`、`rpcTransactionPlanner()` 和 `rpcTransactionPlanSendingExecutor()` stack，旧的 custom fallback sender 不再使用。永远不要把有资金的 secret 放入 Nuxt public runtime value。
+demo payer 在 client-only plugin 中生成，不配置在 `nuxt.config.ts` 或 public runtime config 中。示例设置了 `solana.clientPlugin: false` 使模块跳过自己的 plugin；两者同时安装会产生两个 Solana context。模块的默认 client 也使用官方 `solanaRpc()` 和 `rpcAirdrop()` stack，`solanaRpc()` 会自行安装 transaction planner 以及 plan-signing 和 plan-sending executor，旧的 custom fallback sender 不再使用。永远不要把有资金的 secret 放入 Nuxt public runtime value。
 
 转账示例使用来自 `@vue-solana/nuxt/buffer-polyfill` 的 `installSolanaBufferPolyfill()` 初始化浏览器 `Buffer` polyfill。如果 Vite 之前缓存了 externalized Buffer import，请重启 Nuxt 开发服务器。
 

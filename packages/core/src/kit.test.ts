@@ -170,4 +170,48 @@ describe("createSolanaClient", () => {
       /invalid `payerSecretKey`/i,
     );
   });
+
+  it("blames the environment, not the key, when WebCrypto is unavailable", async () => {
+    const { secretKey } = nacl.sign.keyPair();
+    // Browsers only expose `crypto.subtle` in a secure context, so serving the
+    // app over `http://<LAN-IP>` must not be reported as a malformed key.
+    vi.stubGlobal("crypto", {});
+
+    try {
+      const client = createSolanaClient({
+        payerSecretKey: Buffer.from(secretKey).toString("base64"),
+      });
+      const payer = client.payer as unknown as {
+        signTransactions: (transactions: readonly unknown[]) => Promise<unknown>;
+      };
+
+      await expect(payer.signTransactions([{ messageBytes: new Uint8Array([1]) }])).rejects.toThrow(
+        /WebCrypto/,
+      );
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("rejects when the signal aborts while the signing key is importing", async () => {
+    const { secretKey } = nacl.sign.keyPair();
+    const client = createSolanaClient({
+      payerSecretKey: Buffer.from(secretKey).toString("base64"),
+    });
+    const payer = client.payer as unknown as {
+      signTransactions: (
+        transactions: readonly unknown[],
+        config?: { abortSignal?: AbortSignal },
+      ) => Promise<unknown>;
+    };
+    const controller = new AbortController();
+
+    // Aborts after the first check but while `getPrivateKey()` is still pending.
+    const signing = payer.signTransactions([{ messageBytes: new Uint8Array([1]) }], {
+      abortSignal: controller.signal,
+    });
+    controller.abort();
+
+    await expect(signing).rejects.toThrow(/abort/i);
+  });
 });

@@ -58,7 +58,7 @@ Available package subpaths:
 - `@vue-solana/vue/useTokenBalance`
 - `@vue-solana/vue/kit`
 
-Use `@vue-solana/vue/kit` for the Kit API (`createSolanaClient`, `address`, `lamports`, and the types `Address`, `Commitment`, `Rpc`, `Signature`, `SolanaRpcApi`, `SolanaClient`) and `@vue-solana/vue/useSolanaClient` for the Kit client composable. Use `@vue-solana/vue/buffer-polyfill` when browser transaction code needs the Buffer polyfill. Direct `@vue-solana/core/*` imports remain supported for lower-level core usage.
+Use `@vue-solana/vue/kit` for the Kit API (`createSolanaClient`, `address`, `lamports`, and the types `Address`, `Commitment`, `Rpc`, `Signature`, `SolanaRpcApi`, `SolanaClient`) and `@vue-solana/vue/useSolanaClient` for the Kit client composable. Use `@vue-solana/vue/buffer-polyfill` when browser transaction code needs the Buffer polyfill. Import `installSolanaBufferPolyfill()` as a named import and call it; a bare side-effect import installs nothing, because every `@vue-solana/*` package is marked `"sideEffects": false`. Direct `@vue-solana/core/*` imports remain supported for lower-level core usage.
 
 ## `createSolanaPlugin(options?)`
 
@@ -89,7 +89,7 @@ createApp(App).use(
 
 `iosWallet` controls iOS browser wallet universal-link entries. It defaults to enabled on iOS browser clients, accepts app identity and redirect URL options, and can be disabled with `iosWallet: false`.
 
-The plugin accepts `payer` as a Kit `TransactionSigner` and `payerSecretKey` as a base64 64-byte Ed25519 keypair (secret key first). A client-sent transaction requires one of those signers. These options are for direct Vue/core clients only: Nuxt's public runtime config must never receive a raw secret or `payerSecretKey`. The default client uses the official `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()` composition; the old custom fallback sender is not used.
+The plugin accepts `payer` as a Kit `TransactionSigner` and `payerSecretKey` as a base64 64-byte Ed25519 keypair (secret key first). A client-sent transaction requires one of those signers. `payerSecretKey` derives its address at client creation from the unverified public half, so treat `payer.address` as unconfirmed until the first signature succeeds, and a mismatched keypair is rejected at the first signature rather than at creation. Signing imports the key through WebCrypto, which browsers expose only in a secure context (`https`, or `http` on `localhost`). These options are for direct Vue/core clients only: Nuxt's public runtime config must never receive a raw secret or `payerSecretKey`. The default client uses the official `solanaRpc()` and `rpcAirdrop()` composition, and `solanaRpc()` installs the transaction planner and the plan-signing and plan-sending executors itself; the old custom fallback sender is not used.
 
 ## `useSolana()`
 
@@ -446,7 +446,7 @@ await execute(instructionInput, { abortSignal });
 
 ## `useSendTransaction()` / `useSendTransactions()`
 
-Plan, sign, submit, and confirm transactions through the official `ClientWithTransactionSending` capability installed by `createSolanaClient()` and `createSolanaPlugin()`. The default composition uses `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()`; the old custom fallback sender is not used. The official executor waits for `confirmed` commitment before `execute()` resolves, so `status` becomes `sent` only after send-and-confirm completes. There is no wallet popup.
+Plan, sign, submit, and confirm transactions through the official `ClientWithTransactionSending` capability installed by `createSolanaClient()` and `createSolanaPlugin()`. The default composition uses `solanaRpc()` and `rpcAirdrop()`, and `solanaRpc()` installs the transaction planner and the plan-signing and plan-sending executors itself; the old custom fallback sender is not used. The official executor waits for `confirmed` commitment before `execute()` resolves, so `status` becomes `sent` only after send-and-confirm completes. There is no wallet popup.
 
 Reserve these for trusted contexts (relayer, automated flows): the client signs with its own keypairs, so do not register app-signing keypairs on a client exposed to end-user browsers. Configure `payer` directly for a Vue/core client, but never put `payerSecretKey` or a raw secret in Nuxt public runtime config.
 
