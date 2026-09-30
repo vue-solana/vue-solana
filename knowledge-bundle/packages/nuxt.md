@@ -68,7 +68,7 @@ The Nuxt module installs the runtime plugin on the client only and auto-imports 
 
 The Nuxt runtime plugin also installs the selected wallet account context app-wide (via `createSelectedWalletAccountContext`), so `useSolanaSelectedWalletAccount()` works in any component without an explicit provider. Apps that need a custom filter or storage can mount `SelectedWalletAccountProvider` deeper in the component tree to shadow the default context.
 
-The default client uses the official `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()` composition. The old custom fallback sender is not used. `useSolanaSendTransaction()` and `useSolanaSendTransactions()` use that official sender, which waits for `confirmed` commitment before reporting `sent`; the module does not provide a payer, so install a client-owned `payer` in a client-only plugin with `clientPlugin: false`.
+The default client uses the official `solanaRpc()` and `rpcAirdrop()` composition; `solanaRpc()` installs the transaction planner and the plan-signing and plan-sending executors itself. The old custom fallback sender is not used. `useSolanaSendTransaction()` and `useSolanaSendTransactions()` use that official sender, which waits for `confirmed` commitment before reporting `sent`; the module does not provide a payer, so install a client-owned `payer` in a client-only plugin with `clientPlugin: false`.
 
 ## Explicit Solana Imports
 

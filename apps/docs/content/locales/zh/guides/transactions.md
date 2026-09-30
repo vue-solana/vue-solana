@@ -44,7 +44,7 @@ console.log(confirmation.signature, confirmation.commitment);
 
 ## 客户端发送交易
 
-`createSolanaClient()` 默认组合 `@solana/kit-plugin-rpc` 的官方交易 stack：`solanaRpc()`、`rpcTransactionPlanner()` 和 `rpcTransactionPlanSendingExecutor()`。旧的 custom fallback sender 不再使用。
+`createSolanaClient()` 默认组合 `@solana/kit-plugin-rpc` 的官方交易 stack：`solanaRpc()` 和 `rpcAirdrop()`。`solanaRpc()` 会自行安装 transaction planner 以及 plan-signing 和 plan-sending executor。旧的 custom fallback sender 不再使用。
 
 当 client 应在不显示 wallet popup 的情况下 plan、sign、submit 和 confirm 时，使用 `useSendTransaction()` 或 `useSendTransactions()`。官方 executor 会获取新的 blockhash、处理 resource limit 和 preflight、使用 client signer 签名、通过 RPC 提交并等待 `confirmed`。只有 send-and-confirm 操作完成后，composable 才会将 `status` 设为 `sent`。单笔结果在 `data.context.signature` 提供签名，batch 结果包含 plan result tree。
 

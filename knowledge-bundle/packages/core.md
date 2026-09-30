@@ -53,9 +53,9 @@ If `endpoint` is omitted, the default public endpoint for the selected cluster i
 
 `autoConnect` defaults to `false`. When enabled in the Vue plugin or Nuxt module, Vue Solana reconnects only a wallet identity that the user previously selected and that is discovered again on the client. It stores only wallet identity metadata under `localStorage["vue-solana:selected-wallet"]`: `name`, and `platform`/`source` when available. It never stores private keys, session data, or transaction data, and it never connects an arbitrary installed wallet. Calling `selectWallet(null)` or `setWallet(customWallet)` clears the stored selection.
 
-`payer` is a Kit `TransactionSigner` used as the client fee payer and signer. `payerSecretKey` is its base64-encoded 64-byte Ed25519 keypair form, with the secret key first: the client derives its address at creation and imports the signing key on first use, so a keypair whose public half does not match its seed is rejected at the first signature instead of at client creation. Both are supported by direct core/Vue clients. A client-sent transaction requires a payer. Never put a raw secret or `payerSecretKey` in Nuxt public runtime config, and never expose a funded keypair to an end-user browser.
+`payer` is a Kit `TransactionSigner` used as the client fee payer and signer. `payerSecretKey` is its base64-encoded 64-byte Ed25519 keypair form, with the secret key first: the client derives its address at creation and imports the signing key on first use, so a keypair whose public half does not match its seed is rejected at the first signature instead of at client creation. The address comes from the unverified public half, so treat `payer.address` as unconfirmed until the first signature succeeds. Signing imports the key through WebCrypto, which browsers expose only in a secure context (`https`, or `http` on `localhost`); outside one, the first `signTransactions()` call throws a WebCrypto-specific error rather than an invalid-key error. Both are supported by direct core/Vue clients. A client-sent transaction requires a payer. Never put a raw secret or `payerSecretKey` in Nuxt public runtime config, and never expose a funded keypair to an end-user browser.
 
-`createSolanaClient()` composes the official `@solana/kit-plugin-rpc` stack by default: `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()`. The old custom fallback sender is removed. The official executor adds a fresh blockhash, resource-limit and preflight handling, signs, submits, and waits for `confirmed` commitment before the send resolves.
+`createSolanaClient()` composes the official `@solana/kit-plugin-rpc` stack by default: `solanaRpc()` followed by `rpcAirdrop()`. `solanaRpc()` installs `rpcTransactionPlanner()`, `rpcTransactionPlanSigningExecutor()`, and `rpcTransactionPlanSendingExecutor()` itself. The old custom fallback sender is removed. The official executor adds a fresh blockhash, resource-limit and preflight handling, signs, submits, and waits for `confirmed` commitment before the send resolves.
 
 ## `@solana/kit` Client
 
@@ -86,6 +86,8 @@ import { installSolanaBufferPolyfill } from "@vue-solana/core/buffer-polyfill";
 
 installSolanaBufferPolyfill();
 ```
+
+Every `@vue-solana/*` package is marked `"sideEffects": false`, so the named import and the call are both required. A bare `import "@vue-solana/core/buffer-polyfill"` is tree-shaken away and installs nothing.
 
 Supported clusters:
 

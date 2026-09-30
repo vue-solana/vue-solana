@@ -240,7 +240,7 @@ Plans live in the top-level `plans/` directory, separate from the knowledge bund
 When step 4 passes, **delete this whole bullet** from `AGENTS.md` in the same commit. It is a one-time release checklist, not a standing limitation; a future agent that finds it should assume the follow-up was never done.
 
 - Follow `apps/docs/content/roadmap.md` for upcoming features (core composables, wallet features, Ecosystem integrations, etc.).
-- Follow `plans/native-wallet-plan.md` to add mobile native wallet and desktop native wallet support through the unified `useWallets()` flow.
+- `plans/native-wallet-plan.md` is complete except for one open item, "Future iOS Wallet Support" (line 19). Mobile native wallets, Android MWA, iOS browser wallets, and desktop native wallets all shipped through the unified `useWallets()` flow.
 - Re-check the `@solana/kit` and `@solana/kit-plugin-rpc` peer versions on every new release.
 
 ## Useful Commands
