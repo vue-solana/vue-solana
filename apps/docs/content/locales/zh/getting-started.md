@@ -9,7 +9,7 @@ surroundOrder: 2
 
 ## 开始之前
 
-如果你只需要 Solana primitives，而不需要 Vue/Nuxt 集成，请直接使用 `@vue-solana/core`。它基于 `@solana/kit`，并从 `@vue-solana/core/kit` 重新导出 `createSolanaClient()` 以及 `Address`/`address()`/`lamports()` 和 Kit 交易与 RPC 类型。如果你需要框架集成，请使用 `@vue-solana/vue` 或 `@vue-solana/nuxt`。
+如果你只需要 Solana primitives，而不需要 Vue/Nuxt 集成，请直接使用 `@vue-solana/core`。它基于 `@solana/kit`，并从 `@vue-solana/core/kit` 重新导出 `createSolanaClient()` 以及全部的 `@solana/kit`。如果你需要框架集成，请使用 `@vue-solana/vue` 或 `@vue-solana/nuxt`。
 
 支持的集群：
 

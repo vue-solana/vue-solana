@@ -31,7 +31,7 @@ Official Solana references:
 
 ## Before You Start
 
-Use `@vue-solana/core` directly if you need framework-agnostic Solana helpers such as `createSolanaContext()`, `createSolanaClient()`, `parseAddress()`, and token-account reads without Vue/Nuxt integration. Use `@vue-solana/vue` or `@vue-solana/nuxt` when you want framework integration. Build transaction messages with `@solana/kit`.
+Use `@vue-solana/core` directly if you need framework-agnostic Solana helpers such as `createSolanaContext()`, `createSolanaClient()`, `parseAddress()`, and token-account reads without Vue/Nuxt integration. Use `@vue-solana/vue` or `@vue-solana/nuxt` when you want framework integration. Build transaction messages with the Kit helpers from `@vue-solana/vue/kit` (`@vue-solana/nuxt/kit` in Nuxt) or `@vue-solana/core/kit`.
 
 Supported clusters:
 
@@ -617,7 +617,7 @@ import {
   getTransactionEncoder,
   setTransactionMessageFeePayer,
   setTransactionMessageLifetimeUsingBlockhash,
-} from "@solana/kit";
+} from "@vue-solana/vue/kit";
 
 installSolanaBufferPolyfill();
 

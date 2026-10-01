@@ -59,7 +59,7 @@ If `endpoint` is omitted, the default public endpoint for the selected cluster i
 
 ## `@solana/kit` Client
 
-The modern path re-exports Kit primitives and a client factory from `@vue-solana/core/kit`:
+The modern path re-exports all of `@solana/kit` plus a client factory from `@vue-solana/core/kit`:
 
 ```ts
 import { createSolanaClient, address, lamports } from "@vue-solana/core/kit";
@@ -73,7 +73,7 @@ const client = createSolanaClient({ cluster: "devnet" });
 const slot = await client.rpc.getSlot().send(); // bigint
 ```
 
-`@vue-solana/core/kit` re-exports the Kit helpers and types Vue Solana consumers need: `address`, `lamports`, and the types `Address`, `Commitment`, `Lamports`, `Rpc`, `Signature`, `SolanaRpcApi`, and `SolanaClient`. Read calls return `bigint` numerics and base64-encoded account data — not `Buffer`. For the full before/after map, see [Kit Migration](../guides/kit-migration.md) (the docs-site guide lives at [`apps/docs/content/guides/kit-migration.md`](../../apps/docs/content/guides/kit-migration.md)).
+`@vue-solana/core/kit` re-exports all of `@solana/kit`, so every helper and type is available without installing that package: `address`, `lamports`, and the types `Address`, `Commitment`, `Lamports`, `Rpc`, `Signature`, `SolanaRpcApi`, `SolanaClient`, and the rest. Read calls return `bigint` numerics and base64-encoded account data — not `Buffer`. For the full before/after map, see [Kit Migration](../guides/kit-migration.md) (the docs-site guide lives at [`apps/docs/content/guides/kit-migration.md`](../../apps/docs/content/guides/kit-migration.md)).
 
 ## Legacy Compatibility Removed In v2
 

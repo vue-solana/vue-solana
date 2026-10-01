@@ -664,10 +664,10 @@ Sin `confirm: true`, `execute()` devuelve después del envío y establece `statu
 
 ### Entradas y resultados de las peticiones de wallet
 
-Los flujos de firma de wallet aceptan la transacción de entrada como bytes de wire `Uint8Array` en bruto que cumplen el esquema de transacción de Solana. Constróyelos con `@solana/kit` (o decodifícalos desde una respuesta RPC en base64/base58); las cadenas base64, los objetos de transacción y las listas de instrucciones no se aceptan aquí.
+Los flujos de firma de wallet aceptan la transacción de entrada como bytes de wire `Uint8Array` en bruto que cumplen el esquema de transacción de Solana. Constróyelos con los helpers de Kit de `@vue-solana/vue/kit` (o decodifícalos desde una respuesta RPC en base64/base58); las cadenas base64, los objetos de transacción y las listas de instrucciones no se aceptan aquí.
 
 ```ts
-import { compileTransaction, getTransactionEncoder } from "@solana/kit";
+import { compileTransaction, getTransactionEncoder } from "@vue-solana/vue/kit";
 
 const transaction: Uint8Array = getTransactionEncoder().encode(compileTransaction(message));
 await execute(transaction);

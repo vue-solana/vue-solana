@@ -91,7 +91,7 @@ const addr: Address = address("BonK9Y...");
 const amount = lamports(1_000_000_000n);
 ```
 
-消息构建器不会被重新导出。请在你的 `package.json` 中自行添加 `@solana/kit` —— pnpm 严格的 `node_modules` 不会提升传递依赖，因此无法通过 `@vue-solana/vue` 导入。程序指令来自各自的插件，例如 `@solana-program/system` 提供 `getTransferSolInstruction`。
+消息构建器来自同一个 subpath。`@vue-solana/vue/kit` 重新导出全部的 `@solana/kit`，因此这里无需在你的 `package.json` 中添加 `@solana/kit`。程序指令来自各自的插件，例如 `@solana-program/system` 提供 `getTransferSolInstruction`。
 
 已连接钱包的地址是一个普通的 base58 `Address` 字符串：
 
@@ -143,7 +143,7 @@ const slot = await client.rpc.getSlot().send();
 import { address, lamports } from "@vue-solana/nuxt/kit";
 ```
 
-请在你的 `package.json` 中自行添加 `@solana/kit` 用于消息构建 —— Nuxt 模块只重新导出流经其自身 API 的辅助函数和类型。
+`@vue-solana/nuxt/kit` 重新导出全部的 `@solana/kit`，消息构建器也从那里获取 —— 永远不要在自己的 `package.json` 中添加 `@solana/kit`。
 
 ### 步骤 3：移除旧接口
 

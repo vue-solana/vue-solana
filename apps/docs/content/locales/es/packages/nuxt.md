@@ -398,7 +398,7 @@ const { signature, confirmation, status, loading, error, execute } =
 const canSubmit = computed(() => connected.value && canSignTransaction.value && !loading.value);
 
 async function submitTransaction(transaction: SolanaTransaction) {
-  // Construye el mensaje de la transacción con @solana/kit y serialízalo a bytes de la red (wire) primero.
+  // Construye el mensaje de la transacción con @vue-solana/nuxt/kit y serialízalo a bytes de la red (wire) primero.
   await execute(transaction, {
     confirm: true,
     confirmation: { commitment: "confirmed", timeoutMs: 120_000 },

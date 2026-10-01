@@ -7,7 +7,7 @@ surroundOrder: 11
 
 Vue Solana 提供了感知钱包的钱包提交辅助函数，以及用于响应式交易状态的组合式函数。
 
-本指南涵盖 Vue Solana 的边界：钱包能力检查、签名、发送、确认和错误。请使用 `@solana/kit` 和你的程序客户端的指令辅助函数来构建交易消息。
+本指南涵盖 Vue Solana 的边界：钱包能力检查、签名、发送、确认和错误。请使用从 `@vue-solana/vue/kit`（Nuxt 应用使用 `@vue-solana/nuxt/kit`）重新导出的 Kit 辅助函数和你的程序客户端的指令辅助函数来构建交易消息。
 
 ## Core 发送辅助函数
 
@@ -75,7 +75,7 @@ import {
   setTransactionMessageFeePayer,
   setTransactionMessageLifetimeUsingBlockhash,
   type Address,
-} from "@solana/kit";
+} from "@vue-solana/vue/kit";
 
 const SYSTEM_PROGRAM_ADDRESS = address("11111111111111111111111111111111");
 
@@ -176,10 +176,10 @@ async function submitTransaction() {
 
 ### 钱包请求的输入与返回值
 
-钱包签名流程接受符合 Solana 交易 schema 的原始 `Uint8Array` wire 字节作为交易输入。使用 `@solana/kit` 构建它们（或从 base64/base58 RPC 响应中解码）；此处不接受 base64 字符串、交易对象和指令列表。
+钱包签名流程接受符合 Solana 交易 schema 的原始 `Uint8Array` wire 字节作为交易输入。使用 `@vue-solana/vue/kit` 中的辅助函数构建它们（或从 base64/base58 RPC 响应中解码）；此处不接受 base64 字符串、交易对象和指令列表。
 
 ```ts
-import { compileTransaction, getTransactionEncoder } from "@solana/kit";
+import { compileTransaction, getTransactionEncoder } from "@vue-solana/vue/kit";
 
 const transaction: Uint8Array = getTransactionEncoder().encode(compileTransaction(message));
 await execute(transaction);

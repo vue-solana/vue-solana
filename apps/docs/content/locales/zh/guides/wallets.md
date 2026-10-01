@@ -14,7 +14,7 @@ Vue Solana 通过同一个钱包流程暴露浏览器扩展钱包、Android Mobi
 - 浏览器扩展钱包：`@wallet-standard/app`、`@wallet-standard/base`、`@wallet-standard/features` 和 `@solana/wallet-standard-features`。
 - Android 移动端原生钱包：`@solana-mobile/wallet-standard-mobile`，它会在受支持的 Android Chrome 移动网页和 PWA 运行时中，将 Solana Mobile Wallet Adapter 注册为 Wallet Standard 钱包。
 - iOS 浏览器钱包：Phantom、Solflare 和 Backpack 的钱包专属 universal links。
-- Solana 基础类型和交易辅助函数：`@solana/kit` 的类型和消息构建器，部分通过 `@vue-solana/vue/kit`、`@vue-solana/nuxt/kit` 和 `@vue-solana/core/kit` 重新导出。
+- Solana 基础类型和交易辅助函数：`@solana/kit` 的类型和消息构建器，全部通过 `@vue-solana/vue/kit`、`@vue-solana/nuxt/kit` 和 `@vue-solana/core/kit` 重新导出。
 
 ## 钱包来源
 

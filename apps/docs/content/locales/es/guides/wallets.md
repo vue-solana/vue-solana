@@ -14,7 +14,7 @@ El soporte actual de wallets se basa en estas librerías:
 - Wallets de extensión de navegador: `@wallet-standard/app`, `@wallet-standard/base`, `@wallet-standard/features` y `@solana/wallet-standard-features`.
 - Wallets nativas móviles Android: `@solana-mobile/wallet-standard-mobile`, que registra Solana Mobile Wallet Adapter como Wallet Standard en runtimes compatibles de Android Chrome mobile web y PWA.
 - Wallets de navegador iOS: enlaces universales específicos de wallet para Phantom, Solflare y Backpack.
-- Primitivas de Solana y helpers de transacción: tipos y constructores de mensajes de `@solana/kit`, reexportados en parte a través de `@vue-solana/vue/kit`, `@vue-solana/nuxt/kit` y `@vue-solana/core/kit`.
+- Primitivas de Solana y helpers de transacción: tipos y constructores de mensajes de `@solana/kit`, reexportados por completo a través de `@vue-solana/vue/kit`, `@vue-solana/nuxt/kit` y `@vue-solana/core/kit`.
 
 ## Fuentes De Wallet
 

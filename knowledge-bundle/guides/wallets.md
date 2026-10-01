@@ -21,7 +21,7 @@ Current wallet support is built on these libraries:
 - Browser extension wallets: discovered through `@wallet-standard/app`, `@wallet-standard/base`, `@wallet-standard/features`, and Solana signing features from `@solana/wallet-standard-features`.
 - Android mobile native wallets: registered through `@solana-mobile/wallet-standard-mobile`, which exposes Solana Mobile Wallet Adapter as a Wallet Standard wallet on supported Android Chrome mobile web and PWA runtimes.
 - iOS browser wallets: exposed as wallet-specific universal link entries for Phantom, Solflare, and Backpack on iOS browsers.
-- Solana primitives and transaction types: `@solana/kit` message builders and types (available directly or through `@vue-solana/vue/kit`, `@vue-solana/nuxt/kit`, and `@vue-solana/core/kit`).
+- Solana primitives and transaction types: every `@solana/kit` message builder and type, re-exported in full through `@vue-solana/vue/kit`, `@vue-solana/nuxt/kit`, and `@vue-solana/core/kit`.
 
 Wallets such as Phantom, Solflare, Backpack, and other Solana Wallet Standard-compatible wallets can be discovered at runtime when they register with Wallet Standard. Android users can also see `Mobile Wallet Adapter` when browsing on supported Android Chrome mobile web and PWA runtimes. iOS browser users can see Phantom, Solflare, and Backpack universal-link entries even though Mobile Wallet Adapter web flows are not available on iOS.
 
@@ -108,7 +108,7 @@ import {
   getTransactionEncoder,
   setTransactionMessageFeePayer,
   setTransactionMessageLifetimeUsingBlockhash,
-} from "@solana/kit";
+} from "@vue-solana/vue/kit";
 import { useSignAndSendTransaction } from "@vue-solana/vue/useSignAndSendTransaction";
 import { useSolanaClient } from "@vue-solana/vue/useSolanaClient";
 import { useWallet } from "@vue-solana/vue/useWallet";

@@ -9,7 +9,7 @@ surroundOrder: 2
 
 ## 시작 전 확인
 
-Vue/Nuxt 통합 없이 Solana primitive가 필요하면 `@vue-solana/core`를 직접 사용하세요. 이 패키지는 `@solana/kit`을 기반으로 하며 `@vue-solana/core/kit`에서 `createSolanaClient()`, `Address`/`address()`/`lamports()`, Kit transaction과 RPC type을 다시 export합니다. 프레임워크 통합이 필요하면 `@vue-solana/vue` 또는 `@vue-solana/nuxt`를 사용합니다.
+Vue/Nuxt 통합 없이 Solana primitive가 필요하면 `@vue-solana/core`를 직접 사용하세요. 이 패키지는 `@solana/kit`을 기반으로 하며 `@vue-solana/core/kit`에서 `createSolanaClient()`와 `@solana/kit` 전체를 다시 export합니다. 프레임워크 통합이 필요하면 `@vue-solana/vue` 또는 `@vue-solana/nuxt`를 사용합니다.
 
 지원 클러스터:
 

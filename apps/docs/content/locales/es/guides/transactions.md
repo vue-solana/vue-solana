@@ -7,7 +7,7 @@ surroundOrder: 11
 
 Vue Solana proporciona helpers conscientes de wallets para enviar transacciones y composables para estado reactivo de transacciones.
 
-Esta guía cubre el límite de Vue Solana: comprobaciones de capacidades de wallet, firma, envío, confirmación y errores. Construye mensajes de transacción con `@solana/kit` y los helpers de instrucciones de tu cliente de programa.
+Esta guía cubre el límite de Vue Solana: comprobaciones de capacidades de wallet, firma, envío, confirmación y errores. Construye mensajes de transacción con los helpers de Kit reexportados desde `@vue-solana/vue/kit` (`@vue-solana/nuxt/kit` en una app Nuxt) y los helpers de instrucciones de tu cliente de programa.
 
 ## Helper Core De Envío
 
@@ -75,7 +75,7 @@ import {
   setTransactionMessageFeePayer,
   setTransactionMessageLifetimeUsingBlockhash,
   type Address,
-} from "@solana/kit";
+} from "@vue-solana/vue/kit";
 
 const SYSTEM_PROGRAM_ADDRESS = address("11111111111111111111111111111111");
 
@@ -176,10 +176,10 @@ async function submitTransaction() {
 
 ### Entradas y resultados de las peticiones de wallet
 
-Los flujos de firma de wallet aceptan la transaccion de entrada como bytes de cable `Uint8Array` sin procesar que cumplen el esquema de transaccion de Solana. Construyelos con `@solana/kit` (o decodificalos desde una respuesta RPC en base64/base58); las cadenas base64, los objetos de transaccion y las listas de instrucciones no se aceptan aqui.
+Los flujos de firma de wallet aceptan la transaccion de entrada como bytes de cable `Uint8Array` sin procesar que cumplen el esquema de transaccion de Solana. Construyelos con los helpers de Kit de `@vue-solana/vue/kit` (o decodificalos desde una respuesta RPC en base64/base58); las cadenas base64, los objetos de transaccion y las listas de instrucciones no se aceptan aqui.
 
 ```ts
-import { compileTransaction, getTransactionEncoder } from "@solana/kit";
+import { compileTransaction, getTransactionEncoder } from "@vue-solana/vue/kit";
 
 const transaction: Uint8Array = getTransactionEncoder().encode(compileTransaction(message));
 await execute(transaction);

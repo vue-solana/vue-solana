@@ -12,7 +12,7 @@ Use this skill when helping with apps or libraries that use the Vue Solana ecosy
 
 ## Package Selection
 
-- Use `@vue-solana/vue/kit` in Vue apps and `@vue-solana/nuxt/kit` in Nuxt apps for Kit primitives (types and values such as `Address`, `Commitment`, `Signature`, `address()`, `lamports()`, and `createSolanaClient()`). Build transaction messages with `@solana/kit` helpers (e.g. `createTransactionMessage()`, `compileTransaction()`); transactions flow through the packages as raw `Uint8Array` wire bytes. The default client composes the official `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()` stack; the old custom fallback sender is not used.
+- Use `@vue-solana/vue/kit` in Vue apps and `@vue-solana/nuxt/kit` in Nuxt apps for Kit primitives (types and values such as `Address`, `Commitment`, `Signature`, `address()`, `lamports()`, and `createSolanaClient()`). Build transaction messages with `@vue-solana/vue/kit` helpers (e.g. `createTransactionMessage()`, `compileTransaction()`); transactions flow through the packages as raw `Uint8Array` wire bytes. The default client composes the official `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()` stack; the old custom fallback sender is not used.
 - Use `@vue-solana/core` for framework-agnostic config, cluster endpoint helpers, wallet types, Wallet Standard adapters, Android Mobile Wallet Adapter registration, iOS browser wallet helpers, transaction helpers, and core subpath exports.
 - Use `@vue-solana/vue` in Vue 3 apps for the plugin and composables.
 - Use `@vue-solana/nuxt` in Nuxt apps for module setup and auto-imported composables.

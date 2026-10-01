@@ -30,7 +30,7 @@ Implemented files:
 
 - `src/types.ts`: shared `SolanaConfig`, `SolanaContext`, `SolanaWallet`, and transaction types.
 - `src/clusters.ts`: cluster names and endpoint resolution (`mainnet` with a `mainnet-beta` alias).
-- `src/kit.ts`: `createSolanaClient()` — the official Kit stack (`solanaRpc`, `rpcAirdrop`) plus `payer` / `payerSecretKey` resolution, and the curated list of Kit re-exports.
+- `src/kit.ts`: `createSolanaClient()` — the official Kit stack (`solanaRpc`, `rpcAirdrop`) plus `payer` / `payerSecretKey` resolution. The `kit` subpath is a full `export * from "@solana/kit"` mirror (values + types); the root barrel resolves the only clashing names (`SolanaError`, `SolanaErrorCode`, `isSolanaError`, `TransactionStatus`) to this package's own.
 - `src/rpc.ts`: `createSolanaContext()`.
 - `src/wallet.ts`: wallet connection assertions.
 - `src/transaction.ts`: `signAndSendTransaction()` and `confirmTransactionSignature()` helpers.
@@ -51,7 +51,7 @@ Implemented files:
 
 - `src/plugin.ts`: `createSolanaPlugin()` and `VueSolana` alias.
 - `src/injection.ts`: Vue injection key and context type.
-- `src/kit.ts`: re-export of the core Kit helpers.
+- `src/kit.ts`: re-exports all of `@solana/kit` via `export *` (with root-barrel clashing names resolved in favour of core).
 - `src/composables/useSolana.ts`: access injected Solana context.
 - `src/composables/useSolanaClient.ts`: the active Kit client and its `rpc` surface.
 - `src/composables/useRpc.ts`: expose cluster, endpoint, and client.
@@ -94,7 +94,7 @@ Implemented files:
 - `src/module.ts`: Nuxt module with `solana` config key. It deliberately omits `wallet`, `payer`, and `payerSecretKey` from `ModuleOptions` and strips them from public runtime config. `solana.clientPlugin: false` skips the module's runtime plugin so the app can install `createSolanaPlugin` itself (for example to attach a client-only `payer`); installing both would create two contexts and two wallet subscriptions.
 - `src/imports.ts`: maps every composable to its `useSolana*` auto-import alias.
 - `src/runtime/plugin.ts`: installs the Vue Solana plugin using public runtime config.
-- `src/runtime/kit.ts`: re-export of the core Kit helpers.
+- `src/runtime/kit.ts`: re-export of the core Kit helpers (full `@solana/kit` mirror via core).
 - `src/runtime/types.ts`: augments Nuxt public runtime config.
 
 Auto-imported Nuxt composables (source of truth: `packages/nuxt/src/imports.ts`):
@@ -121,7 +121,9 @@ The code switched from `@solana/web3.js` to `@solana/web3-compat` in v1, then to
 
 Current package dependency:
 
-- `@solana/kit@^8.3.0` (with `@solana/kit-plugin-rpc` in `packages/core`)
+- `@solana/kit@^8.4.0` (with `@solana/kit-plugin-rpc` in `packages/core`). The `pnpm-workspace.yaml` `overrides` entry must always equal this range; two Kit copies mean two `SolanaError` classes, so `isSolanaError()` from one rejects errors thrown by the other.
+
+Kit surface rule: the `kit` subpaths of all three packages are a full `export * from "@solana/kit"` mirror, not a curated list. Consumers must never have to add `@solana/kit` to their own `package.json` (pnpm's strict `node_modules` does not even resolve it from `packages/vue`). The only names resolved by hand are the four listed above, and they are resolved in the root barrels only — never inside the `kit` subpaths, which must stay a faithful mirror.
 
 Client transaction stack:
 

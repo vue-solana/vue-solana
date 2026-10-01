@@ -32,3 +32,8 @@ export * from "./injection";
 export * from "./kit";
 export * from "./plugin";
 export * from "@vue-solana/core/types";
+
+// `./kit` mirrors all of `@solana/kit`, which exports `TransactionStatus` too.
+// Resolved explicitly so the star-export clash cannot drop it from this
+// barrel; the Kit original is reachable through `@vue-solana/vue/kit`.
+export type { TransactionStatus } from "@vue-solana/core/types";

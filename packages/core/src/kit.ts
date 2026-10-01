@@ -140,67 +140,17 @@ function resolvePayerFromSecretKey(
 export type SolanaClient = SolanaClientWithOptionalPayer;
 
 /**
- * Re-exported so apps need only `@vue-solana/vue` (or `@vue-solana/nuxt`),
- * never a direct `@solana/kit` install.
+ * The full `@solana/kit` surface, re-exported so apps need only
+ * `@vue-solana/vue` (or `@vue-solana/nuxt`), never a direct `@solana/kit`
+ * install. A wildcard keeps the mirror complete: a curated list silently
+ * forced every consumer who needed one unlisted symbol to depend on
+ * `@solana/kit` themselves, which pnpm's strict `node_modules` does not
+ * resolve.
  *
- * Kept an explicit list on purpose: `index.ts` re-exports this module next to
- * `./errors` and `./action`, and Kit also exports `SolanaError`, `isSolanaError`
- * and `isAbortError`. A `export * from "@solana/kit"` would make those three
- * names ambiguous and silently drop them from the package root. Add names here
- * as consumers need them.
+ * `@vue-solana/core` re-exports this module at its root next to `./errors` and
+ * `./types`, and Kit exports `SolanaError`, `SolanaErrorCode`,
+ * `isSolanaError` and `TransactionStatus` under the same names. `index.ts`
+ * resolves those four in favour of this package's own types; the Kit
+ * originals stay reachable here.
  */
-export type {
-  Address,
-  Commitment,
-  Instruction,
-  InstructionPlanInput,
-  Lamports,
-  Rpc,
-  Signature,
-  SingleTransactionPlan,
-  SolanaRpcApi,
-  SolanaRpcResponse,
-  SuccessfulSingleTransactionPlanResult,
-  TransactionMessage,
-  TransactionPlan,
-  TransactionPlanInput,
-  TransactionPlanResult,
-  TransactionSigner,
-} from "@solana/kit";
-export type {
-  ClientWithIdentity,
-  ClientWithPayer,
-  ClientWithSubscribeToIdentity,
-  ClientWithSubscribeToPayer,
-  ClientWithTransactionPlanning,
-  ClientWithTransactionSending,
-} from "@solana/kit";
-export type {
-  CreateReactiveStoreWithInitialValueAndSlotTrackingConfig,
-  ReactiveActionSource,
-  ReactiveActionState,
-  ReactiveActionStatus,
-  ReactiveActionStore,
-  ReactiveState,
-  ReactiveStreamSource,
-  ReactiveStreamStore,
-} from "@solana/kit";
-export {
-  AccountRole,
-  address,
-  appendTransactionMessageInstruction,
-  compileTransaction,
-  createReactiveActionStore,
-  createReactiveStoreWithInitialValueAndSlotTracking,
-  createTransactionMessage,
-  extendClient,
-  generateKeyPairSigner,
-  getAbortablePromise,
-  getTransactionEncoder,
-  isAbortError,
-  isAddress,
-  lamports,
-  setTransactionMessageFeePayer,
-  setTransactionMessageLifetimeUsingBlockhash,
-  summarizeTransactionPlanResult,
-} from "@solana/kit";
+export * from "@solana/kit";

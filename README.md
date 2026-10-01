@@ -20,7 +20,7 @@ Use [`@vue-solana/vue`](https://www.npmjs.com/package/@vue-solana/vue) in Vue ap
 
 Use [`@vue-solana/nuxt`](https://www.npmjs.com/package/@vue-solana/nuxt) in Nuxt apps.
 
-`@vue-solana/core` builds on top of [`@solana/kit`](https://www.npmjs.com/package/@solana/kit) and re-exports the supported primitives (`address`, `lamports`, `Address`, `Commitment`, `Signature`, and the transaction/RPC types) so apps can use one Vue Solana package entry point.
+`@vue-solana/core` builds on top of [`@solana/kit`](https://www.npmjs.com/package/@solana/kit) and re-exports all of `@solana/kit` from its `kit` subpaths, so apps can use one Vue Solana package entry point and never install `@solana/kit` themselves.
 
 ## Clusters
 

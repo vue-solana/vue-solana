@@ -256,7 +256,7 @@ const slot = await solana.client.rpc.getSlot().send();
 
 ### Kit
 
-The `@vue-solana/core/kit` subpath exports everything most apps need from `@solana/kit` without installing it directly:
+The `@vue-solana/core/kit` subpath re-exports all of `@solana/kit` — the full public surface, values and types — so you never install `@solana/kit` in your own `package.json`:
 
 ```ts
 import { address, lamports } from "@vue-solana/core/kit";

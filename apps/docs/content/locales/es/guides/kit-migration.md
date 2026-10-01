@@ -91,7 +91,7 @@ const addr: Address = address("BonK9Y...");
 const amount = lamports(1_000_000_000n);
 ```
 
-Los constructores de mensajes no se re-exportan. Añade `@solana/kit` a tu propio `package.json` — el `node_modules` estricto de pnpm no sube la copia transitivity, así que no es importable a través de `@vue-solana/vue`. Las instrucciones de programa vienen de sus propios plugins, p. ej. `@solana-program/system` para `getTransferSolInstruction`.
+Los constructores de mensajes vienen del mismo subpath. `@vue-solana/vue/kit` reexporta todo `@solana/kit`, así que nada de esto necesita `@solana/kit` en tu propio `package.json`. Las instrucciones de programa vienen de sus propios plugins, p. ej. `@solana-program/system` para `getTransferSolInstruction`.
 
 La dirección de la wallet conectada es un string base58 `Address` plano:
 
@@ -143,7 +143,7 @@ Los helpers de Kit están disponibles desde `@vue-solana/nuxt/kit`:
 import { address, lamports } from "@vue-solana/nuxt/kit";
 ```
 
-Añade `@solana/kit` a tu propio `package.json` para la construcción de mensajes — el módulo de Nuxt solo re-exporta los helpers y tipos que fluyen a través de su propia API.
+`@vue-solana/nuxt/kit` reexporta todo `@solana/kit`, así que los constructores de mensajes también vienen de ahí — nunca añadas `@solana/kit` a tu propio `package.json`.
 
 ### Paso 3: Elimina la superficie legacy
 

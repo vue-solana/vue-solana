@@ -91,7 +91,7 @@ const addr: Address = address("BonK9Y...");
 const amount = lamports(1_000_000_000n);
 ```
 
-메시지 빌더는 재수출되지 않습니다. `@solana/kit`을 직접 `package.json`에 추가하세요 — pnpm의 엄격한 `node_modules`는 전이 복사본을 호이스트하지 않으므로 `@vue-solana/vue`를 통해 import할 수 없습니다. 프로그램 명령어는 자체 플러그인에서 제공됩니다. 예: `getTransferSolInstruction`은 `@solana-program/system`.
+메시지 빌더도 같은 subpath에서 옵니다. `@vue-solana/vue/kit`는 `@solana/kit` 전체를 다시 export하므로 여기서는 `@solana/kit`을 직접 `package.json`에 추가할 필요가 없습니다. 프로그램 명령어는 자체 플러그인에서 제공됩니다. 예: `getTransferSolInstruction`은 `@solana-program/system`.
 
 연결된 지갑의 주소는 일반 base58 `Address` 문자열입니다:
 
@@ -143,7 +143,7 @@ Kit 헬퍼는 `@vue-solana/nuxt/kit`에서 사용할 수 있습니다:
 import { address, lamports } from "@vue-solana/nuxt/kit";
 ```
 
-메시지 빌드를 위해 `@solana/kit`을 직접 `package.json`에 추가하세요 — Nuxt 모듈은 자체 API를 흐르는 헬퍼와 타입만 재수출합니다.
+`@vue-solana/nuxt/kit`도 `@solana/kit` 전체를 다시 export하므로 메시지 빌더도 거기서 가져오세요 — `@solana/kit`을 직접 `package.json`에 추가하지 마세요.
 
 ### 3단계: 레거시 표면 제거
 

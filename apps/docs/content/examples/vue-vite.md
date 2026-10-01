@@ -27,7 +27,7 @@ Live demo: [vue-solana-docs.vercel.app/demo](/demo)
 - Sending a real transfer with `useSignAndSendTransaction()` and showing submitted vs confirmed transaction status. The example uses devnet by default for safe testing.
 - Building cluster-aware Solana Explorer links for submitted signatures.
 - Exercising the Kit-reactive data layer in the Live Data Panels: `useRequest()` for one-shot requests, `useSubscription()` for live slot notifications over websocket, `useTrackedData()` for fetch-seeded account data updated by account notifications, `useSignIn()` for Sign In With Solana, `useAirdrop()` for devnet faucet requests, `usePayer()` to inspect the client's fee-payer signer, `useSendTransaction()` and `useSendTransactions()` for client-sent SPL Memo transactions with no wallet popup, and `useRequestSwr()` from `@vue-solana/vue/swr` for cache-keyed stale-while-revalidate across remounts.
-- Configuring a demo `payer` signer (`generateKeyPairSigner()` from `@solana/kit`) in `main.ts` so client-sent transactions can pay fees. The payer starts unfunded; the `usePayer` panel airdrops 1 devnet SOL into it.
+- Configuring a demo `payer` signer (`generateKeyPairSigner()` from `@vue-solana/vue/kit`) in `main.ts` so client-sent transactions can pay fees. The payer starts unfunded; the `usePayer` panel airdrops 1 devnet SOL into it.
 - Using the default official `solanaRpc()` client composition, which installs the transaction planner and the plan-signing and plan-sending executors itself. The client-send demo waits for `confirmed` commitment before showing `sent`; it does not use a custom fallback sender.
 
 The app uses `devnet` by default. Devnet SOL has no real value.

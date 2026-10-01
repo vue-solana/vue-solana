@@ -225,7 +225,7 @@ Esta guia cubre la instalacion de los paquetes de Vue Solana, la configuracion d
 
 ## Antes de empezar
 
-Usa `@vue-solana/core` directamente si necesitas primitivas de Solana sin integracion con Vue/Nuxt. Se construye sobre `@solana/kit` y reexporta `createSolanaClient()` mas `Address`/`address()`/`lamports()` y los tipos de transaccion y RPC de Kit desde `@vue-solana/core/kit`. Usa `@vue-solana/vue` o `@vue-solana/nuxt` cuando quieras integracion con el framework.
+Usa `@vue-solana/core` directamente si necesitas primitivas de Solana sin integracion con Vue/Nuxt. Se construye sobre `@solana/kit` y reexporta `createSolanaClient()` mas todo `@solana/kit` desde `@vue-solana/core/kit`. Usa `@vue-solana/vue` o `@vue-solana/nuxt` cuando quieras integracion con el framework.
 
 Clusters compatibles:
 
@@ -648,7 +648,7 @@ This guide covers installing the Vue Solana packages, configuring Vue or Nuxt, t
 
 ## Before You Start
 
-Use `@vue-solana/core` directly if you need Solana primitives without Vue/Nuxt integration. It builds on `@solana/kit` and re-exports `createSolanaClient()` plus `Address`/`address()`/`lamports()` and the Kit transaction and RPC types from `@vue-solana/core/kit`. Use `@vue-solana/vue` or `@vue-solana/nuxt` when you want framework integration.
+Use `@vue-solana/core` directly if you need Solana primitives without Vue/Nuxt integration. It builds on `@solana/kit` and re-exports `createSolanaClient()` plus all of `@solana/kit` from `@vue-solana/core/kit`. Use `@vue-solana/vue` or `@vue-solana/nuxt` when you want framework integration.
 
 Supported clusters:
 
@@ -1071,7 +1071,7 @@ Description: Vue Solana 패키지를 설치하고 Vue 또는 Nuxt를 설정한 �
 
 ## 시작 전 확인
 
-Vue/Nuxt 통합 없이 Solana primitive가 필요하면 `@vue-solana/core`를 직접 사용하세요. 이 패키지는 `@solana/kit`을 기반으로 하며 `@vue-solana/core/kit`에서 `createSolanaClient()`, `Address`/`address()`/`lamports()`, Kit transaction과 RPC type을 다시 export합니다. 프레임워크 통합이 필요하면 `@vue-solana/vue` 또는 `@vue-solana/nuxt`를 사용합니다.
+Vue/Nuxt 통합 없이 Solana primitive가 필요하면 `@vue-solana/core`를 직접 사용하세요. 이 패키지는 `@solana/kit`을 기반으로 하며 `@vue-solana/core/kit`에서 `createSolanaClient()`와 `@solana/kit` 전체를 다시 export합니다. 프레임워크 통합이 필요하면 `@vue-solana/vue` 또는 `@vue-solana/nuxt`를 사용합니다.
 
 지원 클러스터:
 
@@ -1494,7 +1494,7 @@ Description: 安装 Vue Solana 包、配置 Vue 或 Nuxt，并在 devnet 上测�
 
 ## 开始之前
 
-如果你只需要 Solana primitives，而不需要 Vue/Nuxt 集成，请直接使用 `@vue-solana/core`。它基于 `@solana/kit`，并从 `@vue-solana/core/kit` 重新导出 `createSolanaClient()` 以及 `Address`/`address()`/`lamports()` 和 Kit 交易与 RPC 类型。如果你需要框架集成，请使用 `@vue-solana/vue` 或 `@vue-solana/nuxt`。
+如果你只需要 Solana primitives，而不需要 Vue/Nuxt 集成，请直接使用 `@vue-solana/core`。它基于 `@solana/kit`，并从 `@vue-solana/core/kit` 重新导出 `createSolanaClient()` 以及全部的 `@solana/kit`。如果你需要框架集成，请使用 `@vue-solana/vue` 或 `@vue-solana/nuxt`。
 
 支持的集群：
 
@@ -3655,7 +3655,7 @@ const addr: Address = address("BonK9Y...");
 const amount = lamports(1_000_000_000n);
 ```
 
-Los constructores de mensajes no se re-exportan. Añade `@solana/kit` a tu propio `package.json` — el `node_modules` estricto de pnpm no sube la copia transitivity, así que no es importable a través de `@vue-solana/vue`. Las instrucciones de programa vienen de sus propios plugins, p. ej. `@solana-program/system` para `getTransferSolInstruction`.
+Los constructores de mensajes vienen del mismo subpath. `@vue-solana/vue/kit` reexporta todo `@solana/kit`, así que nada de esto necesita `@solana/kit` en tu propio `package.json`. Las instrucciones de programa vienen de sus propios plugins, p. ej. `@solana-program/system` para `getTransferSolInstruction`.
 
 La dirección de la wallet conectada es un string base58 `Address` plano:
 
@@ -3707,7 +3707,7 @@ Los helpers de Kit están disponibles desde `@vue-solana/nuxt/kit`:
 import { address, lamports } from "@vue-solana/nuxt/kit";
 ```
 
-Añade `@solana/kit` a tu propio `package.json` para la construcción de mensajes — el módulo de Nuxt solo re-exporta los helpers y tipos que fluyen a través de su propia API.
+`@vue-solana/nuxt/kit` reexporta todo `@solana/kit`, así que los constructores de mensajes también vienen de ahí — nunca añadas `@solana/kit` a tu propio `package.json`.
 
 ### Paso 3: Elimina la superficie legacy
 
@@ -3825,7 +3825,7 @@ const addr: Address = address("BonK9Y...");
 const amount = lamports(1_000_000_000n);
 ```
 
-Message builders are not re-exported. Add `@solana/kit` to your own `package.json` — pnpm's strict `node_modules` does not hoist the transitive copy, so it is not importable through `@vue-solana/vue`. Program instructions come from their own plugins, e.g. `@solana-program/system` for `getTransferSolInstruction`.
+Message builders come from the same subpath. `@vue-solana/vue/kit` re-exports all of `@solana/kit`, so nothing here needs `@solana/kit` in your own `package.json`. Program instructions come from their own plugins, e.g. `@solana-program/system` for `getTransferSolInstruction`.
 
 The connected wallet's address is a plain base58 `Address` string:
 
@@ -3877,7 +3877,7 @@ Kit helpers are available from `@vue-solana/nuxt/kit`:
 import { address, lamports } from "@vue-solana/nuxt/kit";
 ```
 
-Add `@solana/kit` to your own `package.json` for message building — the Nuxt module re-exports only the helpers and types that flow through its own API.
+`@vue-solana/nuxt/kit` re-exports all of `@solana/kit`, so message builders come from there too — never add `@solana/kit` to your own `package.json`.
 
 ### Step 3: Remove the legacy surface
 
@@ -3995,7 +3995,7 @@ const addr: Address = address("BonK9Y...");
 const amount = lamports(1_000_000_000n);
 ```
 
-메시지 빌더는 재수출되지 않습니다. `@solana/kit`을 직접 `package.json`에 추가하세요 — pnpm의 엄격한 `node_modules`는 전이 복사본을 호이스트하지 않으므로 `@vue-solana/vue`를 통해 import할 수 없습니다. 프로그램 명령어는 자체 플러그인에서 제공됩니다. 예: `getTransferSolInstruction`은 `@solana-program/system`.
+메시지 빌더도 같은 subpath에서 옵니다. `@vue-solana/vue/kit`는 `@solana/kit` 전체를 다시 export하므로 여기서는 `@solana/kit`을 직접 `package.json`에 추가할 필요가 없습니다. 프로그램 명령어는 자체 플러그인에서 제공됩니다. 예: `getTransferSolInstruction`은 `@solana-program/system`.
 
 연결된 지갑의 주소는 일반 base58 `Address` 문자열입니다:
 
@@ -4047,7 +4047,7 @@ Kit 헬퍼는 `@vue-solana/nuxt/kit`에서 사용할 수 있습니다:
 import { address, lamports } from "@vue-solana/nuxt/kit";
 ```
 
-메시지 빌드를 위해 `@solana/kit`을 직접 `package.json`에 추가하세요 — Nuxt 모듈은 자체 API를 흐르는 헬퍼와 타입만 재수출합니다.
+`@vue-solana/nuxt/kit`도 `@solana/kit` 전체를 다시 export하므로 메시지 빌더도 거기서 가져오세요 — `@solana/kit`을 직접 `package.json`에 추가하지 마세요.
 
 ### 3단계: 레거시 표면 제거
 
@@ -4165,7 +4165,7 @@ const addr: Address = address("BonK9Y...");
 const amount = lamports(1_000_000_000n);
 ```
 
-消息构建器不会被重新导出。请在你的 `package.json` 中自行添加 `@solana/kit` —— pnpm 严格的 `node_modules` 不会提升传递依赖，因此无法通过 `@vue-solana/vue` 导入。程序指令来自各自的插件，例如 `@solana-program/system` 提供 `getTransferSolInstruction`。
+消息构建器来自同一个 subpath。`@vue-solana/vue/kit` 重新导出全部的 `@solana/kit`，因此这里无需在你的 `package.json` 中添加 `@solana/kit`。程序指令来自各自的插件，例如 `@solana-program/system` 提供 `getTransferSolInstruction`。
 
 已连接钱包的地址是一个普通的 base58 `Address` 字符串：
 
@@ -4217,7 +4217,7 @@ const slot = await client.rpc.getSlot().send();
 import { address, lamports } from "@vue-solana/nuxt/kit";
 ```
 
-请在你的 `package.json` 中自行添加 `@solana/kit` 用于消息构建 —— Nuxt 模块只重新导出流经其自身 API 的辅助函数和类型。
+`@vue-solana/nuxt/kit` 重新导出全部的 `@solana/kit`，消息构建器也从那里获取 —— 永远不要在自己的 `package.json` 中添加 `@solana/kit`。
 
 ### 步骤 3：移除旧接口
 
@@ -4882,7 +4882,7 @@ El soporte actual de wallets se basa en estas librerías:
 - Wallets de extensión de navegador: `@wallet-standard/app`, `@wallet-standard/base`, `@wallet-standard/features` y `@solana/wallet-standard-features`.
 - Wallets nativas móviles Android: `@solana-mobile/wallet-standard-mobile`, que registra Solana Mobile Wallet Adapter como Wallet Standard en runtimes compatibles de Android Chrome mobile web y PWA.
 - Wallets de navegador iOS: enlaces universales específicos de wallet para Phantom, Solflare y Backpack.
-- Primitivas de Solana y helpers de transacción: tipos y constructores de mensajes de `@solana/kit`, reexportados en parte a través de `@vue-solana/vue/kit`, `@vue-solana/nuxt/kit` y `@vue-solana/core/kit`.
+- Primitivas de Solana y helpers de transacción: tipos y constructores de mensajes de `@solana/kit`, reexportados por completo a través de `@vue-solana/vue/kit`, `@vue-solana/nuxt/kit` y `@vue-solana/core/kit`.
 
 ## Fuentes De Wallet
 
@@ -5149,7 +5149,7 @@ Current wallet support is built on these libraries:
 - Browser extension wallets: `@wallet-standard/app`, `@wallet-standard/base`, `@wallet-standard/features`, and `@solana/wallet-standard-features`.
 - Android mobile native wallets: `@solana-mobile/wallet-standard-mobile`, which registers Solana Mobile Wallet Adapter as a Wallet Standard wallet on supported Android Chrome mobile web and PWA runtimes.
 - iOS browser wallets: wallet-specific universal links for Phantom, Solflare, and Backpack.
-- Solana primitives and transaction helpers: `@solana/kit` types and message builders, re-exported in part through `@vue-solana/vue/kit`, `@vue-solana/nuxt/kit`, and `@vue-solana/core/kit`.
+- Solana primitives and transaction helpers: `@solana/kit` types and message builders, re-exported in full through `@vue-solana/vue/kit`, `@vue-solana/nuxt/kit`, and `@vue-solana/core/kit`.
 
 ## Wallet Sources
 
@@ -5416,7 +5416,7 @@ Vue Solana는 브라우저 확장 지갑, Android Mobile Wallet Adapter 지갑, 
 - 브라우저 확장 지갑: `@wallet-standard/app`, `@wallet-standard/base`, `@wallet-standard/features`, `@solana/wallet-standard-features`.
 - Android 모바일 네이티브 지갑: `@solana-mobile/wallet-standard-mobile`. 지원되는 Android Chrome mobile web 및 PWA runtime에서 Solana Mobile Wallet Adapter를 Wallet Standard 지갑으로 등록합니다.
 - iOS 브라우저 지갑: Phantom, Solflare, Backpack용 wallet-specific universal link.
-- Solana primitive와 transaction helper: `@solana/kit` 타입과 message builder로, 일부는 `@vue-solana/vue/kit`, `@vue-solana/nuxt/kit`, `@vue-solana/core/kit`를 통해 다시 내보내집니다.
+- Solana primitive와 transaction helper: `@solana/kit` 타입과 message builder로, 전부는 `@vue-solana/vue/kit`, `@vue-solana/nuxt/kit`, `@vue-solana/core/kit`를 통해 다시 내보내집니다.
 
 ## 지갑 소스
 
@@ -5683,7 +5683,7 @@ Vue Solana 通过同一个钱包流程暴露浏览器扩展钱包、Android Mobi
 - 浏览器扩展钱包：`@wallet-standard/app`、`@wallet-standard/base`、`@wallet-standard/features` 和 `@solana/wallet-standard-features`。
 - Android 移动端原生钱包：`@solana-mobile/wallet-standard-mobile`，它会在受支持的 Android Chrome 移动网页和 PWA 运行时中，将 Solana Mobile Wallet Adapter 注册为 Wallet Standard 钱包。
 - iOS 浏览器钱包：Phantom、Solflare 和 Backpack 的钱包专属 universal links。
-- Solana 基础类型和交易辅助函数：`@solana/kit` 的类型和消息构建器，部分通过 `@vue-solana/vue/kit`、`@vue-solana/nuxt/kit` 和 `@vue-solana/core/kit` 重新导出。
+- Solana 基础类型和交易辅助函数：`@solana/kit` 的类型和消息构建器，全部通过 `@vue-solana/vue/kit`、`@vue-solana/nuxt/kit` 和 `@vue-solana/core/kit` 重新导出。
 
 ## 钱包来源
 
@@ -6547,7 +6547,7 @@ Description: Firma, envía, confirma y maneja estado de transacciones con Vue So
 
 Vue Solana proporciona helpers conscientes de wallets para enviar transacciones y composables para estado reactivo de transacciones.
 
-Esta guía cubre el límite de Vue Solana: comprobaciones de capacidades de wallet, firma, envío, confirmación y errores. Construye mensajes de transacción con `@solana/kit` y los helpers de instrucciones de tu cliente de programa.
+Esta guía cubre el límite de Vue Solana: comprobaciones de capacidades de wallet, firma, envío, confirmación y errores. Construye mensajes de transacción con los helpers de Kit reexportados desde `@vue-solana/vue/kit` (`@vue-solana/nuxt/kit` en una app Nuxt) y los helpers de instrucciones de tu cliente de programa.
 
 ## Helper Core De Envío
 
@@ -6615,7 +6615,7 @@ import {
   setTransactionMessageFeePayer,
   setTransactionMessageLifetimeUsingBlockhash,
   type Address,
-} from "@solana/kit";
+} from "@vue-solana/vue/kit";
 
 const SYSTEM_PROGRAM_ADDRESS = address("11111111111111111111111111111111");
 
@@ -6716,10 +6716,10 @@ async function submitTransaction() {
 
 ### Entradas y resultados de las peticiones de wallet
 
-Los flujos de firma de wallet aceptan la transaccion de entrada como bytes de cable `Uint8Array` sin procesar que cumplen el esquema de transaccion de Solana. Construyelos con `@solana/kit` (o decodificalos desde una respuesta RPC en base64/base58); las cadenas base64, los objetos de transaccion y las listas de instrucciones no se aceptan aqui.
+Los flujos de firma de wallet aceptan la transaccion de entrada como bytes de cable `Uint8Array` sin procesar que cumplen el esquema de transaccion de Solana. Construyelos con los helpers de Kit de `@vue-solana/vue/kit` (o decodificalos desde una respuesta RPC en base64/base58); las cadenas base64, los objetos de transaccion y las listas de instrucciones no se aceptan aqui.
 
 ```ts
-import { compileTransaction, getTransactionEncoder } from "@solana/kit";
+import { compileTransaction, getTransactionEncoder } from "@vue-solana/vue/kit";
 
 const transaction: Uint8Array = getTransactionEncoder().encode(compileTransaction(message));
 await execute(transaction);
@@ -6849,7 +6849,7 @@ Description: Sign, send, confirm, and handle transaction state with Vue Solana.
 
 Vue Solana provides wallet-aware helpers for submitting transactions and composables for reactive transaction state.
 
-This guide covers the Vue Solana boundary: wallet capability checks, signing, sending, confirmation, and errors. Build transaction messages with `@solana/kit` and your program client's instruction helpers.
+This guide covers the Vue Solana boundary: wallet capability checks, signing, sending, confirmation, and errors. Build transaction messages with the Kit helpers re-exported from `@vue-solana/vue/kit` (`@vue-solana/nuxt/kit` in a Nuxt app) and your program client's instruction helpers. You never need to install `@solana/kit` yourself.
 
 ## Core Send Helper
 
@@ -6917,7 +6917,7 @@ import {
   setTransactionMessageFeePayer,
   setTransactionMessageLifetimeUsingBlockhash,
   type Address,
-} from "@solana/kit";
+} from "@vue-solana/vue/kit";
 
 const SYSTEM_PROGRAM_ADDRESS = address("11111111111111111111111111111111");
 
@@ -7018,10 +7018,10 @@ async function submitTransaction() {
 
 ### Wallet Request Inputs and Returns
 
-Wallet signing flows accept transaction input as raw `Uint8Array` wire bytes that conform to the Solana transaction schema. Build them with `@solana/kit` (or decode them from a base64/base58 RPC response); base64 strings, transaction objects, and instruction lists are not accepted here.
+Wallet signing flows accept transaction input as raw `Uint8Array` wire bytes that conform to the Solana transaction schema. Build them with the Kit helpers from `@vue-solana/vue/kit` (or decode them from a base64/base58 RPC response); base64 strings, transaction objects, and instruction lists are not accepted here.
 
 ```ts
-import { compileTransaction, getTransactionEncoder } from "@solana/kit";
+import { compileTransaction, getTransactionEncoder } from "@vue-solana/vue/kit";
 
 const transaction: Uint8Array = getTransactionEncoder().encode(compileTransaction(message));
 await execute(transaction);
@@ -7151,7 +7151,7 @@ Description: Vue Solana로 트랜잭션에 서명하고, 전송하고, 확인하
 
 Vue Solana는 트랜잭션 제출을 위한 wallet-aware helper와 반응형 트랜잭션 상태를 위한 컴포저블을 제공합니다.
 
-이 가이드는 Vue Solana 경계에서 필요한 지갑 capability 확인, 서명, 전송, confirmation, 오류 처리를 다룹니다. 트랜잭션 message는 `@solana/kit`과 program client의 instruction helper로 구성하세요.
+이 가이드는 Vue Solana 경계에서 필요한 지갑 capability 확인, 서명, 전송, confirmation, 오류 처리를 다룹니다. 트랜잭션 message는 `@vue-solana/vue/kit`(Nuxt 앱은 `@vue-solana/nuxt/kit`)에서 다시 export되는 Kit helper와 program client의 instruction helper로 구성하세요.
 
 ## Core Send Helper
 
@@ -7219,7 +7219,7 @@ import {
   setTransactionMessageFeePayer,
   setTransactionMessageLifetimeUsingBlockhash,
   type Address,
-} from "@solana/kit";
+} from "@vue-solana/vue/kit";
 
 const SYSTEM_PROGRAM_ADDRESS = address("11111111111111111111111111111111");
 
@@ -7320,10 +7320,10 @@ async function submitTransaction() {
 
 ### 지갑 요청 입력과 반환값
 
-지갑 서명 flow는 트랜잭션 입력으로 Solana 트랜잭션 스키마를 따르는 raw `Uint8Array` wire 바이트를 받습니다. `@solana/kit`으로 만들거나 base64/base58 RPC 응답에서 디코딩하세요. base64 문자열, 트랜잭션 객체, instruction 목록은 여기서 허용되지 않습니다.
+지갑 서명 flow는 트랜잭션 입력으로 Solana 트랜잭션 스키마를 따르는 raw `Uint8Array` wire 바이트를 받습니다. `@vue-solana/vue/kit`의 helper로 만들거나 base64/base58 RPC 응답에서 디코딩하세요. base64 문자열, 트랜잭션 객체, instruction 목록은 여기서 허용되지 않습니다.
 
 ```ts
-import { compileTransaction, getTransactionEncoder } from "@solana/kit";
+import { compileTransaction, getTransactionEncoder } from "@vue-solana/vue/kit";
 
 const transaction: Uint8Array = getTransactionEncoder().encode(compileTransaction(message));
 await execute(transaction);
@@ -7453,7 +7453,7 @@ Description: 使用 Vue Solana 签署、发送、确认并处理交易状态。
 
 Vue Solana 提供了感知钱包的钱包提交辅助函数，以及用于响应式交易状态的组合式函数。
 
-本指南涵盖 Vue Solana 的边界：钱包能力检查、签名、发送、确认和错误。请使用 `@solana/kit` 和你的程序客户端的指令辅助函数来构建交易消息。
+本指南涵盖 Vue Solana 的边界：钱包能力检查、签名、发送、确认和错误。请使用从 `@vue-solana/vue/kit`（Nuxt 应用使用 `@vue-solana/nuxt/kit`）重新导出的 Kit 辅助函数和你的程序客户端的指令辅助函数来构建交易消息。
 
 ## Core 发送辅助函数
 
@@ -7521,7 +7521,7 @@ import {
   setTransactionMessageFeePayer,
   setTransactionMessageLifetimeUsingBlockhash,
   type Address,
-} from "@solana/kit";
+} from "@vue-solana/vue/kit";
 
 const SYSTEM_PROGRAM_ADDRESS = address("11111111111111111111111111111111");
 
@@ -7622,10 +7622,10 @@ async function submitTransaction() {
 
 ### 钱包请求的输入与返回值
 
-钱包签名流程接受符合 Solana 交易 schema 的原始 `Uint8Array` wire 字节作为交易输入。使用 `@solana/kit` 构建它们（或从 base64/base58 RPC 响应中解码）；此处不接受 base64 字符串、交易对象和指令列表。
+钱包签名流程接受符合 Solana 交易 schema 的原始 `Uint8Array` wire 字节作为交易输入。使用 `@vue-solana/vue/kit` 中的辅助函数构建它们（或从 base64/base58 RPC 响应中解码）；此处不接受 base64 字符串、交易对象和指令列表。
 
 ```ts
-import { compileTransaction, getTransactionEncoder } from "@solana/kit";
+import { compileTransaction, getTransactionEncoder } from "@vue-solana/vue/kit";
 
 const transaction: Uint8Array = getTransactionEncoder().encode(compileTransaction(message));
 await execute(transaction);
@@ -9228,21 +9228,21 @@ Estos helpers son seguros para SSR. El registro de Android devuelve sin registra
 
 La exportación raíz `@vue-solana/core` reexporta los helpers públicos siguientes. Usa subpaths directos cuando quieras imports más específicos o límites de módulo más claros.
 
-| Import path                        | Qué contiene                                                                                                                      | Úsalo cuando                                                                                                                     |
-| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `@vue-solana/core/address`         | `parseAddress()` y tipos de entrada de dirección.                                                                                 | Aceptas una dirección Solana como string, objeto tipo ref o getter y necesitas un `Address` validado y normalizado.              |
-| `@vue-solana/core/clusters`        | Helpers de cluster y endpoint por defecto.                                                                                        | Necesitas el endpoint RPC o WebSocket integrado del paquete para `mainnet`, `mainnet-beta`, `testnet`, `devnet` o `localnet`.    |
-| `@vue-solana/core/errors`          | `SolanaError`, fábricas de error y guards de error.                                                                               | Necesitas códigos de error estables para fallos de wallet, RPC, dirección, transacción, timeout o storage orientados al usuario. |
-| `@vue-solana/core/ios-wallet`      | Descubrimiento de wallets de navegador iOS, adaptadores deep-link y callbacks.                                                    | Estás conectando enlaces de wallet iOS sin el flujo unificado de wallets del plugin de Vue.                                      |
-| `@vue-solana/core/kit`             | `createSolanaClient()` y las reexportaciones de `@solana/kit` (`Address`, `address`, `lamports`, `SolanaRpcApi`, `SolanaClient`). | Quieres la API Kit moderna sin el grafo completo de dependencias de `@solana/kit`.                                               |
-| `@vue-solana/core/mobile-wallet`   | Helpers de registro de Android Mobile Wallet Adapter.                                                                             | Necesitas registrar Android MWA antes de leer wallets Wallet Standard.                                                           |
-| `@vue-solana/core/rpc`             | `createSolanaContext()`.                                                                                                          | Quieres un cliente Kit configurado y endpoints de cluster resueltos sin instalar el plugin de Vue.                               |
-| `@vue-solana/core/timeout`         | Helpers de timeout de Promise que producen errores de timeout Solana.                                                             | Necesitas comportamiento de timeout coherente con los helpers de confirmación de transacción.                                    |
-| `@vue-solana/core/transaction`     | Helpers de envío y confirmación de transacciones.                                                                                 | Necesitas una ruta de envío consciente de wallet o un resultado de confirmación para una firma existente.                        |
-| `@vue-solana/core/token-accounts`  | Lecturas de cuenta SPL Token sin estado (`getTokenAccountsByOwner`, `getTokenAccount`, `getTokenBalance`).                        | Necesitas lecturas de cuenta de token o balance mediante la API `jsonParsed` del RPC Kit.                                        |
-| `@vue-solana/core/types`           | Tipos TypeScript compartidos.                                                                                                     | Necesitas `SolanaConfig`, `SolanaContext`, `SolanaWallet`, metadatos de wallet o tipos de opciones de transacción.               |
-| `@vue-solana/core/wallet`          | Aserciones de estado de wallet y errores de capacidad de wallet.                                                                  | Necesitas validar que una wallet seleccionada está conectada o soporta firma antes de llamar métodos de wallet.                  |
-| `@vue-solana/core/wallet-standard` | Mapeo de cadenas Wallet Standard, descubrimiento, suscripciones y helpers de adaptador.                                           | Estás creando tu propia capa de descubrimiento de wallets sobre Solana Wallet Standard.                                          |
+| Import path                        | Qué contiene                                                                                               | Úsalo cuando                                                                                                                     |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `@vue-solana/core/address`         | `parseAddress()` y tipos de entrada de dirección.                                                          | Aceptas una dirección Solana como string, objeto tipo ref o getter y necesitas un `Address` validado y normalizado.              |
+| `@vue-solana/core/clusters`        | Helpers de cluster y endpoint por defecto.                                                                 | Necesitas el endpoint RPC o WebSocket integrado del paquete para `mainnet`, `mainnet-beta`, `testnet`, `devnet` o `localnet`.    |
+| `@vue-solana/core/errors`          | `SolanaError`, fábricas de error y guards de error.                                                        | Necesitas códigos de error estables para fallos de wallet, RPC, dirección, transacción, timeout o storage orientados al usuario. |
+| `@vue-solana/core/ios-wallet`      | Descubrimiento de wallets de navegador iOS, adaptadores deep-link y callbacks.                             | Estás conectando enlaces de wallet iOS sin el flujo unificado de wallets del plugin de Vue.                                      |
+| `@vue-solana/core/kit`             | `createSolanaClient()` y toda la superficie de `@solana/kit`.                                              | Quieres la API Kit moderna sin instalar `@solana/kit` en tu propio `package.json`.                                               |
+| `@vue-solana/core/mobile-wallet`   | Helpers de registro de Android Mobile Wallet Adapter.                                                      | Necesitas registrar Android MWA antes de leer wallets Wallet Standard.                                                           |
+| `@vue-solana/core/rpc`             | `createSolanaContext()`.                                                                                   | Quieres un cliente Kit configurado y endpoints de cluster resueltos sin instalar el plugin de Vue.                               |
+| `@vue-solana/core/timeout`         | Helpers de timeout de Promise que producen errores de timeout Solana.                                      | Necesitas comportamiento de timeout coherente con los helpers de confirmación de transacción.                                    |
+| `@vue-solana/core/transaction`     | Helpers de envío y confirmación de transacciones.                                                          | Necesitas una ruta de envío consciente de wallet o un resultado de confirmación para una firma existente.                        |
+| `@vue-solana/core/token-accounts`  | Lecturas de cuenta SPL Token sin estado (`getTokenAccountsByOwner`, `getTokenAccount`, `getTokenBalance`). | Necesitas lecturas de cuenta de token o balance mediante la API `jsonParsed` del RPC Kit.                                        |
+| `@vue-solana/core/types`           | Tipos TypeScript compartidos.                                                                              | Necesitas `SolanaConfig`, `SolanaContext`, `SolanaWallet`, metadatos de wallet o tipos de opciones de transacción.               |
+| `@vue-solana/core/wallet`          | Aserciones de estado de wallet y errores de capacidad de wallet.                                           | Necesitas validar que una wallet seleccionada está conectada o soporta firma antes de llamar métodos de wallet.                  |
+| `@vue-solana/core/wallet-standard` | Mapeo de cadenas Wallet Standard, descubrimiento, suscripciones y helpers de adaptador.                    | Estás creando tu propia capa de descubrimiento de wallets sobre Solana Wallet Standard.                                          |
 
 ### Clusters y RPC
 
@@ -9273,7 +9273,7 @@ const slot = await solana.client.rpc.getSlot().send();
 
 ### Kit
 
-El subpath `@vue-solana/core/kit` exporta todo lo que la mayoría de apps necesitan de `@solana/kit` sin instalarlo directamente:
+El subpath `@vue-solana/core/kit` reexporta todo `@solana/kit` — la superficie pública completa, valores y tipos — así que nunca instalas `@solana/kit` en tu propio `package.json`:
 
 ```ts
 import { address, lamports } from "@vue-solana/core/kit";
@@ -9812,21 +9812,21 @@ type SolanaChain = "solana:mainnet" | "solana:testnet" | "solana:devnet" | "sola
 
 Root `@vue-solana/core` export는 아래 public helper를 다시 export합니다. 더 좁은 import나 명확한 module boundary가 필요하면 direct subpath를 사용하세요.
 
-| Import path                        | 포함 내용                                                                                                           | 사용할 때                                                                                                      |
-| ---------------------------------- | ------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `@vue-solana/core/address`         | `parseAddress()`와 address input type.                                                                              | Solana 주소를 string, ref-like object, getter로 받고 검증되고 정규화된 `Address`가 필요할 때.                  |
-| `@vue-solana/core/clusters`        | 기본 cluster 및 endpoint helper.                                                                                    | `mainnet`, `mainnet-beta`, `testnet`, `devnet`, `localnet`의 built-in RPC 또는 WebSocket endpoint가 필요할 때. |
-| `@vue-solana/core/errors`          | `SolanaError`, error factory, error guard.                                                                          | 지갑, RPC, 주소, 트랜잭션, timeout, storage 실패에 대한 안정적인 error code가 필요할 때.                       |
-| `@vue-solana/core/ios-wallet`      | iOS browser wallet discovery, deep-link adapter, callback handling.                                                 | Vue plugin의 unified wallet flow 없이 iOS wallet link를 직접 wiring할 때.                                      |
-| `@vue-solana/core/kit`             | `createSolanaClient()`와 `@solana/kit` re-export(`Address`, `address`, `lamports`, `SolanaRpcApi`, `SolanaClient`). | 전체 `@solana/kit` dependency graph 없이 현대 Kit API를 원할 때.                                               |
-| `@vue-solana/core/mobile-wallet`   | Android Mobile Wallet Adapter registration helper.                                                                  | Wallet Standard wallet을 읽기 전에 Android MWA를 등록해야 할 때.                                               |
-| `@vue-solana/core/rpc`             | `createSolanaContext()`.                                                                                            | Vue plugin 없이 configured Kit client와 resolved cluster endpoint가 필요할 때.                                 |
-| `@vue-solana/core/timeout`         | Solana timeout error를 만드는 Promise timeout helper.                                                               | transaction confirmation helper와 일관된 timeout behavior가 필요할 때.                                         |
-| `@vue-solana/core/transaction`     | Transaction send 및 confirmation helper.                                                                            | Wallet-aware send path 또는 기존 signature의 confirmation result가 필요할 때.                                  |
-| `@vue-solana/core/token-accounts`  | 무상태 SPL Token account 읽기(`getTokenAccountsByOwner`, `getTokenAccount`, `getTokenBalance`).                     | Kit RPC `jsonParsed` API를 통해 token account 또는 balance 읽기가 필요할 때.                                   |
-| `@vue-solana/core/types`           | 공유 TypeScript type.                                                                                               | `SolanaConfig`, `SolanaContext`, `SolanaWallet`, wallet metadata, transaction option type이 필요할 때.         |
-| `@vue-solana/core/wallet`          | Wallet state assertion 및 wallet capability error.                                                                  | 선택된 wallet이 연결되어 있거나 signing을 지원하는지 wallet method 호출 전에 검증해야 할 때.                   |
-| `@vue-solana/core/wallet-standard` | Wallet Standard chain mapping, discovery, subscription, adapter helper.                                             | Solana Wallet Standard 위에 자체 wallet discovery layer를 만들 때.                                             |
+| Import path                        | 포함 내용                                                                                       | 사용할 때                                                                                                      |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `@vue-solana/core/address`         | `parseAddress()`와 address input type.                                                          | Solana 주소를 string, ref-like object, getter로 받고 검증되고 정규화된 `Address`가 필요할 때.                  |
+| `@vue-solana/core/clusters`        | 기본 cluster 및 endpoint helper.                                                                | `mainnet`, `mainnet-beta`, `testnet`, `devnet`, `localnet`의 built-in RPC 또는 WebSocket endpoint가 필요할 때. |
+| `@vue-solana/core/errors`          | `SolanaError`, error factory, error guard.                                                      | 지갑, RPC, 주소, 트랜잭션, timeout, storage 실패에 대한 안정적인 error code가 필요할 때.                       |
+| `@vue-solana/core/ios-wallet`      | iOS browser wallet discovery, deep-link adapter, callback handling.                             | Vue plugin의 unified wallet flow 없이 iOS wallet link를 직접 wiring할 때.                                      |
+| `@vue-solana/core/kit`             | `createSolanaClient()`와 `@solana/kit` 전체 표면.                                               | 직접 `package.json`에 `@solana/kit`을 설치하지 않고 현대 Kit API를 원할 때.                                    |
+| `@vue-solana/core/mobile-wallet`   | Android Mobile Wallet Adapter registration helper.                                              | Wallet Standard wallet을 읽기 전에 Android MWA를 등록해야 할 때.                                               |
+| `@vue-solana/core/rpc`             | `createSolanaContext()`.                                                                        | Vue plugin 없이 configured Kit client와 resolved cluster endpoint가 필요할 때.                                 |
+| `@vue-solana/core/timeout`         | Solana timeout error를 만드는 Promise timeout helper.                                           | transaction confirmation helper와 일관된 timeout behavior가 필요할 때.                                         |
+| `@vue-solana/core/transaction`     | Transaction send 및 confirmation helper.                                                        | Wallet-aware send path 또는 기존 signature의 confirmation result가 필요할 때.                                  |
+| `@vue-solana/core/token-accounts`  | 무상태 SPL Token account 읽기(`getTokenAccountsByOwner`, `getTokenAccount`, `getTokenBalance`). | Kit RPC `jsonParsed` API를 통해 token account 또는 balance 읽기가 필요할 때.                                   |
+| `@vue-solana/core/types`           | 공유 TypeScript type.                                                                           | `SolanaConfig`, `SolanaContext`, `SolanaWallet`, wallet metadata, transaction option type이 필요할 때.         |
+| `@vue-solana/core/wallet`          | Wallet state assertion 및 wallet capability error.                                              | 선택된 wallet이 연결되어 있거나 signing을 지원하는지 wallet method 호출 전에 검증해야 할 때.                   |
+| `@vue-solana/core/wallet-standard` | Wallet Standard chain mapping, discovery, subscription, adapter helper.                         | Solana Wallet Standard 위에 자체 wallet discovery layer를 만들 때.                                             |
 
 ### 클러스터와 RPC
 
@@ -9857,7 +9857,7 @@ const slot = await solana.client.rpc.getSlot().send();
 
 ### Kit
 
-`@vue-solana/core/kit` subpath는 대부분의 앱이 `@solana/kit`에서 필요한 모든 것을 직접 설치하지 않고 export합니다:
+`@vue-solana/core/kit` subpath는 `@solana/kit` 전체(공개 표면의 모든 값과 타입)를 다시 export하므로 `@solana/kit`을 직접 설치할 필요가 없습니다:
 
 ```ts
 import { address, lamports } from "@vue-solana/core/kit";
@@ -10245,7 +10245,7 @@ const slot = await solana.client.rpc.getSlot().send();
 
 ### Kit
 
-The `@vue-solana/core/kit` subpath exports everything most apps need from `@solana/kit` without installing it directly:
+The `@vue-solana/core/kit` subpath re-exports all of `@solana/kit` — the full public surface, values and types — so you never install `@solana/kit` in your own `package.json`:
 
 ```ts
 import { address, lamports } from "@vue-solana/core/kit";
@@ -10700,21 +10700,21 @@ type SolanaChain = "solana:mainnet" | "solana:testnet" | "solana:devnet" | "sola
 
 根 `@vue-solana/core` 导出会重新导出下面的公共 helper。需要更窄导入或更清晰模块边界时，请使用直接 subpath。
 
-| Import path                        | 包含内容                                                                                                             | 何时使用                                                                                             |
-| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `@vue-solana/core/address`         | `parseAddress()` 和地址输入类型。                                                                                    | 你以字符串、类似 ref 的对象或 getter 形式接受 Solana 地址，并需要一个经过验证和规范化的 `Address`。  |
-| `@vue-solana/core/clusters`        | 默认 cluster 和 endpoint helper。                                                                                    | 你需要包内置的 `mainnet`、`mainnet-beta`、`testnet`、`devnet` 或 `localnet` RPC/WebSocket endpoint。 |
-| `@vue-solana/core/errors`          | `SolanaError`、错误工厂和错误 guard。                                                                                | 你需要稳定错误 code 来处理面向用户的钱包、RPC、地址、交易、超时或存储失败。                          |
-| `@vue-solana/core/ios-wallet`      | iOS 浏览器钱包发现、deep-link adapter 和回调处理。                                                                   | 你在不使用 Vue 插件统一钱包流程的情况下接入 iOS 钱包链接。                                           |
-| `@vue-solana/core/kit`             | `createSolanaClient()` 和 `@solana/kit` 重导出（`Address`、`address`、`lamports`、`SolanaRpcApi`、`SolanaClient`）。 | 你想要现代 Kit API，但不涉及完整的 `@solana/kit` 依赖图。                                            |
-| `@vue-solana/core/mobile-wallet`   | Android Mobile Wallet Adapter 注册 helper。                                                                          | 你需要在读取 Wallet Standard 钱包前注册 Android MWA。                                                |
-| `@vue-solana/core/rpc`             | `createSolanaContext()`。                                                                                            | 你想在不安装 Vue 插件的情况下获得已配置的 Kit 客户端和解析后的 cluster endpoint。                    |
-| `@vue-solana/core/timeout`         | 生成 Solana 超时错误的 Promise timeout helper。                                                                      | 你需要与交易确认 helper 一致的超时行为。                                                             |
-| `@vue-solana/core/transaction`     | 交易发送和确认 helper。                                                                                              | 你需要感知钱包的发送路径，或需要为现有签名获取确认结果。                                             |
-| `@vue-solana/core/token-accounts`  | 无状态 SPL Token 账户读取（`getTokenAccountsByOwner`、`getTokenAccount`、`getTokenBalance`）。                       | 你需要通过 Kit RPC `jsonParsed` API 读取 token 账户或余额。                                          |
-| `@vue-solana/core/types`           | 共享 TypeScript 类型。                                                                                               | 你需要 `SolanaConfig`、`SolanaContext`、`SolanaWallet`、钱包元数据或交易选项类型。                   |
-| `@vue-solana/core/wallet`          | 钱包状态断言和钱包能力错误。                                                                                         | 你需要在调用钱包方法前验证所选钱包已连接或支持签名。                                                 |
-| `@vue-solana/core/wallet-standard` | Wallet Standard chain 映射、发现、订阅和 adapter helper。                                                            | 你正在 Solana Wallet Standard 之上构建自己的钱包发现层。                                             |
+| Import path                        | 包含内容                                                                                       | 何时使用                                                                                             |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `@vue-solana/core/address`         | `parseAddress()` 和地址输入类型。                                                              | 你以字符串、类似 ref 的对象或 getter 形式接受 Solana 地址，并需要一个经过验证和规范化的 `Address`。  |
+| `@vue-solana/core/clusters`        | 默认 cluster 和 endpoint helper。                                                              | 你需要包内置的 `mainnet`、`mainnet-beta`、`testnet`、`devnet` 或 `localnet` RPC/WebSocket endpoint。 |
+| `@vue-solana/core/errors`          | `SolanaError`、错误工厂和错误 guard。                                                          | 你需要稳定错误 code 来处理面向用户的钱包、RPC、地址、交易、超时或存储失败。                          |
+| `@vue-solana/core/ios-wallet`      | iOS 浏览器钱包发现、deep-link adapter 和回调处理。                                             | 你在不使用 Vue 插件统一钱包流程的情况下接入 iOS 钱包链接。                                           |
+| `@vue-solana/core/kit`             | `createSolanaClient()` 和完整的 `@solana/kit` 表面。                                           | 你想要现代 Kit API，但不想在自己的 `package.json` 中安装 `@solana/kit`。                             |
+| `@vue-solana/core/mobile-wallet`   | Android Mobile Wallet Adapter 注册 helper。                                                    | 你需要在读取 Wallet Standard 钱包前注册 Android MWA。                                                |
+| `@vue-solana/core/rpc`             | `createSolanaContext()`。                                                                      | 你想在不安装 Vue 插件的情况下获得已配置的 Kit 客户端和解析后的 cluster endpoint。                    |
+| `@vue-solana/core/timeout`         | 生成 Solana 超时错误的 Promise timeout helper。                                                | 你需要与交易确认 helper 一致的超时行为。                                                             |
+| `@vue-solana/core/transaction`     | 交易发送和确认 helper。                                                                        | 你需要感知钱包的发送路径，或需要为现有签名获取确认结果。                                             |
+| `@vue-solana/core/token-accounts`  | 无状态 SPL Token 账户读取（`getTokenAccountsByOwner`、`getTokenAccount`、`getTokenBalance`）。 | 你需要通过 Kit RPC `jsonParsed` API 读取 token 账户或余额。                                          |
+| `@vue-solana/core/types`           | 共享 TypeScript 类型。                                                                         | 你需要 `SolanaConfig`、`SolanaContext`、`SolanaWallet`、钱包元数据或交易选项类型。                   |
+| `@vue-solana/core/wallet`          | 钱包状态断言和钱包能力错误。                                                                   | 你需要在调用钱包方法前验证所选钱包已连接或支持签名。                                                 |
+| `@vue-solana/core/wallet-standard` | Wallet Standard chain 映射、发现、订阅和 adapter helper。                                      | 你正在 Solana Wallet Standard 之上构建自己的钱包发现层。                                             |
 
 ### Clusters 和 RPC
 
@@ -10745,7 +10745,7 @@ const slot = await solana.client.rpc.getSlot().send();
 
 ### Kit
 
-`@vue-solana/core/kit` subpath 导出大多数应用需要从 `@solana/kit` 获得的一切，无需直接安装它：
+`@vue-solana/core/kit` subpath 重新导出全部的 `@solana/kit` —— 完整的公开表面，值和类型都有 —— 因此你无需在自己 `package.json` 中安装 `@solana/kit`：
 
 ```ts
 import { address, lamports } from "@vue-solana/core/kit";
@@ -11541,10 +11541,10 @@ Sin `confirm: true`, `execute()` devuelve después del envío y establece `statu
 
 ### Entradas y resultados de las peticiones de wallet
 
-Los flujos de firma de wallet aceptan la transacción de entrada como bytes de wire `Uint8Array` en bruto que cumplen el esquema de transacción de Solana. Constróyelos con `@solana/kit` (o decodifícalos desde una respuesta RPC en base64/base58); las cadenas base64, los objetos de transacción y las listas de instrucciones no se aceptan aquí.
+Los flujos de firma de wallet aceptan la transacción de entrada como bytes de wire `Uint8Array` en bruto que cumplen el esquema de transacción de Solana. Constróyelos con los helpers de Kit de `@vue-solana/vue/kit` (o decodifícalos desde una respuesta RPC en base64/base58); las cadenas base64, los objetos de transacción y las listas de instrucciones no se aceptan aquí.
 
 ```ts
-import { compileTransaction, getTransactionEncoder } from "@solana/kit";
+import { compileTransaction, getTransactionEncoder } from "@vue-solana/vue/kit";
 
 const transaction: Uint8Array = getTransactionEncoder().encode(compileTransaction(message));
 await execute(transaction);
@@ -12352,10 +12352,10 @@ await execute(transaction, {
 
 ### 지갑 요청 입력과 반환값
 
-Wallet 서명 흐름은 트랜잭션 입력으로 Solana 트랜잭션 스키마를 따르는 raw `Uint8Array` wire bytes를 받습니다. `@solana/kit`으로 만들거나 base64/base58 RPC 응답에서 decode하세요. base64 문자열, 트랜잭션 객체, instruction 목록은 여기서 허용되지 않습니다.
+Wallet 서명 흐름은 트랜잭션 입력으로 Solana 트랜잭션 스키마를 따르는 raw `Uint8Array` wire bytes를 받습니다. `@vue-solana/vue/kit`의 helper로 만들거나 base64/base58 RPC 응답에서 decode하세요. base64 문자열, 트랜잭션 객체, instruction 목록은 여기서 허용되지 않습니다.
 
 ```ts
-import { compileTransaction, getTransactionEncoder } from "@solana/kit";
+import { compileTransaction, getTransactionEncoder } from "@vue-solana/vue/kit";
 
 const transaction: Uint8Array = getTransactionEncoder().encode(compileTransaction(message));
 await execute(transaction);
@@ -12643,7 +12643,7 @@ Direct package subpaths:
 - `@vue-solana/vue/useTokenAccounts`
 - `@vue-solana/vue/kit`
 
-Use `@vue-solana/vue/buffer-polyfill` for browser transaction code that needs the Buffer polyfill. Import `installSolanaBufferPolyfill()` as a named import and call it; a bare side-effect import such as `import "@vue-solana/vue/buffer-polyfill"` installs nothing, because every `@vue-solana/*` package is marked `"sideEffects": false` and the subpath only exports the function. Use `@vue-solana/vue/kit` for the Kit API (`createSolanaClient`, `address`, `lamports`, and types). Direct `@vue-solana/core/*` imports remain supported for lower-level core usage.
+Use `@vue-solana/vue/buffer-polyfill` for browser transaction code that needs the Buffer polyfill. Import `installSolanaBufferPolyfill()` as a named import and call it; a bare side-effect import such as `import "@vue-solana/vue/buffer-polyfill"` installs nothing, because every `@vue-solana/*` package is marked `"sideEffects": false` and the subpath only exports the function. Use `@vue-solana/vue/kit` for the Kit API — it re-exports all of `@solana/kit`, so you never install that package yourself. Direct `@vue-solana/core/*` imports remain supported for lower-level core usage.
 
 - `useSolana()`: returns the full injected Solana context.
 - `useSolanaClient()`: returns the Kit `{ client, rpc }` from the context. Recommended for new code.
@@ -13164,10 +13164,10 @@ Without `confirm: true`, `execute()` returns after submission and sets `status` 
 
 ### Wallet Request Inputs and Returns
 
-Wallet signing flows accept transaction input as raw `Uint8Array` wire bytes that conform to the Solana transaction schema. Build them with `@solana/kit` (or decode them from a base64/base58 RPC response); base64 strings, transaction objects, and instruction lists are not accepted here.
+Wallet signing flows accept transaction input as raw `Uint8Array` wire bytes that conform to the Solana transaction schema. Build them with the Kit helpers from `@vue-solana/vue/kit` (or decode them from a base64/base58 RPC response); base64 strings, transaction objects, and instruction lists are not accepted here.
 
 ```ts
-import { compileTransaction, getTransactionEncoder } from "@solana/kit";
+import { compileTransaction, getTransactionEncoder } from "@vue-solana/vue/kit";
 
 const transaction: Uint8Array = getTransactionEncoder().encode(compileTransaction(message));
 await execute(transaction);
@@ -13975,10 +13975,10 @@ await execute(transaction, {
 
 ### 钱包请求的输入与返回值
 
-钱包签名流程接受符合 Solana 交易 schema 的原始 `Uint8Array` wire bytes 作为交易输入。请用 `@solana/kit` 构建它们（或从 base64/base58 RPC 响应中解码）；这里不接受 base64 字符串、交易对象和指令列表。
+钱包签名流程接受符合 Solana 交易 schema 的原始 `Uint8Array` wire bytes 作为交易输入。请用 `@vue-solana/vue/kit` 中的辅助函数构建它们（或从 base64/base58 RPC 响应中解码）；这里不接受 base64 字符串、交易对象和指令列表。
 
 ```ts
-import { compileTransaction, getTransactionEncoder } from "@solana/kit";
+import { compileTransaction, getTransactionEncoder } from "@vue-solana/vue/kit";
 
 const transaction: Uint8Array = getTransactionEncoder().encode(compileTransaction(message));
 await execute(transaction);
@@ -14520,7 +14520,7 @@ const { signature, confirmation, status, loading, error, execute } =
 const canSubmit = computed(() => connected.value && canSignTransaction.value && !loading.value);
 
 async function submitTransaction(transaction: SolanaTransaction) {
-  // Construye el mensaje de la transacción con @solana/kit y serialízalo a bytes de la red (wire) primero.
+  // Construye el mensaje de la transacción con @vue-solana/nuxt/kit y serialízalo a bytes de la red (wire) primero.
   await execute(transaction, {
     confirm: true,
     confirmation: { commitment: "confirmed", timeoutMs: 120_000 },
@@ -15006,7 +15006,7 @@ const { signature, confirmation, status, loading, error, execute } =
 const canSubmit = computed(() => connected.value && canSignTransaction.value && !loading.value);
 
 async function submitTransaction(transaction: SolanaTransaction) {
-  // Build the transaction message with @solana/kit and serialize it to wire bytes first.
+  // Build the transaction message with @vue-solana/nuxt/kit and serialize it to wire bytes first.
   await execute(transaction, {
     confirm: true,
     confirmation: { commitment: "confirmed", timeoutMs: 120_000 },
@@ -15111,7 +15111,7 @@ npx nuxt module add @vue-solana/nuxt
 
 This installs the package and adds `@vue-solana/nuxt` to the `modules` array in `nuxt.config.ts`.
 
-Browser apps that create or serialize transactions can initialize the Buffer polyfill from `@vue-solana/nuxt/buffer-polyfill`. Use `@vue-solana/nuxt/kit` for the Kit API (`createSolanaClient`, `address`, `lamports`, and types) and the auto-imported `useSolanaClient()`.
+Browser apps that create or serialize transactions can initialize the Buffer polyfill from `@vue-solana/nuxt/buffer-polyfill`. Use `@vue-solana/nuxt/kit` for the Kit API — it re-exports all of `@solana/kit` — or the auto-imported `useSolanaClient()`.
 
 ## Module Setup
 
@@ -15493,7 +15493,7 @@ const { signature, confirmation, status, loading, error, execute } =
 const canSubmit = computed(() => connected.value && canSignTransaction.value && !loading.value);
 
 async function submitTransaction(transaction: SolanaTransaction) {
-  // Build the transaction message with @solana/kit and serialize it to wire bytes first.
+  // Build the transaction message with @vue-solana/nuxt/kit and serialize it to wire bytes first.
   await execute(transaction, {
     confirm: true,
     confirmation: { commitment: "confirmed", timeoutMs: 120_000 },
@@ -15979,7 +15979,7 @@ const { signature, confirmation, status, loading, error, execute } =
 const canSubmit = computed(() => connected.value && canSignTransaction.value && !loading.value);
 
 async function submitTransaction(transaction: SolanaTransaction) {
-  // Build the transaction message with @solana/kit and serialize it to wire bytes first.
+  // Build the transaction message with @vue-solana/nuxt/kit and serialize it to wire bytes first.
   await execute(transaction, {
     confirm: true,
     confirmation: { commitment: "confirmed", timeoutMs: 120_000 },
@@ -16095,7 +16095,7 @@ Fuente: <a href="https://github.com/vue-solana/vue-solana/tree/main/examples/vue
 - Enviar una transferencia real con `useSignAndSendTransaction()` y mostrar estado de transacción enviada vs confirmada. El ejemplo usa devnet por defecto para pruebas seguras.
 - Construir links a Solana Explorer conscientes del cluster para firmas enviadas.
 - Ejercitar la capa de datos reactiva de Kit en los Live Data Panels: `useRequest()` para peticiones de un solo uso, `useSubscription()` para notificaciones de slot en vivo por websocket, `useTrackedData()` para datos de cuenta sembrados por fetch y actualizados por notificaciones de cuenta, `useSignIn()` para Sign In With Solana, `useAirdrop()` para solicitudes del faucet de devnet, `usePayer()` para inspeccionar el signer de payer del cliente, `useSendTransaction()` y `useSendTransactions()` para transacciones SPL Memo enviadas por el cliente sin popup de wallet, y `useRequestSwr()` desde `@vue-solana/vue/swr` para stale-while-revalidate cacheada por clave entre remounts.
-- Configurar un signer `payer` de demo (`generateKeyPairSigner()` de `@solana/kit`) en `main.ts` para que las transacciones enviadas por el cliente paguen fees. El payer empieza sin fondos; el panel `usePayer` hace un airdrop de 1 devnet SOL.
+- Configurar un signer `payer` de demo (`generateKeyPairSigner()` de `@vue-solana/vue/kit`) en `main.ts` para que las transacciones enviadas por el cliente paguen fees. El payer empieza sin fondos; el panel `usePayer` hace un airdrop de 1 devnet SOL.
 - Usar la composicion oficial por defecto del cliente `solanaRpc()`, que instala por si mismo el planner de transacciones y los ejecutores de firma y envio de planes. El demo de envio del cliente espera `confirmed` antes de mostrar `sent`; no usa un fallback sender custom.
 
 La app usa `devnet` por defecto. El SOL de devnet no tiene valor real.
@@ -16178,7 +16178,7 @@ Source: <a href="https://github.com/vue-solana/vue-solana/tree/main/examples/vue
 - Sending a real transfer with `useSignAndSendTransaction()` and showing submitted vs confirmed transaction status. The example uses devnet by default for safe testing.
 - Building cluster-aware Solana Explorer links for submitted signatures.
 - Exercising the Kit-reactive data layer in the Live Data Panels: `useRequest()` for one-shot requests, `useSubscription()` for live slot notifications over websocket, `useTrackedData()` for fetch-seeded account data updated by account notifications, `useSignIn()` for Sign In With Solana, `useAirdrop()` for devnet faucet requests, `usePayer()` to inspect the client's fee-payer signer, `useSendTransaction()` and `useSendTransactions()` for client-sent SPL Memo transactions with no wallet popup, and `useRequestSwr()` from `@vue-solana/vue/swr` for cache-keyed stale-while-revalidate across remounts.
-- Configuring a demo `payer` signer (`generateKeyPairSigner()` from `@solana/kit`) in `main.ts` so client-sent transactions can pay fees. The payer starts unfunded; the `usePayer` panel airdrops 1 devnet SOL into it.
+- Configuring a demo `payer` signer (`generateKeyPairSigner()` from `@vue-solana/vue/kit`) in `main.ts` so client-sent transactions can pay fees. The payer starts unfunded; the `usePayer` panel airdrops 1 devnet SOL into it.
 - Using the default official `solanaRpc()` client composition, which installs the transaction planner and the plan-signing and plan-sending executors itself. The client-send demo waits for `confirmed` commitment before showing `sent`; it does not use a custom fallback sender.
 
 The app uses `devnet` by default. Devnet SOL has no real value.
@@ -16261,7 +16261,7 @@ Vue Vite 예제는 `@vue-solana/vue`를 위한 실행 가능한 Vue 3 앱입니�
 - `useSignAndSendTransaction()`으로 실제 전송을 보내고 제출 상태와 확인 상태를 보여 줍니다. 예제는 안전한 테스트를 위해 기본적으로 devnet을 사용합니다.
 - 제출된 signature에 대해 클러스터를 반영한 Solana Explorer 링크를 만듭니다.
 - Live Data Panels에서 Kit 반응형 데이터 레이어를 사용합니다: 일회성 요청에는 `useRequest()`, websocket을 통한 실시간 slot 알림에는 `useSubscription()`, 계정 알림으로 업데이트되는 fetch 기반 계정 데이터에는 `useTrackedData()`, Sign In With Solana에는 `useSignIn()`, devnet faucet 요청에는 `useAirdrop()`, client fee-payer signer 확인에는 `usePayer()`, wallet popup 없는 client-sent SPL Memo 트랜잭션에는 `useSendTransaction()`과 `useSendTransactions()`, remount 전반에 걸친 cache-keyed stale-while-revalidate에는 `@vue-solana/vue/swr`의 `useRequestSwr()`를 사용합니다.
-- `main.ts`에서 demo `payer` signer(`@solana/kit`의 `generateKeyPairSigner()`)를 설정해 client-sent transaction이 fee를 지불하게 합니다. payer는 처음에 unfunded이며 `usePayer` panel이 devnet SOL 1개를 airdrop합니다.
+- `main.ts`에서 demo `payer` signer(`@vue-solana/vue/kit`의 `generateKeyPairSigner()`)를 설정해 client-sent transaction이 fee를 지불하게 합니다. payer는 처음에 unfunded이며 `usePayer` panel이 devnet SOL 1개를 airdrop합니다.
 - default client의 official `solanaRpc()` 구성을 사용하며, `solanaRpc()`가 transaction planner와 plan-signing/plan-sending executor를 직접 설치합니다. client-send demo는 `sent`를 표시하기 전에 `confirmed`를 기다리며 custom fallback sender를 사용하지 않습니다.
 
 앱은 기본적으로 `devnet`을 사용합니다. Devnet SOL은 실제 가치가 없습니다.
@@ -16345,7 +16345,7 @@ Live demo: [vue-solana-docs.vercel.app/demo](/zh/demo)
 - 使用 `useSignAndSendTransaction()` 发送真实转账，并显示已提交和已确认的交易状态。示例默认使用 devnet，以便安全测试。
 - 为已提交的签名构建带有集群信息的 Solana Explorer 链接。
 - 在 Live Data Panels 中演练基于 Kit 的响应式数据层：`useRequest()` 用于一次性请求，`useSubscription()` 用于通过 websocket 的实时 slot 通知，`useTrackedData()` 用于由账户通知更新的、基于 fetch 种子的账户数据，`useSignIn()` 用于 Sign In With Solana，`useAirdrop()` 用于 devnet faucet 请求，`usePayer()` 用于检查客户端的 fee-payer signer，`useSendTransaction()` 和 `useSendTransactions()` 用于不显示 wallet popup 的 client-sent SPL Memo 交易，以及来自 `@vue-solana/vue/swr` 的 `useRequestSwr()` 用于跨重新挂载的缓存键控 stale-while-revalidate。
-- 在 `main.ts` 中配置 demo `payer` signer（来自 `@solana/kit` 的 `generateKeyPairSigner()`），让 client-sent 交易能够支付费用。payer 初始没有资金，`usePayer` panel 会空投 1 devnet SOL。
+- 在 `main.ts` 中配置 demo `payer` signer（来自 `@vue-solana/vue/kit` 的 `generateKeyPairSigner()`），让 client-sent 交易能够支付费用。payer 初始没有资金，`usePayer` panel 会空投 1 devnet SOL。
 - 使用默认 client 的官方 `solanaRpc()` 组合，`solanaRpc()` 会自行安装 transaction planner 以及 plan-signing 和 plan-sending executor。client-send demo 会等待 `confirmed` 后才显示 `sent`，不使用 custom fallback sender。
 
 该应用默认使用 `devnet`。Devnet SOL 没有真实价值。

@@ -7,7 +7,7 @@ surroundOrder: 11
 
 Vue Solana provides wallet-aware helpers for submitting transactions and composables for reactive transaction state.
 
-This guide covers the Vue Solana boundary: wallet capability checks, signing, sending, confirmation, and errors. Build transaction messages with `@solana/kit` and your program client's instruction helpers.
+This guide covers the Vue Solana boundary: wallet capability checks, signing, sending, confirmation, and errors. Build transaction messages with the Kit helpers re-exported from `@vue-solana/vue/kit` (`@vue-solana/nuxt/kit` in a Nuxt app) and your program client's instruction helpers. You never need to install `@solana/kit` yourself.
 
 ## Core Send Helper
 
@@ -75,7 +75,7 @@ import {
   setTransactionMessageFeePayer,
   setTransactionMessageLifetimeUsingBlockhash,
   type Address,
-} from "@solana/kit";
+} from "@vue-solana/vue/kit";
 
 const SYSTEM_PROGRAM_ADDRESS = address("11111111111111111111111111111111");
 
@@ -176,10 +176,10 @@ async function submitTransaction() {
 
 ### Wallet Request Inputs and Returns
 
-Wallet signing flows accept transaction input as raw `Uint8Array` wire bytes that conform to the Solana transaction schema. Build them with `@solana/kit` (or decode them from a base64/base58 RPC response); base64 strings, transaction objects, and instruction lists are not accepted here.
+Wallet signing flows accept transaction input as raw `Uint8Array` wire bytes that conform to the Solana transaction schema. Build them with the Kit helpers from `@vue-solana/vue/kit` (or decode them from a base64/base58 RPC response); base64 strings, transaction objects, and instruction lists are not accepted here.
 
 ```ts
-import { compileTransaction, getTransactionEncoder } from "@solana/kit";
+import { compileTransaction, getTransactionEncoder } from "@vue-solana/vue/kit";
 
 const transaction: Uint8Array = getTransactionEncoder().encode(compileTransaction(message));
 await execute(transaction);

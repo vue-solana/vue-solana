@@ -664,10 +664,10 @@ await execute(transaction, {
 
 ### 钱包请求的输入与返回值
 
-钱包签名流程接受符合 Solana 交易 schema 的原始 `Uint8Array` wire bytes 作为交易输入。请用 `@solana/kit` 构建它们（或从 base64/base58 RPC 响应中解码）；这里不接受 base64 字符串、交易对象和指令列表。
+钱包签名流程接受符合 Solana 交易 schema 的原始 `Uint8Array` wire bytes 作为交易输入。请用 `@vue-solana/vue/kit` 中的辅助函数构建它们（或从 base64/base58 RPC 响应中解码）；这里不接受 base64 字符串、交易对象和指令列表。
 
 ```ts
-import { compileTransaction, getTransactionEncoder } from "@solana/kit";
+import { compileTransaction, getTransactionEncoder } from "@vue-solana/vue/kit";
 
 const transaction: Uint8Array = getTransactionEncoder().encode(compileTransaction(message));
 await execute(transaction);

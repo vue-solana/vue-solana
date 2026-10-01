@@ -9,7 +9,7 @@ This guide covers installing the Vue Solana packages, configuring Vue or Nuxt, t
 
 ## Before You Start
 
-Use `@vue-solana/core` directly if you need Solana primitives without Vue/Nuxt integration. It builds on `@solana/kit` and re-exports `createSolanaClient()` plus `Address`/`address()`/`lamports()` and the Kit transaction and RPC types from `@vue-solana/core/kit`. Use `@vue-solana/vue` or `@vue-solana/nuxt` when you want framework integration.
+Use `@vue-solana/core` directly if you need Solana primitives without Vue/Nuxt integration. It builds on `@solana/kit` and re-exports `createSolanaClient()` plus all of `@solana/kit` from `@vue-solana/core/kit`. Use `@vue-solana/vue` or `@vue-solana/nuxt` when you want framework integration.
 
 Supported clusters:
 

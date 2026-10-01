@@ -664,10 +664,10 @@ await execute(transaction, {
 
 ### 지갑 요청 입력과 반환값
 
-Wallet 서명 흐름은 트랜잭션 입력으로 Solana 트랜잭션 스키마를 따르는 raw `Uint8Array` wire bytes를 받습니다. `@solana/kit`으로 만들거나 base64/base58 RPC 응답에서 decode하세요. base64 문자열, 트랜잭션 객체, instruction 목록은 여기서 허용되지 않습니다.
+Wallet 서명 흐름은 트랜잭션 입력으로 Solana 트랜잭션 스키마를 따르는 raw `Uint8Array` wire bytes를 받습니다. `@vue-solana/vue/kit`의 helper로 만들거나 base64/base58 RPC 응답에서 decode하세요. base64 문자열, 트랜잭션 객체, instruction 목록은 여기서 허용되지 않습니다.
 
 ```ts
-import { compileTransaction, getTransactionEncoder } from "@solana/kit";
+import { compileTransaction, getTransactionEncoder } from "@vue-solana/vue/kit";
 
 const transaction: Uint8Array = getTransactionEncoder().encode(compileTransaction(message));
 await execute(transaction);
