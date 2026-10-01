@@ -72,6 +72,11 @@ function extractHeadings(path: string): Heading[] {
   return headings;
 }
 
+function extractCodeFenceCount(path: string): number {
+  const content = readFileSync(path, "utf8");
+  return content.match(/^```/gm)?.length ?? 0;
+}
+
 describe("locale docs structure", () => {
   it("discovers locale directories", () => {
     expect(LOCALES.length).toBeGreaterThan(0);
@@ -126,6 +131,33 @@ describe("locale docs structure", () => {
           `Add, remove, or translate the corresponding headings in the locale file.`,
         ].join("\n"),
       ).toEqual(englishLevels);
+    });
+  });
+
+  describe.each(LOCALES)("%s code fence count", (locale) => {
+    const localeDir = join(CONTENT_DIR, "locales", locale);
+
+    it.each(englishFiles)("%s", (file) => {
+      if (STRUCTURE_EXEMPT_FILES.has(file)) {
+        return;
+      }
+
+      const localePath = join(localeDir, file);
+
+      expect(existsSync(localePath), `Locale file missing for ${file}`).toBe(true);
+
+      const englishFenceCount = extractCodeFenceCount(join(CONTENT_DIR, file));
+      const localeFenceCount = extractCodeFenceCount(localePath);
+
+      expect(
+        localeFenceCount,
+        [
+          `Code fence count of locales/${locale}/${file} drifted from ${file}.`,
+          `English:   ${englishFenceCount}`,
+          `Locale:    ${localeFenceCount}`,
+          `Add, remove, or translate the corresponding code blocks in the locale file.`,
+        ].join("\n"),
+      ).toEqual(englishFenceCount);
     });
   });
 });

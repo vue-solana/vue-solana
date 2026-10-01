@@ -13,6 +13,18 @@ v2.0.0 removed `@solana/web3-compat` from every Vue Solana package, so a missing
 
 Update those imports to the Kit equivalents — see the [Kit Migration guide](/guides/kit-migration). If you are still on a v1.x package, the v1 packages shipped package-owned declaration shims for the documented core imports, and apps on v1 could add their own `@solana/web3-compat` shim only when importing the package directly. Upgrading to `@vue-solana/*@^2` removes the need for any shim.
 
+## `ERR_PACKAGE_PATH_NOT_EXPORTED` When Requiring A Package
+
+v3 publishes ESM only: the `require` export condition and the top-level `main` field were removed. A CommonJS `require("@vue-solana/core")` therefore fails with `No "exports" main defined`, and requiring a subpath fails with `Package subpath './kit' is not defined by "exports"`.
+
+Make the importing module ESM. Add `"type": "module"` to your `package.json`, or rename the file to `.mjs`:
+
+```js
+import { createSolanaClient } from "@vue-solana/core/kit";
+```
+
+Nuxt and Vite apps already bundle ESM and are unaffected. If you cannot leave CommonJS, pin `@vue-solana/*` to `^2`, which still ships a `.cjs` build.
+
 ## `Vue Solana plugin is not installed`
 
 This means client-side code tried to use the Solana client or wallet actions without installing the plugin. Current composables return inert SSR-safe state when Nuxt renders on the server, but real RPC and wallet operations still require the client plugin context.

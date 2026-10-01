@@ -13,6 +13,8 @@ surroundOrder: 15
 pnpm add @vue-solana/vue
 ```
 
+The package is ESM only. Vite apps already bundle ESM and need no change; a CommonJS `require("@vue-solana/vue")` fails with `No "exports" main defined`, so make the importing module ESM, or stay on `@vue-solana/vue@^2`, which still ships a `.cjs` build. See [Upgrading v2 to v3](/guides/kit-migration#upgrading-v2-to-v3).
+
 Browser apps that create or serialize transactions can initialize the Buffer polyfill from `@vue-solana/vue/buffer-polyfill`.
 
 ## Plugin Setup
@@ -144,7 +146,7 @@ Direct package subpaths:
 - `@vue-solana/vue/useTokenAccounts`
 - `@vue-solana/vue/kit`
 
-Use `@vue-solana/vue/buffer-polyfill` for browser transaction code that needs the Buffer polyfill. Import `installSolanaBufferPolyfill()` as a named import and call it; a bare side-effect import such as `import "@vue-solana/vue/buffer-polyfill"` installs nothing, because every `@vue-solana/*` package is marked `"sideEffects": false` and the subpath only exports the function. Use `@vue-solana/vue/kit` for the Kit API (`createSolanaClient`, `address`, `lamports`, and types). Direct `@vue-solana/core/*` imports remain supported for lower-level core usage.
+Use `@vue-solana/vue/buffer-polyfill` for browser transaction code that needs the Buffer polyfill. Import `installSolanaBufferPolyfill()` as a named import and call it; a bare side-effect import such as `import "@vue-solana/vue/buffer-polyfill"` installs nothing, because every `@vue-solana/*` package is marked `"sideEffects": false` and the subpath only exports the function. Use `@vue-solana/vue/kit` for the Kit API — it re-exports all of `@solana/kit`, so you never install that package yourself. Direct `@vue-solana/core/*` imports remain supported for lower-level core usage.
 
 - `useSolana()`: returns the full injected Solana context.
 - `useSolanaClient()`: returns the Kit `{ client, rpc }` from the context. Recommended for new code.
@@ -665,10 +667,10 @@ Without `confirm: true`, `execute()` returns after submission and sets `status` 
 
 ### Wallet Request Inputs and Returns
 
-Wallet signing flows accept transaction input as raw `Uint8Array` wire bytes that conform to the Solana transaction schema. Build them with `@solana/kit` (or decode them from a base64/base58 RPC response); base64 strings, transaction objects, and instruction lists are not accepted here.
+Wallet signing flows accept transaction input as raw `Uint8Array` wire bytes that conform to the Solana transaction schema. Build them with the Kit helpers from `@vue-solana/vue/kit` (or decode them from a base64/base58 RPC response); base64 strings, transaction objects, and instruction lists are not accepted here.
 
 ```ts
-import { compileTransaction, getTransactionEncoder } from "@solana/kit";
+import { compileTransaction, getTransactionEncoder } from "@vue-solana/vue/kit";
 
 const transaction: Uint8Array = getTransactionEncoder().encode(compileTransaction(message));
 await execute(transaction);

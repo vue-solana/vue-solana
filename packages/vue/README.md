@@ -55,6 +55,8 @@ pnpm add @vue-solana/vue
 npm install @vue-solana/vue
 ```
 
+Since v3.0.0 this package is ESM only. There is no `require` export condition and no top-level `main`, so `require("@vue-solana/vue")` fails with `No "exports" main defined`. Vite apps are unaffected; pin to `@vue-solana/vue@^2` if you must stay on CommonJS.
+
 ## Plugin Setup
 
 ```ts
@@ -196,7 +198,7 @@ const { balance, loading, error, refresh } = useBalance(address);
 `useAirdrop()` sends SOL to an account on devnet, testnet, or a local validator. The default Vue client includes the RPC and airdrop capabilities; a custom client can install them with `createClient().use(solanaRpc({ ... })).use(rpcAirdrop())` from `@solana/kit-plugin-rpc`.
 
 ```ts
-import { lamports } from "@solana/kit";
+import { lamports } from "@vue-solana/vue/kit";
 import { useAirdrop } from "@vue-solana/vue/useAirdrop";
 
 const { data, status, error, dispatch } = useAirdrop();
@@ -344,10 +346,10 @@ await confirmation.confirm(signature);
 
 ### Wallet Request Inputs and Returns
 
-Wallet signing flows accept transaction input as raw `Uint8Array` wire bytes that conform to the Solana transaction schema. Build them with `@solana/kit` (or decode them from a base64/base58 RPC response); base64 strings, transaction objects, and instruction lists are not accepted here.
+Wallet signing flows accept transaction input as raw `Uint8Array` wire bytes that conform to the Solana transaction schema. Build them with the Kit helpers from `@vue-solana/vue/kit` (or decode them from a base64/base58 RPC response); base64 strings, transaction objects, and instruction lists are not accepted here.
 
 ```ts
-import { compileTransaction, getTransactionEncoder } from "@solana/kit";
+import { compileTransaction, getTransactionEncoder } from "@vue-solana/vue/kit";
 
 const transaction: Uint8Array = getTransactionEncoder().encode(compileTransaction(message));
 await execute(transaction);
@@ -673,7 +675,7 @@ Other direct subpaths:
 - Public Solana RPC endpoints are useful for development, but production apps should use dedicated RPC infrastructure.
 - Broad `useProgramAccounts()` scans can be expensive or blocked on public RPC nodes. Prefer narrow filters and `dataSlice`.
 - Use `mainnet` for Solana mainnet. This is Solana's official mainnet cluster name; the legacy `mainnet-beta` spelling is still accepted and redirects to the same endpoint.
-- v2.0.0 removed `@solana/web3-compat` and the `web3` subpaths. Build transaction messages with `@solana/kit` and pass raw `Uint8Array` wire bytes to wallet flows. See the [Kit Migration guide](https://vue-solana-docs.vercel.app/guides/kit-migration) for migrating from v1.
+- v2.0.0 removed `@solana/web3-compat` and the `web3` subpaths. Build transaction messages with `@vue-solana/vue/kit` and pass raw `Uint8Array` wire bytes to wallet flows. See the [Kit Migration guide](https://vue-solana-docs.vercel.app/guides/kit-migration) for migrating from v1.
 - Desktop native app wallets are planned but not implemented yet.
 
 ## Status

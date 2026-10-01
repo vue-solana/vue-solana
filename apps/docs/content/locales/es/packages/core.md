@@ -9,13 +9,15 @@ surroundOrder: 14
 
 Usa este paquete directamente cuando quieras clientes Kit, helpers de endpoint, tipos de wallet compartidos, helpers de registro de Android Mobile Wallet Adapter, helpers de wallet de navegador iOS, lecturas de cuentas de token y helpers de transacción sin instalar el plugin de Vue.
 
-`@vue-solana/core` se basa en el moderno [`@solana/kit`](https://www.npmjs.com/package/@solana/kit). `createSolanaClient()` y el subpath `@vue-solana/core/kit` reexportan primitivas de Kit. La API legacy `@solana/web3-compat` y el subpath `web3` se eliminaron en v2.0.0 — consulta [Kit Migration](/guides/kit-migration) para el mapa completo antes/después.
+`@vue-solana/core` se basa en el moderno [`@solana/kit`](https://www.npmjs.com/package/@solana/kit). `createSolanaClient()` vive en el subpath `@vue-solana/core/kit`, que reexporta todo `@solana/kit`. La API legacy `@solana/web3-compat` y el subpath `web3` se eliminaron en v2.0.0 — consulta [Kit Migration](/guides/kit-migration) para el mapa completo antes/después.
 
 ## Instalar
 
 ```sh
 pnpm add @vue-solana/core
 ```
+
+El paquete es solo ESM. Un `require("@vue-solana/core")` de CommonJS falla con `No "exports" main defined`; convierte el módulo importador a ESM, o quédate en `@vue-solana/core@^2`, que todavía incluye una build `.cjs`. Consulta [Actualizar de v2 a v3](/es/guides/kit-migration#actualizar-de-v2-a-v3).
 
 ## Inicio rápido
 
@@ -98,11 +100,11 @@ Los clusters soportados son `mainnet` (alias heredado `mainnet-beta`), `testnet`
 
 `autoConnect` usa `false` por defecto. Cuando se activa mediante el plugin de Vue o el módulo Nuxt, Vue Solana reconecta solo una identidad de wallet que el usuario seleccionó antes y que se descubre otra vez en el cliente. Solo guarda metadatos de identidad de wallet en `localStorage["vue-solana:selected-wallet"]`: `name`, y `platform`/`source` cuando están disponibles. Nunca guarda claves privadas, datos de sesión ni datos de transacción, y nunca conecta una wallet instalada arbitraria.
 
-`payer` es un `TransactionSigner` de Kit que se usa como payer de comisiones y signer del cliente para transacciones enviadas por el cliente. `payerSecretKey` es un keypair Ed25519 de 64 bytes codificado en base64, con la secret key primero; el cliente deriva su direccion al crearse e importa la signing key en el primer uso, asi que un keypair cuya mitad publica no coincide con su seed se rechaza en la primera firma en vez de al crear el cliente. La direccion viene de la mitad publica sin verificar, asi que trata `payer.address` como no confirmado hasta que la primera firma tenga exito. La firma importa la key con WebCrypto, que los navegadores solo exponen en un contexto seguro (`https`, o `http` en `localhost`); fuera de uno, la primera llamada a `signTransactions()` lanza un error de WebCrypto en vez de un error de key invalida. Ambos son compatibles con clientes core/Vue directos.
+`payer` es un `TransactionSigner` de Kit que se usa como payer de comisiones y signer del cliente para transacciones enviadas por el cliente. `payerSecretKey` es un keypair Ed25519 de 64 bytes codificado en base64, con la secret key primero; el cliente deriva su dirección al crearse e importa la signing key en el primer uso, así que un keypair cuya mitad publica no coincide con su seed se rechaza en la primera firma en vez de al crear el cliente. La dirección viene de la mitad publica sin verificar, así que trata `payer.address` como no confirmado hasta que la primera firma tenga éxito. La firma importa la key con WebCrypto, que los navegadores solo exponen en un contexto seguro (`https`, o `http` en `localhost`); fuera de uno, la primera llamada a `signTransactions()` lanza un error de WebCrypto en vez de un error de key invalida. Ambos son compatibles con clientes core/Vue directos.
 
-`createSolanaClient()` compone por defecto el stack oficial de `@solana/kit-plugin-rpc`: `solanaRpc()` y `rpcAirdrop()`. `solanaRpc()` instala por si mismo el planner de transacciones y los ejecutores de firma y envio de planes. El fallback custom anterior no se usa. El cliente expone lecturas y suscripciones RPC, `planTransaction(s)` y `sendTransaction(s)`. El executor oficial agrega un blockhash nuevo, maneja limites de recursos y preflight, firma con los signers disponibles, envia la transaccion y espera al commitment `confirmed` antes de resolver el envio. Un envio del cliente requiere un signer `payer`.
+`createSolanaClient()` compone por defecto el stack oficial de `@solana/kit-plugin-rpc`: `solanaRpc()` y `rpcAirdrop()`. `solanaRpc()` instala por si mismo el planner de transacciones y los ejecutores de firma y envio de planes. El fallback custom anterior no se usa. El cliente expone lecturas y suscripciones RPC, `planTransaction(s)` y `sendTransaction(s)`. El executor oficial agrega un blockhash nuevo, maneja limites de recursos y preflight, firma con los signers disponibles, envia la transacción y espera al commitment `confirmed` antes de resolver el envio. Un envio del cliente requiere un signer `payer`.
 
-Nunca pongas un secreto crudo o `payerSecretKey` en la configuracion runtime publica de Nuxt. No envíes una clave de firma con fondos al navegador de un usuario final; usa un servidor o relayer, o un signer efimero sin fondos para demos.
+Nunca pongas un secreto crudo o `payerSecretKey` en la configuración runtime publica de Nuxt. No envíes una clave de firma con fondos al navegador de un usuario final; usa un servidor o relayer, o un signer efimero sin fondos para demos.
 
 Usa `mainnet` para la mainnet de Solana. Este es el nombre oficial del mainnet de Solana. La grafía heredada `mainnet-beta` sigue siendo aceptada y redirige al mismo endpoint `https://api.mainnet.solana.com`.
 
@@ -209,21 +211,21 @@ Estos helpers son seguros para SSR. El registro de Android devuelve sin registra
 
 La exportación raíz `@vue-solana/core` reexporta los helpers públicos siguientes. Usa subpaths directos cuando quieras imports más específicos o límites de módulo más claros.
 
-| Import path                        | Qué contiene                                                                                                                      | Úsalo cuando                                                                                                                     |
-| ---------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `@vue-solana/core/address`         | `parseAddress()` y tipos de entrada de dirección.                                                                                 | Aceptas una dirección Solana como string, objeto tipo ref o getter y necesitas un `Address` validado y normalizado.              |
-| `@vue-solana/core/clusters`        | Helpers de cluster y endpoint por defecto.                                                                                        | Necesitas el endpoint RPC o WebSocket integrado del paquete para `mainnet`, `mainnet-beta`, `testnet`, `devnet` o `localnet`.    |
-| `@vue-solana/core/errors`          | `SolanaError`, fábricas de error y guards de error.                                                                               | Necesitas códigos de error estables para fallos de wallet, RPC, dirección, transacción, timeout o storage orientados al usuario. |
-| `@vue-solana/core/ios-wallet`      | Descubrimiento de wallets de navegador iOS, adaptadores deep-link y callbacks.                                                    | Estás conectando enlaces de wallet iOS sin el flujo unificado de wallets del plugin de Vue.                                      |
-| `@vue-solana/core/kit`             | `createSolanaClient()` y las reexportaciones de `@solana/kit` (`Address`, `address`, `lamports`, `SolanaRpcApi`, `SolanaClient`). | Quieres la API Kit moderna sin el grafo completo de dependencias de `@solana/kit`.                                               |
-| `@vue-solana/core/mobile-wallet`   | Helpers de registro de Android Mobile Wallet Adapter.                                                                             | Necesitas registrar Android MWA antes de leer wallets Wallet Standard.                                                           |
-| `@vue-solana/core/rpc`             | `createSolanaContext()`.                                                                                                          | Quieres un cliente Kit configurado y endpoints de cluster resueltos sin instalar el plugin de Vue.                               |
-| `@vue-solana/core/timeout`         | Helpers de timeout de Promise que producen errores de timeout Solana.                                                             | Necesitas comportamiento de timeout coherente con los helpers de confirmación de transacción.                                    |
-| `@vue-solana/core/transaction`     | Helpers de envío y confirmación de transacciones.                                                                                 | Necesitas una ruta de envío consciente de wallet o un resultado de confirmación para una firma existente.                        |
-| `@vue-solana/core/token-accounts`  | Lecturas de cuenta SPL Token sin estado (`getTokenAccountsByOwner`, `getTokenAccount`, `getTokenBalance`).                        | Necesitas lecturas de cuenta de token o balance mediante la API `jsonParsed` del RPC Kit.                                        |
-| `@vue-solana/core/types`           | Tipos TypeScript compartidos.                                                                                                     | Necesitas `SolanaConfig`, `SolanaContext`, `SolanaWallet`, metadatos de wallet o tipos de opciones de transacción.               |
-| `@vue-solana/core/wallet`          | Aserciones de estado de wallet y errores de capacidad de wallet.                                                                  | Necesitas validar que una wallet seleccionada está conectada o soporta firma antes de llamar métodos de wallet.                  |
-| `@vue-solana/core/wallet-standard` | Mapeo de cadenas Wallet Standard, descubrimiento, suscripciones y helpers de adaptador.                                           | Estás creando tu propia capa de descubrimiento de wallets sobre Solana Wallet Standard.                                          |
+| Import path                        | Qué contiene                                                                                               | Úsalo cuando                                                                                                                     |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| `@vue-solana/core/address`         | `parseAddress()` y tipos de entrada de dirección.                                                          | Aceptas una dirección Solana como string, objeto tipo ref o getter y necesitas un `Address` validado y normalizado.              |
+| `@vue-solana/core/clusters`        | Helpers de cluster y endpoint por defecto.                                                                 | Necesitas el endpoint RPC o WebSocket integrado del paquete para `mainnet`, `mainnet-beta`, `testnet`, `devnet` o `localnet`.    |
+| `@vue-solana/core/errors`          | `SolanaError`, fábricas de error y guards de error.                                                        | Necesitas códigos de error estables para fallos de wallet, RPC, dirección, transacción, timeout o storage orientados al usuario. |
+| `@vue-solana/core/ios-wallet`      | Descubrimiento de wallets de navegador iOS, adaptadores deep-link y callbacks.                             | Estás conectando enlaces de wallet iOS sin el flujo unificado de wallets del plugin de Vue.                                      |
+| `@vue-solana/core/kit`             | `createSolanaClient()` y toda la superficie de `@solana/kit`.                                              | Quieres la API Kit moderna sin instalar `@solana/kit` en tu propio `package.json`.                                               |
+| `@vue-solana/core/mobile-wallet`   | Helpers de registro de Android Mobile Wallet Adapter.                                                      | Necesitas registrar Android MWA antes de leer wallets Wallet Standard.                                                           |
+| `@vue-solana/core/rpc`             | `createSolanaContext()`.                                                                                   | Quieres un cliente Kit configurado y endpoints de cluster resueltos sin instalar el plugin de Vue.                               |
+| `@vue-solana/core/timeout`         | Helpers de timeout de Promise que producen errores de timeout Solana.                                      | Necesitas comportamiento de timeout coherente con los helpers de confirmación de transacción.                                    |
+| `@vue-solana/core/transaction`     | Helpers de envío y confirmación de transacciones.                                                          | Necesitas una ruta de envío consciente de wallet o un resultado de confirmación para una firma existente.                        |
+| `@vue-solana/core/token-accounts`  | Lecturas de cuenta SPL Token sin estado (`getTokenAccountsByOwner`, `getTokenAccount`, `getTokenBalance`). | Necesitas lecturas de cuenta de token o balance mediante la API `jsonParsed` del RPC Kit.                                        |
+| `@vue-solana/core/types`           | Tipos TypeScript compartidos.                                                                              | Necesitas `SolanaConfig`, `SolanaContext`, `SolanaWallet`, metadatos de wallet o tipos de opciones de transacción.               |
+| `@vue-solana/core/wallet`          | Aserciones de estado de wallet y errores de capacidad de wallet.                                           | Necesitas validar que una wallet seleccionada está conectada o soporta firma antes de llamar métodos de wallet.                  |
+| `@vue-solana/core/wallet-standard` | Mapeo de cadenas Wallet Standard, descubrimiento, suscripciones y helpers de adaptador.                    | Estás creando tu propia capa de descubrimiento de wallets sobre Solana Wallet Standard.                                          |
 
 ### Clusters y RPC
 
@@ -254,7 +256,7 @@ const slot = await solana.client.rpc.getSlot().send();
 
 ### Kit
 
-El subpath `@vue-solana/core/kit` exporta todo lo que la mayoría de apps necesitan de `@solana/kit` sin instalarlo directamente:
+El subpath `@vue-solana/core/kit` reexporta todo `@solana/kit` — la superficie pública completa, valores y tipos — así que nunca instalas `@solana/kit` en tu propio `package.json`:
 
 ```ts
 import { address, lamports } from "@vue-solana/core/kit";
@@ -265,13 +267,29 @@ import type { Address, Commitment, Lamports, Signature, SolanaRpcApi } from "@vu
 - `client.rpc` expone la API completa de lectura de Solana (`getSlot`, `getBalance`, `getBlockHeight`, `getSignatureStatuses` y más) como funciones RPC llamadas con `.send()`.
 - `address(value)`: valida y devuelve un `Address` (marca de string base58) — el reemplazo de Kit para `new PublicKey(...)`.
 - `lamports(value: bigint)`: devuelve un valor `Lamports` — el reemplazo de Kit para números de lamports sin procesar.
-- Types: `Address`, `Commitment`, `Lamports`, `Rpc`, `Signature`, `SolanaRpcApi`, `SolanaClient`.
+- Types: `Address`, `Commitment`, `Lamports`, `Rpc`, `Signature`, `SolanaRpcApi`, `SolanaClient`. El subpath reexporta todos los tipos que exporta `@solana/kit`, no solo estos.
+- Cuatro nombres existen tanto en Kit como en esta librería. Se resuelven a la versión **de esta librería** desde la raíz del paquete (`@vue-solana/core`) y a la versión **de Kit** desde el subpath `/kit`: `SolanaError`, `SolanaErrorCode`, `isSolanaError` y `TransactionStatus`. Importa `isSolanaError` desde `@vue-solana/core/kit` cuando inspecciones un error lanzado por el propio Kit, porque la guarda de la raíz no coincide con la clase de error de Kit.
 
 Los resultados numéricos de RPC son `bigint`, y los datos de cuenta son `Uint8Array` en vez de `Buffer`. Consulta [Kit Migration](/guides/kit-migration) para más detalles.
 
 ### Acciones
 
 `createSolanaActionStore()` envuelve cualquier función asíncrona que reciba un `AbortSignal` nuevo por llamada en una máquina de estados de acciones con abort-on-redispatch. El composable de Vue `useAction()` se construye sobre este store; `isSolanaActionAborted()` detecta llamadas canceladas o superadas.
+
+```ts
+import { createSolanaActionStore, isSolanaActionAborted } from "@vue-solana/core/action";
+
+const { dispatch, getState, subscribe, reset, withSignal } = createSolanaActionStore(
+  (signal, address: Address) => client.rpc.getBalance(address).send(),
+);
+
+await dispatch(address);
+```
+
+- Cada `dispatch` cancela la llamada en curso anterior con un `AbortSignal` nuevo; las llamadas superadas se rechazan con un error de cancelación y nunca corrompen el estado.
+- `getState()` / `subscribe(listener)`: instantánea y flujo de `SolanaActionState` (`status`, `data` y `error`).
+- `withSignal(signal, ...args)`: compone una fuente de cancelación indicada por quien llama para un único `dispatch` (tiempos de espera por intento, interruptores compartidos).
+- `isSolanaActionAborted(error)`: comprueba si un rechazo provino de una llamada cancelada o superada.
 
 ### Direcciones
 
@@ -303,7 +321,7 @@ const signedTransaction = await wallet.signTransaction(transaction);
 - `signAndSendTransaction(client, wallet, transaction, options?)`: firma y envía bytes de transacción en la red (wire) usando una wallet configurada y devuelve la firma RPC. Se delega en las wallets que exponen `signAndSendTransaction`; en caso contrario, la transacción se firma con `wallet.signTransaction` y se envía mediante `client.rpc.sendTransaction(...).send()`. Las wallets Android Mobile Wallet Adapter prefieren firma más envío RPC del lado de la app para que la app controle el envío y devuelva de forma fiable la firma RPC después del traspaso a la wallet.
 - `confirmTransactionSignature(client, signature, options?)`: espera a que una firma enviada alcance un commitment solicitado. Usa por defecto commitment `confirmed`, timeout de 60 segundos y sondeo de `client.rpc.getSignatureStatuses([signature]).send()`.
 
-El flujo de envio del cliente es separado de este helper consciente de wallet. El cliente expone `sendTransaction()` y `sendTransactions()` mediante el `rpcTransactionPlanSendingExecutor()` oficial instalado por `createSolanaClient()`; los composables de Vue envuelven esos metodos. Planifican, firman, envian y esperan `confirmed`; el estado `sent` se establece solo cuando termina la operacion de envio y confirmacion. El resultado simple expone la firma en `data.context.signature`, y el resultado batch contiene el arbol completo del plan. El sender oficial no muestra popup de wallet.
+El flujo de envio del cliente es separado de este helper consciente de wallet. El cliente expone `sendTransaction()` y `sendTransactions()` mediante el `rpcTransactionPlanSendingExecutor()` oficial instalado por `createSolanaClient()`; los composables de Vue envuelven esos metodos. Planifican, firman, envian y esperan `confirmed`; el estado `sent` se establece solo cuando termina la operación de envio y confirmación. El resultado simple expone la firma en `data.context.signature`, y el resultado batch contiene el arbol completo del plan. El sender oficial no muestra popup de wallet.
 
 ```ts
 import { confirmTransactionSignature, signAndSendTransaction } from "@vue-solana/core/transaction";

@@ -15,7 +15,9 @@ npx nuxt module add @vue-solana/nuxt
 
 이 명령은 package를 설치하고 `nuxt.config.ts`의 `modules` 배열에 `@vue-solana/nuxt`를 추가합니다.
 
-트랜잭션을 만들거나 직렬화하는 브라우저 앱은 `@vue-solana/nuxt/buffer-polyfill`에서 Buffer polyfill을 초기화할 수 있습니다. Kit API(`createSolanaClient`, `address`, `lamports` 및 타입)와 자동 import되는 `useSolanaClient()`에는 `@vue-solana/nuxt/kit`을 사용하세요.
+이 package는 ESM만 배포합니다. Nuxt는 이미 ESM으로 번들링되므로 변경이 필요 없고, CommonJS의 `require("@vue-solana/nuxt")`는 `No "exports" main defined`로 실패하므로 import하는 모듈을 ESM으로 바꾸거나 `.cjs` 빌드를 계속 제공하는 `@vue-solana/nuxt@^2`를 사용하세요. [v2에서 v3로 업그레이드](/ko/guides/kit-migration#v2에서-v3로-업그레이드)를 참고하세요.
+
+트랜잭션을 만들거나 직렬화하는 브라우저 앱은 `@vue-solana/nuxt/buffer-polyfill`에서 Buffer polyfill을 초기화할 수 있습니다. Kit API에는 `@vue-solana/nuxt/kit`을 사용하세요 — `@solana/kit` 전체를 다시 export합니다 — 자동 import되는 `useSolanaClient()`도 사용할 수 있습니다.
 
 ## 모듈 설정
 
@@ -396,7 +398,7 @@ const { signature, confirmation, status, loading, error, execute } =
 const canSubmit = computed(() => connected.value && canSignTransaction.value && !loading.value);
 
 async function submitTransaction(transaction: SolanaTransaction) {
-  // Build the transaction message with @solana/kit and serialize it to wire bytes first.
+  // Build the transaction message with @vue-solana/nuxt/kit and serialize it to wire bytes first.
   await execute(transaction, {
     confirm: true,
     confirmation: { commitment: "confirmed", timeoutMs: 120_000 },

@@ -9,7 +9,7 @@ surroundOrder: 2
 
 ## 시작 전 확인
 
-Vue/Nuxt 통합 없이 Solana primitive가 필요하면 `@vue-solana/core`를 직접 사용하세요. 이 패키지는 `@solana/kit`을 기반으로 하며 `@vue-solana/core/kit`에서 `createSolanaClient()`, `Address`/`address()`/`lamports()`, Kit transaction과 RPC type을 다시 export합니다. 프레임워크 통합이 필요하면 `@vue-solana/vue` 또는 `@vue-solana/nuxt`를 사용합니다.
+Vue/Nuxt 통합 없이 Solana primitive가 필요하면 `@vue-solana/core`를 직접 사용하세요. 이 패키지는 `@solana/kit`을 기반으로 하며 `@vue-solana/core/kit`에서 `createSolanaClient()`와 `@solana/kit` 전체를 다시 export합니다. 프레임워크 통합이 필요하면 `@vue-solana/vue` 또는 `@vue-solana/nuxt`를 사용합니다.
 
 지원 클러스터:
 
@@ -52,6 +52,10 @@ npx nuxt module add @vue-solana/nuxt
 이 명령은 패키지를 설치하고 `nuxt.config.ts`의 `modules` 배열에 `@vue-solana/nuxt`를 추가합니다.
 
 Nuxt 앱은 `@vue-solana/core`, `@vue-solana/vue`, low-level Solana/Buffer 패키지를 직접 설치하지 않고 `@vue-solana/nuxt/kit`와 `@vue-solana/nuxt/buffer-polyfill`을 사용할 수 있습니다. 자동 import된 `useSolanaClient()`는 주입된 Kit 클라이언트를 반환합니다.
+
+## v3 메모
+
+v3.0.0부터 ESM만 배포합니다. 모든 `@vue-solana/*` 패키지에서 `require` export 조건과 최상위 `main` 필드가 제거됩니다. Nuxt와 Vite 앱은 이미 ESM으로 번들링되므로 변경이 필요 없고, Vue Solana 패키지를 `require()`하는 Node 스크립트만 ESM으로 바꾸면 됩니다. `kit` 서브패스는 `@solana/kit`의 완전한 미러가 되었으므로, v2에서 추가했다면 자신의 `package.json`에서 `@solana/kit`을 제거할 수 있습니다. 자세한 내용은 [v2에서 v3로 업그레이드](/ko/guides/kit-migration#v2에서-v3로-업그레이드)를 참고하세요.
 
 ## v2 메모
 

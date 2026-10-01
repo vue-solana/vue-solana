@@ -1,11 +1,11 @@
 ---
 title: "Kit Migration"
-description: How to move a Vue or Nuxt app from the legacy web3-compat API to @solana/kit. v2.0.0 removed web3-compat everywhere.
+description: How to move a Vue or Nuxt app from the legacy web3-compat API to @solana/kit. v2.0.0 removed web3-compat; v3.0.0 publishes ESM only.
 ogSection: Guides
 surroundOrder: 7
 ---
 
-Vue Solana moved from `@solana/web3-compat` to `@solana/kit` in v2.0.0. This guide explains why the change happened, what the Kit equivalents of each legacy symbol are, and how to migrate a Vue or Nuxt app that is still on the v1.x surface.
+Vue Solana moved from `@solana/web3-compat` to `@solana/kit` in v2.0.0, and v3.0.0 turned the `kit` subpaths into a complete mirror of `@solana/kit`. This guide explains why the change happened, what the Kit equivalents of each legacy symbol are, and how to migrate a Vue or Nuxt app that is still on the v1.x surface. If you are already on v2, jump straight to [Upgrading v2 to v3](#upgrading-v2-to-v3).
 
 ## Why Migrate
 
@@ -21,31 +21,32 @@ Kit also brings the modularity benefit: you import only the pieces you use. In v
 | Release              | What happened                                                                                                                                                                                                                                                       |
 | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **v1.x (previous)**  | Dual support. `connection`, `web3` subpaths, and all legacy helpers kept working unchanged, while the new Kit surface was added alongside: `createSolanaClient()`, `@vue-solana/*/kit` subpaths, and `useSolanaClient()`. Legacy helpers were marked `@deprecated`. |
-| **v2.0.0 (current)** | Kit only. `@solana/web3-compat` is removed from every package. The context no longer carries `connection`, and the `web3` subpaths are deleted. `useRpc()` becomes the Kit RPC composable, and the wallet exposes `publicKey: Address`.                             |
+| **v2.0.0**           | Kit only. `@solana/web3-compat` is removed from every package. The context no longer carries `connection`, and the `web3` subpaths are deleted. `useRpc()` becomes the Kit RPC composable, and the wallet exposes `publicKey: Address`.                             |
+| **v3.0.0 (current)** | ESM only and a complete Kit mirror. The `require` export condition and the top-level `main` field are gone from all three packages, and `@vue-solana/{core,vue,nuxt}/kit` now re-export all of `@solana/kit` instead of a curated list.                             |
 
-Migrate by updating to `^2.0.0`, resolving compiler errors, and removing the legacy imports the compiler flags. The full before/after map is below.
+The v1 → v2 work is unchanged: update to `^2.0.0`, resolve compiler errors, and remove the legacy imports the compiler flags. The full before/after map is below. If you are on v2 already, see [Upgrading v2 to v3](#upgrading-v2-to-v3).
 
 ## Migration Map
 
 The table below maps every legacy symbol to its Kit replacement.
 
-| Legacy                                                                      | Kit replacement                                                                                                                                     |
-| --------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Connection`                                                                | `client.rpc` / `useSolanaClient()`                                                                                                                  |
-| `new Connection(url)`                                                       | `client.rpc` from `createSolanaClient({ endpoint: url })`                                                                                           |
-| `PublicKey`                                                                 | `Address` (`address("...")`)                                                                                                                        |
-| `new PublicKey(s)` / `.toBase58()`                                          | `address(s)` — base58 strings are already `Address`-shaped                                                                                          |
-| `Keypair` / `Keypair.generate()`                                            | `generateKeyPairSigner()` from `@solana/kit`, or the `@solana/kit-plugin-signer` variants (`signer`, `payer`, `identity`, `generated*`, `airdrop*`) |
-| `keypair.publicKey`                                                         | signer `.address`                                                                                                                                   |
-| `SystemProgram.transfer`                                                    | `getTransferSolInstruction` from `@solana-program/system`                                                                                           |
-| `LAMPORTS_PER_SOL` math                                                     | `lamports()` from `@solana/kit`                                                                                                                     |
-| `sendAndConfirmTransaction`                                                 | Kit transaction planning (upstream `@solana/kit-plugin-rpc` executors); for wallet-signed flows use `signAndSendTransaction(client, ...)`           |
-| devnet airdrop via `requestAirdrop`                                         | `client.airdrop` (upstream, enabled by `solanaDevnetRpc()` / `airdropSigner`)                                                                       |
-| `Transaction` / `VersionedTransaction`                                      | Kit instruction and message builders; `SolanaTransaction` is now raw serialized bytes                                                               |
-| `connection.getBalance`                                                     | `client.rpc.getBalance(...).send()` — returns lamports as `bigint`                                                                                  |
-| `getTokenAccountsByOwner` / `getTokenBalance` / `@solana/spl-token` helpers | `getTokenAccountsByOwner(client, ...)` / `getTokenBalance(client, ...)` from `@vue-solana/core/token-accounts` (Kit RPC `jsonParsed` reads)         |
-| `connection.confirmTransaction` / `getSignatureStatuses`                    | `confirmTransactionSignature(client, ...)` (polls `client.rpc.getSignatureStatuses(...).send()`)                                                    |
-| wallet-standard flows                                                       | unchanged — wallet-standard discovery and adaptation still power `useWallets()` / `useWallet()`                                                     |
+| Legacy                                                                      | Kit replacement                                                                                                                                             |
+| --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Connection`                                                                | `client.rpc` / `useSolanaClient()`                                                                                                                          |
+| `new Connection(url)`                                                       | `client.rpc` from `createSolanaClient({ endpoint: url })`                                                                                                   |
+| `PublicKey`                                                                 | `Address` (`address("...")`)                                                                                                                                |
+| `new PublicKey(s)` / `.toBase58()`                                          | `address(s)` — base58 strings are already `Address`-shaped                                                                                                  |
+| `Keypair` / `Keypair.generate()`                                            | `generateKeyPairSigner()` from `@vue-solana/core/kit` (or the `@solana/kit-plugin-signer` variants `signer`, `payer`, `identity`, `generated*`, `airdrop*`) |
+| `keypair.publicKey`                                                         | signer `.address`                                                                                                                                           |
+| `SystemProgram.transfer`                                                    | `getTransferSolInstruction` from `@solana-program/system`                                                                                                   |
+| `LAMPORTS_PER_SOL` math                                                     | `lamports()` from `@vue-solana/core/kit`                                                                                                                    |
+| `sendAndConfirmTransaction`                                                 | Kit transaction planning (upstream `@solana/kit-plugin-rpc` executors); for wallet-signed flows use `signAndSendTransaction(client, ...)`                   |
+| devnet airdrop via `requestAirdrop`                                         | `client.airdrop` (upstream, enabled by `solanaDevnetRpc()` / `airdropSigner`)                                                                               |
+| `Transaction` / `VersionedTransaction`                                      | Kit instruction and message builders; `SolanaTransaction` is now raw serialized bytes                                                                       |
+| `connection.getBalance`                                                     | `client.rpc.getBalance(...).send()` — returns lamports as `bigint`                                                                                          |
+| `getTokenAccountsByOwner` / `getTokenBalance` / `@solana/spl-token` helpers | `getTokenAccountsByOwner(client, ...)` / `getTokenBalance(client, ...)` from `@vue-solana/core/token-accounts` (Kit RPC `jsonParsed` reads)                 |
+| `connection.confirmTransaction` / `getSignatureStatuses`                    | `confirmTransactionSignature(client, ...)` (polls `client.rpc.getSignatureStatuses(...).send()`)                                                            |
+| wallet-standard flows                                                       | unchanged — wallet-standard discovery and adaptation still power `useWallets()` / `useWallet()`                                                             |
 
 > Some rows reference upstream `@solana/kit` plugins (signer, planner, system program). The default client from `createSolanaClient()` already installs the official planner and RPC plan-sending executor from `@solana/kit-plugin-rpc`; install the rest (signer, system program) directly from the `@solana/kit` ecosystem when you need them.
 
@@ -58,12 +59,62 @@ What the helpers map to after v2:
 - `signAndSendTransaction(connection, ...)` / `confirmTransactionSignature(connection, ...)` → `signAndSendTransaction(client, ...)` / `confirmTransactionSignature(client, ...)`; the `SolanaTransaction` argument is now serialized wire bytes
 - `getTokenAccountsByOwner(connection, ...)` & friends → `getTokenAccountsByOwner(client, ...)` and `getTokenAccountsByOwner(client, ...)`-based reads returning `TokenAccountInfo`
 
-## Upgrade a Vue App
+## Upgrading v2 to v3
 
-### Step 1: Update to v2
+v3 has exactly one breaking change and one large convenience change. The Kit migration itself is already done — there is no new symbol mapping to make.
 
 ```sh
-pnpm add @vue-solana/vue@^2.0.0
+pnpm add @vue-solana/vue@^3.0.0
+```
+
+```sh
+pnpm add @vue-solana/nuxt@^3.0.0
+```
+
+### ESM Only
+
+Every `@vue-solana/*` package now ships ESM only. The `require` export condition and the top-level `main` field were removed, so a CommonJS `require("@vue-solana/core")` fails with `No "exports" main defined`, and requiring a subpath fails with `Package subpath './kit' is not defined by "exports"`.
+
+Nuxt and Vite apps already bundle ESM and need no change. If a script, config file, or Node tool in your project still uses `require()`, make it ESM — add `"type": "module"` to your `package.json`, or rename the file to `.mjs`. If you genuinely cannot leave CommonJS, stay on `@vue-solana/*@^2`, which still ships a `.cjs` build. See the [`ERR_PACKAGE_PATH_NOT_EXPORTED` entry in Troubleshooting](/troubleshooting).
+
+### The Kit Subpaths Are Now A Full Mirror
+
+`@vue-solana/core/kit`, `@vue-solana/vue/kit`, and `@vue-solana/nuxt/kit` now `export *` from `@solana/kit` instead of re-exporting a curated list. Every Kit value and type is reachable from the subpath you already have installed.
+
+- Drop `@solana/kit` from your own `package.json` if you added it in v2. You no longer need it, and keeping it risks a second Kit copy in the tree.
+- Move message builders, codecs, planner helpers, and signer factories to the same `@vue-solana/*/kit` import you already use, so your app has one Solana entry point.
+
+Four names exist in both Kit and this library. They resolve to **this library's** version from the package root, and to **Kit's** version from the `/kit` subpath:
+
+| Name                | Root barrel (`@vue-solana/core`)               | `kit` subpath (`@vue-solana/core/kit`) |
+| ------------------- | ---------------------------------------------- | -------------------------------------- |
+| `SolanaError`       | `@vue-solana/core`'s own error class           | Kit's `SolanaError`                    |
+| `SolanaErrorCode`   | `@vue-solana/core`'s own codes                 | Kit's `SolanaErrorCode`                |
+| `isSolanaError`     | `@vue-solana/core`'s own guard                 | Kit's `isSolanaError`                  |
+| `TransactionStatus` | `@vue-solana/core`'s confirmation status shape | Kit's `TransactionStatus`              |
+
+This matters if you catch Kit errors. `isSolanaError()` from the root barrel recognises this library's `SolanaError`, not Kit's, so import it from `@vue-solana/*/kit` when you are inspecting an error thrown by Kit itself:
+
+```ts
+import { isSolanaError } from "@vue-solana/core/kit"; // Kit's guard, matches Kit's errors
+
+try {
+  await client.rpc.getBalance(account).send();
+} catch (error) {
+  if (isSolanaError(error, "RPC_HTTP_ERROR")) {
+    // ...
+  }
+}
+```
+
+Everything else is internal. The composable state machines were deduplicated into shared helpers, so `@solana/kit` moved to `^8.4.0` and the bundles got smaller, but no composable signature or return shape changed.
+
+## Upgrade a Vue App
+
+### Step 1: Update to v3
+
+```sh
+pnpm add @vue-solana/vue@^3.0.0
 ```
 
 The compiler will now point you at every remaining legacy reference because the `web3` subpaths no longer exist.
@@ -91,7 +142,7 @@ const addr: Address = address("BonK9Y...");
 const amount = lamports(1_000_000_000n);
 ```
 
-Message builders are not re-exported. Add `@solana/kit` to your own `package.json` — pnpm's strict `node_modules` does not hoist the transitive copy, so it is not importable through `@vue-solana/vue`. Program instructions come from their own plugins, e.g. `@solana-program/system` for `getTransferSolInstruction`.
+Message builders come from the same subpath. `@vue-solana/vue/kit` re-exports all of `@solana/kit`, so nothing here needs `@solana/kit` in your own `package.json`. Program instructions come from their own plugins, e.g. `@solana-program/system` for `getTransferSolInstruction`.
 
 The connected wallet's address is a plain base58 `Address` string:
 
@@ -121,10 +172,10 @@ There is no network setup and no shim: the endpoint resolves from cluster config
 
 ## Upgrade a Nuxt App
 
-### Step 1: Update to v2
+### Step 1: Update to v3
 
 ```sh
-pnpm add @vue-solana/nuxt@^2.0.0
+pnpm add @vue-solana/nuxt@^3.0.0
 ```
 
 ### Step 2: Switch to the Kit API
@@ -143,7 +194,7 @@ Kit helpers are available from `@vue-solana/nuxt/kit`:
 import { address, lamports } from "@vue-solana/nuxt/kit";
 ```
 
-Add `@solana/kit` to your own `package.json` for message building — the Nuxt module re-exports only the helpers and types that flow through its own API.
+`@vue-solana/nuxt/kit` re-exports all of `@solana/kit`, so message builders come from there too — never add `@solana/kit` to your own `package.json`.
 
 ### Step 3: Remove the legacy surface
 

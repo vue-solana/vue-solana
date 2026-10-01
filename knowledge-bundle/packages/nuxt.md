@@ -78,7 +78,7 @@ The browser Buffer helper is an explicit import, not an auto-import:
 import { installSolanaBufferPolyfill } from "@vue-solana/nuxt/buffer-polyfill";
 ```
 
-Use the auto-imported `useSolanaClient()` and explicit imports from `@vue-solana/nuxt/kit` (`createSolanaClient`, `address`, `lamports`, and the types `Address`, `Commitment`, `Rpc`, `Signature`, `SolanaRpcApi`, `SolanaClient`):
+Use the auto-imported `useSolanaClient()` and explicit imports from `@vue-solana/nuxt/kit`, which re-exports all of `@solana/kit` (`createSolanaClient`, `address`, `lamports`, the types `Address`, `Commitment`, `Rpc`, `Signature`, `SolanaRpcApi`, `SolanaClient`, and everything else):
 
 ```ts
 import { address } from "@vue-solana/nuxt/kit";

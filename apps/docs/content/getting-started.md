@@ -9,7 +9,7 @@ This guide covers installing the Vue Solana packages, configuring Vue or Nuxt, t
 
 ## Before You Start
 
-Use `@vue-solana/core` directly if you need Solana primitives without Vue/Nuxt integration. It builds on `@solana/kit` and re-exports `createSolanaClient()` plus `Address`/`address()`/`lamports()` and the Kit transaction and RPC types from `@vue-solana/core/kit`. Use `@vue-solana/vue` or `@vue-solana/nuxt` when you want framework integration.
+Use `@vue-solana/core` directly if you need Solana primitives without Vue/Nuxt integration. It builds on `@solana/kit` and re-exports `createSolanaClient()` plus all of `@solana/kit` from `@vue-solana/core/kit`. Use `@vue-solana/vue` or `@vue-solana/nuxt` when you want framework integration.
 
 Supported clusters:
 
@@ -52,6 +52,10 @@ npx nuxt module add @vue-solana/nuxt
 This installs the package and adds `@vue-solana/nuxt` to the `modules` array in `nuxt.config.ts`.
 
 Nuxt apps can use `@vue-solana/nuxt/kit` and `@vue-solana/nuxt/buffer-polyfill` without installing `@vue-solana/core`, `@vue-solana/vue`, or low-level Solana and Buffer packages directly. The auto-imported `useSolanaClient()` returns the injected Kit client.
+
+## v3 Note
+
+v3.0.0 publishes ESM only — the `require` export condition and the top-level `main` field are gone from every `@vue-solana/*` package. Nuxt and Vite apps already bundle ESM and need no change; a plain Node script that `require()`s a Vue Solana package must become ESM. The `kit` subpaths also became a complete mirror of `@solana/kit`, so you can drop `@solana/kit` from your own `package.json` if you added it on v2. See [Upgrading v2 to v3](/guides/kit-migration#upgrading-v2-to-v3) for the details.
 
 ## v2 Note
 

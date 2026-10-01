@@ -15,7 +15,7 @@ Vue Solana는 Vue와 Nuxt 컴포저블을 통해 RPC 설정, 반응형 계정 �
 - [`@vue-solana/vue`](/packages/vue): Vue 플러그인과 컴포저블입니다.
 - [`@vue-solana/nuxt`](/packages/nuxt): Vue 플러그인을 설치하고 컴포저블을 자동 import하는 Nuxt 모듈입니다.
 
-`@vue-solana/core`는 [Solana Kit](https://solana.com/docs/kit)를 기반으로 합니다. `@vue-solana/core/kit`에서 Kit primitive와 `createSolanaClient()` 팩토리를 다시 export하며, 프레임워크 패키지는 `useSolanaClient()` 같은 Kit-first 컴포저블을 노출합니다. 레거시 `@solana/web3-compat` surface와 `web3` 하위 경로는 v2.0.0에서 제거되었습니다. before/after 매핑은 [Kit 마이그레이션 가이드](/guides/kit-migration)를 참고하세요.
+`@vue-solana/core`는 [Solana Kit](https://solana.com/docs/kit)를 기반으로 합니다. `@vue-solana/core/kit`에서 `@solana/kit` 전체와 `createSolanaClient()` 팩토리를 다시 export하므로 `@solana/kit`을 직접 설치할 필요가 없고, 프레임워크 패키지는 `useSolanaClient()` 같은 Kit-first 컴포저블을 노출합니다. 레거시 `@solana/web3-compat` surface와 `web3` 하위 경로는 v2.0.0에서 제거되었습니다. before/after 매핑은 [Kit 마이그레이션 가이드](/guides/kit-migration)를 참고하세요.
 
 ## 먼저 읽기
 

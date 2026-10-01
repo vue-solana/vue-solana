@@ -7,7 +7,7 @@ surroundOrder: 11
 
 Vue Solana proporciona helpers conscientes de wallets para enviar transacciones y composables para estado reactivo de transacciones.
 
-Esta guía cubre el límite de Vue Solana: comprobaciones de capacidades de wallet, firma, envío, confirmación y errores. Construye mensajes de transacción con `@solana/kit` y los helpers de instrucciones de tu cliente de programa.
+Esta guía cubre el límite de Vue Solana: comprobaciones de capacidades de wallet, firma, envío, confirmación y errores. Construye mensajes de transacción con los helpers de Kit reexportados desde `@vue-solana/vue/kit` (`@vue-solana/nuxt/kit` en una app Nuxt) y los helpers de instrucciones de tu cliente de programa.
 
 ## Helper Core De Envío
 
@@ -46,11 +46,11 @@ La confirmación usa `confirmed` y un timeout de 60 segundos por defecto. Hace p
 
 `createSolanaClient()` compone por defecto el stack oficial de transacciones de `@solana/kit-plugin-rpc`: `solanaRpc()` y `rpcAirdrop()`. `solanaRpc()` instala por si mismo el planner de transacciones y los ejecutores de firma y envio de planes. El fallback custom anterior no se usa.
 
-Usa `useSendTransaction()` o `useSendTransactions()` cuando el cliente debe planificar, firmar, enviar y confirmar sin popup de wallet. El executor oficial obtiene un blockhash nuevo, maneja limites de recursos y preflight, firma con los signers del cliente, envia por RPC y espera `confirmed`. El composable establece `status` en `sent` solo cuando termina la operacion de envio y confirmacion. El resultado simple expone `data.context.signature`; el resultado batch contiene el arbol del plan.
+Usa `useSendTransaction()` o `useSendTransactions()` cuando el cliente debe planificar, firmar, enviar y confirmar sin popup de wallet. El executor oficial obtiene un blockhash nuevo, maneja limites de recursos y preflight, firma con los signers del cliente, envia por RPC y espera `confirmed`. El composable establece `status` en `sent` solo cuando termina la operación de envio y confirmación. El resultado simple expone `data.context.signature`; el resultado batch contiene el arbol del plan.
 
-Configura un cliente core/Vue directo con `payer` o `payerSecretKey`; el envio del cliente requiere un `payer`. `payerSecretKey` es un keypair Ed25519 de 64 bytes codificado en base64 y solo es apropiado para desarrollo confiable o flows del servidor. Nunca pongas un secreto crudo o `payerSecretKey` en la configuracion runtime publica de Nuxt, y nunca expongas una keypair con fondos al navegador de un usuario final.
+Configura un cliente core/Vue directo con `payer` o `payerSecretKey`; el envio del cliente requiere un `payer`. `payerSecretKey` es un keypair Ed25519 de 64 bytes codificado en base64 y solo es apropiado para desarrollo confiable o flows del servidor. Nunca pongas un secreto crudo o `payerSecretKey` en la configuración runtime publica de Nuxt, y nunca expongas una keypair con fondos al navegador de un usuario final.
 
-El flujo de wallet es separado: `useSignAndSendTransaction()` puede devolver despues del envio RPC por defecto, o esperar un commitment seleccionado con `confirm: true`. Mantén ese comportamiento cuando un usuario conectado debe aprobar una transaccion en su wallet.
+El flujo de wallet es separado: `useSignAndSendTransaction()` puede devolver después del envio RPC por defecto, o esperar un commitment seleccionado con `confirm: true`. Mantén ese comportamiento cuando un usuario conectado debe aprobar una transacción en su wallet.
 
 ## Construir Una Transferencia Real En Devnet
 
@@ -75,7 +75,7 @@ import {
   setTransactionMessageFeePayer,
   setTransactionMessageLifetimeUsingBlockhash,
   type Address,
-} from "@solana/kit";
+} from "@vue-solana/vue/kit";
 
 const SYSTEM_PROGRAM_ADDRESS = address("11111111111111111111111111111111");
 
@@ -176,32 +176,32 @@ async function submitTransaction() {
 
 ### Entradas y resultados de las peticiones de wallet
 
-Los flujos de firma de wallet aceptan la transaccion de entrada como bytes de cable `Uint8Array` sin procesar que cumplen el esquema de transaccion de Solana. Construyelos con `@solana/kit` (o decodificalos desde una respuesta RPC en base64/base58); las cadenas base64, los objetos de transaccion y las listas de instrucciones no se aceptan aqui.
+Los flujos de firma de wallet aceptan la transacción de entrada como bytes de cable `Uint8Array` sin procesar que cumplen el esquema de transacción de Solana. Construyelos con los helpers de Kit de `@vue-solana/vue/kit` (o decodificalos desde una respuesta RPC en base64/base58); las cadenas base64, los objetos de transacción y las listas de instrucciones no se aceptan aquí.
 
 ```ts
-import { compileTransaction, getTransactionEncoder } from "@solana/kit";
+import { compileTransaction, getTransactionEncoder } from "@vue-solana/vue/kit";
 
 const transaction: Uint8Array = getTransactionEncoder().encode(compileTransaction(message));
 await execute(transaction);
 ```
 
-`useSignMessage()` toma los bytes del mensaje sin procesar que se van a firmar. Toda peticion de envio de wallet tambien acepta las `SendTransactionOptions` de Kit:
+`useSignMessage()` toma los bytes del mensaje sin procesar que se van a firmar. Toda petición de envio de wallet también acepta las `SendTransactionOptions` de Kit:
 
-| Opcion                | Descripcion                                                                                                                 |
+| Opción                | Descripción                                                                                                                 |
 | --------------------- | --------------------------------------------------------------------------------------------------------------------------- |
-| `skipPreflight`       | Omite la simulacion de preflight antes de enviar.                                                                           |
-| `maxRetries`          | Numero de reintentos del nodo RPC (`bigint`).                                                                               |
-| `minContextSlot`      | Slot en el que se sabe que existe cualquier blockhash o nonce de la transaccion; enviar antes de ese slot puede rechazarse. |
-| `preflightCommitment` | Commitment usado para la simulacion de preflight.                                                                           |
+| `skipPreflight`       | Omite la simulación de preflight antes de enviar.                                                                           |
+| `maxRetries`          | Número de reintentos del nodo RPC (`bigint`).                                                                               |
+| `minContextSlot`      | Slot en el que se sabe que existe cualquier blockhash o nonce de la transacción; enviar antes de ese slot puede rechazarse. |
+| `preflightCommitment` | Commitment usado para la simulación de preflight.                                                                           |
 
 Formas de retorno:
 
 - `useSignMessage().execute(bytes)` resuelve a `{ signedMessage, signature }`, ambos `Uint8Array`.
-- `useSignTransactions().execute(transactions)` resuelve al `Uint8Array[]` firmado (tambien expuesto como `signedTransactions`); pasa un array de un solo elemento para una transaccion.
-- `useSignAndSendTransaction().execute(transaction)` resuelve a la cadena `signature` enviada; con `confirm: true` tambien rellena `confirmation`.
-- `useSignAndSendTransactions().execute(transactions)` resuelve a un `string[]` de firmas (tambien expuesto como `signatures`).
+- `useSignTransactions().execute(transactions)` resuelve al `Uint8Array[]` firmado (también expuesto como `signedTransactions`); pasa un array de un solo elemento para una transacción.
+- `useSignAndSendTransaction().execute(transaction)` resuelve a la cadena `signature` enviada; con `confirm: true` también rellena `confirmation`.
+- `useSignAndSendTransactions().execute(transactions)` resuelve a un `string[]` de firmas (también expuesto como `signatures`).
 
-Una wallet puede modificar el mensaje o la transaccion antes de firmar (por ejemplo, para anadir su propia instruccion o cambiar el pagador de la comision) y el Wallet Standard lo permite explicitamente. Vuelve a leer el `signedMessage` o los bytes de la transaccion firmada devueltos en lugar de asumir que coinciden byte a byte con tu entrada.
+Una wallet puede modificar el mensaje o la transacción antes de firmar (por ejemplo, para anadir su propia instrucción o cambiar el pagador de la comisión) y el Wallet Standard lo permite explicitamente. Vuelve a leer el `signedMessage` o los bytes de la transacción firmada devueltos en lugar de asumir que coinciden byte a byte con tu entrada.
 
 ## Enlaces De Explorer
 
@@ -250,7 +250,7 @@ async function submit(transaction: Uint8Array) {
 </script>
 ```
 
-Llama métodos de transacción desde acciones del usuario en el cliente. No dispares firma de wallet durante SSR. Las opciones del modulo Nuxt omiten `payer` y `payerSecretKey`; configura un `payer` en un plugin Vue solo de cliente con `clientPlugin: false` en vez de poner un secreto en la configuracion runtime publica.
+Llama métodos de transacción desde acciones del usuario en el cliente. No dispares firma de wallet durante SSR. Las opciones del modulo Nuxt omiten `payer` y `payerSecretKey`; configura un `payer` en un plugin Vue solo de cliente con `clientPlugin: false` en vez de poner un secreto en la configuración runtime publica.
 
 Usa `useSolanaTransactionConfirmation({ commitment: "confirmed" })` y llama `confirm(signature)` cuando necesites confirmar una firma devuelta por otro flujo. Usa `useSolanaSignatureStatus(signature, { pollIntervalMs: 2_000 })` cuando quieras seguir comprobando el estado después de un timeout o redirección.
 
@@ -290,7 +290,7 @@ try {
 
 ## Lista De Seguridad
 
-- Mantén las claves de firma de transacciones del cliente en un servidor confiable o en un signer efimero de demo explicito; nunca expongas secretos con fondos mediante la configuracion runtime publica de Nuxt.
+- Mantén las claves de firma de transacciones del cliente en un servidor confiable o en un signer efimero de demo explicito; nunca expongas secretos con fondos mediante la configuración runtime publica de Nuxt.
 - Muestra a los usuarios lo que están a punto de firmar antes de abrir un prompt de wallet.
 - Nunca firmes ni envíes transacciones sin una acción explícita del usuario.
 - Nunca solicites ni manejes claves privadas.

@@ -9,7 +9,7 @@ Framework-agnostic Solana primitives for Vue Solana libraries and apps that want
 
 Use this package directly when you want Kit RPC client helpers, shared wallet types, Android Mobile Wallet Adapter registration helpers, message signing support, token account reads, and transaction helpers without installing the Vue plugin.
 
-`@vue-solana/core` builds on `@solana/kit`. It exposes `createSolanaClient()` and re-exports Kit primitives (`address`, `lamports`, and the `Address`, `Commitment`, `Lamports`, `Rpc`, `Signature`, and `SolanaRpcApi` types) from `@vue-solana/core/kit`. The legacy `@solana/web3-compat` surface and the `web3` subpaths were removed in v2.0.0; transactions flow through the packages as raw `Uint8Array` wire bytes.
+`@vue-solana/core` builds on `@solana/kit`. It exposes `createSolanaClient()` and re-exports all of `@solana/kit` from `@vue-solana/core/kit`. The legacy `@solana/web3-compat` surface and the `web3` subpaths were removed in v2.0.0; transactions flow through the packages as raw `Uint8Array` wire bytes.
 
 Official Solana docs:
 
@@ -42,10 +42,12 @@ Full Vue Solana docs:
 
 | Requirement   | Supported                                                         |
 | ------------- | ----------------------------------------------------------------- |
-| Runtime       | Modern ESM or CommonJS bundlers                                   |
+| Runtime       | ESM only (modern bundlers; Node needs ESM)                        |
 | TypeScript    | TypeScript 5.x recommended                                        |
-| Solana client | `@solana/kit@^8.3.0` (and `@solana/kit-plugin-rpc`)               |
+| Solana client | `@solana/kit@^8.4.0` (and `@solana/kit-plugin-rpc`)               |
 | Clusters      | `mainnet` (alias `mainnet-beta`), `devnet`, `testnet`, `localnet` |
+
+Since v3.0.0 this package is ESM only: there is no `require` export condition and no top-level `main`, so `require("@vue-solana/core")` fails with `No "exports" main defined`. Pin to `@vue-solana/core@^2` if you must stay on CommonJS.
 
 This package no longer depends on `@solana/web3-compat`. It depends on `@solana/kit` and `@solana/kit-plugin-rpc`, so apps do not need to install either directly for normal Vue Solana usage.
 
@@ -226,7 +228,7 @@ Docs: [Vue Solana Agent Skill](https://vue-solana-docs.vercel.app/agent-skill)
 
 - Public Solana RPC endpoints are useful for development, but production apps should use dedicated RPC infrastructure.
 - Use `mainnet` for Solana mainnet. This is Solana's official mainnet cluster name; the legacy `mainnet-beta` spelling is still accepted and redirects to the same endpoint.
-- Transactions are raw wire bytes. Build transaction messages with `@solana/kit` (`createTransactionMessage()`, `compileTransaction()`) and serialize them before passing them to wallet flows.
+- Transactions are raw wire bytes. Build transaction messages with `@vue-solana/core/kit` (`createTransactionMessage()`, `compileTransaction()`) and serialize them before passing them to wallet flows.
 - v2.0.0 removed `@solana/web3-compat` and the `web3` subpaths. See the [Kit Migration guide](https://vue-solana-docs.vercel.app/guides/kit-migration) for migrating from v1.
 - Desktop native app wallets are planned but not implemented yet.
 

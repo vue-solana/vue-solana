@@ -7,7 +7,7 @@ surroundOrder: 11
 
 Vue Solana는 트랜잭션 제출을 위한 wallet-aware helper와 반응형 트랜잭션 상태를 위한 컴포저블을 제공합니다.
 
-이 가이드는 Vue Solana 경계에서 필요한 지갑 capability 확인, 서명, 전송, confirmation, 오류 처리를 다룹니다. 트랜잭션 message는 `@solana/kit`과 program client의 instruction helper로 구성하세요.
+이 가이드는 Vue Solana 경계에서 필요한 지갑 capability 확인, 서명, 전송, confirmation, 오류 처리를 다룹니다. 트랜잭션 message는 `@vue-solana/vue/kit`(Nuxt 앱은 `@vue-solana/nuxt/kit`)에서 다시 export되는 Kit helper와 program client의 instruction helper로 구성하세요.
 
 ## Core Send Helper
 
@@ -75,7 +75,7 @@ import {
   setTransactionMessageFeePayer,
   setTransactionMessageLifetimeUsingBlockhash,
   type Address,
-} from "@solana/kit";
+} from "@vue-solana/vue/kit";
 
 const SYSTEM_PROGRAM_ADDRESS = address("11111111111111111111111111111111");
 
@@ -176,10 +176,10 @@ async function submitTransaction() {
 
 ### 지갑 요청 입력과 반환값
 
-지갑 서명 flow는 트랜잭션 입력으로 Solana 트랜잭션 스키마를 따르는 raw `Uint8Array` wire 바이트를 받습니다. `@solana/kit`으로 만들거나 base64/base58 RPC 응답에서 디코딩하세요. base64 문자열, 트랜잭션 객체, instruction 목록은 여기서 허용되지 않습니다.
+지갑 서명 flow는 트랜잭션 입력으로 Solana 트랜잭션 스키마를 따르는 raw `Uint8Array` wire 바이트를 받습니다. `@vue-solana/vue/kit`의 helper로 만들거나 base64/base58 RPC 응답에서 디코딩하세요. base64 문자열, 트랜잭션 객체, instruction 목록은 여기서 허용되지 않습니다.
 
 ```ts
-import { compileTransaction, getTransactionEncoder } from "@solana/kit";
+import { compileTransaction, getTransactionEncoder } from "@vue-solana/vue/kit";
 
 const transaction: Uint8Array = getTransactionEncoder().encode(compileTransaction(message));
 await execute(transaction);
