@@ -98,11 +98,11 @@ Los clusters soportados son `mainnet` (alias heredado `mainnet-beta`), `testnet`
 
 `autoConnect` usa `false` por defecto. Cuando se activa mediante el plugin de Vue o el módulo Nuxt, Vue Solana reconecta solo una identidad de wallet que el usuario seleccionó antes y que se descubre otra vez en el cliente. Solo guarda metadatos de identidad de wallet en `localStorage["vue-solana:selected-wallet"]`: `name`, y `platform`/`source` cuando están disponibles. Nunca guarda claves privadas, datos de sesión ni datos de transacción, y nunca conecta una wallet instalada arbitraria.
 
-`payer` es un `TransactionSigner` de Kit que se usa como payer de comisiones y signer del cliente para transacciones enviadas por el cliente. `payerSecretKey` es un keypair Ed25519 de 64 bytes codificado en base64, con la secret key primero; el cliente deriva su direccion al crearse e importa la signing key en el primer uso, asi que un keypair cuya mitad publica no coincide con su seed se rechaza en la primera firma en vez de al crear el cliente. La direccion viene de la mitad publica sin verificar, asi que trata `payer.address` como no confirmado hasta que la primera firma tenga exito. La firma importa la key con WebCrypto, que los navegadores solo exponen en un contexto seguro (`https`, o `http` en `localhost`); fuera de uno, la primera llamada a `signTransactions()` lanza un error de WebCrypto en vez de un error de key invalida. Ambos son compatibles con clientes core/Vue directos.
+`payer` es un `TransactionSigner` de Kit que se usa como payer de comisiones y signer del cliente para transacciones enviadas por el cliente. `payerSecretKey` es un keypair Ed25519 de 64 bytes codificado en base64, con la secret key primero; el cliente deriva su dirección al crearse e importa la signing key en el primer uso, así que un keypair cuya mitad publica no coincide con su seed se rechaza en la primera firma en vez de al crear el cliente. La dirección viene de la mitad publica sin verificar, así que trata `payer.address` como no confirmado hasta que la primera firma tenga éxito. La firma importa la key con WebCrypto, que los navegadores solo exponen en un contexto seguro (`https`, o `http` en `localhost`); fuera de uno, la primera llamada a `signTransactions()` lanza un error de WebCrypto en vez de un error de key invalida. Ambos son compatibles con clientes core/Vue directos.
 
-`createSolanaClient()` compone por defecto el stack oficial de `@solana/kit-plugin-rpc`: `solanaRpc()` y `rpcAirdrop()`. `solanaRpc()` instala por si mismo el planner de transacciones y los ejecutores de firma y envio de planes. El fallback custom anterior no se usa. El cliente expone lecturas y suscripciones RPC, `planTransaction(s)` y `sendTransaction(s)`. El executor oficial agrega un blockhash nuevo, maneja limites de recursos y preflight, firma con los signers disponibles, envia la transaccion y espera al commitment `confirmed` antes de resolver el envio. Un envio del cliente requiere un signer `payer`.
+`createSolanaClient()` compone por defecto el stack oficial de `@solana/kit-plugin-rpc`: `solanaRpc()` y `rpcAirdrop()`. `solanaRpc()` instala por si mismo el planner de transacciones y los ejecutores de firma y envio de planes. El fallback custom anterior no se usa. El cliente expone lecturas y suscripciones RPC, `planTransaction(s)` y `sendTransaction(s)`. El executor oficial agrega un blockhash nuevo, maneja limites de recursos y preflight, firma con los signers disponibles, envia la transacción y espera al commitment `confirmed` antes de resolver el envio. Un envio del cliente requiere un signer `payer`.
 
-Nunca pongas un secreto crudo o `payerSecretKey` en la configuracion runtime publica de Nuxt. No envíes una clave de firma con fondos al navegador de un usuario final; usa un servidor o relayer, o un signer efimero sin fondos para demos.
+Nunca pongas un secreto crudo o `payerSecretKey` en la configuración runtime publica de Nuxt. No envíes una clave de firma con fondos al navegador de un usuario final; usa un servidor o relayer, o un signer efimero sin fondos para demos.
 
 Usa `mainnet` para la mainnet de Solana. Este es el nombre oficial del mainnet de Solana. La grafía heredada `mainnet-beta` sigue siendo aceptada y redirige al mismo endpoint `https://api.mainnet.solana.com`.
 
@@ -273,6 +273,21 @@ Los resultados numéricos de RPC son `bigint`, y los datos de cuenta son `Uint8A
 
 `createSolanaActionStore()` envuelve cualquier función asíncrona que reciba un `AbortSignal` nuevo por llamada en una máquina de estados de acciones con abort-on-redispatch. El composable de Vue `useAction()` se construye sobre este store; `isSolanaActionAborted()` detecta llamadas canceladas o superadas.
 
+```ts
+import { createSolanaActionStore, isSolanaActionAborted } from "@vue-solana/core/action";
+
+const { dispatch, getState, subscribe, reset, withSignal } = createSolanaActionStore(
+  (signal, address: Address) => client.rpc.getBalance(address).send(),
+);
+
+await dispatch(address);
+```
+
+- Cada `dispatch` cancela la llamada en curso anterior con un `AbortSignal` nuevo; las llamadas superadas se rechazan con un error de cancelación y nunca corrompen el estado.
+- `getState()` / `subscribe(listener)`: instantánea y flujo de `SolanaActionState` (`status`, `data` y `error`).
+- `withSignal(signal, ...args)`: compone una fuente de cancelación indicada por quien llama para un único `dispatch` (tiempos de espera por intento, interruptores compartidos).
+- `isSolanaActionAborted(error)`: comprueba si un rechazo provino de una llamada cancelada o superada.
+
 ### Direcciones
 
 - `parseAddress(value)`: analiza un string de dirección, valor tipo ref o getter, y devuelve `null` para entrada nullish. Lanza `INVALID_ADDRESS` para un string base58 inválido. Acepta valores `Address` sin cambios.
@@ -303,7 +318,7 @@ const signedTransaction = await wallet.signTransaction(transaction);
 - `signAndSendTransaction(client, wallet, transaction, options?)`: firma y envía bytes de transacción en la red (wire) usando una wallet configurada y devuelve la firma RPC. Se delega en las wallets que exponen `signAndSendTransaction`; en caso contrario, la transacción se firma con `wallet.signTransaction` y se envía mediante `client.rpc.sendTransaction(...).send()`. Las wallets Android Mobile Wallet Adapter prefieren firma más envío RPC del lado de la app para que la app controle el envío y devuelva de forma fiable la firma RPC después del traspaso a la wallet.
 - `confirmTransactionSignature(client, signature, options?)`: espera a que una firma enviada alcance un commitment solicitado. Usa por defecto commitment `confirmed`, timeout de 60 segundos y sondeo de `client.rpc.getSignatureStatuses([signature]).send()`.
 
-El flujo de envio del cliente es separado de este helper consciente de wallet. El cliente expone `sendTransaction()` y `sendTransactions()` mediante el `rpcTransactionPlanSendingExecutor()` oficial instalado por `createSolanaClient()`; los composables de Vue envuelven esos metodos. Planifican, firman, envian y esperan `confirmed`; el estado `sent` se establece solo cuando termina la operacion de envio y confirmacion. El resultado simple expone la firma en `data.context.signature`, y el resultado batch contiene el arbol completo del plan. El sender oficial no muestra popup de wallet.
+El flujo de envio del cliente es separado de este helper consciente de wallet. El cliente expone `sendTransaction()` y `sendTransactions()` mediante el `rpcTransactionPlanSendingExecutor()` oficial instalado por `createSolanaClient()`; los composables de Vue envuelven esos metodos. Planifican, firman, envian y esperan `confirmed`; el estado `sent` se establece solo cuando termina la operación de envio y confirmación. El resultado simple expone la firma en `data.context.signature`, y el resultado batch contiene el arbol completo del plan. El sender oficial no muestra popup de wallet.
 
 ```ts
 import { confirmTransactionSignature, signAndSendTransaction } from "@vue-solana/core/transaction";

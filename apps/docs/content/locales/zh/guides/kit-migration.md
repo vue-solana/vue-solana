@@ -29,23 +29,23 @@ Kit 还带来模块化的好处：只导入你使用的部分。在 v2 中，旧
 
 下表将每个旧版符号映射到其 Kit 替代品。
 
-| 旧版                                                                         | Kit 替代品                                                                                                                                 |
-| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `Connection`                                                                 | `client.rpc` / `useSolanaClient()`                                                                                                         |
-| `new Connection(url)`                                                        | `createSolanaClient({ endpoint: url })` 的 `client.rpc`                                                                                    |
-| `PublicKey`                                                                  | `Address`（`address("...")`）                                                                                                              |
-| `new PublicKey(s)` / `.toBase58()`                                           | `address(s)` — base58 字符串已经是 `Address` 形态                                                                                          |
-| `Keypair` / `Keypair.generate()`                                             | `@solana/kit` 的 `generateKeyPairSigner()`，或 `@solana/kit-plugin-signer` 变体（`signer`、`payer`、`identity`、`generated*`、`airdrop*`） |
-| `keypair.publicKey`                                                          | signer 的 `.address`                                                                                                                       |
-| `SystemProgram.transfer`                                                     | `@solana-program/system` 的 `getTransferSolInstruction`                                                                                    |
-| `LAMPORTS_PER_SOL` 运算                                                      | `@solana/kit` 的 `lamports()`                                                                                                              |
-| `sendAndConfirmTransaction`                                                  | Kit 交易规划（上游 `@solana/kit-plugin-rpc` 执行器）；钱包签名流程使用 `signAndSendTransaction(client, ...)`                               |
-| 通过 `requestAirdrop` 领取 devnet 空投                                       | `client.airdrop`（上游，由 `solanaDevnetRpc()` / `airdropSigner` 启用）                                                                    |
-| `Transaction` / `VersionedTransaction`                                       | Kit 指令和消息构建器；`SolanaTransaction` 现在是原始序列化字节                                                                             |
-| `connection.getBalance`                                                      | `client.rpc.getBalance(...).send()` — 以 `bigint` 返回 lamports                                                                            |
-| `getTokenAccountsByOwner` / `getTokenBalance` / `@solana/spl-token` 辅助函数 | `@vue-solana/core/token-accounts` 的 `getTokenAccountsByOwner(client, ...)` / `getTokenBalance(client, ...)`（Kit RPC `jsonParsed` 读取）  |
-| `connection.confirmTransaction` / `getSignatureStatuses`                     | `confirmTransactionSignature(client, ...)`（轮询 `client.rpc.getSignatureStatuses(...).send()`）                                           |
-| wallet-standard 流程                                                         | 不变 —— wallet-standard 发现和适配仍然驱动 `useWallets()` / `useWallet()`                                                                  |
+| 旧版                                                                         | Kit 替代品                                                                                                                                          |
+| ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Connection`                                                                 | `client.rpc` / `useSolanaClient()`                                                                                                                  |
+| `new Connection(url)`                                                        | `createSolanaClient({ endpoint: url })` 的 `client.rpc`                                                                                             |
+| `PublicKey`                                                                  | `Address`（`address("...")`）                                                                                                                       |
+| `new PublicKey(s)` / `.toBase58()`                                           | `address(s)` — base58 字符串已经是 `Address` 形态                                                                                                   |
+| `Keypair` / `Keypair.generate()`                                             | `@vue-solana/core/kit` 的 `generateKeyPairSigner()`，或 `@solana/kit-plugin-signer` 变体（`signer`、`payer`、`identity`、`generated*`、`airdrop*`） |
+| `keypair.publicKey`                                                          | signer 的 `.address`                                                                                                                                |
+| `SystemProgram.transfer`                                                     | `@solana-program/system` 的 `getTransferSolInstruction`                                                                                             |
+| `LAMPORTS_PER_SOL` 运算                                                      | `@vue-solana/core/kit` 的 `lamports()`                                                                                                              |
+| `sendAndConfirmTransaction`                                                  | Kit 交易规划（上游 `@solana/kit-plugin-rpc` 执行器）；钱包签名流程使用 `signAndSendTransaction(client, ...)`                                        |
+| 通过 `requestAirdrop` 领取 devnet 空投                                       | `client.airdrop`（上游，由 `solanaDevnetRpc()` / `airdropSigner` 启用）                                                                             |
+| `Transaction` / `VersionedTransaction`                                       | Kit 指令和消息构建器；`SolanaTransaction` 现在是原始序列化字节                                                                                      |
+| `connection.getBalance`                                                      | `client.rpc.getBalance(...).send()` — 以 `bigint` 返回 lamports                                                                                     |
+| `getTokenAccountsByOwner` / `getTokenBalance` / `@solana/spl-token` 辅助函数 | `@vue-solana/core/token-accounts` 的 `getTokenAccountsByOwner(client, ...)` / `getTokenBalance(client, ...)`（Kit RPC `jsonParsed` 读取）           |
+| `connection.confirmTransaction` / `getSignatureStatuses`                     | `confirmTransactionSignature(client, ...)`（轮询 `client.rpc.getSignatureStatuses(...).send()`）                                                    |
+| wallet-standard 流程                                                         | 不变 —— wallet-standard 发现和适配仍然驱动 `useWallets()` / `useWallet()`                                                                           |
 
 > 部分行引用了上游 `@solana/kit` 插件（signer、planner、system program）。`createSolanaClient()` 创建的默认客户端已安装 `@solana/kit-plugin-rpc` 的官方 planner 和 RPC 计划发送执行器；其余插件（signer、system program）需要时请直接从 `@solana/kit` 生态安装。
 

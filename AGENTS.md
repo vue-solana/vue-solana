@@ -200,7 +200,7 @@ The Playwright e2e suite in `e2e/` covers the example apps. `e2e/helpers.ts` moc
 
 The locale docs in `apps/docs/content/locales/{es,ko,zh}/` mirror the English docs tree. `packages/core/src/locale-docs.test.ts` (runs with `pnpm test`, so it gates CI) fails when a locale file is missing, has no English counterpart anymore, or its heading structure (levels and order, ignoring text) drifts from the English source.
 
-When you add, remove, or restructure sections in an English doc, translate the same change into all three locale files in the same change set. Spanish files follow their existing no-accent style; Korean freely mixes English technical terms; do not translate code, identifiers, or API names. If a structural difference is genuinely intentional, add the file to `STRUCTURE_EXEMPT_FILES` in the test with a comment explaining why.
+When you add, remove, or restructure sections in an English doc, translate the same change into all three locale files in the same change set. Spanish files use **proper accented Spanish** (`página`, `configuración`, `está`) — earlier notes in this file claimed a "no-accent style", which was wrong: only 7 of 24 Spanish files were accent-free, and the whole set was normalized to accented Spanish. Korean freely mixes English technical terms; do not translate code, identifiers, or API names. Accents belong in user-visible Spanish strings inside code blocks too (e.g. `"Iniciar sesión en…"`). If a structural difference is genuinely intentional, add the file to `STRUCTURE_EXEMPT_FILES` in the test with a comment explaining why.
 
 ### Workspace App Dependency Policy
 

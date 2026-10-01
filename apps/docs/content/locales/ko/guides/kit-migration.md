@@ -29,23 +29,23 @@ Kit는 또한 모듈성 이점을 제공합니다: 사용하는 부분만 가져
 
 아래 표는 모든 레거시 심볼을 Kit 대체품에 매핑합니다.
 
-| 레거시                                                                   | Kit 대체품                                                                                                                                |
-| ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| `Connection`                                                             | `client.rpc` / `useSolanaClient()`                                                                                                        |
-| `new Connection(url)`                                                    | `createSolanaClient({ endpoint: url })`의 `client.rpc`                                                                                    |
-| `PublicKey`                                                              | `Address` (`address("...")`)                                                                                                              |
-| `new PublicKey(s)` / `.toBase58()`                                       | `address(s)` — base58 문자열은 이미 `Address` 형태입니다                                                                                  |
-| `Keypair` / `Keypair.generate()`                                         | `@solana/kit`의 `generateKeyPairSigner()`, 또는 `@solana/kit-plugin-signer` 변형(`signer`, `payer`, `identity`, `generated*`, `airdrop*`) |
-| `keypair.publicKey`                                                      | signer의 `.address`                                                                                                                       |
-| `SystemProgram.transfer`                                                 | `@solana-program/system`의 `getTransferSolInstruction`                                                                                    |
-| `LAMPORTS_PER_SOL` 연산                                                  | `@solana/kit`의 `lamports()`                                                                                                              |
-| `sendAndConfirmTransaction`                                              | Kit 트랜잭션 계획 (업스트림 `@solana/kit-plugin-rpc` 실행기); 지갑 서명 흐름에는 `signAndSendTransaction(client, ...)` 사용               |
-| `requestAirdrop`을 통한 devnet 에어드랍                                  | `client.airdrop` (업스트림, `solanaDevnetRpc()` / `airdropSigner`로 활성화)                                                               |
-| `Transaction` / `VersionedTransaction`                                   | Kit 명령어 및 메시지 빌더; `SolanaTransaction`은 이제 원시 직렬화 바이트입니다                                                            |
-| `connection.getBalance`                                                  | `client.rpc.getBalance(...).send()` — lamports를 `bigint`로 반환                                                                          |
-| `getTokenAccountsByOwner` / `getTokenBalance` / `@solana/spl-token` 헬퍼 | `@vue-solana/core/token-accounts`의 `getTokenAccountsByOwner(client, ...)` / `getTokenBalance(client, ...)` (Kit RPC `jsonParsed` 읽기)   |
-| `connection.confirmTransaction` / `getSignatureStatuses`                 | `confirmTransactionSignature(client, ...)` (`client.rpc.getSignatureStatuses(...).send()` 폴링)                                           |
-| wallet-standard 흐름                                                     | 변경 없음 — wallet-standard 탐색과 적응이 여전히 `useWallets()` / `useWallet()`을 구동합니다                                              |
+| 레거시                                                                   | Kit 대체품                                                                                                                                         |
+| ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Connection`                                                             | `client.rpc` / `useSolanaClient()`                                                                                                                 |
+| `new Connection(url)`                                                    | `createSolanaClient({ endpoint: url })`의 `client.rpc`                                                                                             |
+| `PublicKey`                                                              | `Address` (`address("...")`)                                                                                                                       |
+| `new PublicKey(s)` / `.toBase58()`                                       | `address(s)` — base58 문자열은 이미 `Address` 형태입니다                                                                                           |
+| `Keypair` / `Keypair.generate()`                                         | `@vue-solana/core/kit`의 `generateKeyPairSigner()`, 또는 `@solana/kit-plugin-signer` 변형(`signer`, `payer`, `identity`, `generated*`, `airdrop*`) |
+| `keypair.publicKey`                                                      | signer의 `.address`                                                                                                                                |
+| `SystemProgram.transfer`                                                 | `@solana-program/system`의 `getTransferSolInstruction`                                                                                             |
+| `LAMPORTS_PER_SOL` 연산                                                  | `@vue-solana/core/kit`의 `lamports()`                                                                                                              |
+| `sendAndConfirmTransaction`                                              | Kit 트랜잭션 계획 (업스트림 `@solana/kit-plugin-rpc` 실행기); 지갑 서명 흐름에는 `signAndSendTransaction(client, ...)` 사용                        |
+| `requestAirdrop`을 통한 devnet 에어드랍                                  | `client.airdrop` (업스트림, `solanaDevnetRpc()` / `airdropSigner`로 활성화)                                                                        |
+| `Transaction` / `VersionedTransaction`                                   | Kit 명령어 및 메시지 빌더; `SolanaTransaction`은 이제 원시 직렬화 바이트입니다                                                                     |
+| `connection.getBalance`                                                  | `client.rpc.getBalance(...).send()` — lamports를 `bigint`로 반환                                                                                   |
+| `getTokenAccountsByOwner` / `getTokenBalance` / `@solana/spl-token` 헬퍼 | `@vue-solana/core/token-accounts`의 `getTokenAccountsByOwner(client, ...)` / `getTokenBalance(client, ...)` (Kit RPC `jsonParsed` 읽기)            |
+| `connection.confirmTransaction` / `getSignatureStatuses`                 | `confirmTransactionSignature(client, ...)` (`client.rpc.getSignatureStatuses(...).send()` 폴링)                                                    |
+| wallet-standard 흐름                                                     | 변경 없음 — wallet-standard 탐색과 적응이 여전히 `useWallets()` / `useWallet()`을 구동합니다                                                       |
 
 > 일부 행은 업스트림 `@solana/kit` 플러그인(signer, planner, system program)을 참조합니다. `createSolanaClient()`의 기본 클라이언트는 `@solana/kit-plugin-rpc`의 공식 planner와 RPC plan executor를 이미 설치합니다. 나머지 플러그인(signer, system program)은 필요할 때 `@solana/kit` 생태계에서 직접 설치하세요.
 

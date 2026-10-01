@@ -58,7 +58,7 @@ Los clusters soportados son `mainnet` (alias heredado `mainnet-beta`), `devnet`,
 
 ### Opciones del plugin
 
-| Opcion           | Tipo                           | Default               | Descripcion                                                                                                                                |
+| Opción           | Tipo                           | Default               | Descripción                                                                                                                                |
 | ---------------- | ------------------------------ | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
 | `cluster`        | Solana cluster                 | `devnet`              | Cluster usado cuando se omite `endpoint`. `mainnet-beta` se acepta como alias heredado de `mainnet`.                                       |
 | `endpoint`       | `string`                       | Endpoint del cluster  | Endpoint RPC HTTP.                                                                                                                         |
@@ -66,14 +66,14 @@ Los clusters soportados son `mainnet` (alias heredado `mainnet-beta`), `devnet`,
 | `commitment`     | Commitment                     | Default de Kit        | Commitment por defecto para llamadas RPC.                                                                                                  |
 | `autoConnect`    | `boolean`                      | `false`               | Reconecta solo una wallet descubierta seleccionada previamente.                                                                            |
 | `payer`          | `TransactionSigner`            | None                  | Payer de comisiones y signer del cliente para transacciones enviadas por el cliente.                                                       |
-| `payerSecretKey` | `string`                       | None                  | Keypair Ed25519 de 64 bytes en base64, secret key primero. Direccion derivada al crear el cliente; signing key importada en el primer uso. |
+| `payerSecretKey` | `string`                       | None                  | Keypair Ed25519 de 64 bytes en base64, secret key primero. Dirección derivada al crear el cliente; signing key importada en el primer uso. |
 | `wallet`         | `SolanaWallet`                 | Deshabilitado         | Adaptador de wallet personalizado.                                                                                                         |
 | `mobileWallet`   | `MobileWalletOptions \| false` | Habilitado en Android | Opciones de Android Mobile Wallet Adapter.                                                                                                 |
 | `iosWallet`      | `iOSWalletOptions \| false`    | Habilitado en iOS     | Opciones de universal links de wallets iOS.                                                                                                |
 
-`payer` y `payerSecretKey` son compatibles con clientes Vue/core directos. Un envio del cliente requiere un `payer`. `payerSecretKey` deriva su direccion al crear el cliente desde la mitad publica sin verificar, asi que trata `payer.address` como no confirmado hasta que la primera firma tenga exito, y un keypair que no coincide se rechaza en la primera firma en vez de al crear el cliente. La firma importa la key con WebCrypto, que los navegadores solo exponen en un contexto seguro (`https`, o `http` en `localhost`). Nunca pongas un secreto crudo o `payerSecretKey` en la configuracion runtime publica de Nuxt, y nunca envíes una clave de firma con fondos al navegador de un usuario final.
+`payer` y `payerSecretKey` son compatibles con clientes Vue/core directos. Un envio del cliente requiere un `payer`. `payerSecretKey` deriva su dirección al crear el cliente desde la mitad publica sin verificar, así que trata `payer.address` como no confirmado hasta que la primera firma tenga éxito, y un keypair que no coincide se rechaza en la primera firma en vez de al crear el cliente. La firma importa la key con WebCrypto, que los navegadores solo exponen en un contexto seguro (`https`, o `http` en `localhost`). Nunca pongas un secreto crudo o `payerSecretKey` en la configuración runtime publica de Nuxt, y nunca envíes una clave de firma con fondos al navegador de un usuario final.
 
-El cliente por defecto de `createSolanaPlugin()` usa la composicion oficial `solanaRpc()` y `rpcAirdrop()`; `solanaRpc()` instala por si mismo el planner de transacciones y los ejecutores de firma y envio de planes. El fallback custom anterior no se usa. El executor oficial espera el commitment `confirmed` antes de que `execute()` resuelva y `status` sea `sent`.
+El cliente por defecto de `createSolanaPlugin()` usa la composición oficial `solanaRpc()` y `rpcAirdrop()`; `solanaRpc()` instala por si mismo el planner de transacciones y los ejecutores de firma y envio de planes. El fallback custom anterior no se usa. El executor oficial espera el commitment `confirmed` antes de que `execute()` resuelva y `status` sea `sent`.
 
 ### Ciclo de vida del cliente y del plugin
 
@@ -693,13 +693,13 @@ Una wallet puede modificar el mensaje o la transacción antes de firmar — por 
 
 ### Transacciones enviadas por el cliente
 
-`useSendTransaction()` y `useSendTransactions()` usan la capacidad de envio del cliente en vez de la wallet conectada. `createSolanaClient()` y `createSolanaPlugin()` instalan por defecto el stack oficial `solanaRpc()` y `rpcAirdrop()`, y `solanaRpc()` instala por si mismo el planner de transacciones y los ejecutores de firma y envio de planes, asi que estos composables no necesitan un fallback custom ni instalar plugins manualmente otra vez.
+`useSendTransaction()` y `useSendTransactions()` usan la capacidad de envio del cliente en vez de la wallet conectada. `createSolanaClient()` y `createSolanaPlugin()` instalan por defecto el stack oficial `solanaRpc()` y `rpcAirdrop()`, y `solanaRpc()` instala por si mismo el planner de transacciones y los ejecutores de firma y envio de planes, así que estos composables no necesitan un fallback custom ni instalar plugins manualmente otra vez.
 
-El executor obtiene un blockhash nuevo, estima o respeta los limites de recursos, ejecuta preflight salvo que se configure lo contrario, firma con los signers del cliente, envia por RPC y espera el commitment `confirmed`. `status` cambia de `sending` a `sent` solo cuando termina la operacion de envio y confirmacion. El resultado simple expone `data.context.signature`; el resultado batch contiene el arbol del plan. No hay popup de wallet, asi que usa este flujo solo cuando el cliente tenga un signer apropiado.
+El executor obtiene un blockhash nuevo, estima o respeta los limites de recursos, ejecuta preflight salvo que se configure lo contrario, firma con los signers del cliente, envia por RPC y espera el commitment `confirmed`. `status` cambia de `sending` a `sent` solo cuando termina la operación de envio y confirmación. El resultado simple expone `data.context.signature`; el resultado batch contiene el arbol del plan. No hay popup de wallet, así que usa este flujo solo cuando el cliente tenga un signer apropiado.
 
-Configura un `payer` directamente en un cliente Vue/core con `payer` o `payerSecretKey`; un cliente sin payer no puede planificar ni enviar. Las claves de produccion con fondos deben permanecer en un servidor o relayer. No pongas un secreto crudo o `payerSecretKey` en la configuracion runtime publica de Nuxt, y no envíes una keypair con fondos al navegador de un usuario final.
+Configura un `payer` directamente en un cliente Vue/core con `payer` o `payerSecretKey`; un cliente sin payer no puede planificar ni enviar. Las claves de producción con fondos deben permanecer en un servidor o relayer. No pongas un secreto crudo o `payerSecretKey` en la configuración runtime publica de Nuxt, y no envíes una keypair con fondos al navegador de un usuario final.
 
-Los composables de wallet son separados: `useSignAndSendTransaction()` puede devolver despues del envio RPC, o esperar el commitment seleccionado cuando se pasa `confirm: true`. Los envios del cliente siempre usan el comportamiento send-and-confirm del executor oficial en `confirmed`.
+Los composables de wallet son separados: `useSignAndSendTransaction()` puede devolver después del envio RPC, o esperar el commitment seleccionado cuando se pasa `confirm: true`. Los envios del cliente siempre usan el comportamiento send-and-confirm del executor oficial en `confirmed`.
 
 ## Transacciones en lote
 

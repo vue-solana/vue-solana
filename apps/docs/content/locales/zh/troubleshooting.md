@@ -13,6 +13,18 @@ v2.0.0 从每个 Vue Solana 包中移除了 `@solana/web3-compat`，因此针对
 
 请把这些导入更新为 Kit 对应的写法——参见 [Kit 迁移指南](/zh/guides/kit-migration)。如果你仍在使用 v1.x 包：v1 包为文档中的 core 导入发布过包内声明 shim，v1 应用只有在直接导入该包时才需要添加自己的 `@solana/web3-compat` shim。升级到 `@vue-solana/*@^2` 后就不再需要任何 shim。
 
+## 使用 `require` 时出现 `ERR_PACKAGE_PATH_NOT_EXPORTED`
+
+v3 仅发布 ESM：`require` 导出条件和顶层 `main` 字段都已移除。因此在 CommonJS 中 `require("@vue-solana/core")` 会以 `No "exports" main defined` 失败，require 子路径会以 `Package subpath './kit' is not defined by "exports"` 失败。
+
+把导入该包的模块改为 ESM。在 `package.json` 中添加 `"type": "module"`，或把文件重命名为 `.mjs`:
+
+```js
+import { createSolanaClient } from "@vue-solana/core/kit";
+```
+
+Nuxt 和 Vite 应用本身已经打包为 ESM,不受影响。如果无法脱离 CommonJS,请把 `@vue-solana/*` 固定在 `^2`,该版本仍然提供 `.cjs` 构建。
+
 ## `Vue Solana plugin is not installed`
 
 这表示客户端代码在没有安装插件的情况下尝试使用 Solana 客户端或钱包操作。当前 composable 在 Nuxt 服务端渲染期间会返回惰性的 SSR 安全状态，但真实 RPC 和钱包操作仍然需要客户端插件上下文。

@@ -9,7 +9,7 @@ surroundOrder: 14
 
 Vue plugin을 설치하지 않고 Kit client, endpoint helper, 공유 wallet type, Android Mobile Wallet Adapter 등록 helper, iOS browser wallet helper, token account 읽기, transaction helper를 사용하고 싶을 때 이 package를 직접 사용하세요.
 
-`@vue-solana/core`는 현대적인 [`@solana/kit`](https://www.npmjs.com/package/@solana/kit)을 기반으로 합니다. `createSolanaClient()`와 `@vue-solana/core/kit` subpath는 Kit primitive를 다시 export합니다. legacy `@solana/web3-compat` API와 `web3` subpath는 v2.0.0에서 제거되었습니다 - 전체 before/after 매핑은 [Kit Migration](/ko/guides/kit-migration)을 참고하세요.
+`@vue-solana/core`는 현대적인 [`@solana/kit`](https://www.npmjs.com/package/@solana/kit)을 기반으로 합니다. `createSolanaClient()`는 `@vue-solana/core/kit` subpath에 있고, 이 subpath는 `@solana/kit` 전체를 다시 export합니다. legacy `@solana/web3-compat` API와 `web3` subpath는 v2.0.0에서 제거되었습니다 - 전체 before/after 매핑은 [Kit Migration](/ko/guides/kit-migration)을 참고하세요.
 
 ## 설치
 
@@ -44,7 +44,7 @@ console.log(slot); // bigint
 
 `createSolanaContext()`는 `{ cluster, endpoint, wsEndpoint, client }`를 반환하며, `client`는 `client.rpc`와 `client.rpcSubscriptions`를 갖습니다.
 
-Root export는 계속 지원됩니다. 더 좁은 import에는 direct subpath export도 사용할 수 있습니다.
+Root export는 계속 지원됩니다. 특정 모듈의 helper만 import하려면 direct subpath export를 사용할 수 있습니다:
 
 ```ts
 import { createSolanaClient } from "@vue-solana/core/kit";
@@ -207,7 +207,7 @@ type SolanaChain = "solana:mainnet" | "solana:testnet" | "solana:devnet" | "sola
 
 ## Helper
 
-Root `@vue-solana/core` export는 아래 public helper를 다시 export합니다. 더 좁은 import나 명확한 module boundary가 필요하면 direct subpath를 사용하세요.
+Root `@vue-solana/core` export는 아래 public helper를 다시 export합니다. 전체 barrel 대신 한 helper의 모듈만 import하려면 direct subpath를 사용하세요:
 
 | Import path                        | 포함 내용                                                                                       | 사용할 때                                                                                                      |
 | ---------------------------------- | ----------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
@@ -265,13 +265,27 @@ import type { Address, Commitment, Lamports, Signature, SolanaRpcApi } from "@vu
 - `client.rpc`는 전체 Solana read API(`getSlot`, `getBalance`, `getBlockHeight`, `getSignatureStatuses` 등)를 `.send()`로 호출하는 RPC function으로 노출합니다.
 - `address(value)`: `Address`(base58 string brand)를 검증하고 반환합니다 - `new PublicKey(...)`의 Kit 대체입니다.
 - `lamports(value: bigint)`: `Lamports` 값을 반환합니다 - raw lamport number의 Kit 대체입니다.
-- Types: `Address`, `Commitment`, `Lamports`, `Rpc`, `Signature`, `SolanaRpcApi`, `SolanaClient`.
+- 자주 쓰는 타입: `Address`, `Commitment`, `Lamports`, `Rpc`, `Signature`, `SolanaRpcApi`, `SolanaClient`. 이 subpath는 `@solana/kit`가 export하는 모든 타입을 다시 export합니다.
 
 RPC numeric result는 `bigint`이고, account data는 `Buffer`가 아니라 `Uint8Array`입니다. 자세한 내용은 [Kit Migration](/ko/guides/kit-migration)을 참고하세요.
 
 ### Actions
 
-`createSolanaActionStore()`는 호출마다 새 `AbortSignal`을 받는 비동기 함수를 abort-on-redispatch 방식의 상태 머신으로 감쌉니다. Vue composable `useAction()`이 이 store 위에 구축되어 있고, `isSolanaActionAborted()`는 취소되거나 대체된 호출을 감지합니다.
+`createSolanaActionStore()`는 호출마다 새 `AbortSignal`을 받는 비동기 함수를 abort-on-redispatch 방식의 상태 머신으로 감쌉니다. UI 프레임워크는 반환된 store를 반응형 상태로 연결하며, Vue composable `useAction()`은 이 store 위에 구축되어 있습니다.
+
+```ts
+import { createSolanaActionStore, isSolanaActionAborted } from "@vue-solana/core/action";
+
+const { dispatch, getState, subscribe, reset, withSignal } = createSolanaActionStore(
+  (signal, address: Address) => client.rpc.getBalance(address).send(),
+);
+
+await dispatch(address);
+```
+
+- 각 `dispatch`는 이전의 진행 중인 호출을 새 `AbortSignal`로 중단합니다. 대체된 호출은 abort 오류로 거부되며, 상태를 손상시키지 않습니다.
+- `getState()` / `subscribe(listener)`: `SolanaActionState`(`status`, `data`, `error`)의 스냅샷 및 스트림입니다.
+- `withSignal(signal, ...args)`: 단일 `dispatch`에 대해 호출자가 제공한 취소 소스를 조합합니다(시도별 timeout, 공유 kill switch).
 
 ### 주소
 

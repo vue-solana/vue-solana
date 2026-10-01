@@ -9,7 +9,7 @@ surroundOrder: 14
 
 当你想要 Kit 客户端、endpoint helper、共享钱包类型、Android Mobile Wallet Adapter 注册 helper、iOS 浏览器钱包 helper、token 账户读取和交易 helper，但不想安装 Vue 插件时，可以直接使用此包。
 
-`@vue-solana/core` 基于现代的 [`@solana/kit`](https://www.npmjs.com/package/@solana/kit)。`createSolanaClient()` 和 `@vue-solana/core/kit` subpath 重新导出 Kit primitive。遗留的 `@solana/web3-compat` API 和 `web3` subpath 已在 v2.0.0 中移除——完整的 before/after 映射请参阅 [Kit 迁移](/zh/guides/kit-migration)。
+`@vue-solana/core` 基于现代的 [`@solana/kit`](https://www.npmjs.com/package/@solana/kit)。`createSolanaClient()` 位于 `@vue-solana/core/kit` subpath，该 subpath 重新导出全部的 `@solana/kit`。遗留的 `@solana/web3-compat` API 和 `web3` subpath 已在 v2.0.0 中移除——完整的 before/after 映射请参阅 [Kit 迁移](/zh/guides/kit-migration)。
 
 ## 安装
 
@@ -44,7 +44,7 @@ console.log(slot); // bigint
 
 `createSolanaContext()` 返回 `{ cluster, endpoint, wsEndpoint, client }`；`client` 带有 `client.rpc` 和 `client.rpcSubscriptions`。
 
-根导出仍然受支持。也可以使用直接 subpath 导出进行更窄的导入：
+根导出仍然受支持。也可以使用直接 subpath 导出，只导入某个模块自己拥有的 helper：
 
 ```ts
 import { createSolanaClient } from "@vue-solana/core/kit";
@@ -207,7 +207,7 @@ type SolanaChain = "solana:mainnet" | "solana:testnet" | "solana:devnet" | "sola
 
 ## Helper
 
-根 `@vue-solana/core` 导出会重新导出下面的公共 helper。需要更窄导入或更清晰模块边界时，请使用直接 subpath。
+根 `@vue-solana/core` 导出会重新导出下面的公共 helper。如果想只导入某个 helper 的模块而不是整个 barrel，请使用直接 subpath。
 
 | Import path                        | 包含内容                                                                                       | 何时使用                                                                                             |
 | ---------------------------------- | ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
@@ -265,13 +265,27 @@ import type { Address, Commitment, Lamports, Signature, SolanaRpcApi } from "@vu
 - `client.rpc`：以 RPC 函数形式暴露完整的 Solana 读取 API（`getSlot`、`getBalance`、`getBlockHeight`、`getSignatureStatuses` 等），通过 `.send()` 调用。
 - `address(value)`：验证并返回 `Address`（base58 字符串 brand）——替代 `new PublicKey(...)` 的 Kit 版本。
 - `lamports(value: bigint)`：返回 `Lamports` 值——替代原始 lamport 数字的 Kit 版本。
-- 类型：`Address`、`Commitment`、`Lamports`、`Rpc`、`Signature`、`SolanaRpcApi`、`SolanaClient`。
+- 常用类型：`Address`、`Commitment`、`Lamports`、`Rpc`、`Signature`、`SolanaRpcApi`、`SolanaClient`。该 subpath 会重新导出 `@solana/kit` 导出的所有类型，不仅仅是这些。
 
 RPC 数值结果是 `bigint`，账户数据是 `Uint8Array` 而不是 `Buffer`。详见 [Kit 迁移](/zh/guides/kit-migration)。
 
 ### 动作
 
-`createSolanaActionStore()` 将每次调用接收新 `AbortSignal` 的异步函数包装成 abort-on-redispatch 的动作状态机。Vue 组合式函数 `useAction()` 构建于此 store 之上，`isSolanaActionAborted()` 用于检测被取消或被取代的调用。
+`createSolanaActionStore()` 将每次调用接收新 `AbortSignal` 的异步函数包装成 abort-on-redispatch 的动作状态机。UI 框架会将返回的 store 桥接到响应式状态；Vue 组合式函数 `useAction()` 构建于此 store 之上。
+
+```ts
+import { createSolanaActionStore, isSolanaActionAborted } from "@vue-solana/core/action";
+
+const { dispatch, getState, subscribe, reset, withSignal } = createSolanaActionStore(
+  (signal, address: Address) => client.rpc.getBalance(address).send(),
+);
+
+await dispatch(address);
+```
+
+- 每次 `dispatch` 都会用新的 `AbortSignal` 中止上一笔未完成的调用；被取代的调用会以 abort 错误被拒绝，绝不会破坏状态。
+- `getState()` / `subscribe(listener)`: `SolanaActionState`（`status`、`data`、`error`）的快照和流。
+- `withSignal(signal, ...args)`: 为单次 `dispatch` 组合调用方提供的取消源（每次尝试的超时、共享 kill switch）。
 
 ### 地址
 
