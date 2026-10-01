@@ -1,12 +1,12 @@
 import type {
   ReactiveActionSource,
-  ReactiveActionState,
   ReactiveStreamSource,
   ReactiveState,
   ReactiveStreamStore,
   SolanaRpcResponse,
 } from "@vue-solana/core/kit";
 import {
+  createReactiveActionStore,
   createReactiveStoreWithInitialValueAndSlotTracking,
   getAbortablePromise,
 } from "@vue-solana/core/kit";
@@ -139,7 +139,7 @@ export function useTrackedData<TInitialValue, TStreamValue, TItem>(
   const data = shallowRef<SolanaRpcResponse<TItem> | undefined>(undefined);
   const error = shallowRef<SolanaError | null>(null);
   const status = shallowRef<UseTrackedDataStatus>("loading");
-  const disposables: (() => void)[] = [];
+  let disposeActive: (() => void) | undefined;
   let connectionCount = 0;
   let disposed = false;
   let activeStore: ReactiveStreamStore<SolanaRpcResponse<TItem>> | undefined;
@@ -153,9 +153,9 @@ export function useTrackedData<TInitialValue, TStreamValue, TItem>(
       error.value = normalizeSolanaError(state.error, "RPC_FAILURE");
       status.value = "error";
       options.onError?.(state.error);
-    } else if (state.status === "loading") {
+    } else if (state.status === "loading" && data.value === undefined) {
       // Stale-while-revalidate: keep the stale value while reconnecting.
-      status.value = data.value === undefined ? "loading" : status.value;
+      status.value = "loading";
     } else if (state.status === "idle") {
       // A fresh connection window (initial mount, refresh(), source change)
       // starts idle. Preserve the last known data and status for
@@ -183,81 +183,18 @@ export function useTrackedData<TInitialValue, TStreamValue, TItem>(
 
     if (!isActionSource(rpcRequest) && isSendSource(rpcRequest)) {
       // Wrap a bare `send()` source so the slot-tracking store can drive it
-      // through the ReactiveActionSource duck-type: each dispatch sends the
-      // request and publishes the response through the store's state.
+      // through the ReactiveActionSource duck-type. The Kit action store owns
+      // the supersede semantics: a fresh signal per dispatch, the previous
+      // in-flight call aborted, superseded calls rejecting with an abort error.
       const sendSource = rpcRequest as { send: SendFn<SolanaRpcResponse<TInitialValue>> };
-      const listeners = new Set<() => void>();
-      let sendState: ReactiveActionState<SolanaRpcResponse<TInitialValue>> = {
-        data: undefined,
-        error: undefined,
-        status: "idle",
-      };
-      // ponytail: per-connection controller so each dispatch aborts the
-      // previous in-flight send, mirroring the Kit store's dispatch semantics.
-      let controller: AbortController | undefined;
-
-      const emit = () => {
-        listeners.forEach((listener) => {
-          listener();
-        });
-      };
-
-      const settle = (next: ReactiveActionState<SolanaRpcResponse<TInitialValue>>) => {
-        sendState = next;
-        emit();
-      };
-
-      function runSend(abortSignal?: AbortSignal) {
-        controller?.abort();
-        controller = new AbortController();
-        const composed = abortSignal
-          ? AbortSignal.any([controller.signal, abortSignal])
-          : controller.signal;
-
-        settle({ data: undefined, error: undefined, status: "running" });
-
-        const pending = Promise.resolve(sendSource.send({ abortSignal: composed }));
-
-        pending
-          .then((response) => {
-            settle({ data: response, error: undefined, status: "success" });
-          })
-          .catch((cause) => {
-            settle({ data: undefined, error: cause, status: "error" });
-          });
-
-        // Race the send against the composed signal so a reconnection or
-        // teardown abort fails the attempt even if the source ignores it.
-        return getAbortablePromise(pending, composed);
-      }
 
       rpcRequest = {
-        reactiveStore: () => ({
-          dispatch() {
-            void runSend().catch(() => {});
-          },
-          dispatchAsync: () => runSend(),
-          getState: () => sendState,
-          reset() {
-            controller?.abort();
-            settle({ data: undefined, error: undefined, status: "idle" });
-          },
-          subscribe(listener) {
-            listeners.add(listener);
-
-            return () => {
-              listeners.delete(listener);
-            };
-          },
-          withSignal(signal: AbortSignal) {
-            return {
-              dispatch: () => {
-                void runSend(signal).catch(() => {});
-              },
-              dispatchAsync: () => runSend(signal),
-            };
-          },
-        }),
+        reactiveStore: () =>
+          createReactiveActionStore((abortSignal) =>
+            // Race the send against the signal so a reconnection or teardown
+            // abort fails the attempt even if the source ignores it.
+            getAbortablePromise(sendSource.send({ abortSignal }), abortSignal),
+          ),
       };
     }
 
@@ -278,11 +215,9 @@ export function useTrackedData<TInitialValue, TStreamValue, TItem>(
     activeStore = store;
     applyState(store.getState());
 
-    disposables.push(
-      store.subscribe(() => {
-        applyState(store.getState());
-      }),
-    );
+    disposeActive = store.subscribe(() => {
+      applyState(store.getState());
+    });
 
     if (callerSignal?.aborted) {
       applyState({ data: store.getState().data, error: callerSignal.reason, status: "error" });
@@ -298,10 +233,8 @@ export function useTrackedData<TInitialValue, TStreamValue, TItem>(
   }
 
   function disconnect() {
-    disposables.forEach((dispose) => {
-      dispose();
-    });
-    disposables.length = 0;
+    disposeActive?.();
+    disposeActive = undefined;
 
     if (activeStore) {
       activeStore.reset();

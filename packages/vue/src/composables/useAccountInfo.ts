@@ -1,8 +1,7 @@
 import type { Commitment } from "@vue-solana/core/kit";
-import { normalizeSolanaError, type SolanaError } from "@vue-solana/core/errors";
-import { onMounted, shallowRef, toValue, watch, type MaybeRefOrGetter } from "vue";
-import { parseAddress } from "@vue-solana/core/address";
+import type { MaybeRefOrGetter } from "vue";
 import { useConnection } from "./useConnection";
+import { useAddressRead } from "./use-address-read";
 import { tryUseSolana } from "./useSolana";
 import { decodeBase64 } from "./decode-base64";
 
@@ -24,79 +23,20 @@ export function useAccountInfo(
 ) {
   const solana = tryUseSolana();
   const client = solana?.client ?? useConnection();
-  const accountInfo = shallowRef<AccountInfo | null>(null);
-  const loading = shallowRef(false);
-  const error = shallowRef<SolanaError | null>(null);
-  let refreshId = 0;
 
-  async function refresh() {
-    const requestId = ++refreshId;
-    const value = toValue(address);
-
-    if (!value || !solana) {
-      accountInfo.value = null;
-      loading.value = false;
-      error.value = null;
-      return null;
-    }
-
-    loading.value = true;
-    error.value = null;
-
-    try {
-      const parsedAddress = parseAddress(value);
-
-      if (!parsedAddress) {
-        accountInfo.value = null;
-        return null;
-      }
-
-      const { value: account } = await client.rpc
-        .getAccountInfo(parsedAddress, {
-          encoding: "base64",
-          commitment: options.commitment,
-        })
-        .send();
-      const nextAccountInfo = account ? normalizeAccountInfo(account) : null;
-
-      if (requestId === refreshId) {
-        accountInfo.value = nextAccountInfo;
-      }
-
-      return nextAccountInfo;
-    } catch (cause) {
-      const normalizedError = normalizeSolanaError(cause, "RPC_FAILURE");
-
-      if (requestId === refreshId) {
-        accountInfo.value = null;
-        error.value = normalizedError;
-      }
-
-      throw normalizedError;
-    } finally {
-      if (requestId === refreshId) {
-        loading.value = false;
-      }
-    }
-  }
-
-  onMounted(() => {
-    void refresh().catch(() => undefined);
-  });
-
-  watch(
-    () => toValue(address),
-    () => {
-      void refresh().catch(() => undefined);
-    },
+  const { data: accountInfo, ...rest } = useAddressRead(
+    [address],
+    async (key) =>
+      (
+        await client.rpc
+          .getAccountInfo(key, { encoding: "base64", commitment: options.commitment })
+          .send()
+      ).value,
+    (account) => (account ? normalizeAccountInfo(account) : null),
+    null,
   );
 
-  return {
-    accountInfo,
-    loading,
-    error,
-    refresh,
-  };
+  return { accountInfo, ...rest };
 }
 
 function normalizeAccountInfo(account: {

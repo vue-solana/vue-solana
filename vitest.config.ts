@@ -110,11 +110,5 @@ export default defineConfig({
   test: {
     environment: "happy-dom",
     include: ["packages/**/*.test.ts", "apps/docs/**/*.test.ts"],
-    coverage: {
-      provider: "v8",
-      reporter: ["text", "html"],
-      include: ["packages/*/src/**/*.ts"],
-      exclude: ["packages/**/*.test.ts", "packages/**/*.test-utils.ts", "packages/**/*.d.ts"],
-    },
   },
 });

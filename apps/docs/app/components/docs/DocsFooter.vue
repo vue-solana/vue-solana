@@ -1,7 +1,12 @@
 <script setup lang="ts">
+import { useI18n } from "vue-i18n";
 import { externalNavLinks } from "~/utils/docsNavigation";
 
+const { t } = useI18n();
 const copyrightYear = 2026;
+const translatedExternalLinks = computed(() =>
+  externalNavLinks.map((link) => ({ ...link, label: t(link.labelKey) })),
+);
 </script>
 
 <template>
@@ -23,7 +28,7 @@ const copyrightYear = 2026;
 
       <nav class="flex items-center gap-1" aria-label="Package and source links">
         <UButton
-          v-for="link in externalNavLinks"
+          v-for="link in translatedExternalLinks"
           :key="link.to"
           :to="link.to"
           :icon="link.icon"

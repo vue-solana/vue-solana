@@ -4,8 +4,6 @@ export default {
       getStarted: "Get Started",
       concepts: "Concepts",
       guides: "Guides",
-      packages: "Packages",
-      examples: "Examples",
       demo: "Demo",
       roadmap: "Roadmap",
     },
@@ -191,10 +189,6 @@ export default {
         unsupported: "Selected wallet does not support message signing.",
         enterMessage: "Enter a message to sign.",
       },
-      status: {
-        ready: "ready",
-        waiting: "waiting",
-      },
     },
     tokenAccounts: {
       title: "SPL Token Accounts",
@@ -232,10 +226,6 @@ export default {
         connectWallet: "Connect the selected wallet to enable transfers.",
         recipient: "Enter a valid Solana recipient address.",
         amount: "Enter an amount greater than 0 SOL.",
-      },
-      status: {
-        ready: "ready",
-        waiting: "waiting",
       },
     },
     sections: {
@@ -323,7 +313,6 @@ export default {
       description:
         "Requests a devnet airdrop into the client's payer signer through the client's airdrop capability. Devnet faucets are rate-limited, so errors here are usually temporary.",
       request: "Airdrop 1 SOL",
-      payerHint: "The client signer is still loading.",
       signature: "Signature: {signature}",
       noSignature: "No airdrop yet",
     },

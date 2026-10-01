@@ -35,10 +35,7 @@ const mobileItems = computed(() => [
   ...createSidebarNavigationItems(route.path, localePath, t),
 ]);
 const translatedExternalLinks = computed(() =>
-  externalNavLinks.map((link) => ({
-    ...link,
-    label: t(link.labelKey) || link.label,
-  })),
+  externalNavLinks.map((link) => ({ ...link, label: t(link.labelKey) })),
 );
 const languageOptions = computed(() =>
   locales.value.map((availableLocale) => ({

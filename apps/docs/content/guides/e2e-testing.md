@@ -45,7 +45,7 @@ test.beforeEach(async ({ page }) => {
 });
 ```
 
-Handled methods: `getLatestBlockhash`, `getBalance`, `getVersion`, `getAccountInfo`, and `getHealth`. Unknown methods return `{ jsonrpc: "2.0", id, result: null }`. CORS preflight (`OPTIONS`) is answered with `204`.
+Handled methods: `getLatestBlockhash`, `getBalance`, `getVersion`, `getAccountInfo`. Unknown methods return `{ jsonrpc: "2.0", id, result: null }`. CORS preflight (`OPTIONS`) is answered with `204`.
 
 When you add an RPC call to an example app, add the method to `createRpcResponse()` in `e2e/helpers.ts`. Keep numeric values as JSON-safe values (`rentEpoch` is passed as a string because the real `u64::MAX` exceeds JavaScript's safe integer range).
 

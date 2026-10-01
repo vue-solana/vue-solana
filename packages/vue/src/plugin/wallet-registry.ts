@@ -49,41 +49,31 @@ export function createSolanaWalletRegistry(options: SolanaWalletRegistryOptions)
       chain: getSolanaChain(options.cluster),
       onChange: options.onWalletChange,
     });
-    const cachedAdapter: SolanaWallet = {
-      platform: walletInfo.platform,
-      source: walletInfo.source,
-      get publicKey() {
-        return adaptedWallet.publicKey;
-      },
-      get connected() {
-        return adaptedWallet.connected;
-      },
-      get connecting() {
-        return adaptedWallet.connecting;
-      },
-      get disconnecting() {
-        return adaptedWallet.disconnecting;
-      },
-      async connect() {
-        await adaptedWallet.connect();
+    // Everything but `connect` forwards straight through; `connect` also drops
+    // every other connected cached wallet.
+    const cachedAdapter = new Proxy(adaptedWallet, {
+      get(target, property) {
+        if (property === "connect") {
+          return connectAndDisconnectOthers;
+        }
 
-        await Promise.all(
-          Array.from(getCachedWallets()).map((otherWallet) =>
-            otherWallet !== cachedAdapter && otherWallet.connected
-              ? otherWallet.disconnect()
-              : undefined,
-          ),
-        );
+        const value: unknown = Reflect.get(target, property);
+
+        return typeof value === "function" ? value.bind(target) : value;
       },
-      disconnect: () => adaptedWallet.disconnect(),
-      signMessage: adaptedWallet.signMessage?.bind(adaptedWallet),
-      signTransaction: adaptedWallet.signTransaction?.bind(adaptedWallet),
-      signAllTransactions: adaptedWallet.signAllTransactions?.bind(adaptedWallet),
-      signAndSendTransaction: adaptedWallet.signAndSendTransaction?.bind(adaptedWallet),
-      signIn: adaptedWallet.signIn?.bind(adaptedWallet),
-      signTransactions: adaptedWallet.signTransactions?.bind(adaptedWallet),
-      signAndSendTransactions: adaptedWallet.signAndSendTransactions?.bind(adaptedWallet),
-    };
+    });
+
+    async function connectAndDisconnectOthers() {
+      await adaptedWallet.connect();
+
+      await Promise.all(
+        Array.from(getCachedWallets()).map((otherWallet) =>
+          otherWallet !== cachedAdapter && otherWallet.connected
+            ? otherWallet.disconnect()
+            : undefined,
+        ),
+      );
+    }
 
     adaptedWallets.set(walletInfo.wallet, cachedAdapter);
     return cachedAdapter;

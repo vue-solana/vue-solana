@@ -44,59 +44,66 @@ export function getStoredIosWalletAccount(walletId: string, chains: readonly str
 }
 
 export function getStoredSession(walletId: string): IosWalletSession | null {
-  const value = getStorage()?.getItem(`${SESSION_PREFIX}${walletId}`);
-
-  if (!value) {
-    return null;
-  }
-
-  try {
-    const session = JSON.parse(value) as IosWalletSession;
-
-    if (!isAddress(session.publicKey)) {
-      throw new Error("Invalid stored public key");
-    }
-
-    return session;
-  } catch {
-    removeStoredSession(walletId);
-    return null;
-  }
+  return readJson<IosWalletSession>(`${SESSION_PREFIX}${walletId}`, (session) =>
+    isAddress(session.publicKey),
+  );
 }
 
 export function storeSession(session: IosWalletSession) {
-  getStorage()?.setItem(`${SESSION_PREFIX}${session.walletId}`, JSON.stringify(session));
+  writeJson(`${SESSION_PREFIX}${session.walletId}`, session);
 }
 
 export function removeStoredSession(walletId: string) {
-  getStorage()?.removeItem(`${SESSION_PREFIX}${walletId}`);
+  removeJson(`${SESSION_PREFIX}${walletId}`);
 }
 
 export function getPendingRequest(): PendingIosWalletRequest | null {
-  const value = getStorage()?.getItem(PENDING_REQUEST_KEY);
-
-  if (!value) {
-    return null;
-  }
-
-  try {
-    return JSON.parse(value) as PendingIosWalletRequest;
-  } catch {
-    clearPendingRequest();
-    return null;
-  }
+  return readJson(PENDING_REQUEST_KEY);
 }
 
 export function storePendingRequest(request: PendingIosWalletRequest) {
-  getStorage()?.setItem(PENDING_REQUEST_KEY, JSON.stringify(request));
+  writeJson(PENDING_REQUEST_KEY, request);
 }
 
 export function clearPendingRequest() {
-  getStorage()?.removeItem(PENDING_REQUEST_KEY);
+  removeJson(PENDING_REQUEST_KEY);
 }
 
 export function isPendingRequestExpired(request: PendingIosWalletRequest) {
   return Date.now() - request.createdAt > PENDING_REQUEST_TTL_MS;
+}
+
+/**
+ * Reads one key as JSON. A missing, unparseable or `validate`-rejected value is
+ * removed and reported as absent, so a corrupted entry never survives.
+ */
+function readJson<T>(key: string, validate?: (value: T) => boolean): T | null {
+  const value = getStorage()?.getItem(key);
+
+  if (!value) {
+    return null;
+  }
+
+  try {
+    const parsed = JSON.parse(value) as T;
+
+    if (validate && !validate(parsed)) {
+      throw new Error("Invalid stored value");
+    }
+
+    return parsed;
+  } catch {
+    getStorage()?.removeItem(key);
+    return null;
+  }
+}
+
+function writeJson(key: string, value: unknown) {
+  getStorage()?.setItem(key, JSON.stringify(value));
+}
+
+function removeJson(key: string) {
+  getStorage()?.removeItem(key);
 }
 
 function getStorage(): Storage | null {

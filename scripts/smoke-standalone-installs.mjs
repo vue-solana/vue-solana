@@ -39,14 +39,7 @@ function fileDependency(tarballPath, consumerDir) {
   return `file:${relative(consumerDir, tarballPath)}`;
 }
 
-function writeConsumer({
-  name,
-  dependencies,
-  devDependencies,
-  overrides,
-  source,
-  tsconfigCompilerOptions = {},
-}) {
+function writeConsumer({ name, dependencies, devDependencies, overrides = {}, source }) {
   const consumerDir = join(tempRoot, name);
   mkdirSync(join(consumerDir, "src"), { recursive: true });
 
@@ -82,7 +75,6 @@ function writeConsumer({
           // Third-party Solana declarations reference Node globals (e.g. Buffer);
           // consumers should not need @types/node to use browser-first packages.
           skipLibCheck: true,
-          ...tsconfigCompilerOptions,
         },
         include: ["src/**/*.ts"],
       },
@@ -128,7 +120,6 @@ try {
     devDependencies: {
       typescript: "^5.8.3",
     },
-    overrides: {},
     source: `import { createSolanaContext, type SolanaContext } from "@vue-solana/core";
 import { installSolanaBufferPolyfill, Buffer } from "@vue-solana/core/buffer-polyfill";
 import { parseAddress } from "@vue-solana/core/address";
@@ -146,21 +137,6 @@ const rpc: Rpc<SolanaRpcApi> = context.client.rpc;
 const parsed: Address | null = parseAddress("11111111111111111111111111111111");
 const commitment: Commitment = "confirmed";
 
-void payer;
-void amount;
-void rpc;
-void parsed;
-void commitment;
-void extendClient;
-void generateKeyPairSigner;
-void summarizeTransactionPlanResult;
-void (null as AccountRole | null);
-void (null as Instruction | null);
-void (null as TransactionPlanResult | null);
-void getTokenAccount;
-void getTokenAccountsByOwner;
-void getTokenBalance;
-void (null as TokenAccountInfo | null);
 `,
   });
 
@@ -200,16 +176,6 @@ export default defineComponent({
   },
 });
 
-void plugin;
-void client;
-void publicKey;
-void extendClient;
-void generateKeyPairSigner;
-void summarizeTransactionPlanResult;
-void (null as SolanaWalletInfo | null);
-void (null as AccountRole | null);
-void (null as Instruction | null);
-void (null as TransactionPlanResult | null);
 `,
   });
 
@@ -226,9 +192,6 @@ void (null as TransactionPlanResult | null);
       "@vue-solana/core": fileDependency(packages.core.tarball, join(tempRoot, "nuxt-consumer")),
       "@vue-solana/vue": fileDependency(packages.vue.tarball, join(tempRoot, "nuxt-consumer")),
     },
-    // Nuxt/Nitro declarations currently reference many optional peer packages in raw tsc checks.
-    // skipLibCheck (set for all consumers above) covers this upstream declaration noise.
-    tsconfigCompilerOptions: {},
     source: `import VueSolana from "@vue-solana/nuxt";
 import type { SolanaWalletInfo, VueSolanaContext } from "@vue-solana/nuxt";
 import { installSolanaBufferPolyfill, Buffer } from "@vue-solana/nuxt/buffer-polyfill";
@@ -237,17 +200,6 @@ import { createSolanaClient, extendClient, generateKeyPairSigner, summarizeTrans
 installSolanaBufferPolyfill();
 
 const client: SolanaClient = createSolanaClient({ cluster: "devnet" });
-
-void VueSolana;
-void client;
-void extendClient;
-void generateKeyPairSigner;
-void summarizeTransactionPlanResult;
-void (null as SolanaWalletInfo | null);
-void (null as VueSolanaContext | null);
-void (null as AccountRole | null);
-void (null as Instruction | null);
-void (null as TransactionPlanResult | null);
 `,
   });
 

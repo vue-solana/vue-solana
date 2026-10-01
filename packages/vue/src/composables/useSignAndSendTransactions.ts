@@ -7,7 +7,8 @@ import {
   assertWalletCanSignAndSendTransactions,
   createNoWalletSelectedError,
 } from "@vue-solana/core/wallet";
-import { ref, shallowRef } from "vue";
+import { shallowRef } from "vue";
+import { useExecution } from "./use-execution";
 import { useWallet } from "./useWallet";
 
 const SIGN_AND_SEND_TIMEOUT_MS = 120_000;
@@ -42,83 +43,62 @@ export class PartialSignAndSendError extends SolanaError {
 export function useSignAndSendTransactions() {
   const { wallet } = useWallet();
   const signatures = shallowRef<Signature[] | null>(null);
-  const status = ref<SignAndSendTransactionsStatus>("idle");
-  const loading = ref(false);
-  const error = ref<SolanaError | null>(null);
-  let executionId = 0;
+  const { status, loading, error, execute } =
+    useExecution<SignAndSendTransactionsStatus>("sending");
 
-  async function execute(
+  function send(
     transactions: SolanaTransaction[],
     options?: SendTransactionOptions,
   ): Promise<Signature[]> {
-    const currentExecutionId = ++executionId;
-
-    status.value = "sending";
-    loading.value = true;
-    error.value = null;
     signatures.value = null;
 
-    const activeWallet = wallet.value;
+    return execute(
+      async () => {
+        const activeWallet = wallet.value;
 
-    if (!activeWallet) {
-      const normalizedError = createNoWalletSelectedError();
-      error.value = normalizedError;
-      status.value = "error";
-      loading.value = false;
-
-      throw normalizedError;
-    }
-
-    const sendSingularSequentially = async (): Promise<Signature[]> => {
-      const collected: Signature[] = [];
-
-      for (const transaction of transactions) {
-        try {
-          const result = await activeWallet.signAndSendTransaction!(transaction, options);
-          collected.push(result.signature as Signature);
-        } catch (cause) {
-          // Sequential on purpose: a parallel batch would strand in-flight
-          // siblings on the first failure, losing signatures that already
-          // landed and inviting a double-send on retry.
-          throw new PartialSignAndSendError(normalizeSolanaError(cause, "RPC_FAILURE"), collected);
+        if (!activeWallet) {
+          throw createNoWalletSelectedError();
         }
-      }
 
-      return collected;
-    };
+        assertWalletCanSignAndSendTransactions(activeWallet);
 
-    try {
-      assertWalletCanSignAndSendTransactions(activeWallet);
+        const sendSingularSequentially = async (): Promise<Signature[]> => {
+          const collected: Signature[] = [];
 
-      const send = withSolanaTimeout(
-        activeWallet.signAndSendTransactions
-          ? activeWallet.signAndSendTransactions(transactions, options)
-          : sendSingularSequentially(),
-        SIGN_AND_SEND_TIMEOUT_MS,
-        "Wallet transaction did not return a result. Check your wallet or explorer for the final status.",
-      );
-      const result = (await send) as Signature[];
+          for (const transaction of transactions) {
+            try {
+              const result = await activeWallet.signAndSendTransaction!(transaction, options);
+              collected.push(result.signature as Signature);
+            } catch (cause) {
+              // Sequential on purpose: a parallel batch would strand in-flight
+              // siblings on the first failure, losing signatures that already
+              // landed and inviting a double-send on retry.
+              throw new PartialSignAndSendError(
+                normalizeSolanaError(cause, "RPC_FAILURE"),
+                collected,
+              );
+            }
+          }
 
-      if (currentExecutionId === executionId) {
+          return collected;
+        };
+
+        const send = withSolanaTimeout(
+          activeWallet.signAndSendTransactions
+            ? activeWallet.signAndSendTransactions(transactions, options)
+            : sendSingularSequentially(),
+          SIGN_AND_SEND_TIMEOUT_MS,
+          "Wallet transaction did not return a result. Check your wallet or explorer for the final status.",
+        );
+
+        return (await send) as Signature[];
+      },
+      (result) => {
         signatures.value = result;
-        status.value = "sent";
-      }
 
-      return result;
-    } catch (cause) {
-      const normalizedError = normalizeSolanaError(cause, "RPC_FAILURE");
-
-      if (currentExecutionId === executionId) {
-        error.value = normalizedError;
-        status.value = "error";
-      }
-
-      throw normalizedError;
-    } finally {
-      if (currentExecutionId === executionId) {
-        loading.value = false;
-      }
-    }
+        return "sent";
+      },
+    );
   }
 
   return {
@@ -126,6 +106,6 @@ export function useSignAndSendTransactions() {
     status,
     loading,
     error,
-    execute,
+    execute: send,
   };
 }

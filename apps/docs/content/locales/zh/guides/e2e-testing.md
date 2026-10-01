@@ -45,7 +45,7 @@ test.beforeEach(async ({ page }) => {
 });
 ```
 
-已处理的方法：`getLatestBlockhash`、`getBalance`、`getVersion`、`getAccountInfo` 和 `getHealth`。未知方法返回 `{ jsonrpc: "2.0", id, result: null }`。CORS 预检（`OPTIONS`）以 `204` 应答。
+已处理的方法：`getLatestBlockhash`、`getBalance`、`getVersion`、`getAccountInfo`。未知方法返回 `{ jsonrpc: "2.0", id, result: null }`。CORS 预检（`OPTIONS`）以 `204` 应答。
 
 当你在示例应用中新增 RPC 调用时，请把该方法添加到 `e2e/helpers.ts` 的 `createRpcResponse()` 中。数值应保持为 JSON 安全值（真实 `u64::MAX` 超出 JavaScript 的安全整数范围，因此 `rentEpoch` 以字符串形式传递）。
 

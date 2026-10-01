@@ -5,16 +5,11 @@ import type {
   TransactionPlanInput,
   TransactionPlanResult,
 } from "@vue-solana/core/kit";
-import { normalizeSolanaError, type SolanaError } from "@vue-solana/core/errors";
-import { onScopeDispose, ref, shallowRef } from "vue";
-import { useClientCapability } from "./useClientCapability";
-import { useSolanaClient } from "./useSolanaClient";
+import { useClientAction, type ClientActionConfig } from "./client-action";
 
 export type SendTransactionStatus = "idle" | "sending" | "sent" | "error";
 
-export interface SendTransactionConfig {
-  abortSignal?: AbortSignal;
-}
+export type SendTransactionConfig = ClientActionConfig;
 
 export type SendTransactionInput =
   | InstructionPlanInput
@@ -23,20 +18,16 @@ export type SendTransactionInput =
 
 export type SendTransactionsInput = InstructionPlanInput | TransactionPlanInput;
 
-interface SendingClient {
-  sendTransaction: (
-    input: SendTransactionInput,
-    config?: SendTransactionConfig,
-  ) => Promise<SuccessfulSingleTransactionPlanResult>;
-  sendTransactions: (
-    input: SendTransactionsInput,
-    config?: SendTransactionConfig,
-  ) => Promise<TransactionPlanResult>;
-}
-
 const SENDING_PROVIDER_HINT =
   "Use a client created by `createSolanaClient({ payer })` — or any client with a `payer` signer. " +
   "Kit reads `client.payer` when it plans a transaction from an instruction plan.";
+
+const SEND_STATUSES = {
+  error: "error",
+  idle: "idle",
+  success: "sent",
+  working: "sending",
+} as const satisfies Record<string, SendTransactionStatus>;
 
 /**
  * Plan, sign with the client's signers (payer/identity), submit, and confirm
@@ -55,74 +46,16 @@ const SENDING_PROVIDER_HINT =
  * from a real failure.
  */
 export function useSendTransaction() {
-  useClientCapability(["sendTransaction", "payer"], {
+  return useClientAction<
+    SendTransactionInput,
+    SuccessfulSingleTransactionPlanResult,
+    SendTransactionStatus
+  >({
+    capability: "sendTransaction",
     hookName: "useSendTransaction",
     providerHint: SENDING_PROVIDER_HINT,
+    statuses: SEND_STATUSES,
   });
-
-  const { client } = useSolanaClient();
-  const data = shallowRef<SuccessfulSingleTransactionPlanResult | null>(null);
-  const status = ref<SendTransactionStatus>("idle");
-  const loading = ref(false);
-  const error = ref<SolanaError | null>(null);
-  let executionId = 0;
-  let abortController: AbortController | undefined;
-
-  onScopeDispose(() => {
-    abortController?.abort();
-    executionId++;
-  });
-
-  async function execute(
-    input: SendTransactionInput,
-    config?: SendTransactionConfig,
-  ): Promise<SuccessfulSingleTransactionPlanResult> {
-    abortController?.abort();
-    const controller = new AbortController();
-    abortController = controller;
-    const currentExecutionId = ++executionId;
-    const sender = client as unknown as SendingClient;
-
-    status.value = "sending";
-    loading.value = true;
-    error.value = null;
-    data.value = null;
-
-    try {
-      const abortSignal = config?.abortSignal
-        ? AbortSignal.any([controller.signal, config.abortSignal])
-        : controller.signal;
-      const result = await sender.sendTransaction(input, { abortSignal });
-
-      if (currentExecutionId === executionId) {
-        data.value = result;
-        status.value = "sent";
-      }
-
-      return result;
-    } catch (cause) {
-      const normalizedError = normalizeSolanaError(cause, "RPC_FAILURE");
-
-      if (currentExecutionId === executionId) {
-        error.value = normalizedError;
-        status.value = "error";
-      }
-
-      throw normalizedError;
-    } finally {
-      if (currentExecutionId === executionId) {
-        loading.value = false;
-      }
-    }
-  }
-
-  return {
-    data,
-    status,
-    loading,
-    error,
-    execute,
-  };
 }
 
 /**
@@ -134,72 +67,10 @@ export function useSendTransaction() {
  * includes a client without a `payer` signer.
  */
 export function useSendTransactions() {
-  useClientCapability(["sendTransactions", "payer"], {
+  return useClientAction<SendTransactionsInput, TransactionPlanResult, SendTransactionStatus>({
+    capability: "sendTransactions",
     hookName: "useSendTransactions",
     providerHint: SENDING_PROVIDER_HINT,
+    statuses: SEND_STATUSES,
   });
-
-  const { client } = useSolanaClient();
-  const data = shallowRef<TransactionPlanResult | null>(null);
-  const status = ref<SendTransactionStatus>("idle");
-  const loading = ref(false);
-  const error = ref<SolanaError | null>(null);
-  let executionId = 0;
-  let abortController: AbortController | undefined;
-
-  onScopeDispose(() => {
-    abortController?.abort();
-    executionId++;
-  });
-
-  async function execute(
-    input: SendTransactionsInput,
-    config?: SendTransactionConfig,
-  ): Promise<TransactionPlanResult> {
-    abortController?.abort();
-    const controller = new AbortController();
-    abortController = controller;
-    const currentExecutionId = ++executionId;
-    const sender = client as unknown as SendingClient;
-
-    status.value = "sending";
-    loading.value = true;
-    error.value = null;
-    data.value = null;
-
-    try {
-      const abortSignal = config?.abortSignal
-        ? AbortSignal.any([controller.signal, config.abortSignal])
-        : controller.signal;
-      const result = await sender.sendTransactions(input, { abortSignal });
-
-      if (currentExecutionId === executionId) {
-        data.value = result;
-        status.value = "sent";
-      }
-
-      return result;
-    } catch (cause) {
-      const normalizedError = normalizeSolanaError(cause, "RPC_FAILURE");
-
-      if (currentExecutionId === executionId) {
-        error.value = normalizedError;
-        status.value = "error";
-      }
-
-      throw normalizedError;
-    } finally {
-      if (currentExecutionId === executionId) {
-        loading.value = false;
-      }
-    }
-  }
-
-  return {
-    data,
-    status,
-    loading,
-    error,
-    execute,
-  };
 }

@@ -166,30 +166,13 @@ export function adaptSolanaStandardWallet(
         }
       : undefined,
     signAllTransactions: hasSignTransaction(wallet)
-      ? async (transactions) => {
-          const activeAccount = getActiveAccount(account);
-          const results = await wallet.features[SolanaSignTransaction].signTransaction(
-            ...transactions.map((transaction) => ({
-              account: activeAccount,
-              transaction: new Uint8Array(transaction),
-              chain: options.chain,
-            })),
-          );
-
-          if (results.length !== transactions.length) {
-            throw new Error(
-              `Solana wallet returned ${results.length} signed transactions for ${transactions.length} requested transactions`,
-            );
-          }
-
-          return results.map((result) => {
-            if (!result) {
-              throw new Error("Solana wallet did not return a signed transaction");
-            }
-
-            return result.signedTransaction;
-          });
-        }
+      ? async (transactions) =>
+          signAllThroughFeature(
+            wallet as Wallet & { features: SolanaSignTransactionFeature },
+            () => getActiveAccount(account),
+            transactions,
+            options.chain,
+          )
       : undefined,
     signTransactions: hasSignTransaction(wallet)
       ? async (transactions) =>

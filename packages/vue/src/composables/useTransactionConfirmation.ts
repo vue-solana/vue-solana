@@ -1,8 +1,8 @@
 import type { Signature } from "@vue-solana/core/kit";
 import { confirmTransactionSignature } from "@vue-solana/core/transaction";
 import type { ConfirmTransactionOptions, TransactionConfirmation } from "@vue-solana/core/types";
-import { normalizeSolanaError, type SolanaError } from "@vue-solana/core/errors";
 import { ref } from "vue";
+import { useExecution } from "./use-execution";
 import { useConnection } from "./useConnection";
 
 export type TransactionConfirmationStatus =
@@ -27,57 +27,34 @@ export function useTransactionConfirmation(defaultOptions: ConfirmTransactionOpt
   const client = useConnection();
   const signature = ref<Signature | null>(null);
   const confirmation = ref<TransactionConfirmation | null>(null);
-  const status = ref<TransactionConfirmationStatus>("idle");
-  const loading = ref(false);
-  const error = ref<SolanaError | null>(null);
-  let executionId = 0;
+  const {
+    status,
+    loading,
+    error,
+    execute,
+    reset: resetExecution,
+  } = useExecution<TransactionConfirmationStatus>("confirming");
 
-  async function confirm(nextSignature: Signature, options: ConfirmTransactionOptions = {}) {
-    const currentExecutionId = ++executionId;
+  function confirm(nextSignature: Signature, options: ConfirmTransactionOptions = {}) {
     const confirmationOptions = { ...defaultOptions, ...options };
 
     signature.value = nextSignature;
     confirmation.value = null;
-    status.value = "confirming";
-    loading.value = true;
-    error.value = null;
 
-    try {
-      const nextConfirmation = await confirmTransactionSignature(
-        client,
-        nextSignature,
-        confirmationOptions,
-      );
-
-      if (currentExecutionId === executionId) {
+    return execute(
+      () => confirmTransactionSignature(client, nextSignature, confirmationOptions),
+      (nextConfirmation) => {
         confirmation.value = nextConfirmation;
-        status.value = getConfirmedTransactionStatus(nextConfirmation);
-      }
 
-      return nextConfirmation;
-    } catch (cause) {
-      const normalizedError = normalizeSolanaError(cause, "RPC_FAILURE");
-
-      if (currentExecutionId === executionId) {
-        error.value = normalizedError;
-        status.value = "error";
-      }
-
-      throw normalizedError;
-    } finally {
-      if (currentExecutionId === executionId) {
-        loading.value = false;
-      }
-    }
+        return getConfirmedTransactionStatus(nextConfirmation);
+      },
+    );
   }
 
   function reset() {
-    executionId += 1;
+    resetExecution();
     signature.value = null;
     confirmation.value = null;
-    status.value = "idle";
-    loading.value = false;
-    error.value = null;
   }
 
   return {

@@ -8965,7 +8965,7 @@ test.beforeEach(async ({ page }) => {
 });
 ```
 
-Métodos manejados: `getLatestBlockhash`, `getBalance`, `getVersion`, `getAccountInfo` y `getHealth`. Los métodos desconocidos devuelven `{ jsonrpc: "2.0", id, result: null }`. El preflight CORS (`OPTIONS`) se responde con `204`.
+Métodos manejados: `getLatestBlockhash`, `getBalance`, `getVersion`, `getAccountInfo`. Los métodos desconocidos devuelven `{ jsonrpc: "2.0", id, result: null }`. El preflight CORS (`OPTIONS`) se responde con `204`.
 
 Cuando añadas una llamada RPC a una app de ejemplo, añade el método a `createRpcResponse()` en `e2e/helpers.ts`. Mantén los valores numéricos como valores seguros para JSON (`rentEpoch` se pasa como string porque el `u64::MAX` real excede el rango de enteros seguros de JavaScript).
 
@@ -9450,7 +9450,7 @@ test.beforeEach(async ({ page }) => {
 });
 ```
 
-Handled methods: `getLatestBlockhash`, `getBalance`, `getVersion`, `getAccountInfo`, and `getHealth`. Unknown methods return `{ jsonrpc: "2.0", id, result: null }`. CORS preflight (`OPTIONS`) is answered with `204`.
+Handled methods: `getLatestBlockhash`, `getBalance`, `getVersion`, `getAccountInfo`. Unknown methods return `{ jsonrpc: "2.0", id, result: null }`. CORS preflight (`OPTIONS`) is answered with `204`.
 
 When you add an RPC call to an example app, add the method to `createRpcResponse()` in `e2e/helpers.ts`. Keep numeric values as JSON-safe values (`rentEpoch` is passed as a string because the real `u64::MAX` exceeds JavaScript's safe integer range).
 
@@ -9549,7 +9549,7 @@ test.beforeEach(async ({ page }) => {
 });
 ```
 
-처리되는 메서드: `getLatestBlockhash`, `getBalance`, `getVersion`, `getAccountInfo`, `getHealth`. 알 수 없는 메서드는 `{ jsonrpc: "2.0", id, result: null }`을 반환합니다. CORS preflight(`OPTIONS`)는 `204`로 응답됩니다.
+처리되는 메서드: `getLatestBlockhash`, `getBalance`, `getVersion`, `getAccountInfo`. 알 수 없는 메서드는 `{ jsonrpc: "2.0", id, result: null }`을 반환합니다. CORS preflight(`OPTIONS`)는 `204`로 응답됩니다.
 
 예제 앱에 RPC 호출을 추가할 때는 `e2e/helpers.ts`의 `createRpcResponse()`에 해당 메서드를 추가하세요. 숫자 값은 JSON-safe 값으로 유지하세요(실제 `u64::MAX`는 JavaScript의 안전한 정수 범위를 초과하므로 `rentEpoch`는 문자열로 전달됩니다).
 
@@ -10437,7 +10437,7 @@ test.beforeEach(async ({ page }) => {
 });
 ```
 
-已处理的方法：`getLatestBlockhash`、`getBalance`、`getVersion`、`getAccountInfo` 和 `getHealth`。未知方法返回 `{ jsonrpc: "2.0", id, result: null }`。CORS 预检（`OPTIONS`）以 `204` 应答。
+已处理的方法：`getLatestBlockhash`、`getBalance`、`getVersion`、`getAccountInfo`。未知方法返回 `{ jsonrpc: "2.0", id, result: null }`。CORS 预检（`OPTIONS`）以 `204` 应答。
 
 当你在示例应用中新增 RPC 调用时，请把该方法添加到 `e2e/helpers.ts` 的 `createRpcResponse()` 中。数值应保持为 JSON 安全值（真实 `u64::MAX` 超出 JavaScript 的安全整数范围，因此 `rentEpoch` 以字符串形式传递）。
 

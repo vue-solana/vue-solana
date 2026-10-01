@@ -45,7 +45,7 @@ test.beforeEach(async ({ page }) => {
 });
 ```
 
-처리되는 메서드: `getLatestBlockhash`, `getBalance`, `getVersion`, `getAccountInfo`, `getHealth`. 알 수 없는 메서드는 `{ jsonrpc: "2.0", id, result: null }`을 반환합니다. CORS preflight(`OPTIONS`)는 `204`로 응답됩니다.
+처리되는 메서드: `getLatestBlockhash`, `getBalance`, `getVersion`, `getAccountInfo`. 알 수 없는 메서드는 `{ jsonrpc: "2.0", id, result: null }`을 반환합니다. CORS preflight(`OPTIONS`)는 `204`로 응답됩니다.
 
 예제 앱에 RPC 호출을 추가할 때는 `e2e/helpers.ts`의 `createRpcResponse()`에 해당 메서드를 추가하세요. 숫자 값은 JSON-safe 값으로 유지하세요(실제 `u64::MAX`는 JavaScript의 안전한 정수 범위를 초과하므로 `rentEpoch`는 문자열로 전달됩니다).
 
