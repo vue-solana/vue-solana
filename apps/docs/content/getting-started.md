@@ -53,6 +53,10 @@ This installs the package and adds `@vue-solana/nuxt` to the `modules` array in 
 
 Nuxt apps can use `@vue-solana/nuxt/kit` and `@vue-solana/nuxt/buffer-polyfill` without installing `@vue-solana/core`, `@vue-solana/vue`, or low-level Solana and Buffer packages directly. The auto-imported `useSolanaClient()` returns the injected Kit client.
 
+## v3 Note
+
+v3.0.0 publishes ESM only — the `require` export condition and the top-level `main` field are gone from every `@vue-solana/*` package. Nuxt and Vite apps already bundle ESM and need no change; a plain Node script that `require()`s a Vue Solana package must become ESM. The `kit` subpaths also became a complete mirror of `@solana/kit`, so you can drop `@solana/kit` from your own `package.json` if you added it on v2. See [Upgrading v2 to v3](/guides/kit-migration#upgrading-v2-to-v3) for the details.
+
 ## v2 Note
 
 v2.0.0 removed the legacy `@solana/web3-compat` surface. The context no longer carries a `connection`, and the `@vue-solana/*/web3` subpaths were deleted. All composables are Kit-first and `SolanaWallet.publicKey` is a plain base58 `Address` string. The `@solana/buffer/` shim that earlier v1 docs described is gone; the retained package-owned shims only cover the browser `buffer/` subpath used by the Buffer polyfill. See the [Kit Migration guide](/guides/kit-migration) for the full before/after map.

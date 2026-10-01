@@ -125,6 +125,8 @@ Current package dependency:
 
 Kit surface rule: the `kit` subpaths of all three packages are a full `export * from "@solana/kit"` mirror, not a curated list. Consumers must never have to add `@solana/kit` to their own `package.json` (pnpm's strict `node_modules` does not even resolve it from `packages/vue`). The only names resolved by hand are the four listed above, and they are resolved in the root barrels only — never inside the `kit` subpaths, which must stay a faithful mirror.
 
+v3 module format: the packages publish ESM only (`emitCJS` and every `require` export condition are gone, and there is no top-level `main`). A CommonJS `require()` of the package or any subpath fails. This is documented as a breaking change in `.changeset/release-v-3.md` and as a troubleshooting entry in `apps/docs/content/troubleshooting.md`; keep those in sync if the format ever changes again. The `SMOKE_TEST` matrix in `scripts/smoke-standalone-installs.mjs` is the gate that catches a broken `exports` map.
+
 Client transaction stack:
 
 - `createSolanaClient()` chains `createClient()`, `solanaRpc()`, and `rpcAirdrop()` from `@solana/kit-plugin-rpc`. It does **not** call `rpcTransactionPlanner()` or `rpcTransactionPlanSendingExecutor()` — `solanaRpc()` already installs `planTransaction(s)` and `sendTransaction(s)` itself (verified against `@solana/kit-plugin-rpc@0.19.0`). The default client therefore exposes those capabilities with no extra plugin; the send-and-confirm path settles at `confirmed` commitment.

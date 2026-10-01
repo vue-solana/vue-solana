@@ -15,7 +15,9 @@ npx nuxt module add @vue-solana/nuxt
 
 Esto instala el paquete y agrega `@vue-solana/nuxt` al array `modules` en `nuxt.config.ts`.
 
-Las apps de navegador que crean o serializan transacciones pueden inicializar el polyfill de Buffer desde `@vue-solana/nuxt/buffer-polyfill`. Usa `@vue-solana/nuxt/kit` para la API Kit (`createSolanaClient`, `address`, `lamports` y tipos) y el composable autoimportado `useSolanaClient()`.
+El paquete es solo ESM. Nuxt ya empaqueta ESM y no necesita cambios; un `require("@vue-solana/nuxt")` de CommonJS falla con `No "exports" main defined`, así que convierte el módulo importador a ESM, o quédate en `@vue-solana/nuxt@^2`, que todavía incluye una build `.cjs`. Consulta [Actualizar de v2 a v3](/es/guides/kit-migration#actualizar-de-v2-a-v3).
+
+Las apps de navegador que crean o serializan transacciones pueden inicializar el polyfill de Buffer desde `@vue-solana/nuxt/buffer-polyfill`. Usa `@vue-solana/nuxt/kit` para la API Kit — reexporta todo `@solana/kit` — o el composable autoimportado `useSolanaClient()`.
 
 ## Configuración del módulo
 

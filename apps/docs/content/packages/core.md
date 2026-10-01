@@ -17,6 +17,8 @@ Use this package directly when you want Kit clients, endpoint helpers, shared wa
 pnpm add @vue-solana/core
 ```
 
+The package is ESM only. A CommonJS `require("@vue-solana/core")` fails with `No "exports" main defined`; make the importing module ESM, or stay on `@vue-solana/core@^2`, which still ships a `.cjs` build. See [Upgrading v2 to v3](/guides/kit-migration#upgrading-v2-to-v3).
+
 ## Quick Start
 
 ```ts
@@ -268,6 +270,7 @@ import type { Address, Commitment, Lamports, Signature, SolanaRpcApi } from "@vu
 - `address(value)`: validates and returns an `Address` (base58 string brand) — the Kit replacement for `new PublicKey(...)`.
 - `lamports(value: bigint)`: returns a `Lamports` value — the Kit replacement for raw lamport numbers.
 - Commonly used types: `Address`, `Commitment`, `Lamports`, `Rpc`, `Signature`, `SolanaRpcApi`, `SolanaClient`. The subpath re-exports every type `@solana/kit` exports, not just these.
+- Four names exist in both Kit and this library. They resolve to **this library's** version from the root barrel (`@vue-solana/core`) and to **Kit's** version from the `/kit` subpath: `SolanaError`, `SolanaErrorCode`, `isSolanaError`, and `TransactionStatus`. Import `isSolanaError` from `@vue-solana/core/kit` when you are inspecting an error thrown by Kit itself, because the root barrel's guard does not match Kit's error class.
 
 RPC numeric results are `bigint`, and account data is `Uint8Array` rather than `Buffer`. See [Kit Migration](/guides/kit-migration) for details.
 

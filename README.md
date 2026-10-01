@@ -22,6 +22,8 @@ Use [`@vue-solana/nuxt`](https://www.npmjs.com/package/@vue-solana/nuxt) in Nuxt
 
 `@vue-solana/core` builds on top of [`@solana/kit`](https://www.npmjs.com/package/@solana/kit) and re-exports all of `@solana/kit` from its `kit` subpaths, so apps can use one Vue Solana package entry point and never install `@solana/kit` themselves.
 
+Since v3.0.0 every `@vue-solana/*` package is ESM only. There is no `require` export condition and no top-level `main`, so `require("@vue-solana/vue")` fails with `No "exports" main defined`. Vite and Nuxt apps are unaffected; pin to `^2` if you must stay on CommonJS. See the [Kit Migration guide](https://vue-solana-docs.vercel.app/guides/kit-migration) for the v1 → v2 and v2 → v3 maps.
+
 ## Clusters
 
 Supported clusters:

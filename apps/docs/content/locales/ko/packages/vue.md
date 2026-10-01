@@ -13,6 +13,8 @@ surroundOrder: 15
 pnpm add @vue-solana/vue
 ```
 
+이 package는 ESM만 배포합니다. Vite 앱은 이미 ESM으로 번들링되므로 변경이 필요 없고, CommonJS의 `require("@vue-solana/vue")`는 `No "exports" main defined`로 실패하므로 import하는 모듈을 ESM으로 바꾸거나 `.cjs` 빌드를 계속 제공하는 `@vue-solana/vue@^2`를 사용하세요. [v2에서 v3로 업그레이드](/ko/guides/kit-migration#v2에서-v3로-업그레이드)를 참고하세요.
+
 트랜잭션을 만들거나 직렬화하는 브라우저 앱은 `@vue-solana/vue/buffer-polyfill`에서 Buffer polyfill을 초기화할 수 있습니다.
 
 ## 플러그인 설정
@@ -142,7 +144,7 @@ Direct package subpath:
 - `@vue-solana/vue/useTokenAccounts`
 - `@vue-solana/vue/kit`
 
-Buffer polyfill이 필요한 브라우저 트랜잭션 코드에는 `@vue-solana/vue/buffer-polyfill`을 사용하세요. `installSolanaBufferPolyfill()`을 named import로 가져와 호출하세요. `import "@vue-solana/vue/buffer-polyfill"` 같은 side-effect import는 아무것도 설치하지 않습니다. 모든 `@vue-solana/*` package가 `"sideEffects": false`로 표시되어 있고 해당 subpath는 함수만 export하기 때문입니다. Kit API(`createSolanaClient`, `address`, `lamports` 및 타입)에는 `@vue-solana/vue/kit`을 사용하세요. 더 낮은 수준의 core 사용에는 direct `@vue-solana/core/*` import도 계속 지원됩니다.
+Buffer polyfill이 필요한 브라우저 트랜잭션 코드에는 `@vue-solana/vue/buffer-polyfill`을 사용하세요. `installSolanaBufferPolyfill()`을 named import로 가져와 호출하세요. `import "@vue-solana/vue/buffer-polyfill"` 같은 side-effect import는 아무것도 설치하지 않습니다. 모든 `@vue-solana/*` package가 `"sideEffects": false`로 표시되어 있고 해당 subpath는 함수만 export하기 때문입니다. Kit API에는 `@vue-solana/vue/kit`을 사용하세요. `@solana/kit` 전체를 다시 export하므로 해당 package를 직접 설치할 필요가 없습니다. 더 낮은 수준의 core 사용에는 direct `@vue-solana/core/*` import도 계속 지원됩니다.
 
 - `useSolana()`: 주입된 전체 Solana context를 반환합니다.
 - `useSolanaClient()`: Kit `{ client, rpc }`를 context에서 반환합니다. 새 코드에 권장됩니다.

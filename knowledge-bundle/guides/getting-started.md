@@ -60,6 +60,8 @@ Install the package for your framework:
 pnpm add @vue-solana/vue
 ```
 
+Since v3.0.0 every `@vue-solana/*` package is ESM only: the `require` export condition and the top-level `main` field were removed. Vite and Nuxt apps already bundle ESM and need no change; a CommonJS `require("@vue-solana/vue")` fails with `No "exports" main defined`. Make the importing module ESM (`"type": "module"` or a `.mjs` file), or pin `@vue-solana/*` to `^2`, which still ships a `.cjs` build.
+
 For local development, use workspace linking instead:
 
 ```sh

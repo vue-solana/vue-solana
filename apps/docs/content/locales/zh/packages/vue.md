@@ -13,6 +13,8 @@ surroundOrder: 15
 pnpm add @vue-solana/vue
 ```
 
+该包仅发布 ESM。Vite 应用本身已经打包为 ESM，不需要改动；在 CommonJS 中 `require("@vue-solana/vue")` 会以 `No "exports" main defined` 失败。请把导入该包的模块改为 ESM，或者继续使用仍提供 `.cjs` 构建的 `@vue-solana/vue@^2`。参见[从 v2 升级到 v3](/zh/guides/kit-migration#从-v2-升级到-v3)。
+
 创建或序列化交易的浏览器应用可以从 `@vue-solana/vue/buffer-polyfill` 初始化 Buffer polyfill。
 
 ## 插件设置
@@ -142,7 +144,7 @@ import { useWallet } from "@vue-solana/vue/useWallet";
 - `@vue-solana/vue/useTokenAccounts`
 - `@vue-solana/vue/kit`
 
-浏览器交易代码需要 Buffer polyfill 时，使用 `@vue-solana/vue/buffer-polyfill`。请以 named import 引入 `installSolanaBufferPolyfill()` 并调用它；像 `import "@vue-solana/vue/buffer-polyfill"` 这样的副作用导入不会安装任何东西，因为所有 `@vue-solana/*` 包都标记了 `"sideEffects": false`，且该 subpath 只导出函数。需要 Kit API（`createSolanaClient`、`address`、`lamports` 和类型）时，使用 `@vue-solana/vue/kit`。较底层 core 用法仍然支持直接 `@vue-solana/core/*` 导入。
+浏览器交易代码需要 Buffer polyfill 时，使用 `@vue-solana/vue/buffer-polyfill`。请以 named import 引入 `installSolanaBufferPolyfill()` 并调用它；像 `import "@vue-solana/vue/buffer-polyfill"` 这样的副作用导入不会安装任何东西，因为所有 `@vue-solana/*` 包都标记了 `"sideEffects": false`，且该 subpath 只导出函数。需要 Kit API 时，使用 `@vue-solana/vue/kit` — 它会重新导出全部 `@solana/kit`，因此你无需自行安装该包。较底层 core 用法仍然支持直接 `@vue-solana/core/*` 导入。
 
 - `useSolana()`：返回完整注入的 Solana context。
 - `useSolanaClient()`：返回 context 中的 Kit `{ client, rpc }`。新代码推荐使用。

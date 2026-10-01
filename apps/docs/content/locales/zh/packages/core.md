@@ -17,6 +17,8 @@ surroundOrder: 14
 pnpm add @vue-solana/core
 ```
 
+该包仅发布 ESM。在 CommonJS 中 `require("@vue-solana/core")` 会以 `No "exports" main defined` 失败。请把导入该包的模块改为 ESM，或者继续使用仍提供 `.cjs` 构建的 `@vue-solana/core@^2`。参见[从 v2 升级到 v3](/zh/guides/kit-migration#从-v2-升级到-v3)。
+
 ## 快速开始
 
 ```ts
@@ -266,6 +268,7 @@ import type { Address, Commitment, Lamports, Signature, SolanaRpcApi } from "@vu
 - `address(value)`：验证并返回 `Address`（base58 字符串 brand）——替代 `new PublicKey(...)` 的 Kit 版本。
 - `lamports(value: bigint)`：返回 `Lamports` 值——替代原始 lamport 数字的 Kit 版本。
 - 常用类型：`Address`、`Commitment`、`Lamports`、`Rpc`、`Signature`、`SolanaRpcApi`、`SolanaClient`。该 subpath 会重新导出 `@solana/kit` 导出的所有类型，不仅仅是这些。
+- 有四个名字同时存在于 Kit 和本库中。从包根（`@vue-solana/core`）导入时解析为**本库的**版本，从 `/kit` subpath 导入时解析为 **Kit 的**版本：`SolanaError`、`SolanaErrorCode`、`isSolanaError`、`TransactionStatus`。由于包根的判断函数与 Kit 的错误类不匹配，检查 Kit 自身抛出的错误时，请从 `@vue-solana/core/kit` 导入 `isSolanaError`。
 
 RPC 数值结果是 `bigint`，账户数据是 `Uint8Array` 而不是 `Buffer`。详见 [Kit 迁移](/zh/guides/kit-migration)。
 

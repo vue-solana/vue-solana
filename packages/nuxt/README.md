@@ -47,6 +47,8 @@ npx nuxt module add @vue-solana/nuxt
 
 This installs the package and adds `@vue-solana/nuxt` to the `modules` array in `nuxt.config.ts`.
 
+Since v3.0.0 this package is ESM only. There is no `require` export condition and no top-level `main`, so `require("@vue-solana/nuxt")` fails with `No "exports" main defined`. Nuxt apps are unaffected; pin to `@vue-solana/nuxt@^2` if you must stay on CommonJS.
+
 ## Module Setup
 
 ```ts

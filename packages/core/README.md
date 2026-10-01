@@ -42,10 +42,12 @@ Full Vue Solana docs:
 
 | Requirement   | Supported                                                         |
 | ------------- | ----------------------------------------------------------------- |
-| Runtime       | Modern ESM or CommonJS bundlers                                   |
+| Runtime       | ESM only (modern bundlers; Node needs ESM)                        |
 | TypeScript    | TypeScript 5.x recommended                                        |
 | Solana client | `@solana/kit@^8.4.0` (and `@solana/kit-plugin-rpc`)               |
 | Clusters      | `mainnet` (alias `mainnet-beta`), `devnet`, `testnet`, `localnet` |
+
+Since v3.0.0 this package is ESM only: there is no `require` export condition and no top-level `main`, so `require("@vue-solana/core")` fails with `No "exports" main defined`. Pin to `@vue-solana/core@^2` if you must stay on CommonJS.
 
 This package no longer depends on `@solana/web3-compat`. It depends on `@solana/kit` and `@solana/kit-plugin-rpc`, so apps do not need to install either directly for normal Vue Solana usage.
 

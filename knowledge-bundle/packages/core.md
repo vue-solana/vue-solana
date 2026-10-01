@@ -75,6 +75,10 @@ const slot = await client.rpc.getSlot().send(); // bigint
 
 `@vue-solana/core/kit` re-exports all of `@solana/kit`, so every helper and type is available without installing that package: `address`, `lamports`, and the types `Address`, `Commitment`, `Lamports`, `Rpc`, `Signature`, `SolanaRpcApi`, `SolanaClient`, and the rest. Read calls return `bigint` numerics and base64-encoded account data — not `Buffer`. For the full before/after map, see [Kit Migration](../guides/kit-migration.md) (the docs-site guide lives at [`apps/docs/content/guides/kit-migration.md`](../../apps/docs/content/guides/kit-migration.md)).
 
+`SolanaError`, `SolanaErrorCode`, `isSolanaError`, and `TransactionStatus` exist in both Kit and this package. The root barrel resolves them to this package's own versions; the Kit originals are reachable from `@vue-solana/core/kit`. Use the `/kit` `isSolanaError` when checking errors thrown by Kit itself.
+
+`@vue-solana/core` is ESM only since v3.0.0. There is no `require` export condition and no top-level `main`, so `require("@vue-solana/core")` fails with `No "exports" main defined`. Bundlers are unaffected; plain Node consumers must be ESM, or stay on `@vue-solana/core@^2`.
+
 ## Legacy Compatibility Removed In v2
 
 `@solana/web3-compat` was removed from every package in v2.0.0. There is no `connection` on the context, the `web3` subpaths (`@vue-solana/core/web3`, `@vue-solana/vue/web3`, `@vue-solana/nuxt/web3`) were deleted, `SolanaTransaction` is raw serialized `Uint8Array`, and `SolanaWallet.publicKey` is an `Address` string. The declaration shims that v1 published for the broken `web3-compat` metadata were removed.

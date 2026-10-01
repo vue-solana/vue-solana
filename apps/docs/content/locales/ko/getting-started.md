@@ -53,6 +53,10 @@ npx nuxt module add @vue-solana/nuxt
 
 Nuxt 앱은 `@vue-solana/core`, `@vue-solana/vue`, low-level Solana/Buffer 패키지를 직접 설치하지 않고 `@vue-solana/nuxt/kit`와 `@vue-solana/nuxt/buffer-polyfill`을 사용할 수 있습니다. 자동 import된 `useSolanaClient()`는 주입된 Kit 클라이언트를 반환합니다.
 
+## v3 메모
+
+v3.0.0부터 ESM만 배포합니다. 모든 `@vue-solana/*` 패키지에서 `require` export 조건과 최상위 `main` 필드가 제거됩니다. Nuxt와 Vite 앱은 이미 ESM으로 번들링되므로 변경이 필요 없고, Vue Solana 패키지를 `require()`하는 Node 스크립트만 ESM으로 바꾸면 됩니다. `kit` 서브패스는 `@solana/kit`의 완전한 미러가 되었으므로, v2에서 추가했다면 자신의 `package.json`에서 `@solana/kit`을 제거할 수 있습니다. 자세한 내용은 [v2에서 v3로 업그레이드](/ko/guides/kit-migration#v2에서-v3로-업그레이드)를 참고하세요.
+
 ## v2 메모
 
 v2.0.0에서 레거시 `@solana/web3-compat` 표면이 제거되었습니다. context는 더 이상 `connection`을 갖지 않으며 `@vue-solana/*/web3` subpath가 삭제되었습니다. 모든 컴포저블은 Kit 우선이며 `SolanaWallet.publicKey`는 일반 base58 `Address` 문자열입니다. 이전 v1 문서에서 설명한 `@solana/buffer/` shim은 사라졌습니다. 유지되는 package-owned shim은 Buffer polyfill이 사용하는 브라우저 `buffer/` subpath만 커버합니다. 전체 변경 전/후 비교는 [Kit Migration 가이드](/ko/guides/kit-migration)를 참조하세요.

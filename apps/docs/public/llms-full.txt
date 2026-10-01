@@ -269,6 +269,10 @@ Esto instala el paquete y agrega `@vue-solana/nuxt` al arreglo `modules` en `nux
 
 Las apps Nuxt pueden usar `@vue-solana/nuxt/kit` y `@vue-solana/nuxt/buffer-polyfill` sin instalar directamente `@vue-solana/core`, `@vue-solana/vue` ni paquetes Solana y Buffer de bajo nivel. El `useSolanaClient()` autoimportado devuelve el cliente Kit inyectado.
 
+## Nota sobre v3
+
+v3.0.0 publica solo ESM: la condición de exportación `require` y el campo `main` de primer nivel desaparecen de todos los paquetes `@vue-solana/*`. Las apps de Nuxt y Vite ya empaquetan ESM y no necesitan cambios; un script de Node que haga `require()` de un paquete de Vue Solana debe convertirse a ESM. Los subpaths `kit` también pasaron a ser un espejo completo de `@solana/kit`, así que puedes quitar `@solana/kit` de tu propio `package.json` si lo añadiste en v2. Consulta [Actualizar de v2 a v3](/es/guides/kit-migration#actualizar-de-v2-a-v3) para los detalles.
+
 ## Nota sobre v2
 
 v2.0.0 elimino la superficie legacy `@solana/web3-compat`. El contexto ya no lleva un `connection`, y los subpaths `@vue-solana/*/web3` fueron eliminados. Todos los composables son con prioridad en Kit y `SolanaWallet.publicKey` es un string base58 `Address`. El shim `@solana/buffer/` que describian las docs v1 anteriores ya no existe; los shims propios del paquete que se conservan solo cubren el subpath del navegador `buffer/` usado por el polyfill de Buffer. Consulta la [guía de migración a Kit](/guides/kit-migration) para el mapa completo de antes/después.
@@ -691,6 +695,10 @@ npx nuxt module add @vue-solana/nuxt
 This installs the package and adds `@vue-solana/nuxt` to the `modules` array in `nuxt.config.ts`.
 
 Nuxt apps can use `@vue-solana/nuxt/kit` and `@vue-solana/nuxt/buffer-polyfill` without installing `@vue-solana/core`, `@vue-solana/vue`, or low-level Solana and Buffer packages directly. The auto-imported `useSolanaClient()` returns the injected Kit client.
+
+## v3 Note
+
+v3.0.0 publishes ESM only — the `require` export condition and the top-level `main` field are gone from every `@vue-solana/*` package. Nuxt and Vite apps already bundle ESM and need no change; a plain Node script that `require()`s a Vue Solana package must become ESM. The `kit` subpaths also became a complete mirror of `@solana/kit`, so you can drop `@solana/kit` from your own `package.json` if you added it on v2. See [Upgrading v2 to v3](/guides/kit-migration#upgrading-v2-to-v3) for the details.
 
 ## v2 Note
 
@@ -1115,6 +1123,10 @@ npx nuxt module add @vue-solana/nuxt
 
 Nuxt 앱은 `@vue-solana/core`, `@vue-solana/vue`, low-level Solana/Buffer 패키지를 직접 설치하지 않고 `@vue-solana/nuxt/kit`와 `@vue-solana/nuxt/buffer-polyfill`을 사용할 수 있습니다. 자동 import된 `useSolanaClient()`는 주입된 Kit 클라이언트를 반환합니다.
 
+## v3 메모
+
+v3.0.0부터 ESM만 배포합니다. 모든 `@vue-solana/*` 패키지에서 `require` export 조건과 최상위 `main` 필드가 제거됩니다. Nuxt와 Vite 앱은 이미 ESM으로 번들링되므로 변경이 필요 없고, Vue Solana 패키지를 `require()`하는 Node 스크립트만 ESM으로 바꾸면 됩니다. `kit` 서브패스는 `@solana/kit`의 완전한 미러가 되었으므로, v2에서 추가했다면 자신의 `package.json`에서 `@solana/kit`을 제거할 수 있습니다. 자세한 내용은 [v2에서 v3로 업그레이드](/ko/guides/kit-migration#v2에서-v3로-업그레이드)를 참고하세요.
+
 ## v2 메모
 
 v2.0.0에서 레거시 `@solana/web3-compat` 표면이 제거되었습니다. context는 더 이상 `connection`을 갖지 않으며 `@vue-solana/*/web3` subpath가 삭제되었습니다. 모든 컴포저블은 Kit 우선이며 `SolanaWallet.publicKey`는 일반 base58 `Address` 문자열입니다. 이전 v1 문서에서 설명한 `@solana/buffer/` shim은 사라졌습니다. 유지되는 package-owned shim은 Buffer polyfill이 사용하는 브라우저 `buffer/` subpath만 커버합니다. 전체 변경 전/후 비교는 [Kit Migration 가이드](/ko/guides/kit-migration)를 참조하세요.
@@ -1537,6 +1549,10 @@ npx nuxt module add @vue-solana/nuxt
 这会安装包，并把 `@vue-solana/nuxt` 添加到 `nuxt.config.ts` 的 `modules` 数组。
 
 Nuxt 应用可以直接使用 `@vue-solana/nuxt/kit` 和 `@vue-solana/nuxt/buffer-polyfill`，无需直接安装 `@vue-solana/core`、`@vue-solana/vue` 或低层 Solana 与 Buffer 包。自动导入的 `useSolanaClient()` 返回注入的 Kit 客户端。
+
+## v3 说明
+
+v3.0.0 仅发布 ESM：所有 `@vue-solana/*` 包都移除了 `require` 导出条件和顶层 `main` 字段。Nuxt 和 Vite 应用本身已经打包为 ESM，不需要改动；只有 `require()` 这些包的 Node 脚本需要改为 ESM。`kit` 子路径也已成为 `@solana/kit` 的完整镜像，所以如果你在 v2 时添加过 `@solana/kit`，现在可以把它从自己的 `package.json` 中移除。详情请参阅[从 v2 升级到 v3](/zh/guides/kit-migration#从-v2-升级到-v3)。
 
 ## v2 说明
 
@@ -3615,9 +3631,9 @@ Devnet 和 testnet SOL 没有真实价值。测试时绝不要使用包含真实
 # Migración a Kit
 
 Source: https://vue-solana-docs.vercel.app/es/guides/kit-migration
-Description: Cómo migrar una app de Vue o Nuxt de la API legacy de web3-compat a @solana/kit. v2.0.0 eliminó web3-compat por completo.
+Description: Cómo migrar una app de Vue o Nuxt de la API legacy de web3-compat a @solana/kit. v2.0.0 eliminó web3-compat; v3.0.0 publica solo ESM.
 
-Vue Solana migró de `@solana/web3-compat` a `@solana/kit` en v2.0.0. Esta guía explica por qué se hizo el cambio, cuáles son los equivalentes de Kit para cada símbolo legacy y cómo migrar una app de Vue o Nuxt que todavía está en la superficie v1.x.
+Vue Solana migró de `@solana/web3-compat` a `@solana/kit` en v2.0.0, y v3.0.0 convirtió los subpaths `kit` en un espejo completo de `@solana/kit`. Esta guía explica por qué se hizo el cambio, cuáles son los equivalentes de Kit para cada símbolo legacy y cómo migrar una app de Vue o Nuxt que todavía está en la superficie v1.x. Si ya estás en v2, ve directamente a [Actualizar de v2 a v3](#actualizar-de-v2-a-v3).
 
 ## Por Qué Migrar
 
@@ -3633,9 +3649,10 @@ Kit también aporta el beneficio de la modularidad: importas solo las piezas que
 | Versión              | Qué pasó                                                                                                                                                                                                                                                                     |
 | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **v1.x (previous)**  | Compatibilidad dual. `connection`, los subpaths `web3` y todos los helpers legacy siguen funcionando igual, mientras se añade la superficie Kit: `createSolanaClient()`, los subpaths `@vue-solana/*/kit` y `useSolanaClient()`. Los helpers legacy se marcan `@deprecated`. |
-| **v2.0.0 (current)** | Solo Kit. `@solana/web3-compat` se elimina de todos los paquetes. El contexto ya no lleva `connection` y se borran los subpaths `web3`. `useRpc()` se convierte en el composable de RPC de Kit y la wallet expone `publicKey: Address`.                                      |
+| **v2.0.0**           | Solo Kit. `@solana/web3-compat` se elimina de todos los paquetes. El contexto ya no lleva `connection` y se borran los subpaths `web3`. `useRpc()` se convierte en el composable de RPC de Kit y la wallet expone `publicKey: Address`.                                      |
+| **v3.0.0 (current)** | Solo ESM y un espejo completo de Kit. La condición de exportación `require` y el campo `main` de primer nivel desaparecen de los tres paquetes, y `@vue-solana/{core,vue,nuxt}/kit` ahora reexportan todo `@solana/kit` en lugar de una lista curada.                        |
 
-Migra actualizando a `^2.0.0`, resolviendo errores del compilador y eliminando los imports legacy que el compilador señala. El mapa completo de antes/después está a continuación.
+El trabajo de v1 → v2 no cambia: actualiza a `^2.0.0`, resuelve los errores del compilador y elimina los imports legacy que el compilador señala. El mapa completo de antes/después está a continuación. Si ya estás en v2, consulta [Actualizar de v2 a v3](#actualizar-de-v2-a-v3).
 
 ## Mapa de Migración
 
@@ -3670,12 +3687,62 @@ A qué se corresponden los helpers después de v2:
 - `signAndSendTransaction(connection, ...)` / `confirmTransactionSignature(connection, ...)` → `signAndSendTransaction(client, ...)` / `confirmTransactionSignature(client, ...)`; el argumento `SolanaTransaction` ahora son bytes de la red (wire) serializados
 - `getTokenAccountsByOwner(connection, ...)` y compañía → `getTokenAccountsByOwner(client, ...)` y lecturas basadas en `getTokenAccountsByOwner(client, ...)` que devuelven `TokenAccountInfo`
 
-## Actualizar una App de Vue
+## Actualizar de v2 a v3
 
-### Paso 1: Actualiza a v2
+v3 tiene exactamente un cambio incompatible y un cambio grande de comodidad. La migración a Kit ya está hecha: no hay ningún mapeo de símbolos nuevo que aplicar.
 
 ```sh
-pnpm add @vue-solana/vue@^2.0.0
+pnpm add @vue-solana/vue@^3.0.0
+```
+
+```sh
+pnpm add @vue-solana/nuxt@^3.0.0
+```
+
+### Solo ESM
+
+Todos los paquetes `@vue-solana/*` ahora se publican solo como ESM. Se eliminaron la condición de exportación `require` y el campo `main` de primer nivel, así que un `require("@vue-solana/core")` de CommonJS falla con `No "exports" main defined`, y exigir un subpath falla con `Package subpath './kit' is not defined by "exports"`.
+
+Las apps de Nuxt y Vite ya empaquetan ESM y no necesitan cambios. Si algún script, archivo de configuración o herramienta de Node de tu proyecto todavía usa `require()`, conviértelo a ESM: añade `"type": "module"` a tu `package.json`, o renombra el archivo a `.mjs`. Si realmente no puedes dejar CommonJS, quédate en `@vue-solana/*@^2`, que todavía incluye una build `.cjs`. Consulta la entrada [`ERR_PACKAGE_PATH_NOT_EXPORTED` en Troubleshooting](/es/troubleshooting).
+
+### Los Subpaths de Kit Ahora Son un Espejo Completo
+
+`@vue-solana/core/kit`, `@vue-solana/vue/kit` y `@vue-solana/nuxt/kit` ahora hacen `export *` de `@solana/kit` en lugar de reexportar una lista curada. Cada valor y tipo de Kit es alcanzable desde el subpath que ya tienes instalado.
+
+- Quita `@solana/kit` de tu propio `package.json` si lo añadiste en v2. Ya no lo necesitas, y mantenerlo arriesga una segunda copia de Kit en el árbol.
+- Mueve los message builders, codecs, helpers del planner y factories de signers al mismo import `@vue-solana/*/kit` que ya usas, para que tu app tenga un único punto de entrada de Solana.
+
+Cuatro nombres existen tanto en Kit como en esta librería. Se resuelven a la versión **de esta librería** desde la raíz del paquete, y a la versión **de Kit** desde el subpath `/kit`:
+
+| Name                | Raíz del paquete (`@vue-solana/core`)                    | Subpath `kit` (`@vue-solana/core/kit`) |
+| ------------------- | -------------------------------------------------------- | -------------------------------------- |
+| `SolanaError`       | La propia clase de error de `@vue-solana/core`           | El `SolanaError` de Kit                |
+| `SolanaErrorCode`   | Los propios códigos de `@vue-solana/core`                | El `SolanaErrorCode` de Kit            |
+| `isSolanaError`     | La propia guarda de `@vue-solana/core`                   | El `isSolanaError` de Kit              |
+| `TransactionStatus` | La forma de estado de confirmación de `@vue-solana/core` | El `TransactionStatus` de Kit          |
+
+Esto importa si capturas errores de Kit. El `isSolanaError()` de la raíz reconoce el `SolanaError` de esta librería, no el de Kit, así que impórtalo desde `@vue-solana/*/kit` cuando inspecciones un error lanzado por el propio Kit:
+
+```ts
+import { isSolanaError } from "@vue-solana/core/kit"; // la guarda de Kit, coincide con los errores de Kit
+
+try {
+  await client.rpc.getBalance(account).send();
+} catch (error) {
+  if (isSolanaError(error, "RPC_HTTP_ERROR")) {
+    // ...
+  }
+}
+```
+
+Todo lo demás es interno. Las máquinas de estado de los composables se deduplicaron en helpers compartidos, así que `@solana/kit` pasó a `^8.4.0` y los bundles se hicieron más pequeños, pero ninguna firma de composable ni forma de retorno cambió.
+
+## Actualizar una App de Vue
+
+### Paso 1: Actualiza a v3
+
+```sh
+pnpm add @vue-solana/vue@^3.0.0
 ```
 
 El compilador ahora te señalará cada referencia legacy restante porque los subpaths `web3` ya no existen.
@@ -3733,10 +3800,10 @@ No hay configuración de red ni shims: el endpoint se resuelve desde la configur
 
 ## Actualizar una App de Nuxt
 
-### Paso 1: Actualiza a v2
+### Paso 1: Actualiza a v3
 
 ```sh
-pnpm add @vue-solana/nuxt@^2.0.0
+pnpm add @vue-solana/nuxt@^3.0.0
 ```
 
 ### Paso 2: Cambia a la API de Kit
@@ -3785,9 +3852,9 @@ Si quieres la API clásica de clases, `@solana/web3.js@rc` (v3) es la vía de ac
 # Kit Migration
 
 Source: https://vue-solana-docs.vercel.app/guides/kit-migration
-Description: How to move a Vue or Nuxt app from the legacy web3-compat API to @solana/kit. v2.0.0 removed web3-compat everywhere.
+Description: How to move a Vue or Nuxt app from the legacy web3-compat API to @solana/kit. v2.0.0 removed web3-compat; v3.0.0 publishes ESM only.
 
-Vue Solana moved from `@solana/web3-compat` to `@solana/kit` in v2.0.0. This guide explains why the change happened, what the Kit equivalents of each legacy symbol are, and how to migrate a Vue or Nuxt app that is still on the v1.x surface.
+Vue Solana moved from `@solana/web3-compat` to `@solana/kit` in v2.0.0, and v3.0.0 turned the `kit` subpaths into a complete mirror of `@solana/kit`. This guide explains why the change happened, what the Kit equivalents of each legacy symbol are, and how to migrate a Vue or Nuxt app that is still on the v1.x surface. If you are already on v2, jump straight to [Upgrading v2 to v3](#upgrading-v2-to-v3).
 
 ## Why Migrate
 
@@ -3803,9 +3870,10 @@ Kit also brings the modularity benefit: you import only the pieces you use. In v
 | Release              | What happened                                                                                                                                                                                                                                                       |
 | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **v1.x (previous)**  | Dual support. `connection`, `web3` subpaths, and all legacy helpers kept working unchanged, while the new Kit surface was added alongside: `createSolanaClient()`, `@vue-solana/*/kit` subpaths, and `useSolanaClient()`. Legacy helpers were marked `@deprecated`. |
-| **v2.0.0 (current)** | Kit only. `@solana/web3-compat` is removed from every package. The context no longer carries `connection`, and the `web3` subpaths are deleted. `useRpc()` becomes the Kit RPC composable, and the wallet exposes `publicKey: Address`.                             |
+| **v2.0.0**           | Kit only. `@solana/web3-compat` is removed from every package. The context no longer carries `connection`, and the `web3` subpaths are deleted. `useRpc()` becomes the Kit RPC composable, and the wallet exposes `publicKey: Address`.                             |
+| **v3.0.0 (current)** | ESM only and a complete Kit mirror. The `require` export condition and the top-level `main` field are gone from all three packages, and `@vue-solana/{core,vue,nuxt}/kit` now re-export all of `@solana/kit` instead of a curated list.                             |
 
-Migrate by updating to `^2.0.0`, resolving compiler errors, and removing the legacy imports the compiler flags. The full before/after map is below.
+The v1 → v2 work is unchanged: update to `^2.0.0`, resolve compiler errors, and remove the legacy imports the compiler flags. The full before/after map is below. If you are on v2 already, see [Upgrading v2 to v3](#upgrading-v2-to-v3).
 
 ## Migration Map
 
@@ -3840,12 +3908,62 @@ What the helpers map to after v2:
 - `signAndSendTransaction(connection, ...)` / `confirmTransactionSignature(connection, ...)` → `signAndSendTransaction(client, ...)` / `confirmTransactionSignature(client, ...)`; the `SolanaTransaction` argument is now serialized wire bytes
 - `getTokenAccountsByOwner(connection, ...)` & friends → `getTokenAccountsByOwner(client, ...)` and `getTokenAccountsByOwner(client, ...)`-based reads returning `TokenAccountInfo`
 
-## Upgrade a Vue App
+## Upgrading v2 to v3
 
-### Step 1: Update to v2
+v3 has exactly one breaking change and one large convenience change. The Kit migration itself is already done — there is no new symbol mapping to make.
 
 ```sh
-pnpm add @vue-solana/vue@^2.0.0
+pnpm add @vue-solana/vue@^3.0.0
+```
+
+```sh
+pnpm add @vue-solana/nuxt@^3.0.0
+```
+
+### ESM Only
+
+Every `@vue-solana/*` package now ships ESM only. The `require` export condition and the top-level `main` field were removed, so a CommonJS `require("@vue-solana/core")` fails with `No "exports" main defined`, and requiring a subpath fails with `Package subpath './kit' is not defined by "exports"`.
+
+Nuxt and Vite apps already bundle ESM and need no change. If a script, config file, or Node tool in your project still uses `require()`, make it ESM — add `"type": "module"` to your `package.json`, or rename the file to `.mjs`. If you genuinely cannot leave CommonJS, stay on `@vue-solana/*@^2`, which still ships a `.cjs` build. See the [`ERR_PACKAGE_PATH_NOT_EXPORTED` entry in Troubleshooting](/troubleshooting).
+
+### The Kit Subpaths Are Now A Full Mirror
+
+`@vue-solana/core/kit`, `@vue-solana/vue/kit`, and `@vue-solana/nuxt/kit` now `export *` from `@solana/kit` instead of re-exporting a curated list. Every Kit value and type is reachable from the subpath you already have installed.
+
+- Drop `@solana/kit` from your own `package.json` if you added it in v2. You no longer need it, and keeping it risks a second Kit copy in the tree.
+- Move message builders, codecs, planner helpers, and signer factories to the same `@vue-solana/*/kit` import you already use, so your app has one Solana entry point.
+
+Four names exist in both Kit and this library. They resolve to **this library's** version from the package root, and to **Kit's** version from the `/kit` subpath:
+
+| Name                | Root barrel (`@vue-solana/core`)               | `kit` subpath (`@vue-solana/core/kit`) |
+| ------------------- | ---------------------------------------------- | -------------------------------------- |
+| `SolanaError`       | `@vue-solana/core`'s own error class           | Kit's `SolanaError`                    |
+| `SolanaErrorCode`   | `@vue-solana/core`'s own codes                 | Kit's `SolanaErrorCode`                |
+| `isSolanaError`     | `@vue-solana/core`'s own guard                 | Kit's `isSolanaError`                  |
+| `TransactionStatus` | `@vue-solana/core`'s confirmation status shape | Kit's `TransactionStatus`              |
+
+This matters if you catch Kit errors. `isSolanaError()` from the root barrel recognises this library's `SolanaError`, not Kit's, so import it from `@vue-solana/*/kit` when you are inspecting an error thrown by Kit itself:
+
+```ts
+import { isSolanaError } from "@vue-solana/core/kit"; // Kit's guard, matches Kit's errors
+
+try {
+  await client.rpc.getBalance(account).send();
+} catch (error) {
+  if (isSolanaError(error, "RPC_HTTP_ERROR")) {
+    // ...
+  }
+}
+```
+
+Everything else is internal. The composable state machines were deduplicated into shared helpers, so `@solana/kit` moved to `^8.4.0` and the bundles got smaller, but no composable signature or return shape changed.
+
+## Upgrade a Vue App
+
+### Step 1: Update to v3
+
+```sh
+pnpm add @vue-solana/vue@^3.0.0
 ```
 
 The compiler will now point you at every remaining legacy reference because the `web3` subpaths no longer exist.
@@ -3903,10 +4021,10 @@ There is no network setup and no shim: the endpoint resolves from cluster config
 
 ## Upgrade a Nuxt App
 
-### Step 1: Update to v2
+### Step 1: Update to v3
 
 ```sh
-pnpm add @vue-solana/nuxt@^2.0.0
+pnpm add @vue-solana/nuxt@^3.0.0
 ```
 
 ### Step 2: Switch to the Kit API
@@ -3955,9 +4073,9 @@ If you want the classic class API, `@solana/web3.js@rc` (v3) is the upgrade path
 # Kit 마이그레이션
 
 Source: https://vue-solana-docs.vercel.app/ko/guides/kit-migration
-Description: Vue 또는 Nuxt 앱을 레거시 web3-compat API에서 @solana/kit으로 옮기는 방법. v2.0.0에서 web3-compat이 모든 곳에서 제거되었습니다.
+Description: Vue 또는 Nuxt 앱을 레거시 web3-compat API에서 @solana/kit으로 옮기는 방법. v2.0.0에서 web3-compat이 제거되었고, v3.0.0부터 ESM만 배포합니다.
 
-Vue Solana는 v2.0.0에서 `@solana/web3-compat`에서 `@solana/kit`으로 이전했습니다. 이 가이드는 변경이 발생한 이유, 각 레거시 심볼의 Kit 대체품, 그리고 여전히 v1.x 표면을 사용하는 Vue 또는 Nuxt 앱을 이전하는 방법을 설명합니다.
+Vue Solana는 v2.0.0에서 `@solana/web3-compat`에서 `@solana/kit`으로 이전했고, v3.0.0에서 `kit` 서브패스는 `@solana/kit`의 완전 미러가 되었습니다. 이 가이드는 변경이 발생한 이유, 각 레거시 심볼의 Kit 대체품, 그리고 여전히 v1.x 표면을 사용하는 Vue 또는 Nuxt 앱을 이전하는 방법을 설명합니다. 이미 v2를 사용 중이라면 [v2에서 v3로 업그레이드](#v2에서-v3로-업그레이드)로 바로 이동하세요.
 
 ## 왜 이전해야 하나
 
@@ -3973,9 +4091,10 @@ Kit는 또한 모듈성 이점을 제공합니다: 사용하는 부분만 가져
 | 릴리스            | 달라진 것                                                                                                                                                                                                                                           |
 | ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **v1.x (이전)**   | 이중 지원. `connection`, `web3` 서브패스, 모든 레거시 헬퍼가 변경 없이 계속 작동했고, 그와 함께 Kit 표면이 추가되었습니다: `createSolanaClient()`, `@vue-solana/*/kit` 서브패스, `useSolanaClient()`. 레거시 헬퍼는 `@deprecated`로 표시되었습니다. |
-| **v2.0.0 (현재)** | Kit 전용. `@solana/web3-compat`이 모든 패키지에서 제거되었습니다. 컨텍스트에 `connection`이 없어지고 `web3` 서브패스가 삭제되었습니다. `useRpc()`가 Kit RPC 컴포저블이 되고, 지갑은 `publicKey: Address`를 노출합니다.                              |
+| **v2.0.0**        | Kit 전용. `@solana/web3-compat`이 모든 패키지에서 제거되었습니다. 컨텍스트에 `connection`이 없어지고 `web3` 서브패스가 삭제되었습니다. `useRpc()`가 Kit RPC 컴포저블이 되고, 지갑은 `publicKey: Address`를 노출합니다.                              |
+| **v3.0.0 (현재)** | ESM 전용 + 완전한 Kit 미러. 세 패키지 모두에서 `require` export 조건과 최상위 `main` 필드가 제거되었고, `@vue-solana/{core,vue,nuxt}/kit`이 curated list 대신 `@solana/kit` 전체를 다시 export합니다.                                               |
 
-`^2.0.0`으로 업데이트하고, 컴파일러 오류를 해결하고, 컴파일러가 지적하는 레거시 import를 제거하는 방식으로 마이그레이션합니다. 전체 이전/이후 대응 표는 아래에 있습니다.
+v1 → v2 작업은 그대로입니다: `^2.0.0`으로 업데이트하고, 컴파일러 오류를 해결하고, 컴파일러가 지적하는 레거시 import를 제거하세요. 전체 이전/이후 대응 표는 아래에 있습니다. 이미 v2를 사용 중이라면 [v2에서 v3로 업그레이드](#v2에서-v3로-업그레이드)를 참고하세요.
 
 ## 마이그레이션 맵
 
@@ -4010,12 +4129,62 @@ v2 이후 헬퍼의 대응:
 - `signAndSendTransaction(connection, ...)` / `confirmTransactionSignature(connection, ...)` → `signAndSendTransaction(client, ...)` / `confirmTransactionSignature(client, ...)`; `SolanaTransaction` 인자는 이제 직렬화된 와이어 바이트입니다
 - `getTokenAccountsByOwner(connection, ...)` 등 → `getTokenAccountsByOwner(client, ...)`와 그에 기반한 읽기, `TokenAccountInfo` 반환
 
-## Vue 앱 업그레이드
+## v2에서 v3로 업그레이드
 
-### 1단계: v2로 업데이트
+v3에는 호환성 깨지는 변경이 정확히 하나 있고, 편의성 개선이 하나 큽니다. Kit 마이그레이션 자체는 이미 끝났으므로 새로 대응시켜야 할 심볼은 없습니다.
 
 ```sh
-pnpm add @vue-solana/vue@^2.0.0
+pnpm add @vue-solana/vue@^3.0.0
+```
+
+```sh
+pnpm add @vue-solana/nuxt@^3.0.0
+```
+
+### ESM 전용
+
+모든 `@vue-solana/*` 패키지는 이제 ESM만 배포합니다. `require` export 조건과 최상위 `main` 필드가 제거되었기 때문에 CommonJS에서 `require("@vue-solana/core")`를 호출하면 `No "exports" main defined`로 실패하고, subpath를 require하면 `Package subpath './kit' is not defined by "exports"`로 실패합니다.
+
+Nuxt와 Vite 앱은 이미 ESM으로 번들링되므로 변경이 필요 없습니다. 프로젝트의 스크립트, 설정 파일, Node 도구 중 아직 `require()`를 사용한다면 ESM으로 바꾸세요. `package.json`에 `"type": "module"`을 추가하거나 파일 확장자를 `.mjs`로 변경하면 됩니다. CommonJS를 벗어날 수 없다면 `.cjs` 빌드를 계속 제공하는 `@vue-solana/*@^2`를 그대로 사용하세요. [Troubleshooting](/ko/troubleshooting)의 `ERR_PACKAGE_PATH_NOT_EXPORTED` 항목을 참고하세요.
+
+### Kit 서브패스는 이제 완전한 미러
+
+`@vue-solana/core/kit`, `@vue-solana/vue/kit`, `@vue-solana/nuxt/kit`은 curated list를 다시 export하는 대신 `@solana/kit`을 `export *` 합니다. Kit의 모든 값과 타입을 이미 설치한 서브패스에서 바로 가져올 수 있습니다.
+
+- v2에서 추가했다면 자신의 `package.json`에서 `@solana/kit`을 제거하세요. 더 이상 필요하지 않으며, 그대로 두면 트리에 Kit 사본이 두 개 생길 위험이 있습니다.
+- 메시지 빌더, codecs, planner 헬퍼, signer factory를 이미 쓰고 있는 `@vue-solana/*/kit` import로 옮겨서 앱의 Solana 진입점을 하나로 유지하세요.
+
+네 개의 이름은 Kit과 이 라이브러리 양쪽에 모두 존재합니다. 패키지 루트에서는 **이 라이브러리의** 버전으로, `/kit` 서브패스에서는 **Kit의** 버전으로 해석됩니다:
+
+| 이름                | 패키지 루트 (`@vue-solana/core`)    | `kit` 서브패스 (`@vue-solana/core/kit`) |
+| ------------------- | ----------------------------------- | --------------------------------------- |
+| `SolanaError`       | `@vue-solana/core` 자체 에러 클래스 | Kit의 `SolanaError`                     |
+| `SolanaErrorCode`   | `@vue-solana/core` 자체 코드        | Kit의 `SolanaErrorCode`                 |
+| `isSolanaError`     | `@vue-solana/core` 자체 가드        | Kit의 `isSolanaError`                   |
+| `TransactionStatus` | `@vue-solana/core`의 확인 상태 형태 | Kit의 `TransactionStatus`               |
+
+Kit 에러를 잡아서 확인한다면 이 차이가 중요합니다. 루트의 `isSolanaError()`는 이 라이브러리의 `SolanaError`를 인식할 뿐 Kit의 것은 인식하지 않으므로, Kit이 던진 에러를 검사할 때는 `@vue-solana/*/kit`에서 가져오세요:
+
+```ts
+import { isSolanaError } from "@vue-solana/core/kit"; // Kit의 가드, Kit 에러와 일치
+
+try {
+  await client.rpc.getBalance(account).send();
+} catch (error) {
+  if (isSolanaError(error, "RPC_HTTP_ERROR")) {
+    // ...
+  }
+}
+```
+
+나머지는 모두 내부 변경입니다. 컴포저블 상태 머신이 공유 헬퍼로 dedup되면서 `@solana/kit`이 `^8.4.0`으로 올라가고 번들도 작아졌지만, 컴포저블 시그니처와 반환 형태는 바뀌지 않았습니다.
+
+## Vue 앱 업그레이드
+
+### 1단계: v3로 업데이트
+
+```sh
+pnpm add @vue-solana/vue@^3.0.0
 ```
 
 `web3` 서브패스가 더 이상 존재하지 않으므로 컴파일러가 이제 남은 모든 레거시 참조를 짚어줍니다.
@@ -4073,10 +4242,10 @@ const client = createSolanaClient({ cluster: "devnet" });
 
 ## Nuxt 앱 업그레이드
 
-### 1단계: v2로 업데이트
+### 1단계: v3로 업데이트
 
 ```sh
-pnpm add @vue-solana/nuxt@^2.0.0
+pnpm add @vue-solana/nuxt@^3.0.0
 ```
 
 ### 2단계: Kit API로 전환
@@ -4125,9 +4294,9 @@ Kit REST RPC 메서드는 네이티브 JavaScript 타입을 반환합니다:
 # Kit 迁移
 
 Source: https://vue-solana-docs.vercel.app/zh/guides/kit-migration
-Description: 如何将 Vue 或 Nuxt 应用从旧版 web3-compat API 迁移到 @solana/kit。v2.0.0 已在所有位置移除 web3-compat。
+Description: 如何将 Vue 或 Nuxt 应用从旧版 web3-compat API 迁移到 @solana/kit。v2.0.0 移除了 web3-compat，v3.0.0 仅发布 ESM。
 
-Vue Solana 在 v2.0.0 中已从 `@solana/web3-compat` 迁移到 `@solana/kit`。本指南说明这次变更的原因、每个旧版符号对应的 Kit 替代品，以及如何迁移仍在使用 v1.x API 的 Vue 或 Nuxt 应用。
+Vue Solana 在 v2.0.0 中已从 `@solana/web3-compat` 迁移到 `@solana/kit`，v3.0.0 又把 `kit` 子路径变成了 `@solana/kit` 的完整镜像。本指南说明这次变更的原因、每个旧版符号对应的 Kit 替代品，以及如何迁移仍在使用 v1.x API 的 Vue 或 Nuxt 应用。如果你已经在用 v2，请直接跳到[从 v2 升级到 v3](#从-v2-升级到-v3)。
 
 ## 为什么迁移
 
@@ -4143,9 +4312,10 @@ Kit 还带来模块化的好处：只导入你使用的部分。在 v2 中，旧
 | 版本                   | 变化                                                                                                                                                                                                           |
 | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **v1.x（此前版本）**   | 双支持。`connection`、`web3` 子路径和所有旧版辅助函数保持原样工作。同时新增 Kit 接口：`createSolanaClient()`、`@vue-solana/*/kit` 子路径和 `useSolanaClient()`。旧版辅助函数在类型定义中标记为 `@deprecated`。 |
-| **v2.0.0（当前版本）** | 仅 Kit。`@solana/web3-compat` 从所有包中移除。上下文不再携带 `connection`，`web3` 子路径被删除。`useRpc()` 成为 Kit 的 RPC 组合式函数，钱包暴露 `publicKey: Address`。                                         |
+| **v2.0.0**             | 仅 Kit。`@solana/web3-compat` 从所有包中移除。上下文不再携带 `connection`，`web3` 子路径被删除。`useRpc()` 成为 Kit 的 RPC 组合式函数，钱包暴露 `publicKey: Address`。                                         |
+| **v3.0.0（当前版本）** | 仅 ESM，并提供完整的 Kit 镜像。三个包都移除了 `require` 导出条件和顶层 `main` 字段，`@vue-solana/{core,vue,nuxt}/kit` 不再只重新导出精选列表，而是重新导出全部 `@solana/kit`。                                 |
 
-迁移方式：更新到 `^2.0.0`，解决编译器报错，然后移除编译器标记的所有旧版导入。完整的迁移对照表如下。
+v1 → v2 的工作保持不变：更新到 `^2.0.0`，解决编译器报错，然后移除编译器标记的所有旧版导入。完整的迁移对照表如下。如果你已经在用 v2，请参阅[从 v2 升级到 v3](#从-v2-升级到-v3)。
 
 ## 迁移对照表
 
@@ -4180,12 +4350,62 @@ v2 之后辅助函数的对应关系：
 - `signAndSendTransaction(connection, ...)` / `confirmTransactionSignature(connection, ...)` → `signAndSendTransaction(client, ...)` / `confirmTransactionSignature(client, ...)`；`SolanaTransaction` 参数现在是序列化后的线上字节
 - `getTokenAccountsByOwner(connection, ...)` 等 → `getTokenAccountsByOwner(client, ...)` 以及基于它的读取，返回 `TokenAccountInfo`
 
-## 升级 Vue 应用
+## 从 v2 升级到 v3
 
-### 步骤 1：更新到 v2
+v3 恰好有一个破坏性变更和一个很大的便利性变更。Kit 迁移本身已经完成，没有需要对应的新符号。
 
 ```sh
-pnpm add @vue-solana/vue@^2.0.0
+pnpm add @vue-solana/vue@^3.0.0
+```
+
+```sh
+pnpm add @vue-solana/nuxt@^3.0.0
+```
+
+### 仅 ESM
+
+所有 `@vue-solana/*` 包现在仅发布 ESM。`require` 导出条件和顶层 `main` 字段都已移除，因此在 CommonJS 中 `require("@vue-solana/core")` 会以 `No "exports" main defined` 失败，require 子路径会以 `Package subpath './kit' is not defined by "exports"` 失败。
+
+Nuxt 和 Vite 应用本身已经打包为 ESM，不需要任何改动。如果项目里的脚本、配置文件或 Node 工具仍在用 `require()`，请把它们改为 ESM：在 `package.json` 中添加 `"type": "module"`，或把文件重命名为 `.mjs`。如果确实无法脱离 CommonJS，请继续使用 `@vue-solana/*@^2`，该版本仍然提供 `.cjs` 构建。参见 [Troubleshooting](/zh/troubleshooting) 中的 `ERR_PACKAGE_PATH_NOT_EXPORTED` 条目。
+
+### Kit 子路径现在是完整镜像
+
+`@vue-solana/core/kit`、`@vue-solana/vue/kit` 和 `@vue-solana/nuxt/kit` 现在会 `export *` 全部 `@solana/kit`，而不是重新导出一份精选列表。Kit 的每个值和类型都能从你已经安装的那个子路径中获取。
+
+- 如果你在 v2 时添加过 `@solana/kit`，请把它从自己的 `package.json` 中移除。你不再需要它，保留它反而有在依赖树中出现两份 Kit 的风险。
+- 把消息构建器、codec、planner 辅助函数和 signer 工厂都移到同一个 `@vue-solana/*/kit` import 上，让应用只有一个 Solana 入口。
+
+有四个名字同时存在于 Kit 和本库中。从包根导入时解析为**本库的**版本，从 `/kit` 子路径导入时解析为 **Kit 的**版本：
+
+| 名称                | 包根（`@vue-solana/core`）        | `kit` 子路径（`@vue-solana/core/kit`） |
+| ------------------- | --------------------------------- | -------------------------------------- |
+| `SolanaError`       | `@vue-solana/core` 自带的错误类   | Kit 的 `SolanaError`                   |
+| `SolanaErrorCode`   | `@vue-solana/core` 自带的错误码   | Kit 的 `SolanaErrorCode`               |
+| `isSolanaError`     | `@vue-solana/core` 自带的判断函数 | Kit 的 `isSolanaError`                 |
+| `TransactionStatus` | `@vue-solana/core` 的确认状态结构 | Kit 的 `TransactionStatus`             |
+
+如果你要捕获 Kit 抛出的错误，这一点很重要。包根的 `isSolanaError()` 识别的是本库的 `SolanaError`，不是 Kit 的，所以在检查 Kit 自身抛出的错误时，请从 `@vue-solana/*/kit` 导入：
+
+```ts
+import { isSolanaError } from "@vue-solana/core/kit"; // Kit 的判断函数，匹配 Kit 的错误
+
+try {
+  await client.rpc.getBalance(account).send();
+} catch (error) {
+  if (isSolanaError(error, "RPC_HTTP_ERROR")) {
+    // ...
+  }
+}
+```
+
+其余都是内部改动。composable 状态机被合并进共享辅助函数，`@solana/kit` 升到了 `^8.4.0`，bundle 也变小了，但没有任何 composable 的签名或返回结构发生变化。
+
+## 升级 Vue 应用
+
+### 步骤 1：更新到 v3
+
+```sh
+pnpm add @vue-solana/vue@^3.0.0
 ```
 
 由于 `web3` 子路径已不存在，编译器现在会指出所有剩余的旧版引用。
@@ -4243,10 +4463,10 @@ const client = createSolanaClient({ cluster: "devnet" });
 
 ## 升级 Nuxt 应用
 
-### 步骤 1：更新到 v2
+### 步骤 1：更新到 v3
 
 ```sh
-pnpm add @vue-solana/nuxt@^2.0.0
+pnpm add @vue-solana/nuxt@^3.0.0
 ```
 
 ### 步骤 2：切换到 Kit API
@@ -10083,6 +10303,8 @@ Use this package directly when you want Kit clients, endpoint helpers, shared wa
 pnpm add @vue-solana/core
 ```
 
+The package is ESM only. A CommonJS `require("@vue-solana/core")` fails with `No "exports" main defined`; make the importing module ESM, or stay on `@vue-solana/core@^2`, which still ships a `.cjs` build. See [Upgrading v2 to v3](/guides/kit-migration#upgrading-v2-to-v3).
+
 ## Quick Start
 
 ```ts
@@ -10334,6 +10556,7 @@ import type { Address, Commitment, Lamports, Signature, SolanaRpcApi } from "@vu
 - `address(value)`: validates and returns an `Address` (base58 string brand) — the Kit replacement for `new PublicKey(...)`.
 - `lamports(value: bigint)`: returns a `Lamports` value — the Kit replacement for raw lamport numbers.
 - Commonly used types: `Address`, `Commitment`, `Lamports`, `Rpc`, `Signature`, `SolanaRpcApi`, `SolanaClient`. The subpath re-exports every type `@solana/kit` exports, not just these.
+- Four names exist in both Kit and this library. They resolve to **this library's** version from the root barrel (`@vue-solana/core`) and to **Kit's** version from the `/kit` subpath: `SolanaError`, `SolanaErrorCode`, `isSolanaError`, and `TransactionStatus`. Import `isSolanaError` from `@vue-solana/core/kit` when you are inspecting an error thrown by Kit itself, because the root barrel's guard does not match Kit's error class.
 
 RPC numeric results are `bigint`, and account data is `Uint8Array` rather than `Buffer`. See [Kit Migration](/guides/kit-migration) for details.
 
@@ -12602,6 +12825,8 @@ Description: Vue plugin and composables for Solana applications.
 ```sh
 pnpm add @vue-solana/vue
 ```
+
+The package is ESM only. Vite apps already bundle ESM and need no change; a CommonJS `require("@vue-solana/vue")` fails with `No "exports" main defined`, so make the importing module ESM, or stay on `@vue-solana/vue@^2`, which still ships a `.cjs` build. See [Upgrading v2 to v3](/guides/kit-migration#upgrading-v2-to-v3).
 
 Browser apps that create or serialize transactions can initialize the Buffer polyfill from `@vue-solana/vue/buffer-polyfill`.
 
@@ -15201,6 +15426,8 @@ npx nuxt module add @vue-solana/nuxt
 ```
 
 This installs the package and adds `@vue-solana/nuxt` to the `modules` array in `nuxt.config.ts`.
+
+The package is ESM only. Nuxt already bundles ESM and needs no change; a CommonJS `require("@vue-solana/nuxt")` fails with `No "exports" main defined`, so make the importing module ESM, or stay on `@vue-solana/nuxt@^2`, which still ships a `.cjs` build. See [Upgrading v2 to v3](/guides/kit-migration#upgrading-v2-to-v3).
 
 Browser apps that create or serialize transactions can initialize the Buffer polyfill from `@vue-solana/nuxt/buffer-polyfill`. Use `@vue-solana/nuxt/kit` for the Kit API — it re-exports all of `@solana/kit` — or the auto-imported `useSolanaClient()`.
 

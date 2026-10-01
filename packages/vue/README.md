@@ -55,6 +55,8 @@ pnpm add @vue-solana/vue
 npm install @vue-solana/vue
 ```
 
+Since v3.0.0 this package is ESM only. There is no `require` export condition and no top-level `main`, so `require("@vue-solana/vue")` fails with `No "exports" main defined`. Vite apps are unaffected; pin to `@vue-solana/vue@^2` if you must stay on CommonJS.
+
 ## Plugin Setup
 
 ```ts

@@ -13,6 +13,8 @@ surroundOrder: 15
 pnpm add @vue-solana/vue
 ```
 
+El paquete es solo ESM. Las apps de Vite ya empaquetan ESM y no necesitan cambios; un `require("@vue-solana/vue")` de CommonJS falla con `No "exports" main defined`, así que convierte el módulo importador a ESM, o quédate en `@vue-solana/vue@^2`, que todavía incluye una build `.cjs`. Consulta [Actualizar de v2 a v3](/es/guides/kit-migration#actualizar-de-v2-a-v3).
+
 Las apps de navegador que crean o serializan transacciones pueden inicializar el polyfill de Buffer desde `@vue-solana/vue/buffer-polyfill`.
 
 ## Configuración del plugin
@@ -142,7 +144,7 @@ Subpaths directos del paquete:
 - `@vue-solana/vue/useTokenAccounts`
 - `@vue-solana/vue/kit`
 
-Usa `@vue-solana/vue/buffer-polyfill` para código de transacciones en navegador que necesita el polyfill de Buffer. Importa `installSolanaBufferPolyfill()` como named import y llámalo; un import de efecto secundario como `import "@vue-solana/vue/buffer-polyfill"` no instala nada, porque todos los paquetes `@vue-solana/*` están marcados con `"sideEffects": false` y ese subpath solo exporta la función. Usa `@vue-solana/vue/kit` para la API Kit (`createSolanaClient`, `address`, `lamports` y tipos). Los imports directos `@vue-solana/core/*` siguen soportados para uso core de menor nivel.
+Usa `@vue-solana/vue/buffer-polyfill` para código de transacciones en navegador que necesita el polyfill de Buffer. Importa `installSolanaBufferPolyfill()` como named import y llámalo; un import de efecto secundario como `import "@vue-solana/vue/buffer-polyfill"` no instala nada, porque todos los paquetes `@vue-solana/*` están marcados con `"sideEffects": false` y ese subpath solo exporta la función. Usa `@vue-solana/vue/kit` para la API Kit: reexporta todo `@solana/kit`, así que nunca instalas ese paquete por tu cuenta. Los imports directos `@vue-solana/core/*` siguen soportados para uso core de menor nivel.
 
 - `useSolana()`: devuelve el contexto Solana inyectado completo.
 - `useSolanaClient()`: devuelve el `{ client, rpc }` de Kit desde el contexto. Recomendado para código nuevo.
