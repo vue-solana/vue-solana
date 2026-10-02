@@ -9,7 +9,7 @@ surroundOrder: 14
 
 Usa este paquete directamente cuando quieras clientes Kit, helpers de endpoint, tipos de wallet compartidos, helpers de registro de Android Mobile Wallet Adapter, helpers de wallet de navegador iOS, lecturas de cuentas de token y helpers de transacción sin instalar el plugin de Vue.
 
-`@vue-solana/core` se basa en el moderno [`@solana/kit`](https://www.npmjs.com/package/@solana/kit). `createSolanaClient()` vive en el subpath `@vue-solana/core/kit`, que reexporta todo `@solana/kit`. La API legacy `@solana/web3-compat` y el subpath `web3` se eliminaron en v2.0.0 — consulta [Kit Migration](/guides/kit-migration) para el mapa completo antes/después.
+`@vue-solana/core` se basa en el moderno [`@solana/kit`](https://www.npmjs.com/package/@solana/kit). `createSolanaClient()` vive en el subpath `@vue-solana/core/kit`, que reexporta todo `@solana/kit`. La API legacy `@solana/web3-compat` y el subpath `web3` se eliminaron en v2.0.0 — consulta [Kit Migration](/guides/migration) para el mapa completo antes/después.
 
 ## Instalar
 
@@ -17,7 +17,7 @@ Usa este paquete directamente cuando quieras clientes Kit, helpers de endpoint, 
 pnpm add @vue-solana/core
 ```
 
-El paquete es solo ESM. Un `require("@vue-solana/core")` de CommonJS falla con `No "exports" main defined`; convierte el módulo importador a ESM, o quédate en `@vue-solana/core@^2`, que todavía incluye una build `.cjs`. Consulta [Actualizar de v2 a v3](/es/guides/kit-migration#actualizar-de-v2-a-v3).
+El paquete es solo ESM. Un `require("@vue-solana/core")` de CommonJS falla con `No "exports" main defined`; convierte el módulo importador a ESM, o quédate en `@vue-solana/core@^2`, que todavía incluye una build `.cjs`. Consulta [Actualizar de v2 a v3](/es/guides/migration#actualizar-de-v2-a-v3).
 
 ## Inicio rápido
 
@@ -270,7 +270,7 @@ import type { Address, Commitment, Lamports, Signature, SolanaRpcApi } from "@vu
 - Types: `Address`, `Commitment`, `Lamports`, `Rpc`, `Signature`, `SolanaRpcApi`, `SolanaClient`. El subpath reexporta todos los tipos que exporta `@solana/kit`, no solo estos.
 - Cuatro nombres existen tanto en Kit como en esta librería. Se resuelven a la versión **de esta librería** desde la raíz del paquete (`@vue-solana/core`) y a la versión **de Kit** desde el subpath `/kit`: `SolanaError`, `SolanaErrorCode`, `isSolanaError` y `TransactionStatus`. Importa `isSolanaError` desde `@vue-solana/core/kit` cuando inspecciones un error lanzado por el propio Kit, porque la guarda de la raíz no coincide con la clase de error de Kit.
 
-Los resultados numéricos de RPC son `bigint`, y los datos de cuenta son `Uint8Array` en vez de `Buffer`. Consulta [Kit Migration](/guides/kit-migration) para más detalles.
+Los resultados numéricos de RPC son `bigint`, y los datos de cuenta son `Uint8Array` en vez de `Buffer`. Consulta [Kit Migration](/guides/migration) para más detalles.
 
 ### Acciones
 

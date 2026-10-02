@@ -15,7 +15,7 @@ npx nuxt module add @vue-solana/nuxt
 
 这会安装包，并把 `@vue-solana/nuxt` 添加到 `nuxt.config.ts` 的 `modules` 数组中。
 
-该包仅发布 ESM。Nuxt 本身已经打包为 ESM，不需要改动；在 CommonJS 中 `require("@vue-solana/nuxt")` 会以 `No "exports" main defined` 失败。请把导入该包的模块改为 ESM，或者继续使用仍提供 `.cjs` 构建的 `@vue-solana/nuxt@^2`。参见[从 v2 升级到 v3](/zh/guides/kit-migration#从-v2-升级到-v3)。
+该包仅发布 ESM。Nuxt 本身已经打包为 ESM，不需要改动；在 CommonJS 中 `require("@vue-solana/nuxt")` 会以 `No "exports" main defined` 失败。请把导入该包的模块改为 ESM，或者继续使用仍提供 `.cjs` 构建的 `@vue-solana/nuxt@^2`。参见[从 v2 升级到 v3](/zh/guides/migration#从-v2-升级到-v3)。
 
 创建或序列化交易的浏览器应用可以从 `@vue-solana/nuxt/buffer-polyfill` 初始化 Buffer polyfill。使用 `@vue-solana/nuxt/kit` 获取 Kit API — 它会重新导出全部 `@solana/kit` — 以及自动导入的 `useSolanaClient()`。
 

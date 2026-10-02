@@ -15,12 +15,12 @@ Vue Solana ofrece configuración RPC, lecturas reactivas de cuentas, lecturas de
 - [`@vue-solana/vue`](/packages/vue): plugin de Vue y composables.
 - [`@vue-solana/nuxt`](/packages/nuxt): módulo de Nuxt que instala el plugin de Vue y autoimporta composables.
 
-`@vue-solana/core` se construye sobre [Solana Kit](https://solana.com/docs/kit). Reexporta todo `@solana/kit` más una fábrica `createSolanaClient()` desde `@vue-solana/core/kit`, así nunca instalas `@solana/kit` por tu cuenta, y los paquetes de framework exponen composables con prioridad en Kit como `useSolanaClient()`. La superficie legacy `@solana/web3-compat` y los subpaths `web3` fueron eliminados en v2.0.0 — consulta la [guía de migración a Kit](/guides/kit-migration) para el mapa de antes/después.
+`@vue-solana/core` se construye sobre [Solana Kit](https://solana.com/docs/kit). Reexporta todo `@solana/kit` más una fábrica `createSolanaClient()` desde `@vue-solana/core/kit`, así nunca instalas `@solana/kit` por tu cuenta, y los paquetes de framework exponen composables con prioridad en Kit como `useSolanaClient()`. La superficie legacy `@solana/web3-compat` y los subpaths `web3` fueron eliminados en v2.0.0 — consulta la [guía de migración a Kit](/guides/migration) para el mapa de antes/después.
 
 ## Empieza aquí
 
 - [Primeros pasos](/getting-started)
-- [Migración a Kit](/guides/kit-migration)
+- [Migración a Kit](/guides/migration)
 - [Guía de wallets](/guides/wallets)
 - [Guía de transacciones](/guides/transactions)
 - [Solana para desarrolladores Vue](/concepts/solana-for-vue-developers)

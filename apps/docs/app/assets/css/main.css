@@ -100,3 +100,14 @@
   background: transparent;
   color: inherit;
 }
+
+/* Shiki now emits per-token custom properties only (`--shiki-light` /
+   `--shiki-dark`) and relies on an `html.light` / `html.dark` class to pick one.
+   `@nuxt/ui` leaves `<html>` unclassed in light mode, so map both sides here. */
+.docs-content .shiki span {
+  color: var(--shiki-light);
+}
+
+:where(.dark, .dark-mode) .docs-content .shiki span {
+  color: var(--shiki-dark);
+}

@@ -2,7 +2,7 @@
 title: "지갑"
 description: 지갑을 검색하고, 활성 지갑을 선택하고, 연결/해제하고, capability를 확인합니다.
 ogSection: 가이드
-surroundOrder: 9
+surroundOrder: 8
 ---
 
 Vue Solana는 브라우저 확장 지갑, Android Mobile Wallet Adapter 지갑, 지원되는 iOS 브라우저 지갑 링크를 하나의 지갑 flow로 노출합니다.

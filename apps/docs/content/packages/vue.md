@@ -13,7 +13,7 @@ surroundOrder: 15
 pnpm add @vue-solana/vue
 ```
 
-The package is ESM only. Vite apps already bundle ESM and need no change; a CommonJS `require("@vue-solana/vue")` fails with `No "exports" main defined`, so make the importing module ESM, or stay on `@vue-solana/vue@^2`, which still ships a `.cjs` build. See [Upgrading v2 to v3](/guides/kit-migration#upgrading-v2-to-v3).
+The package is ESM only. Vite apps already bundle ESM and need no change; a CommonJS `require("@vue-solana/vue")` fails with `No "exports" main defined`, so make the importing module ESM, or stay on `@vue-solana/vue@^2`, which still ships a `.cjs` build. See [Upgrading v2 to v3](/guides/migration#upgrading-v2-to-v3).
 
 Browser apps that create or serialize transactions can initialize the Buffer polyfill from `@vue-solana/vue/buffer-polyfill`.
 
@@ -242,7 +242,7 @@ onMounted(checkSlot);
 </template>
 ```
 
-`useSolanaClient()` returns the same context as `useSolana()` but shapes it for Kit reads: `client` is the full `@solana/kit` client and `rpc` is its read API. RPC results are `bigint` and account data is `Uint8Array`. See [Kit Migration](/guides/kit-migration).
+`useSolanaClient()` returns the same context as `useSolana()` but shapes it for Kit reads: `client` is the full `@solana/kit` client and `rpc` is its read API. RPC results are `bigint` and account data is `Uint8Array`. See [Kit Migration](/guides/migration).
 
 ## Read Balance
 

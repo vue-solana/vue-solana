@@ -2,7 +2,7 @@
 title: "오류"
 description: core helper와 Vue/Nuxt 컴포저블에서 정규화된 Solana 오류를 처리합니다.
 ogSection: 가이드
-surroundOrder: 13
+surroundOrder: 12
 ---
 
 Vue Solana는 일반적인 지갑, RPC, 주소, 트랜잭션, timeout, storage 실패를 `SolanaError`로 정규화합니다.

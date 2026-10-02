@@ -9,7 +9,7 @@ surroundOrder: 14
 
 Use this package directly when you want Kit clients, endpoint helpers, shared wallet types, Android Mobile Wallet Adapter registration helpers, iOS browser wallet helpers, token account reads, and transaction helpers without installing the Vue plugin.
 
-`@vue-solana/core` builds on the modern [`@solana/kit`](https://www.npmjs.com/package/@solana/kit). `createSolanaClient()` lives on the `@vue-solana/core/kit` subpath, which re-exports all of `@solana/kit`. The legacy `@solana/web3-compat` API and the `web3` subpath were removed in v2.0.0 — see [Kit Migration](/guides/kit-migration) for the full before/after map.
+`@vue-solana/core` builds on the modern [`@solana/kit`](https://www.npmjs.com/package/@solana/kit). `createSolanaClient()` lives on the `@vue-solana/core/kit` subpath, which re-exports all of `@solana/kit`. The legacy `@solana/web3-compat` API and the `web3` subpath were removed in v2.0.0 — see [Kit Migration](/guides/migration) for the full before/after map.
 
 ## Install
 
@@ -17,7 +17,7 @@ Use this package directly when you want Kit clients, endpoint helpers, shared wa
 pnpm add @vue-solana/core
 ```
 
-The package is ESM only. A CommonJS `require("@vue-solana/core")` fails with `No "exports" main defined`; make the importing module ESM, or stay on `@vue-solana/core@^2`, which still ships a `.cjs` build. See [Upgrading v2 to v3](/guides/kit-migration#upgrading-v2-to-v3).
+The package is ESM only. A CommonJS `require("@vue-solana/core")` fails with `No "exports" main defined`; make the importing module ESM, or stay on `@vue-solana/core@^2`, which still ships a `.cjs` build. See [Upgrading v2 to v3](/guides/migration#upgrading-v2-to-v3).
 
 ## Quick Start
 
@@ -272,7 +272,7 @@ import type { Address, Commitment, Lamports, Signature, SolanaRpcApi } from "@vu
 - Commonly used types: `Address`, `Commitment`, `Lamports`, `Rpc`, `Signature`, `SolanaRpcApi`, `SolanaClient`. The subpath re-exports every type `@solana/kit` exports, not just these.
 - Four names exist in both Kit and this library. They resolve to **this library's** version from the root barrel (`@vue-solana/core`) and to **Kit's** version from the `/kit` subpath: `SolanaError`, `SolanaErrorCode`, `isSolanaError`, and `TransactionStatus`. Import `isSolanaError` from `@vue-solana/core/kit` when you are inspecting an error thrown by Kit itself, because the root barrel's guard does not match Kit's error class.
 
-RPC numeric results are `bigint`, and account data is `Uint8Array` rather than `Buffer`. See [Kit Migration](/guides/kit-migration) for details.
+RPC numeric results are `bigint`, and account data is `Uint8Array` rather than `Buffer`. See [Kit Migration](/guides/migration) for details.
 
 ### Actions
 

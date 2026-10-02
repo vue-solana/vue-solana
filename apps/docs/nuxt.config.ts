@@ -70,6 +70,25 @@ export default defineNuxtConfig({
     experimental: {
       sqliteConnector: "native",
     },
+    build: {
+      markdown: {
+        // Shiki defaults to `material-theme-palenight`, a *dark* theme with pale
+        // tokens (#BABED8, #89DDFF, #C3E88D…). `assets/css/main.css` paints the
+        // light-mode `pre` background itself, so light mode was rendering
+        // pale-on-pale at 1.3–2.7:1, far below WCAG AA. Of the bundled light
+        // themes, only the high-contrast GitHub one clears 4.5:1 on `#f8fafc`
+        // (min 4.81); its dark half clears 4.5:1 on `#020617` (min 9.51).
+        highlight: {
+          theme: {
+            // `default` satisfies the content-module type; `light` is the key
+            // shiki's implicit `defaultColor` looks for.
+            default: "github-light-high-contrast",
+            light: "github-light-high-contrast",
+            dark: "github-dark-high-contrast",
+          },
+        },
+      },
+    },
   },
   i18n: {
     defaultLocale: "en",

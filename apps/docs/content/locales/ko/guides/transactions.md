@@ -2,7 +2,7 @@
 title: "트랜잭션"
 description: Vue Solana로 트랜잭션에 서명하고, 전송하고, 확인하고, 상태를 처리합니다.
 ogSection: 가이드
-surroundOrder: 11
+surroundOrder: 10
 ---
 
 Vue Solana는 트랜잭션 제출을 위한 wallet-aware helper와 반응형 트랜잭션 상태를 위한 컴포저블을 제공합니다.

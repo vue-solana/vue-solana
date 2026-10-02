@@ -59,13 +59,13 @@ export const docsNavSections: DocsNavSection[] = [
   {
     titleKey: "navigation.sidebar.guides",
     links: [
-      { labelKey: "navigation.sidebar.kitMigration", to: "/guides/kit-migration" },
       { labelKey: "navigation.sidebar.rpcAndClusters", to: "/guides/rpc-and-clusters" },
       { labelKey: "navigation.sidebar.wallets", to: "/guides/wallets" },
       { labelKey: "navigation.sidebar.accountReads", to: "/guides/account-reads" },
       { labelKey: "navigation.sidebar.transactions", to: "/guides/transactions" },
       { labelKey: "navigation.sidebar.messageSigning", to: "/guides/message-signing" },
       { labelKey: "navigation.sidebar.errors", to: "/guides/errors" },
+      { labelKey: "navigation.sidebar.migration", to: "/guides/migration" },
     ],
   },
   {

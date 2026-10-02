@@ -15,7 +15,7 @@ npx nuxt module add @vue-solana/nuxt
 
 This installs the package and adds `@vue-solana/nuxt` to the `modules` array in `nuxt.config.ts`.
 
-The package is ESM only. Nuxt already bundles ESM and needs no change; a CommonJS `require("@vue-solana/nuxt")` fails with `No "exports" main defined`, so make the importing module ESM, or stay on `@vue-solana/nuxt@^2`, which still ships a `.cjs` build. See [Upgrading v2 to v3](/guides/kit-migration#upgrading-v2-to-v3).
+The package is ESM only. Nuxt already bundles ESM and needs no change; a CommonJS `require("@vue-solana/nuxt")` fails with `No "exports" main defined`, so make the importing module ESM, or stay on `@vue-solana/nuxt@^2`, which still ships a `.cjs` build. See [Upgrading v2 to v3](/guides/migration#upgrading-v2-to-v3).
 
 Browser apps that create or serialize transactions can initialize the Buffer polyfill from `@vue-solana/nuxt/buffer-polyfill`. Use `@vue-solana/nuxt/kit` for the Kit API — it re-exports all of `@solana/kit` — or the auto-imported `useSolanaClient()`.
 

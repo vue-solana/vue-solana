@@ -13,7 +13,7 @@ surroundOrder: 15
 pnpm add @vue-solana/vue
 ```
 
-El paquete es solo ESM. Las apps de Vite ya empaquetan ESM y no necesitan cambios; un `require("@vue-solana/vue")` de CommonJS falla con `No "exports" main defined`, así que convierte el módulo importador a ESM, o quédate en `@vue-solana/vue@^2`, que todavía incluye una build `.cjs`. Consulta [Actualizar de v2 a v3](/es/guides/kit-migration#actualizar-de-v2-a-v3).
+El paquete es solo ESM. Las apps de Vite ya empaquetan ESM y no necesitan cambios; un `require("@vue-solana/vue")` de CommonJS falla con `No "exports" main defined`, así que convierte el módulo importador a ESM, o quédate en `@vue-solana/vue@^2`, que todavía incluye una build `.cjs`. Consulta [Actualizar de v2 a v3](/es/guides/migration#actualizar-de-v2-a-v3).
 
 Las apps de navegador que crean o serializan transacciones pueden inicializar el polyfill de Buffer desde `@vue-solana/vue/buffer-polyfill`.
 
@@ -239,7 +239,7 @@ onMounted(checkSlot);
 </template>
 ```
 
-`useSolanaClient()` devuelve el mismo contexto que `useSolana()` pero lo configura para lecturas Kit: `client` es el cliente completo de `@solana/kit` y `rpc` es su API de lectura. Los resultados de RPC son `bigint` y los datos de cuenta son `Uint8Array`. Consulta [Kit Migration](/guides/kit-migration).
+`useSolanaClient()` devuelve el mismo contexto que `useSolana()` pero lo configura para lecturas Kit: `client` es el cliente completo de `@solana/kit` y `rpc` es su API de lectura. Los resultados de RPC son `bigint` y los datos de cuenta son `Uint8Array`. Consulta [Kit Migration](/guides/migration).
 
 ## Leer balance
 

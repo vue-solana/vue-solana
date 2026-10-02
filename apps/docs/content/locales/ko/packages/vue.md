@@ -13,7 +13,7 @@ surroundOrder: 15
 pnpm add @vue-solana/vue
 ```
 
-이 package는 ESM만 배포합니다. Vite 앱은 이미 ESM으로 번들링되므로 변경이 필요 없고, CommonJS의 `require("@vue-solana/vue")`는 `No "exports" main defined`로 실패하므로 import하는 모듈을 ESM으로 바꾸거나 `.cjs` 빌드를 계속 제공하는 `@vue-solana/vue@^2`를 사용하세요. [v2에서 v3로 업그레이드](/ko/guides/kit-migration#v2에서-v3로-업그레이드)를 참고하세요.
+이 package는 ESM만 배포합니다. Vite 앱은 이미 ESM으로 번들링되므로 변경이 필요 없고, CommonJS의 `require("@vue-solana/vue")`는 `No "exports" main defined`로 실패하므로 import하는 모듈을 ESM으로 바꾸거나 `.cjs` 빌드를 계속 제공하는 `@vue-solana/vue@^2`를 사용하세요. [v2에서 v3로 업그레이드](/ko/guides/migration#v2에서-v3로-업그레이드)를 참고하세요.
 
 트랜잭션을 만들거나 직렬화하는 브라우저 앱은 `@vue-solana/vue/buffer-polyfill`에서 Buffer polyfill을 초기화할 수 있습니다.
 
@@ -239,7 +239,7 @@ onMounted(checkSlot);
 </template>
 ```
 
-`useSolanaClient()`는 `useSolana()`와 같은 context를 반환하지만 Kit 읽기용으로 형태를 갖춥니다. `client`는 전체 `@solana/kit` 클라이언트이고 `rpc`는 그 read API입니다. RPC 결과는 `bigint`, account data는 `Uint8Array`입니다. [Kit 마이그레이션](/ko/guides/kit-migration)을 참고하세요.
+`useSolanaClient()`는 `useSolana()`와 같은 context를 반환하지만 Kit 읽기용으로 형태를 갖춥니다. `client`는 전체 `@solana/kit` 클라이언트이고 `rpc`는 그 read API입니다. RPC 결과는 `bigint`, account data는 `Uint8Array`입니다. [Kit 마이그레이션](/ko/guides/migration)을 참고하세요.
 
 ## 잔액 읽기
 

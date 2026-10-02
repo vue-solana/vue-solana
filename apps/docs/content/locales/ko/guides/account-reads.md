@@ -2,7 +2,7 @@
 title: "계정 읽기"
 description: Vue 또는 Nuxt에서 잔액, 계정 데이터, 프로그램 계정, 서명 상태를 안전하게 읽습니다.
 ogSection: 가이드
-surroundOrder: 10
+surroundOrder: 9
 ---
 
 Vue Solana는 일반적인 Solana 읽기 경로를 위한 컴포저블을 제공합니다. 잔액, 계정 정보, 프로그램 계정, 서명 상태를 읽을 수 있습니다.

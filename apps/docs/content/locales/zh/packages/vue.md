@@ -13,7 +13,7 @@ surroundOrder: 15
 pnpm add @vue-solana/vue
 ```
 
-该包仅发布 ESM。Vite 应用本身已经打包为 ESM，不需要改动；在 CommonJS 中 `require("@vue-solana/vue")` 会以 `No "exports" main defined` 失败。请把导入该包的模块改为 ESM，或者继续使用仍提供 `.cjs` 构建的 `@vue-solana/vue@^2`。参见[从 v2 升级到 v3](/zh/guides/kit-migration#从-v2-升级到-v3)。
+该包仅发布 ESM。Vite 应用本身已经打包为 ESM，不需要改动；在 CommonJS 中 `require("@vue-solana/vue")` 会以 `No "exports" main defined` 失败。请把导入该包的模块改为 ESM，或者继续使用仍提供 `.cjs` 构建的 `@vue-solana/vue@^2`。参见[从 v2 升级到 v3](/zh/guides/migration#从-v2-升级到-v3)。
 
 创建或序列化交易的浏览器应用可以从 `@vue-solana/vue/buffer-polyfill` 初始化 Buffer polyfill。
 
@@ -239,7 +239,7 @@ onMounted(checkSlot);
 </template>
 ```
 
-`useSolanaClient()` 返回与 `useSolana()` 相同的 context，但为 Kit 读取塑形：`client` 是完整的 `@solana/kit` 客户端，`rpc` 是它的读取 API。RPC 结果是 `bigint`，账户数据是 `Uint8Array`。参见 [Kit 迁移](/zh/guides/kit-migration)。
+`useSolanaClient()` 返回与 `useSolana()` 相同的 context，但为 Kit 读取塑形：`client` 是完整的 `@solana/kit` 客户端，`rpc` 是它的读取 API。RPC 结果是 `bigint`，账户数据是 `Uint8Array`。参见 [Kit 迁移](/zh/guides/migration)。
 
 ## 读取余额
 

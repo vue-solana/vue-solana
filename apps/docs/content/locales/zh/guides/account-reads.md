@@ -2,7 +2,7 @@
 title: "账户读取"
 description: 在 Vue 或 Nuxt 中安全读取余额、账户数据、程序账户和签名状态。
 ogSection: 指南
-surroundOrder: 10
+surroundOrder: 9
 ---
 
 Vue Solana 为常见的 Solana 读取路径提供了组合式函数：余额、账户信息、程序账户和签名状态。

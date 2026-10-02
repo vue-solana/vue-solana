@@ -18,7 +18,7 @@ export default {
       solanaForVueDevelopers: "Solana For Vue Developers",
       clusters: "Clusters",
       guides: "Guides",
-      kitMigration: "Kit Migration",
+      migration: "Migration Guide",
       rpcAndClusters: "RPC and Clusters",
       wallets: "Wallets",
       accountReads: "Account Reads",

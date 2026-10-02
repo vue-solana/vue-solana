@@ -55,11 +55,11 @@ Las apps Nuxt pueden usar `@vue-solana/nuxt/kit` y `@vue-solana/nuxt/buffer-poly
 
 ## Nota sobre v3
 
-v3.0.0 publica solo ESM: la condición de exportación `require` y el campo `main` de primer nivel desaparecen de todos los paquetes `@vue-solana/*`. Las apps de Nuxt y Vite ya empaquetan ESM y no necesitan cambios; un script de Node que haga `require()` de un paquete de Vue Solana debe convertirse a ESM. Los subpaths `kit` también pasaron a ser un espejo completo de `@solana/kit`, así que puedes quitar `@solana/kit` de tu propio `package.json` si lo añadiste en v2. Consulta [Actualizar de v2 a v3](/es/guides/kit-migration#actualizar-de-v2-a-v3) para los detalles.
+v3.0.0 publica solo ESM: la condición de exportación `require` y el campo `main` de primer nivel desaparecen de todos los paquetes `@vue-solana/*`. Las apps de Nuxt y Vite ya empaquetan ESM y no necesitan cambios; un script de Node que haga `require()` de un paquete de Vue Solana debe convertirse a ESM. Los subpaths `kit` también pasaron a ser un espejo completo de `@solana/kit`, así que puedes quitar `@solana/kit` de tu propio `package.json` si lo añadiste en v2. Consulta [Actualizar de v2 a v3](/es/guides/migration#actualizar-de-v2-a-v3) para los detalles.
 
 ## Nota sobre v2
 
-v2.0.0 elimino la superficie legacy `@solana/web3-compat`. El contexto ya no lleva un `connection`, y los subpaths `@vue-solana/*/web3` fueron eliminados. Todos los composables son con prioridad en Kit y `SolanaWallet.publicKey` es un string base58 `Address`. El shim `@solana/buffer/` que describian las docs v1 anteriores ya no existe; los shims propios del paquete que se conservan solo cubren el subpath del navegador `buffer/` usado por el polyfill de Buffer. Consulta la [guía de migración a Kit](/guides/kit-migration) para el mapa completo de antes/después.
+v2.0.0 elimino la superficie legacy `@solana/web3-compat`. El contexto ya no lleva un `connection`, y los subpaths `@vue-solana/*/web3` fueron eliminados. Todos los composables son con prioridad en Kit y `SolanaWallet.publicKey` es un string base58 `Address`. El shim `@solana/buffer/` que describian las docs v1 anteriores ya no existe; los shims propios del paquete que se conservan solo cubren el subpath del navegador `buffer/` usado por el polyfill de Buffer. Consulta la [guía de migración a Kit](/guides/migration) para el mapa completo de antes/después.
 
 ## Configuración de Vue
 
@@ -97,7 +97,7 @@ import { useBalance } from "@vue-solana/vue/useBalance";
 import { useSolanaClient } from "@vue-solana/vue/useSolanaClient";
 ```
 
-`useRpc()` devuelve el estado resuelto del cluster y el `client` Kit inyectado; `useBalance()` lee a traves de `client.rpc`. `useSolanaClient()` devuelve el mismo `client` y su `rpc` de solo lectura directamente, más `address()`/`lamports()` desde `@vue-solana/vue/kit`. Consulta la [guía de migración a Kit](/guides/kit-migration) para el mapa completo de antes/después.
+`useRpc()` devuelve el estado resuelto del cluster y el `client` Kit inyectado; `useBalance()` lee a traves de `client.rpc`. `useSolanaClient()` devuelve el mismo `client` y su `rpc` de solo lectura directamente, más `address()`/`lamports()` desde `@vue-solana/vue/kit`. Consulta la [guía de migración a Kit](/guides/migration) para el mapa completo de antes/después.
 
 ### Ciclo de vida del cliente y del plugin
 
@@ -420,7 +420,7 @@ Antes de confiar en un flujo de app, verifica estos comportamientos en devnet:
 - [Clusters](/concepts/clusters)
 - [Wallets](/guides/wallets)
 - [guía de transacciones](/guides/transactions)
-- [Migración a Kit](/guides/kit-migration)
+- [Migración a Kit](/guides/migration)
 - [Solución de problemas](/troubleshooting)
 - [Documentación de Solana Kit](https://www.solanakit.com/) — guías oficiales de Kit, recetas y referencia de API
 - [Documentación de Solana](https://solana.com/docs)

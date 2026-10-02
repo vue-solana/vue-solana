@@ -2,7 +2,7 @@
 title: "Firma De Mensajes"
 description: Firma mensajes de autenticación o propiedad sin crear transacciones on-chain.
 ogSection: Guias
-surroundOrder: 12
+surroundOrder: 11
 ---
 
 La firma de mensajes demuestra el control de una wallet sobre un mensaje off-chain. No autoriza cambios de estado on-chain y no es una firma de transacción.

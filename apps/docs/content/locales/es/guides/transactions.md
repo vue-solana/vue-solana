@@ -2,7 +2,7 @@
 title: "Transacciones"
 description: Firma, envía, confirma y maneja estado de transacciones con Vue Solana.
 ogSection: Guides
-surroundOrder: 11
+surroundOrder: 10
 ---
 
 Vue Solana proporciona helpers conscientes de wallets para enviar transacciones y composables para estado reactivo de transacciones.

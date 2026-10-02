@@ -42,7 +42,7 @@ const publicKey = address("PASTE_A_SOLANA_ADDRESS");
 
 Las direcciones son strings base58 `Address`; la clase legacy `PublicKey` y los subpaths `web3` se eliminaron en v2.0.0.
 
-Consulta la [guía de migración a Kit](/guides/kit-migration) para el mapeo completo entre ambos.
+Consulta la [guía de migración a Kit](/guides/migration) para el mapeo completo entre ambos.
 
 Nunca expongas claves privadas, frases semilla ni arrays de clave secreta en código frontend.
 

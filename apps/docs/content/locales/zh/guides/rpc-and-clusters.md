@@ -2,7 +2,7 @@
 title: "RPC 和集群"
 description: 配置 Solana 集群、RPC 端点、WebSocket 端点和客户端辅助函数。
 ogSection: 指南
-surroundOrder: 8
+surroundOrder: 7
 ---
 
 Vue Solana 在 `@vue-solana/core`、`@vue-solana/vue` 和 `@vue-solana/nuxt` 之间共享集群和端点配置。

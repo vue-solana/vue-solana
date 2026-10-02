@@ -9,7 +9,7 @@ surroundOrder: 14
 
 当你想要 Kit 客户端、endpoint helper、共享钱包类型、Android Mobile Wallet Adapter 注册 helper、iOS 浏览器钱包 helper、token 账户读取和交易 helper，但不想安装 Vue 插件时，可以直接使用此包。
 
-`@vue-solana/core` 基于现代的 [`@solana/kit`](https://www.npmjs.com/package/@solana/kit)。`createSolanaClient()` 位于 `@vue-solana/core/kit` subpath，该 subpath 重新导出全部的 `@solana/kit`。遗留的 `@solana/web3-compat` API 和 `web3` subpath 已在 v2.0.0 中移除——完整的 before/after 映射请参阅 [Kit 迁移](/zh/guides/kit-migration)。
+`@vue-solana/core` 基于现代的 [`@solana/kit`](https://www.npmjs.com/package/@solana/kit)。`createSolanaClient()` 位于 `@vue-solana/core/kit` subpath，该 subpath 重新导出全部的 `@solana/kit`。遗留的 `@solana/web3-compat` API 和 `web3` subpath 已在 v2.0.0 中移除——完整的 before/after 映射请参阅 [Kit 迁移](/zh/guides/migration)。
 
 ## 安装
 
@@ -17,7 +17,7 @@ surroundOrder: 14
 pnpm add @vue-solana/core
 ```
 
-该包仅发布 ESM。在 CommonJS 中 `require("@vue-solana/core")` 会以 `No "exports" main defined` 失败。请把导入该包的模块改为 ESM，或者继续使用仍提供 `.cjs` 构建的 `@vue-solana/core@^2`。参见[从 v2 升级到 v3](/zh/guides/kit-migration#从-v2-升级到-v3)。
+该包仅发布 ESM。在 CommonJS 中 `require("@vue-solana/core")` 会以 `No "exports" main defined` 失败。请把导入该包的模块改为 ESM，或者继续使用仍提供 `.cjs` 构建的 `@vue-solana/core@^2`。参见[从 v2 升级到 v3](/zh/guides/migration#从-v2-升级到-v3)。
 
 ## 快速开始
 
@@ -270,7 +270,7 @@ import type { Address, Commitment, Lamports, Signature, SolanaRpcApi } from "@vu
 - 常用类型：`Address`、`Commitment`、`Lamports`、`Rpc`、`Signature`、`SolanaRpcApi`、`SolanaClient`。该 subpath 会重新导出 `@solana/kit` 导出的所有类型，不仅仅是这些。
 - 有四个名字同时存在于 Kit 和本库中。从包根（`@vue-solana/core`）导入时解析为**本库的**版本，从 `/kit` subpath 导入时解析为 **Kit 的**版本：`SolanaError`、`SolanaErrorCode`、`isSolanaError`、`TransactionStatus`。由于包根的判断函数与 Kit 的错误类不匹配，检查 Kit 自身抛出的错误时，请从 `@vue-solana/core/kit` 导入 `isSolanaError`。
 
-RPC 数值结果是 `bigint`，账户数据是 `Uint8Array` 而不是 `Buffer`。详见 [Kit 迁移](/zh/guides/kit-migration)。
+RPC 数值结果是 `bigint`，账户数据是 `Uint8Array` 而不是 `Buffer`。详见 [Kit 迁移](/zh/guides/migration)。
 
 ### 动作
 

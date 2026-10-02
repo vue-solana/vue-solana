@@ -2,7 +2,7 @@
 title: "Wallets"
 description: Descubre wallets, selecciona una wallet activa, conecta, desconecta y comprueba capacidades.
 ogSection: Guides
-surroundOrder: 9
+surroundOrder: 8
 ---
 
 Vue Solana expone wallets de extensión de navegador, wallets Android Mobile Wallet Adapter y enlaces de wallets de navegador iOS admitidas mediante un único flujo de wallet.

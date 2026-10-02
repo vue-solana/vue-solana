@@ -2,7 +2,7 @@
 title: "钱包"
 description: 发现钱包、选择活跃钱包、连接、断开连接并检查能力。
 ogSection: 指南
-surroundOrder: 9
+surroundOrder: 8
 ---
 
 Vue Solana 通过同一个钱包流程暴露浏览器扩展钱包、Android Mobile Wallet Adapter 钱包，以及受支持的 iOS 浏览器钱包链接。

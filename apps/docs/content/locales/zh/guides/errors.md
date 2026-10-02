@@ -2,7 +2,7 @@
 title: "错误"
 description: 处理来自核心辅助函数和 Vue/Nuxt 组合式函数的标准化 Solana 错误。
 ogSection: 指南
-surroundOrder: 13
+surroundOrder: 12
 ---
 
 Vue Solana 会将常见的钱包、RPC、地址、交易、超时和存储失败标准化为 `SolanaError`。

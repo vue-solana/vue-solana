@@ -2,7 +2,7 @@
 title: "Lecturas de cuentas"
 description: Lee balances, datos de cuenta, cuentas de programa y estado de firmas de forma segura desde Vue o Nuxt.
 ogSection: Guías
-surroundOrder: 10
+surroundOrder: 9
 ---
 
 Vue Solana incluye composables para rutas comunes de lectura en Solana: balances, información de cuenta, cuentas de programa y estado de firmas.

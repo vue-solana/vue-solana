@@ -11,7 +11,7 @@ Use this guide to diagnose the most common Vue Solana setup issues across Vue, N
 
 v2.0.0 removed `@solana/web3-compat` from every Vue Solana package, so a missing-declaration error against that package almost always means your app still imports from the deleted legacy surface: `@vue-solana/core/web3`, `@vue-solana/vue/web3`, `@vue-solana/nuxt/web3`, or a direct `@solana/web3-compat` dependency.
 
-Update those imports to the Kit equivalents — see the [Kit Migration guide](/guides/kit-migration). If you are still on a v1.x package, the v1 packages shipped package-owned declaration shims for the documented core imports, and apps on v1 could add their own `@solana/web3-compat` shim only when importing the package directly. Upgrading to `@vue-solana/*@^2` removes the need for any shim.
+Update those imports to the Kit equivalents — see the [Kit Migration guide](/guides/migration). If you are still on a v1.x package, the v1 packages shipped package-owned declaration shims for the documented core imports, and apps on v1 could add their own `@solana/web3-compat` shim only when importing the package directly. Upgrading to `@vue-solana/*@^2` removes the need for any shim.
 
 ## `ERR_PACKAGE_PATH_NOT_EXPORTED` When Requiring A Package
 

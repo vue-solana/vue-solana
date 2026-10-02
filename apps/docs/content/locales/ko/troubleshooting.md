@@ -11,7 +11,7 @@ surroundOrder: 4
 
 v2.0.0은 모든 Vue Solana package에서 `@solana/web3-compat`를 제거했으므로, 해당 package에 대한 declaration 누락 오류는 거의 항상 앱이 삭제된 legacy surface에서 import하고 있다는 뜻입니다: `@vue-solana/core/web3`, `@vue-solana/vue/web3`, `@vue-solana/nuxt/web3`, 또는 직접 `@solana/web3-compat` dependency.
 
-이 import들을 Kit에 맞는 형태로 업데이트하세요 - [Kit Migration 가이드](/ko/guides/kit-migration)를 참고하세요. 여전히 v1.x package를 사용 중이라면, v1 package는 문서화된 core import에 package-owned declaration shim을 배포했으며, v1 앱은 package를 직접 import할 때만 자체 `@solana/web3-compat` shim을 추가할 수 있었습니다. `@vue-solana/*@^2`로 업그레이드하면 더 이상 어떤 shim도 필요 없습니다.
+이 import들을 Kit에 맞는 형태로 업데이트하세요 - [Kit Migration 가이드](/ko/guides/migration)를 참고하세요. 여전히 v1.x package를 사용 중이라면, v1 package는 문서화된 core import에 package-owned declaration shim을 배포했으며, v1 앱은 package를 직접 import할 때만 자체 `@solana/web3-compat` shim을 추가할 수 있었습니다. `@vue-solana/*@^2`로 업그레이드하면 더 이상 어떤 shim도 필요 없습니다.
 
 ## `require` 시 발생하는 `ERR_PACKAGE_PATH_NOT_EXPORTED`
 

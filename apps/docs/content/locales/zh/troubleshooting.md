@@ -11,7 +11,7 @@ surroundOrder: 4
 
 v2.0.0 从每个 Vue Solana 包中移除了 `@solana/web3-compat`，因此针对该包的缺少声明错误几乎总是意味着你的应用仍在从被删除的旧版表面导入：`@vue-solana/core/web3`、`@vue-solana/vue/web3`、`@vue-solana/nuxt/web3`，或直接依赖 `@solana/web3-compat`。
 
-请把这些导入更新为 Kit 对应的写法——参见 [Kit 迁移指南](/zh/guides/kit-migration)。如果你仍在使用 v1.x 包：v1 包为文档中的 core 导入发布过包内声明 shim，v1 应用只有在直接导入该包时才需要添加自己的 `@solana/web3-compat` shim。升级到 `@vue-solana/*@^2` 后就不再需要任何 shim。
+请把这些导入更新为 Kit 对应的写法——参见 [Kit 迁移指南](/zh/guides/migration)。如果你仍在使用 v1.x 包：v1 包为文档中的 core 导入发布过包内声明 shim，v1 应用只有在直接导入该包时才需要添加自己的 `@solana/web3-compat` shim。升级到 `@vue-solana/*@^2` 后就不再需要任何 shim。
 
 ## 使用 `require` 时出现 `ERR_PACKAGE_PATH_NOT_EXPORTED`
 

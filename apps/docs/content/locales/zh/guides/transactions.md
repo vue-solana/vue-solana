@@ -2,7 +2,7 @@
 title: "交易"
 description: 使用 Vue Solana 签署、发送、确认并处理交易状态。
 ogSection: 指南
-surroundOrder: 11
+surroundOrder: 10
 ---
 
 Vue Solana 提供了感知钱包的钱包提交辅助函数，以及用于响应式交易状态的组合式函数。

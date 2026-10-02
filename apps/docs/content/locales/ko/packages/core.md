@@ -9,7 +9,7 @@ surroundOrder: 14
 
 Vue plugin을 설치하지 않고 Kit client, endpoint helper, 공유 wallet type, Android Mobile Wallet Adapter 등록 helper, iOS browser wallet helper, token account 읽기, transaction helper를 사용하고 싶을 때 이 package를 직접 사용하세요.
 
-`@vue-solana/core`는 현대적인 [`@solana/kit`](https://www.npmjs.com/package/@solana/kit)을 기반으로 합니다. `createSolanaClient()`는 `@vue-solana/core/kit` subpath에 있고, 이 subpath는 `@solana/kit` 전체를 다시 export합니다. legacy `@solana/web3-compat` API와 `web3` subpath는 v2.0.0에서 제거되었습니다 - 전체 before/after 매핑은 [Kit Migration](/ko/guides/kit-migration)을 참고하세요.
+`@vue-solana/core`는 현대적인 [`@solana/kit`](https://www.npmjs.com/package/@solana/kit)을 기반으로 합니다. `createSolanaClient()`는 `@vue-solana/core/kit` subpath에 있고, 이 subpath는 `@solana/kit` 전체를 다시 export합니다. legacy `@solana/web3-compat` API와 `web3` subpath는 v2.0.0에서 제거되었습니다 - 전체 before/after 매핑은 [Kit Migration](/ko/guides/migration)을 참고하세요.
 
 ## 설치
 
@@ -17,7 +17,7 @@ Vue plugin을 설치하지 않고 Kit client, endpoint helper, 공유 wallet typ
 pnpm add @vue-solana/core
 ```
 
-이 package는 ESM만 배포합니다. CommonJS의 `require("@vue-solana/core")`는 `No "exports" main defined`로 실패합니다. import하는 모듈을 ESM으로 바꾸거나, `.cjs` 빌드를 계속 제공하는 `@vue-solana/core@^2`를 사용하세요. [v2에서 v3로 업그레이드](/ko/guides/kit-migration#v2에서-v3로-업그레이드)를 참고하세요.
+이 package는 ESM만 배포합니다. CommonJS의 `require("@vue-solana/core")`는 `No "exports" main defined`로 실패합니다. import하는 모듈을 ESM으로 바꾸거나, `.cjs` 빌드를 계속 제공하는 `@vue-solana/core@^2`를 사용하세요. [v2에서 v3로 업그레이드](/ko/guides/migration#v2에서-v3로-업그레이드)를 참고하세요.
 
 ## 빠른 시작
 
@@ -270,7 +270,7 @@ import type { Address, Commitment, Lamports, Signature, SolanaRpcApi } from "@vu
 - 자주 쓰는 타입: `Address`, `Commitment`, `Lamports`, `Rpc`, `Signature`, `SolanaRpcApi`, `SolanaClient`. 이 subpath는 `@solana/kit`가 export하는 모든 타입을 다시 export합니다.
 - 네 개의 이름은 Kit과 이 library 양쪽에 모두 존재합니다. 패키지 루트(`@vue-solana/core`)에서는 **이 library의** 버전으로, `/kit` subpath에서는 **Kit의** 버전으로 해석됩니다: `SolanaError`, `SolanaErrorCode`, `isSolanaError`, `TransactionStatus`. Kit이 던진 에러를 검사할 때는 루트의 guard가 Kit의 에러 클래스와 일치하지 않으므로 `@vue-solana/core/kit`에서 `isSolanaError`를 import하세요.
 
-RPC numeric result는 `bigint`이고, account data는 `Buffer`가 아니라 `Uint8Array`입니다. 자세한 내용은 [Kit Migration](/ko/guides/kit-migration)을 참고하세요.
+RPC numeric result는 `bigint`이고, account data는 `Buffer`가 아니라 `Uint8Array`입니다. 자세한 내용은 [Kit Migration](/ko/guides/migration)을 참고하세요.
 
 ### Actions
 

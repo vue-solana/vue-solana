@@ -11,7 +11,7 @@ Usa esta guía para diagnosticar los problemas más comunes de setup de Vue Sola
 
 v2.0.0 elimino `@solana/web3-compat` de todos los paquetes de Vue Solana, así que un error de declaración faltante contra ese paquete casi siempre significa que tu app todavía importa desde la superficie legacy eliminada: `@vue-solana/core/web3`, `@vue-solana/vue/web3`, `@vue-solana/nuxt/web3`, o una dependencia directa de `@solana/web3-compat`.
 
-Actualiza esas importaciones a los equivalentes de Kit — consulta la [guía de migración a Kit](/guides/kit-migration). Si aún estás en un paquete v1.x, los paquetes v1 incluían shims de declaraciones propios del paquete para las importaciones documentadas de core, y las apps en v1 podían agregar su propio shim de `@solana/web3-compat` solo cuando importaban el paquete directamente. Actualizar a `@vue-solana/*@^2` elimina la necesidad de cualquier shim.
+Actualiza esas importaciones a los equivalentes de Kit — consulta la [guía de migración a Kit](/guides/migration). Si aún estás en un paquete v1.x, los paquetes v1 incluían shims de declaraciones propios del paquete para las importaciones documentadas de core, y las apps en v1 podían agregar su propio shim de `@solana/web3-compat` solo cuando importaban el paquete directamente. Actualizar a `@vue-solana/*@^2` elimina la necesidad de cualquier shim.
 
 ## `ERR_PACKAGE_PATH_NOT_EXPORTED` al usar `require` con un paquete
 
