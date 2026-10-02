@@ -1,4 +1,4 @@
-import type { SolanaChain, SolanaCluster, SolanaTransaction, SolanaWalletInfo } from "../types";
+import type { SolanaChain, SolanaCluster, SolanaWalletInfo } from "../types";
 
 export interface SolanaIosWalletAppIdentity {
   name: string;
@@ -73,5 +73,3 @@ export type IosWalletCallbackResult = {
 export type IosWalletSignMethod = Exclude<IosWalletMethod, "connect">;
 
 export type IosWalletInfo = SolanaWalletInfo & { wallet: IosWalletDefinition };
-
-export type IosWalletTransaction = SolanaTransaction;
