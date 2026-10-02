@@ -96,6 +96,27 @@ describe("useAccountInfo", () => {
     expect(getAccountInfo).toHaveBeenCalledTimes(1);
   });
 
+  // The stale-value fix in `useAddressRead`: an RPC failure on the re-read
+  // nulls `accountInfo` instead of leaving the previous account up next to it.
+  // `refresh()` rejecting is what makes this observable.
+  it("drops a previously loaded account when a re-read fails", async () => {
+    const failure = new Error("RPC failed");
+    const getAccountInfo = vi
+      .fn()
+      .mockReturnValueOnce({ send: vi.fn().mockResolvedValue({ value: ACCOUNT }) })
+      .mockReturnValue({ send: vi.fn().mockRejectedValue(failure) });
+    const { result } = mountUseAccountInfo(systemProgram, undefined, { rpc: { getAccountInfo } });
+
+    await flushPromises();
+
+    expect(result.accountInfo.value).toMatchObject({ lamports: 123 });
+
+    await expect(result.refresh()).rejects.toThrow("RPC failed");
+
+    expect(result.accountInfo.value).toBeNull();
+    expect(result.error.value).toMatchObject({ code: "RPC_FAILURE" });
+  });
+
   it("keeps the newest account info when overlapping requests resolve out of order", async () => {
     const firstRequest = deferred<{ value: unknown }>();
     const secondRequest = deferred<{ value: unknown }>();

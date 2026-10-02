@@ -43,12 +43,13 @@ export interface ProgramAccount {
   };
 }
 
-const EMPTY: ProgramAccount[] = [];
-
 export function useProgramAccounts(
   programId: MaybeRefOrGetter<string | null | undefined>,
   options: UseProgramAccountsOptions = {},
 ) {
+  // Per instance, not module level: `accounts.value` is handed out for in-place
+  // mutation, and a shared sentinel would let one instance corrupt every other.
+  const empty: ProgramAccount[] = [];
   const solana = tryUseSolana();
   const client = solana?.client ?? useConnection();
 
@@ -76,7 +77,7 @@ export function useProgramAccounts(
           data: decodeBase64(account.data[0]),
         },
       })),
-    EMPTY,
+    empty,
   );
 
   return { accounts, ...rest };

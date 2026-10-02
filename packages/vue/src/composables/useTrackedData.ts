@@ -169,11 +169,18 @@ export function useTrackedData<TInitialValue, TStreamValue, TItem>(
       return;
     }
 
+    // Every caller of this (the source `watch`, `onMounted`, the
+    // outside-a-component path and `refresh()`) may fire while a previous
+    // connection window is live, so tear that one down here rather than
+    // orphaning it. `store.reset()` aborts the in-flight fetch and the
+    // subscription. `data`/`status` are untouched, so this keeps
+    // stale-while-revalidate.
+    disconnect();
+
     let rpcRequest = unref(source.rpcRequest);
     const rpcSubscriptionRequest = unref(source.rpcSubscriptionRequest);
 
     if (!rpcRequest || !rpcSubscriptionRequest) {
-      disconnect();
       data.value = undefined;
       error.value = null;
       status.value = "disabled";

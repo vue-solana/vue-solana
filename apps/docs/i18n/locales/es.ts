@@ -313,10 +313,11 @@ export default {
     airdrop: {
       title: "Airdrop de SOL",
       description:
-        "Solicita un airdrop en devnet hacia el signer payer del cliente mediante la capacidad de airdrop del cliente. Los faucets de devnet limitan la tasa, asi que los errores suelen ser temporales.",
+        "Solicita un airdrop en devnet hacia el signer payer del cliente mediante la capacidad de airdrop del cliente. Los faucets de devnet limitan la tasa, así que los errores suelen ser temporales.",
       request: "Airdrop de 1 SOL",
+      connectHint: "Esperando a que el signer del cliente esté listo.",
       signature: "Firma: {signature}",
-      noSignature: "Aun no hay airdrop",
+      noSignature: "Aún no hay airdrop",
     },
   },
 };

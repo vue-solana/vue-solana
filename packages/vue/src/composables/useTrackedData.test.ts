@@ -20,12 +20,16 @@ interface FakeNotification {
 interface FakeActionSource extends ReactiveActionSource<SolanaRpcResponse<bigint>> {
   resolve(value: bigint, slot: number): void;
   reject(error: unknown): void;
+  /** How many listeners the store is currently holding. */
+  listenerCount(): number;
 }
 
 interface FakeStreamSource extends ReactiveStreamSource<SolanaRpcResponse<FakeNotification>> {
   notify(value: FakeNotification, slot: number): void;
   fail(error: unknown): void;
   connectCount(): number;
+  /** How many listeners the store is currently holding. */
+  listenerCount(): number;
 }
 
 function createFakeActionSource(): FakeActionSource {
@@ -82,6 +86,7 @@ function createFakeActionSource(): FakeActionSource {
       state = { data: undefined, error, status: "error" };
       emit();
     },
+    listenerCount: () => listeners.size,
   };
 }
 
@@ -143,6 +148,7 @@ function createFakeStreamSource(): FakeStreamSource {
       emit();
     },
     connectCount: () => connects,
+    listenerCount: () => listeners.size,
   };
 }
 
@@ -391,6 +397,60 @@ describe("useTrackedData", () => {
     result.refresh();
 
     expect(streamSource.connectCount()).toBe(connectsBeforeDispose);
+  });
+
+  // `buildAndConnect` used to overwrite the active store without tearing the
+  // previous connection window down, so every `refresh()` left a live
+  // subscription behind that kept writing into this composable's refs.
+  it("does not accumulate source listeners across refresh() calls", () => {
+    const actionSource = createFakeActionSource();
+    const streamSource = createFakeStreamSource();
+    const { result, scope } = setup(() =>
+      useTrackedData<bigint, FakeNotification, bigint>({
+        rpcRequest: actionSource,
+        rpcValueMapper: (lamports) => lamports,
+        rpcSubscriptionRequest: streamSource,
+        rpcSubscriptionValueMapper: ({ lamports }) => lamports,
+      }),
+    );
+
+    expect(actionSource.listenerCount()).toBe(1);
+    expect(streamSource.listenerCount()).toBe(1);
+
+    result.refresh();
+    result.refresh();
+    result.refresh();
+
+    expect(actionSource.listenerCount()).toBe(1);
+    expect(streamSource.listenerCount()).toBe(1);
+
+    scope.stop();
+
+    expect(actionSource.listenerCount()).toBe(0);
+    expect(streamSource.listenerCount()).toBe(0);
+  });
+
+  it("applies each source event once, not once per abandoned store", () => {
+    const actionSource = createFakeActionSource();
+    const streamSource = createFakeStreamSource();
+    const onError = vi.fn();
+    const { result } = setup(() =>
+      useTrackedData<bigint, FakeNotification, bigint>(
+        {
+          rpcRequest: actionSource,
+          rpcValueMapper: (lamports) => lamports,
+          rpcSubscriptionRequest: streamSource,
+          rpcSubscriptionValueMapper: ({ lamports }) => lamports,
+        },
+        { onError },
+      ),
+    );
+
+    result.refresh();
+    result.refresh();
+    streamSource.fail(new Error("stream failed"));
+
+    expect(onError).toHaveBeenCalledTimes(1);
   });
 });
 

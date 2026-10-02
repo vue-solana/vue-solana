@@ -1,5 +1,12 @@
 import { normalizeSolanaError, type SolanaError } from "@vue-solana/core/errors";
-import { computed, shallowRef, type ComputedRef, type Ref, type ShallowRef } from "vue";
+import {
+  computed,
+  onScopeDispose,
+  shallowRef,
+  type ComputedRef,
+  type Ref,
+  type ShallowRef,
+} from "vue";
 
 /**
  * The supersede-and-report state machine shared by the wallet composables in this
@@ -62,6 +69,13 @@ export function useExecution<TStatus extends string>(busy: TStatus): UseExecutio
     status.value = "idle" as TStatus;
     error.value = null;
   }
+
+  // A wallet prompt outlives the component often enough to matter: without this
+  // the execution is still current on unmount and writes `status`/`error` into
+  // refs nothing reads any more.
+  onScopeDispose(() => {
+    id += 1;
+  });
 
   return { status, error, loading: computed(() => status.value === busy), execute, reset };
 }

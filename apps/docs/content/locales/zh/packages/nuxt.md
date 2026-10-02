@@ -290,7 +290,16 @@ const tokenBalanceErrorMessage = computed(() => {
 </template>
 ```
 
-`useSolanaTokenBalance()` 在关联 token 账户不存在时返回 null balance 和 decimals，不会将其视为错误。
+`useSolanaTokenBalance()` 在关联 token 账户不存在时返回 null balance 和 decimals，不会将其视为错误。它的 `balance` 和 `decimals` 是由一次读取派生出的只读 computed ref——请读取，不要赋值。
+
+## 读取组合式函数的语义
+
+`useSolanaBalance()`、`useSolanaAccountInfo()`、`useSolanaProgramAccounts()`、`useSolanaTokenAccounts()`、`useSolanaTokenBalance()` 与 Vue 组合式函数共用同一套状态机：
+
+- **失败时 `refresh()` 会 reject 而不是 resolve**，输入为空时以 `null` resolve。不带 `try`/`catch` 的 `await refresh()` 会抛出。直接接到 `@click` 没问题——Vue 会吞掉 rejection——但手写调用方必须处理。`useSolanaRequest()` 是例外，仍以尝试结果 resolve。
+- **读取失败时，数据会回退为空值。** 最后一次成功的余额不会留在新的 `error` 旁边。请根据 `error` 决定渲染什么。
+
+无法解析的地址会在 `error` 中报告 `INVALID_ADDRESS`，且不会到达 RPC。参见[读取账户](/guides/account-reads#refresh-与错误语义)。
 
 ## 错误处理
 

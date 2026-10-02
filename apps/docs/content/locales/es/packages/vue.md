@@ -346,7 +346,24 @@ const tokenBalanceErrorMessage = computed(() => {
 </template>
 ```
 
-`useTokenBalance()` devuelve balance y decimales null cuando la cuenta de token asociada no existe, sin tratarlo como un error.
+`useTokenBalance()` devuelve balance y decimales null cuando la cuenta de token asociada no existe, sin tratarlo como un error. Sus `balance` y `decimals` son computed refs de solo lectura derivados de una única lectura: líelos, no les asignes.
+
+## Semántica de los composables de lectura
+
+`useBalance()`, `useAccountInfo()`, `useProgramAccounts()`, `useTokenAccounts()` y `useTokenBalance()` comparten una máquina de estados. Dos de sus reglas sorprenden a quien viene de v2:
+
+- **`refresh()` rechaza en lugar de resolver cuando falla**, y resuelve con `null` cuando una entrada está vacía. Un `await refresh()` sin `try`/`catch` lanza. Enlazarlo directamente a `@click` está bien —Vue se traga el rechazo— pero los llamadores escritos a mano deben gestionarlo. `useRequest()` es la excepción y sigue resolviendo con el resultado del intento.
+- **Los datos vuelven a su valor vacío cuando una lectura falla.** El último balance correcto no permanece junto a un `error` nuevo, porque un valor obsoleto junto a un error se lee como dato actual cuando no lo es. Ramifica con `error` para elegir qué renderizar.
+
+```vue
+<template>
+  <UAlert v-if="error" color="error" variant="subtle" :title="balanceErrorMessage" />
+  <p v-else-if="loading">Cargando…</p>
+  <p v-else>Lamports: {{ balance ?? "—" }}</p>
+</template>
+```
+
+Una dirección que no se puede parsear informa `INVALID_ADDRESS` en `error` y nunca llega al RPC. Ver [Leer cuentas](/guides/account-reads#semántica-de-refresh-y-de-errores).
 
 ## Manejo de errores
 

@@ -61,7 +61,7 @@ A qué se corresponden los helpers después de v2:
 
 ## Actualizar de v2 a v3
 
-v3 tiene exactamente un cambio incompatible y un cambio grande de comodidad. La migración a Kit ya está hecha: no hay ningún mapeo de símbolos nuevo que aplicar.
+v3 tiene dos cambios incompatibles —el formato de módulo y los composables de lectura por dirección— y un cambio grande de comodidad. La migración a Kit ya está hecha: no hay ningún mapeo de símbolos nuevo que aplicar.
 
 ```sh
 pnpm add @vue-solana/vue@^3.0.0
@@ -107,7 +107,36 @@ try {
 }
 ```
 
-Todo lo demás es interno. Las máquinas de estado de los composables se deduplicaron en helpers compartidos, así que `@solana/kit` pasó a `^8.4.0` y los bundles se hicieron más pequeños, pero ninguna firma de composable ni forma de retorno cambió.
+Todo lo demás es interno. Las máquinas de estado de los composables se deduplicaron en helpers compartidos, así que `@solana/kit` pasó a `^8.4.0` y los bundles se hicieron más pequeños. Ninguna otra firma de composable ni forma de retorno cambió.
+
+### Cambios de comportamiento en los composables de lectura
+
+`useBalance()`, `useAccountInfo()`, `useProgramAccounts()`, `useTokenAccounts()` y `useTokenBalance()` (y sus equivalentes `useSolana*` de Nuxt) ahora comparten una máquina de estados. Tres comportamientos cambiaron, todos son correcciones, pero los dos primeros aparecerán en tu código como un rechazo sin manejar o como un valor vacío.
+
+**`refresh()` rechaza en lugar de resolver cuando falla.** Resuelve con el nuevo valor si tiene éxito, con `null` si una entrada está vacía, y rechaza con un `SolanaError` normalizado en caso contrario. Si haces `await refresh()` en algún sitio, envuélvelo:
+
+```ts
+// v2: correcto. v3: lanza.
+await refresh();
+
+// v3
+await refresh().catch(() => undefined);
+```
+
+El `@click="refresh"` de una plantilla no cambia: Vue se traga el rechazo.
+
+**Los datos vuelven a su valor vacío cuando una lectura falla.** Si conservabas un balance conocido después de un error, ahora desaparece. Ramifica con `error` en lugar de con un valor falsy:
+
+```vue
+<template>
+  <UAlert v-if="error" color="error" variant="subtle" title="No se pudo cargar el balance." />
+  <p v-else>Lamports: {{ balance ?? "—" }}</p>
+</template>
+```
+
+**El `balance` y el `decimals` de `useTokenBalance()` son computed refs de solo lectura.** Si asignabas a alguno, quita la asignación; deriva del valor que resuelva `refresh()`.
+
+Una dirección que no se puede parsear ahora informa `INVALID_ADDRESS` en `error` en lugar de resolver a `null`. Ver [Leer cuentas](/guides/account-reads#semántica-de-refresh-y-de-errores) para el comportamiento completo.
 
 ## Actualizar una App de Vue
 

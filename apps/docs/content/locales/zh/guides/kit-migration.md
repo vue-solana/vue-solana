@@ -61,7 +61,7 @@ v2 之后辅助函数的对应关系：
 
 ## 从 v2 升级到 v3
 
-v3 恰好有一个破坏性变更和一个很大的便利性变更。Kit 迁移本身已经完成，没有需要对应的新符号。
+v3 有两个破坏性变更——模块格式和地址读取组合式函数——以及一个很大的便利性变更。Kit 迁移本身已经完成，没有需要对应的新符号。
 
 ```sh
 pnpm add @vue-solana/vue@^3.0.0
@@ -107,7 +107,36 @@ try {
 }
 ```
 
-其余都是内部改动。composable 状态机被合并进共享辅助函数，`@solana/kit` 升到了 `^8.4.0`，bundle 也变小了，但没有任何 composable 的签名或返回结构发生变化。
+其余都是内部改动。composable 状态机被合并进共享辅助函数，`@solana/kit` 升到了 `^8.4.0`，bundle 也变小了，但其他任何 composable 的签名或返回结构都没有变化。
+
+### 读取组合式函数的行为变更
+
+`useBalance()`、`useAccountInfo()`、`useProgramAccounts()`、`useTokenAccounts()`、`useTokenBalance()`（以及 Nuxt 中对应的 `useSolana*`）现在共用一套状态机。其中三项行为发生了变化，都是修复，但前两项会以未处理的 rejection 或空值的形式出现在你的代码里。
+
+**失败时 `refresh()` 会 reject，而不是 resolve。** 成功时以新值 resolve，输入为空时以 `null` resolve，其余情况则以规范化后的 `SolanaError` reject。如果某处写了 `await refresh()`，请包一层：
+
+```ts
+// v2：可以。v3：会抛出。
+await refresh();
+
+// v3
+await refresh().catch(() => undefined);
+```
+
+模板里的 `@click="refresh"` 不受影响——Vue 会吞掉这个 rejection。
+
+**读取失败时，数据会回退为空值。** 如果你曾在出错后保留上一次已知的余额，它现在会消失。请根据 `error` 而不是 falsy 值来分支：
+
+```vue
+<template>
+  <UAlert v-if="error" color="error" variant="subtle" title="无法加载余额。" />
+  <p v-else>Lamports: {{ balance ?? "—" }}</p>
+</template>
+```
+
+**`useTokenBalance()` 的 `balance` 和 `decimals` 是只读的 computed ref。** 如果你之前给它们赋过值，请去掉赋值，改为从 `refresh()` resolve 出的值派生。
+
+无法解析的地址现在会在 `error` 中报告 `INVALID_ADDRESS`，而不是 resolve 为 `null`。完整行为见[读取账户](/guides/account-reads#refresh-与错误语义)。
 
 ## 升级 Vue 应用
 

@@ -313,6 +313,7 @@ export default {
       description:
         "클라이언트의 에어드랍 기능으로 클라이언트 payer 서명자에게 devnet 에어드랍을 요청합니다. devnet faucet은 요청 속도를 제한하므로 오류는 대개 일시적입니다.",
       request: "1 SOL 에어드랍",
+      connectHint: "클라이언트 서명자가 준비될 때까지 기다리는 중입니다.",
       signature: "서명: {signature}",
       noSignature: "아직 에어드랍 없음",
     },

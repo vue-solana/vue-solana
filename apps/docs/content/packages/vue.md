@@ -349,7 +349,24 @@ const tokenBalanceErrorMessage = computed(() => {
 </template>
 ```
 
-`useTokenBalance()` returns `null` balance and decimals when the associated token account does not exist, without treating it as an error.
+`useTokenBalance()` returns `null` balance and decimals when the associated token account does not exist, without treating it as an error. Its `balance` and `decimals` are read-only computed refs derived from one read — read them, do not assign to them.
+
+## Read Composable Semantics
+
+`useBalance()`, `useAccountInfo()`, `useProgramAccounts()`, `useTokenAccounts()`, and `useTokenBalance()` share one state machine. Two of its rules surprise people coming from v2:
+
+- **`refresh()` rejects on failure** instead of resolving, and resolves with `null` when an input is empty. `await refresh()` without a `try`/`catch` throws. Wiring it straight to `@click` is fine — Vue swallows the rejection — but hand-written callers must handle it. `useRequest()` is the exception and still resolves with the attempt result.
+- **Data drops back to its empty value when a read fails.** The last successful balance does not linger beside a fresh `error`, because a stale value next to an error reads as current data when it is not. Branch on `error` to choose what to render.
+
+```vue
+<template>
+  <UAlert v-if="error" color="error" variant="subtle" :title="balanceErrorMessage" />
+  <p v-else-if="loading">Loading…</p>
+  <p v-else>Lamports: {{ balance ?? "—" }}</p>
+</template>
+```
+
+An unparseable address reports `INVALID_ADDRESS` in `error` and never reaches the RPC. See [Account Reads](/guides/account-reads#refresh-and-error-semantics).
 
 ## Error Handling
 

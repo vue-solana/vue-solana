@@ -98,6 +98,38 @@ describe("useBalance", () => {
     expect(result?.loading.value).toBe(false);
   });
 
+  // The stale-value fix in `useAddressRead`. A last-known balance sitting next
+  // to a fresh error reads as current data when it is not, so a failed re-read
+  // drops `balance` back to `null` instead of leaving the old number up.
+  it("drops a previously loaded balance when a re-read fails", async () => {
+    const failure = new Error("RPC failed");
+    const getBalance = vi
+      .fn()
+      .mockReturnValueOnce({ send: vi.fn().mockResolvedValue({ value: 123 }) })
+      .mockReturnValue({ send: vi.fn().mockRejectedValue(failure) });
+    let result: ReturnType<typeof useBalance> | undefined;
+
+    mountWithSolana(
+      defineComponent({
+        setup() {
+          result = useBalance("11111111111111111111111111111111");
+
+          return () => h("div");
+        },
+      }),
+      createGetBalance(getBalance),
+    );
+
+    await flushPromises();
+
+    expect(result?.balance.value).toBe(123);
+
+    await expect(result?.refresh()).rejects.toThrow("RPC failed");
+
+    expect(result?.balance.value).toBeNull();
+    expect(result?.error.value?.code).toBe("RPC_FAILURE");
+  });
+
   it("keeps the newest balance when overlapping requests resolve out of order", async () => {
     const firstRequest = deferred<{ value: bigint }>();
     const secondRequest = deferred<{ value: bigint }>();

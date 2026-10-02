@@ -368,6 +368,25 @@ describe("capability fail-fast", () => {
     expect((captured as MissingClientCapabilityError).hookName).toBe("useSendTransactions");
     expect((captured as MissingClientCapabilityError).capabilities).toEqual(["sendTransactions"]);
   });
+
+  // The setup-time assertion cannot see a capability removed afterwards, so
+  // `execute` re-checks. It has to throw the real error rather than let the
+  // `catch` below normalize `method is not a function` into `RPC_FAILURE`.
+  it("reports a capability removed after setup, not RPC_FAILURE", async () => {
+    installSendingClient();
+    const { result } = setupInScope(() => useSendTransaction());
+    clearCapabilities();
+
+    const call = result.execute([{}] as never);
+
+    await expect(call).rejects.toBeInstanceOf(MissingClientCapabilityError);
+    await expect(call).rejects.toMatchObject({
+      hookName: "useSendTransaction",
+      capabilities: ["sendTransaction"],
+    });
+    expect(result.status.value).toBe("idle");
+    expect(result.error.value).toBeNull();
+  });
 });
 
 describe("payer fail-fast", () => {

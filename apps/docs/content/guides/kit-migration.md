@@ -61,7 +61,7 @@ What the helpers map to after v2:
 
 ## Upgrading v2 to v3
 
-v3 has exactly one breaking change and one large convenience change. The Kit migration itself is already done — there is no new symbol mapping to make.
+v3 has two breaking changes — the module format and the address read composables — plus one large convenience change. The Kit migration itself is already done: there is no new symbol mapping to make.
 
 ```sh
 pnpm add @vue-solana/vue@^3.0.0
@@ -107,7 +107,36 @@ try {
 }
 ```
 
-Everything else is internal. The composable state machines were deduplicated into shared helpers, so `@solana/kit` moved to `^8.4.0` and the bundles got smaller, but no composable signature or return shape changed.
+Everything else is internal. The composable state machines were deduplicated into shared helpers, so `@solana/kit` moved to `^8.4.0` and the bundles got smaller. No other composable signature or return shape changed.
+
+### Read Composable Behavior Changes
+
+`useBalance()`, `useAccountInfo()`, `useProgramAccounts()`, `useTokenAccounts()`, and `useTokenBalance()` (and their `useSolana*` Nuxt equivalents) now share one state machine. Three behaviors changed, all of them fixes, but the first two will surface in your code as an unhandled rejection or a blank value.
+
+**`refresh()` rejects instead of resolving on failure.** It resolves with the new value on success, with `null` when an input is empty, and rejects with a normalized `SolanaError` otherwise. If you `await refresh()` anywhere, wrap it:
+
+```ts
+// v2: fine. v3: throws.
+await refresh();
+
+// v3
+await refresh().catch(() => undefined);
+```
+
+Template `@click="refresh"` is unaffected — Vue swallows the rejection.
+
+**Data drops back to its empty value when a read fails.** If you kept a last-known balance on screen after an error, it now disappears. Branch on `error` rather than on a falsy value:
+
+```vue
+<template>
+  <UAlert v-if="error" color="error" variant="subtle" title="Could not load the balance." />
+  <p v-else>Lamports: {{ balance ?? "—" }}</p>
+</template>
+```
+
+**`useTokenBalance()`'s `balance` and `decimals` are read-only computed refs.** If you assigned to either, drop the assignment; derive from `refresh()`'s resolved value instead.
+
+An unparseable address now reports `INVALID_ADDRESS` in `error` instead of resolving to `null`. See [Account Reads](/guides/account-reads#refresh-and-error-semantics) for the full behavior.
 
 ## Upgrade a Vue App
 

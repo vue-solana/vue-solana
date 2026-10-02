@@ -346,7 +346,24 @@ const tokenBalanceErrorMessage = computed(() => {
 </template>
 ```
 
-`useTokenBalance()`는 associated token account가 없으면 error로 처리하지 않고 null balance와 decimals를 반환합니다.
+`useTokenBalance()`는 associated token account가 없으면 error로 처리하지 않고 null balance와 decimals를 반환합니다. `balance`과 `decimals`은 한 번의 읽기에서 파생된 읽기 전용 computed ref이므로 읽기만 하고 대입하지 마세요.
+
+## 읽기 컴포저블의 의미
+
+`useBalance()`, `useAccountInfo()`, `useProgramAccounts()`, `useTokenAccounts()`, `useTokenBalance()`는 하나의 상태 머신을 공유합니다. v2에서 넘어온 사람에게 낯선 규칙이 둘 있습니다:
+
+- **실패하면 `refresh()`는 resolve하지 않고 reject합니다.** 입력이 비어 있으면 `null`로 resolve합니다. `try`/`catch` 없는 `await refresh()`는 던집니다. `@click`에 바로 연결하는 것은 괜찮지만(Vue가 rejection을 삼킵니다) 직접 작성한 호출부는 처리해야 합니다. `useRequest()`만 예외로 시도 결과로 resolve합니다.
+- **읽기가 실패하면 데이터가 빈 값으로 되돌아갑니다.** 마지막으로 성공한 balance가 새 `error` 옆에 남아 있지 않습니다. 무엇을 렌더링할지는 falsy 값이 아니라 `error`로 분기하세요.
+
+```vue
+<template>
+  <UAlert v-if="error" color="error" variant="subtle" :title="balanceErrorMessage" />
+  <p v-else-if="loading">불러오는 중…</p>
+  <p v-else>Lamports: {{ balance ?? "—" }}</p>
+</template>
+```
+
+파싱할 수 없는 주소는 `error`에 `INVALID_ADDRESS`를 보고하고 RPC에 도달하지 않습니다. [계정 읽기](/guides/account-reads#refresh와-에러-의미)를 참고하세요.
 
 ## 오류 처리
 
