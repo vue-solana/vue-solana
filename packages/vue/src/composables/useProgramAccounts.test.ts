@@ -214,6 +214,22 @@ describe("useProgramAccounts", () => {
     expect(getProgramAccounts).toHaveBeenCalledTimes(2);
   });
 
+  it("gives every instance its own empty list", async () => {
+    const getProgramAccounts = vi.fn();
+    const context = createProgramAccountsContext(getProgramAccounts);
+    const first = mountProgramAccounts(context, null);
+    const second = mountProgramAccounts(context, null);
+
+    await flushPromises();
+
+    // `accounts.value` is handed out for in-place mutation, so the empty value
+    // has to be per instance — a shared sentinel corrupts every other instance.
+    first.result.accounts.value.push({} as never);
+
+    expect(first.result.accounts.value).toHaveLength(1);
+    expect(second.result.accounts.value).toEqual([]);
+  });
+
   it("ignores pending program account responses after unmount", async () => {
     const pendingRequest = deferred<{ value: unknown[] }>();
     const getProgramAccounts = vi.fn().mockReturnValue({ send: () => pendingRequest.promise });

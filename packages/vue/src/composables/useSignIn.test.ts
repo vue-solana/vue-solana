@@ -139,12 +139,46 @@ describe("useSignIn", () => {
     expect(status.value).toBe("signed-in");
     expect(signIn).toHaveBeenCalledTimes(2);
   });
+
+  // A wallet prompt routinely outlives the component. Without the unmount
+  // supersede, the in-flight execution is still current and writes `status`
+  // and `signInResult` into refs nothing reads any more.
+  it("does not write state after unmount while the wallet prompt is pending", async () => {
+    let resolveSignIn: (result: SolanaSignInResult) => void = () => undefined;
+    const signIn = vi.fn().mockImplementation(
+      () =>
+        new Promise<SolanaSignInResult>((resolve) => {
+          resolveSignIn = resolve;
+        }),
+    );
+    const {
+      signIn: execute,
+      status,
+      signInResult: result,
+      wrapper,
+    } = mountUseSignIn(
+      createMockSolanaContext({ wallet: shallowRef(connectedWallet({ signIn })) }),
+    );
+
+    const promise = execute();
+    expect(status.value).toBe("signing-in");
+
+    wrapper.unmount();
+
+    resolveSignIn(signInResult);
+    await promise;
+
+    expect(status.value).toBe("signing-in");
+    expect(result.value).toBeNull();
+  });
 });
 
-function mountUseSignIn(context = createMockSolanaContext()): SignInResult {
+function mountUseSignIn(
+  context = createMockSolanaContext(),
+): SignInResult & { wrapper: ReturnType<typeof mountWithSolana> } {
   let result: SignInResult | undefined;
 
-  mountWithSolana(
+  const wrapper = mountWithSolana(
     defineComponent({
       setup() {
         result = useSignIn();
@@ -159,5 +193,5 @@ function mountUseSignIn(context = createMockSolanaContext()): SignInResult {
     throw new Error("useSignIn did not mount.");
   }
 
-  return result;
+  return { ...result, wrapper };
 }

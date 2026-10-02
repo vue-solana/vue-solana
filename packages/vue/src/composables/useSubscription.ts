@@ -125,6 +125,10 @@ export function useSubscription<TResult>(
 
     applyState(store.getState());
 
+    // `connectCurrent`'s same-source path re-opens without `disconnect()`, so the
+    // previous listener has to go here — otherwise every `reconnect()` orphans
+    // one and the store's event runs `applyState` N times per event.
+    disposeActive?.();
     disposeActive = store.subscribe(() => {
       applyState(store.getState());
     });

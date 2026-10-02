@@ -11,12 +11,14 @@ export interface UseTokenAccountsOptions {
   programId?: Address;
 }
 
-const EMPTY: TokenAccountInfo[] = [];
-
 export function useTokenAccounts(
   owner: MaybeRefOrGetter<Address | string | null | undefined>,
   options?: UseTokenAccountsOptions,
 ) {
+  // Per instance, not module level: `tokenAccounts.value` is handed out for
+  // in-place mutation, and a shared sentinel would let one instance corrupt
+  // every other.
+  const empty: TokenAccountInfo[] = [];
   const solana = tryUseSolana();
   const client = solana?.client ?? useConnection();
 
@@ -28,7 +30,7 @@ export function useTokenAccounts(
         programId: options?.programId,
       }),
     (accounts) => accounts,
-    EMPTY,
+    empty,
   );
 
   return { tokenAccounts, ...rest };

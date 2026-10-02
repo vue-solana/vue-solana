@@ -6,16 +6,18 @@ import { useConnection } from "./useConnection";
 import { useAddressRead } from "./use-address-read";
 import { tryUseSolana } from "./useSolana";
 
-const EMPTY: { balance: bigint | null; decimals: number | null } = {
-  balance: null,
-  decimals: null,
-};
-
 export function useTokenBalance(
   mint: MaybeRefOrGetter<string | null | undefined>,
   owner: MaybeRefOrGetter<string | null | undefined>,
   commitment?: Commitment,
 ) {
+  // Per instance, not module level: `balance`/`decimals` are computed off this
+  // object, and a shared sentinel would let one instance mutate what every other
+  // instance reports.
+  const empty: { balance: bigint | null; decimals: number | null } = {
+    balance: null,
+    decimals: null,
+  };
   const solana = tryUseSolana();
   const client = solana?.client ?? useConnection();
 
@@ -26,7 +28,7 @@ export function useTokenBalance(
       balance: result?.amount ?? null,
       decimals: result?.decimals ?? null,
     }),
-    EMPTY,
+    empty,
   );
 
   return {

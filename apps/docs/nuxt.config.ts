@@ -6,11 +6,16 @@ import { join } from "node:path";
  *  discover them. Derive the routes from the content tree instead of listing
  *  them — the hand-maintained copy rotted once already. */
 function contentUrls(dir: string): string[] {
-  return readdirSync(join(import.meta.dirname, "content", dir), { recursive: true })
-    .map(String)
-    .filter((entry) => entry.endsWith(".md") && !entry.startsWith("locales/"))
-    .map((entry) => entry.replace(/\.md$/, "").replace(/(^|\/)index$/, ""))
-    .map((route) => (route ? `/${route}` : "/"));
+  return (
+    readdirSync(join(import.meta.dirname, "content", dir), { recursive: true })
+      .map(String)
+      // `recursive: true` reports platform separators, so normalise first: the
+      // `locales/` filter and the `index` rule below are both written for `/`.
+      .map((entry) => entry.replaceAll("\\", "/"))
+      .filter((entry) => entry.endsWith(".md") && !entry.startsWith("locales/"))
+      .map((entry) => entry.replace(/\.md$/, "").replace(/(^|\/)index$/, ""))
+      .map((route) => (route ? `/${route}` : "/"))
+  );
 }
 
 const sitemapUrls = ["", "es", "ko", "zh"].flatMap((locale) =>
@@ -89,6 +94,12 @@ export default defineNuxtConfig({
     "/es/demo": { ssr: false, prerender: false },
     "/ko/demo": { ssr: false, prerender: false },
     "/zh/demo": { ssr: false, prerender: false },
+    // Not in the sitemap (they are redirects, so `contentUrls` never derives
+    // them) but they are still live inbound links from the pre-2.4 docs.
+    "/concepts/wallets": { redirect: "/guides/wallets" },
+    "/es/concepts/wallets": { redirect: "/es/guides/wallets" },
+    "/ko/concepts/wallets": { redirect: "/ko/guides/wallets" },
+    "/zh/concepts/wallets": { redirect: "/zh/guides/wallets" },
     "/**": {
       prerender: true,
       headers: {

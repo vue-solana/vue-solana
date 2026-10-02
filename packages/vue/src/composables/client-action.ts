@@ -8,7 +8,7 @@ import {
   type Ref,
   type ShallowRef,
 } from "vue";
-import { useClientCapability } from "./useClientCapability";
+import { MissingClientCapabilityError, useClientCapability } from "./useClientCapability";
 import { useSolanaClient } from "./useSolanaClient";
 
 export interface ClientActionConfig {
@@ -62,6 +62,20 @@ export function useClientAction<TInput, TResult, TStatus extends string>(config:
   });
 
   async function execute(input: TInput, options: ClientActionConfig = {}): Promise<TResult> {
+    const method = (
+      client as unknown as
+        | Record<string, ClientActionInvoker<TInput, TResult> | undefined>
+        | undefined
+    )?.[capability];
+
+    // The setup-time assertion cannot see a client swapped in afterwards, so
+    // re-check here. Thrown outside the `try` on purpose: the `catch` below
+    // normalizes every failure to `RPC_FAILURE`, which would bury the real
+    // cause behind a `method is not a function` TypeError.
+    if (typeof method !== "function") {
+      throw new MissingClientCapabilityError(hookName, [capability], providerHint);
+    }
+
     abortController?.abort();
     const controller = new AbortController();
     abortController = controller;
@@ -75,10 +89,7 @@ export function useClientAction<TInput, TResult, TStatus extends string>(config:
       const abortSignal = options.abortSignal
         ? AbortSignal.any([controller.signal, options.abortSignal])
         : controller.signal;
-      const method = (client as unknown as Record<string, ClientActionInvoker<TInput, TResult>>)[
-        capability
-      ];
-      const result = await method!(input, { abortSignal });
+      const result = await method(input, { abortSignal });
 
       if (currentExecutionId === executionId) {
         data.value = result;

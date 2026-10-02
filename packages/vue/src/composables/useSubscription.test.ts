@@ -14,6 +14,8 @@ interface FakeStreamStore extends ReactiveStreamStore<string> {
   /** Simulate a stream failure. */
   fail(error: unknown): void;
   connectCount(): number;
+  /** How many listeners the store is currently holding. */
+  listenerCount(): number;
 }
 
 function createFakeStreamStore(options: FakeStreamStoreOptions = {}): FakeStreamStore {
@@ -76,6 +78,7 @@ function createFakeStreamStore(options: FakeStreamStoreOptions = {}): FakeStream
       setState({ data: state.data, error, status: "error" });
     },
     connectCount: () => connectCalls.length,
+    listenerCount: () => listeners.size,
   };
 }
 
@@ -302,5 +305,39 @@ describe("useSubscription", () => {
 
     expect(store.connectCount()).toBe(connectsBeforeDispose);
     expect(store.getState().status).toBe("idle");
+  });
+
+  // The same-source fast path in `connectCurrent` re-opens without
+  // `disconnect()`, so the previous listener has to be dropped in
+  // `openConnection`. Without that, every reconnect orphaned one.
+  it("does not accumulate listeners across same-source reconnects", () => {
+    const store = createFakeStreamStore();
+    const source = { reactiveStore: () => store as ReactiveStreamStore<string> };
+    const { result, scope } = setup(() => useSubscription(source));
+
+    expect(store.listenerCount()).toBe(1);
+
+    result.reconnect();
+    result.reconnect();
+    result.reconnect();
+
+    expect(store.listenerCount()).toBe(1);
+
+    scope.stop();
+
+    expect(store.listenerCount()).toBe(0);
+  });
+
+  it("applies each store event once, not once per orphaned listener", () => {
+    const onError = vi.fn();
+    const store = createFakeStreamStore();
+    const source = { reactiveStore: () => store as ReactiveStreamStore<string> };
+    const { result } = setup(() => useSubscription(source, { onError }));
+
+    result.reconnect();
+    result.reconnect();
+    store.fail(new Error("stream failed"));
+
+    expect(onError).toHaveBeenCalledTimes(1);
   });
 });
