@@ -307,6 +307,7 @@ export default {
       description:
         "通过客户端的空投功能向客户端 payer 签名者请求 devnet 空投。devnet 水龙头有速率限制，因此出错通常是暂时的。",
       request: "空投 1 SOL",
+      connectHint: "正在等待客户端签名者就绪。",
       signature: "签名：{signature}",
       noSignature: "暂无空投",
     },

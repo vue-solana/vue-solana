@@ -168,6 +168,28 @@ describe("useProgramAccounts", () => {
     expect(getProgramAccounts).toHaveBeenCalledTimes(1);
   });
 
+  // The stale-value fix in `useAddressRead`: an RPC failure on the re-read
+  // empties the list rather than leaving the previous accounts up next to it.
+  it("empties a previously loaded list when a re-read fails", async () => {
+    const failure = new Error("RPC failed");
+    const getProgramAccounts = vi
+      .fn()
+      .mockReturnValueOnce({ send: vi.fn().mockResolvedValue({ value: ACCOUNTS }) })
+      .mockReturnValue({ send: vi.fn().mockRejectedValue(failure) });
+    const { result } = mountProgramAccounts(
+      createProgramAccountsContext(getProgramAccounts),
+      PROGRAM_ID,
+    );
+
+    await flushPromises();
+    expect(result.accounts.value).toHaveLength(1);
+
+    await expect(result.refresh()).rejects.toThrow("RPC failed");
+
+    expect(result.accounts.value).toEqual([]);
+    expect(result.error.value).toMatchObject({ code: "RPC_FAILURE" });
+  });
+
   it("refreshes when the program id changes", async () => {
     const getProgramAccounts = vi
       .fn()

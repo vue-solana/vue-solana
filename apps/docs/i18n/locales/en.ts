@@ -313,6 +313,7 @@ export default {
       description:
         "Requests a devnet airdrop into the client's payer signer through the client's airdrop capability. Devnet faucets are rate-limited, so errors here are usually temporary.",
       request: "Airdrop 1 SOL",
+      connectHint: "Waiting for the client signer to be ready.",
       signature: "Signature: {signature}",
       noSignature: "No airdrop yet",
     },

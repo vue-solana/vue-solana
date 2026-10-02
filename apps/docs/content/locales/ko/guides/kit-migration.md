@@ -61,7 +61,7 @@ v2 이후 헬퍼의 대응:
 
 ## v2에서 v3로 업그레이드
 
-v3에는 호환성 깨지는 변경이 정확히 하나 있고, 편의성 개선이 하나 큽니다. Kit 마이그레이션 자체는 이미 끝났으므로 새로 대응시켜야 할 심볼은 없습니다.
+v3에는 호환성 깨지는 변경이 두 개 — 모듈 포맷과 주소 읽기 컴포저블 — 있고 편의성 개선이 하나 큽니다. Kit 마이그레이션 자체는 이미 끝났으므로 새로 대응시켜야 할 심볼은 없습니다.
 
 ```sh
 pnpm add @vue-solana/vue@^3.0.0
@@ -107,7 +107,36 @@ try {
 }
 ```
 
-나머지는 모두 내부 변경입니다. 컴포저블 상태 머신이 공유 헬퍼로 dedup되면서 `@solana/kit`이 `^8.4.0`으로 올라가고 번들도 작아졌지만, 컴포저블 시그니처와 반환 형태는 바뀌지 않았습니다.
+나머지는 모두 내부 변경입니다. 컴포저블 상태 머신이 공유 헬퍼로 dedup되면서 `@solana/kit`이 `^8.4.0`으로 올라가고 번들도 작아졌지만, 다른 컴포저블의 시그니처와 반환 형태는 바뀌지 않았습니다.
+
+### 읽기 컴포저블의 동작 변경
+
+`useBalance()`, `useAccountInfo()`, `useProgramAccounts()`, `useTokenAccounts()`, `useTokenBalance()`(및 Nuxt의 `useSolana*` 동등 함수)는 이제 하나의 상태 머신을 공유합니다. 세 가지 동작이 바뀌었는데 모두 수정이지만, 앞의 두 가지는 처리되지 않은 rejection이나 빈 값으로 코드에 드러납니다.
+
+**실패하면 `refresh()`는 resolve하지 않고 reject합니다.** 성공하면 새 값으로 resolve하고, 입력이 비어 있으면 `null`로 resolve하며, 그 외에는 정규화된 `SolanaError`와 함께 reject합니다. `await refresh()`를 쓰는 곳이 있다면 감싸세요:
+
+```ts
+// v2: 괜찮음. v3: 던집니다.
+await refresh();
+
+// v3
+await refresh().catch(() => undefined);
+```
+
+템플릿의 `@click="refresh"`는 그대로입니다. Vue가 rejection을 삼킵니다.
+
+**읽기가 실패하면 데이터가 빈 값으로 되돌아갑니다.** 에러 이후에도 마지막으로 알던 잔액을 화면에 남겨 두었다면 이제 사라집니다. falsy 값이 아니라 `error`로 분기하세요:
+
+```vue
+<template>
+  <UAlert v-if="error" color="error" variant="subtle" title="잔액을 불러오지 못했습니다." />
+  <p v-else>Lamports: {{ balance ?? "—" }}</p>
+</template>
+```
+
+**`useTokenBalance()`의 `balance`과 `decimals`은 읽기 전용 computed ref입니다.** 둘 중 하나에 대입하고 있었다면 대입을 제거하고 `refresh()`가 resolve한 값에서 파생하세요.
+
+파싱할 수 없는 주소는 이제 `null`로 resolve하는 대신 `error`에 `INVALID_ADDRESS`를 보고합니다. 전체 동작은 [계정 읽기](/guides/account-reads#refresh와-에러-의미)를 참고하세요.
 
 ## Vue 앱 업그레이드
 

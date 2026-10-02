@@ -129,6 +129,39 @@ describe("usePlanTransaction", () => {
     expect(result.transactionMessage.value).toBe(message);
     expect(result.status.value).toBe("planned");
   });
+
+  // The scope-dispose half of `useClientAction`, mirroring
+  // `useSendTransaction.test.ts`. A component unmounting mid-plan must abort
+  // the in-flight RPC and stop the resolution from writing state.
+  it("aborts an in-flight plan when the scope is disposed", async () => {
+    const { planTransaction } = installPlanningClient();
+    const planDeferred = deferred<TransactionMessage>();
+    const abortError = new Error("aborted");
+    const signals: AbortSignal[] = [];
+    planTransaction.mockImplementation((_input: never, config?: PlanTransactionConfig) => {
+      const signal = config?.abortSignal as AbortSignal;
+      signals.push(signal);
+      signal.addEventListener("abort", () => planDeferred.reject(abortError));
+
+      return planDeferred.promise;
+    });
+    const { result, scope } = setupInScope(() => usePlanTransaction());
+
+    const call = result.execute([{}] as never);
+    const signal = signals[0];
+
+    expect(signal?.aborted).toBe(false);
+
+    scope.stop();
+
+    expect(signal?.aborted).toBe(true);
+    await expect(call).rejects.toMatchObject({
+      message: expect.stringContaining("aborted"),
+      cause: abortError,
+    });
+    expect(result.status.value).toBe("planning");
+    expect(result.transactionMessage.value).toBeNull();
+  });
 });
 
 describe("usePlanTransactions", () => {

@@ -154,6 +154,43 @@ describe("useTokenBalance", () => {
     expect(result?.loading.value).toBe(false);
   });
 
+  // The stale-value fix in `useAddressRead`: a failed re-read nulls the balance
+  // instead of leaving the last amount up next to the error. Note this proves
+  // the reset too — `refresh()` resolving would hide it.
+  it("drops a previously loaded balance when a re-read fails", async () => {
+    const failure = new Error("RPC failed");
+    mockedGetTokenBalance
+      .mockResolvedValueOnce({ amount: 500n, decimals: 6 })
+      .mockRejectedValue(failure);
+    const context = createMockSolanaContext({
+      client: {} as never,
+    });
+    let result: ReturnType<typeof useTokenBalance> | undefined;
+
+    mountWithSolana(
+      defineComponent({
+        setup() {
+          result = useTokenBalance(
+            "11111111111111111111111111111111",
+            "11111111111111111111111111111111",
+          );
+          return () => h("div");
+        },
+      }),
+      context,
+    );
+
+    await flushPromises();
+
+    expect(result?.balance.value).toBe(500n);
+
+    await expect(result?.refresh()).rejects.toThrow("RPC failed");
+
+    expect(result?.balance.value).toBeNull();
+    expect(result?.decimals.value).toBeNull();
+    expect(result?.error.value?.code).toBe("RPC_FAILURE");
+  });
+
   it("keeps the newest balance when overlapping requests resolve out of order", async () => {
     const firstRequest = deferred<{ amount: bigint; decimals: number } | null>();
     const secondRequest = deferred<{ amount: bigint; decimals: number } | null>();

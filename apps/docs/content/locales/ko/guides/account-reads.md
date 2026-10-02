@@ -138,7 +138,39 @@ Nuxt 컴포저블은 SSR 중 호출할 수 있으며 hydration으로 실제 clie
 
 주소, 프로그램 id 또는 서명이 `null`이면 읽기 컴포저블은 RPC를 호출하지 않고 state를 비웁니다.
 
-잘못된 주소 문자열은 오래된 데이터를 지우고 `error`를 설정하며 RPC 메서드를 호출하지 않습니다. 사용자에게 보여 줄 메시지는 `error.value.code`를 기준으로 분기하세요.
+잘못된 주소 문자열은 오래된 데이터를 지우고 `error`를 설정하며 RPC 메서드를 호출하지 않습니다. 사용자에게 보여 줄 메시지는 `error.value.code`를 기준으로 분기하세요. 파싱할 수 없는 주소는 `INVALID_ADDRESS`를 보고합니다.
+
+## refresh와 에러 의미
+
+`useBalance`, `useAccountInfo`, `useProgramAccounts`, `useTokenAccounts`, `useTokenBalance`는 하나의 상태 머신을 공유하므로 세 가지 경우에 동일하게 동작합니다.
+
+**`refresh()`는 거부합니다. 실패해도 resolve하지 않습니다.** 성공하면 새 값으로 resolve하고, 입력이 비어 있으면 `null`로 resolve하며, 그 외에는 정규화된 `SolanaError`와 함께 거부합니다. Vue가 거부를 삼키므로 `@click="refresh"`만 쓰는 것은 괜찮지만, 직접 작성한 코드는 처리해야 합니다:
+
+```ts
+// 거부된 promise에는 에러 상태가 없으므로 이건 쓸모가 없습니다.
+await refresh();
+
+// await 하고 보고합니다.
+try {
+  await refresh();
+} catch (cause) {
+  console.error(cause);
+}
+```
+
+`useRequest()`만 예외입니다. 이 컴포저블의 `refresh()`는 거부하는 대신 시도 결과로 resolve합니다.
+
+**읽기가 실패하면 데이터가 빈 값으로 되돌아갑니다.** 이전에 읽어둔 잔액이 새 에러 옆에 남아 있으면 최신 데이터처럼 보이므로 남겨 두지 않습니다. 무엇을 렌더링할지는 `error`로 분기하세요:
+
+```vue
+<template>
+  <UAlert v-if="error" color="error" variant="subtle" :title="errorMessage" />
+  <p v-else-if="loading">불러오는 중…</p>
+  <p v-else>Lamports: {{ balance ?? "—" }}</p>
+</template>
+```
+
+**`useTokenBalance`의 결과는 읽기 전용입니다.** `balance`과 `decimals`은 한 번의 읽기에서 파생된 계산 ref입니다. 읽기만 하세요. 대입해도 효과가 없습니다.
 
 ## RPC 비용 체크리스트
 

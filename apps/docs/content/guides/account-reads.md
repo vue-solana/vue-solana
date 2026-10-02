@@ -138,7 +138,39 @@ Nuxt composables can be called during SSR and return inert state until hydration
 
 Read composables clear state without calling RPC when the address, program id, or signature is `null`.
 
-Invalid address strings clear stale data, set `error`, and do not call the RPC method. Branch on `error.value.code` for user-facing messages.
+Invalid address strings clear stale data, set `error`, and do not call the RPC method. Branch on `error.value.code` for user-facing messages; an unparseable address reports `INVALID_ADDRESS`.
+
+## Refresh And Error Semantics
+
+`useBalance`, `useAccountInfo`, `useProgramAccounts`, `useTokenAccounts`, and `useTokenBalance` share one state machine, so they behave the same way in three cases that are easy to get wrong.
+
+**`refresh()` rejects; it does not resolve on failure.** It resolves with the new value on success, with `null` when an input is empty, and rejects with a normalized `SolanaError` otherwise. A bare `@click="refresh"` is fine because Vue swallows the rejection, but hand-written code must handle it:
+
+```ts
+// No error state on a rejected promise, so this silently does nothing useful.
+await refresh();
+
+// Await it and report.
+try {
+  await refresh();
+} catch (cause) {
+  console.error(cause);
+}
+```
+
+`useRequest()` is the exception: its `refresh()` resolves with the attempt result rather than rejecting.
+
+**Data drops back to its empty value when a read fails.** A previously loaded balance does not stay on screen next to a fresh error — it reads as current data when it is not. Branch on `error` to decide what to render:
+
+```vue
+<template>
+  <UAlert v-if="error" color="error" variant="subtle" :title="errorMessage" />
+  <p v-else-if="loading">Loading…</p>
+  <p v-else>Lamports: {{ balance ?? "—" }}</p>
+</template>
+```
+
+**Read-only results in `useTokenBalance`.** Its `balance` and `decimals` are computed refs derived from one read. Read them; assigning to them has no effect.
 
 ## RPC Cost Checklist
 

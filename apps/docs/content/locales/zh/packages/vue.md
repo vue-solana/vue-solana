@@ -346,7 +346,24 @@ const tokenBalanceErrorMessage = computed(() => {
 </template>
 ```
 
-`useTokenBalance()` 在关联 token 账户不存在时返回 null balance 和 decimals，不会将其视为错误。
+`useTokenBalance()` 在关联 token 账户不存在时返回 null balance 和 decimals，不会将其视为错误。它的 `balance` 和 `decimals` 是由一次读取派生出的只读 computed ref——请读取，不要赋值。
+
+## 读取组合式函数的语义
+
+`useBalance()`、`useAccountInfo()`、`useProgramAccounts()`、`useTokenAccounts()`、`useTokenBalance()` 共用一套状态机。其中两条规则会让从 v2 过来的人措手不及：
+
+- **失败时 `refresh()` 会 reject 而不是 resolve**，输入为空时以 `null` resolve。不带 `try`/`catch` 的 `await refresh()` 会抛出。直接接到 `@click` 没问题——Vue 会吞掉 rejection——但手写调用方必须处理。`useRequest()` 是例外，仍以尝试结果 resolve。
+- **读取失败时，数据会回退为空值。** 最后一次成功的余额不会留在新的 `error` 旁边，因为和错误并排的陈旧值会被误读成当前数据。请根据 `error` 而不是 falsy 值来决定渲染什么。
+
+```vue
+<template>
+  <UAlert v-if="error" color="error" variant="subtle" :title="balanceErrorMessage" />
+  <p v-else-if="loading">加载中…</p>
+  <p v-else>Lamports: {{ balance ?? "—" }}</p>
+</template>
+```
+
+无法解析的地址会在 `error` 中报告 `INVALID_ADDRESS`，且不会到达 RPC。参见[读取账户](/guides/account-reads#refresh-与错误语义)。
 
 ## 错误处理
 

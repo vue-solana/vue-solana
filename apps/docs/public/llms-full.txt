@@ -3689,7 +3689,7 @@ A qué se corresponden los helpers después de v2:
 
 ## Actualizar de v2 a v3
 
-v3 tiene exactamente un cambio incompatible y un cambio grande de comodidad. La migración a Kit ya está hecha: no hay ningún mapeo de símbolos nuevo que aplicar.
+v3 tiene dos cambios incompatibles —el formato de módulo y los composables de lectura por dirección— y un cambio grande de comodidad. La migración a Kit ya está hecha: no hay ningún mapeo de símbolos nuevo que aplicar.
 
 ```sh
 pnpm add @vue-solana/vue@^3.0.0
@@ -3735,7 +3735,36 @@ try {
 }
 ```
 
-Todo lo demás es interno. Las máquinas de estado de los composables se deduplicaron en helpers compartidos, así que `@solana/kit` pasó a `^8.4.0` y los bundles se hicieron más pequeños, pero ninguna firma de composable ni forma de retorno cambió.
+Todo lo demás es interno. Las máquinas de estado de los composables se deduplicaron en helpers compartidos, así que `@solana/kit` pasó a `^8.4.0` y los bundles se hicieron más pequeños. Ninguna otra firma de composable ni forma de retorno cambió.
+
+### Cambios de comportamiento en los composables de lectura
+
+`useBalance()`, `useAccountInfo()`, `useProgramAccounts()`, `useTokenAccounts()` y `useTokenBalance()` (y sus equivalentes `useSolana*` de Nuxt) ahora comparten una máquina de estados. Tres comportamientos cambiaron, todos son correcciones, pero los dos primeros aparecerán en tu código como un rechazo sin manejar o como un valor vacío.
+
+**`refresh()` rechaza en lugar de resolver cuando falla.** Resuelve con el nuevo valor si tiene éxito, con `null` si una entrada está vacía, y rechaza con un `SolanaError` normalizado en caso contrario. Si haces `await refresh()` en algún sitio, envuélvelo:
+
+```ts
+// v2: correcto. v3: lanza.
+await refresh();
+
+// v3
+await refresh().catch(() => undefined);
+```
+
+El `@click="refresh"` de una plantilla no cambia: Vue se traga el rechazo.
+
+**Los datos vuelven a su valor vacío cuando una lectura falla.** Si conservabas un balance conocido después de un error, ahora desaparece. Ramifica con `error` en lugar de con un valor falsy:
+
+```vue
+<template>
+  <UAlert v-if="error" color="error" variant="subtle" title="No se pudo cargar el balance." />
+  <p v-else>Lamports: {{ balance ?? "—" }}</p>
+</template>
+```
+
+**El `balance` y el `decimals` de `useTokenBalance()` son computed refs de solo lectura.** Si asignabas a alguno, quita la asignación; deriva del valor que resuelva `refresh()`.
+
+Una dirección que no se puede parsear ahora informa `INVALID_ADDRESS` en `error` en lugar de resolver a `null`. Ver [Leer cuentas](/guides/account-reads#semántica-de-refresh-y-de-errores) para el comportamiento completo.
 
 ## Actualizar una App de Vue
 
@@ -3910,7 +3939,7 @@ What the helpers map to after v2:
 
 ## Upgrading v2 to v3
 
-v3 has exactly one breaking change and one large convenience change. The Kit migration itself is already done — there is no new symbol mapping to make.
+v3 has two breaking changes — the module format and the address read composables — plus one large convenience change. The Kit migration itself is already done: there is no new symbol mapping to make.
 
 ```sh
 pnpm add @vue-solana/vue@^3.0.0
@@ -3956,7 +3985,36 @@ try {
 }
 ```
 
-Everything else is internal. The composable state machines were deduplicated into shared helpers, so `@solana/kit` moved to `^8.4.0` and the bundles got smaller, but no composable signature or return shape changed.
+Everything else is internal. The composable state machines were deduplicated into shared helpers, so `@solana/kit` moved to `^8.4.0` and the bundles got smaller. No other composable signature or return shape changed.
+
+### Read Composable Behavior Changes
+
+`useBalance()`, `useAccountInfo()`, `useProgramAccounts()`, `useTokenAccounts()`, and `useTokenBalance()` (and their `useSolana*` Nuxt equivalents) now share one state machine. Three behaviors changed, all of them fixes, but the first two will surface in your code as an unhandled rejection or a blank value.
+
+**`refresh()` rejects instead of resolving on failure.** It resolves with the new value on success, with `null` when an input is empty, and rejects with a normalized `SolanaError` otherwise. If you `await refresh()` anywhere, wrap it:
+
+```ts
+// v2: fine. v3: throws.
+await refresh();
+
+// v3
+await refresh().catch(() => undefined);
+```
+
+Template `@click="refresh"` is unaffected — Vue swallows the rejection.
+
+**Data drops back to its empty value when a read fails.** If you kept a last-known balance on screen after an error, it now disappears. Branch on `error` rather than on a falsy value:
+
+```vue
+<template>
+  <UAlert v-if="error" color="error" variant="subtle" title="Could not load the balance." />
+  <p v-else>Lamports: {{ balance ?? "—" }}</p>
+</template>
+```
+
+**`useTokenBalance()`'s `balance` and `decimals` are read-only computed refs.** If you assigned to either, drop the assignment; derive from `refresh()`'s resolved value instead.
+
+An unparseable address now reports `INVALID_ADDRESS` in `error` instead of resolving to `null`. See [Account Reads](/guides/account-reads#refresh-and-error-semantics) for the full behavior.
 
 ## Upgrade a Vue App
 
@@ -4131,7 +4189,7 @@ v2 이후 헬퍼의 대응:
 
 ## v2에서 v3로 업그레이드
 
-v3에는 호환성 깨지는 변경이 정확히 하나 있고, 편의성 개선이 하나 큽니다. Kit 마이그레이션 자체는 이미 끝났으므로 새로 대응시켜야 할 심볼은 없습니다.
+v3에는 호환성 깨지는 변경이 두 개 — 모듈 포맷과 주소 읽기 컴포저블 — 있고 편의성 개선이 하나 큽니다. Kit 마이그레이션 자체는 이미 끝났으므로 새로 대응시켜야 할 심볼은 없습니다.
 
 ```sh
 pnpm add @vue-solana/vue@^3.0.0
@@ -4177,7 +4235,36 @@ try {
 }
 ```
 
-나머지는 모두 내부 변경입니다. 컴포저블 상태 머신이 공유 헬퍼로 dedup되면서 `@solana/kit`이 `^8.4.0`으로 올라가고 번들도 작아졌지만, 컴포저블 시그니처와 반환 형태는 바뀌지 않았습니다.
+나머지는 모두 내부 변경입니다. 컴포저블 상태 머신이 공유 헬퍼로 dedup되면서 `@solana/kit`이 `^8.4.0`으로 올라가고 번들도 작아졌지만, 다른 컴포저블의 시그니처와 반환 형태는 바뀌지 않았습니다.
+
+### 읽기 컴포저블의 동작 변경
+
+`useBalance()`, `useAccountInfo()`, `useProgramAccounts()`, `useTokenAccounts()`, `useTokenBalance()`(및 Nuxt의 `useSolana*` 동등 함수)는 이제 하나의 상태 머신을 공유합니다. 세 가지 동작이 바뀌었는데 모두 수정이지만, 앞의 두 가지는 처리되지 않은 rejection이나 빈 값으로 코드에 드러납니다.
+
+**실패하면 `refresh()`는 resolve하지 않고 reject합니다.** 성공하면 새 값으로 resolve하고, 입력이 비어 있으면 `null`로 resolve하며, 그 외에는 정규화된 `SolanaError`와 함께 reject합니다. `await refresh()`를 쓰는 곳이 있다면 감싸세요:
+
+```ts
+// v2: 괜찮음. v3: 던집니다.
+await refresh();
+
+// v3
+await refresh().catch(() => undefined);
+```
+
+템플릿의 `@click="refresh"`는 그대로입니다. Vue가 rejection을 삼킵니다.
+
+**읽기가 실패하면 데이터가 빈 값으로 되돌아갑니다.** 에러 이후에도 마지막으로 알던 잔액을 화면에 남겨 두었다면 이제 사라집니다. falsy 값이 아니라 `error`로 분기하세요:
+
+```vue
+<template>
+  <UAlert v-if="error" color="error" variant="subtle" title="잔액을 불러오지 못했습니다." />
+  <p v-else>Lamports: {{ balance ?? "—" }}</p>
+</template>
+```
+
+**`useTokenBalance()`의 `balance`과 `decimals`은 읽기 전용 computed ref입니다.** 둘 중 하나에 대입하고 있었다면 대입을 제거하고 `refresh()`가 resolve한 값에서 파생하세요.
+
+파싱할 수 없는 주소는 이제 `null`로 resolve하는 대신 `error`에 `INVALID_ADDRESS`를 보고합니다. 전체 동작은 [계정 읽기](/guides/account-reads#refresh와-에러-의미)를 참고하세요.
 
 ## Vue 앱 업그레이드
 
@@ -4352,7 +4439,7 @@ v2 之后辅助函数的对应关系：
 
 ## 从 v2 升级到 v3
 
-v3 恰好有一个破坏性变更和一个很大的便利性变更。Kit 迁移本身已经完成，没有需要对应的新符号。
+v3 有两个破坏性变更——模块格式和地址读取组合式函数——以及一个很大的便利性变更。Kit 迁移本身已经完成，没有需要对应的新符号。
 
 ```sh
 pnpm add @vue-solana/vue@^3.0.0
@@ -4398,7 +4485,36 @@ try {
 }
 ```
 
-其余都是内部改动。composable 状态机被合并进共享辅助函数，`@solana/kit` 升到了 `^8.4.0`，bundle 也变小了，但没有任何 composable 的签名或返回结构发生变化。
+其余都是内部改动。composable 状态机被合并进共享辅助函数，`@solana/kit` 升到了 `^8.4.0`，bundle 也变小了，但其他任何 composable 的签名或返回结构都没有变化。
+
+### 读取组合式函数的行为变更
+
+`useBalance()`、`useAccountInfo()`、`useProgramAccounts()`、`useTokenAccounts()`、`useTokenBalance()`（以及 Nuxt 中对应的 `useSolana*`）现在共用一套状态机。其中三项行为发生了变化，都是修复，但前两项会以未处理的 rejection 或空值的形式出现在你的代码里。
+
+**失败时 `refresh()` 会 reject，而不是 resolve。** 成功时以新值 resolve，输入为空时以 `null` resolve，其余情况则以规范化后的 `SolanaError` reject。如果某处写了 `await refresh()`，请包一层：
+
+```ts
+// v2：可以。v3：会抛出。
+await refresh();
+
+// v3
+await refresh().catch(() => undefined);
+```
+
+模板里的 `@click="refresh"` 不受影响——Vue 会吞掉这个 rejection。
+
+**读取失败时，数据会回退为空值。** 如果你曾在出错后保留上一次已知的余额，它现在会消失。请根据 `error` 而不是 falsy 值来分支：
+
+```vue
+<template>
+  <UAlert v-if="error" color="error" variant="subtle" title="无法加载余额。" />
+  <p v-else>Lamports: {{ balance ?? "—" }}</p>
+</template>
+```
+
+**`useTokenBalance()` 的 `balance` 和 `decimals` 是只读的 computed ref。** 如果你之前给它们赋过值，请去掉赋值，改为从 `refresh()` resolve 出的值派生。
+
+无法解析的地址现在会在 `error` 中报告 `INVALID_ADDRESS`，而不是 resolve 为 `null`。完整行为见[读取账户](/guides/account-reads#refresh-与错误语义)。
 
 ## 升级 Vue 应用
 
@@ -6342,7 +6458,39 @@ Los composables de Nuxt pueden llamarse durante SSR y devuelven estado inerte ha
 
 Los composables de lectura limpian estado sin llamar a RPC cuando la dirección, program id o firma es `null`.
 
-Las direcciones string inválidas limpian datos obsoletos, establecen `error` y no llaman al método RPC. Ramifica con `error.value.code` para mensajes orientados al usuario.
+Las direcciones string inválidas limpian datos obsoletos, establecen `error` y no llaman al método RPC. Ramifica con `error.value.code` para mensajes orientados al usuario; una dirección que no se puede parsear informa `INVALID_ADDRESS`.
+
+## Semántica de refresh y de errores
+
+`useBalance`, `useAccountInfo`, `useProgramAccounts`, `useTokenAccounts` y `useTokenBalance` comparten una única máquina de estados, así que se comportan igual en tres casos fáciles de confundir.
+
+**`refresh()` rechaza; no resuelve cuando hay error.** Resuelve con el nuevo valor si tiene éxito, con `null` si una entrada está vacía, y rechaza con un `SolanaError` normalizado en caso contrario. Un `@click="refresh"` a secas está bien porque Vue se traga el rechazo, pero el código escrito a mano debe gestionarlo:
+
+```ts
+// Sin estado de error en una promesa rechazada, esto no hace nada útil.
+await refresh();
+
+// Await y reportar.
+try {
+  await refresh();
+} catch (cause) {
+  console.error(cause);
+}
+```
+
+`useRequest()` es la excepción: su `refresh()` resuelve con el resultado del intento en lugar de rechazar.
+
+**Los datos vuelven a su valor vacío cuando una lectura falla.** Un balance cargado previamente no se queda en pantalla junto a un error nuevo, porque un valor obsoleto junto a un error se lee como dato actual cuando no lo es. Ramifica con `error` para decidir qué renderizar:
+
+```vue
+<template>
+  <UAlert v-if="error" color="error" variant="subtle" :title="errorMessage" />
+  <p v-else-if="loading">Cargando…</p>
+  <p v-else>Lamports: {{ balance ?? "—" }}</p>
+</template>
+```
+
+**Resultados de solo lectura en `useTokenBalance`.** Sus `balance` y `decimals` son refs computadas derivadas de una única lectura. Lelos; asignarles no tiene efecto.
 
 ## Checklist de coste RPC
 
@@ -6493,7 +6641,39 @@ Nuxt composables can be called during SSR and return inert state until hydration
 
 Read composables clear state without calling RPC when the address, program id, or signature is `null`.
 
-Invalid address strings clear stale data, set `error`, and do not call the RPC method. Branch on `error.value.code` for user-facing messages.
+Invalid address strings clear stale data, set `error`, and do not call the RPC method. Branch on `error.value.code` for user-facing messages; an unparseable address reports `INVALID_ADDRESS`.
+
+## Refresh And Error Semantics
+
+`useBalance`, `useAccountInfo`, `useProgramAccounts`, `useTokenAccounts`, and `useTokenBalance` share one state machine, so they behave the same way in three cases that are easy to get wrong.
+
+**`refresh()` rejects; it does not resolve on failure.** It resolves with the new value on success, with `null` when an input is empty, and rejects with a normalized `SolanaError` otherwise. A bare `@click="refresh"` is fine because Vue swallows the rejection, but hand-written code must handle it:
+
+```ts
+// No error state on a rejected promise, so this silently does nothing useful.
+await refresh();
+
+// Await it and report.
+try {
+  await refresh();
+} catch (cause) {
+  console.error(cause);
+}
+```
+
+`useRequest()` is the exception: its `refresh()` resolves with the attempt result rather than rejecting.
+
+**Data drops back to its empty value when a read fails.** A previously loaded balance does not stay on screen next to a fresh error — it reads as current data when it is not. Branch on `error` to decide what to render:
+
+```vue
+<template>
+  <UAlert v-if="error" color="error" variant="subtle" :title="errorMessage" />
+  <p v-else-if="loading">Loading…</p>
+  <p v-else>Lamports: {{ balance ?? "—" }}</p>
+</template>
+```
+
+**Read-only results in `useTokenBalance`.** Its `balance` and `decimals` are computed refs derived from one read. Read them; assigning to them has no effect.
 
 ## RPC Cost Checklist
 
@@ -6644,7 +6824,39 @@ Nuxt 컴포저블은 SSR 중 호출할 수 있으며 hydration으로 실제 clie
 
 주소, 프로그램 id 또는 서명이 `null`이면 읽기 컴포저블은 RPC를 호출하지 않고 state를 비웁니다.
 
-잘못된 주소 문자열은 오래된 데이터를 지우고 `error`를 설정하며 RPC 메서드를 호출하지 않습니다. 사용자에게 보여 줄 메시지는 `error.value.code`를 기준으로 분기하세요.
+잘못된 주소 문자열은 오래된 데이터를 지우고 `error`를 설정하며 RPC 메서드를 호출하지 않습니다. 사용자에게 보여 줄 메시지는 `error.value.code`를 기준으로 분기하세요. 파싱할 수 없는 주소는 `INVALID_ADDRESS`를 보고합니다.
+
+## refresh와 에러 의미
+
+`useBalance`, `useAccountInfo`, `useProgramAccounts`, `useTokenAccounts`, `useTokenBalance`는 하나의 상태 머신을 공유하므로 세 가지 경우에 동일하게 동작합니다.
+
+**`refresh()`는 거부합니다. 실패해도 resolve하지 않습니다.** 성공하면 새 값으로 resolve하고, 입력이 비어 있으면 `null`로 resolve하며, 그 외에는 정규화된 `SolanaError`와 함께 거부합니다. Vue가 거부를 삼키므로 `@click="refresh"`만 쓰는 것은 괜찮지만, 직접 작성한 코드는 처리해야 합니다:
+
+```ts
+// 거부된 promise에는 에러 상태가 없으므로 이건 쓸모가 없습니다.
+await refresh();
+
+// await 하고 보고합니다.
+try {
+  await refresh();
+} catch (cause) {
+  console.error(cause);
+}
+```
+
+`useRequest()`만 예외입니다. 이 컴포저블의 `refresh()`는 거부하는 대신 시도 결과로 resolve합니다.
+
+**읽기가 실패하면 데이터가 빈 값으로 되돌아갑니다.** 이전에 읽어둔 잔액이 새 에러 옆에 남아 있으면 최신 데이터처럼 보이므로 남겨 두지 않습니다. 무엇을 렌더링할지는 `error`로 분기하세요:
+
+```vue
+<template>
+  <UAlert v-if="error" color="error" variant="subtle" :title="errorMessage" />
+  <p v-else-if="loading">불러오는 중…</p>
+  <p v-else>Lamports: {{ balance ?? "—" }}</p>
+</template>
+```
+
+**`useTokenBalance`의 결과는 읽기 전용입니다.** `balance`과 `decimals`은 한 번의 읽기에서 파생된 계산 ref입니다. 읽기만 하세요. 대입해도 효과가 없습니다.
 
 ## RPC 비용 체크리스트
 
@@ -6795,7 +7007,39 @@ Nuxt 组合式函数可以在 SSR 期间调用，并会返回惰性状态，直�
 
 当地址、程序 id 或签名为 `null` 时，读取组合式函数会清空状态，并且不会调用 RPC。
 
-无效地址字符串会清除过期数据、设置 `error`，并且不会调用 RPC 方法。根据 `error.value.code` 分支处理面向用户的消息。
+无效地址字符串会清除过期数据、设置 `error`，并且不会调用 RPC 方法。根据 `error.value.code` 分支处理面向用户的消息；无法解析的地址会报告 `INVALID_ADDRESS`。
+
+## refresh 与错误语义
+
+`useBalance`、`useAccountInfo`、`useProgramAccounts`、`useTokenAccounts`、`useTokenBalance` 共用同一套状态机，因此在三个容易出错的情况下行为一致。
+
+**`refresh()` 会 reject，失败时不会 resolve。** 成功时以新值 resolve，输入为空时以 `null` resolve，其余情况则以规范化后的 `SolanaError` reject。直接写 `@click="refresh"` 没问题，因为 Vue 会吞掉这个 rejection，但手写代码必须处理：
+
+```ts
+// 被 reject 的 promise 没有错误状态，所以这样写毫无意义。
+await refresh();
+
+// await 并上报。
+try {
+  await refresh();
+} catch (cause) {
+  console.error(cause);
+}
+```
+
+`useRequest()` 是例外：它的 `refresh()` 以尝试结果 resolve，而不会 reject。
+
+**读取失败时，数据会回退为空值。** 之前加载成功的余额不会留在新的错误旁边，因为和错误并排的陈旧值会被误读成当前数据。请根据 `error` 决定渲染什么：
+
+```vue
+<template>
+  <UAlert v-if="error" color="error" variant="subtle" :title="errorMessage" />
+  <p v-else-if="loading">加载中…</p>
+  <p v-else>Lamports: {{ balance ?? "—" }}</p>
+</template>
+```
+
+**`useTokenBalance` 的结果是只读的。** 它的 `balance` 和 `decimals` 是由一次读取派生出的 computed ref。请读取，不要赋值。
 
 ## RPC 成本检查清单
 
@@ -9296,13 +9540,15 @@ Description: Configuración Solana independiente del framework, RPC, tipos de wa
 
 Usa este paquete directamente cuando quieras clientes Kit, helpers de endpoint, tipos de wallet compartidos, helpers de registro de Android Mobile Wallet Adapter, helpers de wallet de navegador iOS, lecturas de cuentas de token y helpers de transacción sin instalar el plugin de Vue.
 
-`@vue-solana/core` se basa en el moderno [`@solana/kit`](https://www.npmjs.com/package/@solana/kit). `createSolanaClient()` y el subpath `@vue-solana/core/kit` reexportan primitivas de Kit. La API legacy `@solana/web3-compat` y el subpath `web3` se eliminaron en v2.0.0 — consulta [Kit Migration](/guides/kit-migration) para el mapa completo antes/después.
+`@vue-solana/core` se basa en el moderno [`@solana/kit`](https://www.npmjs.com/package/@solana/kit). `createSolanaClient()` vive en el subpath `@vue-solana/core/kit`, que reexporta todo `@solana/kit`. La API legacy `@solana/web3-compat` y el subpath `web3` se eliminaron en v2.0.0 — consulta [Kit Migration](/guides/kit-migration) para el mapa completo antes/después.
 
 ## Instalar
 
 ```sh
 pnpm add @vue-solana/core
 ```
+
+El paquete es solo ESM. Un `require("@vue-solana/core")` de CommonJS falla con `No "exports" main defined`; convierte el módulo importador a ESM, o quédate en `@vue-solana/core@^2`, que todavía incluye una build `.cjs`. Consulta [Actualizar de v2 a v3](/es/guides/kit-migration#actualizar-de-v2-a-v3).
 
 ## Inicio rápido
 
@@ -9552,7 +9798,8 @@ import type { Address, Commitment, Lamports, Signature, SolanaRpcApi } from "@vu
 - `client.rpc` expone la API completa de lectura de Solana (`getSlot`, `getBalance`, `getBlockHeight`, `getSignatureStatuses` y más) como funciones RPC llamadas con `.send()`.
 - `address(value)`: valida y devuelve un `Address` (marca de string base58) — el reemplazo de Kit para `new PublicKey(...)`.
 - `lamports(value: bigint)`: devuelve un valor `Lamports` — el reemplazo de Kit para números de lamports sin procesar.
-- Types: `Address`, `Commitment`, `Lamports`, `Rpc`, `Signature`, `SolanaRpcApi`, `SolanaClient`.
+- Types: `Address`, `Commitment`, `Lamports`, `Rpc`, `Signature`, `SolanaRpcApi`, `SolanaClient`. El subpath reexporta todos los tipos que exporta `@solana/kit`, no solo estos.
+- Cuatro nombres existen tanto en Kit como en esta librería. Se resuelven a la versión **de esta librería** desde la raíz del paquete (`@vue-solana/core`) y a la versión **de Kit** desde el subpath `/kit`: `SolanaError`, `SolanaErrorCode`, `isSolanaError` y `TransactionStatus`. Importa `isSolanaError` desde `@vue-solana/core/kit` cuando inspecciones un error lanzado por el propio Kit, porque la guarda de la raíz no coincide con la clase de error de Kit.
 
 Los resultados numéricos de RPC son `bigint`, y los datos de cuenta son `Uint8Array` en vez de `Buffer`. Consulta [Kit Migration](/guides/kit-migration) para más detalles.
 
@@ -9903,6 +10150,8 @@ Vue plugin을 설치하지 않고 Kit client, endpoint helper, 공유 wallet typ
 pnpm add @vue-solana/core
 ```
 
+이 package는 ESM만 배포합니다. CommonJS의 `require("@vue-solana/core")`는 `No "exports" main defined`로 실패합니다. import하는 모듈을 ESM으로 바꾸거나, `.cjs` 빌드를 계속 제공하는 `@vue-solana/core@^2`를 사용하세요. [v2에서 v3로 업그레이드](/ko/guides/kit-migration#v2에서-v3로-업그레이드)를 참고하세요.
+
 ## 빠른 시작
 
 ```ts
@@ -10152,6 +10401,7 @@ import type { Address, Commitment, Lamports, Signature, SolanaRpcApi } from "@vu
 - `address(value)`: `Address`(base58 string brand)를 검증하고 반환합니다 - `new PublicKey(...)`의 Kit 대체입니다.
 - `lamports(value: bigint)`: `Lamports` 값을 반환합니다 - raw lamport number의 Kit 대체입니다.
 - 자주 쓰는 타입: `Address`, `Commitment`, `Lamports`, `Rpc`, `Signature`, `SolanaRpcApi`, `SolanaClient`. 이 subpath는 `@solana/kit`가 export하는 모든 타입을 다시 export합니다.
+- 네 개의 이름은 Kit과 이 library 양쪽에 모두 존재합니다. 패키지 루트(`@vue-solana/core`)에서는 **이 library의** 버전으로, `/kit` subpath에서는 **Kit의** 버전으로 해석됩니다: `SolanaError`, `SolanaErrorCode`, `isSolanaError`, `TransactionStatus`. Kit이 던진 에러를 검사할 때는 루트의 guard가 Kit의 에러 클래스와 일치하지 않으므로 `@vue-solana/core/kit`에서 `isSolanaError`를 import하세요.
 
 RPC numeric result는 `bigint`이고, account data는 `Buffer`가 아니라 `Uint8Array`입니다. 자세한 내용은 [Kit Migration](/ko/guides/kit-migration)을 참고하세요.
 
@@ -10808,6 +11058,8 @@ Description: 框架无关的 Solana 配置、RPC、钱包类型和交易 helper�
 pnpm add @vue-solana/core
 ```
 
+该包仅发布 ESM。在 CommonJS 中 `require("@vue-solana/core")` 会以 `No "exports" main defined` 失败。请把导入该包的模块改为 ESM，或者继续使用仍提供 `.cjs` 构建的 `@vue-solana/core@^2`。参见[从 v2 升级到 v3](/zh/guides/kit-migration#从-v2-升级到-v3)。
+
 ## 快速开始
 
 ```ts
@@ -11057,6 +11309,7 @@ import type { Address, Commitment, Lamports, Signature, SolanaRpcApi } from "@vu
 - `address(value)`：验证并返回 `Address`（base58 字符串 brand）——替代 `new PublicKey(...)` 的 Kit 版本。
 - `lamports(value: bigint)`：返回 `Lamports` 值——替代原始 lamport 数字的 Kit 版本。
 - 常用类型：`Address`、`Commitment`、`Lamports`、`Rpc`、`Signature`、`SolanaRpcApi`、`SolanaClient`。该 subpath 会重新导出 `@solana/kit` 导出的所有类型，不仅仅是这些。
+- 有四个名字同时存在于 Kit 和本库中。从包根（`@vue-solana/core`）导入时解析为**本库的**版本，从 `/kit` subpath 导入时解析为 **Kit 的**版本：`SolanaError`、`SolanaErrorCode`、`isSolanaError`、`TransactionStatus`。由于包根的判断函数与 Kit 的错误类不匹配，检查 Kit 自身抛出的错误时，请从 `@vue-solana/core/kit` 导入 `isSolanaError`。
 
 RPC 数值结果是 `bigint`，账户数据是 `Uint8Array` 而不是 `Buffer`。详见 [Kit 迁移](/zh/guides/kit-migration)。
 
@@ -11204,6 +11457,8 @@ Description: Plugin de Vue y composables para aplicaciones Solana.
 pnpm add @vue-solana/vue
 ```
 
+El paquete es solo ESM. Las apps de Vite ya empaquetan ESM y no necesitan cambios; un `require("@vue-solana/vue")` de CommonJS falla con `No "exports" main defined`, así que convierte el módulo importador a ESM, o quédate en `@vue-solana/vue@^2`, que todavía incluye una build `.cjs`. Consulta [Actualizar de v2 a v3](/es/guides/kit-migration#actualizar-de-v2-a-v3).
+
 Las apps de navegador que crean o serializan transacciones pueden inicializar el polyfill de Buffer desde `@vue-solana/vue/buffer-polyfill`.
 
 ## Configuración del plugin
@@ -11333,7 +11588,7 @@ Subpaths directos del paquete:
 - `@vue-solana/vue/useTokenAccounts`
 - `@vue-solana/vue/kit`
 
-Usa `@vue-solana/vue/buffer-polyfill` para código de transacciones en navegador que necesita el polyfill de Buffer. Importa `installSolanaBufferPolyfill()` como named import y llámalo; un import de efecto secundario como `import "@vue-solana/vue/buffer-polyfill"` no instala nada, porque todos los paquetes `@vue-solana/*` están marcados con `"sideEffects": false` y ese subpath solo exporta la función. Usa `@vue-solana/vue/kit` para la API Kit (`createSolanaClient`, `address`, `lamports` y tipos). Los imports directos `@vue-solana/core/*` siguen soportados para uso core de menor nivel.
+Usa `@vue-solana/vue/buffer-polyfill` para código de transacciones en navegador que necesita el polyfill de Buffer. Importa `installSolanaBufferPolyfill()` como named import y llámalo; un import de efecto secundario como `import "@vue-solana/vue/buffer-polyfill"` no instala nada, porque todos los paquetes `@vue-solana/*` están marcados con `"sideEffects": false` y ese subpath solo exporta la función. Usa `@vue-solana/vue/kit` para la API Kit: reexporta todo `@solana/kit`, así que nunca instalas ese paquete por tu cuenta. Los imports directos `@vue-solana/core/*` siguen soportados para uso core de menor nivel.
 
 - `useSolana()`: devuelve el contexto Solana inyectado completo.
 - `useSolanaClient()`: devuelve el `{ client, rpc }` de Kit desde el contexto. Recomendado para código nuevo.
@@ -11535,7 +11790,24 @@ const tokenBalanceErrorMessage = computed(() => {
 </template>
 ```
 
-`useTokenBalance()` devuelve balance y decimales null cuando la cuenta de token asociada no existe, sin tratarlo como un error.
+`useTokenBalance()` devuelve balance y decimales null cuando la cuenta de token asociada no existe, sin tratarlo como un error. Sus `balance` y `decimals` son computed refs de solo lectura derivados de una única lectura: líelos, no les asignes.
+
+## Semántica de los composables de lectura
+
+`useBalance()`, `useAccountInfo()`, `useProgramAccounts()`, `useTokenAccounts()` y `useTokenBalance()` comparten una máquina de estados. Dos de sus reglas sorprenden a quien viene de v2:
+
+- **`refresh()` rechaza en lugar de resolver cuando falla**, y resuelve con `null` cuando una entrada está vacía. Un `await refresh()` sin `try`/`catch` lanza. Enlazarlo directamente a `@click` está bien —Vue se traga el rechazo— pero los llamadores escritos a mano deben gestionarlo. `useRequest()` es la excepción y sigue resolviendo con el resultado del intento.
+- **Los datos vuelven a su valor vacío cuando una lectura falla.** El último balance correcto no permanece junto a un `error` nuevo, porque un valor obsoleto junto a un error se lee como dato actual cuando no lo es. Ramifica con `error` para elegir qué renderizar.
+
+```vue
+<template>
+  <UAlert v-if="error" color="error" variant="subtle" :title="balanceErrorMessage" />
+  <p v-else-if="loading">Cargando…</p>
+  <p v-else>Lamports: {{ balance ?? "—" }}</p>
+</template>
+```
+
+Una dirección que no se puede parsear informa `INVALID_ADDRESS` en `error` y nunca llega al RPC. Ver [Leer cuentas](/guides/account-reads#semántica-de-refresh-y-de-errores).
 
 ## Manejo de errores
 
@@ -12015,6 +12287,8 @@ Description: Solana 앱을 위한 Vue 플러그인과 컴포저블입니다.
 pnpm add @vue-solana/vue
 ```
 
+이 package는 ESM만 배포합니다. Vite 앱은 이미 ESM으로 번들링되므로 변경이 필요 없고, CommonJS의 `require("@vue-solana/vue")`는 `No "exports" main defined`로 실패하므로 import하는 모듈을 ESM으로 바꾸거나 `.cjs` 빌드를 계속 제공하는 `@vue-solana/vue@^2`를 사용하세요. [v2에서 v3로 업그레이드](/ko/guides/kit-migration#v2에서-v3로-업그레이드)를 참고하세요.
+
 트랜잭션을 만들거나 직렬화하는 브라우저 앱은 `@vue-solana/vue/buffer-polyfill`에서 Buffer polyfill을 초기화할 수 있습니다.
 
 ## 플러그인 설정
@@ -12144,7 +12418,7 @@ Direct package subpath:
 - `@vue-solana/vue/useTokenAccounts`
 - `@vue-solana/vue/kit`
 
-Buffer polyfill이 필요한 브라우저 트랜잭션 코드에는 `@vue-solana/vue/buffer-polyfill`을 사용하세요. `installSolanaBufferPolyfill()`을 named import로 가져와 호출하세요. `import "@vue-solana/vue/buffer-polyfill"` 같은 side-effect import는 아무것도 설치하지 않습니다. 모든 `@vue-solana/*` package가 `"sideEffects": false`로 표시되어 있고 해당 subpath는 함수만 export하기 때문입니다. Kit API(`createSolanaClient`, `address`, `lamports` 및 타입)에는 `@vue-solana/vue/kit`을 사용하세요. 더 낮은 수준의 core 사용에는 direct `@vue-solana/core/*` import도 계속 지원됩니다.
+Buffer polyfill이 필요한 브라우저 트랜잭션 코드에는 `@vue-solana/vue/buffer-polyfill`을 사용하세요. `installSolanaBufferPolyfill()`을 named import로 가져와 호출하세요. `import "@vue-solana/vue/buffer-polyfill"` 같은 side-effect import는 아무것도 설치하지 않습니다. 모든 `@vue-solana/*` package가 `"sideEffects": false`로 표시되어 있고 해당 subpath는 함수만 export하기 때문입니다. Kit API에는 `@vue-solana/vue/kit`을 사용하세요. `@solana/kit` 전체를 다시 export하므로 해당 package를 직접 설치할 필요가 없습니다. 더 낮은 수준의 core 사용에는 direct `@vue-solana/core/*` import도 계속 지원됩니다.
 
 - `useSolana()`: 주입된 전체 Solana context를 반환합니다.
 - `useSolanaClient()`: Kit `{ client, rpc }`를 context에서 반환합니다. 새 코드에 권장됩니다.
@@ -12346,7 +12620,24 @@ const tokenBalanceErrorMessage = computed(() => {
 </template>
 ```
 
-`useTokenBalance()`는 associated token account가 없으면 error로 처리하지 않고 null balance와 decimals를 반환합니다.
+`useTokenBalance()`는 associated token account가 없으면 error로 처리하지 않고 null balance와 decimals를 반환합니다. `balance`과 `decimals`은 한 번의 읽기에서 파생된 읽기 전용 computed ref이므로 읽기만 하고 대입하지 마세요.
+
+## 읽기 컴포저블의 의미
+
+`useBalance()`, `useAccountInfo()`, `useProgramAccounts()`, `useTokenAccounts()`, `useTokenBalance()`는 하나의 상태 머신을 공유합니다. v2에서 넘어온 사람에게 낯선 규칙이 둘 있습니다:
+
+- **실패하면 `refresh()`는 resolve하지 않고 reject합니다.** 입력이 비어 있으면 `null`로 resolve합니다. `try`/`catch` 없는 `await refresh()`는 던집니다. `@click`에 바로 연결하는 것은 괜찮지만(Vue가 rejection을 삼킵니다) 직접 작성한 호출부는 처리해야 합니다. `useRequest()`만 예외로 시도 결과로 resolve합니다.
+- **읽기가 실패하면 데이터가 빈 값으로 되돌아갑니다.** 마지막으로 성공한 balance가 새 `error` 옆에 남아 있지 않습니다. 무엇을 렌더링할지는 falsy 값이 아니라 `error`로 분기하세요.
+
+```vue
+<template>
+  <UAlert v-if="error" color="error" variant="subtle" :title="balanceErrorMessage" />
+  <p v-else-if="loading">불러오는 중…</p>
+  <p v-else>Lamports: {{ balance ?? "—" }}</p>
+</template>
+```
+
+파싱할 수 없는 주소는 `error`에 `INVALID_ADDRESS`를 보고하고 RPC에 도달하지 않습니다. [계정 읽기](/guides/account-reads#refresh와-에러-의미)를 참고하세요.
 
 ## 오류 처리
 
@@ -13162,7 +13453,24 @@ const tokenBalanceErrorMessage = computed(() => {
 </template>
 ```
 
-`useTokenBalance()` returns `null` balance and decimals when the associated token account does not exist, without treating it as an error.
+`useTokenBalance()` returns `null` balance and decimals when the associated token account does not exist, without treating it as an error. Its `balance` and `decimals` are read-only computed refs derived from one read — read them, do not assign to them.
+
+## Read Composable Semantics
+
+`useBalance()`, `useAccountInfo()`, `useProgramAccounts()`, `useTokenAccounts()`, and `useTokenBalance()` share one state machine. Two of its rules surprise people coming from v2:
+
+- **`refresh()` rejects on failure** instead of resolving, and resolves with `null` when an input is empty. `await refresh()` without a `try`/`catch` throws. Wiring it straight to `@click` is fine — Vue swallows the rejection — but hand-written callers must handle it. `useRequest()` is the exception and still resolves with the attempt result.
+- **Data drops back to its empty value when a read fails.** The last successful balance does not linger beside a fresh `error`, because a stale value next to an error reads as current data when it is not. Branch on `error` to choose what to render.
+
+```vue
+<template>
+  <UAlert v-if="error" color="error" variant="subtle" :title="balanceErrorMessage" />
+  <p v-else-if="loading">Loading…</p>
+  <p v-else>Lamports: {{ balance ?? "—" }}</p>
+</template>
+```
+
+An unparseable address reports `INVALID_ADDRESS` in `error` and never reaches the RPC. See [Account Reads](/guides/account-reads#refresh-and-error-semantics).
 
 ## Error Handling
 
@@ -13640,6 +13948,8 @@ Description: 用于 Solana 应用的 Vue 插件和 composable。
 pnpm add @vue-solana/vue
 ```
 
+该包仅发布 ESM。Vite 应用本身已经打包为 ESM，不需要改动；在 CommonJS 中 `require("@vue-solana/vue")` 会以 `No "exports" main defined` 失败。请把导入该包的模块改为 ESM，或者继续使用仍提供 `.cjs` 构建的 `@vue-solana/vue@^2`。参见[从 v2 升级到 v3](/zh/guides/kit-migration#从-v2-升级到-v3)。
+
 创建或序列化交易的浏览器应用可以从 `@vue-solana/vue/buffer-polyfill` 初始化 Buffer polyfill。
 
 ## 插件设置
@@ -13769,7 +14079,7 @@ import { useWallet } from "@vue-solana/vue/useWallet";
 - `@vue-solana/vue/useTokenAccounts`
 - `@vue-solana/vue/kit`
 
-浏览器交易代码需要 Buffer polyfill 时，使用 `@vue-solana/vue/buffer-polyfill`。请以 named import 引入 `installSolanaBufferPolyfill()` 并调用它；像 `import "@vue-solana/vue/buffer-polyfill"` 这样的副作用导入不会安装任何东西，因为所有 `@vue-solana/*` 包都标记了 `"sideEffects": false`，且该 subpath 只导出函数。需要 Kit API（`createSolanaClient`、`address`、`lamports` 和类型）时，使用 `@vue-solana/vue/kit`。较底层 core 用法仍然支持直接 `@vue-solana/core/*` 导入。
+浏览器交易代码需要 Buffer polyfill 时，使用 `@vue-solana/vue/buffer-polyfill`。请以 named import 引入 `installSolanaBufferPolyfill()` 并调用它；像 `import "@vue-solana/vue/buffer-polyfill"` 这样的副作用导入不会安装任何东西，因为所有 `@vue-solana/*` 包都标记了 `"sideEffects": false`，且该 subpath 只导出函数。需要 Kit API 时，使用 `@vue-solana/vue/kit` — 它会重新导出全部 `@solana/kit`，因此你无需自行安装该包。较底层 core 用法仍然支持直接 `@vue-solana/core/*` 导入。
 
 - `useSolana()`：返回完整注入的 Solana context。
 - `useSolanaClient()`：返回 context 中的 Kit `{ client, rpc }`。新代码推荐使用。
@@ -13971,7 +14281,24 @@ const tokenBalanceErrorMessage = computed(() => {
 </template>
 ```
 
-`useTokenBalance()` 在关联 token 账户不存在时返回 null balance 和 decimals，不会将其视为错误。
+`useTokenBalance()` 在关联 token 账户不存在时返回 null balance 和 decimals，不会将其视为错误。它的 `balance` 和 `decimals` 是由一次读取派生出的只读 computed ref——请读取，不要赋值。
+
+## 读取组合式函数的语义
+
+`useBalance()`、`useAccountInfo()`、`useProgramAccounts()`、`useTokenAccounts()`、`useTokenBalance()` 共用一套状态机。其中两条规则会让从 v2 过来的人措手不及：
+
+- **失败时 `refresh()` 会 reject 而不是 resolve**，输入为空时以 `null` resolve。不带 `try`/`catch` 的 `await refresh()` 会抛出。直接接到 `@click` 没问题——Vue 会吞掉 rejection——但手写调用方必须处理。`useRequest()` 是例外，仍以尝试结果 resolve。
+- **读取失败时，数据会回退为空值。** 最后一次成功的余额不会留在新的 `error` 旁边，因为和错误并排的陈旧值会被误读成当前数据。请根据 `error` 而不是 falsy 值来决定渲染什么。
+
+```vue
+<template>
+  <UAlert v-if="error" color="error" variant="subtle" :title="balanceErrorMessage" />
+  <p v-else-if="loading">加载中…</p>
+  <p v-else>Lamports: {{ balance ?? "—" }}</p>
+</template>
+```
+
+无法解析的地址会在 `error` 中报告 `INVALID_ADDRESS`，且不会到达 RPC。参见[读取账户](/guides/account-reads#refresh-与错误语义)。
 
 ## 错误处理
 
@@ -14453,7 +14780,9 @@ npx nuxt module add @vue-solana/nuxt
 
 Esto instala el paquete y agrega `@vue-solana/nuxt` al array `modules` en `nuxt.config.ts`.
 
-Las apps de navegador que crean o serializan transacciones pueden inicializar el polyfill de Buffer desde `@vue-solana/nuxt/buffer-polyfill`. Usa `@vue-solana/nuxt/kit` para la API Kit (`createSolanaClient`, `address`, `lamports` y tipos) y el composable autoimportado `useSolanaClient()`.
+El paquete es solo ESM. Nuxt ya empaqueta ESM y no necesita cambios; un `require("@vue-solana/nuxt")` de CommonJS falla con `No "exports" main defined`, así que convierte el módulo importador a ESM, o quédate en `@vue-solana/nuxt@^2`, que todavía incluye una build `.cjs`. Consulta [Actualizar de v2 a v3](/es/guides/kit-migration#actualizar-de-v2-a-v3).
+
+Las apps de navegador que crean o serializan transacciones pueden inicializar el polyfill de Buffer desde `@vue-solana/nuxt/buffer-polyfill`. Usa `@vue-solana/nuxt/kit` para la API Kit — reexporta todo `@solana/kit` — o el composable autoimportado `useSolanaClient()`.
 
 ## Configuración del módulo
 
@@ -14726,7 +15055,16 @@ const tokenBalanceErrorMessage = computed(() => {
 </template>
 ```
 
-`useSolanaTokenBalance()` devuelve balance y decimales null cuando la cuenta de token asociada no existe, sin tratarlo como un error.
+`useSolanaTokenBalance()` devuelve balance y decimales null cuando la cuenta de token asociada no existe, sin tratarlo como un error. Sus `balance` y `decimals` son computed refs de solo lectura derivados de una única lectura: líelos, no les asignes.
+
+## Semántica de los composables de lectura
+
+`useSolanaBalance()`, `useSolanaAccountInfo()`, `useSolanaProgramAccounts()`, `useSolanaTokenAccounts()` y `useSolanaTokenBalance()` comparten una máquina de estados, idéntica a la de los composables de Vue:
+
+- **`refresh()` rechaza en lugar de resolver cuando falla**, y resuelve con `null` cuando una entrada está vacía. Un `await refresh()` sin `try`/`catch` lanza. Enlazarlo directamente a `@click` está bien —Vue se traga el rechazo— pero los llamadores escritos a mano deben gestionarlo. `useSolanaRequest()` es la excepción y sigue resolviendo con el resultado del intento.
+- **Los datos vuelven a su valor vacío cuando una lectura falla.** El último balance correcto no permanece junto a un `error` nuevo. Ramifica con `error` para elegir qué renderizar.
+
+Una dirección que no se puede parsear informa `INVALID_ADDRESS` en `error` y nunca llega al RPC. Ver [Leer cuentas](/guides/account-reads#semántica-de-refresh-y-de-errores).
 
 ## Manejo de errores
 
@@ -14941,7 +15279,9 @@ npx nuxt module add @vue-solana/nuxt
 
 이 명령은 package를 설치하고 `nuxt.config.ts`의 `modules` 배열에 `@vue-solana/nuxt`를 추가합니다.
 
-트랜잭션을 만들거나 직렬화하는 브라우저 앱은 `@vue-solana/nuxt/buffer-polyfill`에서 Buffer polyfill을 초기화할 수 있습니다. Kit API(`createSolanaClient`, `address`, `lamports` 및 타입)와 자동 import되는 `useSolanaClient()`에는 `@vue-solana/nuxt/kit`을 사용하세요.
+이 package는 ESM만 배포합니다. Nuxt는 이미 ESM으로 번들링되므로 변경이 필요 없고, CommonJS의 `require("@vue-solana/nuxt")`는 `No "exports" main defined`로 실패하므로 import하는 모듈을 ESM으로 바꾸거나 `.cjs` 빌드를 계속 제공하는 `@vue-solana/nuxt@^2`를 사용하세요. [v2에서 v3로 업그레이드](/ko/guides/kit-migration#v2에서-v3로-업그레이드)를 참고하세요.
+
+트랜잭션을 만들거나 직렬화하는 브라우저 앱은 `@vue-solana/nuxt/buffer-polyfill`에서 Buffer polyfill을 초기화할 수 있습니다. Kit API에는 `@vue-solana/nuxt/kit`을 사용하세요 — `@solana/kit` 전체를 다시 export합니다 — 자동 import되는 `useSolanaClient()`도 사용할 수 있습니다.
 
 ## 모듈 설정
 
@@ -15214,7 +15554,16 @@ const tokenBalanceErrorMessage = computed(() => {
 </template>
 ```
 
-`useSolanaTokenBalance()`는 associated token account가 없으면 error로 처리하지 않고 null balance와 decimals를 반환합니다.
+`useSolanaTokenBalance()`는 associated token account가 없으면 error로 처리하지 않고 null balance와 decimals를 반환합니다. `balance`과 `decimals`은 한 번의 읽기에서 파생된 읽기 전용 computed ref이므로 읽기만 하고 대입하지 마세요.
+
+## 읽기 컴포저블의 의미
+
+`useSolanaBalance()`, `useSolanaAccountInfo()`, `useSolanaProgramAccounts()`, `useSolanaTokenAccounts()`, `useSolanaTokenBalance()`는 Vue 컴포저블과 동일하게 하나의 상태 머신을 공유합니다:
+
+- **실패하면 `refresh()`는 resolve하지 않고 reject합니다.** 입력이 비어 있으면 `null`로 resolve합니다. `try`/`catch` 없는 `await refresh()`는 던집니다. `@click`에 바로 연결하는 것은 괜찮지만(Vue가 rejection을 삼킵니다) 직접 작성한 호출부는 처리해야 합니다. `useSolanaRequest()`만 예외로 시도 결과로 resolve합니다.
+- **읽기가 실패하면 데이터가 빈 값으로 되돌아갑니다.** 마지막으로 성공한 balance가 새 `error` 옆에 남아 있지 않습니다. 무엇을 렌더링할지는 `error`로 분기하세요.
+
+파싱할 수 없는 주소는 `error`에 `INVALID_ADDRESS`를 보고하고 RPC에 도달하지 않습니다. [계정 읽기](/guides/account-reads#refresh와-에러-의미)를 참고하세요.
 
 ## 오류 처리
 
@@ -15703,7 +16052,16 @@ const tokenBalanceErrorMessage = computed(() => {
 </template>
 ```
 
-`useSolanaTokenBalance()` returns `null` balance and decimals when the associated token account does not exist, without treating it as an error.
+`useSolanaTokenBalance()` returns `null` balance and decimals when the associated token account does not exist, without treating it as an error. Its `balance` and `decimals` are read-only computed refs derived from one read — read them, do not assign to them.
+
+## Read Composable Semantics
+
+`useSolanaBalance()`, `useSolanaAccountInfo()`, `useSolanaProgramAccounts()`, `useSolanaTokenAccounts()`, and `useSolanaTokenBalance()` share one state machine, identical to the Vue composables:
+
+- **`refresh()` rejects on failure** instead of resolving, and resolves with `null` when an input is empty. `await refresh()` without a `try`/`catch` throws. Wiring it straight to `@click` is fine — Vue swallows the rejection — but hand-written callers must handle it. `useSolanaRequest()` is the exception and still resolves with the attempt result.
+- **Data drops back to its empty value when a read fails.** The last successful balance does not linger beside a fresh `error`. Branch on `error` to choose what to render.
+
+An unparseable address reports `INVALID_ADDRESS` in `error` and never reaches the RPC. See [Account Reads](/guides/account-reads#refresh-and-error-semantics).
 
 ## Error Handling
 
@@ -15916,7 +16274,9 @@ npx nuxt module add @vue-solana/nuxt
 
 这会安装包，并把 `@vue-solana/nuxt` 添加到 `nuxt.config.ts` 的 `modules` 数组中。
 
-创建或序列化交易的浏览器应用可以从 `@vue-solana/nuxt/buffer-polyfill` 初始化 Buffer polyfill。使用 `@vue-solana/nuxt/kit` 获取 Kit API（`createSolanaClient`、`address`、`lamports` 和类型）以及自动导入的 `useSolanaClient()`。
+该包仅发布 ESM。Nuxt 本身已经打包为 ESM，不需要改动；在 CommonJS 中 `require("@vue-solana/nuxt")` 会以 `No "exports" main defined` 失败。请把导入该包的模块改为 ESM，或者继续使用仍提供 `.cjs` 构建的 `@vue-solana/nuxt@^2`。参见[从 v2 升级到 v3](/zh/guides/kit-migration#从-v2-升级到-v3)。
+
+创建或序列化交易的浏览器应用可以从 `@vue-solana/nuxt/buffer-polyfill` 初始化 Buffer polyfill。使用 `@vue-solana/nuxt/kit` 获取 Kit API — 它会重新导出全部 `@solana/kit` — 以及自动导入的 `useSolanaClient()`。
 
 ## 模块设置
 
@@ -16189,7 +16549,16 @@ const tokenBalanceErrorMessage = computed(() => {
 </template>
 ```
 
-`useSolanaTokenBalance()` 在关联 token 账户不存在时返回 null balance 和 decimals，不会将其视为错误。
+`useSolanaTokenBalance()` 在关联 token 账户不存在时返回 null balance 和 decimals，不会将其视为错误。它的 `balance` 和 `decimals` 是由一次读取派生出的只读 computed ref——请读取，不要赋值。
+
+## 读取组合式函数的语义
+
+`useSolanaBalance()`、`useSolanaAccountInfo()`、`useSolanaProgramAccounts()`、`useSolanaTokenAccounts()`、`useSolanaTokenBalance()` 与 Vue 组合式函数共用同一套状态机：
+
+- **失败时 `refresh()` 会 reject 而不是 resolve**，输入为空时以 `null` resolve。不带 `try`/`catch` 的 `await refresh()` 会抛出。直接接到 `@click` 没问题——Vue 会吞掉 rejection——但手写调用方必须处理。`useSolanaRequest()` 是例外，仍以尝试结果 resolve。
+- **读取失败时，数据会回退为空值。** 最后一次成功的余额不会留在新的 `error` 旁边。请根据 `error` 决定渲染什么。
+
+无法解析的地址会在 `error` 中报告 `INVALID_ADDRESS`，且不会到达 RPC。参见[读取账户](/guides/account-reads#refresh-与错误语义)。
 
 ## 错误处理
 

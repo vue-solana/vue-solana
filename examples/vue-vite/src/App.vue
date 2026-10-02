@@ -451,6 +451,12 @@ function createTransferInstruction(fromPubkey: Address, toPubkey: Address, lampo
       </p>
       <p class="result" data-testid="balance-sol">SOL: {{ balanceInSol }}</p>
       <p v-if="balanceError" class="error">{{ balanceError }}</p>
+      <p class="help-text">
+        <code>refresh()</code> rejects on failure, so wire it to an event like above or catch it.
+        When a read fails, <code>balance</code> drops back to <code>null</code> instead of leaving
+        the last value next to the error — that is why the line above reads "No balance loaded"
+        while an error is shown.
+      </p>
     </section>
 
     <section class="panel" data-testid="wallet-panel">

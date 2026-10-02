@@ -290,7 +290,16 @@ const tokenBalanceErrorMessage = computed(() => {
 </template>
 ```
 
-`useSolanaTokenBalance()` devuelve balance y decimales null cuando la cuenta de token asociada no existe, sin tratarlo como un error.
+`useSolanaTokenBalance()` devuelve balance y decimales null cuando la cuenta de token asociada no existe, sin tratarlo como un error. Sus `balance` y `decimals` son computed refs de solo lectura derivados de una única lectura: líelos, no les asignes.
+
+## Semántica de los composables de lectura
+
+`useSolanaBalance()`, `useSolanaAccountInfo()`, `useSolanaProgramAccounts()`, `useSolanaTokenAccounts()` y `useSolanaTokenBalance()` comparten una máquina de estados, idéntica a la de los composables de Vue:
+
+- **`refresh()` rechaza en lugar de resolver cuando falla**, y resuelve con `null` cuando una entrada está vacía. Un `await refresh()` sin `try`/`catch` lanza. Enlazarlo directamente a `@click` está bien —Vue se traga el rechazo— pero los llamadores escritos a mano deben gestionarlo. `useSolanaRequest()` es la excepción y sigue resolviendo con el resultado del intento.
+- **Los datos vuelven a su valor vacío cuando una lectura falla.** El último balance correcto no permanece junto a un `error` nuevo. Ramifica con `error` para elegir qué renderizar.
+
+Una dirección que no se puede parsear informa `INVALID_ADDRESS` en `error` y nunca llega al RPC. Ver [Leer cuentas](/guides/account-reads#semántica-de-refresh-y-de-errores).
 
 ## Manejo de errores
 
