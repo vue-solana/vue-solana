@@ -125,7 +125,9 @@ export function adaptSolanaStandardWallet(
     },
     signIn: hasSignIn(wallet)
       ? async (input?: SolanaSignInInput): Promise<SolanaSignInResult> => {
-          const [result] = await wallet.features[SolanaSignIn].signIn(...(input ? [input] : []));
+          const [result] = await wallet.features[SolanaSignIn].signIn(
+            input ?? getDefaultSignInInput(getActiveAccount(account)),
+          );
 
           if (!result) {
             throw new Error("Solana wallet did not return a sign-in result");
@@ -262,6 +264,19 @@ async function signAllThroughFeature(
 
     return result.signedTransaction;
   });
+}
+
+/**
+ * Always send a complete sign-in request: Phantom resolves an empty result
+ * without opening any popup when `solana:signIn` gets no input. `host` (not
+ * `origin`) is what the request domain has to be for Backpack not to warn that
+ * the domain does not match the requesting one.
+ */
+function getDefaultSignInInput(account: WalletAccount): SolanaSignInInput {
+  return {
+    domain: typeof location === "undefined" ? "" : location.host,
+    address: account.address,
+  };
 }
 
 function toSolanaSignInResult(result: SolanaSignInOutput): SolanaSignInResult {
