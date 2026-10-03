@@ -2,7 +2,7 @@ import bs58 from "bs58";
 import type { SendTransactionOptions, SolanaTransaction } from "../types";
 import { getDefaultIosWalletAppIdentity, openIosWalletUrl, waitForRedirect } from "./browser";
 import { handleSolanaIosWalletCallback } from "./callback";
-import { encryptPayload, nacl } from "./crypto";
+import { encryptPayload, getNacl } from "./crypto";
 import { createPendingRequest, getStoredSession, storePendingRequest } from "./storage";
 import type {
   AdaptSolanaIosWalletOptions,
@@ -14,7 +14,7 @@ export function launchConnect(
   definition: IosWalletDefinition,
   options: AdaptSolanaIosWalletOptions,
 ) {
-  const keyPair = nacl.box.keyPair();
+  const keyPair = getNacl().box.keyPair();
   const pending = createPendingRequest(definition.id, "connect", keyPair, options.redirectUrl);
   const appIdentity = options.appIdentity ?? getDefaultIosWalletAppIdentity();
   const url = new URL(definition.connectUrl);
@@ -111,7 +111,7 @@ async function launchEncryptedWalletRequest(
       ? payload.transactions.length
       : undefined,
   );
-  const nonce = nacl.randomBytes(nacl.box.nonceLength);
+  const nonce = getNacl().randomBytes(getNacl().box.nonceLength);
   const encryptedPayload = encryptPayload(
     { ...payload, session: session.session },
     nonce,

@@ -66,10 +66,6 @@ How an agent should use this site:
 - [Clusters](https://vue-solana-docs.vercel.app/es/concepts/clusters): Nombres de clusters de Solana, endpoints RPC e instrucciones para faucet.
 - [클러스터](https://vue-solana-docs.vercel.app/ko/concepts/clusters): Solana 클러스터 이름, RPC 엔드포인트, faucet 안내입니다.
 - [集群](https://vue-solana-docs.vercel.app/zh/concepts/clusters): Solana 集群名称、RPC 端点和水龙头使用说明。
-- [Migración a Kit](https://vue-solana-docs.vercel.app/es/guides/kit-migration): Cómo migrar una app de Vue o Nuxt de la API legacy de web3-compat a @solana/kit. v2.0.0 eliminó web3-compat; v3.0.0 publica solo ESM.
-- [Kit Migration](https://vue-solana-docs.vercel.app/guides/kit-migration): How to move a Vue or Nuxt app from the legacy web3-compat API to @solana/kit. v2.0.0 removed web3-compat; v3.0.0 publishes ESM only.
-- [Kit 마이그레이션](https://vue-solana-docs.vercel.app/ko/guides/kit-migration): Vue 또는 Nuxt 앱을 레거시 web3-compat API에서 @solana/kit으로 옮기는 방법. v2.0.0에서 web3-compat이 제거되었고, v3.0.0부터 ESM만 배포합니다.
-- [Kit 迁移](https://vue-solana-docs.vercel.app/zh/guides/kit-migration): 如何将 Vue 或 Nuxt 应用从旧版 web3-compat API 迁移到 @solana/kit。v2.0.0 移除了 web3-compat，v3.0.0 仅发布 ESM。
 - [RPC Y Clusters](https://vue-solana-docs.vercel.app/es/guides/rpc-and-clusters): Configura clusters de Solana, endpoints RPC, endpoints WebSocket y helpers de cliente.
 - [RPC and Clusters](https://vue-solana-docs.vercel.app/guides/rpc-and-clusters): Configure Solana clusters, RPC endpoints, WebSocket endpoints, and client helpers.
 - [RPC와 클러스터](https://vue-solana-docs.vercel.app/ko/guides/rpc-and-clusters): Solana 클러스터, RPC 엔드포인트, WebSocket 엔드포인트, client helper를 설정합니다.
@@ -94,6 +90,10 @@ How an agent should use this site:
 - [Errors](https://vue-solana-docs.vercel.app/guides/errors): Handle normalized Solana errors from core helpers and Vue/Nuxt composables.
 - [오류](https://vue-solana-docs.vercel.app/ko/guides/errors): core helper와 Vue/Nuxt 컴포저블에서 정규화된 Solana 오류를 처리합니다.
 - [错误](https://vue-solana-docs.vercel.app/zh/guides/errors): 处理来自核心辅助函数和 Vue/Nuxt 组合式函数的标准化 Solana 错误。
+- [Guía de Migración](https://vue-solana-docs.vercel.app/es/guides/migration): Cómo migrar entre versiones de Vue Solana. Cubre la actualización de v2 a v3 (ESM, espejo completo de Kit) y la migración de v1.x a v2 (API basada en Kit).
+- [Migration Guide](https://vue-solana-docs.vercel.app/guides/migration): How to migrate between Vue Solana versions. Covers upgrading from v2 to v3 and migrating from v1.x to v2.
+- [마이그레이션 가이드](https://vue-solana-docs.vercel.app/ko/guides/migration): Vue Solana 버전 간 마이그레이션 가이드입니다. v2에서 v3으로 업그레이드와 v1.x에서 v2로 마이그레이션을 다룹니다.
+- [迁移指南](https://vue-solana-docs.vercel.app/zh/guides/migration): Vue Solana 版本迁移指南。涵盖 v2 到 v3 的升级以及 v1.x 到 v2 的迁移。
 - [Pruebas E2E](https://vue-solana-docs.vercel.app/es/guides/e2e-testing): Ejecuta la suite e2e de Playwright y simula RPC de Solana, suscripciones RPC y wallets para pruebas de UI.
 - [@vue-solana/core](https://vue-solana-docs.vercel.app/es/packages/core): Configuración Solana independiente del framework, RPC, tipos de wallet y helpers de transacción.
 - [E2E Testing](https://vue-solana-docs.vercel.app/guides/e2e-testing): Run the Playwright e2e suite and mock Solana RPC, RPC subscriptions, and wallets for UI tests.

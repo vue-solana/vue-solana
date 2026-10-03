@@ -67,6 +67,7 @@ Direct subpaths:
 - `@vue-solana/core/ios-wallet`
 - `@vue-solana/core/kit`
 - `@vue-solana/core/mobile-wallet`
+- `@vue-solana/core/mobile-wallet-support`
 - `@vue-solana/core/rpc`
 - `@vue-solana/core/timeout`
 - `@vue-solana/core/transaction`
@@ -206,7 +207,7 @@ type SolanaChain = "solana:mainnet" | "solana:testnet" | "solana:devnet" | "sola
 - `handleSolanaIosWalletCallback(options?)`: validates and decrypts iOS wallet redirect callbacks.
 - `isSolanaIosBrowserWalletSupported()`: returns whether the current runtime should expose iOS browser wallet links.
 
-These helpers are SSR-safe. Android registration returns without registering when `window` is unavailable or when the browser is not an Android Chrome mobile web/PWA runtime. iOS wallet discovery returns an empty list when the browser is not an iOS browser runtime.
+These helpers are SSR-safe. Android registration returns without registering when `window` is unavailable, when the page is not in a secure context, or when the browser is not Android. iOS wallet discovery returns an empty list when the browser is not an iOS browser runtime.
 
 ## Helpers
 

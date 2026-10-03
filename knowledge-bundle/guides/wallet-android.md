@@ -47,7 +47,7 @@ createApp(App).use(
 
 ## Platform Notes
 
-- Supported: Android Chrome and Android Chrome PWAs.
+- Supported: any Android browser served over a secure context (HTTPS), including Chrome and Firefox.
 - Not supported by MWA web: iOS Safari, iOS Chrome, Firefox Android, Brave Android, Opera Android, and desktop browsers.
 - The registration helper is SSR-safe and returns without registering when `window` is unavailable.
 - The mobile wallet package handles installed-wallet fallback UI through its default wallet-not-found handler.

@@ -548,7 +548,7 @@ createApp(App).use(
 
 Support notes:
 
-- Android Chrome and Chrome PWAs are the supported browser targets for local Mobile Wallet Adapter.
+- Any Android browser served over a secure context (HTTPS) is a supported target for local Mobile Wallet Adapter.
 - iOS browsers do not support Mobile Wallet Adapter. iOS wallet support uses wallet-specific universal links instead.
 - Registration is SSR-safe. Nuxt installs the runtime plugin on the client, and core mobile wallet registration returns `false` when `window` is unavailable.
 - `@solana-mobile/wallet-standard-mobile` handles installed-wallet fallback UI through its default wallet-not-found handler.

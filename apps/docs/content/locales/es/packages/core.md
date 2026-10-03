@@ -66,6 +66,7 @@ Subpaths directos:
 - `@vue-solana/core/ios-wallet`
 - `@vue-solana/core/kit`
 - `@vue-solana/core/mobile-wallet`
+- `@vue-solana/core/mobile-wallet-support`
 - `@vue-solana/core/rpc`
 - `@vue-solana/core/timeout`
 - `@vue-solana/core/transaction`
@@ -205,7 +206,7 @@ type SolanaChain = "solana:mainnet" | "solana:testnet" | "solana:devnet" | "sola
 - `handleSolanaIosWalletCallback(options?)`: valida y descifra callbacks de redirección de wallet iOS.
 - `isSolanaIosBrowserWalletSupported()`: devuelve si el runtime actual debería exponer enlaces de wallet de navegador iOS.
 
-Estos helpers son seguros para SSR. El registro de Android devuelve sin registrar cuando `window` no está disponible o cuando el navegador no es un runtime web móvil/PWA de Android Chrome. El descubrimiento de wallets iOS devuelve una lista vacía cuando el navegador no es un runtime de navegador iOS.
+Estos helpers son seguros para SSR. El registro de Android devuelve sin registrar cuando `window` no está disponible, cuando la página no está en un contexto seguro o cuando el navegador no es Android. El descubrimiento de wallets iOS devuelve una lista vacía cuando el navegador no es un runtime de navegador iOS.
 
 ## Helpers
 

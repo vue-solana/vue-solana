@@ -226,6 +226,12 @@ vi.mock("@vue-solana/core/wallet-standard", async (importOriginal) => {
   };
 });
 
+// The plugin gates the mobile-wallet dynamic import on this check, so it has to
+// report support for the registration tests below to reach the mocked module.
+vi.mock("@vue-solana/core/mobile-wallet-support", () => ({
+  isSolanaMobileWalletSupported: () => true,
+}));
+
 vi.mock("@vue-solana/core/mobile-wallet", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@vue-solana/core/mobile-wallet")>();
 

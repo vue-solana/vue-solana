@@ -191,7 +191,7 @@ iOS wallet link는 iOS browser에서 기본 활성화됩니다. App identity, re
 Android 메모:
 
 - Android MWA 등록은 client-only이며 SSR 중에는 no-op입니다.
-- Mobile wallet adapter bridge를 지원하는 Android Chrome 또는 Chrome PWA runtime에서만 동작할 것으로 예상됩니다.
+- Mobile wallet adapter bridge를 지원하는 secure context(HTTPS)로 제공되는 Android browser에서만 동작할 것으로 예상됩니다.
 - Wallet handoff는 browser를 떠났다가 앱으로 돌아올 수 있습니다. Redirect 후 제출된 signature를 사용자가 볼 수 있도록 UI state를 보존하세요.
 - Vue Solana는 MWA wallet을 extension wallet과 같은 `SolanaWallet` interface로 adapt합니다.
 - Mobile wallet package는 기본 wallet-not-found handler를 통해 installed-wallet fallback UI를 처리합니다.

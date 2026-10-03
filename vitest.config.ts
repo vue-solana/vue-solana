@@ -24,6 +24,9 @@ export default defineConfig({
       "@vue-solana/core/ios-wallet": fileURLToPath(
         new URL("./packages/core/src/ios-wallet.ts", import.meta.url),
       ),
+      "@vue-solana/core/mobile-wallet-support": fileURLToPath(
+        new URL("./packages/core/src/mobile-wallet-support.ts", import.meta.url),
+      ),
       "@vue-solana/core/mobile-wallet": fileURLToPath(
         new URL("./packages/core/src/mobile-wallet.ts", import.meta.url),
       ),

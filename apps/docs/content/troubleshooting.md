@@ -74,7 +74,7 @@ Install a wallet such as Phantom, Solflare, or Backpack, then call `refreshWalle
 
 ## Mobile Wallet Adapter Is Not Detected
 
-Android Mobile Wallet Adapter web registration works only on supported Android Chrome mobile web and Chrome PWA runtimes.
+Android Mobile Wallet Adapter web registration works only on Android browsers served over a secure context (HTTPS).
 
 Common causes:
 

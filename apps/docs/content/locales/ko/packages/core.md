@@ -66,6 +66,7 @@ Direct subpath:
 - `@vue-solana/core/ios-wallet`
 - `@vue-solana/core/kit`
 - `@vue-solana/core/mobile-wallet`
+- `@vue-solana/core/mobile-wallet-support`
 - `@vue-solana/core/rpc`
 - `@vue-solana/core/timeout`
 - `@vue-solana/core/transaction`
@@ -205,7 +206,7 @@ type SolanaChain = "solana:mainnet" | "solana:testnet" | "solana:devnet" | "sola
 - `handleSolanaIosWalletCallback(options?)`: iOS wallet redirect callback을 validate 및 decrypt합니다.
 - `isSolanaIosBrowserWalletSupported()`: 현재 runtime에서 iOS browser wallet link를 노출해야 하는지 반환합니다.
 
-이 helper들은 SSR-safe입니다. Android registration은 `window`가 없거나 browser가 Android Chrome mobile web/PWA runtime이 아니면 등록하지 않고 반환합니다. iOS wallet discovery는 browser가 iOS browser runtime이 아니면 빈 list를 반환합니다.
+이 helper들은 SSR-safe입니다. Android registration은 `window`가 없거나 page가 secure context가 아니거나 browser가 Android가 아니면 등록하지 않고 반환합니다. iOS wallet discovery는 browser가 iOS browser runtime이 아니면 빈 list를 반환합니다.
 
 ## Helper
 

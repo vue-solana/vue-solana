@@ -6,7 +6,9 @@ export type SolanaErrorCode =
   | "INVALID_ADDRESS"
   | "TRANSACTION_TIMEOUT"
   | "RPC_FAILURE"
-  | "STORAGE_FAILURE";
+  | "STORAGE_FAILURE"
+  | "INVALID_INPUT"
+  | "DECRYPTION_FAILED";
 
 export interface SolanaErrorOptions {
   cause?: unknown;

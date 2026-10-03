@@ -1,5 +1,6 @@
 import { normalizeSolanaError } from "@vue-solana/core/errors";
 import type { GetSolanaIosWalletsOptions } from "@vue-solana/core/ios-wallet";
+import { isSolanaMobileWalletSupported } from "@vue-solana/core/mobile-wallet-support";
 import type { RegisterSolanaMobileWalletOptions } from "@vue-solana/core/mobile-wallet";
 import { createSolanaContext } from "@vue-solana/core/rpc";
 import { withTimeout } from "@vue-solana/core/timeout";
@@ -137,7 +138,10 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}): VueSol
           }
         }
 
-        if (options.mobileWallet !== false) {
+        // Gate on platform support before the dynamic import: the module behind it
+        // is ~98 KB (Mobile Wallet Adapter + qrcode) that only ever runs on Android
+        // Chrome, and `registerSolanaMobileWallet` would throw it away anyway.
+        if (options.mobileWallet !== false && isSolanaMobileWalletSupported()) {
           registerMobileWallets();
         }
 
