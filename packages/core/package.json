@@ -1,6 +1,6 @@
 {
   "name": "@vue-solana/core",
-  "version": "2.6.1",
+  "version": "3.0.0",
   "description": "Framework-agnostic primitives for Vue Solana libraries.",
   "license": "MIT",
   "keywords": [
