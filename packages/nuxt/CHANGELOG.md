@@ -1,5 +1,13 @@
 # @vue-solana/nuxt
 
+## 3.0.1
+
+### Patch Changes
+
+- 58951c0: Harden iOS wallet crypto (structured SolanaError codes, input validation, safer decoding), add mobile wallet support detection helper, and minor build/doc updates for mobile wallet support.
+- Updated dependencies [58951c0]
+  - @vue-solana/vue@3.0.1
+
 ## 3.0.0
 
 ### Major Changes
