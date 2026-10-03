@@ -2,7 +2,7 @@
 title: RPC와 클러스터
 description: Solana 클러스터, RPC 엔드포인트, WebSocket 엔드포인트, client helper를 설정합니다.
 ogSection: 가이드
-surroundOrder: 8
+surroundOrder: 7
 ---
 
 Vue Solana는 `@vue-solana/core`, `@vue-solana/vue`, `@vue-solana/nuxt` 전반에서 클러스터와 엔드포인트 설정을 공유합니다.

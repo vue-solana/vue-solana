@@ -88,7 +88,7 @@ After v2 mapping:
 
    Framework-agnostic code uses `createSolanaClient({ cluster: "devnet" })` from `@vue-solana/core/kit`. No shim or network setup needed. `useWallet().publicKey` is `Address | null`.
 
-   Message builders are **not** re-exported — add `@solana/kit` to the consumer's own `package.json` (pnpm does not hoist the transitive copy from `@vue-solana/vue` → `@vue-solana/core`). Program instructions come from their own plugins, e.g. `@solana-program/system`.
+   Message builders come from the same subpath: `@vue-solana/vue/kit`, `@vue-solana/nuxt/kit`, and `@vue-solana/core/kit` each re-export all of `@solana/kit`, so nothing here needs `@solana/kit` in the consumer's own `package.json`. Program instructions come from their own plugins, e.g. `@solana-program/system`.
 
 3. Remove `@vue-solana/vue/web3` and `@vue-solana/core/web3` imports, `useConnection()` usage, the `@solana/web3-compat` dependency, local `.d.ts` shims, and `buffer-polyfill` if it was only needed for legacy web3-compat transaction paths.
 

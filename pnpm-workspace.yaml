@@ -7,13 +7,17 @@ onlyBuiltDependencies:
   - vue-demi
 # `@solana-mobile/wallet-standard-mobile` pulls
 # `@solana-mobile/mobile-wallet-adapter-protocol`, which declares
-# `@solana/kit: ^6.0.0`. Without this the workspace installs kit 8.3.0 and
-# 6.9.0 side by side, duplicating every `@solana/*` subpackage (69 KB of
+# `@solana/kit: ^6.0.0`. Without this the workspace installs the current kit
+# and 6.9.0 side by side, duplicating every `@solana/*` subpackage (69 KB of
 # error tables alone) in the root-barrel case. The MWA protocol only imports
 # codec helpers from `@solana/kit` — getBase58/Base64/Utf8 Decoder+Encoder —
-# all present and unchanged in 8.3.0.
+# all present and unchanged in 8.x.
+#
+# Keep this equal to the `@solana/kit` range in `packages/core/package.json`.
+# Two copies of kit means two `SolanaError` classes, so
+# `isSolanaError()` from one copy rejects an error thrown by the other.
 #
 # This is a repo-install setting only: it is not published and does not alter
 # the dependency ranges consumers resolve.
 overrides:
-  "@solana/kit": ^8.3.0
+  "@solana/kit": ^8.4.0

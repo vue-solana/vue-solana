@@ -2,7 +2,7 @@
 title: "消息签名"
 description: 签署认证或所有权消息，而不创建链上交易。
 ogSection: 指南
-surroundOrder: 12
+surroundOrder: 11
 ---
 
 消息签名用于证明钱包对一段链下消息的控制权。它不会授权链上状态变更，也不是交易签名。

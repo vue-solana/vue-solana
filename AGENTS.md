@@ -30,7 +30,7 @@ Implemented files:
 
 - `src/types.ts`: shared `SolanaConfig`, `SolanaContext`, `SolanaWallet`, and transaction types.
 - `src/clusters.ts`: cluster names and endpoint resolution (`mainnet` with a `mainnet-beta` alias).
-- `src/kit.ts`: `createSolanaClient()` — the official Kit stack (`solanaRpc`, `rpcAirdrop`) plus `payer` / `payerSecretKey` resolution, and the curated list of Kit re-exports.
+- `src/kit.ts`: `createSolanaClient()` — the official Kit stack (`solanaRpc`, `rpcAirdrop`) plus `payer` / `payerSecretKey` resolution. The `kit` subpath is a full `export * from "@solana/kit"` mirror (values + types); the root barrel resolves the only clashing names (`SolanaError`, `SolanaErrorCode`, `isSolanaError`, `TransactionStatus`) to this package's own.
 - `src/rpc.ts`: `createSolanaContext()`.
 - `src/wallet.ts`: wallet connection assertions.
 - `src/transaction.ts`: `signAndSendTransaction()` and `confirmTransactionSignature()` helpers.
@@ -51,7 +51,7 @@ Implemented files:
 
 - `src/plugin.ts`: `createSolanaPlugin()` and `VueSolana` alias.
 - `src/injection.ts`: Vue injection key and context type.
-- `src/kit.ts`: re-export of the core Kit helpers.
+- `src/kit.ts`: re-exports all of `@solana/kit` via `export *` (with root-barrel clashing names resolved in favour of core).
 - `src/composables/useSolana.ts`: access injected Solana context.
 - `src/composables/useSolanaClient.ts`: the active Kit client and its `rpc` surface.
 - `src/composables/useRpc.ts`: expose cluster, endpoint, and client.
@@ -94,7 +94,7 @@ Implemented files:
 - `src/module.ts`: Nuxt module with `solana` config key. It deliberately omits `wallet`, `payer`, and `payerSecretKey` from `ModuleOptions` and strips them from public runtime config. `solana.clientPlugin: false` skips the module's runtime plugin so the app can install `createSolanaPlugin` itself (for example to attach a client-only `payer`); installing both would create two contexts and two wallet subscriptions.
 - `src/imports.ts`: maps every composable to its `useSolana*` auto-import alias.
 - `src/runtime/plugin.ts`: installs the Vue Solana plugin using public runtime config.
-- `src/runtime/kit.ts`: re-export of the core Kit helpers.
+- `src/runtime/kit.ts`: re-export of the core Kit helpers (full `@solana/kit` mirror via core).
 - `src/runtime/types.ts`: augments Nuxt public runtime config.
 
 Auto-imported Nuxt composables (source of truth: `packages/nuxt/src/imports.ts`):
@@ -121,7 +121,11 @@ The code switched from `@solana/web3.js` to `@solana/web3-compat` in v1, then to
 
 Current package dependency:
 
-- `@solana/kit@^8.3.0` (with `@solana/kit-plugin-rpc` in `packages/core`)
+- `@solana/kit@^8.4.0` (with `@solana/kit-plugin-rpc` in `packages/core`). The `pnpm-workspace.yaml` `overrides` entry must always equal this range; two Kit copies mean two `SolanaError` classes, so `isSolanaError()` from one rejects errors thrown by the other.
+
+Kit surface rule: the `kit` subpaths of all three packages are a full `export * from "@solana/kit"` mirror, not a curated list. Consumers must never have to add `@solana/kit` to their own `package.json` (pnpm's strict `node_modules` does not even resolve it from `packages/vue`). The only names resolved by hand are the four listed above, and they are resolved in the root barrels only — never inside the `kit` subpaths, which must stay a faithful mirror.
+
+v3 module format: the packages publish ESM only (`emitCJS` and every `require` export condition are gone, and there is no top-level `main`). A CommonJS `require()` of the package or any subpath fails. This is documented as a breaking change in `.changeset/release-v-3.md` and as a troubleshooting entry in `apps/docs/content/troubleshooting.md`; keep those in sync if the format ever changes again. The `SMOKE_TEST` matrix in `scripts/smoke-standalone-installs.mjs` is the gate that catches a broken `exports` map.
 
 Client transaction stack:
 
@@ -198,7 +202,7 @@ The Playwright e2e suite in `e2e/` covers the example apps. `e2e/helpers.ts` moc
 
 The locale docs in `apps/docs/content/locales/{es,ko,zh}/` mirror the English docs tree. `packages/core/src/locale-docs.test.ts` (runs with `pnpm test`, so it gates CI) fails when a locale file is missing, has no English counterpart anymore, or its heading structure (levels and order, ignoring text) drifts from the English source.
 
-When you add, remove, or restructure sections in an English doc, translate the same change into all three locale files in the same change set. Spanish files follow their existing no-accent style; Korean freely mixes English technical terms; do not translate code, identifiers, or API names. If a structural difference is genuinely intentional, add the file to `STRUCTURE_EXEMPT_FILES` in the test with a comment explaining why.
+When you add, remove, or restructure sections in an English doc, translate the same change into all three locale files in the same change set. Spanish files use **proper accented Spanish** (`página`, `configuración`, `está`) — earlier notes in this file claimed a "no-accent style", which was wrong: only 7 of 24 Spanish files were accent-free, and the whole set was normalized to accented Spanish. Korean freely mixes English technical terms; do not translate code, identifiers, or API names. Accents belong in user-visible Spanish strings inside code blocks too (e.g. `"Iniciar sesión en…"`). If a structural difference is genuinely intentional, add the file to `STRUCTURE_EXEMPT_FILES` in the test with a comment explaining why.
 
 ### Workspace App Dependency Policy
 
@@ -226,6 +230,27 @@ Repeat per release rather than filing a one-time task. Two things to check by re
 
 - **`sideEffects` changes** deserve the step-4 browser load. Both Buffer injection points in `apps/docs` (`nuxt.config.ts` virtual entry and `app/plugins/buffer-polyfill.client.ts`) bind a named import and call it, so they survive tree-shaking — but a bare side-effect import would not, and only a real page load catches that. Confirm `globalThis.Buffer` is defined in the browser rather than just grepping the bundle for a `Buffer??=` assignment.
 - **New or removed `exports` subpaths** need a `vitest.config.ts` alias in the root config if `apps/docs` imports them. Vite alias keys are prefix matches, so a subpath alias must be declared _before_ its bare parent. If app code starts needing a type from `@vue-solana/core`, that is a release-policy problem, not an alias problem — see `docs-import-policy.test.ts`.
+
+### Dependency Policy (Kit-first)
+
+**Forbidden packages:** Do NOT add the following granular packages. They duplicate concerns already provided by `@solana/kit` and create type/instance duplication (notably `SolanaError`, subscription signals, transaction types):
+
+- `@solana/promises`
+- `@solana/signers`
+- `@solana/subscribable`
+- `@solana/transaction-messages`
+- `@solana/transactions`
+- `@solana/web3.js` (legacy; removed)
+- `@solana/web3-compat` (removed)
+
+**Wallet Standard:** Use `@wallet-standard/app`, `@wallet-standard/base`, `@wallet-standard/features`. Do NOT add React-specific `@wallet-standard/react`, `@wallet-standard/ui`, or `@wallet-standard/ui-registry`.
+
+**Version discipline:**
+
+- `@solana/kit` and `@solana/kit-plugin-rpc` must stay within compatible ranges; `pnpm-workspace.yaml` `overrides` for Kit must always equal the range used.
+- Keep `@solana/wallet-standard-features` aligned with what Kit and `@wallet-standard/*` expect.
+- Never introduce a second copy of `@solana/kit` (peer/hoisting) — this is the highest-value guard.
+- Periodically audit whether `bs58`, `buffer`, and `tweetnacl` remain necessary as direct deps after refactors (tweetnacl is currently required for iOS ECDH in `packages/core/src/ios-wallet/crypto.ts`).
 
 Not needed on a version bump alone: `llms.txt` / `llms-full.txt` (both are generated by the `build` and `generate` scripts via `pnpm llms`, and they are tracked, so commit the regenerated files only when the English docs content actually changed), `skills-lock.json` (an orphaned agent-tooling lockfile; nothing in the repo reads it), and `pnpm test:e2e` (Playwright only serves `examples/vue-vite` and `examples/nuxt`).
 

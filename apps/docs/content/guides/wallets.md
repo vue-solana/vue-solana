@@ -2,7 +2,7 @@
 title: "Wallets"
 description: Discover wallets, select an active wallet, connect, disconnect, and check capabilities.
 ogSection: Guides
-surroundOrder: 9
+surroundOrder: 8
 ---
 
 Vue Solana exposes browser extension wallets, Android Mobile Wallet Adapter wallets, and supported iOS browser wallet links through one wallet flow.
@@ -14,7 +14,7 @@ Current wallet support is built on these libraries:
 - Browser extension wallets: `@wallet-standard/app`, `@wallet-standard/base`, `@wallet-standard/features`, and `@solana/wallet-standard-features`.
 - Android mobile native wallets: `@solana-mobile/wallet-standard-mobile`, which registers Solana Mobile Wallet Adapter as a Wallet Standard wallet on supported Android Chrome mobile web and PWA runtimes.
 - iOS browser wallets: wallet-specific universal links for Phantom, Solflare, and Backpack.
-- Solana primitives and transaction helpers: `@solana/kit` types and message builders, re-exported in part through `@vue-solana/vue/kit`, `@vue-solana/nuxt/kit`, and `@vue-solana/core/kit`.
+- Solana primitives and transaction helpers: `@solana/kit` types and message builders, re-exported in full through `@vue-solana/vue/kit`, `@vue-solana/nuxt/kit`, and `@vue-solana/core/kit`.
 
 ## Wallet Sources
 

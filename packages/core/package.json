@@ -22,89 +22,72 @@
   },
   "type": "module",
   "sideEffects": false,
-  "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.cjs"
+      "import": "./dist/index.mjs"
     },
     "./address": {
       "types": "./dist/address.d.ts",
-      "import": "./dist/address.mjs",
-      "require": "./dist/address.cjs"
+      "import": "./dist/address.mjs"
     },
     "./action": {
       "types": "./dist/action.d.ts",
-      "import": "./dist/action.mjs",
-      "require": "./dist/action.cjs"
+      "import": "./dist/action.mjs"
     },
     "./buffer-polyfill": {
       "types": "./dist/buffer-polyfill.d.ts",
-      "import": "./dist/buffer-polyfill.mjs",
-      "require": "./dist/buffer-polyfill.cjs"
+      "import": "./dist/buffer-polyfill.mjs"
     },
     "./types": {
       "types": "./dist/types.d.ts",
-      "import": "./dist/types.mjs",
-      "require": "./dist/types.cjs"
+      "import": "./dist/types.mjs"
     },
     "./clusters": {
       "types": "./dist/clusters.d.ts",
-      "import": "./dist/clusters.mjs",
-      "require": "./dist/clusters.cjs"
+      "import": "./dist/clusters.mjs"
     },
     "./errors": {
       "types": "./dist/errors.d.ts",
-      "import": "./dist/errors.mjs",
-      "require": "./dist/errors.cjs"
+      "import": "./dist/errors.mjs"
     },
     "./ios-wallet": {
       "types": "./dist/ios-wallet.d.ts",
-      "import": "./dist/ios-wallet.mjs",
-      "require": "./dist/ios-wallet.cjs"
+      "import": "./dist/ios-wallet.mjs"
     },
     "./kit": {
       "types": "./dist/kit.d.ts",
-      "import": "./dist/kit.mjs",
-      "require": "./dist/kit.cjs"
+      "import": "./dist/kit.mjs"
     },
     "./mobile-wallet": {
       "types": "./dist/mobile-wallet.d.ts",
-      "import": "./dist/mobile-wallet.mjs",
-      "require": "./dist/mobile-wallet.cjs"
+      "import": "./dist/mobile-wallet.mjs"
     },
     "./rpc": {
       "types": "./dist/rpc.d.ts",
-      "import": "./dist/rpc.mjs",
-      "require": "./dist/rpc.cjs"
+      "import": "./dist/rpc.mjs"
     },
     "./timeout": {
       "types": "./dist/timeout.d.ts",
-      "import": "./dist/timeout.mjs",
-      "require": "./dist/timeout.cjs"
+      "import": "./dist/timeout.mjs"
     },
     "./transaction": {
       "types": "./dist/transaction.d.ts",
-      "import": "./dist/transaction.mjs",
-      "require": "./dist/transaction.cjs"
+      "import": "./dist/transaction.mjs"
     },
     "./wallet": {
       "types": "./dist/wallet.d.ts",
-      "import": "./dist/wallet.mjs",
-      "require": "./dist/wallet.cjs"
+      "import": "./dist/wallet.mjs"
     },
     "./wallet-standard": {
       "types": "./dist/wallet-standard.d.ts",
-      "import": "./dist/wallet-standard.mjs",
-      "require": "./dist/wallet-standard.cjs"
+      "import": "./dist/wallet-standard.mjs"
     },
     "./token-accounts": {
       "types": "./dist/token-accounts.d.ts",
-      "import": "./dist/token-accounts.mjs",
-      "require": "./dist/token-accounts.cjs"
+      "import": "./dist/token-accounts.mjs"
     }
   },
   "files": [
@@ -122,7 +105,7 @@
   },
   "dependencies": {
     "@solana-mobile/wallet-standard-mobile": "^0.5.3",
-    "@solana/kit": "^8.3.0",
+    "@solana/kit": "^8.4.0",
     "@solana/kit-plugin-rpc": "^0.19.0",
     "@solana/wallet-standard-features": "^1.3.0",
     "@wallet-standard/app": "^1.1.1",

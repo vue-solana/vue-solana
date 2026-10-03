@@ -15,7 +15,9 @@ npx nuxt module add @vue-solana/nuxt
 
 这会安装包，并把 `@vue-solana/nuxt` 添加到 `nuxt.config.ts` 的 `modules` 数组中。
 
-创建或序列化交易的浏览器应用可以从 `@vue-solana/nuxt/buffer-polyfill` 初始化 Buffer polyfill。使用 `@vue-solana/nuxt/kit` 获取 Kit API（`createSolanaClient`、`address`、`lamports` 和类型）以及自动导入的 `useSolanaClient()`。
+该包仅发布 ESM。Nuxt 本身已经打包为 ESM，不需要改动；在 CommonJS 中 `require("@vue-solana/nuxt")` 会以 `No "exports" main defined` 失败。请把导入该包的模块改为 ESM，或者继续使用仍提供 `.cjs` 构建的 `@vue-solana/nuxt@^2`。参见[从 v2 升级到 v3](/zh/guides/migration#从-v2-升级到-v3)。
+
+创建或序列化交易的浏览器应用可以从 `@vue-solana/nuxt/buffer-polyfill` 初始化 Buffer polyfill。使用 `@vue-solana/nuxt/kit` 获取 Kit API — 它会重新导出全部 `@solana/kit` — 以及自动导入的 `useSolanaClient()`。
 
 ## 模块设置
 
@@ -288,7 +290,16 @@ const tokenBalanceErrorMessage = computed(() => {
 </template>
 ```
 
-`useSolanaTokenBalance()` 在关联 token 账户不存在时返回 null balance 和 decimals，不会将其视为错误。
+`useSolanaTokenBalance()` 在关联 token 账户不存在时返回 null balance 和 decimals，不会将其视为错误。它的 `balance` 和 `decimals` 是由一次读取派生出的只读 computed ref——请读取，不要赋值。
+
+## 读取组合式函数的语义
+
+`useSolanaBalance()`、`useSolanaAccountInfo()`、`useSolanaProgramAccounts()`、`useSolanaTokenAccounts()`、`useSolanaTokenBalance()` 与 Vue 组合式函数共用同一套状态机：
+
+- **失败时 `refresh()` 会 reject 而不是 resolve**，输入为空时以 `null` resolve。不带 `try`/`catch` 的 `await refresh()` 会抛出。直接接到 `@click` 没问题——Vue 会吞掉 rejection——但手写调用方必须处理。`useSolanaRequest()` 是例外，仍以尝试结果 resolve。
+- **读取失败时，数据会回退为空值。** 最后一次成功的余额不会留在新的 `error` 旁边。请根据 `error` 决定渲染什么。
+
+无法解析的地址会在 `error` 中报告 `INVALID_ADDRESS`，且不会到达 RPC。参见[读取账户](/guides/account-reads#refresh-与错误语义)。
 
 ## 错误处理
 
@@ -396,7 +407,7 @@ const { signature, confirmation, status, loading, error, execute } =
 const canSubmit = computed(() => connected.value && canSignTransaction.value && !loading.value);
 
 async function submitTransaction(transaction: SolanaTransaction) {
-  // Build the transaction message with @solana/kit and serialize it to wire bytes first.
+  // Build the transaction message with @vue-solana/nuxt/kit and serialize it to wire bytes first.
   await execute(transaction, {
     confirm: true,
     confirmation: { commitment: "confirmed", timeoutMs: 120_000 },

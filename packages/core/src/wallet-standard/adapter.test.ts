@@ -473,8 +473,8 @@ describe("Wallet Standard adapter", () => {
     });
   });
 
-  it("forwards no input to sign-in when called without arguments", async () => {
-    const standardWallet = createStandardWallet();
+  it("sends a default domain and address when called without arguments", async () => {
+    const standardWallet = createStandardWallet([account]);
     const signIn = vi.fn().mockResolvedValue([
       {
         account,
@@ -496,12 +496,13 @@ describe("Wallet Standard adapter", () => {
     } satisfies SolanaWalletInfo;
     const wallet = adaptSolanaStandardWallet(walletInfo);
 
+    await wallet.connect();
     await wallet.signIn?.();
 
-    expect(signIn).toHaveBeenCalledWith();
+    expect(signIn).toHaveBeenCalledWith({ domain: location.host, address: account.address });
   });
 
-  it("rejects sign-in when the wallet returns no sign-in result", async () => {
+  it("rejects sign-in without arguments when the wallet is not connected", async () => {
     const standardWallet = createStandardWallet();
     const signIn = vi.fn().mockResolvedValue([]);
     (standardWallet.features as Record<string, unknown>)[SolanaSignIn] = {
@@ -516,6 +517,28 @@ describe("Wallet Standard adapter", () => {
       wallet: standardWallet,
     } satisfies SolanaWalletInfo;
     const wallet = adaptSolanaStandardWallet(walletInfo);
+
+    await expect(wallet.signIn?.()).rejects.toThrow("Solana wallet is not connected");
+    expect(signIn).not.toHaveBeenCalled();
+  });
+
+  it("rejects sign-in when the wallet returns no sign-in result", async () => {
+    const standardWallet = createStandardWallet([account]);
+    const signIn = vi.fn().mockResolvedValue([]);
+    (standardWallet.features as Record<string, unknown>)[SolanaSignIn] = {
+      version: "1.0.0",
+      signIn,
+    };
+    const walletInfo = {
+      name: standardWallet.name,
+      icon: standardWallet.icon,
+      chains: standardWallet.chains,
+      accounts: [],
+      wallet: standardWallet,
+    } satisfies SolanaWalletInfo;
+    const wallet = adaptSolanaStandardWallet(walletInfo);
+
+    await wallet.connect();
 
     await expect(wallet.signIn?.()).rejects.toThrow(
       "Solana wallet did not return a sign-in result",

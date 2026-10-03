@@ -9,7 +9,7 @@ surroundOrder: 2
 
 ## 시작 전 확인
 
-Vue/Nuxt 통합 없이 Solana primitive가 필요하면 `@vue-solana/core`를 직접 사용하세요. 이 패키지는 `@solana/kit`을 기반으로 하며 `@vue-solana/core/kit`에서 `createSolanaClient()`, `Address`/`address()`/`lamports()`, Kit transaction과 RPC type을 다시 export합니다. 프레임워크 통합이 필요하면 `@vue-solana/vue` 또는 `@vue-solana/nuxt`를 사용합니다.
+Vue/Nuxt 통합 없이 Solana primitive가 필요하면 `@vue-solana/core`를 직접 사용하세요. 이 패키지는 `@solana/kit`을 기반으로 하며 `@vue-solana/core/kit`에서 `createSolanaClient()`와 `@solana/kit` 전체를 다시 export합니다. 프레임워크 통합이 필요하면 `@vue-solana/vue` 또는 `@vue-solana/nuxt`를 사용합니다.
 
 지원 클러스터:
 
@@ -53,9 +53,13 @@ npx nuxt module add @vue-solana/nuxt
 
 Nuxt 앱은 `@vue-solana/core`, `@vue-solana/vue`, low-level Solana/Buffer 패키지를 직접 설치하지 않고 `@vue-solana/nuxt/kit`와 `@vue-solana/nuxt/buffer-polyfill`을 사용할 수 있습니다. 자동 import된 `useSolanaClient()`는 주입된 Kit 클라이언트를 반환합니다.
 
+## v3 메모
+
+v3.0.0부터 ESM만 배포합니다. 모든 `@vue-solana/*` 패키지에서 `require` export 조건과 최상위 `main` 필드가 제거됩니다. Nuxt와 Vite 앱은 이미 ESM으로 번들링되므로 변경이 필요 없고, Vue Solana 패키지를 `require()`하는 Node 스크립트만 ESM으로 바꾸면 됩니다. `kit` 서브패스는 `@solana/kit`의 완전한 미러가 되었으므로, v2에서 추가했다면 자신의 `package.json`에서 `@solana/kit`을 제거할 수 있습니다. 자세한 내용은 [v2에서 v3로 업그레이드](/ko/guides/migration#v2에서-v3로-업그레이드)를 참고하세요.
+
 ## v2 메모
 
-v2.0.0에서 레거시 `@solana/web3-compat` 표면이 제거되었습니다. context는 더 이상 `connection`을 갖지 않으며 `@vue-solana/*/web3` subpath가 삭제되었습니다. 모든 컴포저블은 Kit 우선이며 `SolanaWallet.publicKey`는 일반 base58 `Address` 문자열입니다. 이전 v1 문서에서 설명한 `@solana/buffer/` shim은 사라졌습니다. 유지되는 package-owned shim은 Buffer polyfill이 사용하는 브라우저 `buffer/` subpath만 커버합니다. 전체 변경 전/후 비교는 [Kit Migration 가이드](/ko/guides/kit-migration)를 참조하세요.
+v2.0.0에서 레거시 `@solana/web3-compat` 표면이 제거되었습니다. context는 더 이상 `connection`을 갖지 않으며 `@vue-solana/*/web3` subpath가 삭제되었습니다. 모든 컴포저블은 Kit 우선이며 `SolanaWallet.publicKey`는 일반 base58 `Address` 문자열입니다. 이전 v1 문서에서 설명한 `@solana/buffer/` shim은 사라졌습니다. 유지되는 package-owned shim은 Buffer polyfill이 사용하는 브라우저 `buffer/` subpath만 커버합니다. 전체 변경 전/후 비교는 [Kit Migration 가이드](/ko/guides/migration)를 참조하세요.
 
 ## Vue 설정
 
@@ -93,7 +97,7 @@ import { useBalance } from "@vue-solana/vue/useBalance";
 import { useSolanaClient } from "@vue-solana/vue/useSolanaClient";
 ```
 
-`useRpc()`는 해석된 cluster state와 주입된 Kit `client`를 반환하고 `useBalance()`는 `client.rpc`를 통해 읽습니다. `useSolanaClient()`는 동일한 `client`와 그 read-only `rpc`를 직접 반환하며 `@vue-solana/vue/kit`에서 `address()`/`lamports()`도 제공합니다. 전체 변경 전/후 비교는 [Kit Migration 가이드](/ko/guides/kit-migration)를 참조하세요.
+`useRpc()`는 해석된 cluster state와 주입된 Kit `client`를 반환하고 `useBalance()`는 `client.rpc`를 통해 읽습니다. `useSolanaClient()`는 동일한 `client`와 그 read-only `rpc`를 직접 반환하며 `@vue-solana/vue/kit`에서 `address()`/`lamports()`도 제공합니다. 전체 변경 전/후 비교는 [Kit Migration 가이드](/ko/guides/migration)를 참조하세요.
 
 ### Client와 Plugin 수명 주기
 
@@ -416,7 +420,7 @@ client-send demo는 default client에 설치된 official `rpcTransactionPlanSend
 - [클러스터](/ko/concepts/clusters)
 - [지갑](/ko/guides/wallets)
 - [트랜잭션 가이드](/ko/guides/transactions)
-- [Kit Migration](/ko/guides/kit-migration)
+- [Kit Migration](/ko/guides/migration)
 - [문제 해결](/ko/troubleshooting)
 - [Solana Kit 문서](https://www.solanakit.com/) — 공식 Kit 가이드, 레시피, API 레퍼런스
 - [Solana Documentation](https://solana.com/docs)

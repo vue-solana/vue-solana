@@ -2,7 +2,7 @@
 title: "账户读取"
 description: 在 Vue 或 Nuxt 中安全读取余额、账户数据、程序账户和签名状态。
 ogSection: 指南
-surroundOrder: 10
+surroundOrder: 9
 ---
 
 Vue Solana 为常见的 Solana 读取路径提供了组合式函数：余额、账户信息、程序账户和签名状态。
@@ -138,7 +138,39 @@ Nuxt 组合式函数可以在 SSR 期间调用，并会返回惰性状态，直�
 
 当地址、程序 id 或签名为 `null` 时，读取组合式函数会清空状态，并且不会调用 RPC。
 
-无效地址字符串会清除过期数据、设置 `error`，并且不会调用 RPC 方法。根据 `error.value.code` 分支处理面向用户的消息。
+无效地址字符串会清除过期数据、设置 `error`，并且不会调用 RPC 方法。根据 `error.value.code` 分支处理面向用户的消息；无法解析的地址会报告 `INVALID_ADDRESS`。
+
+## refresh 与错误语义
+
+`useBalance`、`useAccountInfo`、`useProgramAccounts`、`useTokenAccounts`、`useTokenBalance` 共用同一套状态机，因此在三个容易出错的情况下行为一致。
+
+**`refresh()` 会 reject，失败时不会 resolve。** 成功时以新值 resolve，输入为空时以 `null` resolve，其余情况则以规范化后的 `SolanaError` reject。直接写 `@click="refresh"` 没问题，因为 Vue 会吞掉这个 rejection，但手写代码必须处理：
+
+```ts
+// 被 reject 的 promise 没有错误状态，所以这样写毫无意义。
+await refresh();
+
+// await 并上报。
+try {
+  await refresh();
+} catch (cause) {
+  console.error(cause);
+}
+```
+
+`useRequest()` 是例外：它的 `refresh()` 以尝试结果 resolve，而不会 reject。
+
+**读取失败时，数据会回退为空值。** 之前加载成功的余额不会留在新的错误旁边，因为和错误并排的陈旧值会被误读成当前数据。请根据 `error` 决定渲染什么：
+
+```vue
+<template>
+  <UAlert v-if="error" color="error" variant="subtle" :title="errorMessage" />
+  <p v-else-if="loading">加载中…</p>
+  <p v-else>Lamports: {{ balance ?? "—" }}</p>
+</template>
+```
+
+**`useTokenBalance` 的结果是只读的。** 它的 `balance` 和 `decimals` 是由一次读取派生出的 computed ref。请读取，不要赋值。
 
 ## RPC 成本检查清单
 

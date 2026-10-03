@@ -35,6 +35,7 @@ export default tseslint.config(
         computed: "readonly",
         defineOgImage: "readonly",
         createError: "readonly",
+        formatError: "readonly",
         queryCollection: "readonly",
         queryCollectionItemSurroundings: "readonly",
         useAsyncData: "readonly",

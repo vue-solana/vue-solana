@@ -136,7 +136,7 @@ test("renders submitted-vs-confirmed transaction state", async ({ page }) => {
   await expect(page.getByTestId("transfer-explorer-link")).toHaveCount(0);
 });
 
-test("renders live request and slot subscription data", async ({ page }, testInfo) => {
+test("renders live request and slot subscription data", async ({ page }) => {
   if (isRealRpcRun()) {
     test.skip(true, "Live panels are deterministic only against the RPC mocks");
   }
@@ -167,8 +167,6 @@ test("renders live request and slot subscription data", async ({ page }, testInf
   await page.getByTestId("tracked-address").fill("11111111111111111111111111111111");
   await expect(page.getByTestId("request-status")).toHaveText("success");
   await expect(page.getByTestId("request-data")).toContainText("1 SOL");
-
-  void testInfo;
 });
 
 test("seeds tracked data from the fetch and updates it from notifications", async ({ page }) => {

@@ -3,32 +3,23 @@ import type {
   TransactionMessage,
   TransactionPlan,
 } from "@vue-solana/core/kit";
-import { normalizeSolanaError, type SolanaError } from "@vue-solana/core/errors";
-import { onScopeDispose, ref, shallowRef } from "vue";
-import { useClientCapability } from "./useClientCapability";
-import { useSolanaClient } from "./useSolanaClient";
+import { useClientAction, type ClientActionConfig } from "./client-action";
 
 export type PlanTransactionStatus = "idle" | "planning" | "planned" | "error";
 
-export interface PlanTransactionConfig {
-  abortSignal?: AbortSignal;
-}
-
-interface PlanningClient {
-  planTransaction: (
-    input: InstructionPlanInput,
-    config?: PlanTransactionConfig,
-  ) => Promise<TransactionMessage>;
-  planTransactions: (
-    input: InstructionPlanInput,
-    config?: PlanTransactionConfig,
-  ) => Promise<TransactionPlan>;
-}
+export type PlanTransactionConfig = ClientActionConfig;
 
 const PLANNING_PROVIDER_HINT =
   "Install a planner plugin, e.g. `createClient().use(rpcTransactionPlanner())` from " +
   "`@solana/kit-plugin-rpc`, and plan with a client that has a `payer` signer — " +
   "Kit reads `client.payer` to set the fee payer.";
+
+const PLAN_STATUSES = {
+  error: "error",
+  idle: "idle",
+  success: "planned",
+  working: "planning",
+} as const satisfies Record<string, PlanTransactionStatus>;
 
 /**
  * Plan a single transaction message from instruction inputs — without
@@ -43,74 +34,18 @@ const PLANNING_PROVIDER_HINT =
  * from a real failure.
  */
 export function usePlanTransaction() {
-  useClientCapability(["planTransaction", "payer"], {
+  const { data: transactionMessage, ...rest } = useClientAction<
+    InstructionPlanInput,
+    TransactionMessage,
+    PlanTransactionStatus
+  >({
+    capability: "planTransaction",
     hookName: "usePlanTransaction",
     providerHint: PLANNING_PROVIDER_HINT,
+    statuses: PLAN_STATUSES,
   });
 
-  const { client } = useSolanaClient();
-  const transactionMessage = shallowRef<TransactionMessage | null>(null);
-  const status = ref<PlanTransactionStatus>("idle");
-  const loading = ref(false);
-  const error = ref<SolanaError | null>(null);
-  let executionId = 0;
-  let abortController: AbortController | undefined;
-
-  onScopeDispose(() => {
-    abortController?.abort();
-    executionId++;
-  });
-
-  async function execute(
-    input: InstructionPlanInput,
-    config?: PlanTransactionConfig,
-  ): Promise<TransactionMessage> {
-    abortController?.abort();
-    const controller = new AbortController();
-    abortController = controller;
-    const currentExecutionId = ++executionId;
-    const planner = client as unknown as PlanningClient;
-
-    status.value = "planning";
-    loading.value = true;
-    error.value = null;
-    transactionMessage.value = null;
-
-    try {
-      const abortSignal = config?.abortSignal
-        ? AbortSignal.any([controller.signal, config.abortSignal])
-        : controller.signal;
-      const message = await planner.planTransaction(input, { abortSignal });
-
-      if (currentExecutionId === executionId) {
-        transactionMessage.value = message;
-        status.value = "planned";
-      }
-
-      return message;
-    } catch (cause) {
-      const normalizedError = normalizeSolanaError(cause, "RPC_FAILURE");
-
-      if (currentExecutionId === executionId) {
-        error.value = normalizedError;
-        status.value = "error";
-      }
-
-      throw normalizedError;
-    } finally {
-      if (currentExecutionId === executionId) {
-        loading.value = false;
-      }
-    }
-  }
-
-  return {
-    transactionMessage,
-    status,
-    loading,
-    error,
-    execute,
-  };
+  return { transactionMessage, ...rest };
 }
 
 /**
@@ -122,72 +57,16 @@ export function usePlanTransaction() {
  * includes a client without a `payer` signer.
  */
 export function usePlanTransactions() {
-  useClientCapability(["planTransactions", "payer"], {
+  const { data: transactionPlan, ...rest } = useClientAction<
+    InstructionPlanInput,
+    TransactionPlan,
+    PlanTransactionStatus
+  >({
+    capability: "planTransactions",
     hookName: "usePlanTransactions",
     providerHint: PLANNING_PROVIDER_HINT,
+    statuses: PLAN_STATUSES,
   });
 
-  const { client } = useSolanaClient();
-  const transactionPlan = shallowRef<TransactionPlan | null>(null);
-  const status = ref<PlanTransactionStatus>("idle");
-  const loading = ref(false);
-  const error = ref<SolanaError | null>(null);
-  let executionId = 0;
-  let abortController: AbortController | undefined;
-
-  onScopeDispose(() => {
-    abortController?.abort();
-    executionId++;
-  });
-
-  async function execute(
-    input: InstructionPlanInput,
-    config?: PlanTransactionConfig,
-  ): Promise<TransactionPlan> {
-    abortController?.abort();
-    const controller = new AbortController();
-    abortController = controller;
-    const currentExecutionId = ++executionId;
-    const planner = client as unknown as PlanningClient;
-
-    status.value = "planning";
-    loading.value = true;
-    error.value = null;
-    transactionPlan.value = null;
-
-    try {
-      const abortSignal = config?.abortSignal
-        ? AbortSignal.any([controller.signal, config.abortSignal])
-        : controller.signal;
-      const plan = await planner.planTransactions(input, { abortSignal });
-
-      if (currentExecutionId === executionId) {
-        transactionPlan.value = plan;
-        status.value = "planned";
-      }
-
-      return plan;
-    } catch (cause) {
-      const normalizedError = normalizeSolanaError(cause, "RPC_FAILURE");
-
-      if (currentExecutionId === executionId) {
-        error.value = normalizedError;
-        status.value = "error";
-      }
-
-      throw normalizedError;
-    } finally {
-      if (currentExecutionId === executionId) {
-        loading.value = false;
-      }
-    }
-  }
-
-  return {
-    transactionPlan,
-    status,
-    loading,
-    error,
-    execute,
-  };
+  return { transactionPlan, ...rest };
 }

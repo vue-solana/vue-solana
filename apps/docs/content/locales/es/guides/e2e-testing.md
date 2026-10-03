@@ -45,7 +45,7 @@ test.beforeEach(async ({ page }) => {
 });
 ```
 
-Métodos manejados: `getLatestBlockhash`, `getBalance`, `getVersion`, `getAccountInfo` y `getHealth`. Los métodos desconocidos devuelven `{ jsonrpc: "2.0", id, result: null }`. El preflight CORS (`OPTIONS`) se responde con `204`.
+Métodos manejados: `getLatestBlockhash`, `getBalance`, `getVersion`, `getAccountInfo`. Los métodos desconocidos devuelven `{ jsonrpc: "2.0", id, result: null }`. El preflight CORS (`OPTIONS`) se responde con `204`.
 
 Cuando añadas una llamada RPC a una app de ejemplo, añade el método a `createRpcResponse()` en `e2e/helpers.ts`. Mantén los valores numéricos como valores seguros para JSON (`rentEpoch` se pasa como string porque el `u64::MAX` real excede el rango de enteros seguros de JavaScript).
 

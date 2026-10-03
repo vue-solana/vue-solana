@@ -4,8 +4,6 @@ export default {
       getStarted: "Comenzar",
       concepts: "Conceptos",
       guides: "Guías",
-      packages: "Paquetes",
-      examples: "Ejemplos",
       demo: "Demo",
       roadmap: "Hoja de ruta",
     },
@@ -20,7 +18,7 @@ export default {
       solanaForVueDevelopers: "Solana para desarrolladores Vue",
       clusters: "Clústeres",
       guides: "Guías",
-      kitMigration: "Migración a Kit",
+      migration: "Guía de Migración",
       rpcAndClusters: "RPC y clústeres",
       wallets: "Wallets",
       accountReads: "Lecturas de cuentas",
@@ -192,10 +190,6 @@ export default {
         unsupported: "La wallet seleccionada no admite firma de mensajes.",
         enterMessage: "Introduce un mensaje para firmar.",
       },
-      status: {
-        ready: "lista",
-        waiting: "esperando",
-      },
     },
     tokenAccounts: {
       title: "Cuentas de tokens SPL",
@@ -233,10 +227,6 @@ export default {
         connectWallet: "Conecta la wallet seleccionada para habilitar transferencias.",
         recipient: "Introduce una dirección destinataria de Solana válida.",
         amount: "Introduce una cantidad mayor que 0 SOL.",
-      },
-      status: {
-        ready: "lista",
-        waiting: "esperando",
       },
     },
     sections: {
@@ -323,11 +313,11 @@ export default {
     airdrop: {
       title: "Airdrop de SOL",
       description:
-        "Solicita un airdrop en devnet hacia el signer payer del cliente mediante la capacidad de airdrop del cliente. Los faucets de devnet limitan la tasa, asi que los errores suelen ser temporales.",
+        "Solicita un airdrop en devnet hacia el signer payer del cliente mediante la capacidad de airdrop del cliente. Los faucets de devnet limitan la tasa, así que los errores suelen ser temporales.",
       request: "Airdrop de 1 SOL",
-      payerHint: "El signer del cliente aun esta cargando.",
+      connectHint: "Esperando a que el signer del cliente esté listo.",
       signature: "Firma: {signature}",
-      noSignature: "Aun no hay airdrop",
+      noSignature: "Aún no hay airdrop",
     },
   },
 };

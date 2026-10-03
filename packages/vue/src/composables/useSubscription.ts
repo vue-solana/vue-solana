@@ -86,7 +86,7 @@ export function useSubscription<TResult>(
   const data = shallowRef<TResult | undefined>(undefined);
   const error = shallowRef<SolanaError | null>(null);
   const status = shallowRef<UseSubscriptionStatus>("loading");
-  const disposables: (() => void)[] = [];
+  let disposeActive: (() => void) | undefined;
   let connectionCount = 0;
   let disposed = false;
   let activeSource: { reactiveStore: () => ReactiveStreamStore<TResult> } | undefined;
@@ -101,9 +101,9 @@ export function useSubscription<TResult>(
       error.value = normalizeSolanaError(state.error, "RPC_FAILURE");
       status.value = "error";
       options.onError?.(state.error);
-    } else if (state.status === "loading") {
+    } else if (state.status === "loading" && data.value === undefined) {
       // Keep showing the stale value while reconnecting.
-      status.value = data.value === undefined ? "loading" : status.value;
+      status.value = "loading";
     } else if (state.status === "idle") {
       data.value = undefined;
       error.value = null;
@@ -125,11 +125,13 @@ export function useSubscription<TResult>(
 
     applyState(store.getState());
 
-    disposables.push(
-      store.subscribe(() => {
-        applyState(store.getState());
-      }),
-    );
+    // `connectCurrent`'s same-source path re-opens without `disconnect()`, so the
+    // previous listener has to go here — otherwise every `reconnect()` orphans
+    // one and the store's event runs `applyState` N times per event.
+    disposeActive?.();
+    disposeActive = store.subscribe(() => {
+      applyState(store.getState());
+    });
 
     if (callerSignal?.aborted) {
       // A pre-aborted caller signal fails the connection immediately.
@@ -147,10 +149,8 @@ export function useSubscription<TResult>(
   }
 
   function disconnect() {
-    disposables.forEach((dispose) => {
-      dispose();
-    });
-    disposables.length = 0;
+    disposeActive?.();
+    disposeActive = undefined;
 
     if (activeStore) {
       activeStore.reset();

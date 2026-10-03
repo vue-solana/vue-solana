@@ -9,7 +9,7 @@ surroundOrder: 2
 
 ## 开始之前
 
-如果你只需要 Solana primitives，而不需要 Vue/Nuxt 集成，请直接使用 `@vue-solana/core`。它基于 `@solana/kit`，并从 `@vue-solana/core/kit` 重新导出 `createSolanaClient()` 以及 `Address`/`address()`/`lamports()` 和 Kit 交易与 RPC 类型。如果你需要框架集成，请使用 `@vue-solana/vue` 或 `@vue-solana/nuxt`。
+如果你只需要 Solana primitives，而不需要 Vue/Nuxt 集成，请直接使用 `@vue-solana/core`。它基于 `@solana/kit`，并从 `@vue-solana/core/kit` 重新导出 `createSolanaClient()` 以及全部的 `@solana/kit`。如果你需要框架集成，请使用 `@vue-solana/vue` 或 `@vue-solana/nuxt`。
 
 支持的集群：
 
@@ -53,9 +53,13 @@ npx nuxt module add @vue-solana/nuxt
 
 Nuxt 应用可以直接使用 `@vue-solana/nuxt/kit` 和 `@vue-solana/nuxt/buffer-polyfill`，无需直接安装 `@vue-solana/core`、`@vue-solana/vue` 或低层 Solana 与 Buffer 包。自动导入的 `useSolanaClient()` 返回注入的 Kit 客户端。
 
+## v3 说明
+
+v3.0.0 仅发布 ESM：所有 `@vue-solana/*` 包都移除了 `require` 导出条件和顶层 `main` 字段。Nuxt 和 Vite 应用本身已经打包为 ESM，不需要改动；只有 `require()` 这些包的 Node 脚本需要改为 ESM。`kit` 子路径也已成为 `@solana/kit` 的完整镜像，所以如果你在 v2 时添加过 `@solana/kit`，现在可以把它从自己的 `package.json` 中移除。详情请参阅[从 v2 升级到 v3](/zh/guides/migration#从-v2-升级到-v3)。
+
 ## v2 说明
 
-v2.0.0 移除了旧版 `@solana/web3-compat` 表面。上下文不再携带 `connection`，`@vue-solana/*/web3` 子路径已被删除。所有 composable 都以 Kit 为先，`SolanaWallet.publicKey` 是普通的 base58 `Address` 字符串。早期 v1 文档描述的 `@solana/buffer/` shim 已不存在；保留的包内 shim 只覆盖 Buffer polyfill 使用的浏览器 `buffer/` 子路径。完整的 before/after 对照请参阅 [Kit 迁移指南](/zh/guides/kit-migration)。
+v2.0.0 移除了旧版 `@solana/web3-compat` 表面。上下文不再携带 `connection`，`@vue-solana/*/web3` 子路径已被删除。所有 composable 都以 Kit 为先，`SolanaWallet.publicKey` 是普通的 base58 `Address` 字符串。早期 v1 文档描述的 `@solana/buffer/` shim 已不存在；保留的包内 shim 只覆盖 Buffer polyfill 使用的浏览器 `buffer/` 子路径。完整的 before/after 对照请参阅 [Kit 迁移指南](/zh/guides/migration)。
 
 ## Vue 设置
 
@@ -93,7 +97,7 @@ import { useBalance } from "@vue-solana/vue/useBalance";
 import { useSolanaClient } from "@vue-solana/vue/useSolanaClient";
 ```
 
-`useRpc()` 返回已解析的集群状态和注入的 Kit `client`；`useBalance()` 通过 `client.rpc` 读取。`useSolanaClient()` 直接返回同一个 `client` 及其只读 `rpc`，外加来自 `@vue-solana/vue/kit` 的 `address()`/`lamports()`。完整的 before/after 对照请参阅 [Kit 迁移指南](/zh/guides/kit-migration)。
+`useRpc()` 返回已解析的集群状态和注入的 Kit `client`；`useBalance()` 通过 `client.rpc` 读取。`useSolanaClient()` 直接返回同一个 `client` 及其只读 `rpc`，外加来自 `@vue-solana/vue/kit` 的 `address()`/`lamports()`。完整的 before/after 对照请参阅 [Kit 迁移指南](/zh/guides/migration)。
 
 ### 客户端与插件生命周期
 
@@ -416,7 +420,7 @@ client-send 演示使用默认 client 安装的官方 `rpcTransactionPlanSending
 - [集群](/zh/concepts/clusters)
 - [钱包](/zh/guides/wallets)
 - [交易指南](/zh/guides/transactions)
-- [Kit 迁移](/zh/guides/kit-migration)
+- [Kit 迁移](/zh/guides/migration)
 - [故障排查](/zh/troubleshooting)
 - [Solana Kit 文档](https://www.solanakit.com/) — 官方 Kit 指南、recipes 和 API reference
 - [Solana Documentation](https://solana.com/docs)

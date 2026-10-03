@@ -13,6 +13,9 @@ export function withTimeout<T>(
 
   return Promise.race([
     promise,
+    // ponytail: the try/catch looks redundant but is not. `createError()` runs
+    // in the `setTimeout` callback, not the executor body, so a throwing
+    // factory would be an uncaught exception rather than a rejection.
     new Promise<never>((_, reject) => {
       timeoutId = setTimeout(() => {
         try {

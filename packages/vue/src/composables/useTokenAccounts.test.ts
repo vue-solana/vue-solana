@@ -99,6 +99,38 @@ describe("useTokenAccounts", () => {
     expect(result?.loading.value).toBe(false);
   });
 
+  // The stale-value fix in `useAddressRead`: a failed re-read empties the list
+  // rather than leaving the previous accounts up next to the error.
+  it("empties a previously loaded list when a re-read fails", async () => {
+    const failure = new Error("RPC failed");
+    mockedGetTokenAccountsByOwner
+      .mockResolvedValueOnce([{ address: "token-account" } as never])
+      .mockRejectedValue(failure);
+    const context = createMockSolanaContext({
+      client: {} as never,
+    });
+    let result: ReturnType<typeof useTokenAccounts> | undefined;
+
+    mountWithSolana(
+      defineComponent({
+        setup() {
+          result = useTokenAccounts("11111111111111111111111111111111");
+          return () => h("div");
+        },
+      }),
+      context,
+    );
+
+    await flushPromises();
+
+    expect(result?.tokenAccounts.value).toHaveLength(1);
+
+    await expect(result?.refresh()).rejects.toThrow("RPC failed");
+
+    expect(result?.tokenAccounts.value).toEqual([]);
+    expect(result?.error.value?.code).toBe("RPC_FAILURE");
+  });
+
   it("keeps the newest accounts when overlapping requests resolve out of order", async () => {
     const firstRequest = deferred<never[]>();
     const secondRequest = deferred<never[]>();

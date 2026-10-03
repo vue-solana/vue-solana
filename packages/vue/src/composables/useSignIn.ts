@@ -1,7 +1,7 @@
 import type { SolanaSignInInput, SolanaSignInResult } from "@vue-solana/core/types";
-import { normalizeSolanaError, type SolanaError } from "@vue-solana/core/errors";
 import { assertWalletCanSignIn, createNoWalletSelectedError } from "@vue-solana/core/wallet";
-import { ref, shallowRef } from "vue";
+import { shallowRef } from "vue";
+import { useExecution } from "./use-execution";
 import { useWallet } from "./useWallet";
 
 export type SignInStatus = "idle" | "signing-in" | "signed-in" | "error";
@@ -17,55 +17,29 @@ export type SignInStatus = "idle" | "signing-in" | "signed-in" | "error";
 export function useSignIn() {
   const { wallet } = useWallet();
   const signInResult = shallowRef<SolanaSignInResult | null>(null);
-  const status = ref<SignInStatus>("idle");
-  const loading = ref(false);
-  const error = ref<SolanaError | null>(null);
-  let executionId = 0;
+  const { status, loading, error, execute } = useExecution<SignInStatus>("signing-in");
 
-  async function signIn(input?: SolanaSignInInput): Promise<SolanaSignInResult> {
-    const currentExecutionId = ++executionId;
-
-    status.value = "signing-in";
-    loading.value = true;
-    error.value = null;
+  function signIn(input?: SolanaSignInInput): Promise<SolanaSignInResult> {
     signInResult.value = null;
 
-    const activeWallet = wallet.value;
+    return execute(
+      async () => {
+        const activeWallet = wallet.value;
 
-    if (!activeWallet) {
-      const normalizedError = createNoWalletSelectedError();
-      error.value = normalizedError;
-      status.value = "error";
-      loading.value = false;
+        if (!activeWallet) {
+          throw createNoWalletSelectedError();
+        }
 
-      throw normalizedError;
-    }
+        assertWalletCanSignIn(activeWallet);
 
-    try {
-      assertWalletCanSignIn(activeWallet);
-
-      const result = await activeWallet.signIn(input);
-
-      if (currentExecutionId === executionId) {
+        return activeWallet.signIn(input);
+      },
+      (result) => {
         signInResult.value = result;
-        status.value = "signed-in";
-      }
 
-      return result;
-    } catch (cause) {
-      const normalizedError = normalizeSolanaError(cause, "RPC_FAILURE");
-
-      if (currentExecutionId === executionId) {
-        error.value = normalizedError;
-        status.value = "error";
-      }
-
-      throw normalizedError;
-    } finally {
-      if (currentExecutionId === executionId) {
-        loading.value = false;
-      }
-    }
+        return "signed-in";
+      },
+    );
   }
 
   return {

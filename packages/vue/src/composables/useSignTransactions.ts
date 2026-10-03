@@ -1,10 +1,10 @@
 import type { SolanaTransaction } from "@vue-solana/core/types";
-import { normalizeSolanaError, type SolanaError } from "@vue-solana/core/errors";
 import {
   assertWalletCanSignTransactions,
   createNoWalletSelectedError,
 } from "@vue-solana/core/wallet";
-import { ref, shallowRef } from "vue";
+import { shallowRef } from "vue";
+import { useExecution } from "./use-execution";
 import { useWallet } from "./useWallet";
 
 export type SignTransactionsStatus = "idle" | "signing" | "signed" | "error";
@@ -21,58 +21,33 @@ export type SignTransactionsStatus = "idle" | "signing" | "signed" | "error";
 export function useSignTransactions() {
   const { wallet } = useWallet();
   const signedTransactions = shallowRef<SolanaTransaction[] | null>(null);
-  const status = ref<SignTransactionsStatus>("idle");
-  const loading = ref(false);
-  const error = ref<SolanaError | null>(null);
-  let executionId = 0;
+  const { status, loading, error, execute } = useExecution<SignTransactionsStatus>("signing");
 
-  async function execute(transactions: SolanaTransaction[]): Promise<SolanaTransaction[]> {
-    const currentExecutionId = ++executionId;
-
-    status.value = "signing";
-    loading.value = true;
-    error.value = null;
+  function sign(transactions: SolanaTransaction[]): Promise<SolanaTransaction[]> {
     signedTransactions.value = null;
 
-    const activeWallet = wallet.value;
+    return execute(
+      async () => {
+        const activeWallet = wallet.value;
 
-    if (!activeWallet) {
-      const normalizedError = createNoWalletSelectedError();
-      error.value = normalizedError;
-      status.value = "error";
-      loading.value = false;
+        if (!activeWallet) {
+          throw createNoWalletSelectedError();
+        }
 
-      throw normalizedError;
-    }
+        assertWalletCanSignTransactions(activeWallet);
 
-    try {
-      assertWalletCanSignTransactions(activeWallet);
+        const sign = activeWallet.signTransactions
+          ? activeWallet.signTransactions.bind(activeWallet)
+          : activeWallet.signAllTransactions!.bind(activeWallet);
 
-      const sign = activeWallet.signTransactions
-        ? activeWallet.signTransactions.bind(activeWallet)
-        : activeWallet.signAllTransactions!.bind(activeWallet);
-      const result = await sign([...transactions]);
-
-      if (currentExecutionId === executionId) {
+        return sign([...transactions]);
+      },
+      (result) => {
         signedTransactions.value = result;
-        status.value = "signed";
-      }
 
-      return result;
-    } catch (cause) {
-      const normalizedError = normalizeSolanaError(cause, "RPC_FAILURE");
-
-      if (currentExecutionId === executionId) {
-        error.value = normalizedError;
-        status.value = "error";
-      }
-
-      throw normalizedError;
-    } finally {
-      if (currentExecutionId === executionId) {
-        loading.value = false;
-      }
-    }
+        return "signed";
+      },
+    );
   }
 
   return {
@@ -80,6 +55,6 @@ export function useSignTransactions() {
     status,
     loading,
     error,
-    execute,
+    execute: sign,
   };
 }

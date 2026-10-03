@@ -22,189 +22,152 @@
   },
   "type": "module",
   "sideEffects": false,
-  "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.cjs"
+      "import": "./dist/index.mjs"
     },
     "./buffer-polyfill": {
       "types": "./dist/buffer-polyfill.d.ts",
-      "import": "./dist/buffer-polyfill.mjs",
-      "require": "./dist/buffer-polyfill.cjs"
+      "import": "./dist/buffer-polyfill.mjs"
     },
     "./useAction": {
       "types": "./dist/useAction.d.ts",
-      "import": "./dist/useAction.mjs",
-      "require": "./dist/useAction.cjs"
+      "import": "./dist/useAction.mjs"
     },
     "./useAirdrop": {
       "types": "./dist/useAirdrop.d.ts",
-      "import": "./dist/useAirdrop.mjs",
-      "require": "./dist/useAirdrop.cjs"
+      "import": "./dist/useAirdrop.mjs"
     },
     "./useRequest": {
       "types": "./dist/useRequest.d.ts",
-      "import": "./dist/useRequest.mjs",
-      "require": "./dist/useRequest.cjs"
+      "import": "./dist/useRequest.mjs"
     },
     "./useSubscription": {
       "types": "./dist/useSubscription.d.ts",
-      "import": "./dist/useSubscription.mjs",
-      "require": "./dist/useSubscription.cjs"
+      "import": "./dist/useSubscription.mjs"
     },
     "./useTrackedData": {
       "types": "./dist/useTrackedData.d.ts",
-      "import": "./dist/useTrackedData.mjs",
-      "require": "./dist/useTrackedData.cjs"
+      "import": "./dist/useTrackedData.mjs"
     },
     "./useSignIn": {
       "types": "./dist/useSignIn.d.ts",
-      "import": "./dist/useSignIn.mjs",
-      "require": "./dist/useSignIn.cjs"
+      "import": "./dist/useSignIn.mjs"
     },
     "./useSelectedWalletAccount": {
       "types": "./dist/useSelectedWalletAccount.d.ts",
-      "import": "./dist/useSelectedWalletAccount.mjs",
-      "require": "./dist/useSelectedWalletAccount.cjs"
+      "import": "./dist/useSelectedWalletAccount.mjs"
     },
     "./useSignTransactions": {
       "types": "./dist/useSignTransactions.d.ts",
-      "import": "./dist/useSignTransactions.mjs",
-      "require": "./dist/useSignTransactions.cjs"
+      "import": "./dist/useSignTransactions.mjs"
     },
     "./useSignAndSendTransactions": {
       "types": "./dist/useSignAndSendTransactions.d.ts",
-      "import": "./dist/useSignAndSendTransactions.mjs",
-      "require": "./dist/useSignAndSendTransactions.cjs"
+      "import": "./dist/useSignAndSendTransactions.mjs"
     },
     "./useClientCapability": {
       "types": "./dist/useClientCapability.d.ts",
-      "import": "./dist/useClientCapability.mjs",
-      "require": "./dist/useClientCapability.cjs"
+      "import": "./dist/useClientCapability.mjs"
     },
     "./usePayer": {
       "types": "./dist/usePayer.d.ts",
-      "import": "./dist/usePayer.mjs",
-      "require": "./dist/usePayer.cjs"
+      "import": "./dist/usePayer.mjs"
     },
     "./useIdentity": {
       "types": "./dist/useIdentity.d.ts",
-      "import": "./dist/useIdentity.mjs",
-      "require": "./dist/useIdentity.cjs"
+      "import": "./dist/useIdentity.mjs"
     },
     "./usePlanTransaction": {
       "types": "./dist/usePlanTransaction.d.ts",
-      "import": "./dist/usePlanTransaction.mjs",
-      "require": "./dist/usePlanTransaction.cjs"
+      "import": "./dist/usePlanTransaction.mjs"
     },
     "./usePlanTransactions": {
       "types": "./dist/usePlanTransactions.d.ts",
-      "import": "./dist/usePlanTransactions.mjs",
-      "require": "./dist/usePlanTransactions.cjs"
+      "import": "./dist/usePlanTransactions.mjs"
     },
     "./useSendTransaction": {
       "types": "./dist/useSendTransaction.d.ts",
-      "import": "./dist/useSendTransaction.mjs",
-      "require": "./dist/useSendTransaction.cjs"
+      "import": "./dist/useSendTransaction.mjs"
     },
     "./useSendTransactions": {
       "types": "./dist/useSendTransactions.d.ts",
-      "import": "./dist/useSendTransactions.mjs",
-      "require": "./dist/useSendTransactions.cjs"
+      "import": "./dist/useSendTransactions.mjs"
     },
     "./swr": {
       "types": "./dist/swr.d.ts",
-      "import": "./dist/swr.mjs",
-      "require": "./dist/swr.cjs"
+      "import": "./dist/swr.mjs"
     },
     "./useSolana": {
       "types": "./dist/useSolana.d.ts",
-      "import": "./dist/useSolana.mjs",
-      "require": "./dist/useSolana.cjs"
+      "import": "./dist/useSolana.mjs"
     },
     "./useSolanaClient": {
       "types": "./dist/useSolanaClient.d.ts",
-      "import": "./dist/useSolanaClient.mjs",
-      "require": "./dist/useSolanaClient.cjs"
+      "import": "./dist/useSolanaClient.mjs"
     },
     "./useRpc": {
       "types": "./dist/useRpc.d.ts",
-      "import": "./dist/useRpc.mjs",
-      "require": "./dist/useRpc.cjs"
+      "import": "./dist/useRpc.mjs"
     },
     "./useConnection": {
       "types": "./dist/useConnection.d.ts",
-      "import": "./dist/useConnection.mjs",
-      "require": "./dist/useConnection.cjs"
+      "import": "./dist/useConnection.mjs"
     },
     "./useAccountInfo": {
       "types": "./dist/useAccountInfo.d.ts",
-      "import": "./dist/useAccountInfo.mjs",
-      "require": "./dist/useAccountInfo.cjs"
+      "import": "./dist/useAccountInfo.mjs"
     },
     "./useBalance": {
       "types": "./dist/useBalance.d.ts",
-      "import": "./dist/useBalance.mjs",
-      "require": "./dist/useBalance.cjs"
+      "import": "./dist/useBalance.mjs"
     },
     "./useProgramAccounts": {
       "types": "./dist/useProgramAccounts.d.ts",
-      "import": "./dist/useProgramAccounts.mjs",
-      "require": "./dist/useProgramAccounts.cjs"
+      "import": "./dist/useProgramAccounts.mjs"
     },
     "./useWallet": {
       "types": "./dist/useWallet.d.ts",
-      "import": "./dist/useWallet.mjs",
-      "require": "./dist/useWallet.cjs"
+      "import": "./dist/useWallet.mjs"
     },
     "./useWallets": {
       "types": "./dist/useWallets.d.ts",
-      "import": "./dist/useWallets.mjs",
-      "require": "./dist/useWallets.cjs"
+      "import": "./dist/useWallets.mjs"
     },
     "./useTransaction": {
       "types": "./dist/useTransaction.d.ts",
-      "import": "./dist/useTransaction.mjs",
-      "require": "./dist/useTransaction.cjs"
+      "import": "./dist/useTransaction.mjs"
     },
     "./useTransactionConfirmation": {
       "types": "./dist/useTransactionConfirmation.d.ts",
-      "import": "./dist/useTransactionConfirmation.mjs",
-      "require": "./dist/useTransactionConfirmation.cjs"
+      "import": "./dist/useTransactionConfirmation.mjs"
     },
     "./useSignatureStatus": {
       "types": "./dist/useSignatureStatus.d.ts",
-      "import": "./dist/useSignatureStatus.mjs",
-      "require": "./dist/useSignatureStatus.cjs"
+      "import": "./dist/useSignatureStatus.mjs"
     },
     "./useSignMessage": {
       "types": "./dist/useSignMessage.d.ts",
-      "import": "./dist/useSignMessage.mjs",
-      "require": "./dist/useSignMessage.cjs"
+      "import": "./dist/useSignMessage.mjs"
     },
     "./useSignAndSendTransaction": {
       "types": "./dist/useSignAndSendTransaction.d.ts",
-      "import": "./dist/useSignAndSendTransaction.mjs",
-      "require": "./dist/useSignAndSendTransaction.cjs"
+      "import": "./dist/useSignAndSendTransaction.mjs"
     },
     "./useTokenBalance": {
       "types": "./dist/useTokenBalance.d.ts",
-      "import": "./dist/useTokenBalance.mjs",
-      "require": "./dist/useTokenBalance.cjs"
+      "import": "./dist/useTokenBalance.mjs"
     },
     "./useTokenAccounts": {
       "types": "./dist/useTokenAccounts.d.ts",
-      "import": "./dist/useTokenAccounts.mjs",
-      "require": "./dist/useTokenAccounts.cjs"
+      "import": "./dist/useTokenAccounts.mjs"
     },
     "./kit": {
       "types": "./dist/kit.d.ts",
-      "import": "./dist/kit.mjs",
-      "require": "./dist/kit.cjs"
+      "import": "./dist/kit.mjs"
     }
   },
   "files": [

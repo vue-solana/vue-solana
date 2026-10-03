@@ -42,7 +42,7 @@ const publicKey = address("PASTE_A_SOLANA_ADDRESS");
 
 地址是 base58 的 `Address` 字符串；旧版 `PublicKey` 类和 `web3` 子路径已在 v2.0.0 中被移除。
 
-有关两者之间完整的对应关系，请参阅 [Kit 迁移](/zh/guides/kit-migration) 指南。
+有关两者之间完整的对应关系，请参阅 [Kit 迁移](/zh/guides/migration) 指南。
 
 绝不要在前端代码中暴露私钥、助记词或 secret key 数组。
 

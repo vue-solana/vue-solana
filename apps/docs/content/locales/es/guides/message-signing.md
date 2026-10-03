@@ -1,13 +1,13 @@
 ---
 title: "Firma De Mensajes"
-description: Firma mensajes de autenticacion o propiedad sin crear transacciones on-chain.
+description: Firma mensajes de autenticación o propiedad sin crear transacciones on-chain.
 ogSection: Guias
-surroundOrder: 12
+surroundOrder: 11
 ---
 
-La firma de mensajes demuestra el control de una wallet sobre un mensaje off-chain. No autoriza cambios de estado on-chain y no es una firma de transaccion.
+La firma de mensajes demuestra el control de una wallet sobre un mensaje off-chain. No autoriza cambios de estado on-chain y no es una firma de transacción.
 
-Usa la firma de mensajes para desafios de autenticacion, comprobaciones de propiedad de cuenta o textos de consentimiento que tu aplicacion verifica fuera de la cadena.
+Usa la firma de mensajes para desafios de autenticación, comprobaciones de propiedad de cuenta o textos de consentimiento que tu aplicación verifica fuera de la cadena.
 
 ## Firma De Mensajes En Vue
 
@@ -23,7 +23,7 @@ const { signature, status, error, execute } = useSignMessage();
 const canSign = computed(() => connected.value && canSignMessage.value);
 
 async function signIn() {
-  const message = new TextEncoder().encode("Iniciar sesion en example.com");
+  const message = new TextEncoder().encode("Iniciar sesión en example.com");
   await execute(message);
 }
 </script>
@@ -40,9 +40,9 @@ async function signIn() {
 
 Las wallets que no exponen firma de mensajes reportan `canSignMessage` como false. Llamar a `execute()` sin soporte rechaza con `WALLET_FEATURE_UNSUPPORTED`.
 
-## Iniciar Sesion Con Solana (SIWS)
+## Iniciar Sesión Con Solana (SIWS)
 
-Para autenticacion, prefiere SIWS sobre la firma de mensajes de texto libre cuando la wallet lo soporta. SIWS muestra al usuario una pantalla de consentimiento estructurada (dominio, statement, resources, URI) en lugar de bytes arbitrarios, y la wallet devuelve un resultado tipado:
+Para autenticación, prefiere SIWS sobre la firma de mensajes de texto libre cuando la wallet lo soporta. SIWS muestra al usuario una pantalla de consentimiento estructurada (dominio, statement, resources, URI) en lugar de bytes arbitrarios, y la wallet devuelve un resultado tipado:
 
 ```ts
 import { useSignIn } from "@vue-solana/vue/useSignIn";
@@ -50,16 +50,16 @@ import { useSignIn } from "@vue-solana/vue/useSignIn";
 const { signIn } = useSignIn();
 
 const { account, signedMessage, signature } = await signIn({
-  statement: "Iniciar sesion en example.com",
+  statement: "Iniciar sesión en example.com",
   nonce: nonceDeTuServidor,
 });
 ```
 
-El resultado no es una sesion autenticada: es una afirmacion que hay que verificar. En tu servidor:
+El resultado no es una sesión autenticada: es una afirmación que hay que verificar. En tu servidor:
 
-1. Decodifica `signedMessage` y comprueba que el dominio es tu origen, la URI es tuya y el nonce coincide con el que tu servidor emitio para este intento de inicio de sesion (de un solo uso, expiracion corta).
+1. Decodifica `signedMessage` y comprueba que el dominio es tu origen, la URI es tuya y el nonce coincide con el que tu servidor emitio para este intento de inicio de sesión (de un solo uso, expiración corta).
 2. Verifica la firma Ed25519 sobre `signedMessage` contra `account.publicKey`, por ejemplo con `tweetnacl`: `nacl.sign.detached.verify(signedMessage, signature, account.publicKey)`.
-3. Solo entonces crea la sesion, asociada a `account.address`.
+3. Solo entonces crea la sesión, asociada a `account.address`.
 
 Las wallets sin soporte SIWS rechazan `signIn()` con `WALLET_FEATURE_UNSUPPORTED`; para esas wallets, usa `useSignMessage()` con tu propio texto de desafio.
 
@@ -73,7 +73,7 @@ const { connected, canSignMessage } = useSolanaWallet();
 const { signature, status, error, execute } = useSolanaSignMessage();
 
 async function signChallenge() {
-  await execute(new TextEncoder().encode("Iniciar sesion en mi app Nuxt"));
+  await execute(new TextEncoder().encode("Iniciar sesión en mi app Nuxt"));
 }
 </script>
 ```
@@ -82,28 +82,28 @@ Solo llama a la firma de mensajes desde acciones del usuario en el cliente.
 
 ## Texto Del Desafio
 
-Usa un texto de desafio claro y especifico de la aplicacion. Los usuarios deben entender lo que estan firmando.
+Usa un texto de desafio claro y específico de la aplicación. Los usuarios deben entender lo que están firmando.
 
 Un buen texto de desafio normalmente incluye:
 
 - Nombre de la app o dominio.
-- Proposito de la firma.
+- Propósito de la firma.
 - Nonce o valor de desafio de un solo uso.
-- Hora de emision y hora de expiracion.
+- Hora de emisión y hora de expiración.
 
 Ejemplo:
 
 ```txt
-Iniciar sesion en example.com
+Iniciar sesión en example.com
 Wallet: 8Y...abc
 Nonce: 7f4b3c
 Emitido En: 2026-07-02T12:00:00Z
 Expira En: 2026-07-02T12:10:00Z
 ```
 
-## Limite De Verificacion
+## Límite De Verificación
 
-Vue Solana ayuda a solicitar la firma a la wallet. Tu aplicacion es responsable de la verificacion del lado del servidor, el almacenamiento de nonces, las comprobaciones de expiracion y la creacion de sesiones.
+Vue Solana ayuda a solicitar la firma a la wallet. Tu aplicación es responsable de la verificación del lado del servidor, el almacenamiento de nonces, las comprobaciones de expiración y la creación de sesiones.
 
 No trates una firma sobre texto generico como permiso para transferir tokens o cambiar estado on-chain.
 
@@ -130,9 +130,9 @@ const message = computed(() => {
 
 ## Lista De Seguridad
 
-- Usa nonces de un solo uso para desafios de autenticacion.
+- Usa nonces de un solo uso para desafios de autenticación.
 - Haz que los desafios expiren rapidamente.
-- Verifica las firmas en el servidor antes de crear una sesion.
+- Verifica las firmas en el servidor antes de crear una sesión.
 - Haz que el texto firmado sea legible para humanos.
-- Nunca sugieras que la firma de mensajes envia una transaccion.
-- Nunca reutilices un flujo de firma de transacciones para texto de autenticacion.
+- Nunca sugieras que la firma de mensajes envia una transacción.
+- Nunca reutilices un flujo de firma de transacciones para texto de autenticación.

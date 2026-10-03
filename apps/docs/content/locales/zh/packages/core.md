@@ -9,13 +9,15 @@ surroundOrder: 14
 
 当你想要 Kit 客户端、endpoint helper、共享钱包类型、Android Mobile Wallet Adapter 注册 helper、iOS 浏览器钱包 helper、token 账户读取和交易 helper，但不想安装 Vue 插件时，可以直接使用此包。
 
-`@vue-solana/core` 基于现代的 [`@solana/kit`](https://www.npmjs.com/package/@solana/kit)。`createSolanaClient()` 和 `@vue-solana/core/kit` subpath 重新导出 Kit primitive。遗留的 `@solana/web3-compat` API 和 `web3` subpath 已在 v2.0.0 中移除——完整的 before/after 映射请参阅 [Kit 迁移](/zh/guides/kit-migration)。
+`@vue-solana/core` 基于现代的 [`@solana/kit`](https://www.npmjs.com/package/@solana/kit)。`createSolanaClient()` 位于 `@vue-solana/core/kit` subpath，该 subpath 重新导出全部的 `@solana/kit`。遗留的 `@solana/web3-compat` API 和 `web3` subpath 已在 v2.0.0 中移除——完整的 before/after 映射请参阅 [Kit 迁移](/zh/guides/migration)。
 
 ## 安装
 
 ```sh
 pnpm add @vue-solana/core
 ```
+
+该包仅发布 ESM。在 CommonJS 中 `require("@vue-solana/core")` 会以 `No "exports" main defined` 失败。请把导入该包的模块改为 ESM，或者继续使用仍提供 `.cjs` 构建的 `@vue-solana/core@^2`。参见[从 v2 升级到 v3](/zh/guides/migration#从-v2-升级到-v3)。
 
 ## 快速开始
 
@@ -44,7 +46,7 @@ console.log(slot); // bigint
 
 `createSolanaContext()` 返回 `{ cluster, endpoint, wsEndpoint, client }`；`client` 带有 `client.rpc` 和 `client.rpcSubscriptions`。
 
-根导出仍然受支持。也可以使用直接 subpath 导出进行更窄的导入：
+根导出仍然受支持。也可以使用直接 subpath 导出，只导入某个模块自己拥有的 helper：
 
 ```ts
 import { createSolanaClient } from "@vue-solana/core/kit";
@@ -207,23 +209,23 @@ type SolanaChain = "solana:mainnet" | "solana:testnet" | "solana:devnet" | "sola
 
 ## Helper
 
-根 `@vue-solana/core` 导出会重新导出下面的公共 helper。需要更窄导入或更清晰模块边界时，请使用直接 subpath。
+根 `@vue-solana/core` 导出会重新导出下面的公共 helper。如果想只导入某个 helper 的模块而不是整个 barrel，请使用直接 subpath。
 
-| Import path                        | 包含内容                                                                                                             | 何时使用                                                                                             |
-| ---------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `@vue-solana/core/address`         | `parseAddress()` 和地址输入类型。                                                                                    | 你以字符串、类似 ref 的对象或 getter 形式接受 Solana 地址，并需要一个经过验证和规范化的 `Address`。  |
-| `@vue-solana/core/clusters`        | 默认 cluster 和 endpoint helper。                                                                                    | 你需要包内置的 `mainnet`、`mainnet-beta`、`testnet`、`devnet` 或 `localnet` RPC/WebSocket endpoint。 |
-| `@vue-solana/core/errors`          | `SolanaError`、错误工厂和错误 guard。                                                                                | 你需要稳定错误 code 来处理面向用户的钱包、RPC、地址、交易、超时或存储失败。                          |
-| `@vue-solana/core/ios-wallet`      | iOS 浏览器钱包发现、deep-link adapter 和回调处理。                                                                   | 你在不使用 Vue 插件统一钱包流程的情况下接入 iOS 钱包链接。                                           |
-| `@vue-solana/core/kit`             | `createSolanaClient()` 和 `@solana/kit` 重导出（`Address`、`address`、`lamports`、`SolanaRpcApi`、`SolanaClient`）。 | 你想要现代 Kit API，但不涉及完整的 `@solana/kit` 依赖图。                                            |
-| `@vue-solana/core/mobile-wallet`   | Android Mobile Wallet Adapter 注册 helper。                                                                          | 你需要在读取 Wallet Standard 钱包前注册 Android MWA。                                                |
-| `@vue-solana/core/rpc`             | `createSolanaContext()`。                                                                                            | 你想在不安装 Vue 插件的情况下获得已配置的 Kit 客户端和解析后的 cluster endpoint。                    |
-| `@vue-solana/core/timeout`         | 生成 Solana 超时错误的 Promise timeout helper。                                                                      | 你需要与交易确认 helper 一致的超时行为。                                                             |
-| `@vue-solana/core/transaction`     | 交易发送和确认 helper。                                                                                              | 你需要感知钱包的发送路径，或需要为现有签名获取确认结果。                                             |
-| `@vue-solana/core/token-accounts`  | 无状态 SPL Token 账户读取（`getTokenAccountsByOwner`、`getTokenAccount`、`getTokenBalance`）。                       | 你需要通过 Kit RPC `jsonParsed` API 读取 token 账户或余额。                                          |
-| `@vue-solana/core/types`           | 共享 TypeScript 类型。                                                                                               | 你需要 `SolanaConfig`、`SolanaContext`、`SolanaWallet`、钱包元数据或交易选项类型。                   |
-| `@vue-solana/core/wallet`          | 钱包状态断言和钱包能力错误。                                                                                         | 你需要在调用钱包方法前验证所选钱包已连接或支持签名。                                                 |
-| `@vue-solana/core/wallet-standard` | Wallet Standard chain 映射、发现、订阅和 adapter helper。                                                            | 你正在 Solana Wallet Standard 之上构建自己的钱包发现层。                                             |
+| Import path                        | 包含内容                                                                                       | 何时使用                                                                                             |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `@vue-solana/core/address`         | `parseAddress()` 和地址输入类型。                                                              | 你以字符串、类似 ref 的对象或 getter 形式接受 Solana 地址，并需要一个经过验证和规范化的 `Address`。  |
+| `@vue-solana/core/clusters`        | 默认 cluster 和 endpoint helper。                                                              | 你需要包内置的 `mainnet`、`mainnet-beta`、`testnet`、`devnet` 或 `localnet` RPC/WebSocket endpoint。 |
+| `@vue-solana/core/errors`          | `SolanaError`、错误工厂和错误 guard。                                                          | 你需要稳定错误 code 来处理面向用户的钱包、RPC、地址、交易、超时或存储失败。                          |
+| `@vue-solana/core/ios-wallet`      | iOS 浏览器钱包发现、deep-link adapter 和回调处理。                                             | 你在不使用 Vue 插件统一钱包流程的情况下接入 iOS 钱包链接。                                           |
+| `@vue-solana/core/kit`             | `createSolanaClient()` 和完整的 `@solana/kit` 表面。                                           | 你想要现代 Kit API，但不想在自己的 `package.json` 中安装 `@solana/kit`。                             |
+| `@vue-solana/core/mobile-wallet`   | Android Mobile Wallet Adapter 注册 helper。                                                    | 你需要在读取 Wallet Standard 钱包前注册 Android MWA。                                                |
+| `@vue-solana/core/rpc`             | `createSolanaContext()`。                                                                      | 你想在不安装 Vue 插件的情况下获得已配置的 Kit 客户端和解析后的 cluster endpoint。                    |
+| `@vue-solana/core/timeout`         | 生成 Solana 超时错误的 Promise timeout helper。                                                | 你需要与交易确认 helper 一致的超时行为。                                                             |
+| `@vue-solana/core/transaction`     | 交易发送和确认 helper。                                                                        | 你需要感知钱包的发送路径，或需要为现有签名获取确认结果。                                             |
+| `@vue-solana/core/token-accounts`  | 无状态 SPL Token 账户读取（`getTokenAccountsByOwner`、`getTokenAccount`、`getTokenBalance`）。 | 你需要通过 Kit RPC `jsonParsed` API 读取 token 账户或余额。                                          |
+| `@vue-solana/core/types`           | 共享 TypeScript 类型。                                                                         | 你需要 `SolanaConfig`、`SolanaContext`、`SolanaWallet`、钱包元数据或交易选项类型。                   |
+| `@vue-solana/core/wallet`          | 钱包状态断言和钱包能力错误。                                                                   | 你需要在调用钱包方法前验证所选钱包已连接或支持签名。                                                 |
+| `@vue-solana/core/wallet-standard` | Wallet Standard chain 映射、发现、订阅和 adapter helper。                                      | 你正在 Solana Wallet Standard 之上构建自己的钱包发现层。                                             |
 
 ### Clusters 和 RPC
 
@@ -254,7 +256,7 @@ const slot = await solana.client.rpc.getSlot().send();
 
 ### Kit
 
-`@vue-solana/core/kit` subpath 导出大多数应用需要从 `@solana/kit` 获得的一切，无需直接安装它：
+`@vue-solana/core/kit` subpath 重新导出全部的 `@solana/kit` —— 完整的公开表面，值和类型都有 —— 因此你无需在自己 `package.json` 中安装 `@solana/kit`：
 
 ```ts
 import { address, lamports } from "@vue-solana/core/kit";
@@ -265,13 +267,28 @@ import type { Address, Commitment, Lamports, Signature, SolanaRpcApi } from "@vu
 - `client.rpc`：以 RPC 函数形式暴露完整的 Solana 读取 API（`getSlot`、`getBalance`、`getBlockHeight`、`getSignatureStatuses` 等），通过 `.send()` 调用。
 - `address(value)`：验证并返回 `Address`（base58 字符串 brand）——替代 `new PublicKey(...)` 的 Kit 版本。
 - `lamports(value: bigint)`：返回 `Lamports` 值——替代原始 lamport 数字的 Kit 版本。
-- 类型：`Address`、`Commitment`、`Lamports`、`Rpc`、`Signature`、`SolanaRpcApi`、`SolanaClient`。
+- 常用类型：`Address`、`Commitment`、`Lamports`、`Rpc`、`Signature`、`SolanaRpcApi`、`SolanaClient`。该 subpath 会重新导出 `@solana/kit` 导出的所有类型，不仅仅是这些。
+- 有四个名字同时存在于 Kit 和本库中。从包根（`@vue-solana/core`）导入时解析为**本库的**版本，从 `/kit` subpath 导入时解析为 **Kit 的**版本：`SolanaError`、`SolanaErrorCode`、`isSolanaError`、`TransactionStatus`。由于包根的判断函数与 Kit 的错误类不匹配，检查 Kit 自身抛出的错误时，请从 `@vue-solana/core/kit` 导入 `isSolanaError`。
 
-RPC 数值结果是 `bigint`，账户数据是 `Uint8Array` 而不是 `Buffer`。详见 [Kit 迁移](/zh/guides/kit-migration)。
+RPC 数值结果是 `bigint`，账户数据是 `Uint8Array` 而不是 `Buffer`。详见 [Kit 迁移](/zh/guides/migration)。
 
 ### 动作
 
-`createSolanaActionStore()` 将每次调用接收新 `AbortSignal` 的异步函数包装成 abort-on-redispatch 的动作状态机。Vue 组合式函数 `useAction()` 构建于此 store 之上，`isSolanaActionAborted()` 用于检测被取消或被取代的调用。
+`createSolanaActionStore()` 将每次调用接收新 `AbortSignal` 的异步函数包装成 abort-on-redispatch 的动作状态机。UI 框架会将返回的 store 桥接到响应式状态；Vue 组合式函数 `useAction()` 构建于此 store 之上。
+
+```ts
+import { createSolanaActionStore, isSolanaActionAborted } from "@vue-solana/core/action";
+
+const { dispatch, getState, subscribe, reset, withSignal } = createSolanaActionStore(
+  (signal, address: Address) => client.rpc.getBalance(address).send(),
+);
+
+await dispatch(address);
+```
+
+- 每次 `dispatch` 都会用新的 `AbortSignal` 中止上一笔未完成的调用；被取代的调用会以 abort 错误被拒绝，绝不会破坏状态。
+- `getState()` / `subscribe(listener)`: `SolanaActionState`（`status`、`data`、`error`）的快照和流。
+- `withSignal(signal, ...args)`: 为单次 `dispatch` 组合调用方提供的取消源（每次尝试的超时、共享 kill switch）。
 
 ### 地址
 

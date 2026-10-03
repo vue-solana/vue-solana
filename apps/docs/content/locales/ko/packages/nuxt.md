@@ -15,7 +15,9 @@ npx nuxt module add @vue-solana/nuxt
 
 이 명령은 package를 설치하고 `nuxt.config.ts`의 `modules` 배열에 `@vue-solana/nuxt`를 추가합니다.
 
-트랜잭션을 만들거나 직렬화하는 브라우저 앱은 `@vue-solana/nuxt/buffer-polyfill`에서 Buffer polyfill을 초기화할 수 있습니다. Kit API(`createSolanaClient`, `address`, `lamports` 및 타입)와 자동 import되는 `useSolanaClient()`에는 `@vue-solana/nuxt/kit`을 사용하세요.
+이 package는 ESM만 배포합니다. Nuxt는 이미 ESM으로 번들링되므로 변경이 필요 없고, CommonJS의 `require("@vue-solana/nuxt")`는 `No "exports" main defined`로 실패하므로 import하는 모듈을 ESM으로 바꾸거나 `.cjs` 빌드를 계속 제공하는 `@vue-solana/nuxt@^2`를 사용하세요. [v2에서 v3로 업그레이드](/ko/guides/migration#v2에서-v3로-업그레이드)를 참고하세요.
+
+트랜잭션을 만들거나 직렬화하는 브라우저 앱은 `@vue-solana/nuxt/buffer-polyfill`에서 Buffer polyfill을 초기화할 수 있습니다. Kit API에는 `@vue-solana/nuxt/kit`을 사용하세요 — `@solana/kit` 전체를 다시 export합니다 — 자동 import되는 `useSolanaClient()`도 사용할 수 있습니다.
 
 ## 모듈 설정
 
@@ -288,7 +290,16 @@ const tokenBalanceErrorMessage = computed(() => {
 </template>
 ```
 
-`useSolanaTokenBalance()`는 associated token account가 없으면 error로 처리하지 않고 null balance와 decimals를 반환합니다.
+`useSolanaTokenBalance()`는 associated token account가 없으면 error로 처리하지 않고 null balance와 decimals를 반환합니다. `balance`과 `decimals`은 한 번의 읽기에서 파생된 읽기 전용 computed ref이므로 읽기만 하고 대입하지 마세요.
+
+## 읽기 컴포저블의 의미
+
+`useSolanaBalance()`, `useSolanaAccountInfo()`, `useSolanaProgramAccounts()`, `useSolanaTokenAccounts()`, `useSolanaTokenBalance()`는 Vue 컴포저블과 동일하게 하나의 상태 머신을 공유합니다:
+
+- **실패하면 `refresh()`는 resolve하지 않고 reject합니다.** 입력이 비어 있으면 `null`로 resolve합니다. `try`/`catch` 없는 `await refresh()`는 던집니다. `@click`에 바로 연결하는 것은 괜찮지만(Vue가 rejection을 삼킵니다) 직접 작성한 호출부는 처리해야 합니다. `useSolanaRequest()`만 예외로 시도 결과로 resolve합니다.
+- **읽기가 실패하면 데이터가 빈 값으로 되돌아갑니다.** 마지막으로 성공한 balance가 새 `error` 옆에 남아 있지 않습니다. 무엇을 렌더링할지는 `error`로 분기하세요.
+
+파싱할 수 없는 주소는 `error`에 `INVALID_ADDRESS`를 보고하고 RPC에 도달하지 않습니다. [계정 읽기](/guides/account-reads#refresh와-에러-의미)를 참고하세요.
 
 ## 오류 처리
 
@@ -396,7 +407,7 @@ const { signature, confirmation, status, loading, error, execute } =
 const canSubmit = computed(() => connected.value && canSignTransaction.value && !loading.value);
 
 async function submitTransaction(transaction: SolanaTransaction) {
-  // Build the transaction message with @solana/kit and serialize it to wire bytes first.
+  // Build the transaction message with @vue-solana/nuxt/kit and serialize it to wire bytes first.
   await execute(transaction, {
     confirm: true,
     confirmation: { commitment: "confirmed", timeoutMs: 120_000 },

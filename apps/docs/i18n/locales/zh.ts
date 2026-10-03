@@ -4,8 +4,6 @@ export default {
       getStarted: "开始使用",
       concepts: "概念",
       guides: "指南",
-      packages: "包",
-      examples: "示例",
       demo: "演示",
       roadmap: "路线图",
     },
@@ -20,7 +18,7 @@ export default {
       solanaForVueDevelopers: "面向 Vue 开发者的 Solana",
       clusters: "集群",
       guides: "指南",
-      kitMigration: "Kit 迁移",
+      migration: "迁移指南",
       rpcAndClusters: "RPC 和集群",
       wallets: "钱包",
       accountReads: "账户读取",
@@ -189,10 +187,6 @@ export default {
         unsupported: "所选钱包不支持消息签名。",
         enterMessage: "请输入要签名的消息。",
       },
-      status: {
-        ready: "就绪",
-        waiting: "等待中",
-      },
     },
     tokenAccounts: {
       title: "SPL 代币账户",
@@ -230,10 +224,6 @@ export default {
         connectWallet: "连接所选钱包以启用转账。",
         recipient: "请输入有效的 Solana 收款地址。",
         amount: "请输入大于 0 SOL 的金额。",
-      },
-      status: {
-        ready: "就绪",
-        waiting: "等待中",
       },
     },
     sections: {
@@ -317,7 +307,7 @@ export default {
       description:
         "通过客户端的空投功能向客户端 payer 签名者请求 devnet 空投。devnet 水龙头有速率限制，因此出错通常是暂时的。",
       request: "空投 1 SOL",
-      payerHint: "客户端签名者仍在加载中。",
+      connectHint: "正在等待客户端签名者就绪。",
       signature: "签名：{signature}",
       noSignature: "暂无空投",
     },

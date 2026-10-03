@@ -241,6 +241,12 @@ const trackedText = computed(() => {
 });
 const signInErrorText = computed(() => formatError(signIn.error.value));
 const airdropErrorText = computed(() => formatError(airdrop.error.value));
+
+// The composable rethrows and already reports through `signIn.error`; swallow
+// the rethrow so the click handler raises no unhandled rejection.
+function runSignIn() {
+  void signIn.signIn().catch(() => undefined);
+}
 </script>
 
 <template>
@@ -342,7 +348,7 @@ const airdropErrorText = computed(() => formatError(airdrop.error.value));
             type="button"
             data-testid="sign-in-button"
             :disabled="!wallet.connected.value || signIn.loading.value"
-            @click="signIn.signIn()"
+            @click="runSignIn"
           >
             {{ signIn.loading.value ? "Signing in..." : "Sign In With Wallet" }}
           </button>

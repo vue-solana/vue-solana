@@ -42,15 +42,10 @@ interface RpcMockHarness {
   methodCalls(): readonly string[];
 }
 
-const rpcMockHarnesses = new WeakMap<Page, RpcMockHarness>();
-
+// No per-page memo: Playwright runs only the LAST matching `page.route` handler
+// unless it calls `fallback()`, so re-registering replaces the previous handler
+// rather than stacking, and nothing reads a previously-returned harness.
 export async function mockSolanaRpc(page: Page): Promise<RpcMockHarness> {
-  const existingHarness = rpcMockHarnesses.get(page);
-
-  if (existingHarness) {
-    return existingHarness;
-  }
-
   const methodCalls: string[] = [];
 
   await page.route("https://api.devnet.solana.com/**", async (route) => {
@@ -79,10 +74,7 @@ export async function mockSolanaRpc(page: Page): Promise<RpcMockHarness> {
     });
   });
 
-  const harness: RpcMockHarness = { methodCalls: () => methodCalls };
-  rpcMockHarnesses.set(page, harness);
-
-  return harness;
+  return { methodCalls: () => methodCalls };
 }
 
 /**
@@ -172,10 +164,20 @@ export async function mockSolanaSubscriptions(page: Page): Promise<SubscriptionH
     });
   });
 
+  function push(method: string, subscribedTo: string, result: unknown) {
+    for (const socket of openSockets) {
+      for (const [subscriptionId, name] of socket.subscriptions) {
+        if (name === subscribedTo) {
+          sendNotification(socket, method, subscriptionId, result);
+        }
+      }
+    }
+  }
+
   return {
     rpcMethodCalls: rpc.methodCalls,
     pushAccountNotification(lamports: number, slot: number) {
-      const notification = {
+      push("accountNotification", "accountSubscribe", {
         context: { slot },
         value: {
           lamports: String(lamports),
@@ -187,36 +189,10 @@ export async function mockSolanaSubscriptions(page: Page): Promise<SubscriptionH
           rentEpoch: "18446744073709551615",
           space: 0,
         },
-      };
-
-      for (const socket of openSockets) {
-        for (const [subscriptionId, method] of socket.subscriptions) {
-          if (method === "accountSubscribe") {
-            socket.send(
-              JSON.stringify({
-                jsonrpc: "2.0",
-                method: "accountNotification",
-                params: { subscription: subscriptionId, result: notification },
-              }),
-            );
-          }
-        }
-      }
+      });
     },
     pushSlotNotification(slot: number, root: number) {
-      for (const socket of openSockets) {
-        for (const [subscriptionId, method] of socket.subscriptions) {
-          if (method === "slotSubscribe") {
-            socket.send(
-              JSON.stringify({
-                jsonrpc: "2.0",
-                method: "slotNotification",
-                params: { subscription: subscriptionId, result: { slot, root, parent: root } },
-              }),
-            );
-          }
-        }
-      }
+      push("slotNotification", "slotSubscribe", { slot, root, parent: root });
     },
     openSubscriptionCount() {
       return openSockets.filter((socket) => socket.subscriptions.size > 0).length;
@@ -381,10 +357,6 @@ function createRpcResponse(id: string | number, method?: string, params?: unknow
         })),
       },
     };
-  }
-
-  if (method === "getHealth") {
-    return { jsonrpc: "2.0", id, result: "ok" };
   }
 
   return { jsonrpc: "2.0", id, result: null };

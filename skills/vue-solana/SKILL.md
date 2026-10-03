@@ -12,10 +12,13 @@ Use this skill when helping with apps or libraries that use the Vue Solana ecosy
 
 ## Package Selection
 
-- Use `@vue-solana/vue/kit` in Vue apps and `@vue-solana/nuxt/kit` in Nuxt apps for Kit primitives (types and values such as `Address`, `Commitment`, `Signature`, `address()`, `lamports()`, and `createSolanaClient()`). Build transaction messages with `@solana/kit` helpers (e.g. `createTransactionMessage()`, `compileTransaction()`); transactions flow through the packages as raw `Uint8Array` wire bytes. The default client composes the official `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()` stack; the old custom fallback sender is not used.
+- Use `@vue-solana/vue/kit` in Vue apps and `@vue-solana/nuxt/kit` in Nuxt apps for Kit primitives (types and values such as `Address`, `Commitment`, `Signature`, `address()`, `lamports()`, and `createSolanaClient()`). Build transaction messages with `@vue-solana/vue/kit` helpers (e.g. `createTransactionMessage()`, `compileTransaction()`); transactions flow through the packages as raw `Uint8Array` wire bytes. The default client composes the official `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()` stack; the old custom fallback sender is not used.
 - Use `@vue-solana/core` for framework-agnostic config, cluster endpoint helpers, wallet types, Wallet Standard adapters, Android Mobile Wallet Adapter registration, iOS browser wallet helpers, transaction helpers, and core subpath exports.
 - Use `@vue-solana/vue` in Vue 3 apps for the plugin and composables.
 - Use `@vue-solana/nuxt` in Nuxt apps for module setup and auto-imported composables.
+
+Since v3.0.0 every `@vue-solana/*` package is ESM only (no `require` export condition, no top-level `main`). Never advise adding `@solana/kit` to a consumer's `package.json`: the `kit` subpaths re-export all of it. Four names exist in both Kit and this library — `SolanaError`, `SolanaErrorCode`, `isSolanaError`, `TransactionStatus` — and the package root resolves them to this library's versions, while the `/kit` subpath keeps Kit's. Import `isSolanaError` from `@vue-solana/*/kit` when checking Kit-thrown errors.
+
 - Prefer `devnet` for examples and tests. Use `mainnet` for Solana mainnet; this is Solana's official mainnet cluster name. The legacy `mainnet-beta` spelling is still accepted and redirects to the same endpoint.
 
 ## Install Commands

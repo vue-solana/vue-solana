@@ -2,7 +2,7 @@
 title: "Message Signing"
 description: Sign authentication or ownership messages without creating on-chain transactions.
 ogSection: Guides
-surroundOrder: 12
+surroundOrder: 11
 ---
 
 Message signing proves wallet control for an off-chain message. It does not authorize on-chain state changes and it is not a transaction signature.

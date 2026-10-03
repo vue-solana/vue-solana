@@ -35,72 +35,74 @@ export function assertWalletConnected(
   }
 }
 
+/**
+ * `features` lists the wallet methods that satisfy the request; a wallet
+ * exposing only one of them (for example `signAllTransactions` without
+ * `signTransactions`) still passes. The first name is the reported feature.
+ */
+function assertWalletFeature(
+  wallet: SolanaWallet | null | undefined,
+  features: readonly WalletFeatureKey[],
+  message: string,
+): void {
+  assertWalletConnected(wallet);
+
+  if (!features.some((feature) => wallet[feature])) {
+    throw new SolanaWalletError("WALLET_FEATURE_UNSUPPORTED", message, { feature: features[0] });
+  }
+}
+
+type WalletFeatureKey =
+  | "signTransaction"
+  | "signTransactions"
+  | "signAllTransactions"
+  | "signAndSendTransaction"
+  | "signAndSendTransactions"
+  | "signMessage"
+  | "signIn";
+
 export function assertWalletCanSign(
   wallet: SolanaWallet | null | undefined,
 ): asserts wallet is SolanaWallet & Required<Pick<SolanaWallet, "signTransaction">> {
-  assertWalletConnected(wallet);
-
-  if (!wallet.signTransaction) {
-    throw new SolanaWalletError(
-      "WALLET_FEATURE_UNSUPPORTED",
-      "Solana wallet does not support signTransaction",
-      { feature: "signTransaction" },
-    );
-  }
+  assertWalletFeature(
+    wallet,
+    ["signTransaction"],
+    "Solana wallet does not support signTransaction",
+  );
 }
 
 export function assertWalletCanSignMessage(
   wallet: SolanaWallet | null | undefined,
 ): asserts wallet is SolanaWallet & Required<Pick<SolanaWallet, "signMessage">> {
-  assertWalletConnected(wallet);
-
-  if (!wallet.signMessage) {
-    throw new SolanaWalletError(
-      "WALLET_FEATURE_UNSUPPORTED",
-      "Solana wallet does not support signMessage",
-      { feature: "signMessage" },
-    );
-  }
+  assertWalletFeature(wallet, ["signMessage"], "Solana wallet does not support signMessage");
 }
 
 export function assertWalletCanSignIn(
   wallet: SolanaWallet | null | undefined,
 ): asserts wallet is SolanaWallet & Required<Pick<SolanaWallet, "signIn">> {
-  assertWalletConnected(wallet);
-
-  if (!wallet.signIn) {
-    throw new SolanaWalletError(
-      "WALLET_FEATURE_UNSUPPORTED",
-      "Solana wallet does not support signIn (Sign In With Solana)",
-      { feature: "signIn" },
-    );
-  }
+  assertWalletFeature(
+    wallet,
+    ["signIn"],
+    "Solana wallet does not support signIn (Sign In With Solana)",
+  );
 }
 
 export function assertWalletCanSignTransactions(
   wallet: SolanaWallet | null | undefined,
 ): asserts wallet is SolanaWallet & Required<Pick<SolanaWallet, "signTransactions">> {
-  assertWalletConnected(wallet);
-
-  if (!wallet.signTransactions && !wallet.signAllTransactions) {
-    throw new SolanaWalletError(
-      "WALLET_FEATURE_UNSUPPORTED",
-      "Solana wallet does not support signTransactions",
-      { feature: "signTransactions" },
-    );
-  }
+  assertWalletFeature(
+    wallet,
+    ["signTransactions", "signAllTransactions"],
+    "Solana wallet does not support signTransactions",
+  );
 }
 
 export function assertWalletCanSignAndSendTransactions(
   wallet: SolanaWallet | null | undefined,
 ): asserts wallet is SolanaWallet & Required<Pick<SolanaWallet, "signAndSendTransactions">> {
-  assertWalletConnected(wallet);
-
-  if (!wallet.signAndSendTransactions && !wallet.signAndSendTransaction) {
-    throw new SolanaWalletError(
-      "WALLET_FEATURE_UNSUPPORTED",
-      "Solana wallet does not support signAndSendTransactions",
-      { feature: "signAndSendTransactions" },
-    );
-  }
+  assertWalletFeature(
+    wallet,
+    ["signAndSendTransactions", "signAndSendTransaction"],
+    "Solana wallet does not support signAndSendTransactions",
+  );
 }

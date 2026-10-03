@@ -2,7 +2,7 @@
 title: "지갑"
 description: 지갑을 검색하고, 활성 지갑을 선택하고, 연결/해제하고, capability를 확인합니다.
 ogSection: 가이드
-surroundOrder: 9
+surroundOrder: 8
 ---
 
 Vue Solana는 브라우저 확장 지갑, Android Mobile Wallet Adapter 지갑, 지원되는 iOS 브라우저 지갑 링크를 하나의 지갑 flow로 노출합니다.
@@ -14,7 +14,7 @@ Vue Solana는 브라우저 확장 지갑, Android Mobile Wallet Adapter 지갑, 
 - 브라우저 확장 지갑: `@wallet-standard/app`, `@wallet-standard/base`, `@wallet-standard/features`, `@solana/wallet-standard-features`.
 - Android 모바일 네이티브 지갑: `@solana-mobile/wallet-standard-mobile`. 지원되는 Android Chrome mobile web 및 PWA runtime에서 Solana Mobile Wallet Adapter를 Wallet Standard 지갑으로 등록합니다.
 - iOS 브라우저 지갑: Phantom, Solflare, Backpack용 wallet-specific universal link.
-- Solana primitive와 transaction helper: `@solana/kit` 타입과 message builder로, 일부는 `@vue-solana/vue/kit`, `@vue-solana/nuxt/kit`, `@vue-solana/core/kit`를 통해 다시 내보내집니다.
+- Solana primitive와 transaction helper: `@solana/kit` 타입과 message builder로, 전부는 `@vue-solana/vue/kit`, `@vue-solana/nuxt/kit`, `@vue-solana/core/kit`를 통해 다시 내보내집니다.
 
 ## 지갑 소스
 

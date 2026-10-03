@@ -168,6 +168,28 @@ describe("useProgramAccounts", () => {
     expect(getProgramAccounts).toHaveBeenCalledTimes(1);
   });
 
+  // The stale-value fix in `useAddressRead`: an RPC failure on the re-read
+  // empties the list rather than leaving the previous accounts up next to it.
+  it("empties a previously loaded list when a re-read fails", async () => {
+    const failure = new Error("RPC failed");
+    const getProgramAccounts = vi
+      .fn()
+      .mockReturnValueOnce({ send: vi.fn().mockResolvedValue({ value: ACCOUNTS }) })
+      .mockReturnValue({ send: vi.fn().mockRejectedValue(failure) });
+    const { result } = mountProgramAccounts(
+      createProgramAccountsContext(getProgramAccounts),
+      PROGRAM_ID,
+    );
+
+    await flushPromises();
+    expect(result.accounts.value).toHaveLength(1);
+
+    await expect(result.refresh()).rejects.toThrow("RPC failed");
+
+    expect(result.accounts.value).toEqual([]);
+    expect(result.error.value).toMatchObject({ code: "RPC_FAILURE" });
+  });
+
   it("refreshes when the program id changes", async () => {
     const getProgramAccounts = vi
       .fn()
@@ -212,6 +234,22 @@ describe("useProgramAccounts", () => {
 
     expect(result.accounts.value[0]?.account.lamports).toBe(456);
     expect(getProgramAccounts).toHaveBeenCalledTimes(2);
+  });
+
+  it("gives every instance its own empty list", async () => {
+    const getProgramAccounts = vi.fn();
+    const context = createProgramAccountsContext(getProgramAccounts);
+    const first = mountProgramAccounts(context, null);
+    const second = mountProgramAccounts(context, null);
+
+    await flushPromises();
+
+    // `accounts.value` is handed out for in-place mutation, so the empty value
+    // has to be per instance — a shared sentinel corrupts every other instance.
+    first.result.accounts.value.push({} as never);
+
+    expect(first.result.accounts.value).toHaveLength(1);
+    expect(second.result.accounts.value).toEqual([]);
   });
 
   it("ignores pending program account responses after unmount", async () => {

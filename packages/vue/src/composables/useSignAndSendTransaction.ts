@@ -9,7 +9,7 @@ import type {
   TransactionConfirmation,
 } from "@vue-solana/core/types";
 import { createNoWalletSelectedError } from "@vue-solana/core/wallet";
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { useConnection } from "./useConnection";
 import { useWallet } from "./useWallet";
 import { getConfirmedTransactionStatus } from "./useTransactionConfirmation";
@@ -37,7 +37,9 @@ export function useSignAndSendTransaction() {
   const signature = ref<Signature | null>(null);
   const confirmation = ref<TransactionConfirmation | null>(null);
   const status = ref<SignAndSendTransactionStatus>("idle");
-  const loading = ref(false);
+  // Both in-flight phases read as loading; the confirmation phase is a
+  // separate public status, so `loading` cannot be a single-status compare.
+  const loading = computed(() => status.value === "sending" || status.value === "confirming");
   const error = ref<SolanaError | null>(null);
   let executionId = 0;
 
@@ -47,8 +49,8 @@ export function useSignAndSendTransaction() {
     const transactionOptions = Object.keys(sendOptions).length > 0 ? sendOptions : undefined;
 
     status.value = "sending";
-    loading.value = true;
     error.value = null;
+
     confirmation.value = null;
 
     const activeWallet = wallet.value;
@@ -57,7 +59,6 @@ export function useSignAndSendTransaction() {
       const normalizedError = createNoWalletSelectedError();
       error.value = normalizedError;
       status.value = "error";
-      loading.value = false;
 
       throw normalizedError;
     }
@@ -99,10 +100,6 @@ export function useSignAndSendTransaction() {
       }
 
       throw normalizedError;
-    } finally {
-      if (currentExecutionId === executionId) {
-        loading.value = false;
-      }
     }
   }
 

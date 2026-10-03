@@ -2,7 +2,7 @@
 title: "Errores"
 description: Maneja errores Solana normalizados desde helpers core y composables Vue/Nuxt.
 ogSection: Guías
-surroundOrder: 13
+surroundOrder: 12
 ---
 
 Vue Solana normaliza fallos comunes de wallet, RPC, dirección, transacción, timeout y storage en `SolanaError`.

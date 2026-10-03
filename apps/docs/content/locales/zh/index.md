@@ -15,12 +15,12 @@ Vue Solana 通过 Vue 和 Nuxt composable 提供 RPC 设置、响应式账户读
 - [`@vue-solana/vue`](/zh/packages/vue): Vue 插件和 composable。
 - [`@vue-solana/nuxt`](/zh/packages/nuxt): 安装 Vue 插件并自动导入 composable 的 Nuxt 模块。
 
-`@vue-solana/core` 基于 [Solana Kit](https://solana.com/docs/kit)。它从 `@vue-solana/core/kit` 重新导出 Kit primitives 和 `createSolanaClient()` 工厂，框架包则暴露以 Kit 为先的 composable，例如 `useSolanaClient()`。旧版 `@solana/web3-compat` 表面和 `web3` 子路径已在 v2.0.0 移除——before/after 对照请参阅 [Kit 迁移指南](/zh/guides/kit-migration)。
+`@vue-solana/core` 基于 [Solana Kit](https://solana.com/docs/kit)。它从 `@vue-solana/core/kit` 重新导出全部的 `@solana/kit` 和 `createSolanaClient()` 工厂，因此你无需自行安装 `@solana/kit`，框架包则暴露以 Kit 为先的 composable，例如 `useSolanaClient()`。旧版 `@solana/web3-compat` 表面和 `web3` 子路径已在 v2.0.0 移除——before/after 对照请参阅 [Kit 迁移指南](/zh/guides/migration)。
 
 ## 从这里开始
 
 - [开始使用](/zh/getting-started)
-- [Kit 迁移](/zh/guides/kit-migration)
+- [Kit 迁移](/zh/guides/migration)
 - [钱包指南](/zh/guides/wallets)
 - [交易指南](/zh/guides/transactions)
 - [面向 Vue 开发者的 Solana](/zh/concepts/solana-for-vue-developers)

@@ -31,7 +31,7 @@ Official Solana references:
 
 ## Before You Start
 
-Use `@vue-solana/core` directly if you need framework-agnostic Solana helpers such as `createSolanaContext()`, `createSolanaClient()`, `parseAddress()`, and token-account reads without Vue/Nuxt integration. Use `@vue-solana/vue` or `@vue-solana/nuxt` when you want framework integration. Build transaction messages with `@solana/kit`.
+Use `@vue-solana/core` directly if you need framework-agnostic Solana helpers such as `createSolanaContext()`, `createSolanaClient()`, `parseAddress()`, and token-account reads without Vue/Nuxt integration. Use `@vue-solana/vue` or `@vue-solana/nuxt` when you want framework integration. Build transaction messages with the Kit helpers from `@vue-solana/vue/kit` (`@vue-solana/nuxt/kit` in Nuxt) or `@vue-solana/core/kit`.
 
 Supported clusters:
 
@@ -59,6 +59,8 @@ Install the package for your framework:
 ```sh
 pnpm add @vue-solana/vue
 ```
+
+Since v3.0.0 every `@vue-solana/*` package is ESM only: the `require` export condition and the top-level `main` field were removed. Vite and Nuxt apps already bundle ESM and need no change; a CommonJS `require("@vue-solana/vue")` fails with `No "exports" main defined`. Make the importing module ESM (`"type": "module"` or a `.mjs` file), or pin `@vue-solana/*` to `^2`, which still ships a `.cjs` build.
 
 For local development, use workspace linking instead:
 
@@ -617,7 +619,7 @@ import {
   getTransactionEncoder,
   setTransactionMessageFeePayer,
   setTransactionMessageLifetimeUsingBlockhash,
-} from "@solana/kit";
+} from "@vue-solana/vue/kit";
 
 installSolanaBufferPolyfill();
 

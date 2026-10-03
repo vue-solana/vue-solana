@@ -13,6 +13,8 @@ surroundOrder: 15
 pnpm add @vue-solana/vue
 ```
 
+该包仅发布 ESM。Vite 应用本身已经打包为 ESM，不需要改动；在 CommonJS 中 `require("@vue-solana/vue")` 会以 `No "exports" main defined` 失败。请把导入该包的模块改为 ESM，或者继续使用仍提供 `.cjs` 构建的 `@vue-solana/vue@^2`。参见[从 v2 升级到 v3](/zh/guides/migration#从-v2-升级到-v3)。
+
 创建或序列化交易的浏览器应用可以从 `@vue-solana/vue/buffer-polyfill` 初始化 Buffer polyfill。
 
 ## 插件设置
@@ -142,7 +144,7 @@ import { useWallet } from "@vue-solana/vue/useWallet";
 - `@vue-solana/vue/useTokenAccounts`
 - `@vue-solana/vue/kit`
 
-浏览器交易代码需要 Buffer polyfill 时，使用 `@vue-solana/vue/buffer-polyfill`。请以 named import 引入 `installSolanaBufferPolyfill()` 并调用它；像 `import "@vue-solana/vue/buffer-polyfill"` 这样的副作用导入不会安装任何东西，因为所有 `@vue-solana/*` 包都标记了 `"sideEffects": false`，且该 subpath 只导出函数。需要 Kit API（`createSolanaClient`、`address`、`lamports` 和类型）时，使用 `@vue-solana/vue/kit`。较底层 core 用法仍然支持直接 `@vue-solana/core/*` 导入。
+浏览器交易代码需要 Buffer polyfill 时，使用 `@vue-solana/vue/buffer-polyfill`。请以 named import 引入 `installSolanaBufferPolyfill()` 并调用它；像 `import "@vue-solana/vue/buffer-polyfill"` 这样的副作用导入不会安装任何东西，因为所有 `@vue-solana/*` 包都标记了 `"sideEffects": false`，且该 subpath 只导出函数。需要 Kit API 时，使用 `@vue-solana/vue/kit` — 它会重新导出全部 `@solana/kit`，因此你无需自行安装该包。较底层 core 用法仍然支持直接 `@vue-solana/core/*` 导入。
 
 - `useSolana()`：返回完整注入的 Solana context。
 - `useSolanaClient()`：返回 context 中的 Kit `{ client, rpc }`。新代码推荐使用。
@@ -237,7 +239,7 @@ onMounted(checkSlot);
 </template>
 ```
 
-`useSolanaClient()` 返回与 `useSolana()` 相同的 context，但为 Kit 读取塑形：`client` 是完整的 `@solana/kit` 客户端，`rpc` 是它的读取 API。RPC 结果是 `bigint`，账户数据是 `Uint8Array`。参见 [Kit 迁移](/zh/guides/kit-migration)。
+`useSolanaClient()` 返回与 `useSolana()` 相同的 context，但为 Kit 读取塑形：`client` 是完整的 `@solana/kit` 客户端，`rpc` 是它的读取 API。RPC 结果是 `bigint`，账户数据是 `Uint8Array`。参见 [Kit 迁移](/zh/guides/migration)。
 
 ## 读取余额
 
@@ -344,7 +346,24 @@ const tokenBalanceErrorMessage = computed(() => {
 </template>
 ```
 
-`useTokenBalance()` 在关联 token 账户不存在时返回 null balance 和 decimals，不会将其视为错误。
+`useTokenBalance()` 在关联 token 账户不存在时返回 null balance 和 decimals，不会将其视为错误。它的 `balance` 和 `decimals` 是由一次读取派生出的只读 computed ref——请读取，不要赋值。
+
+## 读取组合式函数的语义
+
+`useBalance()`、`useAccountInfo()`、`useProgramAccounts()`、`useTokenAccounts()`、`useTokenBalance()` 共用一套状态机。其中两条规则会让从 v2 过来的人措手不及：
+
+- **失败时 `refresh()` 会 reject 而不是 resolve**，输入为空时以 `null` resolve。不带 `try`/`catch` 的 `await refresh()` 会抛出。直接接到 `@click` 没问题——Vue 会吞掉 rejection——但手写调用方必须处理。`useRequest()` 是例外，仍以尝试结果 resolve。
+- **读取失败时，数据会回退为空值。** 最后一次成功的余额不会留在新的 `error` 旁边，因为和错误并排的陈旧值会被误读成当前数据。请根据 `error` 而不是 falsy 值来决定渲染什么。
+
+```vue
+<template>
+  <UAlert v-if="error" color="error" variant="subtle" :title="balanceErrorMessage" />
+  <p v-else-if="loading">加载中…</p>
+  <p v-else>Lamports: {{ balance ?? "—" }}</p>
+</template>
+```
+
+无法解析的地址会在 `error` 中报告 `INVALID_ADDRESS`，且不会到达 RPC。参见[读取账户](/guides/account-reads#refresh-与错误语义)。
 
 ## 错误处理
 
@@ -664,10 +683,10 @@ await execute(transaction, {
 
 ### 钱包请求的输入与返回值
 
-钱包签名流程接受符合 Solana 交易 schema 的原始 `Uint8Array` wire bytes 作为交易输入。请用 `@solana/kit` 构建它们（或从 base64/base58 RPC 响应中解码）；这里不接受 base64 字符串、交易对象和指令列表。
+钱包签名流程接受符合 Solana 交易 schema 的原始 `Uint8Array` wire bytes 作为交易输入。请用 `@vue-solana/vue/kit` 中的辅助函数构建它们（或从 base64/base58 RPC 响应中解码）；这里不接受 base64 字符串、交易对象和指令列表。
 
 ```ts
-import { compileTransaction, getTransactionEncoder } from "@solana/kit";
+import { compileTransaction, getTransactionEncoder } from "@vue-solana/vue/kit";
 
 const transaction: Uint8Array = getTransactionEncoder().encode(compileTransaction(message));
 await execute(transaction);

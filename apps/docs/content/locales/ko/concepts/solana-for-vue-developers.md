@@ -42,7 +42,7 @@ const publicKey = address("PASTE_A_SOLANA_ADDRESS");
 
 주소는 base58 `Address` 문자열입니다. 레거시 `PublicKey` 클래스와 `web3` 하위 경로는 v2.0.0에서 제거되었습니다.
 
-둘 사이의 전체 매핑은 [Kit 마이그레이션](/guides/kit-migration) 가이드를 참고하세요.
+둘 사이의 전체 매핑은 [Kit 마이그레이션](/guides/migration) 가이드를 참고하세요.
 
 프런트엔드 코드에 private key, seed phrase, secret key 배열을 절대 노출하지 마세요.
 

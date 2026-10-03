@@ -51,10 +51,10 @@ How an agent should use this site:
 - [시작하기](https://vue-solana-docs.vercel.app/ko/getting-started): Vue Solana 패키지를 설치하고 Vue 또는 Nuxt를 설정한 뒤 devnet에서 RPC 읽기를 테스트합니다.
 - [开始使用](https://vue-solana-docs.vercel.app/zh/getting-started): 安装 Vue Solana 包、配置 Vue 或 Nuxt，并在 devnet 上测试 RPC 读取。
 - [Agent Skill](https://vue-solana-docs.vercel.app/agent-skill): Install the Vue Solana Agent Skill for AI coding agents.
-- [Skill de agente](https://vue-solana-docs.vercel.app/es/agent-skill): Instala el Agent Skill de Vue Solana para agentes de codificacion con IA.
+- [Skill de agente](https://vue-solana-docs.vercel.app/es/agent-skill): Instala el Agent Skill de Vue Solana para agentes de codificación con IA.
 - [Agent Skill](https://vue-solana-docs.vercel.app/ko/agent-skill): AI 코딩 에이전트를 위한 Vue Solana Agent Skill 설치 방법입니다.
 - [Agent Skill](https://vue-solana-docs.vercel.app/zh/agent-skill): 为 AI 编码代理安装 Vue Solana Agent Skill。
-- [Solucion de problemas](https://vue-solana-docs.vercel.app/es/troubleshooting): Problemas comunes de setup, TypeScript, wallet, RPC y Nuxt.
+- [Solución de problemas](https://vue-solana-docs.vercel.app/es/troubleshooting): Problemas comunes de setup, TypeScript, wallet, RPC y Nuxt.
 - [문제 해결](https://vue-solana-docs.vercel.app/ko/troubleshooting): 일반적인 설정, TypeScript, 지갑, RPC, Nuxt 문제입니다.
 - [Troubleshooting](https://vue-solana-docs.vercel.app/troubleshooting): Common setup, TypeScript, wallet, RPC, and Nuxt issues.
 - [故障排查](https://vue-solana-docs.vercel.app/zh/troubleshooting): 常见的安装、TypeScript、钱包、RPC 和 Nuxt 问题。
@@ -66,10 +66,10 @@ How an agent should use this site:
 - [Clusters](https://vue-solana-docs.vercel.app/es/concepts/clusters): Nombres de clusters de Solana, endpoints RPC e instrucciones para faucet.
 - [클러스터](https://vue-solana-docs.vercel.app/ko/concepts/clusters): Solana 클러스터 이름, RPC 엔드포인트, faucet 안내입니다.
 - [集群](https://vue-solana-docs.vercel.app/zh/concepts/clusters): Solana 集群名称、RPC 端点和水龙头使用说明。
-- [Migración a Kit](https://vue-solana-docs.vercel.app/es/guides/kit-migration): Cómo migrar una app de Vue o Nuxt de la API legacy de web3-compat a @solana/kit. v2.0.0 eliminó web3-compat por completo.
-- [Kit Migration](https://vue-solana-docs.vercel.app/guides/kit-migration): How to move a Vue or Nuxt app from the legacy web3-compat API to @solana/kit. v2.0.0 removed web3-compat everywhere.
-- [Kit 마이그레이션](https://vue-solana-docs.vercel.app/ko/guides/kit-migration): Vue 또는 Nuxt 앱을 레거시 web3-compat API에서 @solana/kit으로 옮기는 방법. v2.0.0에서 web3-compat이 모든 곳에서 제거되었습니다.
-- [Kit 迁移](https://vue-solana-docs.vercel.app/zh/guides/kit-migration): 如何将 Vue 或 Nuxt 应用从旧版 web3-compat API 迁移到 @solana/kit。v2.0.0 已在所有位置移除 web3-compat。
+- [Migración a Kit](https://vue-solana-docs.vercel.app/es/guides/kit-migration): Cómo migrar una app de Vue o Nuxt de la API legacy de web3-compat a @solana/kit. v2.0.0 eliminó web3-compat; v3.0.0 publica solo ESM.
+- [Kit Migration](https://vue-solana-docs.vercel.app/guides/kit-migration): How to move a Vue or Nuxt app from the legacy web3-compat API to @solana/kit. v2.0.0 removed web3-compat; v3.0.0 publishes ESM only.
+- [Kit 마이그레이션](https://vue-solana-docs.vercel.app/ko/guides/kit-migration): Vue 또는 Nuxt 앱을 레거시 web3-compat API에서 @solana/kit으로 옮기는 방법. v2.0.0에서 web3-compat이 제거되었고, v3.0.0부터 ESM만 배포합니다.
+- [Kit 迁移](https://vue-solana-docs.vercel.app/zh/guides/kit-migration): 如何将 Vue 或 Nuxt 应用从旧版 web3-compat API 迁移到 @solana/kit。v2.0.0 移除了 web3-compat，v3.0.0 仅发布 ESM。
 - [RPC Y Clusters](https://vue-solana-docs.vercel.app/es/guides/rpc-and-clusters): Configura clusters de Solana, endpoints RPC, endpoints WebSocket y helpers de cliente.
 - [RPC and Clusters](https://vue-solana-docs.vercel.app/guides/rpc-and-clusters): Configure Solana clusters, RPC endpoints, WebSocket endpoints, and client helpers.
 - [RPC와 클러스터](https://vue-solana-docs.vercel.app/ko/guides/rpc-and-clusters): Solana 클러스터, RPC 엔드포인트, WebSocket 엔드포인트, client helper를 설정합니다.
@@ -86,7 +86,7 @@ How an agent should use this site:
 - [Transactions](https://vue-solana-docs.vercel.app/guides/transactions): Sign, send, confirm, and handle transaction state with Vue Solana.
 - [트랜잭션](https://vue-solana-docs.vercel.app/ko/guides/transactions): Vue Solana로 트랜잭션에 서명하고, 전송하고, 확인하고, 상태를 처리합니다.
 - [交易](https://vue-solana-docs.vercel.app/zh/guides/transactions): 使用 Vue Solana 签署、发送、确认并处理交易状态。
-- [Firma De Mensajes](https://vue-solana-docs.vercel.app/es/guides/message-signing): Firma mensajes de autenticacion o propiedad sin crear transacciones on-chain.
+- [Firma De Mensajes](https://vue-solana-docs.vercel.app/es/guides/message-signing): Firma mensajes de autenticación o propiedad sin crear transacciones on-chain.
 - [Message Signing](https://vue-solana-docs.vercel.app/guides/message-signing): Sign authentication or ownership messages without creating on-chain transactions.
 - [메시지 서명](https://vue-solana-docs.vercel.app/ko/guides/message-signing): 온체인 트랜잭션을 만들지 않고 인증 또는 소유권 메시지에 서명합니다.
 - [消息签名](https://vue-solana-docs.vercel.app/zh/guides/message-signing): 签署认证或所有权消息，而不创建链上交易。
@@ -130,12 +130,12 @@ How an agent should use this site:
 - [Contacto](https://vue-solana-docs.vercel.app/es/contact): Como contactar al equipo de Vue Solana para soporte, reportes de seguridad y prensa.
 - [문의](https://vue-solana-docs.vercel.app/ko/contact): 지원, 보안 보고, 언론 문의를 위해 Vue Solana 팀에 연락하는 방법.
 - [联系](https://vue-solana-docs.vercel.app/zh/contact): 如何就支持、安全报告和媒体事务联系 Vue Solana 团队。
-- [Privacidad](https://vue-solana-docs.vercel.app/es/privacy): Que recoge este sitio de documentacion, que no recoge, y como se gestionan las analiticas.
+- [Privacidad](https://vue-solana-docs.vercel.app/es/privacy): Que recoge este sitio de documentación, que no recoge, y como se gestionan las analiticas.
 - [개인정보](https://vue-solana-docs.vercel.app/ko/privacy): 이 문서 사이트가 수집하는 것, 수집하지 않는 것, 애널리틱스 처리 방식.
 - [Privacy](https://vue-solana-docs.vercel.app/privacy): What this documentation site collects, what it does not, and how analytics are handled.
 - [隐私](https://vue-solana-docs.vercel.app/zh/privacy): 本文档网站收集什么、不收集什么，以及分析数据的处理方式。
 - [Developer Portal](https://vue-solana-docs.vercel.app/developers): Quickstart, machine-readable endpoints, and integration conventions for building against Vue Solana.
-- [Portal De Desarrolladores](https://vue-solana-docs.vercel.app/es/developers): Quickstart, endpoints legibles por maquina y convenciones de integracion para construir sobre Vue Solana.
+- [Portal De Desarrolladores](https://vue-solana-docs.vercel.app/es/developers): Quickstart, endpoints legibles por máquina y convenciones de integración para construir sobre Vue Solana.
 - [개발자 포털](https://vue-solana-docs.vercel.app/ko/developers): Vue Solana로 빌드하기 위한 퀵스타트, 기계 판독 가능 엔드포인트, 통합 규약.
 - [开发者门户](https://vue-solana-docs.vercel.app/zh/developers): 构建 Vue Solana 集成的快速上手、机器可读端点与集成约定。
 

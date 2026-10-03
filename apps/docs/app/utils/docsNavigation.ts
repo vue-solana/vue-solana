@@ -1,14 +1,12 @@
 import type { NavigationMenuItem } from "@nuxt/ui";
 
 export type DocsNavLink = {
-  label: string;
   labelKey: string;
   to: string;
   icon?: string;
 };
 
 export type DocsNavSection = {
-  title: string;
   titleKey: string;
   links: DocsNavLink[];
 };
@@ -16,30 +14,21 @@ export type DocsNavSection = {
 export type DocsLocalePathResolver = (path: string) => string;
 export type DocsTranslationResolver = (key: string) => string;
 
-const resolveDefaultLocalePath: DocsLocalePathResolver = (path) => path;
-const resolveDefaultTranslation: DocsTranslationResolver = (key) => key;
-
 export const primaryNavLinks: DocsNavLink[] = [
-  { label: "Get Started", labelKey: "navigation.primary.getStarted", to: "/getting-started" },
-  {
-    label: "Concepts",
-    labelKey: "navigation.primary.concepts",
-    to: "/concepts/solana-for-vue-developers",
-  },
-  { label: "Guides", labelKey: "navigation.primary.guides", to: "/guides/rpc-and-clusters" },
-  { label: "Demo", labelKey: "navigation.primary.demo", to: "/demo" },
-  { label: "Roadmap", labelKey: "navigation.primary.roadmap", to: "/roadmap" },
+  { labelKey: "navigation.primary.getStarted", to: "/getting-started" },
+  { labelKey: "navigation.primary.concepts", to: "/concepts/solana-for-vue-developers" },
+  { labelKey: "navigation.primary.guides", to: "/guides/rpc-and-clusters" },
+  { labelKey: "navigation.primary.demo", to: "/demo" },
+  { labelKey: "navigation.primary.roadmap", to: "/roadmap" },
 ];
 
 export const externalNavLinks: DocsNavLink[] = [
   {
-    label: "GitHub",
     labelKey: "navigation.external.github",
     to: "https://github.com/vue-solana/vue-solana",
     icon: "i-simple-icons-github",
   },
   {
-    label: "npm",
     labelKey: "navigation.external.npm",
     to: "https://www.npmjs.com/org/vue-solana",
     icon: "i-simple-icons-npm",
@@ -48,107 +37,63 @@ export const externalNavLinks: DocsNavLink[] = [
 
 export const docsNavSections: DocsNavSection[] = [
   {
-    title: "Start",
     titleKey: "navigation.sidebar.start",
     links: [
-      { label: "Overview", labelKey: "navigation.sidebar.overview", to: "/" },
-      {
-        label: "Getting Started",
-        labelKey: "navigation.sidebar.gettingStarted",
-        to: "/getting-started",
-      },
-      { label: "Agent Skill", labelKey: "navigation.sidebar.agentSkill", to: "/agent-skill" },
-      {
-        label: "Troubleshooting",
-        labelKey: "navigation.sidebar.troubleshooting",
-        to: "/troubleshooting",
-      },
-      { label: "Developers", labelKey: "navigation.sidebar.developers", to: "/developers" },
+      { labelKey: "navigation.sidebar.overview", to: "/" },
+      { labelKey: "navigation.sidebar.gettingStarted", to: "/getting-started" },
+      { labelKey: "navigation.sidebar.agentSkill", to: "/agent-skill" },
+      { labelKey: "navigation.sidebar.troubleshooting", to: "/troubleshooting" },
+      { labelKey: "navigation.sidebar.developers", to: "/developers" },
     ],
   },
   {
-    title: "Concepts",
     titleKey: "navigation.sidebar.concepts",
     links: [
       {
-        label: "Solana For Vue Developers",
         labelKey: "navigation.sidebar.solanaForVueDevelopers",
         to: "/concepts/solana-for-vue-developers",
       },
-      { label: "Clusters", labelKey: "navigation.sidebar.clusters", to: "/concepts/clusters" },
+      { labelKey: "navigation.sidebar.clusters", to: "/concepts/clusters" },
     ],
   },
   {
-    title: "Guides",
     titleKey: "navigation.sidebar.guides",
     links: [
-      {
-        label: "Kit Migration",
-        labelKey: "navigation.sidebar.kitMigration",
-        to: "/guides/kit-migration",
-      },
-      {
-        label: "RPC and Clusters",
-        labelKey: "navigation.sidebar.rpcAndClusters",
-        to: "/guides/rpc-and-clusters",
-      },
-      { label: "Wallets", labelKey: "navigation.sidebar.wallets", to: "/guides/wallets" },
-      {
-        label: "Account Reads",
-        labelKey: "navigation.sidebar.accountReads",
-        to: "/guides/account-reads",
-      },
-      {
-        label: "Transactions",
-        labelKey: "navigation.sidebar.transactions",
-        to: "/guides/transactions",
-      },
-      {
-        label: "Message Signing",
-        labelKey: "navigation.sidebar.messageSigning",
-        to: "/guides/message-signing",
-      },
-      { label: "Errors", labelKey: "navigation.sidebar.errors", to: "/guides/errors" },
+      { labelKey: "navigation.sidebar.rpcAndClusters", to: "/guides/rpc-and-clusters" },
+      { labelKey: "navigation.sidebar.wallets", to: "/guides/wallets" },
+      { labelKey: "navigation.sidebar.accountReads", to: "/guides/account-reads" },
+      { labelKey: "navigation.sidebar.transactions", to: "/guides/transactions" },
+      { labelKey: "navigation.sidebar.messageSigning", to: "/guides/message-signing" },
+      { labelKey: "navigation.sidebar.errors", to: "/guides/errors" },
+      { labelKey: "navigation.sidebar.migration", to: "/guides/migration" },
     ],
   },
   {
-    title: "Packages",
     titleKey: "navigation.sidebar.packages",
     links: [
-      {
-        label: "@vue-solana/core",
-        labelKey: "navigation.sidebar.corePackage",
-        to: "/packages/core",
-      },
-      { label: "@vue-solana/vue", labelKey: "navigation.sidebar.vuePackage", to: "/packages/vue" },
-      {
-        label: "@vue-solana/nuxt",
-        labelKey: "navigation.sidebar.nuxtPackage",
-        to: "/packages/nuxt",
-      },
+      { labelKey: "navigation.sidebar.corePackage", to: "/packages/core" },
+      { labelKey: "navigation.sidebar.vuePackage", to: "/packages/vue" },
+      { labelKey: "navigation.sidebar.nuxtPackage", to: "/packages/nuxt" },
     ],
   },
   {
-    title: "Examples",
     titleKey: "navigation.sidebar.examples",
     links: [
-      { label: "Live Demo", labelKey: "navigation.sidebar.liveDemo", to: "/demo" },
-      { label: "Vue Vite", labelKey: "navigation.sidebar.vueVite", to: "/examples/vue-vite" },
-      { label: "Nuxt", labelKey: "navigation.sidebar.nuxt", to: "/examples/nuxt" },
+      { labelKey: "navigation.sidebar.liveDemo", to: "/demo" },
+      { labelKey: "navigation.sidebar.vueVite", to: "/examples/vue-vite" },
+      { labelKey: "navigation.sidebar.nuxt", to: "/examples/nuxt" },
     ],
   },
   {
-    title: "Roadmap",
     titleKey: "navigation.sidebar.roadmap",
-    links: [{ label: "Roadmap", labelKey: "navigation.sidebar.roadmapPage", to: "/roadmap" }],
+    links: [{ labelKey: "navigation.sidebar.roadmapPage", to: "/roadmap" }],
   },
   {
-    title: "Project",
     titleKey: "navigation.sidebar.project",
     links: [
-      { label: "About", labelKey: "navigation.sidebar.about", to: "/about" },
-      { label: "Contact", labelKey: "navigation.sidebar.contact", to: "/contact" },
-      { label: "Privacy", labelKey: "navigation.sidebar.privacy", to: "/privacy" },
+      { labelKey: "navigation.sidebar.about", to: "/about" },
+      { labelKey: "navigation.sidebar.contact", to: "/contact" },
+      { labelKey: "navigation.sidebar.privacy", to: "/privacy" },
     ],
   },
 ];
@@ -177,15 +122,15 @@ function stripLocalePrefix(currentPath: string, localizedLinkPath: string, linkP
 
 export function createPrimaryNavigationItems(
   currentPath: string,
-  resolveLocalePath: DocsLocalePathResolver = resolveDefaultLocalePath,
-  resolveTranslation: DocsTranslationResolver = resolveDefaultTranslation,
+  resolveLocalePath: DocsLocalePathResolver,
+  resolveTranslation: DocsTranslationResolver,
 ): NavigationMenuItem[] {
   return primaryNavLinks.map((link) => {
     const localizedTo = resolveLocalePath(link.to);
 
     return {
       ...link,
-      label: resolveTranslation(link.labelKey) || link.label,
+      label: resolveTranslation(link.labelKey),
       to: localizedTo,
       active: isPrimaryNavLinkActive(stripLocalePrefix(currentPath, localizedTo, link.to), link.to),
     };
@@ -194,17 +139,17 @@ export function createPrimaryNavigationItems(
 
 export function createSidebarNavigationItems(
   currentPath: string,
-  resolveLocalePath: DocsLocalePathResolver = resolveDefaultLocalePath,
-  resolveTranslation: DocsTranslationResolver = resolveDefaultTranslation,
+  resolveLocalePath: DocsLocalePathResolver,
+  resolveTranslation: DocsTranslationResolver,
 ): NavigationMenuItem[][] {
   return docsNavSections.map((section) => [
     {
-      label: resolveTranslation(section.titleKey) || section.title,
+      label: resolveTranslation(section.titleKey),
       type: "label",
     },
     ...section.links.map((link) => ({
       ...link,
-      label: resolveTranslation(link.labelKey) || link.label,
+      label: resolveTranslation(link.labelKey),
       to: resolveLocalePath(link.to),
       active: currentPath === resolveLocalePath(link.to),
     })),

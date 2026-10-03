@@ -21,24 +21,20 @@
   },
   "type": "module",
   "sideEffects": false,
-  "main": "./dist/module.cjs",
   "module": "./dist/module.mjs",
   "types": "./dist/module.d.mts",
   "exports": {
     ".": {
       "types": "./dist/module.d.mts",
-      "import": "./dist/module.mjs",
-      "require": "./dist/module.cjs"
+      "import": "./dist/module.mjs"
     },
     "./buffer-polyfill": {
       "types": "./dist/runtime/buffer-polyfill.d.ts",
-      "import": "./dist/runtime/buffer-polyfill.mjs",
-      "require": "./dist/runtime/buffer-polyfill.cjs"
+      "import": "./dist/runtime/buffer-polyfill.mjs"
     },
     "./kit": {
       "types": "./dist/runtime/kit.d.ts",
-      "import": "./dist/runtime/kit.mjs",
-      "require": "./dist/runtime/kit.cjs"
+      "import": "./dist/runtime/kit.mjs"
     }
   },
   "files": [

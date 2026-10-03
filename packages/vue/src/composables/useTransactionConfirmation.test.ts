@@ -163,6 +163,53 @@ describe("useTransactionConfirmation", () => {
     expect(result.error.value?.code).toBe("RPC_FAILURE");
     expect(result.error.value?.cause).toBe(failure);
   });
+
+  it("clears every settled field on reset", async () => {
+    const failure = new Error("confirmation RPC failed");
+    const getSignatureStatuses = vi
+      .fn()
+      .mockReturnValueOnce({ send: vi.fn().mockResolvedValue({ value: [CONFIRMED_STATUS] }) })
+      .mockReturnValue({ send: vi.fn().mockRejectedValue(failure) });
+    const result = mountTransactionConfirmation(getSignatureStatuses);
+
+    await result.confirm(SIGNATURE);
+
+    expect(result.status.value).toBe("confirmed");
+
+    await expect(result.confirm(NEW_SIGNATURE)).rejects.toThrow("confirmation RPC failed");
+
+    expect(result.status.value).toBe("error");
+    expect(result.error.value?.code).toBe("RPC_FAILURE");
+
+    result.reset();
+
+    expect(result.status.value).toBe("idle");
+    expect(result.error.value).toBeNull();
+    expect(result.loading.value).toBe(false);
+    expect(result.signature.value).toBeNull();
+    expect(result.confirmation.value).toBeNull();
+  });
+
+  // `reset` bumps `useExecution`'s execution id, so a confirmation that is
+  // still polling when the user resets must not resurrect the state it cleared.
+  it("does not write state for a confirmation that settles after reset", async () => {
+    const pendingConfirmation = createDeferred<{ value: (typeof CONFIRMED_STATUS)[] }>();
+    const getSignatureStatuses = vi.fn(() => ({ send: () => pendingConfirmation.promise }));
+    const result = mountTransactionConfirmation(getSignatureStatuses);
+
+    const confirmation = result.confirm(SIGNATURE);
+
+    expect(result.status.value).toBe("confirming");
+
+    result.reset();
+
+    pendingConfirmation.resolve({ value: [CONFIRMED_STATUS] });
+    await confirmation;
+
+    expect(result.status.value).toBe("idle");
+    expect(result.signature.value).toBeNull();
+    expect(result.confirmation.value).toBeNull();
+  });
 });
 
 function mountTransactionConfirmation(

@@ -2,7 +2,7 @@
 title: "Lecturas de cuentas"
 description: Lee balances, datos de cuenta, cuentas de programa y estado de firmas de forma segura desde Vue o Nuxt.
 ogSection: Guías
-surroundOrder: 10
+surroundOrder: 9
 ---
 
 Vue Solana incluye composables para rutas comunes de lectura en Solana: balances, información de cuenta, cuentas de programa y estado de firmas.
@@ -138,7 +138,39 @@ Los composables de Nuxt pueden llamarse durante SSR y devuelven estado inerte ha
 
 Los composables de lectura limpian estado sin llamar a RPC cuando la dirección, program id o firma es `null`.
 
-Las direcciones string inválidas limpian datos obsoletos, establecen `error` y no llaman al método RPC. Ramifica con `error.value.code` para mensajes orientados al usuario.
+Las direcciones string inválidas limpian datos obsoletos, establecen `error` y no llaman al método RPC. Ramifica con `error.value.code` para mensajes orientados al usuario; una dirección que no se puede parsear informa `INVALID_ADDRESS`.
+
+## Semántica de refresh y de errores
+
+`useBalance`, `useAccountInfo`, `useProgramAccounts`, `useTokenAccounts` y `useTokenBalance` comparten una única máquina de estados, así que se comportan igual en tres casos fáciles de confundir.
+
+**`refresh()` rechaza; no resuelve cuando hay error.** Resuelve con el nuevo valor si tiene éxito, con `null` si una entrada está vacía, y rechaza con un `SolanaError` normalizado en caso contrario. Un `@click="refresh"` a secas está bien porque Vue se traga el rechazo, pero el código escrito a mano debe gestionarlo:
+
+```ts
+// Sin estado de error en una promesa rechazada, esto no hace nada útil.
+await refresh();
+
+// Await y reportar.
+try {
+  await refresh();
+} catch (cause) {
+  console.error(cause);
+}
+```
+
+`useRequest()` es la excepción: su `refresh()` resuelve con el resultado del intento en lugar de rechazar.
+
+**Los datos vuelven a su valor vacío cuando una lectura falla.** Un balance cargado previamente no se queda en pantalla junto a un error nuevo, porque un valor obsoleto junto a un error se lee como dato actual cuando no lo es. Ramifica con `error` para decidir qué renderizar:
+
+```vue
+<template>
+  <UAlert v-if="error" color="error" variant="subtle" :title="errorMessage" />
+  <p v-else-if="loading">Cargando…</p>
+  <p v-else>Lamports: {{ balance ?? "—" }}</p>
+</template>
+```
+
+**Resultados de solo lectura en `useTokenBalance`.** Sus `balance` y `decimals` son refs computadas derivadas de una única lectura. Lelos; asignarles no tiene efecto.
 
 ## Checklist de coste RPC
 

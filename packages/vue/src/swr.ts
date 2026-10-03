@@ -1,6 +1,5 @@
 import type { SolanaError } from "@vue-solana/core/errors";
-import type { SolanaRpcResponse } from "@vue-solana/core/kit";
-import { computed, watch } from "vue";
+import { computed, watch, type ComputedRef, type Ref } from "vue";
 import type { UseRequestOptions, UseRequestReturn } from "./composables/useRequest";
 import { useRequest } from "./composables/useRequest";
 import type {
@@ -58,18 +57,6 @@ export function clearSwrCache(): void {
   swrCache.clear();
 }
 
-function readSwrCache(key: string): SwrCacheEntry | undefined {
-  return swrCache.get(key);
-}
-
-function writeSwrCache(key: string, entry: SwrCacheEntry): void {
-  swrCache.set(key, entry);
-}
-
-function deleteSwrCache(key: string): void {
-  swrCache.delete(key);
-}
-
 function isPendingStatus(status: string): boolean {
   return status === "fetching" || status === "loading";
 }
@@ -86,14 +73,14 @@ function writeSwrResult(
   status: string,
 ): void {
   if (status === "disabled") {
-    deleteSwrCache(key);
+    swrCache.delete(key);
 
     return;
   }
 
-  const previous = readSwrCache(key);
+  const previous = swrCache.get(key);
 
-  writeSwrCache(key, {
+  swrCache.set(key, {
     data: data !== undefined ? data : previous?.data,
     error,
     status,
@@ -117,6 +104,53 @@ function swrError(
   return error ?? (isPendingStatus(status) ? (seed?.error ?? null) : null);
 }
 
+interface SwrResult<TData> {
+  data: ComputedRef<TData | undefined>;
+  error: ComputedRef<SolanaError | null>;
+  status: Ref<string>;
+}
+
+/**
+ * The seed-then-write-back half every adapter shares, so a new composable
+ * adapter is one `useSwrKeyed` call plus its extra methods.
+ *
+ * Takes an already-created composable result: the cache read is order-free
+ * (nothing writes between the composable's own watcher and this one).
+ */
+function useSwrKeyed<TData>(
+  prefix: string,
+  key: string,
+  result: SwrResult<TData>,
+): Pick<SwrResult<TData>, "data" | "error"> {
+  const cacheKey = `${prefix}${key}`;
+  const seed = swrCache.get(cacheKey);
+
+  if (result.status.value === "disabled") {
+    swrCache.delete(cacheKey);
+  }
+
+  watch(
+    [result.data, result.error, result.status],
+    ([data, error, status]) => writeSwrResult(cacheKey, data, error, status),
+    { flush: "sync" },
+  );
+
+  const data = computed<TData | undefined>(() => {
+    if (result.status.value === "disabled") {
+      return undefined;
+    }
+
+    return result.data.value !== undefined ? result.data.value : (seed?.data as TData | undefined);
+  });
+
+  return {
+    data,
+    error: computed<SolanaError | null>(() =>
+      swrError(result.error.value, result.status.value, seed),
+    ),
+  };
+}
+
 /**
  * `useRequest` with cache keying. A component mounting with a key that
  * already holds data shows it immediately (stale) while its own request
@@ -131,39 +165,10 @@ export function useRequestSwr<TResult>(
   source: Parameters<typeof useRequest<TResult>>[0],
   options: UseRequestOptions = {},
 ): UseRequestReturn<TResult> {
-  const cacheKey = `${PREFIX_REQUEST}${key}`;
-  const seed = readSwrCache(cacheKey);
   const result = useRequest<TResult>(source, options);
+  const swr = useSwrKeyed(PREFIX_REQUEST, key, result);
 
-  if (result.status.value === "disabled") {
-    deleteSwrCache(cacheKey);
-  }
-
-  watch(
-    [result.data, result.error, result.status],
-    ([data, error, status]) => writeSwrResult(cacheKey, data, error, status),
-    { flush: "sync" },
-  );
-
-  const data = computed<TResult | undefined>(() => {
-    if (result.status.value === "disabled") {
-      return undefined;
-    }
-
-    return result.data.value !== undefined
-      ? result.data.value
-      : (seed?.data as TResult | undefined);
-  });
-  const error = computed<SolanaError | null>(() =>
-    swrError(result.error.value, result.status.value, seed),
-  );
-
-  return {
-    data,
-    error,
-    refresh: result.refresh,
-    status: result.status,
-  };
+  return { ...swr, refresh: result.refresh, status: result.status };
 }
 
 /**
@@ -178,39 +183,10 @@ export function useSubscriptionSwr<TResult>(
   source: UseSubscriptionSource<TResult>,
   options: UseSubscriptionOptions = {},
 ): UseSubscriptionReturn<TResult> {
-  const cacheKey = `${PREFIX_SUBSCRIPTION}${key}`;
-  const seed = readSwrCache(cacheKey);
   const result = useSubscription<TResult>(source, options);
+  const swr = useSwrKeyed(PREFIX_SUBSCRIPTION, key, result);
 
-  if (result.status.value === "disabled") {
-    deleteSwrCache(cacheKey);
-  }
-
-  watch(
-    [result.data, result.error, result.status],
-    ([data, error, status]) => writeSwrResult(cacheKey, data, error, status),
-    { flush: "sync" },
-  );
-
-  const data = computed<TResult | undefined>(() => {
-    if (result.status.value === "disabled") {
-      return undefined;
-    }
-
-    return result.data.value !== undefined
-      ? result.data.value
-      : (seed?.data as TResult | undefined);
-  });
-  const error = computed<SolanaError | null>(() =>
-    swrError(result.error.value, result.status.value, seed),
-  );
-
-  return {
-    data,
-    error,
-    reconnect: result.reconnect,
-    status: result.status,
-  };
+  return { ...swr, reconnect: result.reconnect, status: result.status };
 }
 
 /**
@@ -226,35 +202,8 @@ export function useTrackedDataSwr<TInitialValue, TStreamValue, TItem>(
   source: UseTrackedDataSource<TInitialValue, TStreamValue, TItem>,
   options: UseTrackedDataOptions = {},
 ): UseTrackedDataReturn<TItem> {
-  const cacheKey = `${PREFIX_TRACKED}${key}`;
-  const seed = readSwrCache(cacheKey);
   const result = useTrackedData<TInitialValue, TStreamValue, TItem>(source, options);
+  const swr = useSwrKeyed(PREFIX_TRACKED, key, result);
 
-  if (result.status.value === "disabled") {
-    deleteSwrCache(cacheKey);
-  }
-
-  watch(
-    [result.data, result.error, result.status],
-    ([data, error, status]) => writeSwrResult(cacheKey, data, error, status),
-    { flush: "sync" },
-  );
-
-  const data = computed<SolanaRpcResponse<TItem> | undefined>(() => {
-    if (result.status.value === "disabled") {
-      return undefined;
-    }
-
-    return result.data.value ?? (seed?.data as SolanaRpcResponse<TItem> | undefined);
-  });
-  const error = computed<SolanaError | null>(() =>
-    swrError(result.error.value, result.status.value, seed),
-  );
-
-  return {
-    data,
-    error,
-    refresh: result.refresh,
-    status: result.status,
-  };
+  return { ...swr, refresh: result.refresh, status: result.status };
 }

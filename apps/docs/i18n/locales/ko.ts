@@ -4,8 +4,6 @@ export default {
       getStarted: "시작하기",
       concepts: "개념",
       guides: "가이드",
-      packages: "패키지",
-      examples: "예제",
       demo: "데모",
       roadmap: "로드맵",
     },
@@ -20,7 +18,7 @@ export default {
       solanaForVueDevelopers: "Vue 개발자를 위한 Solana",
       clusters: "클러스터",
       guides: "가이드",
-      kitMigration: "Kit 마이그레이션",
+      migration: "마이그레이션 가이드",
       rpcAndClusters: "RPC와 클러스터",
       wallets: "지갑",
       accountReads: "계정 읽기",
@@ -191,10 +189,6 @@ export default {
         unsupported: "선택한 지갑은 메시지 서명을 지원하지 않습니다.",
         enterMessage: "서명할 메시지를 입력하세요.",
       },
-      status: {
-        ready: "준비됨",
-        waiting: "대기 중",
-      },
     },
     tokenAccounts: {
       title: "SPL 토큰 계정",
@@ -232,10 +226,6 @@ export default {
         connectWallet: "전송을 사용하려면 선택한 지갑을 연결하세요.",
         recipient: "유효한 Solana 수신자 주소를 입력하세요.",
         amount: "0보다 큰 SOL 금액을 입력하세요.",
-      },
-      status: {
-        ready: "준비됨",
-        waiting: "대기 중",
       },
     },
     sections: {
@@ -323,7 +313,7 @@ export default {
       description:
         "클라이언트의 에어드랍 기능으로 클라이언트 payer 서명자에게 devnet 에어드랍을 요청합니다. devnet faucet은 요청 속도를 제한하므로 오류는 대개 일시적입니다.",
       request: "1 SOL 에어드랍",
-      payerHint: "클라이언트 서명자를 아직 불러오는 중입니다.",
+      connectHint: "클라이언트 서명자가 준비될 때까지 기다리는 중입니다.",
       signature: "서명: {signature}",
       noSignature: "아직 에어드랍 없음",
     },

@@ -13,6 +13,8 @@ surroundOrder: 15
 pnpm add @vue-solana/vue
 ```
 
+이 package는 ESM만 배포합니다. Vite 앱은 이미 ESM으로 번들링되므로 변경이 필요 없고, CommonJS의 `require("@vue-solana/vue")`는 `No "exports" main defined`로 실패하므로 import하는 모듈을 ESM으로 바꾸거나 `.cjs` 빌드를 계속 제공하는 `@vue-solana/vue@^2`를 사용하세요. [v2에서 v3로 업그레이드](/ko/guides/migration#v2에서-v3로-업그레이드)를 참고하세요.
+
 트랜잭션을 만들거나 직렬화하는 브라우저 앱은 `@vue-solana/vue/buffer-polyfill`에서 Buffer polyfill을 초기화할 수 있습니다.
 
 ## 플러그인 설정
@@ -142,7 +144,7 @@ Direct package subpath:
 - `@vue-solana/vue/useTokenAccounts`
 - `@vue-solana/vue/kit`
 
-Buffer polyfill이 필요한 브라우저 트랜잭션 코드에는 `@vue-solana/vue/buffer-polyfill`을 사용하세요. `installSolanaBufferPolyfill()`을 named import로 가져와 호출하세요. `import "@vue-solana/vue/buffer-polyfill"` 같은 side-effect import는 아무것도 설치하지 않습니다. 모든 `@vue-solana/*` package가 `"sideEffects": false`로 표시되어 있고 해당 subpath는 함수만 export하기 때문입니다. Kit API(`createSolanaClient`, `address`, `lamports` 및 타입)에는 `@vue-solana/vue/kit`을 사용하세요. 더 낮은 수준의 core 사용에는 direct `@vue-solana/core/*` import도 계속 지원됩니다.
+Buffer polyfill이 필요한 브라우저 트랜잭션 코드에는 `@vue-solana/vue/buffer-polyfill`을 사용하세요. `installSolanaBufferPolyfill()`을 named import로 가져와 호출하세요. `import "@vue-solana/vue/buffer-polyfill"` 같은 side-effect import는 아무것도 설치하지 않습니다. 모든 `@vue-solana/*` package가 `"sideEffects": false`로 표시되어 있고 해당 subpath는 함수만 export하기 때문입니다. Kit API에는 `@vue-solana/vue/kit`을 사용하세요. `@solana/kit` 전체를 다시 export하므로 해당 package를 직접 설치할 필요가 없습니다. 더 낮은 수준의 core 사용에는 direct `@vue-solana/core/*` import도 계속 지원됩니다.
 
 - `useSolana()`: 주입된 전체 Solana context를 반환합니다.
 - `useSolanaClient()`: Kit `{ client, rpc }`를 context에서 반환합니다. 새 코드에 권장됩니다.
@@ -237,7 +239,7 @@ onMounted(checkSlot);
 </template>
 ```
 
-`useSolanaClient()`는 `useSolana()`와 같은 context를 반환하지만 Kit 읽기용으로 형태를 갖춥니다. `client`는 전체 `@solana/kit` 클라이언트이고 `rpc`는 그 read API입니다. RPC 결과는 `bigint`, account data는 `Uint8Array`입니다. [Kit 마이그레이션](/ko/guides/kit-migration)을 참고하세요.
+`useSolanaClient()`는 `useSolana()`와 같은 context를 반환하지만 Kit 읽기용으로 형태를 갖춥니다. `client`는 전체 `@solana/kit` 클라이언트이고 `rpc`는 그 read API입니다. RPC 결과는 `bigint`, account data는 `Uint8Array`입니다. [Kit 마이그레이션](/ko/guides/migration)을 참고하세요.
 
 ## 잔액 읽기
 
@@ -344,7 +346,24 @@ const tokenBalanceErrorMessage = computed(() => {
 </template>
 ```
 
-`useTokenBalance()`는 associated token account가 없으면 error로 처리하지 않고 null balance와 decimals를 반환합니다.
+`useTokenBalance()`는 associated token account가 없으면 error로 처리하지 않고 null balance와 decimals를 반환합니다. `balance`과 `decimals`은 한 번의 읽기에서 파생된 읽기 전용 computed ref이므로 읽기만 하고 대입하지 마세요.
+
+## 읽기 컴포저블의 의미
+
+`useBalance()`, `useAccountInfo()`, `useProgramAccounts()`, `useTokenAccounts()`, `useTokenBalance()`는 하나의 상태 머신을 공유합니다. v2에서 넘어온 사람에게 낯선 규칙이 둘 있습니다:
+
+- **실패하면 `refresh()`는 resolve하지 않고 reject합니다.** 입력이 비어 있으면 `null`로 resolve합니다. `try`/`catch` 없는 `await refresh()`는 던집니다. `@click`에 바로 연결하는 것은 괜찮지만(Vue가 rejection을 삼킵니다) 직접 작성한 호출부는 처리해야 합니다. `useRequest()`만 예외로 시도 결과로 resolve합니다.
+- **읽기가 실패하면 데이터가 빈 값으로 되돌아갑니다.** 마지막으로 성공한 balance가 새 `error` 옆에 남아 있지 않습니다. 무엇을 렌더링할지는 falsy 값이 아니라 `error`로 분기하세요.
+
+```vue
+<template>
+  <UAlert v-if="error" color="error" variant="subtle" :title="balanceErrorMessage" />
+  <p v-else-if="loading">불러오는 중…</p>
+  <p v-else>Lamports: {{ balance ?? "—" }}</p>
+</template>
+```
+
+파싱할 수 없는 주소는 `error`에 `INVALID_ADDRESS`를 보고하고 RPC에 도달하지 않습니다. [계정 읽기](/guides/account-reads#refresh와-에러-의미)를 참고하세요.
 
 ## 오류 처리
 
@@ -664,10 +683,10 @@ await execute(transaction, {
 
 ### 지갑 요청 입력과 반환값
 
-Wallet 서명 흐름은 트랜잭션 입력으로 Solana 트랜잭션 스키마를 따르는 raw `Uint8Array` wire bytes를 받습니다. `@solana/kit`으로 만들거나 base64/base58 RPC 응답에서 decode하세요. base64 문자열, 트랜잭션 객체, instruction 목록은 여기서 허용되지 않습니다.
+Wallet 서명 흐름은 트랜잭션 입력으로 Solana 트랜잭션 스키마를 따르는 raw `Uint8Array` wire bytes를 받습니다. `@vue-solana/vue/kit`의 helper로 만들거나 base64/base58 RPC 응답에서 decode하세요. base64 문자열, 트랜잭션 객체, instruction 목록은 여기서 허용되지 않습니다.
 
 ```ts
-import { compileTransaction, getTransactionEncoder } from "@solana/kit";
+import { compileTransaction, getTransactionEncoder } from "@vue-solana/vue/kit";
 
 const transaction: Uint8Array = getTransactionEncoder().encode(compileTransaction(message));
 await execute(transaction);

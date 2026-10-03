@@ -1,8 +1,7 @@
 import type { Commitment } from "@vue-solana/core/kit";
-import { normalizeSolanaError, type SolanaError } from "@vue-solana/core/errors";
-import { onMounted, onUnmounted, shallowRef, toValue, watch, type MaybeRefOrGetter } from "vue";
-import { parseAddress } from "@vue-solana/core/address";
+import type { MaybeRefOrGetter } from "vue";
 import { useConnection } from "./useConnection";
+import { useAddressRead } from "./use-address-read";
 import { tryUseSolana } from "./useSolana";
 import { decodeBase64 } from "./decode-base64";
 
@@ -48,44 +47,27 @@ export function useProgramAccounts(
   programId: MaybeRefOrGetter<string | null | undefined>,
   options: UseProgramAccountsOptions = {},
 ) {
+  // Per instance, not module level: `accounts.value` is handed out for in-place
+  // mutation, and a shared sentinel would let one instance corrupt every other.
+  const empty: ProgramAccount[] = [];
   const solana = tryUseSolana();
   const client = solana?.client ?? useConnection();
-  const accounts = shallowRef<ProgramAccount[]>([]);
-  const loading = shallowRef(false);
-  const error = shallowRef<SolanaError | null>(null);
-  let refreshId = 0;
 
-  async function refresh() {
-    const requestId = ++refreshId;
-    const value = toValue(programId);
-
-    if (!value || !solana) {
-      accounts.value = [];
-      loading.value = false;
-      error.value = null;
-      return [];
-    }
-
-    loading.value = true;
-    error.value = null;
-
-    try {
-      const parsedAddress = parseAddress(value);
-
-      if (!parsedAddress) {
-        accounts.value = [];
-        return [];
-      }
-
-      const { value: response } = await client.rpc
-        .getProgramAccounts(parsedAddress, {
-          encoding: "base64",
-          commitment: options.commitment,
-          dataSlice: options.dataSlice,
-          filters: options.filters,
-        } as never)
-        .send();
-      const nextAccounts = response.map(({ pubkey, account }) => ({
+  const { data: accounts, ...rest } = useAddressRead(
+    [programId],
+    async (key) =>
+      (
+        await client.rpc
+          .getProgramAccounts(key, {
+            encoding: "base64",
+            commitment: options.commitment,
+            dataSlice: options.dataSlice,
+            filters: options.filters,
+          } as never)
+          .send()
+      ).value,
+    (response) =>
+      response.map(({ pubkey, account }) => ({
         pubkey,
         account: {
           executable: account.executable,
@@ -94,48 +76,9 @@ export function useProgramAccounts(
           space: Number(account.space),
           data: decodeBase64(account.data[0]),
         },
-      }));
-
-      if (requestId === refreshId) {
-        accounts.value = nextAccounts;
-      }
-
-      return nextAccounts;
-    } catch (cause) {
-      const normalizedError = normalizeSolanaError(cause, "RPC_FAILURE");
-
-      if (requestId === refreshId) {
-        accounts.value = [];
-        error.value = normalizedError;
-      }
-
-      throw normalizedError;
-    } finally {
-      if (requestId === refreshId) {
-        loading.value = false;
-      }
-    }
-  }
-
-  onMounted(() => {
-    void refresh().catch(() => undefined);
-  });
-
-  onUnmounted(() => {
-    refreshId += 1;
-  });
-
-  watch(
-    () => toValue(programId),
-    () => {
-      void refresh().catch(() => undefined);
-    },
+      })),
+    empty,
   );
 
-  return {
-    accounts,
-    loading,
-    error,
-    refresh,
-  };
+  return { accounts, ...rest };
 }

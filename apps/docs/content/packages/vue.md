@@ -13,6 +13,8 @@ surroundOrder: 15
 pnpm add @vue-solana/vue
 ```
 
+The package is ESM only. Vite apps already bundle ESM and need no change; a CommonJS `require("@vue-solana/vue")` fails with `No "exports" main defined`, so make the importing module ESM, or stay on `@vue-solana/vue@^2`, which still ships a `.cjs` build. See [Upgrading v2 to v3](/guides/migration#upgrading-v2-to-v3).
+
 Browser apps that create or serialize transactions can initialize the Buffer polyfill from `@vue-solana/vue/buffer-polyfill`.
 
 ## Plugin Setup
@@ -144,7 +146,7 @@ Direct package subpaths:
 - `@vue-solana/vue/useTokenAccounts`
 - `@vue-solana/vue/kit`
 
-Use `@vue-solana/vue/buffer-polyfill` for browser transaction code that needs the Buffer polyfill. Import `installSolanaBufferPolyfill()` as a named import and call it; a bare side-effect import such as `import "@vue-solana/vue/buffer-polyfill"` installs nothing, because every `@vue-solana/*` package is marked `"sideEffects": false` and the subpath only exports the function. Use `@vue-solana/vue/kit` for the Kit API (`createSolanaClient`, `address`, `lamports`, and types). Direct `@vue-solana/core/*` imports remain supported for lower-level core usage.
+Use `@vue-solana/vue/buffer-polyfill` for browser transaction code that needs the Buffer polyfill. Import `installSolanaBufferPolyfill()` as a named import and call it; a bare side-effect import such as `import "@vue-solana/vue/buffer-polyfill"` installs nothing, because every `@vue-solana/*` package is marked `"sideEffects": false` and the subpath only exports the function. Use `@vue-solana/vue/kit` for the Kit API — it re-exports all of `@solana/kit`, so you never install that package yourself. Direct `@vue-solana/core/*` imports remain supported for lower-level core usage.
 
 - `useSolana()`: returns the full injected Solana context.
 - `useSolanaClient()`: returns the Kit `{ client, rpc }` from the context. Recommended for new code.
@@ -240,7 +242,7 @@ onMounted(checkSlot);
 </template>
 ```
 
-`useSolanaClient()` returns the same context as `useSolana()` but shapes it for Kit reads: `client` is the full `@solana/kit` client and `rpc` is its read API. RPC results are `bigint` and account data is `Uint8Array`. See [Kit Migration](/guides/kit-migration).
+`useSolanaClient()` returns the same context as `useSolana()` but shapes it for Kit reads: `client` is the full `@solana/kit` client and `rpc` is its read API. RPC results are `bigint` and account data is `Uint8Array`. See [Kit Migration](/guides/migration).
 
 ## Read Balance
 
@@ -347,7 +349,24 @@ const tokenBalanceErrorMessage = computed(() => {
 </template>
 ```
 
-`useTokenBalance()` returns `null` balance and decimals when the associated token account does not exist, without treating it as an error.
+`useTokenBalance()` returns `null` balance and decimals when the associated token account does not exist, without treating it as an error. Its `balance` and `decimals` are read-only computed refs derived from one read — read them, do not assign to them.
+
+## Read Composable Semantics
+
+`useBalance()`, `useAccountInfo()`, `useProgramAccounts()`, `useTokenAccounts()`, and `useTokenBalance()` share one state machine. Two of its rules surprise people coming from v2:
+
+- **`refresh()` rejects on failure** instead of resolving, and resolves with `null` when an input is empty. `await refresh()` without a `try`/`catch` throws. Wiring it straight to `@click` is fine — Vue swallows the rejection — but hand-written callers must handle it. `useRequest()` is the exception and still resolves with the attempt result.
+- **Data drops back to its empty value when a read fails.** The last successful balance does not linger beside a fresh `error`, because a stale value next to an error reads as current data when it is not. Branch on `error` to choose what to render.
+
+```vue
+<template>
+  <UAlert v-if="error" color="error" variant="subtle" :title="balanceErrorMessage" />
+  <p v-else-if="loading">Loading…</p>
+  <p v-else>Lamports: {{ balance ?? "—" }}</p>
+</template>
+```
+
+An unparseable address reports `INVALID_ADDRESS` in `error` and never reaches the RPC. See [Account Reads](/guides/account-reads#refresh-and-error-semantics).
 
 ## Error Handling
 
@@ -665,10 +684,10 @@ Without `confirm: true`, `execute()` returns after submission and sets `status` 
 
 ### Wallet Request Inputs and Returns
 
-Wallet signing flows accept transaction input as raw `Uint8Array` wire bytes that conform to the Solana transaction schema. Build them with `@solana/kit` (or decode them from a base64/base58 RPC response); base64 strings, transaction objects, and instruction lists are not accepted here.
+Wallet signing flows accept transaction input as raw `Uint8Array` wire bytes that conform to the Solana transaction schema. Build them with the Kit helpers from `@vue-solana/vue/kit` (or decode them from a base64/base58 RPC response); base64 strings, transaction objects, and instruction lists are not accepted here.
 
 ```ts
-import { compileTransaction, getTransactionEncoder } from "@solana/kit";
+import { compileTransaction, getTransactionEncoder } from "@vue-solana/vue/kit";
 
 const transaction: Uint8Array = getTransactionEncoder().encode(compileTransaction(message));
 await execute(transaction);

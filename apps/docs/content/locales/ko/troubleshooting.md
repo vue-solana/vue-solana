@@ -11,7 +11,19 @@ surroundOrder: 4
 
 v2.0.0은 모든 Vue Solana package에서 `@solana/web3-compat`를 제거했으므로, 해당 package에 대한 declaration 누락 오류는 거의 항상 앱이 삭제된 legacy surface에서 import하고 있다는 뜻입니다: `@vue-solana/core/web3`, `@vue-solana/vue/web3`, `@vue-solana/nuxt/web3`, 또는 직접 `@solana/web3-compat` dependency.
 
-이 import들을 Kit에 맞는 형태로 업데이트하세요 - [Kit Migration 가이드](/ko/guides/kit-migration)를 참고하세요. 여전히 v1.x package를 사용 중이라면, v1 package는 문서화된 core import에 package-owned declaration shim을 배포했으며, v1 앱은 package를 직접 import할 때만 자체 `@solana/web3-compat` shim을 추가할 수 있었습니다. `@vue-solana/*@^2`로 업그레이드하면 더 이상 어떤 shim도 필요 없습니다.
+이 import들을 Kit에 맞는 형태로 업데이트하세요 - [Kit Migration 가이드](/ko/guides/migration)를 참고하세요. 여전히 v1.x package를 사용 중이라면, v1 package는 문서화된 core import에 package-owned declaration shim을 배포했으며, v1 앱은 package를 직접 import할 때만 자체 `@solana/web3-compat` shim을 추가할 수 있었습니다. `@vue-solana/*@^2`로 업그레이드하면 더 이상 어떤 shim도 필요 없습니다.
+
+## `require` 시 발생하는 `ERR_PACKAGE_PATH_NOT_EXPORTED`
+
+v3는 ESM만 배포합니다. `require` export 조건과 최상위 `main` 필드가 제거되었기 때문에 CommonJS에서 `require("@vue-solana/core")`를 호출하면 `No "exports" main defined`로 실패하고, subpath를 require하면 `Package subpath './kit' is not defined by "exports"`로 실패합니다.
+
+import하는 모듈을 ESM으로 바꾸세요. `package.json`에 `"type": "module"`을 추가하거나 파일 확장자를 `.mjs`로 변경하면 됩니다:
+
+```js
+import { createSolanaClient } from "@vue-solana/core/kit";
+```
+
+Nuxt와 Vite 앱은 이미 ESM으로 번들링되므로 영향을 받지 않습니다. CommonJS를 벗어날 수 없다면, `.cjs` 빌드를 계속 제공하는 `@vue-solana/*@^2`로 고정하세요.
 
 ## `Vue Solana plugin is not installed`
 

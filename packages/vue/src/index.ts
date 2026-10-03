@@ -32,3 +32,13 @@ export * from "./injection";
 export * from "./kit";
 export * from "./plugin";
 export * from "@vue-solana/core/types";
+
+// `./kit` mirrors all of `@solana/kit`, which exports `SolanaError`,
+// `isSolanaError`, `SolanaErrorCode` and `TransactionStatus`. Resolved
+// explicitly so the star-export clash cannot drop these from this barrel, and
+// in favour of `@vue-solana/core`'s — every error these composables throw is
+// core's, so Kit's class would make `instanceof SolanaError` silently false for
+// all of them. The Kit originals stay reachable through `@vue-solana/vue/kit`.
+export { SolanaError, isSolanaError } from "@vue-solana/core/errors";
+export type { SolanaErrorCode } from "@vue-solana/core/errors";
+export type { TransactionStatus } from "@vue-solana/core/types";

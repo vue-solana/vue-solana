@@ -1,4 +1,29 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
+import { readdirSync } from "node:fs";
+import { join } from "node:path";
+
+/** Content pages are server-rendered, not prerendered, so the sitemap cannot
+ *  discover them. Derive the routes from the content tree instead of listing
+ *  them — the hand-maintained copy rotted once already. */
+function contentUrls(dir: string): string[] {
+  return (
+    readdirSync(join(import.meta.dirname, "content", dir), { recursive: true })
+      .map(String)
+      // `recursive: true` reports platform separators, so normalise first: the
+      // `locales/` filter and the `index` rule below are both written for `/`.
+      .map((entry) => entry.replaceAll("\\", "/"))
+      .filter((entry) => entry.endsWith(".md") && !entry.startsWith("locales/"))
+      .map((entry) => entry.replace(/\.md$/, "").replace(/(^|\/)index$/, ""))
+      .map((route) => (route ? `/${route}` : "/"))
+  );
+}
+
+const sitemapUrls = ["", "es", "ko", "zh"].flatMap((locale) =>
+  contentUrls(locale ? `locales/${locale}` : "").map((route) =>
+    locale ? (route === "/" ? `/${locale}` : `/${locale}${route}`) : route,
+  ),
+);
+
 export default defineNuxtConfig({
   modules: [
     "@nuxt/ui",
@@ -6,7 +31,6 @@ export default defineNuxtConfig({
     "@nuxtjs/i18n",
     "@vue-solana/nuxt",
     "@vercel/analytics",
-    "@nuxt/image",
     "@nuxtjs/seo",
   ],
   css: ["~/assets/css/main.css"],
@@ -25,100 +49,7 @@ export default defineNuxtConfig({
     defaultLocale: "en",
   },
   sitemap: {
-    urls: [
-      "/",
-      "/es",
-      "/ko",
-      "/zh",
-      "/agent-skill",
-      "/es/agent-skill",
-      "/ko/agent-skill",
-      "/zh/agent-skill",
-      "/concepts/clusters",
-      "/es/concepts/clusters",
-      "/ko/concepts/clusters",
-      "/zh/concepts/clusters",
-      "/concepts/solana-for-vue-developers",
-      "/es/concepts/solana-for-vue-developers",
-      "/ko/concepts/solana-for-vue-developers",
-      "/zh/concepts/solana-for-vue-developers",
-      "/examples/nuxt",
-      "/es/examples/nuxt",
-      "/ko/examples/nuxt",
-      "/zh/examples/nuxt",
-      "/examples/vue-vite",
-      "/es/examples/vue-vite",
-      "/ko/examples/vue-vite",
-      "/zh/examples/vue-vite",
-      "/getting-started",
-      "/es/getting-started",
-      "/ko/getting-started",
-      "/zh/getting-started",
-      "/guides/account-reads",
-      "/es/guides/account-reads",
-      "/ko/guides/account-reads",
-      "/zh/guides/account-reads",
-      "/guides/errors",
-      "/es/guides/errors",
-      "/ko/guides/errors",
-      "/zh/guides/errors",
-      "/guides/message-signing",
-      "/es/guides/message-signing",
-      "/ko/guides/message-signing",
-      "/zh/guides/message-signing",
-      "/guides/kit-migration",
-      "/es/guides/kit-migration",
-      "/ko/guides/kit-migration",
-      "/zh/guides/kit-migration",
-      "/guides/rpc-and-clusters",
-      "/es/guides/rpc-and-clusters",
-      "/ko/guides/rpc-and-clusters",
-      "/zh/guides/rpc-and-clusters",
-      "/guides/transactions",
-      "/es/guides/transactions",
-      "/ko/guides/transactions",
-      "/zh/guides/transactions",
-      "/guides/wallets",
-      "/es/guides/wallets",
-      "/ko/guides/wallets",
-      "/zh/guides/wallets",
-      "/packages/core",
-      "/es/packages/core",
-      "/ko/packages/core",
-      "/zh/packages/core",
-      "/packages/nuxt",
-      "/es/packages/nuxt",
-      "/ko/packages/nuxt",
-      "/zh/packages/nuxt",
-      "/packages/vue",
-      "/es/packages/vue",
-      "/ko/packages/vue",
-      "/zh/packages/vue",
-      "/roadmap",
-      "/es/roadmap",
-      "/ko/roadmap",
-      "/zh/roadmap",
-      "/about",
-      "/es/about",
-      "/ko/about",
-      "/zh/about",
-      "/contact",
-      "/es/contact",
-      "/ko/contact",
-      "/zh/contact",
-      "/privacy",
-      "/es/privacy",
-      "/ko/privacy",
-      "/zh/privacy",
-      "/developers",
-      "/es/developers",
-      "/ko/developers",
-      "/zh/developers",
-      "/troubleshooting",
-      "/es/troubleshooting",
-      "/ko/troubleshooting",
-      "/zh/troubleshooting",
-    ],
+    urls: sitemapUrls,
     exclude: ["/demo"],
   },
   robots: {
@@ -138,6 +69,25 @@ export default defineNuxtConfig({
   content: {
     experimental: {
       sqliteConnector: "native",
+    },
+    build: {
+      markdown: {
+        // Shiki defaults to `material-theme-palenight`, a *dark* theme with pale
+        // tokens (#BABED8, #89DDFF, #C3E88D…). `assets/css/main.css` paints the
+        // light-mode `pre` background itself, so light mode was rendering
+        // pale-on-pale at 1.3–2.7:1, far below WCAG AA. Of the bundled light
+        // themes, only the high-contrast GitHub one clears 4.5:1 on `#f8fafc`
+        // (min 4.81); its dark half clears 4.5:1 on `#020617` (min 9.51).
+        highlight: {
+          theme: {
+            // `default` satisfies the content-module type; `light` is the key
+            // shiki's implicit `defaultColor` looks for.
+            default: "github-light-high-contrast",
+            light: "github-light-high-contrast",
+            dark: "github-dark-high-contrast",
+          },
+        },
+      },
     },
   },
   i18n: {
@@ -163,6 +113,8 @@ export default defineNuxtConfig({
     "/es/demo": { ssr: false, prerender: false },
     "/ko/demo": { ssr: false, prerender: false },
     "/zh/demo": { ssr: false, prerender: false },
+    // Not in the sitemap (they are redirects, so `contentUrls` never derives
+    // them) but they are still live inbound links from the pre-2.4 docs.
     "/concepts/wallets": { redirect: "/guides/wallets" },
     "/es/concepts/wallets": { redirect: "/es/guides/wallets" },
     "/ko/concepts/wallets": { redirect: "/ko/guides/wallets" },
@@ -175,46 +127,5 @@ export default defineNuxtConfig({
         vary: "Accept, Accept-Encoding",
       },
     },
-  },
-  vite: {
-    optimizeDeps: {
-      include: [
-        "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > buffer/",
-        "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl",
-        "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl/nacl-fast.js",
-      ],
-      needsInterop: [
-        "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl",
-        "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl/nacl-fast.js",
-      ],
-    },
-    $client: {
-      optimizeDeps: {
-        include: [
-          "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > buffer/",
-          "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl",
-          "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl/nacl-fast.js",
-        ],
-        needsInterop: [
-          "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl",
-          "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl/nacl-fast.js",
-        ],
-      },
-    },
-    plugins: [
-      {
-        name: "solana-buffer-polyfill-entry",
-        transform(code, id) {
-          if (id.includes("/nuxt/dist/app/entry.async")) {
-            return {
-              code:
-                `import { installSolanaBufferPolyfill } from "@vue-solana/nuxt/buffer-polyfill";\ninstallSolanaBufferPolyfill();\n` +
-                code,
-              map: null,
-            };
-          }
-        },
-      },
-    ],
   },
 });
