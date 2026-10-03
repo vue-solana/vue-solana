@@ -296,7 +296,7 @@ const { publicKey, connected, connect, disconnect } = useSolanaWallet();
 
 启用 `autoConnect` 时，Vue Solana 只会恢复用户之前选择的钱包身份，并且只在该钱包再次在客户端被发现后恢复。它在 `localStorage` 中存储 `name`、`platform` 和 `source` 元数据，不存储私钥、会话或交易。
 
-iOS 浏览器钱包支持使用钱包专用 universal links，因为 Mobile Wallet Adapter web 支持仅限 Android Chrome。Phantom、Solflare 和 Backpack 会在 iOS 浏览器的同一 `useWallets()` 列表中出现。
+iOS 浏览器钱包支持使用钱包专用 universal links，因为 Mobile Wallet Adapter web 支持仅限 Android。Phantom、Solflare 和 Backpack 会在 iOS 浏览器的同一 `useWallets()` 列表中出现。
 
 ## 手动钱包测试
 

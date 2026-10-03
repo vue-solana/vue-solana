@@ -1,7 +1,15 @@
 import bs58 from "bs58";
 import * as tweetnacl from "tweetnacl";
 import { describe, expect, it } from "vitest";
-import { createRequestId, decryptPayload, encryptPayload, getSharedSecret, nacl } from "./crypto";
+import {
+  createRequestId,
+  decryptPayload,
+  encryptPayload,
+  getNacl,
+  getSharedSecret,
+} from "./crypto";
+
+const nacl = getNacl();
 
 describe("iOS wallet crypto", () => {
   it("createRequestId returns a base58-encoded 16-byte id", () => {

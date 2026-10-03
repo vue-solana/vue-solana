@@ -4,7 +4,10 @@ import {
   createDefaultWalletNotFoundHandler,
   registerMwa,
 } from "@solana-mobile/wallet-standard-mobile";
+import { isSolanaMobileWalletSupported } from "./mobile-wallet-support";
 import type { SolanaChain } from "./types";
+
+export { isSolanaMobileWalletSupported };
 
 export interface SolanaMobileWalletAppIdentity {
   name: string;
@@ -52,18 +55,6 @@ export function registerSolanaMobileWallet(
   registeredMobileWalletKeys.add(registrationKey);
 
   return true;
-}
-
-export function isSolanaMobileWalletSupported(): boolean {
-  if (typeof window === "undefined" || typeof navigator === "undefined") {
-    return false;
-  }
-
-  const userAgent = navigator.userAgent;
-  const isAndroid = /Android/i.test(userAgent);
-  const isChrome = /Chrome|CriOS/i.test(userAgent) && !/Edg|OPR|Firefox|FxiOS/i.test(userAgent);
-
-  return isAndroid && isChrome;
 }
 
 export function getDefaultMobileWalletAppIdentity(): SolanaMobileWalletAppIdentity {

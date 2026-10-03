@@ -191,7 +191,7 @@ iOS 钱包链接在 iOS 浏览器上默认启用。传入 `iosWallet` 选项可�
 Android 注意事项：
 
 - Android MWA 注册仅在客户端运行，并且在 SSR 期间为空操作。
-- 预计只在支持 mobile wallet adapter bridge 的 Android Chrome 或 Chrome PWA 运行时中工作。
+- 预计只在以安全上下文（HTTPS）提供且支持 mobile wallet adapter bridge 的 Android 浏览器中工作。
 - 钱包切换可能会离开浏览器并返回应用；请保留 UI 状态，让用户在重定向后能看到已提交的签名。
 - Vue Solana 会把 MWA 钱包适配到与扩展钱包相同的 `SolanaWallet` 接口。
 - 移动端钱包包会通过默认 wallet-not-found 处理器处理已安装钱包的回退 UI。

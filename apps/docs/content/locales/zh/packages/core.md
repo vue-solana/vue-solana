@@ -66,6 +66,7 @@ import type { SolanaConfig } from "@vue-solana/core/types";
 - `@vue-solana/core/ios-wallet`
 - `@vue-solana/core/kit`
 - `@vue-solana/core/mobile-wallet`
+- `@vue-solana/core/mobile-wallet-support`
 - `@vue-solana/core/rpc`
 - `@vue-solana/core/timeout`
 - `@vue-solana/core/transaction`
@@ -205,7 +206,7 @@ type SolanaChain = "solana:mainnet" | "solana:testnet" | "solana:devnet" | "sola
 - `handleSolanaIosWalletCallback(options?)`：验证并解密 iOS 钱包重定向回调。
 - `isSolanaIosBrowserWalletSupported()`：返回当前运行时是否应暴露 iOS 浏览器钱包链接。
 
-这些 helper 都是 SSR 安全的。当 `window` 不可用，或浏览器不是 Android Chrome 移动 Web/PWA 运行时时，Android 注册会直接返回且不注册。浏览器不是 iOS 浏览器运行时时，iOS 钱包发现返回空列表。
+这些 helper 都是 SSR 安全的。当 `window` 不可用、页面不处于安全上下文，或浏览器不是 Android 时，Android 注册会直接返回且不注册。浏览器不是 iOS 浏览器运行时时，iOS 钱包发现返回空列表。
 
 ## Helper
 

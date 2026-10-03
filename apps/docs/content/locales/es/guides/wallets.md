@@ -191,7 +191,7 @@ Los enlaces de wallets iOS están habilitados por defecto en navegadores iOS. Pa
 Notas de Android:
 
 - El registro Android MWA es solo de cliente y no hace nada durante SSR.
-- Se espera que funcione solo en runtimes Android Chrome o Chrome PWA que admitan el bridge mobile wallet adapter.
+- Se espera que funcione solo en navegadores Android servidos en un contexto seguro (HTTPS) que admitan el bridge mobile wallet adapter.
 - El traspaso a la wallet puede salir del navegador y volver a la app; conserva estado de UI para que los usuarios puedan ver la firma enviada después de la redirección.
 - Vue Solana adapta wallets MWA a la misma interfaz `SolanaWallet` que las wallets de extensión.
 - El paquete mobile wallet maneja UI de fallback para wallet no instalada mediante su handler predeterminado wallet-not-found.

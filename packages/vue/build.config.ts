@@ -43,6 +43,9 @@ export default defineBuildConfig({
   clean: true,
   rollup: {
     emitCJS: false,
+    // See packages/core/build.config.ts: hoisted bare imports of externals force
+    // bundlers to keep dependencies the consumer never uses.
+    output: { hoistTransitiveImports: false },
   },
   externals: ["@solana/kit", "@solana/kit-plugin-rpc", "vue", /^@vue-solana\/core(?:\/.*)?$/],
 });

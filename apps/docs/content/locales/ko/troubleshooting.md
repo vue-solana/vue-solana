@@ -74,7 +74,7 @@ Phantom, Solflare, Backpack 같은 지갑을 설치한 뒤 페이지 load 후 `r
 
 ## Mobile Wallet Adapter가 감지되지 않음
 
-Android Mobile Wallet Adapter web registration은 지원되는 Android Chrome mobile web 및 Chrome PWA 런타임에서만 동작합니다.
+Android Mobile Wallet Adapter web registration은 secure context(HTTPS)로 제공되는 Android browser에서만 동작합니다.
 
 일반적인 원인:
 

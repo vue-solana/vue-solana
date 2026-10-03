@@ -42,6 +42,21 @@ describe("mobile wallet registration", () => {
     expect(isSolanaMobileWalletSupported()).toBe(true);
   });
 
+  it("detects support on non-Chrome Android browsers", () => {
+    mockUserAgent("Mozilla/5.0 (Android 14; Mobile; rv:121.0) Gecko/121.0 Firefox/121.0");
+
+    expect(isSolanaMobileWalletSupported()).toBe(true);
+  });
+
+  it("does not report support outside a secure context", () => {
+    mockUserAgent(
+      "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36",
+      false,
+    );
+
+    expect(isSolanaMobileWalletSupported()).toBe(false);
+  });
+
   it("does not report support for iOS browsers", () => {
     mockUserAgent(
       "Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1",
@@ -106,6 +121,7 @@ describe("mobile wallet registration", () => {
   });
 });
 
-function mockUserAgent(userAgent: string) {
+function mockUserAgent(userAgent: string, isSecureContext = true) {
   vi.stubGlobal("navigator", { userAgent });
+  vi.stubGlobal("isSecureContext", isSecureContext);
 }

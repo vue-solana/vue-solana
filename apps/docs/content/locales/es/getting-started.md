@@ -296,7 +296,7 @@ Selecciona una wallet desde `wallets` y luego llama `connect()`. Seleccionar una
 
 Cuando `autoConnect` está habilitado, Vue Solana restaura solo la identidad de wallet que el usuario seleccionó antes y solo después de que esa wallet se descubra otra vez en el cliente. Guarda metadatos `name`, `platform` y `source` en `localStorage`, no claves privadas, sesiones ni transacciones.
 
-El soporte de wallets de navegador iOS usa enlaces universales especificos de cada wallet porque el soporte web de Mobile Wallet Adapter solo funciona en Android Chrome. Phantom, Solflare y Backpack aparecen en la misma lista `useWallets()` en navegadores iOS.
+El soporte de wallets de navegador iOS usa enlaces universales especificos de cada wallet porque el soporte web de Mobile Wallet Adapter solo funciona en Android. Phantom, Solflare y Backpack aparecen en la misma lista `useWallets()` en navegadores iOS.
 
 ## Pruebas manuales de wallet
 

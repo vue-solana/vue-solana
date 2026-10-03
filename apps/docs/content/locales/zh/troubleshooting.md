@@ -74,7 +74,7 @@ RPC 读取和余额读取不需要钱包。
 
 ## 未检测到 Mobile Wallet Adapter
 
-Android Mobile Wallet Adapter Web 注册只在支持的 Android Chrome 移动 Web 和 Chrome PWA 运行时中可用。
+Android Mobile Wallet Adapter Web 注册只在以安全上下文（HTTPS）提供的 Android 浏览器中可用。
 
 常见原因：
 

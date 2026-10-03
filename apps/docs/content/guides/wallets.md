@@ -191,7 +191,7 @@ iOS wallet links are enabled by default on iOS browsers. Pass `iosWallet` option
 Android notes:
 
 - Android MWA registration is client-only and no-ops during SSR.
-- It is expected to work only in Android Chrome or Chrome PWA runtimes that support the mobile wallet adapter bridge.
+- It is expected to work only in Android browsers served over a secure context that support the mobile wallet adapter bridge.
 - The wallet handoff can leave the browser and return to the app; preserve UI state so users can see the submitted signature after redirect.
 - Vue Solana adapts MWA wallets into the same `SolanaWallet` interface as extension wallets.
 - The mobile wallet package handles installed-wallet fallback UI through its default wallet-not-found handler.

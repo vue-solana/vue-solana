@@ -296,7 +296,7 @@ const { publicKey, connected, connect, disconnect } = useSolanaWallet();
 
 `autoConnect`가 활성화되면 Vue Solana는 사용자가 이전에 선택한 wallet identity만, 그리고 client에서 해당 지갑이 다시 discovery된 뒤에만 복원합니다. `localStorage`에는 private key, session, transaction이 아니라 `name`, `platform`, `source` metadata만 저장합니다.
 
-iOS 브라우저 지갑 지원은 Mobile Wallet Adapter web support가 Android Chrome 전용이기 때문에 wallet-specific universal link를 사용합니다. Phantom, Solflare, Backpack은 iOS browser에서 같은 `useWallets()` list에 나타납니다.
+iOS 브라우저 지갑 지원은 Mobile Wallet Adapter web support가 Android 전용이기 때문에 wallet-specific universal link를 사용합니다. Phantom, Solflare, Backpack은 iOS browser에서 같은 `useWallets()` list에 나타납니다.
 
 ## 수동 지갑 테스트
 
