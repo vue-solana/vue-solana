@@ -22,10 +22,10 @@
   "type": "module",
   "sideEffects": false,
   "module": "./dist/module.mjs",
-  "types": "./dist/module.d.mts",
+  "types": "./dist/module.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/module.d.mts",
+      "types": "./dist/module.d.ts",
       "import": "./dist/module.mjs"
     },
     "./buffer-polyfill": {
@@ -38,7 +38,8 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "!dist/**/*.d.mts"
   ],
   "publishConfig": {
     "access": "public"

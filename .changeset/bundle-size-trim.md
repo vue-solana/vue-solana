@@ -39,13 +39,15 @@ no-op for every documented usage.
 
 unbuild writes both a `.d.ts` and a byte-identical `.d.mts` for every entry
 point when `declaration: true`. Nothing resolves to the `.d.mts` — every
-`exports` condition points at `.d.ts`, except `@vue-solana/nuxt`'s
-`module.d.mts`, which is genuinely referenced and kept. Both are now excluded
-from the published tarballs:
+`exports` condition points at `.d.ts`, including `@vue-solana/nuxt`'s root,
+which is repointed from `module.d.mts` to the identical `module.d.ts` sitting
+next to it (the package is `"type": "module"`, so a `.d.ts` is already ESM).
+All three now exclude the `.d.mts` files:
 
 | Package            | Before             | After              |
 | ------------------ | ------------------ | ------------------ |
 | `@vue-solana/core` | 123 KB / 59 files  | 97 KB / 41 files   |
 | `@vue-solana/vue`  | 282 KB / 149 files | 200 KB / 111 files |
+| `@vue-solana/nuxt` | 32 KB / 15 files   | 32 KB / 11 files   |
 
 Unpacked sizes, gzip/cjk excluded. No API, type, or resolution change.
