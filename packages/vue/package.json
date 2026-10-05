@@ -171,7 +171,8 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "!dist/**/*.d.mts"
   ],
   "publishConfig": {
     "access": "public"

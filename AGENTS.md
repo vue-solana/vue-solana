@@ -125,7 +125,7 @@ Current package dependency:
 
 Kit surface rule: the `kit` subpaths of all three packages are a full `export * from "@solana/kit"` mirror, not a curated list. Consumers must never have to add `@solana/kit` to their own `package.json` (pnpm's strict `node_modules` does not even resolve it from `packages/vue`). The only names resolved by hand are the four listed above, and they are resolved in the root barrels only — never inside the `kit` subpaths, which must stay a faithful mirror.
 
-v3 module format: the packages publish ESM only (`emitCJS` and every `require` export condition are gone, and there is no top-level `main`). A CommonJS `require()` of the package or any subpath fails. This is documented as a breaking change in `.changeset/release-v-3.md` and as a troubleshooting entry in `apps/docs/content/troubleshooting.md`; keep those in sync if the format ever changes again. The `SMOKE_TEST` matrix in `scripts/smoke-standalone-installs.mjs` is the gate that catches a broken `exports` map.
+v3 module format: the packages publish ESM only (`emitCJS` and every `require` export condition are gone, and there is no top-level `main`). A CommonJS `require()` of the package or any subpath fails. This is documented as a troubleshooting entry in `apps/docs/content/troubleshooting.md` (changesets are consumed and deleted at release time, so cite that file rather than a `.changeset/*.md` name); keep them in sync if the format ever changes again. The `SMOKE_TEST` matrix in `scripts/smoke-standalone-installs.mjs` is the gate that catches a broken `exports` map.
 
 Client transaction stack:
 
@@ -150,6 +150,16 @@ Published package workaround:
 - `packages/core/scripts/prepare-declarations.mjs`
 
 The core build runs `prepare-declarations.mjs` after `unbuild` to add triple-slash references from generated declarations that mention `buffer/`, so fresh consumers do not need a local `buffer/` shim for `@vue-solana/core/buffer-polyfill`.
+
+## Bundle and Tarball Size Invariants
+
+These two rules exist because both were measured regressions that were silently reintroduced once. Re-check them after touching any barrel, `exports` map, or `package.json` `files`.
+
+**1. The `@vue-solana/core` root barrel must NOT re-export `./buffer-polyfill`.** It was removed on 2026-10-05. `buffer-polyfill.ts` does `export { Buffer } from "buffer/"`, and `buffer/index.js` has module-level side effects, so a root-barrel re-export pinned the Node Buffer polyfill into the initial chunk of every consumer — 27 KB of the 145 KB a bare `import { createSolanaClient } from "@vue-solana/core"` cost. `@vue-solana/core/kit` was already 117.5 KB, which is exactly what the root barrel now costs. Only apps that serialize transactions in a browser need it, and they reach it through the `@vue-solana/core/buffer-polyfill` subpath (mirrored by `@vue-solana/vue/buffer-polyfill` and `@vue-solana/nuxt/buffer-polyfill`). Never add that `export *` back. `@vue-solana/vue/src/index.ts` never re-exported it, so vue was never affected.
+
+**2. `packages/core` and `packages/vue` exclude `.d.mts` from their tarballs** via `"files": ["dist", "!dist/**/*.d.mts", ...]`. unbuild with `declaration: true` writes a byte-identical `.d.mts` next to every `.d.ts` (in `dist/shared/unbuild.*.mjs`, `.d.mts` is unconditional and `.d.ts` is the extra), and no `exports` condition resolves to them. That was 97 KB of dead weight. **`@vue-solana/nuxt` is deliberately exempt** — its `exports` really does point `"types"` at `./dist/module.d.mts`, so excluding those there would break it. Before adding or removing an `exports` subpath, re-verify which `.d.mts` are actually referenced rather than assuming; a `files` negation is only safe because of that check.
+
+Known remaining weight, deliberately not fixed: `tweetnacl` is 32.1 KB of the 77 KB initial chunk for `import { createSolanaPlugin } from "@vue-solana/vue"`. Its `getNacl()` lazy wrapper does **not** achieve that, because `ios-wallet/crypto.ts` still holds a static `import * as naclModule from "tweetnacl"` and that static edge is what bundlers follow. Making it real requires `await import()`, which forces `getSharedSecret` / `encryptPayload` / `decryptPayload` / `createRequestId` async and cascades through the **synchronous** entry points `getSolanaIosWallets`, `handleSolanaIosWalletCallback`, `createPendingRequest` and `launchConnect` into the iOS deep-link return handler `plugin.ts` runs at bootstrap — a startup race. The `ponytail:` comment at the top of `crypto.ts` records this; read it before "fixing" the wrapper. mobile-wallet + qrcode (97 KB) is already correctly lazy behind `import("@vue-solana/core/mobile-wallet")` in `packages/vue/src/plugin.ts`.
 
 ## Documentation
 
@@ -219,7 +229,7 @@ When you add, remove, or restructure sections in an English doc, translate the s
 
 ### Post-Publish Release Checklist
 
-Run this after every npm publish of `@vue-solana/*`, once the version is confirmed live on npm. The 2.6.0 pass is the worked example: the pin moved, the lockfile moved, the type-only surface was checked, and the build proved the first `sideEffects: false` build.
+Run this after every npm publish of `@vue-solana/*`, once the version is confirmed live on npm. The 3.0.0 pass is the worked example: the pin moved, the lockfile moved, the type-only surface was checked, and the build proved the first `sideEffects: false` build.
 
 1. Bump the exact pin in `apps/docs/package.json` to the new version. Never a range, never `workspace:*`; `apps/docs/docs-package-policy.test.ts` fails both.
 2. Run `pnpm install` at the repo root and commit `pnpm-lock.yaml`. CI installs with `--frozen-lockfile`, so a missing lockfile change fails the build rather than the docs app.
@@ -272,7 +282,8 @@ Plans live in the top-level `plans/` directory, separate from the knowledge bund
 
 ## Suggested Next Tasks
 
-- `apps/docs` is pinned to 2.6.0, which does **not** contain the `payerSecretKey` signing fix from `1456821`. The next publish (2.6.1) will. Per the Post-Publish Release Checklist, bump the docs pin again once 2.6.1 is live; no other `apps/docs` change is needed.
+- `apps/docs` is pinned to `3.0.0` and `3.0.1` is already live, so the pin is one release behind (read the real value from `apps/docs/package.json`, not from here). Per the Post-Publish Release Checklist the catch-up is steps 1-2 only: bump the exact pin and commit `pnpm-lock.yaml`. The old "`payerSecretKey` fix missing from the pin" item is closed — commit `1456821` is an ancestor of `@vue-solana/core@3.0.0`, so the current pin already has it.
+- A `major` changeset (`.changeset/bundle-size-trim.md`) is pending and will publish 4.0.0: the core root barrel dropped `Buffer`/`installSolanaBufferPolyfill` (breaking; use the `@vue-solana/core/buffer-polyfill` subpath) and core+vue tarballs exclude `.d.mts`. `@vue-solana/nuxt` takes the major only through dependency propagation.
 - Follow `apps/docs/content/roadmap.md` for upcoming features (core composables, wallet features, Ecosystem integrations, etc.).
 - `plans/native-wallet-plan.md` is complete except for one open item, "Future iOS Wallet Support" (line 19). Mobile native wallets, Android MWA, iOS browser wallets, and desktop native wallets all shipped through the unified `useWallets()` flow.
 - Re-check the `@solana/kit` and `@solana/kit-plugin-rpc` peer versions on every new release.
