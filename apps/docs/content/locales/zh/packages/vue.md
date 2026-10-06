@@ -97,6 +97,17 @@ const cluster = ref<SolanaCluster>("devnet");
 const plugin = computed(() => createSolanaPlugin({ cluster: cluster.value }));
 ```
 
+拆除应用时请释放该 plugin。`createSolanaPlugin()` 会启动一个 Wallet Standard 发现订阅和一个延迟 bootstrap；`dispose()` 会同时停止它们，使它们不会比应用活得更久：
+
+```ts
+export const solana = createSolanaPlugin({ cluster: "devnet" });
+const app = createApp(App).use(solana);
+
+app.unmount().then(() => solana.dispose());
+```
+
+可以安全地多次调用，也可以在 `use()` 之前调用。Nuxt 应用无需任何代码：模块的 runtime plugin 会把它接到 `vueApp.onUnmount()` 上。
+
 Kit client 会在构建期间运行其 `createClient().use(...)` 插件。当其中某个插件是异步的，client——以及由它构建的任何 context——只会在该 promise resolve 后才激活。请把真正的 RPC 和钱包工作推迟到 hydration 之后的客户端生命周期钩子或用户操作，而不要在 setup 或 SSR 期间运行。
 
 ## Composables
@@ -817,10 +828,11 @@ const { status, loading, error, refresh, stopPolling, stopSubscription } = useSi
     pollIntervalMs: 5_000,
     searchTransactionHistory: true,
     subscribe: true,
-    commitment: "confirmed",
   },
 );
 ```
+
+没有按次调用的 `commitment` 选项：`getSignatureStatuses()` 不接受该参数，因此读取使用的是 endpoint 自带的 commitment。请在 endpoint 或 `createSolanaPlugin()` 上设置。如果需要按次指定 commitment，请使用 `useTransactionConfirmation()`。
 
 轮询会在每个间隔调用 `getSignatureStatuses()`，因此 UI 不再需要更新时应停止轮询。调用 `stopPolling()` 会清除当前 interval，并阻止该 composable 实例自动重启轮询。无效签名会清除过期 `status`、设置 `error`，且不调用 RPC 或启动轮询。小于或等于 `0` 的无效 `pollIntervalMs` 会设置 `RangeError` 且不启动轮询。`subscribe: true` 使用 `onSignature()`，并在组件卸载时移除 listener。调用 `stopSubscription()` 会移除当前签名 listener，并阻止该 composable 实例自动重启。
 

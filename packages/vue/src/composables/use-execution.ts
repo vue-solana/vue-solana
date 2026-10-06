@@ -9,7 +9,7 @@ import {
 } from "vue";
 
 /**
- * The supersede-and-report state machine shared by the wallet composables in this
+ * The supersede-and-report state machine behind every action composable in this
  * package: one in-flight execution at a time, `loading` derived from the busy
  * status, and a superseded execution that resolves but never writes state.
  *
@@ -30,8 +30,17 @@ export interface UseExecution<TStatus extends string> {
   status: ShallowRef<TStatus>;
 }
 
-export function useExecution<TStatus extends string>(busy: TStatus): UseExecution<TStatus> {
-  const status: ShallowRef<TStatus> = shallowRef("idle" as TStatus);
+/**
+ * `idle` and `error` are the only statuses every caller shares, so they default
+ * here and only a hook with a different vocabulary passes them (`useClientAction`).
+ */
+export function useExecution<TStatus extends string>(
+  busy: TStatus,
+  statuses: { error?: TStatus; idle?: TStatus } = {},
+): UseExecution<TStatus> {
+  const errorStatus = statuses.error ?? ("error" as TStatus);
+  const idleStatus = statuses.idle ?? ("idle" as TStatus);
+  const status: ShallowRef<TStatus> = shallowRef(idleStatus);
   const error = shallowRef<SolanaError | null>(null);
   let id = 0;
 
@@ -57,7 +66,7 @@ export function useExecution<TStatus extends string>(busy: TStatus): UseExecutio
 
       if (currentId === id) {
         error.value = normalizedError;
-        status.value = "error" as TStatus;
+        status.value = errorStatus;
       }
 
       throw normalizedError;
@@ -66,7 +75,7 @@ export function useExecution<TStatus extends string>(busy: TStatus): UseExecutio
 
   function reset() {
     id += 1;
-    status.value = "idle" as TStatus;
+    status.value = idleStatus;
     error.value = null;
   }
 

@@ -97,6 +97,17 @@ const cluster = ref<SolanaCluster>("devnet");
 const plugin = computed(() => createSolanaPlugin({ cluster: cluster.value }));
 ```
 
+Dispose of the plugin when you tear your app down. `createSolanaPlugin()` starts a Wallet Standard discovery subscription and a deferred bootstrap; `dispose()` stops both so they do not outlive the app:
+
+```ts
+export const solana = createSolanaPlugin({ cluster: "devnet" });
+const app = createApp(App).use(solana);
+
+app.unmount().then(() => solana.dispose());
+```
+
+It is safe to call more than once and before `use()`. Nuxt apps need no code: the module's runtime plugin wires it to `vueApp.onUnmount()`.
+
 A Kit client runs its `createClient().use(...)` plugins during construction. When one of those plugins is async, the client — and any context built from it — only activates after that promise resolves. Defer real RPC and wallet work to client lifecycle hooks or user actions after hydration rather than running it during setup or SSR.
 
 ## Composables
@@ -818,10 +829,11 @@ const { status, loading, error, refresh, stopPolling, stopSubscription } = useSi
     pollIntervalMs: 5_000,
     searchTransactionHistory: true,
     subscribe: true,
-    commitment: "confirmed",
   },
 );
 ```
+
+There is no per-call `commitment` option: `getSignatureStatuses()` accepts none, so reads use the commitment baked into the endpoint. Set it on the endpoint or on `createSolanaPlugin()`. For a per-call commitment use `useTransactionConfirmation()`.
 
 Polling uses `getSignatureStatuses()` on every interval, so stop polling when the UI no longer needs updates. Calling `stopPolling()` clears the current interval and prevents automatic polling restarts for that composable instance. Invalid signatures clear stale `status`, set `error`, and do not call RPC or start polling. Invalid `pollIntervalMs` values less than or equal to `0` set a `RangeError` and do not start polling. `subscribe: true` uses `onSignature()` and removes the listener on component unmount. Calling `stopSubscription()` removes the current signature listener and prevents automatic restarts for that composable instance.
 

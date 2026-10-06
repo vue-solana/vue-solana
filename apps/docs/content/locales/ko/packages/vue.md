@@ -97,6 +97,17 @@ const cluster = ref<SolanaCluster>("devnet");
 const plugin = computed(() => createSolanaPlugin({ cluster: cluster.value }));
 ```
 
+App을 teardown할 때 plugin을 정리하세요. `createSolanaPlugin()`은 Wallet Standard discovery 구독과 지연된 bootstrap을 시작하며, `dispose()`가 둘 다 중단해 app이 사라진 뒤에도 남지 않게 합니다:
+
+```ts
+export const solana = createSolanaPlugin({ cluster: "devnet" });
+const app = createApp(App).use(solana);
+
+app.unmount().then(() => solana.dispose());
+```
+
+여러 번 호출해도 되고 `use()` 전에 호출해도 안전합니다. Nuxt app은 코드가 필요 없습니다. 모듈의 runtime plugin이 `vueApp.onUnmount()`에 연결해 줍니다.
+
 Kit client는 생성 중에 `createClient().use(...)` plugin을 실행합니다. 그중 하나가 async이면 client — 그리고 그로부터 만들어진 context — 는 그 promise가 resolve된 뒤에야 활성화됩니다. 실제 RPC와 wallet 작업은 setup이나 SSR 중에 실행하지 말고 hydration 이후 client lifecycle hook이나 사용자 동작으로 미루세요.
 
 ## 컴포저블
@@ -817,10 +828,11 @@ const { status, loading, error, refresh, stopPolling, stopSubscription } = useSi
     pollIntervalMs: 5_000,
     searchTransactionHistory: true,
     subscribe: true,
-    commitment: "confirmed",
   },
 );
 ```
+
+호출당 `commitment` 옵션은 없습니다. `getSignatureStatuses()`가 이를 받지 않으므로 읽기는 endpoint에 설정된 commitment를 사용합니다. endpoint 또는 `createSolanaPlugin()`에서 설정하세요. 호출당 commitment가 필요하면 `useTransactionConfirmation()`을 사용하세요.
 
 Polling은 interval마다 `getSignatureStatuses()`를 사용하므로 UI에 update가 더 이상 필요하지 않으면 polling을 중지하세요. `stopPolling()`은 현재 interval을 clear하고 해당 composable instance에서 automatic polling restart를 방지합니다. 잘못된 signature는 stale `status`를 clear하고 `error`를 설정하며 RPC를 호출하거나 polling을 시작하지 않습니다. `0` 이하의 잘못된 `pollIntervalMs` 값은 `RangeError`를 설정하고 polling을 시작하지 않습니다. `subscribe: true`는 `onSignature()`를 사용하고 component unmount 시 listener를 제거합니다. `stopSubscription()`은 현재 signature listener를 제거하고 해당 composable instance에서 automatic restart를 방지합니다.
 

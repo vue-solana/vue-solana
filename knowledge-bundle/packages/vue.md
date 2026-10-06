@@ -85,6 +85,17 @@ createApp(App).use(
 
 `VueSolana` is an alias for `createSolanaPlugin`.
 
+The returned object exposes `context` (the live injected context, available after `install()`) and `dispose()`, which stops the Wallet Standard discovery subscription and the deferred bootstrap. Vue has no plugin unmount hook, so call it from your own teardown:
+
+```ts
+const solana = createSolanaPlugin({ cluster: "devnet" });
+createApp(App).use(solana);
+// on teardown
+solana.dispose();
+```
+
+It is safe to call repeatedly and before `install()`. Nuxt apps need no code: the module's runtime plugin wires it to `vueApp.onUnmount()`.
+
 `mobileWallet` controls Android Mobile Wallet Adapter registration. It defaults to enabled on supported Android Chrome clients, accepts `RegisterSolanaMobileWalletOptions`, and can be disabled with `mobileWallet: false`.
 
 `iosWallet` controls iOS browser wallet universal-link entries. It defaults to enabled on iOS browser clients, accepts app identity and redirect URL options, and can be disabled with `iosWallet: false`.
@@ -369,9 +380,10 @@ Reads the current status for a submitted signature. Pass `pollIntervalMs` to pol
 
 Options:
 
-- `commitment`: commitment used for signature status reads.
 - `pollIntervalMs`: interval in milliseconds for repeated `getSignatureStatuses()` calls.
 - `searchTransactionHistory`: forwards to `getSignatureStatuses()` for older signatures.
+
+There is no per-call `commitment`: `getSignatureStatuses` accepts none, so reads use the commitment baked into the endpoint. Set it on the endpoint or `createSolanaPlugin`. For a per-call commitment use `useTransactionConfirmation()`, or `confirmTransactionSignature()` in `@vue-solana/core`.
 
 Returns:
 

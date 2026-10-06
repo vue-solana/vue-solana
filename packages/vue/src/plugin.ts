@@ -33,9 +33,19 @@ export interface VueSolanaPlugin {
    * context to consumers that run outside a component setup.
    */
   context: VueSolanaContext | null;
+  /**
+   * Stops the wallet discovery subscription started by `install`. Vue has no
+   * plugin unmount hook, so call this from an app teardown hook (`app.onUnmount`
+   * in Nuxt, `app.unmount().then(...)` in Vue). Safe to call more than once and
+   * before `install`. Without it the Wallet Standard subscription outlives the
+   * app that created it.
+   */
+  dispose(): void;
 }
 
 export function createSolanaPlugin(options: VueSolanaPluginOptions = {}): VueSolanaPlugin {
+  let teardown: (() => void) | null = null;
+
   const plugin: VueSolanaPlugin = {
     context: null,
     install(app: App) {
@@ -56,6 +66,7 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}): VueSol
       let mobileWalletRegistrationPromise: Promise<void> | null = null;
       let attemptedAutoConnectWallet: string | null = null;
       let rpcCheckId = 0;
+      let bootstrapId = 0;
 
       async function checkConnection() {
         const checkId = ++rpcCheckId;
@@ -234,8 +245,20 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}): VueSol
       app.provide(solanaInjectionKey, vueContext);
       plugin.context = vueContext;
 
+      teardown = () => {
+        if (typeof window !== "undefined") {
+          window.clearTimeout(bootstrapId);
+        }
+
+        unsubscribeWallets?.();
+        unsubscribeWallets = null;
+        // A late in-flight RPC check must not write into a context nobody reads.
+        rpcCheckId += 1;
+        teardown = null;
+      };
+
       if (typeof window !== "undefined") {
-        window.setTimeout(() => {
+        bootstrapId = window.setTimeout(() => {
           try {
             refreshWallets();
           } catch (cause) {
@@ -245,6 +268,9 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}): VueSol
           void checkConnection();
         }, 0);
       }
+    },
+    dispose() {
+      teardown?.();
     },
   };
 

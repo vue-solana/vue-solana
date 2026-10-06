@@ -23,6 +23,11 @@ export default defineNuxtPlugin((nuxtApp) => {
   // on the plugin afterwards.
   nuxtApp.vueApp.use(solanaPlugin);
 
+  // `dispose` unsubscribes the Wallet Standard registry subscription, which
+  // otherwise leaks on every remount. `onUnmount` is the Vue-level hook;
+  // Nuxt has no `app:beforeUnmount`.
+  nuxtApp.vueApp.onUnmount(() => solanaPlugin.dispose());
+
   // Install the app-wide selected wallet account context so
   // `useSelectedWalletAccount` works in every component without an explicit
   // provider component. A custom `stateSync` is not serializable through the

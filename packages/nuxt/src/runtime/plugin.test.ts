@@ -11,7 +11,11 @@ const { createSolanaPlugin, createSelectedWalletAccountContext } = vi.hoisted(()
   const pluginContext = { wallets: { value: [] as unknown[] } };
 
   return {
-    createSolanaPlugin: vi.fn(() => ({ install: vi.fn(), context: pluginContext })),
+    createSolanaPlugin: vi.fn(() => ({
+      dispose: vi.fn(),
+      install: vi.fn(),
+      context: pluginContext,
+    })),
     createSelectedWalletAccountContext: vi.fn(() => ({
       selectedWalletAccount: { value: null },
       setSelectedWalletAccount: vi.fn(),
@@ -49,6 +53,7 @@ describe("Nuxt runtime plugin", () => {
     const vueApp = {
       use: vi.fn(),
       provide: vi.fn(),
+      onUnmount: vi.fn(),
     };
 
     const runPlugin = plugin as (nuxtApp: { vueApp: typeof vueApp }) => void;
@@ -76,6 +81,7 @@ describe("Nuxt runtime plugin", () => {
     const vueApp = {
       use: vi.fn(),
       provide: vi.fn(),
+      onUnmount: vi.fn(),
     };
 
     const runPlugin = plugin as (nuxtApp: { vueApp: typeof vueApp }) => void;
@@ -97,6 +103,7 @@ describe("Nuxt runtime plugin", () => {
     const vueApp = {
       use: vi.fn(),
       provide: vi.fn(),
+      onUnmount: vi.fn(),
     };
 
     const runPlugin = plugin as (nuxtApp: { vueApp: typeof vueApp }) => void;
@@ -114,5 +121,26 @@ describe("Nuxt runtime plugin", () => {
       selectedWalletAccountInjectionKey,
       createSelectedWalletAccountContext.mock.results[0]?.value,
     );
+  });
+
+  // Nuxt has no `app:beforeUnmount`, so the plugin has to hook the Vue app's
+  // `onUnmount` — otherwise the wallet registry subscription outlives the app.
+  it("disposes the Solana plugin when the Vue app unmounts", () => {
+    const vueApp = {
+      use: vi.fn(),
+      provide: vi.fn(),
+      onUnmount: vi.fn(),
+    };
+
+    const runPlugin = plugin as (nuxtApp: { vueApp: typeof vueApp }) => void;
+
+    runPlugin({ vueApp });
+
+    const solanaPlugin = createSolanaPlugin.mock.results[0]?.value;
+    const onUnmountCallback = vueApp.onUnmount.mock.calls[0]?.[0] as () => void;
+
+    expect(solanaPlugin.dispose).not.toHaveBeenCalled();
+    onUnmountCallback();
+    expect(solanaPlugin.dispose).toHaveBeenCalledOnce();
   });
 });

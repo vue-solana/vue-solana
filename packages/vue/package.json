@@ -184,13 +184,13 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@vue-solana/core": "workspace:*",
-    "bs58": "^6.0.0"
+    "@vue-solana/core": "workspace:*"
   },
   "peerDependencies": {
     "vue": "^3.5.0"
   },
   "devDependencies": {
+    "bs58": "^6.0.0",
     "typescript": "^5.8.3",
     "unbuild": "^3.5.0",
     "vue": "^3.5.16"

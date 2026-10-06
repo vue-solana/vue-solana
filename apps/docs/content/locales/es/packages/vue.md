@@ -97,6 +97,17 @@ const cluster = ref<SolanaCluster>("devnet");
 const plugin = computed(() => createSolanaPlugin({ cluster: cluster.value }));
 ```
 
+Libera el plugin cuando desmontes tu app. `createSolanaPlugin()` inicia una suscripción de descubrimiento de Wallet Standard y un arranque diferido; `dispose()` detiene ambos para que no sobrevivan a la app:
+
+```ts
+export const solana = createSolanaPlugin({ cluster: "devnet" });
+const app = createApp(App).use(solana);
+
+app.unmount().then(() => solana.dispose());
+```
+
+Es seguro llamarlo más de una vez y antes de `use()`. Las apps de Nuxt no necesitan código adicional: el plugin de runtime del módulo lo conecta a `vueApp.onUnmount()`.
+
 Un cliente Kit ejecuta sus plugins `createClient().use(...)` durante la construcción. Cuando uno de esos plugins es asíncrono, el cliente — y cualquier contexto construido a partir de él — solo se activa después de que esa promesa se resuelva. Difiere el trabajo real de RPC y wallet a hooks del ciclo de vida del cliente o acciones del usuario después de la hidratación en lugar de ejecutarlo durante el setup o el SSR.
 
 ## Composables
@@ -817,10 +828,11 @@ const { status, loading, error, refresh, stopPolling, stopSubscription } = useSi
     pollIntervalMs: 5_000,
     searchTransactionHistory: true,
     subscribe: true,
-    commitment: "confirmed",
   },
 );
 ```
+
+No existe una opción `commitment` por llamada: `getSignatureStatuses()` no acepta ninguna, así que las lecturas usan el commitment incluido en el endpoint. Configúralo en el endpoint o en `createSolanaPlugin()`. Para un commitment por llamada usa `useTransactionConfirmation()`.
 
 El sondeo usa `getSignatureStatuses()` en cada intervalo, así que detenlo cuando la UI ya no necesite actualizaciones. Llamar a `stopPolling()` limpia el intervalo actual y evita reinicios automáticos del sondeo para esa instancia del composable. Las firmas inválidas limpian `status` obsoleto, establecen `error` y no llaman a RPC ni inician sondeo. Los valores inválidos de `pollIntervalMs` menores o iguales a `0` establecen un `RangeError` y no inician sondeo. `subscribe: true` usa `onSignature()` y elimina el listener al desmontar el componente. Llamar a `stopSubscription()` elimina el listener de firma actual y evita reinicios automáticos para esa instancia del composable.
 

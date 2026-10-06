@@ -247,10 +247,10 @@ importers:
       '@vue-solana/core':
         specifier: workspace:*
         version: link:../core
+    devDependencies:
       bs58:
         specifier: ^6.0.0
         version: 6.0.0
-    devDependencies:
       typescript:
         specifier: ^5.8.3
         version: 5.9.3

@@ -60,6 +60,10 @@ export async function signAndSendTransaction(
 /**
  * Confirm a transaction signature against the kit RPC until it reaches the
  * requested commitment.
+ *
+ * Kit's `sendAndConfirmTransaction` cannot back this: it needs the whole
+ * transaction plus a `rpcSubscriptions` websocket and sends the transaction
+ * itself, whereas this confirms a signature a wallet already submitted.
  */
 export async function confirmTransactionSignature(
   client: SolanaClient,
@@ -68,10 +72,13 @@ export async function confirmTransactionSignature(
 ): Promise<TransactionConfirmation> {
   const commitment = options.commitment ?? DEFAULT_CONFIRMATION_COMMITMENT;
   const timeoutMs = options.timeoutMs ?? DEFAULT_CONFIRMATION_TIMEOUT_MS;
-  let elapsedMs = 0;
+  // Wall clock, not accumulated sleeps: `getSignatureStatuses` can take
+  // seconds on a loaded RPC, and a timeout that only counts the sleeps would
+  // keep polling long past `timeoutMs`.
+  const deadline = Date.now() + timeoutMs;
 
   try {
-    while (elapsedMs < timeoutMs) {
+    while (Date.now() < deadline) {
       const response = await client.rpc.getSignatureStatuses([signature]).send();
       const [status] = response.value;
 
@@ -92,7 +99,6 @@ export async function confirmTransactionSignature(
       }
 
       await wait(SIGNATURE_STATUS_POLL_INTERVAL_MS);
-      elapsedMs += SIGNATURE_STATUS_POLL_INTERVAL_MS;
     }
 
     throw createSolanaError(

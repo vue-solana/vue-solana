@@ -51,3 +51,56 @@ All three now exclude the `.d.mts` files:
 | `@vue-solana/nuxt` | 32 KB / 15 files   | 32 KB / 11 files   |
 
 Unpacked sizes, gzip/cjk excluded. No API, type, or resolution change.
+
+## Breaking: `useSignatureStatus` no longer takes a `commitment` option
+
+`getSignatureStatuses` accepts no commitment parameter, so the option never did
+anything — it was documentation pretending to be configuration. Reads use the
+commitment baked into the RPC endpoint.
+
+```diff
+- useSignatureStatus(signature, { commitment: "confirmed" })
++ useSignatureStatus(signature)
+```
+
+For a per-call commitment, pass `{ commitment }` to `confirm(signature, opts)`
+from `useTransactionConfirmation()`, or call `confirmTransactionSignature()`
+directly from `@vue-solana/core`.
+
+## New: `plugin.dispose()`
+
+`createSolanaPlugin()` now returns `dispose()`, which stops the Wallet Standard
+subscription started by `install`. Vue has no plugin unmount hook, so without it
+the subscription outlives the app that created it.
+
+```ts
+const solana = createSolanaPlugin();
+createApp(App).use(solana);
+// app teardown:
+solana.dispose();
+```
+
+Safe to call more than once and before `install`. The Nuxt runtime plugin wires
+it to `vueApp.onUnmount()` automatically; in plain Vue call it after
+`app.unmount()`.
+
+## Breaking: airdrop failures are typed errors
+
+`useAirdrop()` failures are now `SolanaError`s with code `RPC_FAILURE` (the
+original error kept as `cause`) instead of plain `Error`s, and a client swapped
+in after setup without the `airdrop` capability throws
+`MissingClientCapabilityError` instead of an opaque RPC failure.
+
+## Breaking: `useClientAction` runs on `useExecution`
+
+`useClientAction()` (and everything built on it) now shares the
+`useExecution` state machine: errors are normalized to `RPC_FAILURE`
+`SolanaError`s, and a scope teardown mid-flight no longer lets the in-flight
+call overwrite the settled state. `status` / `loading` / `error` / `data` keep
+their names and shapes; `data` is a `ShallowRef` again after a brief widening.
+
+## `bs58` is no longer a runtime dependency of `@vue-solana/vue`
+
+Signature encoding now goes through Kit's `getBase58Encoder()`, so `bs58`
+moved to `devDependencies`. Apps that only used it via this package can drop it
+from their own `package.json`.

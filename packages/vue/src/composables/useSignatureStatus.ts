@@ -1,12 +1,15 @@
-import type { Commitment, Signature } from "@vue-solana/core/kit";
+import {
+  getBase58Encoder,
+  type Commitment,
+  type ReadonlyUint8Array,
+  type Signature,
+} from "@vue-solana/core/kit";
 import { createSolanaError, normalizeSolanaError, type SolanaError } from "@vue-solana/core/errors";
-import bs58 from "bs58";
 import { onMounted, onUnmounted, shallowRef, toValue, watch, type MaybeRefOrGetter } from "vue";
 import { useConnection } from "./useConnection";
 import { tryUseSolana } from "./useSolana";
 
 export interface UseSignatureStatusOptions {
-  commitment?: Commitment;
   pollIntervalMs?: number;
   searchTransactionHistory?: boolean;
 }
@@ -47,6 +50,9 @@ export function useSignatureStatus(
 
     try {
       const validSignature = parseTransactionSignature(value);
+      // No `commitment` here: `getSignatureStatuses` takes no per-call
+      // commitment (Kit's config type confirms it), it uses the one the client
+      // was built with. Set it on the endpoint / `createSolanaPlugin`.
       const response = await client.rpc
         .getSignatureStatuses([validSignature], {
           searchTransactionHistory: options.searchTransactionHistory,
@@ -144,10 +150,10 @@ export function useSignatureStatus(
 }
 
 function parseTransactionSignature(signature: string): Signature {
-  let decodedSignature: Uint8Array;
+  let decodedSignature: ReadonlyUint8Array;
 
   try {
-    decodedSignature = bs58.decode(signature);
+    decodedSignature = getBase58Encoder().encode(signature);
   } catch (cause) {
     throw new TypeError("Invalid Solana transaction signature", { cause });
   }
