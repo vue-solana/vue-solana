@@ -75,7 +75,7 @@ Los clusters soportados son `mainnet` (alias heredado `mainnet-beta`), `devnet`,
 
 `payer` y `payerSecretKey` son compatibles con clientes Vue/core directos. Un envio del cliente requiere un `payer`. `payerSecretKey` deriva su dirección al crear el cliente desde la mitad publica sin verificar, así que trata `payer.address` como no confirmado hasta que la primera firma tenga éxito, y un keypair que no coincide se rechaza en la primera firma en vez de al crear el cliente. La firma importa la key con WebCrypto, que los navegadores solo exponen en un contexto seguro (`https`, o `http` en `localhost`). Nunca pongas un secreto crudo o `payerSecretKey` en la configuración runtime publica de Nuxt, y nunca envíes una clave de firma con fondos al navegador de un usuario final.
 
-El cliente por defecto de `createSolanaPlugin()` usa la composición oficial `solanaRpc()` y `rpcAirdrop()`; `solanaRpc()` instala por si mismo el planner de transacciones y los ejecutores de firma y envio de planes. El fallback custom anterior no se usa. El executor oficial espera el commitment `confirmed` antes de que `execute()` resuelva y `status` sea `sent`.
+El cliente por defecto de `createSolanaPlugin()` usa la composición oficial `solanaRpc()` y `rpcAirdrop()` cuando no hay `commitment` configurado (un `commitment` configurado construye el mismo stack explícitamente para que llegue a la capa RPC); `solanaRpc()` instala por si mismo el planner de transacciones y los ejecutores de firma y envio de planes. El fallback custom anterior no se usa. El executor oficial espera el commitment `confirmed` antes de que `execute()` resuelva y `status` sea `sent`.
 
 ### Ciclo de vida del cliente y del plugin
 
@@ -103,7 +103,8 @@ Libera el plugin cuando desmontes tu app. `createSolanaPlugin()` inicia una susc
 export const solana = createSolanaPlugin({ cluster: "devnet" });
 const app = createApp(App).use(solana);
 
-app.unmount().then(() => solana.dispose());
+app.unmount();
+solana.dispose();
 ```
 
 Es seguro llamarlo más de una vez y antes de `use()`. Las apps de Nuxt no necesitan código adicional: el plugin de runtime del módulo lo conecta a `vueApp.onUnmount()`.
@@ -822,19 +823,18 @@ El composable conserva la `signature` enviada cuando la confirmación agota el t
 ```ts
 import { useSignatureStatus } from "@vue-solana/vue/useSignatureStatus";
 
-const { status, loading, error, refresh, stopPolling, stopSubscription } = useSignatureStatus(
+const { status, loading, error, refresh, stopPolling } = useSignatureStatus(
   "PASTE_SUBMITTED_SIGNATURE",
   {
     pollIntervalMs: 5_000,
     searchTransactionHistory: true,
-    subscribe: true,
   },
 );
 ```
 
 No existe una opción `commitment` por llamada: `getSignatureStatuses()` no acepta ninguna, así que las lecturas usan el commitment incluido en el endpoint. Configúralo en el endpoint o en `createSolanaPlugin()`. Para un commitment por llamada usa `useTransactionConfirmation()`.
 
-El sondeo usa `getSignatureStatuses()` en cada intervalo, así que detenlo cuando la UI ya no necesite actualizaciones. Llamar a `stopPolling()` limpia el intervalo actual y evita reinicios automáticos del sondeo para esa instancia del composable. Las firmas inválidas limpian `status` obsoleto, establecen `error` y no llaman a RPC ni inician sondeo. Los valores inválidos de `pollIntervalMs` menores o iguales a `0` establecen un `RangeError` y no inician sondeo. `subscribe: true` usa `onSignature()` y elimina el listener al desmontar el componente. Llamar a `stopSubscription()` elimina el listener de firma actual y evita reinicios automáticos para esa instancia del composable.
+El sondeo usa `getSignatureStatuses()` con un `setTimeout` encadenado, así que un RPC lento retrasa el siguiente tick pero nunca se solapa consigo mismo. Llamar a `stopPolling()` limpia el temporizador actual e impide más ticks automáticos — hasta que la firma observada cambia, lo que reinicia el sondeo para la nueva firma. Las firmas inválidas limpian `status` obsoleto, establecen `error` y no llaman a RPC ni inician sondeo. Los valores inválidos de `pollIntervalMs` menores o iguales a `0` establecen un `SolanaError` con código `RPC_FAILURE` y no inician sondeo.
 
 ## App de ejemplo
 

@@ -65,6 +65,28 @@ describe("createSolanaClient", () => {
     expect(typeof client.sendTransaction).toBe("function");
   });
 
+  it("uses the stock solanaRpc path when no commitment is configured", () => {
+    const client = createSolanaClient({ commitment: undefined });
+
+    expect(solanaRpcMock).toHaveBeenCalledOnce();
+    expect(rpcAirdropMock).toHaveBeenCalledOnce();
+    expect(typeof client.sendTransaction).toBe("function");
+  });
+
+  it("builds an explicit RPC stack carrying the commitment when one is configured", () => {
+    const client = createSolanaClient({ commitment: "processed" });
+
+    // Commitment path bypasses the stock `solanaRpc()` connection, which pins
+    // `DEFAULT_RPC_CONFIG` and would drop the configured commitment.
+    expect(solanaRpcMock).not.toHaveBeenCalled();
+    expect(rpcAirdropMock).toHaveBeenCalledOnce();
+    expect(typeof client.sendTransaction).toBe("function");
+    expect(typeof client.sendTransactions).toBe("function");
+    expect(typeof client.planTransaction).toBe("function");
+    expect((client as { rpc?: unknown }).rpc).toBeDefined();
+    expect((client as { rpcSubscriptions?: unknown }).rpcSubscriptions).toBeDefined();
+  });
+
   it("forwards explicit HTTP and WebSocket endpoints", () => {
     createSolanaClient({
       endpoint: "https://rpc.example.com/path",

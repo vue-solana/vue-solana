@@ -4,6 +4,10 @@ import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { createRequire } from "node:module";
 import { solanaAutoImports, solanaSetupAutoImports } from "./imports";
+// Type-only: pulls `nuxt/schema` into the program so the augmentation below
+// resolves (TS2664 otherwise — nothing else in this package imports it).
+// Erased at build time, so no runtime or bundle impact.
+import type {} from "nuxt/schema";
 export type ModuleOptions = Omit<VueSolanaPluginOptions, "wallet" | "payer" | "payerSecretKey"> & {
   /**
    * Set to `false` to auto-import the composables without installing the Solana
@@ -14,6 +18,16 @@ export type ModuleOptions = Omit<VueSolanaPluginOptions, "wallet" | "payer" | "p
 };
 
 type DefinedNuxtModule = ReturnType<ReturnType<typeof defineNuxtModule<ModuleOptions>>["with"]>;
+
+// Shipped with the module entry (`dist/module.d.ts`), so fresh consumers get
+// typed `runtimeConfig.public.solana` with no local shim. A separate
+// `src/runtime/types.d.ts` never reached `dist/` (it was no build entry), so
+// the augmentation lives here instead.
+declare module "nuxt/schema" {
+  interface PublicRuntimeConfig {
+    solana?: ModuleOptions;
+  }
+}
 
 /**
  * Types only, so app code can name the public surface (`SolanaWalletInfo`,

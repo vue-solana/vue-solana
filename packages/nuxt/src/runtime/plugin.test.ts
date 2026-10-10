@@ -56,7 +56,7 @@ describe("Nuxt runtime plugin", () => {
       onUnmount: vi.fn(),
     };
 
-    const runPlugin = plugin as (nuxtApp: { vueApp: typeof vueApp }) => void;
+    const runPlugin = plugin as unknown as (nuxtApp: { vueApp: typeof vueApp }) => void;
 
     runPlugin({ vueApp });
 
@@ -73,10 +73,13 @@ describe("Nuxt runtime plugin", () => {
     expect(vueApp.use).toHaveBeenCalledWith(createSolanaPlugin.mock.results[0]?.value);
   });
 
-  it("does not forward client signer secrets from runtime config", () => {
+  it("does not forward client signer secrets or build-time flags from runtime config", () => {
     runtimeConfig.public.solana = {
       cluster: "devnet",
+      payer: { address: "signer" },
       payerSecretKey: "secret",
+      wallet: { connect: () => {} },
+      clientPlugin: false,
     } as never;
     const vueApp = {
       use: vi.fn(),
@@ -84,19 +87,48 @@ describe("Nuxt runtime plugin", () => {
       onUnmount: vi.fn(),
     };
 
-    const runPlugin = plugin as (nuxtApp: { vueApp: typeof vueApp }) => void;
+    const runPlugin = plugin as unknown as (nuxtApp: { vueApp: typeof vueApp }) => void;
 
     runPlugin({ vueApp });
 
     expect(createSolanaPlugin).toHaveBeenCalledWith({
       cluster: "devnet",
-      endpoint: undefined,
-      wsEndpoint: undefined,
-      commitment: undefined,
-      autoConnect: undefined,
-      mobileWallet: undefined,
-      iosWallet: undefined,
     });
+  });
+
+  it("forwards future plugin fields instead of dropping them", () => {
+    runtimeConfig.public.solana = {
+      cluster: "devnet",
+      checkConnectionOnMount: true,
+    } as never;
+    const vueApp = {
+      use: vi.fn(),
+      provide: vi.fn(),
+      onUnmount: vi.fn(),
+    };
+
+    const runPlugin = plugin as unknown as (nuxtApp: { vueApp: typeof vueApp }) => void;
+
+    runPlugin({ vueApp });
+
+    expect(createSolanaPlugin).toHaveBeenCalledWith({
+      cluster: "devnet",
+      checkConnectionOnMount: true,
+    });
+  });
+
+  it("falls back to defaults when public.solana is missing", () => {
+    runtimeConfig.public.solana = undefined as never;
+    const vueApp = {
+      use: vi.fn(),
+      provide: vi.fn(),
+      onUnmount: vi.fn(),
+    };
+
+    const runPlugin = plugin as unknown as (nuxtApp: { vueApp: typeof vueApp }) => void;
+
+    expect(() => runPlugin({ vueApp })).not.toThrow();
+    expect(createSolanaPlugin).toHaveBeenCalledWith({});
   });
 
   it("installs the app-wide selected wallet account context", () => {
@@ -106,7 +138,7 @@ describe("Nuxt runtime plugin", () => {
       onUnmount: vi.fn(),
     };
 
-    const runPlugin = plugin as (nuxtApp: { vueApp: typeof vueApp }) => void;
+    const runPlugin = plugin as unknown as (nuxtApp: { vueApp: typeof vueApp }) => void;
 
     runPlugin({ vueApp });
 
@@ -132,7 +164,7 @@ describe("Nuxt runtime plugin", () => {
       onUnmount: vi.fn(),
     };
 
-    const runPlugin = plugin as (nuxtApp: { vueApp: typeof vueApp }) => void;
+    const runPlugin = plugin as unknown as (nuxtApp: { vueApp: typeof vueApp }) => void;
 
     runPlugin({ vueApp });
 

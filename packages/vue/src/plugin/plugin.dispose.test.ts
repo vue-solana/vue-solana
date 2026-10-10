@@ -102,4 +102,50 @@ describe("createSolanaPlugin dispose", () => {
     expect(plugin.context?.status?.value).toBe("checking");
     expect(plugin.context?.latestBlockhash?.value).toBeNull();
   });
+
+  it("makes a late mobile-wallet registration a no-op after dispose", async () => {
+    vi.useFakeTimers();
+    silenceConsole();
+    mockSolanaContext();
+    // Mobile path enabled (no `mobileWallet: false`): the support gate is
+    // mocked to true in `plugin.test-utils.ts`, so `refreshWallets()` kicks
+    // off the lazy `import("@vue-solana/core/mobile-wallet")`.
+    const plugin = createSolanaPlugin();
+    plugin.install(createAppStub());
+
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(subscribeSolanaWallets).toHaveBeenCalledOnce();
+
+    const callsAfterBootstrap = subscribeSolanaWallets.mock.calls.length;
+
+    plugin.dispose();
+    plugin.context?.refreshWallets();
+
+    // Let the pre-dispose dynamic import resolve; its `.then` must not
+    // register or re-subscribe.
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(subscribeSolanaWallets.mock.calls.length).toBe(callsAfterBootstrap);
+  });
+
+  it("makes a manual refreshWallets a no-op after dispose", async () => {
+    vi.useFakeTimers();
+    silenceConsole();
+    mockSolanaContext();
+    const plugin = installPlugin();
+
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(subscribeSolanaWallets).toHaveBeenCalledOnce();
+
+    const callsAfterBootstrap = subscribeSolanaWallets.mock.calls.length;
+
+    plugin.dispose();
+    plugin.context?.refreshWallets();
+
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(subscribeSolanaWallets.mock.calls.length).toBe(callsAfterBootstrap);
+  });
 });

@@ -75,7 +75,7 @@ Supported clusters are `mainnet` (legacy alias `mainnet-beta`), `devnet`, `testn
 
 `payer` and `payerSecretKey` are supported by direct Vue plugin/core clients. A client-sent transaction requires a `payer`. `payerSecretKey` derives its address at client creation from the unverified public half, so treat `payer.address` as unconfirmed until the first signature succeeds, and a mismatched keypair is rejected at the first signature rather than at creation. Signing imports the key through WebCrypto, which browsers expose only in a secure context (`https`, or `http` on `localhost`). Never put a raw secret or `payerSecretKey` in Nuxt public runtime config, and never ship a funded signing key to an end-user browser.
 
-The default client created by `createSolanaPlugin()` uses the official `solanaRpc()` + `rpcAirdrop()` composition; `solanaRpc()` itself installs the planner, the plan-signing executor, and the plan-sending executor. The old custom fallback sender is not used. The official sending executor waits for `confirmed` commitment before `execute()` resolves and sets `status` to `sent`.
+The default client created by `createSolanaPlugin()` uses the official `solanaRpc()` + `rpcAirdrop()` composition when no `commitment` is configured; `solanaRpc()` itself installs the planner, the plan-signing executor, and the plan-sending executor. A configured `commitment` builds the same stack explicitly so the commitment reaches the RPC layer. The old custom fallback sender is not used. The official sending executor waits for `confirmed` commitment before `execute()` resolves and sets `status` to `sent`.
 
 ### Client and Plugin Lifecycle
 
@@ -103,7 +103,8 @@ Dispose of the plugin when you tear your app down. `createSolanaPlugin()` starts
 export const solana = createSolanaPlugin({ cluster: "devnet" });
 const app = createApp(App).use(solana);
 
-app.unmount().then(() => solana.dispose());
+app.unmount();
+solana.dispose();
 ```
 
 It is safe to call more than once and before `use()`. Nuxt apps need no code: the module's runtime plugin wires it to `vueApp.onUnmount()`.
@@ -823,19 +824,18 @@ The composable preserves the submitted `signature` when confirmation times out o
 ```ts
 import { useSignatureStatus } from "@vue-solana/vue/useSignatureStatus";
 
-const { status, loading, error, refresh, stopPolling, stopSubscription } = useSignatureStatus(
+const { status, loading, error, refresh, stopPolling } = useSignatureStatus(
   "PASTE_SUBMITTED_SIGNATURE",
   {
     pollIntervalMs: 5_000,
     searchTransactionHistory: true,
-    subscribe: true,
   },
 );
 ```
 
 There is no per-call `commitment` option: `getSignatureStatuses()` accepts none, so reads use the commitment baked into the endpoint. Set it on the endpoint or on `createSolanaPlugin()`. For a per-call commitment use `useTransactionConfirmation()`.
 
-Polling uses `getSignatureStatuses()` on every interval, so stop polling when the UI no longer needs updates. Calling `stopPolling()` clears the current interval and prevents automatic polling restarts for that composable instance. Invalid signatures clear stale `status`, set `error`, and do not call RPC or start polling. Invalid `pollIntervalMs` values less than or equal to `0` set a `RangeError` and do not start polling. `subscribe: true` uses `onSignature()` and removes the listener on component unmount. Calling `stopSubscription()` removes the current signature listener and prevents automatic restarts for that composable instance.
+Polling uses `getSignatureStatuses()` on a chained `setTimeout`, so a slow RPC delays the next tick but never overlaps itself. Calling `stopPolling()` clears the current timer and prevents further automatic ticks — until the watched signature changes, which restarts polling for the new signature. Invalid signatures clear stale `status`, set `error`, and do not call RPC or start polling. Invalid `pollIntervalMs` values less than or equal to `0` set an `RPC_FAILURE` `SolanaError` and do not start polling.
 
 ## Example App
 

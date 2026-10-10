@@ -7,17 +7,19 @@ import type { ModuleOptions } from "../module";
 import { defineNuxtPlugin, useRuntimeConfig } from "#app";
 
 export default defineNuxtPlugin((nuxtApp) => {
-  const config = useRuntimeConfig().public.solana as ModuleOptions;
+  // Missing `public.solana` (deleted or never set) must fall back to defaults,
+  // not throw a raw `TypeError` on `.cluster` access.
+  const rawConfig = (useRuntimeConfig().public.solana ?? {}) as Record<string, unknown>;
 
-  const solanaPlugin = createSolanaPlugin({
-    cluster: config.cluster,
-    endpoint: config.endpoint,
-    wsEndpoint: config.wsEndpoint,
-    commitment: config.commitment,
-    autoConnect: config.autoConnect,
-    mobileWallet: config.mobileWallet,
-    iosWallet: config.iosWallet,
-  });
+  // Allowlist silently dropped future fields: forward everything except the
+  // client-only/build-time keys, which must never reach the client bundle.
+  const pluginOptions = { ...rawConfig };
+  delete pluginOptions.wallet;
+  delete pluginOptions.payer;
+  delete pluginOptions.payerSecretKey;
+  delete pluginOptions.clientPlugin;
+
+  const solanaPlugin = createSolanaPlugin(pluginOptions as ModuleOptions);
 
   // `app.use` runs `install` synchronously, so the built context is available
   // on the plugin afterwards.
@@ -34,10 +36,7 @@ export default defineNuxtPlugin((nuxtApp) => {
   // public runtime config, so the default (localStorage) applies; apps that
   // need a custom store can mount `SelectedWalletAccountProvider` deeper in
   // the tree to shadow this context.
-  const vueApp = nuxtApp.vueApp as unknown as {
-    provide: (key: unknown, value: unknown) => void;
-  };
   const context = createSelectedWalletAccountContext({}, solanaPlugin.context);
 
-  vueApp.provide(selectedWalletAccountInjectionKey, context);
+  nuxtApp.vueApp.provide(selectedWalletAccountInjectionKey, context);
 });

@@ -2,9 +2,7 @@ export * from "./action";
 export * from "./clusters";
 export * from "./address";
 export * from "./errors";
-export * from "./ios-wallet";
 export * from "./kit";
-export * from "./mobile-wallet";
 export * from "./rpc";
 export * from "./token-accounts";
 export * from "./transaction";
@@ -21,6 +19,16 @@ export * from "./wallet-standard";
 // serialize transactions in a browser pay it, and they reach it through the
 // documented `@vue-solana/core/buffer-polyfill` subpath (mirrored by
 // `@vue-solana/vue/buffer-polyfill` and `@vue-solana/nuxt/buffer-polyfill`).
+
+// `./ios-wallet` and `./mobile-wallet` are deliberately NOT re-exported here.
+// `ios-wallet/deep-links.ts` pulls `crypto.ts`, whose static `tweetnacl`
+// import keeps ~32 KB in the chunk, and `mobile-wallet.ts` statically imports
+// `@solana-mobile/wallet-standard-mobile` (~98 KB with its protocol graph).
+// Only apps that use those wallets pay for them, through the documented
+// `@vue-solana/core/ios-wallet` and `@vue-solana/core/mobile-wallet` subpaths.
+// The dependency-free `isSolanaMobileWalletSupported()` gate stays available
+// through `@vue-solana/core/mobile-wallet-support`, which core's own exports
+// map documents.
 
 // `./kit` mirrors all of `@solana/kit`, and Kit exports these four names too.
 // Two `export *` providing the same name is ambiguous, and the name would be

@@ -34,11 +34,15 @@ export interface VueSolanaPlugin {
    */
   context: VueSolanaContext | null;
   /**
-   * Stops the wallet discovery subscription started by `install`. Vue has no
-   * plugin unmount hook, so call this from an app teardown hook (`app.onUnmount`
-   * in Nuxt, `app.unmount().then(...)` in Vue). Safe to call more than once and
-   * before `install`. Without it the Wallet Standard subscription outlives the
-   * app that created it.
+   * Stops the wallet discovery subscription and the deferred bootstrap started
+   * by `install`. Vue has no plugin unmount hook, so call this from an app
+   * teardown hook (`app.onUnmount` in Nuxt, after `app.unmount()` in Vue).
+   * Safe to call more than once and before `install`. Without it the Wallet
+   * Standard subscription outlives the app that created it. After `dispose()`,
+   * `refreshWallets()` is a no-op, so a late mobile-wallet import or manual
+   * call cannot resurrect the subscription. A connected wallet stays
+   * connected; `dispose()` does not disconnect it or abort an in-flight
+   * `connect()`.
    */
   dispose(): void;
 }
@@ -67,6 +71,11 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}): VueSol
       let attemptedAutoConnectWallet: string | null = null;
       let rpcCheckId = 0;
       let bootstrapId = 0;
+      // Set by `teardown`: once disposed, `refreshWallets()` must not
+      // (re)subscribe or kick off the lazy mobile-wallet import — a promise
+      // started before `dispose()` resolving afterwards would otherwise
+      // resurrect a subscription that can never be torn down.
+      let disposed = false;
 
       async function checkConnection() {
         const checkId = ++rpcCheckId;
@@ -117,6 +126,10 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}): VueSol
       }
 
       function refreshWallets() {
+        if (disposed) {
+          return;
+        }
+
         unsubscribeWallets ??= subscribeSolanaWallets(refreshWallets);
         walletRegistry.handleIosWalletCallback();
         wallets.value = walletRegistry.getDiscoveredWallets();
@@ -162,8 +175,16 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}): VueSol
       }
 
       function registerMobileWallets() {
+        if (disposed) {
+          return;
+        }
+
         mobileWalletRegistrationPromise ??= import("@vue-solana/core/mobile-wallet")
           .then(({ registerSolanaMobileWallet }) => {
+            if (disposed) {
+              return;
+            }
+
             registerSolanaMobileWallet({
               chains: [getSolanaChain(context.cluster)],
               ...(options.mobileWallet || {}),
@@ -246,6 +267,8 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}): VueSol
       plugin.context = vueContext;
 
       teardown = () => {
+        disposed = true;
+
         if (typeof window !== "undefined") {
           window.clearTimeout(bootstrapId);
         }

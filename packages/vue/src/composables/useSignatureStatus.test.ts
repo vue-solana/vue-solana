@@ -44,7 +44,7 @@ describe("useSignatureStatus", () => {
 
   it("stores invalid signature errors without calling or polling RPC", async () => {
     vi.useFakeTimers();
-    const setIntervalSpy = vi.spyOn(globalThis, "setInterval");
+    const setTimeoutSpy = vi.spyOn(globalThis, "setTimeout");
     const getSignatureStatuses = vi.fn();
     const { result } = mountUseSignatureStatus(
       "not-a-signature",
@@ -61,7 +61,7 @@ describe("useSignatureStatus", () => {
     expect(result.error.value).toBeInstanceOf(Error);
     expect((result.error.value as SolanaError | null)?.code).toBe("RPC_FAILURE");
     expect(getSignatureStatuses).not.toHaveBeenCalled();
-    expect(setIntervalSpy).not.toHaveBeenCalled();
+    expect(setTimeoutSpy).not.toHaveBeenCalled();
   });
 
   it("rejects signatures that do not decode to 64 bytes", async () => {
@@ -202,7 +202,7 @@ describe("useSignatureStatus", () => {
     expect(getSignatureStatuses).toHaveBeenCalledTimes(2);
   });
 
-  it("does not restart polling after manual stop when the input changes", async () => {
+  it("restarts polling after manual stop when the input changes", async () => {
     vi.useFakeTimers();
     const getSignatureStatuses = vi.fn(() => ({
       send: vi.fn().mockResolvedValue({ value: [null] }),
@@ -223,6 +223,35 @@ describe("useSignatureStatus", () => {
     await flushPromises();
     await vi.advanceTimersByTimeAsync(50);
 
+    // A signature change is an explicit restart: it clears the manual stop,
+    // so polling resumes for the new signature (initial + change + poll tick).
+    expect(getSignatureStatuses).toHaveBeenCalledTimes(3);
+  });
+
+  it("never overlaps slow RPCs while polling", async () => {
+    vi.useFakeTimers();
+    const pending = deferred<{ value: [null] }>();
+    const getSignatureStatuses = vi.fn(() => ({ send: () => pending.promise }));
+    mountUseSignatureStatus(
+      signature,
+      { pollIntervalMs: 50 },
+      {
+        rpc: { getSignatureStatuses },
+      },
+    );
+
+    await flushPromises();
+    expect(getSignatureStatuses).toHaveBeenCalledTimes(1);
+
+    // The next tick fires while the first request is still in flight. Chained
+    // `setTimeout` schedules the following tick only after the current request
+    // settles, so no second RPC starts until the pending one resolves.
+    await vi.advanceTimersByTimeAsync(50);
+    expect(getSignatureStatuses).toHaveBeenCalledTimes(1);
+
+    pending.resolve({ value: [null] });
+    await flushPromises();
+    await vi.advanceTimersByTimeAsync(50);
     expect(getSignatureStatuses).toHaveBeenCalledTimes(2);
   });
 });

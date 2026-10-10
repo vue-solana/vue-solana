@@ -103,7 +103,7 @@ interface SolanaConfig {
 
 `payer` 是 Kit `TransactionSigner`，用作客户端发送交易时的费用支付方和签名者。`payerSecretKey` 是 base64 编码的 64 字节 Ed25519 keypair，secret key 在前；client 会在创建时派生其 address，并在首次使用时导入 signing key，因此 public half 与 seed 不匹配的 keypair 会在第一次签名时被拒绝，而不是在创建 client 时。address 来自未经校验的 public half，所以在第一次签名成功之前请将 `payer.address` 视为未确认。签名通过 WebCrypto 导入 key，而浏览器只在 secure context（`https`，或 `localhost` 上的 `http`）中暴露 WebCrypto；在此之外，第一次 `signTransactions()` 调用会抛出 WebCrypto 错误，而不是 key 无效的错误。两个选项都支持 direct core/Vue client。
 
-`createSolanaClient()` 默认组合 `@solana/kit-plugin-rpc` 的官方 `solanaRpc()` 和 `rpcAirdrop()`。`solanaRpc()` 会自行安装 transaction planner 以及 plan-signing 和 plan-sending executor。旧的 custom fallback sender 不再使用。客户端暴露 RPC 读取和订阅，以及 `planTransaction(s)` 和 `sendTransaction(s)`。官方 executor 会获取新的 blockhash、处理 resource limit 和 preflight、使用可用 signer 签名、提交 RPC 交易，并在 send resolve 前等待 `confirmed` commitment。client-sent 交易需要 `payer` signer。
+`createSolanaClient()` 在未配置 `commitment` 时默认组合 `@solana/kit-plugin-rpc` 的官方 `solanaRpc()` 和 `rpcAirdrop()`（配置了 `commitment` 会显式构建相同 stack 使其到达 RPC 层）。`solanaRpc()` 会自行安装 transaction planner 以及 plan-signing 和 plan-sending executor。旧的 custom fallback sender 不再使用。客户端暴露 RPC 读取和订阅，以及 `planTransaction(s)` 和 `sendTransaction(s)`。官方 executor 会获取新的 blockhash、处理 resource limit 和 preflight、使用可用 signer 签名、提交 RPC 交易，并在 send resolve 前等待 `confirmed` commitment。client-sent 交易需要 `payer` signer。
 
 永远不要把 raw secret 或 `payerSecretKey` 放入 Nuxt public runtime config。不要把有资金的 signing key 发送到 end-user browser；请使用 server 或 relayer 边界，demo 则使用未充值的 ephemeral signer。
 

@@ -100,7 +100,7 @@ It is safe to call repeatedly and before `install()`. Nuxt apps need no code: th
 
 `iosWallet` controls iOS browser wallet universal-link entries. It defaults to enabled on iOS browser clients, accepts app identity and redirect URL options, and can be disabled with `iosWallet: false`.
 
-The plugin accepts `payer` as a Kit `TransactionSigner` and `payerSecretKey` as a base64 64-byte Ed25519 keypair (secret key first). A client-sent transaction requires one of those signers. `payerSecretKey` derives its address at client creation from the unverified public half, so treat `payer.address` as unconfirmed until the first signature succeeds, and a mismatched keypair is rejected at the first signature rather than at creation. Signing imports the key through WebCrypto, which browsers expose only in a secure context (`https`, or `http` on `localhost`). These options are for direct Vue/core clients only: Nuxt's public runtime config must never receive a raw secret or `payerSecretKey`. The default client uses the official `solanaRpc()` and `rpcAirdrop()` composition, and `solanaRpc()` installs the transaction planner and the plan-signing and plan-sending executors itself; the old custom fallback sender is not used.
+The plugin accepts `payer` as a Kit `TransactionSigner` and `payerSecretKey` as a base64 64-byte Ed25519 keypair (secret key first). A client-sent transaction requires one of those signers. `payerSecretKey` derives its address at client creation from the unverified public half, so treat `payer.address` as unconfirmed until the first signature succeeds, and a mismatched keypair is rejected at the first signature rather than at creation. Signing imports the key through WebCrypto, which browsers expose only in a secure context (`https`, or `http` on `localhost`). These options are for direct Vue/core clients only: Nuxt's public runtime config must never receive a raw secret or `payerSecretKey`. The default client uses the official `solanaRpc()` and `rpcAirdrop()` composition when no `commitment` is configured (a configured `commitment` builds the same stack explicitly so it reaches the RPC layer), and `solanaRpc()` installs the transaction planner and the plan-signing and plan-sending executors itself; the old custom fallback sender is not used.
 
 ## `useSolana()`
 
@@ -393,7 +393,7 @@ Returns:
 - `refresh()`
 - `stopPolling()`
 
-Null input clears state without calling RPC. Invalid signatures are rejected before RPC: the signature must be base58-encoded and decode to exactly 64 bytes. Invalid `pollIntervalMs` values less than or equal to `0` set a `RangeError` and do not start polling.
+Null input clears state without calling RPC. Invalid signatures are rejected before RPC: the signature must be base58-encoded and decode to exactly 64 bytes. Invalid `pollIntervalMs` values less than or equal to `0` set an `RPC_FAILURE` `SolanaError` and do not start polling. Calling `stopPolling()` clears the current timer and prevents further automatic ticks — until the watched signature changes, which restarts polling for the new signature.
 
 ## `useAction(action, options?)`
 

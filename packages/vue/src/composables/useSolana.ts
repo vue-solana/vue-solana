@@ -1,18 +1,19 @@
 import { inject, ref, shallowRef } from "vue";
 import { solanaInjectionKey, type VueSolanaContext } from "../injection";
 
-let ssrContext: VueSolanaContext | undefined;
-
 export function tryUseSolana() {
   return inject(solanaInjectionKey, null);
 }
 
 export function useSolana() {
-  return tryUseSolana() ?? getSsrContext();
+  return tryUseSolana() ?? createSsrContext();
 }
 
-function getSsrContext(): VueSolanaContext {
-  ssrContext ??= {
+// A fresh inert context per call, never a module-scope singleton: a cached
+// object would share `wallet` / `status` / `wallets` refs across concurrent
+// SSR requests, leaking one user's wallet state into another's render.
+function createSsrContext(): VueSolanaContext {
+  return {
     cluster: "devnet",
     endpoint: "",
     wsEndpoint: "",
@@ -28,8 +29,6 @@ function getSsrContext(): VueSolanaContext {
     refreshWallets() {},
     selectWallet() {},
   };
-
-  return ssrContext;
 }
 
 function createUnavailableProxy<T>(): T {
