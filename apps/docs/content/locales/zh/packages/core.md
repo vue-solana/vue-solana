@@ -319,7 +319,7 @@ const signedTransaction = await wallet.signTransaction(transaction);
 ### 交易
 
 - `signAndSendTransaction(client, wallet, transaction, options?)`：使用配置的钱包签名并发送原始 wire 交易字节，返回 RPC signature。暴露 `signAndSendTransaction` 的钱包会委托给它；否则交易用 `wallet.signTransaction` 签名，并通过 `client.rpc.sendTransaction(...).send()` 提交。Android Mobile Wallet Adapter 钱包优先使用签名加应用侧 RPC 提交，让应用拥有提交过程，并能在钱包 handoff 后可靠返回 RPC signature。
-- `confirmTransactionSignature(client, signature, options?)`：等待已提交签名达到请求的 commitment。默认使用 `confirmed` commitment、60 秒超时，并轮询 `client.rpc.getSignatureStatuses([signature]).send()`。
+- `confirmTransactionSignature(client, signature, options?)`：等待已提交签名达到请求的 commitment。默认使用 `confirmed` commitment、60 秒超时、1500 毫秒轮询间隔，并轮询 `client.rpc.getSignatureStatuses([signature]).send()`。接受 `pollIntervalMs`（必须大于 `0`）、`abortSignal` 和 `searchTransactionHistory`。失败的交易抛出 `TRANSACTION_FAILED`，从未出现的签名抛出 `TRANSACTION_NOT_FOUND`，耗尽的等待抛出 `TRANSACTION_TIMEOUT`。当签名可能已离开近期状态缓存时，请传递 `searchTransactionHistory: true`——否则旧签名不会出现在结果中，超时后将得到 `TRANSACTION_NOT_FOUND`。
 
 client-sent flow 与这个感知钱包的 helper 分开。client 通过 `createSolanaClient()` 安装的官方 `rpcTransactionPlanSendingExecutor()` 暴露 `sendTransaction()` 和 `sendTransactions()`，Vue composable 包装这些方法。它们会 plan、sign、submit 并等待 `confirmed` commitment；只有 send-and-confirm 操作完成后状态才会变为 `sent`。单笔结果在 `data.context.signature` 提供已提交的签名，batch 结果包含完整的 plan result tree。官方 sender 不显示钱包弹窗。
 
@@ -353,7 +353,7 @@ if (balance) {
 - `createSolanaError(code, message, options?)`：创建规范化 Solana 错误。
 - `isSolanaError(error)`：把 unknown error 收窄为 `SolanaError`。
 - `normalizeSolanaError(cause, fallbackCode, fallbackMessage?, options?)`：把未知失败转换为 `SolanaError`，并把常见钱包拒绝映射到 `USER_REJECTED`。
-- `withTimeout(promise, timeoutMs, createError)`：用调用方提供的超时错误与 promise 竞争。
+- `withTimeout(promise, timeoutMs, createError?, options?)`：用调用方提供的超时错误与 promise 竞争。对 `NaN`/负数超时拒绝 `INVALID_INPUT`；`{ signal }` 以 signal 的原因中止等待，`{ code, message }` 设置默认超时错误。
 - `withSolanaTimeout(promise, timeoutMs, message)`：用 `TRANSACTION_TIMEOUT` 错误与 promise 竞争。
 
 ## 错误模型
@@ -372,7 +372,13 @@ try {
         // The user declined a wallet prompt.
         break;
       case "TRANSACTION_TIMEOUT":
-        // The operation timed out; check signature state before retrying.
+        // 操作超时；重试前请检查签名状态。
+        break;
+      case "TRANSACTION_NOT_FOUND":
+        // 签名从未落地；可安全重试。
+        break;
+      case "TRANSACTION_FAILED":
+        // 交易在链上失败；请查看 error.cause。
         break;
       case "RPC_FAILURE":
         // RPC or confirmation failed.
@@ -390,7 +396,12 @@ try {
 - `WALLET_FEATURE_UNSUPPORTED`
 - `USER_REJECTED`
 - `INVALID_ADDRESS`
+- `INVALID_INPUT`
 - `TRANSACTION_TIMEOUT`
+- `TRANSACTION_NOT_FOUND`
+- `TRANSACTION_FAILED`
+- `REDIRECT_TIMEOUT`
+- `DECRYPTION_FAILED`
 - `RPC_FAILURE`
 - `STORAGE_FAILURE`
 

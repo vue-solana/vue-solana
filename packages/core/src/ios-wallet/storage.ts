@@ -34,10 +34,22 @@ export function getStoredIosWalletAccount(walletId: string, chains: readonly str
     return [];
   }
 
+  // The session passed the `isAddress` check on read, but `publicKey` could
+  // still fail `bs58.decode` (corrupt payload that happens to be a string).
+  // Purge and report absent rather than throwing raw.
+  let publicKey: Uint8Array;
+
+  try {
+    publicKey = bs58.decode(session.publicKey);
+  } catch {
+    removeStoredSession(walletId);
+    return [];
+  }
+
   return [
     {
       address: session.publicKey,
-      publicKey: bs58.decode(session.publicKey),
+      publicKey,
       chains,
     },
   ];

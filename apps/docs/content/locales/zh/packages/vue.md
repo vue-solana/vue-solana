@@ -816,7 +816,7 @@ const { signature, confirmation, status, loading, error, confirm, reset } =
 await confirm("PASTE_SUBMITTED_SIGNATURE", { commitment: "finalized" });
 ```
 
-当确认超时或 RPC 调用失败时，该 composable 会保留已提交的 `signature`，因此应用仍然可以展示 explorer 链接，同时向用户展示 `error`。
+当确认超时或 RPC 调用失败时，该 composable 会保留已提交的 `signature`，因此应用仍然可以展示 explorer 链接，同时向用户展示 `error`。选项会透传给 `confirmTransactionSignature()`：`commitment`、`timeoutMs`、`pollIntervalMs`、`abortSignal` 和 `searchTransactionHistory`。失败的交易展示 `TRANSACTION_FAILED`，从未出现的签名展示 `TRANSACTION_NOT_FOUND`，耗尽的等待展示 `TRANSACTION_TIMEOUT`。
 
 ## 跟踪签名状态
 

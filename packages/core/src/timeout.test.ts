@@ -70,6 +70,65 @@ describe("withTimeout", () => {
 
     await rejection;
   });
+
+  it("throws INVALID_INPUT for NaN and negative timeouts", () => {
+    for (const timeoutMs of [Number.NaN, -1]) {
+      try {
+        withTimeout(Promise.resolve("result"), timeoutMs, () => new Error("timed out"));
+        throw new Error("Expected withTimeout to throw.");
+      } catch (error) {
+        expect(error).toBeInstanceOf(SolanaError);
+        expect((error as SolanaError).code).toBe("INVALID_INPUT");
+      }
+    }
+  });
+
+  it("supports the options-bag overload without a factory", async () => {
+    vi.useFakeTimers();
+
+    const result = withTimeout(new Promise<string>(() => undefined), 10, {
+      code: "RPC_FAILURE",
+      message: "slow",
+    });
+    const rejection = expect(result).rejects.toMatchObject({
+      code: "RPC_FAILURE",
+      message: "slow",
+    });
+
+    await vi.advanceTimersByTimeAsync(10);
+
+    await rejection;
+  });
+
+  it("rejects with the signal reason when the caller aborts first", async () => {
+    vi.useFakeTimers();
+    const controller = new AbortController();
+    const result = withTimeout(
+      new Promise<string>(() => undefined),
+      1000,
+      () => new Error("timed out"),
+      {
+        signal: controller.signal,
+      },
+    );
+    const rejection = expect(result).rejects.toMatchObject({ name: "AbortError" });
+
+    controller.abort();
+    await vi.advanceTimersByTimeAsync(1000);
+
+    await rejection;
+  });
+
+  it("throws synchronously when the signal is already aborted", () => {
+    const controller = new AbortController();
+    controller.abort();
+
+    expect(() =>
+      withTimeout(Promise.resolve("result"), 10, () => new Error("timed out"), {
+        signal: controller.signal,
+      }),
+    ).toThrowError();
+  });
 });
 
 describe("withSolanaTimeout", () => {

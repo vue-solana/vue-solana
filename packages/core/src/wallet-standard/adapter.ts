@@ -34,10 +34,19 @@ export interface AdaptSolanaWalletOptions {
   onChange?: () => void;
 }
 
+/**
+ * A Wallet Standard wallet adapted to {@link SolanaWallet}. `dispose` is
+ * always present here (optional on the base interface, where plain
+ * caller-supplied wallets typically omit it).
+ */
+export interface AdaptedSolanaWallet extends SolanaWallet {
+  dispose(): void;
+}
+
 export function adaptSolanaStandardWallet(
   walletInfo: SolanaWalletInfo,
   options: AdaptSolanaWalletOptions = {},
-): SolanaWallet {
+): AdaptedSolanaWallet {
   const wallet = walletInfo.wallet as Wallet;
   let accounts = wallet.accounts;
   let account = options.account;
@@ -49,7 +58,7 @@ export function adaptSolanaStandardWallet(
   const eventsFeature = wallet.features[StandardEvents] as
     | StandardEventsFeature[typeof StandardEvents]
     | undefined;
-  eventsFeature?.on("change", (properties) => {
+  const unsubscribeChange = eventsFeature?.on("change", (properties) => {
     if (properties.accounts) {
       accounts = properties.accounts;
       account =
@@ -60,9 +69,14 @@ export function adaptSolanaStandardWallet(
     }
   });
 
+  function dispose() {
+    unsubscribeChange?.();
+  }
+
   return {
     platform: walletInfo.platform,
     source: walletInfo.source,
+    dispose,
     get publicKey() {
       return account ? (account.address as Address) : null;
     },

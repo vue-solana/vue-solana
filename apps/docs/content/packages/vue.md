@@ -817,7 +817,7 @@ const { signature, confirmation, status, loading, error, confirm, reset } =
 await confirm("PASTE_SUBMITTED_SIGNATURE", { commitment: "finalized" });
 ```
 
-The composable preserves the submitted `signature` when confirmation times out or the RPC call fails, so apps can still show an explorer link while surfacing `error` to the user.
+The composable preserves the submitted `signature` when confirmation times out or the RPC call fails, so apps can still show an explorer link while surfacing `error` to the user. Options pass through to `confirmTransactionSignature()`: `commitment`, `timeoutMs`, `pollIntervalMs`, `abortSignal`, and `searchTransactionHistory`. A failed transaction surfaces `TRANSACTION_FAILED`, a signature that never appears surfaces `TRANSACTION_NOT_FOUND`, and an exhausted wait surfaces `TRANSACTION_TIMEOUT`.
 
 ## Track Signature Status
 

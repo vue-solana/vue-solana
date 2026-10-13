@@ -69,20 +69,20 @@ Acceptance criteria:
 
 ## Phase 2: Core Input Validation And Error Handling — P0
 
-Status: planned.
+Status: implemented and verified. Gates green: `pnpm test` (699), `typecheck`, `lint`, `format`, `build:packages`, `build:examples`, `docs build`, `test:e2e` 24/24, `smoke:standalone-installs` (all three consumers install + typecheck against local tarballs; script fixed for pnpm 10 overrides/build-approval along the way).
 
 Tasks:
 
-- [ ] `getWebSocketEndpoint()` raw `TypeError` on malformed endpoint (`packages/core/src/clusters.ts:29-39`). Validate / wrap in `SolanaError(INVALID_INPUT)`.
-- [ ] `toAddressInput()` falls through to `value.value` for unexpected shapes (`packages/core/src/address.ts:31-45`). Throw `INVALID_ADDRESS` for numbers/objects instead of returning `null`.
-- [ ] `confirmTransactionSignature()` fixed 1500 ms poll, no abort, no commitment passthrough, generic not-found error (`packages/core/src/transaction.ts:68-111`). Add `{ pollIntervalMs?, abortSignal? }` to `ConfirmTransactionOptions`, pass commitment to `getSignatureStatuses`, throw distinct not-found vs failed vs timeout `SolanaError`.
-- [ ] `waitForRedirect()` never settles (`packages/core/src/ios-wallet/browser.ts:79-81`, awaited in `adapter.ts:91-93` and `deep-links.ts:130`). Add timeout/AbortSignal rejection or document reload-only settlement via `handleSolanaIosWalletCallback()`.
-- [ ] Adapted wallet leaks `change` subscription (`packages/core/src/wallet-standard/adapter.ts:52-61`). Store the unsubscribe handle and expose `dispose()`.
-- [ ] `isSolanaError()` is `instanceof`-only (`packages/core/src/errors.ts:42-44`). Add duck-type fallback (`name === "SolanaError"` + `typeof code === "string"`) for duplicate package copies.
-- [ ] `TokenAccountInfo` trusts RPC shapes (`packages/core/src/token-accounts.ts:143-151`). Validate `tokenAmount.amount`/`decimals`/`state` before constructing; throw `RPC_FAILURE` on mismatch instead of raw `BigInt()` throw.
-- [ ] Corrupt iOS session throws raw (`packages/core/src/ios-wallet/storage.ts:30-44`). Try/catch `bs58.decode`, purge + return `[]` on failure.
-- [ ] `withTimeout()` has no signal passthrough or `timeoutMs` validation; `withSolanaTimeout()` hardcodes one timeout (`packages/core/src/timeout.ts:3-41`). Validate `NaN`/negative, accept optional `signal`, allow caller error `code`.
-- [ ] `STORAGE_FAILURE` defined but never thrown in core (`packages/core/src/errors.ts:9`; only `packages/vue/src/plugin/selected-wallet-storage.ts` uses it). Document as cross-package shared code or move it.
+- [x] `getWebSocketEndpoint()` raw `TypeError` on malformed endpoint (`packages/core/src/clusters.ts:29-39`). Validate / wrap in `SolanaError(INVALID_INPUT)`.
+- [x] `toAddressInput()` falls through to `value.value` for unexpected shapes (`packages/core/src/address.ts:31-45`). Throw `INVALID_ADDRESS` for numbers/objects instead of returning `null`.
+- [x] `confirmTransactionSignature()` fixed 1500 ms poll, no abort, no commitment passthrough, generic not-found error (`packages/core/src/transaction.ts:68-111`). Add `{ pollIntervalMs?, abortSignal? }` to `ConfirmTransactionOptions`, keep the commitment check client-side (`getSignatureStatuses` takes no commitment parameter), throw distinct not-found vs failed vs timeout `SolanaError`.
+- [x] `waitForRedirect()` never settles (`packages/core/src/ios-wallet/browser.ts:79-81`, awaited in `adapter.ts:91-93` and `deep-links.ts:130`). Add timeout/AbortSignal rejection or document reload-only settlement via `handleSolanaIosWalletCallback()`.
+- [x] Adapted wallet leaks `change` subscription (`packages/core/src/wallet-standard/adapter.ts:52-61`). Store the unsubscribe handle and expose `dispose()`.
+- [x] `isSolanaError()` is `instanceof`-only (`packages/core/src/errors.ts:42-44`). Add duck-type fallback (`name === "SolanaError"` + `typeof code === "string"`) for duplicate package copies.
+- [x] `TokenAccountInfo` trusts RPC shapes (`packages/core/src/token-accounts.ts:143-151`). Validate `tokenAmount.amount`/`decimals`/`state` before constructing; throw `RPC_FAILURE` on mismatch instead of raw `BigInt()` throw.
+- [x] Corrupt iOS session throws raw (`packages/core/src/ios-wallet/storage.ts:30-44`). Try/catch `bs58.decode`, purge + return `[]` on failure.
+- [x] `withTimeout()` has no signal passthrough or `timeoutMs` validation; `withSolanaTimeout()` hardcodes one timeout (`packages/core/src/timeout.ts:3-41`). Validate `NaN`/negative, accept optional `signal`, allow caller error `code`.
+- [x] `STORAGE_FAILURE` defined but never thrown in core (`packages/core/src/errors.ts:9`; only `packages/vue/src/plugin/selected-wallet-storage.ts` uses it). Document as cross-package shared code or move it.
 
 Acceptance criteria:
 

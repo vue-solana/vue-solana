@@ -14,6 +14,30 @@ import {
 import { resetIosWalletTestEnvironment } from "./test-utils";
 import type { IosWalletSession, PendingIosWalletRequest } from "./types";
 
+// `bs58.decode` and Kit's `isAddress` agree on every real input, so a stored
+// address that passes the read check but fails decoding cannot be built from
+// real bytes. Toggle the failure through a hoisted flag instead; `encode`
+// always passes through so the other tests in this file are unaffected.
+const bs58Control = vi.hoisted(() => ({ failDecode: false }));
+
+vi.mock("bs58", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("bs58")>();
+
+  return {
+    ...actual,
+    default: {
+      ...actual.default,
+      decode: (...args: Parameters<typeof bs58.decode>) => {
+        if (bs58Control.failDecode) {
+          throw new Error("Non-base58 character");
+        }
+
+        return actual.default.decode(...args);
+      },
+    },
+  };
+});
+
 const pendingStorageKey = "vue-solana:ios-wallet:pending";
 const phantomSessionStorageKey = "vue-solana:ios-wallet:session:phantom";
 const validPublicKey = "11111111111111111111111111111111";
@@ -106,6 +130,20 @@ describe("iOS wallet storage", () => {
         chains: ["solana:devnet"],
       },
     ]);
+  });
+
+  it("purges sessions whose public key fails base58 decoding instead of throwing raw", () => {
+    storeSession(createSession());
+
+    bs58Control.failDecode = true;
+
+    try {
+      expect(getStoredIosWalletAccount("phantom", ["solana:devnet"])).toEqual([]);
+    } finally {
+      bs58Control.failDecode = false;
+    }
+
+    expect(sessionStorage.getItem(phantomSessionStorageKey)).toBeNull();
   });
 
   it("returns no accounts when no session is stored", () => {

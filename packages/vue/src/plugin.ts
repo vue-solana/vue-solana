@@ -275,6 +275,9 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}): VueSol
 
         unsubscribeWallets?.();
         unsubscribeWallets = null;
+        // Release the Wallet Standard `change` subscriptions captured when
+        // wallets were adapted — they must not outlive the app either.
+        walletRegistry.disposeAllAdaptedWallets();
         // A late in-flight RPC check must not write into a context nobody reads.
         rpcCheckId += 1;
         teardown = null;

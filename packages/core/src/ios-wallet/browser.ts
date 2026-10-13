@@ -1,4 +1,5 @@
 import type { SolanaChain } from "../types";
+import { createSolanaError } from "../errors";
 import type { SolanaIosWalletAppIdentity } from "./types";
 
 export const DEFAULT_IOS_WALLET_CHAINS: readonly SolanaChain[] = [
@@ -76,8 +77,59 @@ export function openIosWalletUrl(url: string) {
   window.location.assign(url);
 }
 
-export function waitForRedirect<T = never>(): Promise<T> {
-  return new Promise(() => {});
+export interface WaitForRedirectOptions {
+  /**
+   * Milliseconds to wait for the wallet to redirect back before rejecting
+   * with `REDIRECT_TIMEOUT`. Defaults to 10 minutes, matching the pending
+   * request TTL (`PENDING_REQUEST_TTL_MS` in `storage.ts`).
+   */
+  timeoutMs?: number;
+  /**
+   * Rejects without further waiting when the caller's own `AbortSignal`
+   * fires. An aborted wait rejects with the signal's reason (an
+   * `AbortError` by default) rather than a timeout error.
+   */
+  signal?: AbortSignal;
+}
+
+/**
+ * Settles when the iOS wallet redirects back to the app and the page reloads
+ * — which is the only way it settles on its own. The reload path runs
+ * `handleSolanaIosWalletCallback()` at bootstrap and reads the stored
+ * session/pending request, so this promise intentionally never resolves
+ * in-page: it only rejects on `timeoutMs` / `signal` so callers can reset
+ * `connecting` state instead of hanging forever.
+ */
+export function waitForRedirect<T = never>(options: WaitForRedirectOptions = {}): Promise<T> {
+  const { timeoutMs = 10 * 60 * 1000, signal } = options;
+
+  if (typeof timeoutMs !== "number" || Number.isNaN(timeoutMs) || timeoutMs < 0) {
+    throw createSolanaError(
+      "INVALID_INPUT",
+      `Invalid redirect timeout: expected a non-negative number of milliseconds, received ${String(timeoutMs)}`,
+    );
+  }
+
+  signal?.throwIfAborted();
+
+  return new Promise<T>((_, reject) => {
+    const timeoutId = setTimeout(() => {
+      signal?.removeEventListener("abort", onAbort);
+      reject(
+        createSolanaError(
+          "REDIRECT_TIMEOUT",
+          `Timed out waiting for the iOS wallet to redirect back after ${timeoutMs} ms.`,
+        ),
+      );
+    }, timeoutMs);
+
+    function onAbort() {
+      clearTimeout(timeoutId);
+      reject(signal!.reason);
+    }
+
+    signal?.addEventListener("abort", onAbort, { once: true });
+  });
 }
 
 export function hasIosWalletCallbackParams(url: URL) {

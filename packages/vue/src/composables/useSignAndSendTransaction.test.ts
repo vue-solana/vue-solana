@@ -55,7 +55,10 @@ describe("useSignAndSendTransaction", () => {
     expect(wallet.signAndSendTransaction).toHaveBeenCalledWith(transaction, {
       skipPreflight: false,
     });
-    expect(getSignatureStatuses).toHaveBeenCalledWith(["signature"]);
+    expect(getSignatureStatuses).toHaveBeenCalledWith(
+      ["signature"],
+      expect.objectContaining({ searchTransactionHistory: false }),
+    );
     expect(result.status.value).toBe("finalized");
     expect(result.confirmation.value?.commitment).toBe("finalized");
   });
@@ -79,7 +82,10 @@ describe("useSignAndSendTransaction", () => {
     });
 
     expect(result.status.value).toBe("processed");
-    expect(getSignatureStatuses).toHaveBeenCalledWith(["signature"]);
+    expect(getSignatureStatuses).toHaveBeenCalledWith(
+      ["signature"],
+      expect.objectContaining({ searchTransactionHistory: false }),
+    );
   });
 
   it("ignores an older send that resolves after a newer send", async () => {

@@ -45,7 +45,12 @@ export function createStandardWallet(accounts: readonly WalletAccount[] = []): T
             eventsListener = listener;
           }
 
-          return vi.fn();
+          // Faithful unsubscribe: clearing the listener models the real
+          // Wallet Standard `on("change")` return, so `dispose()` tests can
+          // assert event delivery actually stops.
+          return () => {
+            eventsListener = null;
+          };
         }),
       },
     },

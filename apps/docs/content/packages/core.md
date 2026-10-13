@@ -322,7 +322,7 @@ const signedTransaction = await wallet.signTransaction(transaction);
 ### Transactions
 
 - `signAndSendTransaction(client, wallet, transaction, options?)`: signs and sends raw wire transaction bytes using a configured wallet and returns the RPC signature. Wallets that expose `signAndSendTransaction` are delegated to; otherwise the transaction is signed with `wallet.signTransaction` and submitted through `client.rpc.sendTransaction(...).send()`. Android Mobile Wallet Adapter wallets prefer signing plus app-side RPC submission so the app owns submission and reliably returns the RPC signature after the wallet handoff.
-- `confirmTransactionSignature(client, signature, options?)`: waits for a submitted signature to reach a requested commitment. Defaults to `confirmed` commitment, a 60 second timeout, and polling `client.rpc.getSignatureStatuses([signature]).send()`.
+- `confirmTransactionSignature(client, signature, options?)`: waits for a submitted signature to reach a requested commitment. Defaults to `confirmed` commitment, a 60 second timeout, a 1500 ms poll interval, and polling `client.rpc.getSignatureStatuses([signature]).send()`. Accepts `pollIntervalMs` (must be greater than `0`), `abortSignal`, and `searchTransactionHistory`. A failed transaction throws `TRANSACTION_FAILED`, a signature that never appears throws `TRANSACTION_NOT_FOUND`, and an exhausted wait throws `TRANSACTION_TIMEOUT`. Pass `searchTransactionHistory: true` when the signature may have left the recent status cache — without it an older signature never appears in results and resolves to `TRANSACTION_NOT_FOUND` after the timeout.
 
 The client-sent flow is separate from this wallet-aware helper. The client exposes `sendTransaction()` and `sendTransactions()` through the official `rpcTransactionPlanSendingExecutor()` that `solanaRpc()` installs inside `createSolanaClient()`; the Vue composables wrap those methods. They plan, sign, submit, and wait for `confirmed` commitment; the `sent` status is set only after that send-and-confirm operation completes. A single result exposes the submitted signature at `data.context.signature`, while a batch result contains the full plan result tree. The official sender does not show a wallet popup.
 
@@ -356,7 +356,7 @@ if (balance) {
 - `createSolanaError(code, message, options?)`: creates a normalized Solana error.
 - `isSolanaError(error)`: narrows unknown errors to `SolanaError`.
 - `normalizeSolanaError(cause, fallbackCode, fallbackMessage?, options?)`: converts unknown failures into `SolanaError` and maps common wallet rejections to `USER_REJECTED`.
-- `withTimeout(promise, timeoutMs, createError)`: races a promise against a caller-provided timeout error.
+- `withTimeout(promise, timeoutMs, createError?, options?)`: races a promise against a caller-provided timeout error. Rejects `INVALID_INPUT` for `NaN`/negative timeouts; `{ signal }` aborts the wait with the signal's reason, and `{ code, message }` sets the default timeout error.
 - `withSolanaTimeout(promise, timeoutMs, message)`: races a promise against a `TRANSACTION_TIMEOUT` error.
 
 ## Error Model
@@ -377,6 +377,12 @@ try {
       case "TRANSACTION_TIMEOUT":
         // The operation timed out; check signature state before retrying.
         break;
+      case "TRANSACTION_NOT_FOUND":
+        // The signature never landed; safe to retry.
+        break;
+      case "TRANSACTION_FAILED":
+        // The transaction errored on-chain; see error.cause.
+        break;
       case "RPC_FAILURE":
         // RPC or confirmation failed.
         console.error(error.cause);
@@ -393,7 +399,12 @@ Stable error codes are:
 - `WALLET_FEATURE_UNSUPPORTED`
 - `USER_REJECTED`
 - `INVALID_ADDRESS`
+- `INVALID_INPUT`
 - `TRANSACTION_TIMEOUT`
+- `TRANSACTION_NOT_FOUND`
+- `TRANSACTION_FAILED`
+- `REDIRECT_TIMEOUT`
+- `DECRYPTION_FAILED`
 - `RPC_FAILURE`
 - `STORAGE_FAILURE`
 

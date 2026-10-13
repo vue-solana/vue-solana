@@ -816,7 +816,7 @@ const { signature, confirmation, status, loading, error, confirm, reset } =
 await confirm("PASTE_SUBMITTED_SIGNATURE", { commitment: "finalized" });
 ```
 
-El composable conserva la `signature` enviada cuando la confirmación agota el tiempo o la llamada RPC falla, para que las apps aún puedan mostrar un enlace de explorador mientras muestran `error` al usuario.
+El composable conserva la `signature` enviada cuando la confirmación agota el tiempo o la llamada RPC falla, para que las apps aún puedan mostrar un enlace de explorador mientras muestran `error` al usuario. Las opciones se pasan a `confirmTransactionSignature()`: `commitment`, `timeoutMs`, `pollIntervalMs`, `abortSignal` y `searchTransactionHistory`. Una transacción fallida muestra `TRANSACTION_FAILED`, una firma que nunca aparece muestra `TRANSACTION_NOT_FOUND` y una espera agotada muestra `TRANSACTION_TIMEOUT`.
 
 ## Seguir estado de firma
 

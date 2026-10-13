@@ -622,4 +622,32 @@ describe("Wallet Standard adapter", () => {
 
     expect(wallet.signIn).toBeUndefined();
   });
+
+  it("exposes dispose() that releases the change subscription", async () => {
+    const onChange = vi.fn();
+    const standardWallet = createStandardWallet();
+    const walletInfo = {
+      name: standardWallet.name,
+      icon: standardWallet.icon,
+      chains: standardWallet.chains,
+      accounts: [],
+      wallet: standardWallet,
+    } satisfies SolanaWalletInfo;
+    const wallet = adaptSolanaStandardWallet(walletInfo, { chain: "solana:devnet", onChange });
+
+    expect(typeof wallet.dispose).toBe("function");
+
+    await wallet.connect();
+    expect(onChange).toHaveBeenCalled();
+
+    onChange.mockClear();
+    wallet.dispose();
+    // Idempotent: a second call must not throw.
+    wallet.dispose();
+
+    standardWallet.emitAccountsChange([account]);
+    expect(onChange).not.toHaveBeenCalled();
+    // The wallet itself stays connected; only event delivery stops.
+    expect(wallet.connected).toBe(true);
+  });
 });

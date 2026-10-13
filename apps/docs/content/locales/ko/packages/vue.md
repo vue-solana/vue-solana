@@ -816,7 +816,7 @@ const { signature, confirmation, status, loading, error, confirm, reset } =
 await confirm("PASTE_SUBMITTED_SIGNATURE", { commitment: "finalized" });
 ```
 
-이 composable은 confirmation timeout 또는 RPC failure가 발생해도 제출된 `signature`를 유지하므로, 앱은 사용자에게 `error`를 표시하면서도 explorer 링크를 계속 보여줄 수 있습니다.
+이 composable은 confirmation timeout 또는 RPC failure가 발생해도 제출된 `signature`를 유지하므로, 앱은 사용자에게 `error`를 표시하면서도 explorer 링크를 계속 보여줄 수 있습니다. 옵션은 `confirmTransactionSignature()`로 그대로 전달됩니다: `commitment`, `timeoutMs`, `pollIntervalMs`, `abortSignal`, `searchTransactionHistory`. 실패한 트랜잭션은 `TRANSACTION_FAILED`, 나타나지 않은 서명은 `TRANSACTION_NOT_FOUND`, 소진된 대기는 `TRANSACTION_TIMEOUT`으로 표시됩니다.
 
 ## Signature Status 추적
 

@@ -5,6 +5,7 @@ import {
   getClusterWebSocketEndpoint,
   getWebSocketEndpoint,
 } from "./clusters";
+import { SolanaError } from "./errors";
 
 describe("clusters", () => {
   it("uses devnet as the default cluster", () => {
@@ -28,5 +29,18 @@ describe("clusters", () => {
   it("derives a WebSocket endpoint from a custom RPC endpoint", () => {
     expect(getWebSocketEndpoint("https://rpc.example.com/path")).toBe("wss://rpc.example.com/path");
     expect(getWebSocketEndpoint("http://127.0.0.1:8899")).toBe("ws://127.0.0.1:8899/");
+  });
+
+  it("throws INVALID_ADDRESS for malformed endpoints instead of a raw TypeError", () => {
+    expect(() => getWebSocketEndpoint("not-a-url")).toThrowError(SolanaError);
+
+    try {
+      getWebSocketEndpoint("not-a-url");
+      throw new Error("Expected getWebSocketEndpoint to throw.");
+    } catch (error) {
+      expect(error).toBeInstanceOf(SolanaError);
+      expect((error as SolanaError).code).toBe("INVALID_INPUT");
+      expect((error as SolanaError).cause).toBeInstanceOf(TypeError);
+    }
   });
 });

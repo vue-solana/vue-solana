@@ -97,6 +97,13 @@ export interface SolanaWallet {
   source?: SolanaWalletInfo["source"];
   connect: () => Promise<void>;
   disconnect: () => Promise<void>;
+  /**
+   * Releases wallet-event subscriptions captured at adapt time (e.g. the
+   * Wallet Standard `change` listener). The wallet stays connected; only
+   * event delivery stops. Idempotent. Present on adapted wallets; plain
+   * caller-supplied wallets typically omit it.
+   */
+  dispose?: () => void;
   signMessage?: (message: Uint8Array) => Promise<SolanaSignMessageResult>;
   signIn?: (input?: SolanaSignInInput) => Promise<SolanaSignInResult>;
   signTransaction?: (transaction: SolanaTransaction) => Promise<SolanaTransaction>;
@@ -150,6 +157,26 @@ export interface SendTransactionOptions {
 export interface ConfirmTransactionOptions {
   commitment?: Commitment;
   timeoutMs?: number;
+  /**
+   * Milliseconds between `getSignatureStatuses` polls. Defaults to 1500.
+   * Must be greater than 0: with no delay between polls an absent signature
+   * would hammer the RPC until the timeout expires.
+   */
+  pollIntervalMs?: number;
+  /**
+   * Rejects without further polling when the caller's own `AbortSignal`
+   * fires. An aborted confirmation rejects with the signal's reason (an
+   * `AbortError` by default) rather than a timeout error.
+   */
+  abortSignal?: AbortSignal;
+  /**
+   * Pass `true` to search transaction history when the signature may have
+   * left the recent status cache. Defaults to `false`: an older signature
+   * never appears in `getSignatureStatuses` results, so confirming one
+   * without this flag resolves to `TRANSACTION_NOT_FOUND` after the timeout
+   * rather than confirming.
+   */
+  searchTransactionHistory?: boolean;
 }
 
 export interface TransactionStatus {

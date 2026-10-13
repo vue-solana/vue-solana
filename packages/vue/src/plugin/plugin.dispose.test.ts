@@ -1,10 +1,15 @@
 import { describe, expect, it, vi } from "vitest";
 import type { App } from "vue";
+import type { SolanaWalletInfo } from "@vue-solana/core/types";
 import {
+  adaptSolanaIosWallet,
   createDeferred,
   createSolanaContext,
+  getSolanaIosWallets,
   installPluginTestHooks,
+  isSolanaIosWalletInfo,
   mockSolanaContext,
+  mockWalletDiscovery,
   silenceConsole,
   subscribeSolanaWallets,
 } from "./plugin.test-utils";
@@ -147,5 +152,140 @@ describe("createSolanaPlugin dispose", () => {
     await vi.advanceTimersByTimeAsync(0);
 
     expect(subscribeSolanaWallets.mock.calls.length).toBe(callsAfterBootstrap);
+  });
+
+  it("releases adapted-wallet change subscriptions on dispose", async () => {
+    vi.useFakeTimers();
+    silenceConsole();
+    mockSolanaContext();
+    let changeListener: ((properties: { accounts: unknown[] }) => void) | null = null;
+    const standardWallet = {
+      version: "1.0.0",
+      name: "Test Wallet",
+      icon: "data:image/png;base64,AA==",
+      chains: ["solana:devnet"],
+      accounts: [],
+      features: {
+        "standard:events": {
+          version: "1.0.0",
+          on: vi.fn((_event: string, listener: (properties: { accounts: unknown[] }) => void) => {
+            changeListener = listener;
+            return () => {
+              changeListener = null;
+            };
+          }),
+        },
+      },
+    };
+    const walletInfo = {
+      name: "Test Wallet",
+      icon: "data:image/png;base64,AA==",
+      chains: ["solana:devnet"],
+      accounts: [],
+      wallet: standardWallet,
+    } as unknown as SolanaWalletInfo;
+    mockWalletDiscovery([walletInfo]);
+    const plugin = installPlugin();
+
+    await vi.advanceTimersByTimeAsync(0);
+
+    plugin.context?.selectWallet(walletInfo);
+
+    expect(changeListener).not.toBeNull();
+
+    plugin.dispose();
+
+    // The registry's `disposeAllAdaptedWallets()` ran the adapter's
+    // unsubscribe: the captured listener is gone and a second dispose is safe.
+    expect(changeListener).toBeNull();
+    expect(() => plugin.dispose()).not.toThrow();
+  });
+
+  it("releases subscriptions for wallets unregistered before dispose", async () => {
+    vi.useFakeTimers();
+    silenceConsole();
+    mockSolanaContext();
+    let changeListener: ((properties: { accounts: unknown[] }) => void) | null = null;
+    const standardWallet = {
+      version: "1.0.0",
+      name: "Test Wallet",
+      icon: "data:image/png;base64,AA==",
+      chains: ["solana:devnet"],
+      accounts: [],
+      features: {
+        "standard:events": {
+          version: "1.0.0",
+          on: vi.fn((_event: string, listener: (properties: { accounts: unknown[] }) => void) => {
+            changeListener = listener;
+            return () => {
+              changeListener = null;
+            };
+          }),
+        },
+      },
+    };
+    const walletInfo = {
+      name: "Test Wallet",
+      icon: "data:image/png;base64,AA==",
+      chains: ["solana:devnet"],
+      accounts: [],
+      wallet: standardWallet,
+    } as unknown as SolanaWalletInfo;
+    mockWalletDiscovery([walletInfo]);
+    const plugin = installPlugin();
+
+    await vi.advanceTimersByTimeAsync(0);
+
+    plugin.context?.selectWallet(walletInfo);
+
+    expect(changeListener).not.toBeNull();
+
+    // The wallet disappeared from discovery after adaptation (e.g. extension
+    // unload). Teardown tracks every adapter it created rather than only what
+    // discovery still lists, so the subscription is still released.
+    mockWalletDiscovery([]);
+    plugin.context?.refreshWallets();
+    plugin.dispose();
+
+    expect(changeListener).toBeNull();
+  });
+
+  it("reuses iOS adapters across selections instead of rebuilding them", async () => {
+    vi.useFakeTimers();
+    silenceConsole();
+    mockSolanaContext();
+    const iosWalletInfo = {
+      name: "Phantom",
+      icon: "https://phantom.app/img/phantom-logo.svg",
+      chains: ["solana:devnet"],
+      platform: "mobile",
+      source: "deep-link",
+      accounts: [],
+      wallet: { id: "phantom" },
+    } as unknown as SolanaWalletInfo;
+    mockWalletDiscovery([]);
+    getSolanaIosWallets.mockReturnValue([iosWalletInfo]);
+    isSolanaIosWalletInfo.mockReturnValue(true);
+    const adaptedWallet = {
+      publicKey: null,
+      connected: false,
+      connect: vi.fn(),
+      disconnect: vi.fn(),
+    };
+    adaptSolanaIosWallet.mockReturnValue(adaptedWallet);
+    const plugin = installPlugin();
+
+    await vi.advanceTimersByTimeAsync(0);
+
+    plugin.context?.selectWallet(iosWalletInfo);
+    const firstAdapter = plugin.context?.wallet.value;
+
+    plugin.context?.selectWallet(null);
+    plugin.context?.selectWallet(iosWalletInfo);
+    const secondAdapter = plugin.context?.wallet.value;
+
+    expect(firstAdapter).toBeDefined();
+    expect(secondAdapter).toBe(firstAdapter);
+    expect(adaptSolanaIosWallet).toHaveBeenCalledTimes(1);
   });
 });

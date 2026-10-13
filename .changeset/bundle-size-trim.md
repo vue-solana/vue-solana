@@ -158,3 +158,96 @@ their names and shapes; `data` is a `ShallowRef` again after a brief widening.
 Signature encoding now goes through Kit's `getBase58Encoder()`, so `bs58`
 moved to `devDependencies`. Apps that only used it via this package can drop it
 from their own `package.json`.
+
+Core input validation and error handling also lands in this release.
+
+## Breaking: confirmation failures have distinct error codes
+
+`confirmTransactionSignature()` previously reported a failed transaction and a
+missing signature both as `RPC_FAILURE` (the missing case even started life as a
+raw `Error` before normalization). They are now distinct:
+
+- Transaction errored before reaching the requested commitment →
+  `TRANSACTION_FAILED` (was `RPC_FAILURE`), with the on-chain error kept as
+  `cause`.
+- Signature never appeared in `getSignatureStatuses` results before the deadline
+  → `TRANSACTION_NOT_FOUND` (was `RPC_FAILURE`).
+- Polls exhausted with a sighted-but-unconfirmed status → `TRANSACTION_TIMEOUT`
+  (unchanged).
+
+```diff
+- if (error.code === "RPC_FAILURE") { /* failed OR missing OR timed out */ }
++ switch (error.code) {
++   case "TRANSACTION_FAILED": /* on-chain error in error.cause */ break;
++   case "TRANSACTION_NOT_FOUND": /* never landed; safe to retry */ break;
++   case "TRANSACTION_TIMEOUT": /* check status before retrying */ break;
++ }
+```
+
+`useTransactionConfirmation()` / `useSignAndSendTransaction()` surface the new
+codes unchanged.
+
+## Breaking: `parseAddress()` throws for non-string, non-ref input
+
+Numbers, booleans, plain objects, and arrays previously fell through to
+`value.value` and silently returned `null` (skipping the read). They now throw
+`INVALID_ADDRESS` like every other malformed input. `null` / `undefined` / `""`
+still mean absent and return `null`; getters and `{ value }` refs now unwrap
+recursively (the `MaybeAddressInput` type widened to match).
+
+## `confirmTransactionSignature()` is cancellable and interval-configurable
+
+New `ConfirmTransactionOptions` fields (all optional): `pollIntervalMs` (default
+1500, must be greater than `0` — `0` would poll with no delay and hammer the
+RPC for the whole timeout), `abortSignal` (rejects with the abort reason
+instead of polling on), and `searchTransactionHistory` (forwarded to
+`getSignatureStatuses`, default `false`). Note `getSignatureStatuses` takes no
+commitment parameter — the commitment check stays client-side, as before.
+A signature older than the recent-status cache never appears in results, so
+confirming one without `searchTransactionHistory: true` resolves to
+`TRANSACTION_NOT_FOUND` after the timeout.
+
+## `waitForRedirect()` no longer hangs forever
+
+The iOS deep-link wait only ever settled via page reload, so an in-page `await`
+hung indefinitely. It now rejects with `REDIRECT_TIMEOUT` after `timeoutMs`
+(default 10 minutes, matching the pending-request TTL) or when the optional
+`signal` aborts — letting callers reset `connecting` state. It still never
+resolves in-page; settlement via reload + `handleSolanaIosWalletCallback()` is
+unchanged.
+
+## New: adapted wallets expose `dispose()`
+
+`adaptSolanaStandardWallet()` returns `AdaptedSolanaWallet` with a `dispose()`
+that releases the Wallet Standard `change` subscription captured at adapt time
+(idempotent; the wallet stays connected). `SolanaWallet` gains an optional
+`dispose?: () => void`, and the Vue wallet registry adds
+`disposeAllAdaptedWallets()` — it runs from plugin teardown so adapted wallets
+never outlive the app.
+
+## Stricter validation elsewhere
+
+- `getWebSocketEndpoint("not-a-url")` throws `INVALID_INPUT` instead of a raw
+  `TypeError`.
+- `withTimeout()` throws `INVALID_INPUT` for `NaN`/negative timeouts, accepts an
+  options bag (`{ signal, code, message }`) with or without an error factory, and
+  rejects with the abort reason when the caller's `signal` fires first.
+- Token-account parsing validates `mint` / `owner` / `tokenAmount.amount` /
+  `tokenAmount.decimals` / `state` / `isNative` and throws `RPC_FAILURE` naming
+  the malformed fields instead of a raw `BigInt()` throw.
+- Corrupt iOS sessions whose stored public key fails base58 decoding are purged
+  and reported as absent instead of throwing raw.
+- `isSolanaError()` falls back to a structural check (`name` + string `code`) so
+  it survives duplicate package copies; Kit's own `SolanaError` (numeric `code`)
+  is not misclassified.
+- `STORAGE_FAILURE` is documented as the shared cross-package code: core defines
+  it, `@vue-solana/vue`'s selected-wallet persistence throws it (core stays
+  DOM-free and never throws it itself).
+
+Also fixed in this release: `scripts/smoke-standalone-installs.mjs` wrote
+transitive `@vue-solana/*` pins into the consumer `package.json`
+`pnpm.overrides` key, which pnpm 10 no longer reads — the vue/nuxt consumers
+were silently resolving `@vue-solana/core` (and `vue`) from the npm registry
+instead of the packed tarballs, and the install blocked on pnpm 10 build-script
+approval under `CI=1`. Overrides now go into a consumer `pnpm-workspace.yaml`
+with `dangerouslyAllowAllBuilds: true`.

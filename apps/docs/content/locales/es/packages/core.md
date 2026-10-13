@@ -320,7 +320,7 @@ const signedTransaction = await wallet.signTransaction(transaction);
 ### Transacciones
 
 - `signAndSendTransaction(client, wallet, transaction, options?)`: firma y envía bytes de transacción en la red (wire) usando una wallet configurada y devuelve la firma RPC. Se delega en las wallets que exponen `signAndSendTransaction`; en caso contrario, la transacción se firma con `wallet.signTransaction` y se envía mediante `client.rpc.sendTransaction(...).send()`. Las wallets Android Mobile Wallet Adapter prefieren firma más envío RPC del lado de la app para que la app controle el envío y devuelva de forma fiable la firma RPC después del traspaso a la wallet.
-- `confirmTransactionSignature(client, signature, options?)`: espera a que una firma enviada alcance un commitment solicitado. Usa por defecto commitment `confirmed`, timeout de 60 segundos y sondeo de `client.rpc.getSignatureStatuses([signature]).send()`.
+- `confirmTransactionSignature(client, signature, options?)`: espera a que una firma enviada alcance un commitment solicitado. Usa por defecto commitment `confirmed`, timeout de 60 segundos, intervalo de sondeo de 1500 ms y sondeo de `client.rpc.getSignatureStatuses([signature]).send()`. Acepta `pollIntervalMs` (debe ser mayor que `0`), `abortSignal` y `searchTransactionHistory`. Una transacción fallida lanza `TRANSACTION_FAILED`, una firma que nunca aparece lanza `TRANSACTION_NOT_FOUND` y una espera agotada lanza `TRANSACTION_TIMEOUT`. Pasa `searchTransactionHistory: true` cuando la firma pueda haber salido de la caché de estados recientes — sin ella, una firma antigua nunca aparece en los resultados y termina en `TRANSACTION_NOT_FOUND` tras el timeout.
 
 El flujo de envio del cliente es separado de este helper consciente de wallet. El cliente expone `sendTransaction()` y `sendTransactions()` mediante el `rpcTransactionPlanSendingExecutor()` oficial instalado por `createSolanaClient()`; los composables de Vue envuelven esos metodos. Planifican, firman, envian y esperan `confirmed`; el estado `sent` se establece solo cuando termina la operación de envio y confirmación. El resultado simple expone la firma en `data.context.signature`, y el resultado batch contiene el arbol completo del plan. El sender oficial no muestra popup de wallet.
 
@@ -354,7 +354,7 @@ if (balance) {
 - `createSolanaError(code, message, options?)`: crea un error Solana normalizado.
 - `isSolanaError(error)`: estrecha errores desconocidos a `SolanaError`.
 - `normalizeSolanaError(cause, fallbackCode, fallbackMessage?, options?)`: convierte fallos desconocidos en `SolanaError` y mapea rechazos comunes de wallet a `USER_REJECTED`.
-- `withTimeout(promise, timeoutMs, createError)`: compite una promise contra un error de timeout proporcionado por el llamador.
+- `withTimeout(promise, timeoutMs, createError?, options?)`: compite una promise contra un error de timeout proporcionado por el llamador. Rechaza `INVALID_INPUT` para timeouts `NaN`/negativos; `{ signal }` aborta la espera con la razón del signal, y `{ code, message }` fija el error de timeout por defecto.
 - `withSolanaTimeout(promise, timeoutMs, message)`: compite una promise contra un error `TRANSACTION_TIMEOUT`.
 
 ## Modelo de error
@@ -375,6 +375,12 @@ try {
       case "TRANSACTION_TIMEOUT":
         // La operación agotó el tiempo; comprueba el estado de la firma antes de reintentar.
         break;
+      case "TRANSACTION_NOT_FOUND":
+        // La firma nunca llegó; es seguro reintentar.
+        break;
+      case "TRANSACTION_FAILED":
+        // La transacción falló on-chain; ver error.cause.
+        break;
       case "RPC_FAILURE":
         // RPC o confirmación falló.
         console.error(error.cause);
@@ -391,7 +397,12 @@ Los códigos de error estables son:
 - `WALLET_FEATURE_UNSUPPORTED`
 - `USER_REJECTED`
 - `INVALID_ADDRESS`
+- `INVALID_INPUT`
 - `TRANSACTION_TIMEOUT`
+- `TRANSACTION_NOT_FOUND`
+- `TRANSACTION_FAILED`
+- `REDIRECT_TIMEOUT`
+- `DECRYPTION_FAILED`
 - `RPC_FAILURE`
 - `STORAGE_FAILURE`
 
