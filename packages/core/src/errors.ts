@@ -15,7 +15,8 @@ export type SolanaErrorCode =
   | "STORAGE_FAILURE"
   | "INVALID_INPUT"
   | "DECRYPTION_FAILED"
-  | "REDIRECT_TIMEOUT";
+  | "REDIRECT_TIMEOUT"
+  | "MISSING_CLIENT_CAPABILITY";
 
 export interface SolanaErrorOptions {
   cause?: unknown;
@@ -62,7 +63,9 @@ export function isSolanaError(error: unknown): error is SolanaError {
     typeof error === "object" &&
     error !== null &&
     ((error as { name?: unknown }).name === "SolanaError" ||
-      (error as { name?: unknown }).name === "SolanaWalletError") &&
+      (error as { name?: unknown }).name === "SolanaWalletError" ||
+      (error as { name?: unknown }).name === "MissingClientCapabilityError" ||
+      (error as { name?: unknown }).name === "PartialSignAndSendError") &&
     typeof (error as { code?: unknown }).code === "string"
   );
 }

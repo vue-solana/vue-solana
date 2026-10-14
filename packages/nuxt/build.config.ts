@@ -13,6 +13,7 @@ export default defineBuildConfig({
   externals: [
     "#app",
     "@nuxt/kit",
+    "@nuxt/schema",
     /^@vue-solana\/core(?:\/.*)?$/,
     /^@vue-solana\/vue(?:\/.*)?$/,
     "nuxt",

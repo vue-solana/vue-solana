@@ -54,12 +54,6 @@ describe("useWallet", () => {
 
     expect(wallet.connect).toHaveBeenCalledOnce();
     expect(wallet.disconnect).toHaveBeenCalledOnce();
-    expect(console.info).toHaveBeenCalledWith("[Vue Solana] Wallet connected", {
-      publicKey: "public-key",
-    });
-    expect(console.info).toHaveBeenCalledWith("[Vue Solana] Wallet disconnected", {
-      publicKey: "public-key",
-    });
   });
 
   it("refreshes computed state after a wallet mutates during disconnect", async () => {

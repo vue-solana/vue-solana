@@ -122,6 +122,10 @@ See [Data Fetching Composables](/packages/vue#data-fetching-composables) for the
 
 These are Nuxt aliases for the Vue composables.
 
+- `useSolanaClientCapability()`: fails fast when the installed Kit client is missing a required capability.
+- `tryUseSolana()`: safe, non-throwing accessor for the injected Solana context.
+- `clearSwrCache()`: clears the module-level SWR cache (see [Data Fetching Composables](/packages/vue#data-fetching-composables)).
+
 The default client created by the Nuxt module composes the official `solanaRpc()` and `rpcAirdrop()` plugins when no `commitment` is configured (a configured `commitment` builds the same stack explicitly so it reaches the RPC layer); `solanaRpc()` installs the transaction planner and the plan-signing and plan-sending executors itself. The old custom fallback sender is not used. `useSolanaSendTransaction()` and `useSolanaSendTransactions()` therefore expose the official client-sending capability, but the module does not configure a payer because `payer` and `payerSecretKey` are intentionally omitted from `ModuleOptions`, so a client-sent transaction needs a `payer` installed in a client-only plugin with `clientPlugin: false`, as described in [Module Setup](#module-setup). Their `sent` status is reached after the official executor completes its send-and-confirm operation at `confirmed` commitment.
 
 The Vue package uses short names such as `useRpc()` because callers import them explicitly from `@vue-solana/vue/useRpc`.

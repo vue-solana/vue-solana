@@ -251,3 +251,19 @@ were silently resolving `@vue-solana/core` (and `vue`) from the npm registry
 instead of the packed tarballs, and the install blocked on pnpm 10 build-script
 approval under `CI=1`. Overrides now go into a consumer `pnpm-workspace.yaml`
 with `dangerouslyAllowAllBuilds: true`.
+
+## Other user-visible changes in this release
+
+- `MissingClientCapabilityError` now extends `SolanaError` (code
+  `MISSING_CLIENT_CAPABILITY`) instead of `Error`, so capability failures answer
+  `isSolanaError()`. `isSolanaError()`'s structural fallback also accepts
+  `MissingClientCapabilityError` and `PartialSignAndSendError`.
+- `isAbortError` is deprecated in favor of `isSolanaActionAborted`
+  (`isAbortError` remains as a deprecated alias).
+- `SolanaWallet.signAllTransactions` is deprecated in favor of
+  `signTransactions` (same signature; the latter is tried first).
+- New export `unregisterSolanaMobileWallet()` resets the local deduplication
+  guard used by `registerSolanaMobileWallet()`. It cannot unregister an MWA
+  wallet already installed into the host registry (upstream provides no
+  unregister API); intended for test/HMR reset only.
+- `GetSolanaIosWalletsOptions.appIdentity` was removed — it was never read.

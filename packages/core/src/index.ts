@@ -38,3 +38,10 @@ export * from "./wallet-standard";
 export { SolanaError, isSolanaError } from "./errors";
 export type { SolanaErrorCode } from "./errors";
 export type { TransactionStatus } from "./types";
+
+// `./action` defines its own deprecated `isAbortError` alias (core's public
+// name), which shadows the `isAbortError` exported by `./kit` via `export *`.
+// Resolve it explicitly so the root barrel exposes core's deprecated alias
+// rather than Kit's function. Kit's original stays reachable through
+// `@vue-solana/core/kit`.
+export { isAbortError } from "./action";

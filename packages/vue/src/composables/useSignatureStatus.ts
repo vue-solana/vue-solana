@@ -6,7 +6,7 @@ import {
 } from "@vue-solana/core/kit";
 import { createSolanaError, normalizeSolanaError, type SolanaError } from "@vue-solana/core/errors";
 import { onMounted, onScopeDispose, shallowRef, toValue, watch, type MaybeRefOrGetter } from "vue";
-import { useConnection } from "./useConnection";
+import { useSolanaClient } from "./useSolanaClient";
 import { tryUseSolana } from "./useSolana";
 
 export interface UseSignatureStatusOptions {
@@ -26,7 +26,7 @@ export function useSignatureStatus(
   options: UseSignatureStatusOptions = {},
 ) {
   const solana = tryUseSolana();
-  const client = solana?.client ?? useConnection();
+  const client = solana?.client ?? useSolanaClient().client;
   const status = shallowRef<SignatureStatus | null>(null);
   const loading = shallowRef(false);
   const error = shallowRef<SolanaError | null>(null);

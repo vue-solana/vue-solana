@@ -107,6 +107,11 @@ export interface SolanaWallet {
   signMessage?: (message: Uint8Array) => Promise<SolanaSignMessageResult>;
   signIn?: (input?: SolanaSignInInput) => Promise<SolanaSignInResult>;
   signTransaction?: (transaction: SolanaTransaction) => Promise<SolanaTransaction>;
+  /**
+   * @deprecated Prefer `signTransactions` (identical signature). `signTransactions`
+   * is tried first in `useSignTransactions()`; `signAllTransactions` remains as
+   * the legacy Wallet Standard naming.
+   */
   signAllTransactions?: (transactions: SolanaTransaction[]) => Promise<SolanaTransaction[]>;
   signTransactions?: (transactions: SolanaTransaction[]) => Promise<SolanaTransaction[]>;
   signAndSendTransaction?: (

@@ -29,15 +29,10 @@ export function useWallet() {
       await connection;
       assertWalletConnected(activeWallet);
       triggerRef(wallet);
-
-      console.info("[Vue Solana] Wallet connected", {
-        publicKey: activeWallet.publicKey ?? null,
-      });
     } catch (error) {
       const normalizedError = normalizeSolanaError(error, "RPC_FAILURE");
 
       triggerRef(wallet);
-      console.error("[Vue Solana] Wallet connection failed", normalizedError);
       throw normalizedError;
     } finally {
       connecting.value = false;
@@ -51,20 +46,15 @@ export function useWallet() {
       return;
     }
 
-    const publicKey = activeWallet.publicKey ?? null;
-
     disconnecting.value = true;
 
     try {
       await activeWallet.disconnect();
       triggerRef(wallet);
-
-      console.info("[Vue Solana] Wallet disconnected", { publicKey });
     } catch (error) {
       const normalizedError = normalizeSolanaError(error, "RPC_FAILURE");
 
       triggerRef(wallet);
-      console.error("[Vue Solana] Wallet disconnection failed", normalizedError);
       throw normalizedError;
     } finally {
       disconnecting.value = false;

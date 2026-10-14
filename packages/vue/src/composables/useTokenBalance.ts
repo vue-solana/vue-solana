@@ -2,7 +2,7 @@ import type { Commitment } from "@vue-solana/core/kit";
 import type { TokenBalanceResult } from "@vue-solana/core/token-accounts";
 import { getTokenBalance } from "@vue-solana/core/token-accounts";
 import { computed, type MaybeRefOrGetter } from "vue";
-import { useConnection } from "./useConnection";
+import { useSolanaClient } from "./useSolanaClient";
 import { useAddressRead } from "./use-address-read";
 import { tryUseSolana } from "./useSolana";
 
@@ -19,7 +19,7 @@ export function useTokenBalance(
     decimals: null,
   };
   const solana = tryUseSolana();
-  const client = solana?.client ?? useConnection();
+  const client = solana?.client ?? useSolanaClient().client;
 
   const read = useAddressRead(
     [mint, owner],

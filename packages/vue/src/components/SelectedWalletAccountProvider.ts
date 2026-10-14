@@ -10,6 +10,9 @@ import {
  *
  * Wraps `provideSelectedWalletAccount`; children read state via
  * `useSelectedWalletAccount()`.
+ *
+ * `filterWallet` and `stateSync` are read once during setup (init-only);
+ * changing them after mount requires remounting the provider.
  */
 export const SelectedWalletAccountProvider = defineComponent({
   name: "SelectedWalletAccountProvider",

@@ -142,6 +142,7 @@ describe("Nuxt module", () => {
     expect(kit.addPlugin).toHaveBeenCalledWith({
       src: "resolved:./runtime/plugin",
       mode: "client",
+      order: -10,
     });
     const [imports] = kit.addImports.mock.calls[0] ?? [[]];
     const asNames = imports.map((entry: { as: string }) => entry.as);
@@ -354,8 +355,9 @@ describe("Nuxt module", () => {
     const dist = "/pkg/vue/dist";
 
     for (const { name, from } of solanaAutoImports(dist)) {
-      const isSwr = name.endsWith("Swr");
-      expect(from).toBe(`${dist}/${isSwr ? "swr" : name}.mjs`);
+      const isSwr = name.endsWith("Swr") || name === "clearSwrCache";
+      const file = name === "tryUseSolana" ? "useSolana" : isSwr ? "swr" : name;
+      expect(from).toBe(`${dist}/${file}.mjs`);
     }
 
     // Falls back to the bare subpaths when the module cannot resolve its own

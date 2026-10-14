@@ -1,4 +1,5 @@
 import { addImports, addPlugin, createResolver, defineNuxtModule } from "@nuxt/kit";
+import type { NuxtModule } from "@nuxt/schema";
 import type { VueSolanaPluginOptions } from "@vue-solana/vue";
 import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
@@ -16,8 +17,6 @@ export type ModuleOptions = Omit<VueSolanaPluginOptions, "wallet" | "payer" | "p
    */
   clientPlugin?: boolean;
 };
-
-type DefinedNuxtModule = ReturnType<ReturnType<typeof defineNuxtModule<ModuleOptions>>["with"]>;
 
 // Shipped with the module entry (`dist/module.d.ts`), so fresh consumers get
 // typed `runtimeConfig.public.solana` with no local shim. A separate
@@ -58,7 +57,7 @@ interface ViteOptimizeDepsTarget {
   };
 }
 
-const module: DefinedNuxtModule = defineNuxtModule<ModuleOptions>({
+const module: NuxtModule<ModuleOptions> = defineNuxtModule<ModuleOptions>({
   meta: {
     name: "@vue-solana/nuxt",
     configKey: "solana",
@@ -106,6 +105,7 @@ const module: DefinedNuxtModule = defineNuxtModule<ModuleOptions>({
       addPlugin({
         src: resolver.resolve("./runtime/plugin"),
         mode: "client",
+        order: -10,
       });
 
       addImports(solanaAutoImports(vueDist));

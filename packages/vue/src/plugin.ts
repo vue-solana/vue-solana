@@ -83,12 +83,6 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}): VueSol
         status.value = "checking";
         error.value = null;
 
-        console.info("[Vue Solana] Checking RPC connection", {
-          cluster: context.cluster,
-          endpoint: context.endpoint,
-          wsEndpoint: context.wsEndpoint,
-        });
-
         try {
           const response = await withTimeout(
             context.client.rpc.getLatestBlockhash().send(),
@@ -106,13 +100,6 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}): VueSol
 
           latestBlockhash.value = blockhash.blockhash;
           status.value = "connected";
-
-          console.info("[Vue Solana] Connected", {
-            cluster: context.cluster,
-            endpoint: context.endpoint,
-            wsEndpoint: context.wsEndpoint,
-            blockhash,
-          });
         } catch (cause) {
           if (checkId !== rpcCheckId) {
             return;
@@ -120,8 +107,6 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}): VueSol
 
           status.value = "error";
           error.value = normalizeSolanaError(cause, "RPC_FAILURE");
-
-          console.error("[Vue Solana] Connection failed", cause);
         }
       }
 
@@ -147,7 +132,6 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}): VueSol
           const persistedWallet = readSelectedWallet();
           if (persistedWallet.error) {
             error.value = persistedWallet.error;
-            console.error("[Vue Solana] Selected wallet restoration failed", persistedWallet.error);
           }
 
           restoredWallet = persistedWallet.wallet
@@ -192,7 +176,7 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}): VueSol
             refreshWallets();
           })
           .catch((cause) => {
-            console.error("[Vue Solana] Mobile wallet registration failed", cause);
+            void cause;
           })
           .finally(() => {
             mobileWalletRegistrationPromise = null;
@@ -208,7 +192,6 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}): VueSol
 
         if (storageError) {
           error.value = storageError;
-          console.error("[Vue Solana] Selected wallet persistence failed", storageError);
         }
       }
 
@@ -233,7 +216,7 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}): VueSol
         void activeWallet
           .connect()
           .catch((cause) => {
-            console.error("[Vue Solana] Wallet auto-connect failed", cause);
+            void cause;
           })
           .finally(() => {
             triggerRef(wallet);
@@ -258,7 +241,6 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}): VueSol
 
           if (storageError) {
             error.value = storageError;
-            console.error("[Vue Solana] Selected wallet persistence failed", storageError);
           }
         },
       };
@@ -288,7 +270,7 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}): VueSol
           try {
             refreshWallets();
           } catch (cause) {
-            console.error("[Vue Solana] Wallet refresh failed", cause);
+            void cause;
           }
 
           void checkConnection();

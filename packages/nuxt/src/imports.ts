@@ -5,6 +5,7 @@ const SOLANA_COMPOSABLE_IMPORTS = [
   ["useAction", "useSolanaAction"],
   ["useAirdrop", "useSolanaAirdrop"],
   ["useBalance", "useSolanaBalance"],
+  ["useClientCapability", "useSolanaClientCapability"],
   ["useConnection", "useSolanaConnection"],
   ["useIdentity", "useSolanaIdentity"],
   ["usePlanTransaction", "useSolanaPlanTransaction"],
@@ -84,6 +85,8 @@ export function solanaAutoImports(vueDist: string | undefined): SolanaAutoImport
       from: vueSource(vueDist, name),
     })),
     ...SOLANA_SWR_IMPORTS.map(([name, as]) => ({ name, as, from: vueSource(vueDist, "swr") })),
+    { name: "tryUseSolana", as: "tryUseSolana", from: vueSource(vueDist, "useSolana") },
+    { name: "clearSwrCache", as: "clearSwrCache", from: vueSource(vueDist, "swr") },
   ];
 }
 

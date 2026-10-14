@@ -103,7 +103,8 @@ Auto-imported Nuxt composables (source of truth: `packages/nuxt/src/imports.ts`)
 - `useSolanaBalance()`, `useSolanaAccountInfo()`, `useSolanaProgramAccounts()`
 - `useSolanaTokenAccounts()`, `useSolanaTokenBalance()`, `useSolanaSignatureStatus()`, `useSolanaTransactionConfirmation()`
 - `useSolanaWallet()`, `useSolanaWallets()`, `useSolanaSignMessage()`, `useSolanaSignIn()`
-- `useSolanaAirdrop()`, `useSolanaAction()`, `useSolanaRequest()`, `useSolanaSubscription()`, `useSolanaTrackedData()`
+- `useSolanaAirdrop()`, `useSolanaAction()`, `useSolanaClientCapability()`, `useSolanaRequest()`, `useSolanaSubscription()`, `useSolanaTrackedData()`
+- `tryUseSolana()`, `clearSwrCache()`
 - `useSolanaTransaction()`, `useSolanaRequestSwr()`, `useSolanaSubscriptionSwr()`, `useSolanaTrackedDataSwr()`
 - `useSolanaSelectedWalletAccount()`
 - `useSolanaSignTransactions()`, `useSolanaSignAndSendTransaction()`, `useSolanaSignAndSendTransactions()`

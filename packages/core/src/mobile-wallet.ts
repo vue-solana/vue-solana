@@ -57,6 +57,19 @@ export function registerSolanaMobileWallet(
   return true;
 }
 
+/**
+ * Clears this package's local record of which Mobile Wallet Adapter
+ * registration keys have been applied. This only affects the deduplication guard
+ * inside `registerSolanaMobileWallet()`; it does not (and cannot) unregister an
+ * MWA wallet already installed into the host's Wallet Standard registry, because
+ * `@solana-mobile/wallet-standard-mobile` provides no unregister API. Calling
+ * `registerSolanaMobileWallet()` after this may therefore install a duplicate
+ * host-side registration. Intended for test/HMR reset only.
+ */
+export function unregisterSolanaMobileWallet(): void {
+  registeredMobileWalletKeys.clear();
+}
+
 export function getDefaultMobileWalletAppIdentity(): SolanaMobileWalletAppIdentity {
   if (typeof window === "undefined") {
     return {

@@ -132,7 +132,7 @@ export function createSolanaWalletRegistry(options: SolanaWalletRegistryOptions)
     try {
       handleSolanaIosWalletCallback({ clearUrl: true });
     } catch (cause) {
-      console.error("[Vue Solana] iOS wallet callback failed", cause);
+      void cause;
     }
   }
 

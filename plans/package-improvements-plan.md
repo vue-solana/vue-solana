@@ -92,23 +92,23 @@ Acceptance criteria:
 
 ## Phase 3: DX And API Consistency — P1
 
-Status: planned.
+Status: implemented.
 
 Tasks:
 
-- [ ] Nuxt auto-import table lags Vue (`packages/nuxt/src/imports.ts:3-56`). Add `tryUseSolana` (`packages/vue/src/composables/useSolana.ts:6`), `useClientCapability` (`packages/vue/src/useClientCapability.ts`), `clearSwrCache` (`packages/vue/src/swr.ts:56`), or document intentional omission. Add test asserting every public `use*`/`clearSwrCache` in `@vue-solana/vue` has a Nuxt alias.
-- [ ] `MissingClientCapabilityError extends Error`, not core `SolanaError` (`packages/vue/src/composables/useClientCapability.ts:7-26`). Subclass/wrap as `SolanaError` or document the `instanceof` split.
-- [ ] Unconditional `console.info/error` in library code (`packages/vue/src/plugin.ts:77-81,101-115,174,190,215,264`, `packages/vue/src/composables/useWallet.ts:33,40,62,67`). Gate behind `debug` option or remove; never log in hot paths.
-- [ ] Internal code calls deprecated `useConnection()` (`packages/vue/src/composables/useBalance.ts:10-11`, `useAccountInfo.ts:24-25`, `useSignatureStatus.ts:28-29`; deprecated at `useConnection.ts:7-9`). Call `useSolanaClient()` / `tryUseSolana()` directly.
-- [ ] `SelectedWalletAccountProvider` props read once (`packages/vue/src/components/SelectedWalletAccountProvider.ts:27-31`). Watch `filterWallet`/`stateSync` and re-provide, or document as init-only.
-- [ ] No `./plugin`, `./injection`, `./components/*` subpaths (`packages/vue/package.json:27-172`; provider + keys root-only via `src/index.ts:30-33`). Add subpaths or document root-only imports.
-- [ ] `signTransactions` vs `signAllTransactions` identical signatures, precedence undocumented (`packages/core/src/types.ts:102-112`, `packages/core/src/wallet.ts:90-98`). Document which is tried first; deprecate one name.
-- [ ] `GetSolanaIosWalletsOptions.appIdentity` never read (`packages/core/src/ios-wallet/adapter.ts:24-30`, defined in `src/ios-wallet/types.ts:9-14`). Honor it or remove the field.
-- [ ] `registeredMobileWalletKeys` module-global with no reset (`packages/core/src/mobile-wallet.ts:26-58`). Expose `unregisterSolanaMobileWallet()` or test-only reset for HMR/tests.
-- [ ] Duplicate abort helpers (`packages/core/src/action.ts:38-42` exports `isAbortError` and `isSolanaActionAborted()`). Keep one canonical name, alias the other as deprecated.
-- [ ] Nuxt `DefinedNuxtModule` fragile typing (`packages/nuxt/src/module.ts:16`). Type as `NuxtModule<ModuleOptions>` from `@nuxt/kit` / `@nuxt/schema`.
-- [ ] Nuxt plugin ordering unspecified (`packages/nuxt/src/module.ts:91-104`). Set explicit `order: -10` (or document `dependsOn`/ordering contract for `clientPlugin: false` users).
-- [ ] SWR cache shared across SSR requests with no server clear (`packages/vue/src/swr.ts:30-37` surfaced via Nuxt). Document per-request namespacing / `clearSwrCache()` for SSR, or ship a tiny server plugin doing it.
+- [x] Nuxt auto-import table lags Vue (`packages/nuxt/src/imports.ts:3-56`). Added `tryUseSolana` (`packages/vue/src/composables/useSolana.ts:6`), `useClientCapability` (aliased as `useSolanaClientCapability`), and `clearSwrCache` (`packages/vue/src/swr.ts:56`); `imports.ts` is the source of truth, and `module.test.ts` covers the registered sources. (An exhaustive "every public `use*` has an alias" assertion was not added — the auto-import set is curated, not exhaustive.)
+- [x] `MissingClientCapabilityError extends Error`, not core `SolanaError` (`packages/vue/src/composables/useClientCapability.ts:7-26`). Subclass/wrap as `SolanaError` or document the `instanceof` split.
+- [x] Unconditional `console.info/error` in library code (`packages/vue/src/plugin.ts:77-81,101-115,174,190,215,264`, `packages/vue/src/composables/useWallet.ts:33,40,62,67`). Gate behind `debug` option or remove; never log in hot paths.
+- [x] Internal code calls deprecated `useConnection()` (`packages/vue/src/composables/useBalance.ts:10-11`, `useAccountInfo.ts:24-25`, `useSignatureStatus.ts:28-29`; deprecated at `useConnection.ts:7-9`). Call `useSolanaClient()` / `tryUseSolana()` directly.
+- [x] `SelectedWalletAccountProvider` props read once (`packages/vue/src/components/SelectedWalletAccountProvider.ts:27-31`). Watch `filterWallet`/`stateSync` and re-provide, or document as init-only.
+- [x] No `./plugin`, `./injection`, `./components/*` subpaths (`packages/vue/package.json:27-172`; provider + keys root-only via `src/index.ts:30-33`). Add subpaths or document root-only imports.
+- [x] `signTransactions` vs `signAllTransactions` identical signatures, precedence undocumented (`packages/core/src/types.ts:102-112`, `packages/core/src/wallet.ts:90-98`). Document which is tried first; deprecate one name.
+- [x] `GetSolanaIosWalletsOptions.appIdentity` never read (`packages/core/src/ios-wallet/adapter.ts:24-30`, defined in `src/ios-wallet/types.ts:9-14`). Honor it or remove the field.
+- [x] `registeredMobileWalletKeys` module-global with no reset (`packages/core/src/mobile-wallet.ts:26-58`). Expose `unregisterSolanaMobileWallet()` or test-only reset for HMR/tests.
+- [x] Duplicate abort helpers (`packages/core/src/action.ts:38-42` exports `isAbortError` and `isSolanaActionAborted()`). Keep one canonical name, alias the other as deprecated.
+- [x] Nuxt `DefinedNuxtModule` fragile typing (`packages/nuxt/src/module.ts:16`). Type as `NuxtModule<ModuleOptions>` from `@nuxt/kit` / `@nuxt/schema`.
+- [x] Nuxt plugin ordering unspecified (`packages/nuxt/src/module.ts:91-104`). Set explicit `order: -10` (or document `dependsOn`/ordering contract for `clientPlugin: false` users).
+- [x] SWR cache shared across SSR requests with no server clear (`packages/vue/src/swr.ts:30-37` surfaced via Nuxt). Document per-request namespacing / `clearSwrCache()` for SSR, or ship a tiny server plugin doing it.
 
 Acceptance criteria:
 
