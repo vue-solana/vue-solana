@@ -290,3 +290,56 @@ with `dangerouslyAllowAllBuilds: true`.
   wallet already installed into the host registry (upstream provides no
   unregister API); intended for test/HMR reset only.
 - `GetSolanaIosWalletsOptions.appIdentity` was removed — it was never read.
+
+Verify `signMessage` and `signIn` wallet results against the account's public key
+before resolving.
+
+A Wallet Standard wallet can return a signature over different bytes than the
+message it was handed, or a signature made by a different key than the account it
+reported. The adapter now checks both before `signMessage()` / `signIn()` resolve
+and rejects a mismatch with a new `SolanaError` code, `INVALID_SIGNATURE` (a
+malformed signature is reported with the same code).
+
+```ts
+import { useSignMessage } from "@vue-solana/vue/useSignMessage";
+
+const { execute, error } = useSignMessage();
+await execute(message);
+
+if (error.value?.code === "INVALID_SIGNATURE") {
+  // The wallet's signature did not match the account or the signed bytes.
+}
+```
+
+Details:
+
+- The check uses Kit 8.5's `verifySignature()` and runs against the account's
+  **public key bytes**, so it makes no assumption about the address matching the
+  key (custom adapters can report whichever address they like).
+- It is best-effort and degrades gracefully: where Ed25519 is unavailable in the
+  WebCrypto API (older Safari, insecure contexts, non-browser runtimes), the key
+  import fails and the result resolves unverified rather than rejecting a wallet
+  the user already approved.
+- It only covers message signing and SIWS. Transaction signatures are not
+  verified client-side; Kit does not verify those either.
+- **Server-side verification is still mandatory.** This is a client-side
+  defense-in-depth guard against a misbehaving wallet, not an authentication
+  boundary.
+
+Bump `@solana/kit` to `^8.5.0` (the workspace override moves with it, so the
+workspace still resolves a single copy — two copies mean two `SolanaError`
+classes, and `isSolanaError()` from one rejects errors thrown by the other).
+
+8.5.0 is additive for this package: the new wallet error codes
+(`SOLANA_ERROR__WALLET__INVALID_MESSAGE_SIGNATURE`,
+`SOLANA_ERROR__WALLET__INVALID_SIGN_IN_OUTPUT`,
+`SOLANA_ERROR__WALLET__INVALID_NUMBER_OF_OUTPUTS`) reach consumers through the
+`kit` subpaths, `getAddressEncoder()` / `getAddressCodec()` now also accept any
+address-bearing object (`HasAddress`), and the codec, sysvar, fixed-point and
+plugin-interface fixes land through the re-exported surface. The stricter
+`verifySignature()` now backs the new client-side `signMessage` / `signIn`
+check. The `@solana/wallet-account-signer` package is still not used here —
+`SolanaWallet` deals in raw signature bytes, so its signer wrapper does not fit.
+
+Nothing changes for wallets and environments that already return a correct
+signature, and no new dependency is added.
