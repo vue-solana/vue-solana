@@ -7363,9 +7363,11 @@ Expira En: 2026-07-02T12:10:00Z
 
 ## Límite De Verificación
 
-Vue Solana ayuda a solicitar la firma a la wallet. Tu aplicación es responsable de la verificación del lado del servidor, el almacenamiento de nonces, las comprobaciones de expiración y la creación de sesiones.
+Vue Solana verifica la firma devuelta contra la clave pública de la cuenta antes de resolver `signMessage()` / `signIn()`, cuando el entorno admite Ed25519 (WebCrypto). Es una protección de mejor esfuerzo frente a una wallet que devuelve una firma sobre bytes incorrectos o para otra cuenta; no sustituye la verificación en el servidor y se omite donde Ed25519 no está disponible. Una firma que no supera la comprobación rechaza con `INVALID_SIGNATURE`.
 
-No trates una firma sobre texto generico como permiso para transferir tokens o cambiar estado on-chain.
+Tu aplicación sigue siendo responsable de la verificación del lado del servidor, el almacenamiento de nonces, las comprobaciones de expiración y la creación de sesiones.
+
+No trates una firma sobre texto genérico como permiso para transferir tokens o cambiar estado on-chain.
 
 ## Manejo De Errores
 
@@ -7382,6 +7384,8 @@ const message = computed(() => {
       return "Esta wallet no admite firma de mensajes.";
     case "USER_REJECTED":
       return "La firma del mensaje fue rechazada.";
+    case "INVALID_SIGNATURE":
+      return "La wallet devolvió una firma inválida.";
     default:
       return null;
   }
@@ -7502,7 +7506,9 @@ Expires At: 2026-07-02T12:10:00Z
 
 ## Verification Boundary
 
-Vue Solana helps request the wallet signature. Your app is responsible for server-side verification, nonce storage, expiration checks, and session creation.
+Vue Solana verifies the returned signature against the account's public key before resolving `signMessage()` / `signIn()`, when the environment supports Ed25519 (WebCrypto). This is a best-effort guard against a wallet returning a signature over the wrong bytes or for a different account — it is not a substitute for server-side verification, and it is skipped where Ed25519 is unavailable. A signature that fails the check rejects with `INVALID_SIGNATURE`.
+
+Your app is still responsible for server-side verification, nonce storage, expiration checks, and session creation.
 
 Do not treat a signature over generic text as permission to transfer tokens or change on-chain state.
 
@@ -7521,6 +7527,8 @@ const message = computed(() => {
       return "This wallet does not support message signing.";
     case "USER_REJECTED":
       return "The message signature was rejected.";
+    case "INVALID_SIGNATURE":
+      return "The wallet returned an invalid signature.";
     default:
       return null;
   }
@@ -7641,7 +7649,9 @@ Expires At: 2026-07-02T12:10:00Z
 
 ## 검증 경계
 
-Vue Solana는 지갑 서명을 요청하는 부분을 돕습니다. 서버 측 검증, nonce 저장, 만료 검사, 세션 생성은 앱의 책임입니다.
+Vue Solana는 환경이 Ed25519(WebCrypto)를 지원할 때 `signMessage()` / `signIn()`을 완료하기 전에 반환된 서명을 계정의 공개 키로 검증합니다. 이는 지갑이 잘못된 바이트에 대한 서명이나 다른 계정의 서명을 반환하는 경우를 막는 최선의 방어이며, 서버 측 검증을 대체하지 않고 Ed25519를 사용할 수 없는 환경에서는 건너뜁니다. 검증에 실패한 서명은 `INVALID_SIGNATURE`로 거부됩니다.
+
+서버 측 검증, nonce 저장, 만료 검사, 세션 생성은 여전히 앱의 책임입니다.
 
 일반 텍스트에 대한 서명을 토큰 전송이나 온체인 상태 변경 권한으로 취급하지 마세요.
 
@@ -7660,6 +7670,8 @@ const message = computed(() => {
       return "This wallet does not support message signing.";
     case "USER_REJECTED":
       return "The message signature was rejected.";
+    case "INVALID_SIGNATURE":
+      return "The wallet returned an invalid signature.";
     default:
       return null;
   }
@@ -7780,7 +7792,9 @@ Expires At: 2026-07-02T12:10:00Z
 
 ## 验证边界
 
-Vue Solana 帮助请求钱包签名。你的应用负责服务端验证、nonce 存储、过期检查和会话创建。
+当环境支持 Ed25519（WebCrypto）时，Vue Solana 会在完成 `signMessage()` / `signIn()` 之前，用账户公钥验证返回的签名。这是针对钱包返回错误字节的签名或返回其他账户签名的尽力防护，不能替代服务端验证，并且在 Ed25519 不可用的环境中会跳过。未通过验证的签名会以 `INVALID_SIGNATURE` 拒绝。
+
+你的应用仍然负责服务端验证、nonce 存储、过期检查和会话创建。
 
 不要把对通用文本的签名视为转移代币或更改链上状态的许可。
 
@@ -7799,6 +7813,8 @@ const message = computed(() => {
       return "此钱包不支持消息签名。";
     case "USER_REJECTED":
       return "消息签名已被拒绝。";
+    case "INVALID_SIGNATURE":
+      return "钱包返回了无效的签名。";
     default:
       return null;
   }
@@ -7846,6 +7862,7 @@ const error = new SolanaError("RPC_FAILURE", "Unable to reach RPC");
 - `WALLET_NOT_CONNECTED`: la wallet activa no está conectada o no tiene clave pública.
 - `WALLET_FEATURE_UNSUPPORTED`: la wallet activa no soporta la feature solicitada.
 - `USER_REJECTED`: el usuario rechazó una solicitud de wallet.
+- `INVALID_SIGNATURE`: una wallet devolvió una firma de mensaje o de inicio de sesión que no coincide con la clave de su cuenta.
 - `INVALID_ADDRESS`: un string de dirección no pudo parsearse como dirección de Solana.
 - `INVALID_INPUT`: un helper recibió un endpoint, timeout o valor de opción con formato inválido.
 - `TRANSACTION_TIMEOUT`: una operación relacionada con transacción agotó el tiempo de espera.
@@ -8005,6 +8022,7 @@ const error = new SolanaError("RPC_FAILURE", "Unable to reach RPC");
 - `WALLET_NOT_CONNECTED`: the active wallet is not connected or has no public key.
 - `WALLET_FEATURE_UNSUPPORTED`: the active wallet does not support the requested feature.
 - `USER_REJECTED`: the user rejected a wallet request.
+- `INVALID_SIGNATURE`: a wallet returned a message or sign-in signature that does not match its account key.
 - `INVALID_ADDRESS`: an address string could not be parsed as a Solana address.
 - `INVALID_INPUT`: a helper received a malformed endpoint, timeout, or option value.
 - `TRANSACTION_TIMEOUT`: a transaction-related operation timed out.
@@ -8164,6 +8182,7 @@ const error = new SolanaError("RPC_FAILURE", "Unable to reach RPC");
 - `WALLET_NOT_CONNECTED`: 활성 지갑이 연결되어 있지 않거나 public key가 없습니다.
 - `WALLET_FEATURE_UNSUPPORTED`: 활성 지갑이 요청한 feature를 지원하지 않습니다.
 - `USER_REJECTED`: 사용자가 지갑 요청을 거절했습니다.
+- `INVALID_SIGNATURE`: 지갑이 계정 키와 일치하지 않는 메시지 또는 로그인 서명을 반환했습니다.
 - `INVALID_ADDRESS`: 주소 문자열을 Solana 주소로 파싱할 수 없습니다.
 - `INVALID_INPUT`: helper가 잘못된 endpoint, timeout 또는 옵션 값을 받았습니다.
 - `TRANSACTION_TIMEOUT`: 트랜잭션 관련 작업이 timeout되었습니다.
@@ -8323,6 +8342,7 @@ const error = new SolanaError("RPC_FAILURE", "Unable to reach RPC");
 - `WALLET_NOT_CONNECTED`：活跃钱包未连接，或没有公钥。
 - `WALLET_FEATURE_UNSUPPORTED`：活跃钱包不支持请求的功能。
 - `USER_REJECTED`：用户拒绝了钱包请求。
+- `INVALID_SIGNATURE`：钱包返回的消息签名或登录签名与其账户密钥不匹配。
 - `INVALID_ADDRESS`：地址字符串无法解析为 Solana 地址。
 - `INVALID_INPUT`：辅助函数收到了格式错误的端点、超时或选项值。
 - `TRANSACTION_TIMEOUT`：与交易相关的操作超时。
@@ -9487,7 +9507,7 @@ const signedTransaction = await wallet.signTransaction(transaction);
 ### Transacciones
 
 - `signAndSendTransaction(client, wallet, transaction, options?)`: firma y envía bytes de transacción en la red (wire) usando una wallet configurada y devuelve la firma RPC. Se delega en las wallets que exponen `signAndSendTransaction`; en caso contrario, la transacción se firma con `wallet.signTransaction` y se envía mediante `client.rpc.sendTransaction(...).send()`. Las wallets Android Mobile Wallet Adapter prefieren firma más envío RPC del lado de la app para que la app controle el envío y devuelva de forma fiable la firma RPC después del traspaso a la wallet.
-- `confirmTransactionSignature(client, signature, options?)`: espera a que una firma enviada alcance un commitment solicitado. Usa por defecto commitment `confirmed`, timeout de 60 segundos, intervalo de sondeo de 1500 ms y sondeo de `client.rpc.getSignatureStatuses([signature]).send()`. Acepta `pollIntervalMs`, `abortSignal` y `searchTransactionHistory`. Una transacción fallida lanza `TRANSACTION_FAILED`, una firma que nunca aparece lanza `TRANSACTION_NOT_FOUND` y una espera agotada lanza `TRANSACTION_TIMEOUT`.
+- `confirmTransactionSignature(client, signature, options?)`: espera a que una firma enviada alcance un commitment solicitado. Usa por defecto commitment `confirmed`, timeout de 60 segundos, intervalo de sondeo de 1500 ms y sondeo de `client.rpc.getSignatureStatuses([signature]).send()`. Acepta `pollIntervalMs` (debe ser mayor que `0`), `abortSignal` y `searchTransactionHistory`. Una transacción fallida lanza `TRANSACTION_FAILED`, una firma que nunca aparece lanza `TRANSACTION_NOT_FOUND` y una espera agotada lanza `TRANSACTION_TIMEOUT`. Pasa `searchTransactionHistory: true` cuando la firma pueda haber salido de la caché de estados recientes — sin ella, una firma antigua nunca aparece en los resultados y termina en `TRANSACTION_NOT_FOUND` tras el timeout.
 
 El flujo de envio del cliente es separado de este helper consciente de wallet. El cliente expone `sendTransaction()` y `sendTransactions()` mediante el `rpcTransactionPlanSendingExecutor()` oficial instalado por `createSolanaClient()`; los composables de Vue envuelven esos metodos. Planifican, firman, envian y esperan `confirmed`; el estado `sent` se establece solo cuando termina la operación de envio y confirmación. El resultado simple expone la firma en `data.context.signature`, y el resultado batch contiene el arbol completo del plan. El sender oficial no muestra popup de wallet.
 
@@ -9563,6 +9583,7 @@ Los códigos de error estables son:
 - `WALLET_NOT_CONNECTED`
 - `WALLET_FEATURE_UNSUPPORTED`
 - `USER_REJECTED`
+- `INVALID_SIGNATURE`
 - `INVALID_ADDRESS`
 - `INVALID_INPUT`
 - `TRANSACTION_TIMEOUT`
@@ -10100,7 +10121,7 @@ const signedTransaction = await wallet.signTransaction(transaction);
 ### 트랜잭션
 
 - `signAndSendTransaction(client, wallet, transaction, options?)`: configured wallet로 raw wire transaction byte에 서명하고 전송한 뒤 RPC signature를 반환합니다. `signAndSendTransaction`을 노출하는 wallet은 해당 기능에 위임되고, 그렇지 않으면 트랜잭션은 `wallet.signTransaction`으로 서명된 뒤 `client.rpc.sendTransaction(...).send()`로 제출됩니다. Android Mobile Wallet Adapter wallet은 앱이 제출을 소유하고 wallet handoff 후 RPC signature를 안정적으로 반환할 수 있도록 서명과 app-side RPC 제출을 선호합니다.
-- `confirmTransactionSignature(client, signature, options?)`: 제출된 signature가 요청한 commitment에 도달할 때까지 기다립니다. 기본값은 `confirmed` commitment, 60초 timeout, 1500 ms poll interval, `client.rpc.getSignatureStatuses([signature]).send()` 폴링입니다. `pollIntervalMs`, `abortSignal`, `searchTransactionHistory`를 받습니다. 실패한 트랜잭션은 `TRANSACTION_FAILED`, 나타나지 않은 서명은 `TRANSACTION_NOT_FOUND`, 소진된 대기는 `TRANSACTION_TIMEOUT`을 throw합니다.
+- `confirmTransactionSignature(client, signature, options?)`: 제출된 signature가 요청한 commitment에 도달할 때까지 기다립니다. 기본값은 `confirmed` commitment, 60초 timeout, 1500 ms poll interval, `client.rpc.getSignatureStatuses([signature]).send()` 폴링입니다. `pollIntervalMs`(`0`보다 커야 함), `abortSignal`, `searchTransactionHistory`를 받습니다. 실패한 트랜잭션은 `TRANSACTION_FAILED`, 나타나지 않은 서명은 `TRANSACTION_NOT_FOUND`, 소진된 대기는 `TRANSACTION_TIMEOUT`을 throw합니다. 서명이 최근 상태 캐시를 벗어났을 수 있으면 `searchTransactionHistory: true`를 전달하세요 — 없으면 오래된 서명이 결과에 나타나지 않아 timeout 후 `TRANSACTION_NOT_FOUND`가 됩니다.
 
 wallet-aware helper와 client-sent flow는 별개입니다. client는 `createSolanaClient()`가 설치한 official `rpcTransactionPlanSendingExecutor()`를 통해 `sendTransaction()`과 `sendTransactions()`를 노출하고 Vue composable이 이 method들을 감쌉니다. plan, sign, submit 후 `confirmed` commitment을 기다리며, send-and-confirm가 완료된 뒤에만 `sent` 상태가 됩니다. 단일 결과의 `data.context.signature`에서 제출된 signature를 확인할 수 있고, batch 결과에는 전체 plan result tree가 포함됩니다. official sender는 wallet popup을 표시하지 않습니다.
 
@@ -10176,6 +10197,7 @@ try {
 - `WALLET_NOT_CONNECTED`
 - `WALLET_FEATURE_UNSUPPORTED`
 - `USER_REJECTED`
+- `INVALID_SIGNATURE`
 - `INVALID_ADDRESS`
 - `INVALID_INPUT`
 - `TRANSACTION_TIMEOUT`
@@ -10518,7 +10540,7 @@ const signedTransaction = await wallet.signTransaction(transaction);
 ### Transactions
 
 - `signAndSendTransaction(client, wallet, transaction, options?)`: signs and sends raw wire transaction bytes using a configured wallet and returns the RPC signature. Wallets that expose `signAndSendTransaction` are delegated to; otherwise the transaction is signed with `wallet.signTransaction` and submitted through `client.rpc.sendTransaction(...).send()`. Android Mobile Wallet Adapter wallets prefer signing plus app-side RPC submission so the app owns submission and reliably returns the RPC signature after the wallet handoff.
-- `confirmTransactionSignature(client, signature, options?)`: waits for a submitted signature to reach a requested commitment. Defaults to `confirmed` commitment, a 60 second timeout, a 1500 ms poll interval, and polling `client.rpc.getSignatureStatuses([signature]).send()`. Accepts `pollIntervalMs`, `abortSignal`, and `searchTransactionHistory`. A failed transaction throws `TRANSACTION_FAILED`, a signature that never appears throws `TRANSACTION_NOT_FOUND`, and an exhausted wait throws `TRANSACTION_TIMEOUT`.
+- `confirmTransactionSignature(client, signature, options?)`: waits for a submitted signature to reach a requested commitment. Defaults to `confirmed` commitment, a 60 second timeout, a 1500 ms poll interval, and polling `client.rpc.getSignatureStatuses([signature]).send()`. Accepts `pollIntervalMs` (must be greater than `0`), `abortSignal`, and `searchTransactionHistory`. A failed transaction throws `TRANSACTION_FAILED`, a signature that never appears throws `TRANSACTION_NOT_FOUND`, and an exhausted wait throws `TRANSACTION_TIMEOUT`. Pass `searchTransactionHistory: true` when the signature may have left the recent status cache — without it an older signature never appears in results and resolves to `TRANSACTION_NOT_FOUND` after the timeout.
 
 The client-sent flow is separate from this wallet-aware helper. The client exposes `sendTransaction()` and `sendTransactions()` through the official `rpcTransactionPlanSendingExecutor()` that `solanaRpc()` installs inside `createSolanaClient()`; the Vue composables wrap those methods. They plan, sign, submit, and wait for `confirmed` commitment; the `sent` status is set only after that send-and-confirm operation completes. A single result exposes the submitted signature at `data.context.signature`, while a batch result contains the full plan result tree. The official sender does not show a wallet popup.
 
@@ -10594,6 +10616,7 @@ Stable error codes are:
 - `WALLET_NOT_CONNECTED`
 - `WALLET_FEATURE_UNSUPPORTED`
 - `USER_REJECTED`
+- `INVALID_SIGNATURE`
 - `INVALID_ADDRESS`
 - `INVALID_INPUT`
 - `TRANSACTION_TIMEOUT`
@@ -11032,7 +11055,7 @@ const signedTransaction = await wallet.signTransaction(transaction);
 ### 交易
 
 - `signAndSendTransaction(client, wallet, transaction, options?)`：使用配置的钱包签名并发送原始 wire 交易字节，返回 RPC signature。暴露 `signAndSendTransaction` 的钱包会委托给它；否则交易用 `wallet.signTransaction` 签名，并通过 `client.rpc.sendTransaction(...).send()` 提交。Android Mobile Wallet Adapter 钱包优先使用签名加应用侧 RPC 提交，让应用拥有提交过程，并能在钱包 handoff 后可靠返回 RPC signature。
-- `confirmTransactionSignature(client, signature, options?)`：等待已提交签名达到请求的 commitment。默认使用 `confirmed` commitment、60 秒超时、1500 毫秒轮询间隔，并轮询 `client.rpc.getSignatureStatuses([signature]).send()`。接受 `pollIntervalMs`、`abortSignal` 和 `searchTransactionHistory`。失败的交易抛出 `TRANSACTION_FAILED`，从未出现的签名抛出 `TRANSACTION_NOT_FOUND`，耗尽的等待抛出 `TRANSACTION_TIMEOUT`。
+- `confirmTransactionSignature(client, signature, options?)`：等待已提交签名达到请求的 commitment。默认使用 `confirmed` commitment、60 秒超时、1500 毫秒轮询间隔，并轮询 `client.rpc.getSignatureStatuses([signature]).send()`。接受 `pollIntervalMs`（必须大于 `0`）、`abortSignal` 和 `searchTransactionHistory`。失败的交易抛出 `TRANSACTION_FAILED`，从未出现的签名抛出 `TRANSACTION_NOT_FOUND`，耗尽的等待抛出 `TRANSACTION_TIMEOUT`。当签名可能已离开近期状态缓存时，请传递 `searchTransactionHistory: true`——否则旧签名不会出现在结果中，超时后将得到 `TRANSACTION_NOT_FOUND`。
 
 client-sent flow 与这个感知钱包的 helper 分开。client 通过 `createSolanaClient()` 安装的官方 `rpcTransactionPlanSendingExecutor()` 暴露 `sendTransaction()` 和 `sendTransactions()`，Vue composable 包装这些方法。它们会 plan、sign、submit 并等待 `confirmed` commitment；只有 send-and-confirm 操作完成后状态才会变为 `sent`。单笔结果在 `data.context.signature` 提供已提交的签名，batch 结果包含完整的 plan result tree。官方 sender 不显示钱包弹窗。
 
@@ -11108,6 +11131,7 @@ try {
 - `WALLET_NOT_CONNECTED`
 - `WALLET_FEATURE_UNSUPPORTED`
 - `USER_REJECTED`
+- `INVALID_SIGNATURE`
 - `INVALID_ADDRESS`
 - `INVALID_INPUT`
 - `TRANSACTION_TIMEOUT`
@@ -11698,6 +11722,8 @@ La wallet devuelve una firma sobre `signedMessage` — el mensaje SIWS que el us
 3. **Vincula la sesión**: solo después de que el mensaje pase las comprobaciones y la firma se verifique debes crear la sesión — asociada a `account.address`.
 
 El servidor debe re-derivar el mensaje esperado a partir del nonce que emitió (o validar todos los campos del mensaje recibido) para rechazar nonces expirados o reutilizados.
+
+Antes de que `signMessage()` o `signIn()` se resuelvan, el adaptador también comprueba la firma devuelta contra el `publicKey` de la cuenta cuando Ed25519 (WebCrypto) está disponible, y rechaza con `INVALID_SIGNATURE` si no coincide. Es una protección de mejor esfuerzo del lado del cliente frente a una wallet que se comporta mal; se omite donde Ed25519 no está disponible, así que la comprobación en el servidor anterior es lo que realmente autentica al usuario.
 
 ## Composables de obtención de datos
 
@@ -12540,6 +12566,8 @@ async function handleSignIn() {
 3. **세션 바인딩**: 메시지 검사와 서명 검증이 모두 통과된 후에만 세션을 생성하세요. `account.address`를 키로 사용합니다.
 
 서버는 발급한 nonce로부터 기대하는 메시지를 다시 도출하거나 수신된 메시지의 모든 필드를 검증하여, 만료되었거나 재사용된 nonce를 거부해야 합니다.
+
+`signMessage()` 또는 `signIn()`이 완료되기 전에 어댑터는 Ed25519(WebCrypto)를 사용할 수 있는 경우 반환된 서명을 계정의 `publicKey`로도 검증하며, 일치하지 않으면 `INVALID_SIGNATURE`로 거부합니다. 이는 잘못 동작하는 지갑에 대비한 최선의 클라이언트 측 방어이며 Ed25519를 사용할 수 없는 곳에서는 건너뛰므로, 실제로 사용자를 인증하는 것은 위의 서버 측 검증입니다.
 
 ## 데이터 페칭 컴포저블
 
@@ -13386,6 +13414,8 @@ The wallet returns a signature over `signedMessage` — the SIWS message the use
 
 The server must re-derive the expected message from the nonce it issued (or validate every field of the received message) so expired or replayed nonces are rejected.
 
+Before either `signMessage()` or `signIn()` resolves, the adapter also checks the returned signature against the account's `publicKey` where Ed25519 (WebCrypto) is available, rejecting with `INVALID_SIGNATURE` on a mismatch. That is a best-effort client-side guard against a misbehaving wallet — it is skipped where Ed25519 is unavailable, so the server-side check above is what actually authenticates the user.
+
 ## Data Fetching Composables
 
 `useRequest`, `useSubscription`, and `useTrackedData` are the SWR-style data layer, built on the Kit reactive-store primitives:
@@ -14225,6 +14255,8 @@ async function handleSignIn() {
 3. **绑定会话**：只有在消息检查与签名验证都通过后才应创建会话——以 `account.address` 为键。
 
 服务端必须从其签发的 nonce 重新推导预期消息（或验证收到消息的每个字段），以拒绝过期或重放的 nonce。
+
+在 `signMessage()` 或 `signIn()` 完成之前，当 Ed25519（WebCrypto）可用时，适配器还会用账户的 `publicKey` 校验返回的签名，不匹配时以 `INVALID_SIGNATURE` 拒绝。这是针对行为异常钱包的尽力客户端防护，在 Ed25519 不可用时会跳过，因此真正完成用户身份验证的是上面的服务端校验。
 
 ## 数据获取 Composables
 
@@ -15606,6 +15638,10 @@ See [Data Fetching Composables](/packages/vue#data-fetching-composables) for the
 - `useSolanaSendTransaction()` / `useSolanaSendTransactions()`: use the official Kit planner and RPC plan-sending executor installed by the default client; they plan, sign, submit, and wait for `confirmed` commitment with no wallet popup. Configure a `payer` in a client-only Vue plugin; use `useSolanaSignAndSendTransaction(s)` when a connected wallet must approve each transaction.
 
 These are Nuxt aliases for the Vue composables.
+
+- `useSolanaClientCapability()`: fails fast when the installed Kit client is missing a required capability.
+- `tryUseSolana()`: safe, non-throwing accessor for the injected Solana context.
+- `clearSwrCache()`: clears the module-level SWR cache (see [Data Fetching Composables](/packages/vue#data-fetching-composables)).
 
 The default client created by the Nuxt module composes the official `solanaRpc()` and `rpcAirdrop()` plugins when no `commitment` is configured (a configured `commitment` builds the same stack explicitly so it reaches the RPC layer); `solanaRpc()` installs the transaction planner and the plan-signing and plan-sending executors itself. The old custom fallback sender is not used. `useSolanaSendTransaction()` and `useSolanaSendTransactions()` therefore expose the official client-sending capability, but the module does not configure a payer because `payer` and `payerSecretKey` are intentionally omitted from `ModuleOptions`, so a client-sent transaction needs a `payer` installed in a client-only plugin with `clientPlugin: false`, as described in [Module Setup](#module-setup). Their `sent` status is reached after the official executor completes its send-and-confirm operation at `confirmed` commitment.
 

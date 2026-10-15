@@ -292,7 +292,7 @@ async function signIn() {
 </template>
 ```
 
-Message signing is for wallet ownership or authentication challenges. It is separate from transaction signing and does not authorize on-chain activity. For auth flows, use a server-issued nonce and verify the returned signature server-side.
+Message signing is for wallet ownership or authentication challenges. It is separate from transaction signing and does not authorize on-chain activity. For auth flows, use a server-issued nonce and verify the returned signature server-side. The adapter also checks the signature against the account's public key before resolving, where Ed25519 (WebCrypto) is available — a best-effort client-side guard that rejects with `INVALID_SIGNATURE`, not a replacement for server-side verification.
 
 ## Client-Sent Transactions
 

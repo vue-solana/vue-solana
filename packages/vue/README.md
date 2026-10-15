@@ -312,7 +312,7 @@ async function signIn() {
 </template>
 ```
 
-Message signing proves wallet ownership for flows like authentication challenges. It does not sign, submit, or authorize Solana transactions. For authentication, issue a server-generated nonce, include domain and expiration details in the message, and verify the returned signature server-side.
+Message signing proves wallet ownership for flows like authentication challenges. It does not sign, submit, or authorize Solana transactions. For authentication, issue a server-generated nonce, include domain and expiration details in the message, and verify the returned signature server-side. The adapter also checks the signature against the account's public key before resolving, where Ed25519 (WebCrypto) is available — a best-effort client-side guard that rejects with `INVALID_SIGNATURE`, not a replacement for server-side verification.
 
 ## Transaction State
 

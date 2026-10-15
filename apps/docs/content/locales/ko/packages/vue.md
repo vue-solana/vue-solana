@@ -571,6 +571,8 @@ async function handleSignIn() {
 
 서버는 발급한 nonce로부터 기대하는 메시지를 다시 도출하거나 수신된 메시지의 모든 필드를 검증하여, 만료되었거나 재사용된 nonce를 거부해야 합니다.
 
+`signMessage()` 또는 `signIn()`이 완료되기 전에 어댑터는 Ed25519(WebCrypto)를 사용할 수 있는 경우 반환된 서명을 계정의 `publicKey`로도 검증하며, 일치하지 않으면 `INVALID_SIGNATURE`로 거부합니다. 이는 잘못 동작하는 지갑에 대비한 최선의 클라이언트 측 방어이며 Ed25519를 사용할 수 없는 곳에서는 건너뛰므로, 실제로 사용자를 인증하는 것은 위의 서버 측 검증입니다.
+
 ## 데이터 페칭 컴포저블
 
 `useRequest`, `useSubscription`, `useTrackedData`는 Kit reactive store 프리미티브 위에 구축된 SWR 스타일 데이터 레이어입니다:

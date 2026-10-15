@@ -44,7 +44,7 @@ Full Vue Solana docs:
 | ------------- | ----------------------------------------------------------------- |
 | Runtime       | ESM only (modern bundlers; Node needs ESM)                        |
 | TypeScript    | TypeScript 5.x recommended                                        |
-| Solana client | `@solana/kit@^8.4.0` (and `@solana/kit-plugin-rpc`)               |
+| Solana client | `@solana/kit@^8.5.0` (and `@solana/kit-plugin-rpc`)               |
 | Clusters      | `mainnet` (alias `mainnet-beta`), `devnet`, `testnet`, `localnet` |
 
 Since v3.0.0 this package is ESM only: there is no `require` export condition and no top-level `main`, so `require("@vue-solana/core")` fails with `No "exports" main defined`. Pin to `@vue-solana/core@^2` if you must stay on CommonJS.
@@ -199,6 +199,8 @@ const wallet: SolanaWallet = {
 `SolanaWallet.publicKey` is an `Address` string (`null` when disconnected). `signTransaction` and `signAllTransactions` accept and return raw `Uint8Array` wire bytes.
 
 Browser extension wallets discovered through the Solana Wallet Standard are adapted into `SolanaWallet`. Android Mobile Wallet Adapter is registered through `@solana-mobile/wallet-standard-mobile` and then adapted through the same Wallet Standard adapter on supported Android Chrome clients. iOS browser wallet entries for Phantom, Solflare, and Backpack are adapted through wallet-specific universal links. Wallet capability metadata exposes whether each wallet supports message signing, transaction signing, and sign-and-send flows. You can also provide a custom object that implements `SolanaWallet` for tests or custom adapters.
+
+The Wallet Standard adapter verifies the signature a wallet returns from `signMessage` / `signIn` against the account's public key before resolving, where Ed25519 (WebCrypto) is available. A signature over the wrong bytes or from a different account rejects with `INVALID_SIGNATURE`. This is a best-effort, client-side guard — it is skipped where Ed25519 is unavailable — so server-side verification remains mandatory for auth flows.
 
 Current wallet support:
 

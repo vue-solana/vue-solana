@@ -3,6 +3,7 @@ import type { Mock } from "vitest";
 import { afterEach, beforeEach, vi } from "vitest";
 import { defineComponent, h, type App } from "vue";
 import type { SolanaWalletInfo } from "@vue-solana/core/types";
+import { getBase58Decoder } from "@vue-solana/core/kit";
 import { createSolanaPlugin } from "../plugin";
 import { useSolana } from "../composables/useSolana";
 import { useWallet } from "../composables/useWallet";
@@ -39,6 +40,45 @@ export const account = {
   chains: ["solana:devnet"],
   features: [],
 } satisfies TestWalletAccount;
+
+export interface SigningTestAccount {
+  account: TestWalletAccount;
+  /** Produces a real Ed25519 signature over `message` for `account.publicKey`. */
+  sign(message: Uint8Array): Promise<Uint8Array>;
+}
+
+/**
+ * A Wallet Standard account backed by a freshly generated Ed25519 key pair, so
+ * the adapter's client-side signature check (Kit 8.5+) passes. The all-zero
+ * `account` fixture cannot: Kit rejects small-order public keys.
+ */
+export async function createSigningTestAccount(): Promise<SigningTestAccount> {
+  const keyPair = (await globalThis.crypto.subtle.generateKey("Ed25519", true, [
+    "sign",
+    "verify",
+  ])) as CryptoKeyPair;
+  const publicKey = new Uint8Array(
+    await globalThis.crypto.subtle.exportKey("raw", keyPair.publicKey),
+  );
+
+  return {
+    account: {
+      address: getBase58Decoder().decode(publicKey),
+      publicKey,
+      chains: ["solana:devnet"],
+      features: [],
+    },
+    async sign(message) {
+      return new Uint8Array(
+        await globalThis.crypto.subtle.sign(
+          "Ed25519",
+          keyPair.privateKey,
+          message as unknown as BufferSource,
+        ),
+      );
+    },
+  };
+}
 
 export function createStandardWallet(
   accounts: readonly TestWalletAccount[] = [],

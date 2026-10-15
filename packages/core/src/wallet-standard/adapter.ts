@@ -9,6 +9,7 @@ import {
 import type { SolanaSignInInput, SolanaSignInOutput } from "@solana/wallet-standard-features";
 import { getBase58Decoder } from "@solana/kit";
 import type { Address } from "../kit";
+import { assertWalletSignature } from "./verify-wallet-signature";
 import type {
   SolanaChain,
   SolanaSignInResult,
@@ -147,7 +148,16 @@ export function adaptSolanaStandardWallet(
             throw new Error("Solana wallet did not return a sign-in result");
           }
 
-          return toSolanaSignInResult(result);
+          const signInResult = toSolanaSignInResult(result);
+
+          await assertWalletSignature(
+            signInResult.account.publicKey,
+            signInResult.signedMessage,
+            signInResult.signature,
+            "sign-in",
+          );
+
+          return signInResult;
         }
       : undefined,
     signMessage: hasSignMessage(wallet)
@@ -161,6 +171,13 @@ export function adaptSolanaStandardWallet(
           if (!result) {
             throw new Error("Solana wallet did not return a message signature");
           }
+
+          await assertWalletSignature(
+            activeAccount.publicKey,
+            result.signedMessage,
+            result.signature,
+            "message",
+          );
 
           return result;
         }

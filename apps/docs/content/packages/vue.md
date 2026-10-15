@@ -574,6 +574,8 @@ The wallet returns a signature over `signedMessage` — the SIWS message the use
 
 The server must re-derive the expected message from the nonce it issued (or validate every field of the received message) so expired or replayed nonces are rejected.
 
+Before either `signMessage()` or `signIn()` resolves, the adapter also checks the returned signature against the account's `publicKey` where Ed25519 (WebCrypto) is available, rejecting with `INVALID_SIGNATURE` on a mismatch. That is a best-effort client-side guard against a misbehaving wallet — it is skipped where Ed25519 is unavailable, so the server-side check above is what actually authenticates the user.
+
 ## Data Fetching Composables
 
 `useRequest`, `useSubscription`, and `useTrackedData` are the SWR-style data layer, built on the Kit reactive-store primitives:

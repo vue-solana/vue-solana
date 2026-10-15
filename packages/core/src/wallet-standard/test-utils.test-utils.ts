@@ -1,5 +1,6 @@
 import type { Wallet, WalletAccount } from "@wallet-standard/base";
 import { StandardConnect, StandardDisconnect, StandardEvents } from "@wallet-standard/features";
+import { getBase58Decoder } from "@solana/kit";
 import { vi, type Mock } from "vitest";
 
 export type TestStandardWallet = Wallet & {
@@ -18,6 +19,46 @@ export const account = {
 
 export function createTestTransaction() {
   return new Uint8Array([1, 2, 3, 4, 5]);
+}
+
+export interface SigningTestAccount {
+  account: WalletAccount;
+  /** Produces a real Ed25519 signature over `message` for `account.publicKey`. */
+  sign(message: Uint8Array): Promise<Uint8Array>;
+}
+
+/**
+ * A Wallet Standard account backed by a freshly generated Ed25519 key pair, so
+ * tests can hand the adapter signatures that actually verify. The all-zero
+ * `account` fixture above cannot: Kit 8.5+ rejects small-order public keys, so a
+ * signature over it never verifies.
+ */
+export async function createSigningTestAccount(): Promise<SigningTestAccount> {
+  const keyPair = (await globalThis.crypto.subtle.generateKey("Ed25519", true, [
+    "sign",
+    "verify",
+  ])) as CryptoKeyPair;
+  const publicKey = new Uint8Array(
+    await globalThis.crypto.subtle.exportKey("raw", keyPair.publicKey),
+  );
+
+  return {
+    account: {
+      address: getBase58Decoder().decode(publicKey),
+      publicKey,
+      chains: ["solana:devnet"],
+      features: [],
+    } satisfies WalletAccount,
+    async sign(message) {
+      return new Uint8Array(
+        await globalThis.crypto.subtle.sign(
+          "Ed25519",
+          keyPair.privateKey,
+          message as unknown as BufferSource,
+        ),
+      );
+    },
+  };
 }
 
 export function createStandardWallet(accounts: readonly WalletAccount[] = []): TestStandardWallet {

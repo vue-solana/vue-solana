@@ -571,6 +571,8 @@ La wallet devuelve una firma sobre `signedMessage` — el mensaje SIWS que el us
 
 El servidor debe re-derivar el mensaje esperado a partir del nonce que emitió (o validar todos los campos del mensaje recibido) para rechazar nonces expirados o reutilizados.
 
+Antes de que `signMessage()` o `signIn()` se resuelvan, el adaptador también comprueba la firma devuelta contra el `publicKey` de la cuenta cuando Ed25519 (WebCrypto) está disponible, y rechaza con `INVALID_SIGNATURE` si no coincide. Es una protección de mejor esfuerzo del lado del cliente frente a una wallet que se comporta mal; se omite donde Ed25519 no está disponible, así que la comprobación en el servidor anterior es lo que realmente autentica al usuario.
+
 ## Composables de obtención de datos
 
 `useRequest`, `useSubscription` y `useTrackedData` son la capa de datos estilo SWR, construida sobre las primitivas de stores reactivos de Kit:

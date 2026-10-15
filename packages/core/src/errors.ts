@@ -16,7 +16,11 @@ export type SolanaErrorCode =
   | "INVALID_INPUT"
   | "DECRYPTION_FAILED"
   | "REDIRECT_TIMEOUT"
-  | "MISSING_CLIENT_CAPABILITY";
+  | "MISSING_CLIENT_CAPABILITY"
+  // Client-side best-effort guard: a wallet returned a message or sign-in
+  // signature that does not match its own account key. Server-side verification
+  // stays mandatory; see `assertWalletSignature()`.
+  | "INVALID_SIGNATURE";
 
 export interface SolanaErrorOptions {
   cause?: unknown;

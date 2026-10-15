@@ -20,4 +20,4 @@ onlyBuiltDependencies:
 # This is a repo-install setting only: it is not published and does not alter
 # the dependency ranges consumers resolve.
 overrides:
-  "@solana/kit": ^8.4.0
+  "@solana/kit": ^8.5.0

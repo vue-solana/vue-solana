@@ -30,6 +30,7 @@ const error = new SolanaError("RPC_FAILURE", "Unable to reach RPC");
 - `WALLET_NOT_CONNECTED`：活跃钱包未连接，或没有公钥。
 - `WALLET_FEATURE_UNSUPPORTED`：活跃钱包不支持请求的功能。
 - `USER_REJECTED`：用户拒绝了钱包请求。
+- `INVALID_SIGNATURE`：钱包返回的消息签名或登录签名与其账户密钥不匹配。
 - `INVALID_ADDRESS`：地址字符串无法解析为 Solana 地址。
 - `INVALID_INPUT`：辅助函数收到了格式错误的端点、超时或选项值。
 - `TRANSACTION_TIMEOUT`：与交易相关的操作超时。

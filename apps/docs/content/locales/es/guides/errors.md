@@ -30,6 +30,7 @@ const error = new SolanaError("RPC_FAILURE", "Unable to reach RPC");
 - `WALLET_NOT_CONNECTED`: la wallet activa no está conectada o no tiene clave pública.
 - `WALLET_FEATURE_UNSUPPORTED`: la wallet activa no soporta la feature solicitada.
 - `USER_REJECTED`: el usuario rechazó una solicitud de wallet.
+- `INVALID_SIGNATURE`: una wallet devolvió una firma de mensaje o de inicio de sesión que no coincide con la clave de su cuenta.
 - `INVALID_ADDRESS`: un string de dirección no pudo parsearse como dirección de Solana.
 - `INVALID_INPUT`: un helper recibió un endpoint, timeout o valor de opción con formato inválido.
 - `TRANSACTION_TIMEOUT`: una operación relacionada con transacción agotó el tiempo de espera.

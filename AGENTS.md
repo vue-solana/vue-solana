@@ -122,7 +122,7 @@ The code switched from `@solana/web3.js` to `@solana/web3-compat` in v1, then to
 
 Current package dependency:
 
-- `@solana/kit@^8.4.0` (with `@solana/kit-plugin-rpc` in `packages/core`). The `pnpm-workspace.yaml` `overrides` entry must always equal this range; two Kit copies mean two `SolanaError` classes, so `isSolanaError()` from one rejects errors thrown by the other.
+- `@solana/kit@^8.5.0` (with `@solana/kit-plugin-rpc` in `packages/core`). The `pnpm-workspace.yaml` `overrides` entry must always equal this range; two Kit copies mean two `SolanaError` classes, so `isSolanaError()` from one rejects errors thrown by the other.
 
 Kit surface rule: the `kit` subpaths of all three packages are a full `export * from "@solana/kit"` mirror, not a curated list. Consumers must never have to add `@solana/kit` to their own `package.json` (pnpm's strict `node_modules` does not even resolve it from `packages/vue`). The only names resolved by hand are the four listed above, and they are resolved in the root barrels only — never inside the `kit` subpaths, which must stay a faithful mirror.
 
@@ -138,6 +138,7 @@ Signer configuration and security:
 
 - `payer` (a Kit `TransactionSigner`) and `payerSecretKey` (base64-encoded 64-byte Ed25519 keypair, secret key first) stay available on direct core/Vue `createSolanaClient()` calls. `resolvePayerFromSecretKey()` validates the length, derives the public half, and throws when the pair is inconsistent.
 - Nuxt never accepts or forwards `payer` or `payerSecretKey`: they are omitted from `ModuleOptions` and stripped from public runtime config. Never put a raw secret or a funded key in browser-visible Nuxt config; use a trusted server/relayer boundary, or a client-only ephemeral signer for demos (`examples/nuxt/app/plugins/demo-payer.client.ts`).
+- The Wallet Standard adapter verifies `signMessage` / `signIn` results against the account's **public key bytes** with Kit's `verifySignature()` (`packages/core/src/wallet-standard/verify-wallet-signature.ts`) before resolving, throwing `INVALID_SIGNATURE` on mismatch. It is best-effort: when Ed25519/WebCrypto is unavailable the key import fails and the result resolves unverified. Transaction signatures are not verified. Server-side verification stays mandatory — the client check is defense-in-depth only.
 
 Development-time type shim:
 

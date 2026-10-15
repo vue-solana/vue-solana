@@ -571,6 +571,8 @@ async function handleSignIn() {
 
 服务端必须从其签发的 nonce 重新推导预期消息（或验证收到消息的每个字段），以拒绝过期或重放的 nonce。
 
+在 `signMessage()` 或 `signIn()` 完成之前，当 Ed25519（WebCrypto）可用时，适配器还会用账户的 `publicKey` 校验返回的签名，不匹配时以 `INVALID_SIGNATURE` 拒绝。这是针对行为异常钱包的尽力客户端防护，在 Ed25519 不可用时会跳过，因此真正完成用户身份验证的是上面的服务端校验。
+
 ## 数据获取 Composables
 
 `useRequest`、`useSubscription` 和 `useTrackedData` 是构建在 Kit 响应式 store 原语之上的 SWR 风格数据层：
