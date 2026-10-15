@@ -122,14 +122,14 @@ Status: planned.
 
 Tasks:
 
-- [ ] Nuxt pre-bundles the lazy mobile wallet (`packages/nuxt/src/module.ts:26-38` `VITE_OPTIMIZE_DEPS` includes `@solana-mobile/wallet-standard-mobile`, but `packages/vue/src/plugin.ts:165` lazy-imports it ~98 KB Android-only). Drop the entry from `include`; prefer bare package names over `a > b > c` chains where Vite accepts them.
-- [ ] `tweetnacl/nacl-fast.js` rows may be dead (`packages/nuxt/src/module.ts:31-32,36-37`; core `packages/core/src/kit.ts:23-45` uses Kit `createKeyPairFromBytes`/`signBytes`, only bare `tweetnacl` remains for iOS ECDH). Verify with bundle grep, drop if unreferenced.
-- [ ] `bs58` duplicates Kit codecs (`packages/core/package.json:119`; 11 source files in `src/ios-wallet/*.ts` + `src/wallet-standard/adapter.ts`, while `src/kit.ts:6` already uses Kit `getBase58Encoder/getBase58Decoder`). Replace and drop the dep. Also drop `bs58` test-only devDep in vue (`packages/vue/src/composables/useSignatureStatus.test.ts:1` sole consumer) in favor of Kit codecs.
-- [ ] `buffer` is a hard dep for one subpath (`packages/core/package.json:120`, only `src/buffer-polyfill.ts:1` needs it). Move to `optionalDependencies` or document as subpath-only peer.
+- [x] Nuxt pre-bundles the lazy mobile wallet (`packages/nuxt/src/module.ts:26-38` `VITE_OPTIMIZE_DEPS` includes `@solana-mobile/wallet-standard-mobile`, but `packages/vue/src/plugin.ts:165` lazy-imports it ~98 KB Android-only). Drop the entry from `include`; prefer bare package names over `a > b > c` chains where Vite accepts them.
+- [x] `tweetnacl/nacl-fast.js` rows may be dead (`packages/nuxt/src/module.ts:31-32,36-37`; core `packages/core/src/kit.ts:23-45` uses Kit `createKeyPairFromBytes`/`signBytes`, only bare `tweetnacl` remains for iOS ECDH). Verify with bundle grep, drop if unreferenced.
+- [x] `bs58` duplicates Kit codecs (`packages/core/package.json:119`; 11 source files in `src/ios-wallet/*.ts` + `src/wallet-standard/adapter.ts`, while `src/kit.ts:6` already uses Kit `getBase58Encoder/getBase58Decoder`). Replace and drop the dep. Also drop `bs58` test-only devDep in vue (`packages/vue/src/composables/useSignatureStatus.test.ts:1` sole consumer) in favor of Kit codecs.
+- [x] `buffer` is a hard dep for one subpath (`packages/core/package.json:120`, only `src/buffer-polyfill.ts:1` needs it). Move to `optionalDependencies` or document as subpath-only peer.
 - [ ] Vue plugin chunk carries iOS + wallet-standard statically (`packages/vue/src/plugin/wallet-registry.ts:1-13`; only `mobile-wallet` is lazy). Lazy-load the iOS adapter behind `iosWallet !== false` + iOS-UA gate if the chunk proves heavy.
-- [ ] SWR module `Map` unbounded, all-or-nothing clear, sync-flush writes (`packages/vue/src/swr.ts:50,132-136`). Add per-key `deleteSwrKey()` / size cap (or document key hygiene); confirm `flush: "sync"` is intentional.
-- [ ] Vue build pins 8 GB (`packages/vue/package.json:181` `NODE_OPTIONS=--max-old-space-size=8192 unbuild`). Investigate the OOM (likely kit mirror decl) rather than pinning memory in the script.
-- [ ] Document lean-import guidance: `import { … } from "@vue-solana/core/address|errors|timeout"` for size-sensitive entries (root is ~117 KB via the intentional kit mirror, `packages/core/src/kit-mirror.test.ts:28-31`); add a size-limit CI check so a Kit-heavy import into `address/errors/timeout/clusters` is caught. Same for vue root vs subpath chunks.
+- [x] SWR module `Map` unbounded, all-or-nothing clear, sync-flush writes (`packages/vue/src/swr.ts:50,132-136`). Add per-key `deleteSwrKey()` / size cap (or document key hygiene); confirm `flush: "sync"` is intentional.
+- [x] Vue build pins 8 GB (`packages/vue/package.json:181` `NODE_OPTIONS=--max-old-space-size=8192 unbuild`). Investigate the OOM (likely kit mirror decl) rather than pinning memory in the script. _(OOM reproduced without the pin; pin retained.)_
+- [x] Document lean-import guidance: `import { … } from "@vue-solana/core/address|errors|timeout"` for size-sensitive entries (root is ~117 KB via the intentional kit mirror, `packages/core/src/kit-mirror.test.ts:28-31`); add a size-limit CI check so a Kit-heavy import into `address/errors/timeout/clusters` is caught. Same for vue root vs subpath chunks. (`scripts/check-lean-imports.mjs`, `pnpm size:packages`; core README updated.)
 
 Acceptance criteria:
 

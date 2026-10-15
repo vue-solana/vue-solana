@@ -116,12 +116,18 @@
     "@wallet-standard/app": "^1.1.1",
     "@wallet-standard/base": "^1.1.1",
     "@wallet-standard/features": "^1.1.1",
-    "bs58": "^6.0.0",
-    "buffer": "^6.0.3",
     "tweetnacl": "^1.0.3"
   },
   "devDependencies": {
     "typescript": "^5.8.3",
     "unbuild": "^3.5.0"
+  },
+  "peerDependencies": {
+    "buffer": "^6.0.3"
+  },
+  "peerDependenciesMeta": {
+    "buffer": {
+      "optional": true
+    }
   }
 }

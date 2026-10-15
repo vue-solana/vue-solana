@@ -1,8 +1,8 @@
-import bs58 from "bs58";
 import { flushPromises } from "@vue/test-utils";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ref } from "vue";
 import type { SolanaError } from "@vue-solana/core/errors";
+import { getBase58Decoder } from "@vue-solana/core/kit";
 import {
   deferred,
   mountUseSignatureStatus,
@@ -66,9 +66,13 @@ describe("useSignatureStatus", () => {
 
   it("rejects signatures that do not decode to 64 bytes", async () => {
     const getSignatureStatuses = vi.fn();
-    const { result } = mountUseSignatureStatus(bs58.encode(new Uint8Array(63).fill(1)), undefined, {
-      rpc: { getSignatureStatuses },
-    });
+    const { result } = mountUseSignatureStatus(
+      getBase58Decoder().decode(new Uint8Array(63).fill(1)),
+      undefined,
+      {
+        rpc: { getSignatureStatuses },
+      },
+    );
 
     await flushPromises();
 

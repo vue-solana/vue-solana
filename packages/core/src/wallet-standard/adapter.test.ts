@@ -5,7 +5,7 @@ import {
   SolanaSignMessage,
   SolanaSignTransaction,
 } from "@solana/wallet-standard-features";
-import bs58 from "bs58";
+import { getBase58Decoder } from "@solana/kit";
 import { adaptSolanaStandardWallet } from "./adapter";
 import type { SolanaWalletInfo } from "../types";
 import {
@@ -290,8 +290,8 @@ describe("Wallet Standard adapter", () => {
 
     const options = { maxRetries: 2n };
     await expect(wallet.signAndSendTransactions?.(transactions, options)).resolves.toEqual([
-      bs58.encode(signature),
-      bs58.encode(signature),
+      getBase58Decoder().decode(signature),
+      getBase58Decoder().decode(signature),
     ]);
     expect(signAndSendTransaction).toHaveBeenCalledWith(
       {
@@ -330,7 +330,7 @@ describe("Wallet Standard adapter", () => {
     await wallet.connect();
 
     await expect(wallet.signAndSendTransactions?.([createTestTransaction()])).resolves.toEqual([
-      bs58.encode(signature),
+      getBase58Decoder().decode(signature),
     ]);
     expect(signAndSendTransaction).toHaveBeenCalledWith({
       account,

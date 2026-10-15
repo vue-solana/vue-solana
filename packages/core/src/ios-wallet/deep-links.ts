@@ -1,4 +1,4 @@
-import bs58 from "bs58";
+import { getBase58Decoder, getBase58Encoder } from "@solana/kit";
 import type { SendTransactionOptions, SolanaTransaction } from "../types";
 import { getDefaultIosWalletAppIdentity, openIosWalletUrl, waitForRedirect } from "./browser";
 import { handleSolanaIosWalletCallback } from "./callback";
@@ -37,7 +37,7 @@ export async function launchSignTransaction(
   options: AdaptSolanaIosWalletOptions,
 ): Promise<Uint8Array> {
   const response = await launchEncryptedWalletRequest(definition, "signTransaction", options, {
-    transaction: bs58.encode(new Uint8Array(transaction)),
+    transaction: getBase58Decoder().decode(new Uint8Array(transaction)),
   });
 
   if (!response.transaction) {
@@ -53,7 +53,9 @@ export async function launchSignAllTransactions(
   options: AdaptSolanaIosWalletOptions,
 ): Promise<Uint8Array[]> {
   const response = await launchEncryptedWalletRequest(definition, "signAllTransactions", options, {
-    transactions: transactions.map((transaction) => bs58.encode(new Uint8Array(transaction))),
+    transactions: transactions.map((transaction) =>
+      getBase58Decoder().decode(new Uint8Array(transaction)),
+    ),
   });
 
   if (!response.transactions) {
@@ -74,7 +76,7 @@ export async function launchSignAndSendTransaction(
     "signAndSendTransaction",
     options,
     {
-      transaction: bs58.encode(new Uint8Array(transaction)),
+      transaction: getBase58Decoder().decode(new Uint8Array(transaction)),
       sendOptions,
     },
   );
@@ -103,8 +105,8 @@ async function launchEncryptedWalletRequest(
     definition.id,
     method,
     {
-      publicKey: bs58.decode(session.dappEncryptionPublicKey),
-      secretKey: bs58.decode(session.dappEncryptionSecretKey),
+      publicKey: Uint8Array.from(getBase58Encoder().encode(session.dappEncryptionPublicKey)),
+      secretKey: Uint8Array.from(getBase58Encoder().encode(session.dappEncryptionSecretKey)),
     },
     options.redirectUrl,
     method === "signAllTransactions" && Array.isArray(payload.transactions)
@@ -115,12 +117,12 @@ async function launchEncryptedWalletRequest(
   const encryptedPayload = encryptPayload(
     { ...payload, session: session.session },
     nonce,
-    bs58.decode(session.sharedSecret),
+    Uint8Array.from(getBase58Encoder().encode(session.sharedSecret)),
   );
   const url = new URL(methodUrl);
 
   url.searchParams.set("dapp_encryption_public_key", session.dappEncryptionPublicKey);
-  url.searchParams.set("nonce", bs58.encode(nonce));
+  url.searchParams.set("nonce", getBase58Decoder().decode(nonce));
   url.searchParams.set("redirect_link", pending.redirectUrl);
   url.searchParams.set("payload", encryptedPayload);
 

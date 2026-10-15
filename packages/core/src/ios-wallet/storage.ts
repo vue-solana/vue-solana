@@ -1,5 +1,5 @@
 import { isAddress } from "@solana/kit";
-import bs58 from "bs58";
+import { getBase58Decoder, getBase58Encoder } from "@solana/kit";
 import { getDefaultIosWalletRedirectUrl } from "./browser";
 import { createRequestId } from "./crypto";
 import type { IosWalletMethod, IosWalletSession, PendingIosWalletRequest } from "./types";
@@ -19,8 +19,8 @@ export function createPendingRequest(
     id: createRequestId(),
     walletId,
     method,
-    dappEncryptionPublicKey: bs58.encode(keyPair.publicKey),
-    dappEncryptionSecretKey: bs58.encode(keyPair.secretKey),
+    dappEncryptionPublicKey: getBase58Decoder().decode(keyPair.publicKey),
+    dappEncryptionSecretKey: getBase58Decoder().decode(keyPair.secretKey),
     redirectUrl: redirectUrl ?? getDefaultIosWalletRedirectUrl(),
     createdAt: Date.now(),
     requestedTransactionCount,
@@ -35,12 +35,12 @@ export function getStoredIosWalletAccount(walletId: string, chains: readonly str
   }
 
   // The session passed the `isAddress` check on read, but `publicKey` could
-  // still fail `bs58.decode` (corrupt payload that happens to be a string).
+  // still fail `getBase58Encoder().encode` (corrupt payload that happens to be a string).
   // Purge and report absent rather than throwing raw.
   let publicKey: Uint8Array;
 
   try {
-    publicKey = bs58.decode(session.publicKey);
+    publicKey = Uint8Array.from(getBase58Encoder().encode(session.publicKey));
   } catch {
     removeStoredSession(walletId);
     return [];

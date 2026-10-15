@@ -87,6 +87,7 @@ export function solanaAutoImports(vueDist: string | undefined): SolanaAutoImport
     ...SOLANA_SWR_IMPORTS.map(([name, as]) => ({ name, as, from: vueSource(vueDist, "swr") })),
     { name: "tryUseSolana", as: "tryUseSolana", from: vueSource(vueDist, "useSolana") },
     { name: "clearSwrCache", as: "clearSwrCache", from: vueSource(vueDist, "swr") },
+    { name: "deleteSwrKey", as: "deleteSwrKey", from: vueSource(vueDist, "swr") },
   ];
 }
 

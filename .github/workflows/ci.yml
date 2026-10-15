@@ -49,6 +49,9 @@ jobs:
       - name: Build packages
         run: pnpm build:packages
 
+      - name: Size check packages
+        run: pnpm size:packages
+
       - name: E2E
         run: pnpm test:e2e
 

@@ -191,16 +191,12 @@ describe("Nuxt module", () => {
     expect(vite.optimizeDeps.include).toEqual([
       "existing-dependency",
       "qrcode",
-      "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > @solana-mobile/wallet-standard-mobile",
       "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > buffer",
       "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > buffer/",
-      "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > bs58",
       "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl",
-      "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl/nacl-fast.js",
     ]);
     expect(vite.optimizeDeps.needsInterop).toEqual([
       "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl",
-      "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl/nacl-fast.js",
     ]);
   });
 
@@ -229,14 +225,12 @@ describe("Nuxt module", () => {
     );
     expect(clientConfig.optimizeDeps?.needsInterop).toEqual([
       "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl",
-      "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl/nacl-fast.js",
     ]);
     expect(clientConfig.environments?.client?.optimizeDeps?.include).toContain(
       "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl",
     );
     expect(clientConfig.environments?.client?.optimizeDeps?.needsInterop).toEqual([
       "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl",
-      "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl/nacl-fast.js",
     ]);
   });
 
@@ -355,7 +349,7 @@ describe("Nuxt module", () => {
     const dist = "/pkg/vue/dist";
 
     for (const { name, from } of solanaAutoImports(dist)) {
-      const isSwr = name.endsWith("Swr") || name === "clearSwrCache";
+      const isSwr = name.endsWith("Swr") || name === "clearSwrCache" || name === "deleteSwrKey";
       const file = name === "tryUseSolana" ? "useSolana" : isSwr ? "swr" : name;
       expect(from).toBe(`${dist}/${file}.mjs`);
     }

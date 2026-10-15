@@ -1,4 +1,4 @@
-import bs58 from "bs58";
+import { getBase58Decoder } from "@solana/kit";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   clearPendingRequest,
@@ -20,21 +20,21 @@ import type { IosWalletSession, PendingIosWalletRequest } from "./types";
 // always passes through so the other tests in this file are unaffected.
 const bs58Control = vi.hoisted(() => ({ failDecode: false }));
 
-vi.mock("bs58", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("bs58")>();
+vi.mock("@solana/kit", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@solana/kit")>();
+  const actualEncoderFactory = actual.getBase58Encoder;
 
   return {
     ...actual,
-    default: {
-      ...actual.default,
-      decode: (...args: Parameters<typeof bs58.decode>) => {
+    getBase58Encoder: () => ({
+      encode: (...args: Parameters<ReturnType<typeof actual.getBase58Encoder>["encode"]>) => {
         if (bs58Control.failDecode) {
           throw new Error("Non-base58 character");
         }
 
-        return actual.default.decode(...args);
+        return actualEncoderFactory().encode(...args);
       },
-    },
+    }),
   };
 });
 
@@ -66,8 +66,8 @@ describe("iOS wallet storage", () => {
     expect(request).toMatchObject({
       walletId: "phantom",
       method: "signAllTransactions",
-      dappEncryptionPublicKey: bs58.encode(new Uint8Array([1, 2, 3])),
-      dappEncryptionSecretKey: bs58.encode(new Uint8Array([4, 5, 6])),
+      dappEncryptionPublicKey: getBase58Decoder().decode(new Uint8Array([1, 2, 3])),
+      dappEncryptionSecretKey: getBase58Decoder().decode(new Uint8Array([4, 5, 6])),
       redirectUrl: "https://example.com/callback",
       createdAt: Date.parse("2026-01-01T00:00:00.000Z"),
       requestedTransactionCount: 2,

@@ -53,6 +53,9 @@ jobs:
       - name: Build packages
         run: pnpm build:packages
 
+      - name: Size check packages
+        run: pnpm size:packages
+
       - name: Smoke standalone package installs
         run: pnpm smoke:standalone-installs
         env:

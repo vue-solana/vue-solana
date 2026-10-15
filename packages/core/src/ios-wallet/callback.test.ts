@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import bs58 from "bs58";
+import { getBase58Decoder } from "@solana/kit";
 import { adaptSolanaIosWallet, getSolanaIosWallets } from "./adapter";
 import { handleSolanaIosWalletCallback } from "./callback";
 import {
@@ -99,12 +99,15 @@ describe("iOS wallet callbacks", () => {
   });
 
   it.each([
-    { requestedTransactionCount: 2, transactions: [bs58.encode(new Uint8Array([1, 2, 3]))] },
+    {
+      requestedTransactionCount: 2,
+      transactions: [getBase58Decoder().decode(new Uint8Array([1, 2, 3]))],
+    },
     {
       requestedTransactionCount: 1,
       transactions: [
-        bs58.encode(new Uint8Array([1, 2, 3])),
-        bs58.encode(new Uint8Array([4, 5, 6])),
+        getBase58Decoder().decode(new Uint8Array([1, 2, 3])),
+        getBase58Decoder().decode(new Uint8Array([4, 5, 6])),
       ],
     },
   ])(

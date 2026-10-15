@@ -1,6 +1,6 @@
 // @vitest-environment node
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import bs58 from "bs58";
+import { getBase58Decoder } from "@solana/kit";
 import nacl from "tweetnacl";
 
 const { rpcAirdropMock, solanaRpcMock } = vi.hoisted(() => {
@@ -131,7 +131,7 @@ describe("createSolanaClient", () => {
     const signatures = await payer.signTransactions([{ messageBytes }]);
     const signature = signatures[0]?.[payer.address];
 
-    expect(payer.address).toBe(bs58.encode(publicKey));
+    expect(payer.address).toBe(getBase58Decoder().decode(publicKey));
     expect(client.payer).toBe(payer);
     expect(signature).toBeDefined();
     expect(nacl.sign.detached.verify(messageBytes, signature!, publicKey)).toBe(true);

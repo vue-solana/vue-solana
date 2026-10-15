@@ -37,18 +37,12 @@ declare module "nuxt/schema" {
 export type * from "@vue-solana/vue";
 
 const VITE_OPTIMIZE_DEPS = [
-  "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > @solana-mobile/wallet-standard-mobile",
   "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > buffer",
   "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > buffer/",
-  "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > bs58",
   "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl",
-  "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl/nacl-fast.js",
 ];
 
-const VITE_NEEDS_INTEROP = [
-  "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl",
-  "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl/nacl-fast.js",
-];
+const VITE_NEEDS_INTEROP = ["@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl"];
 
 interface ViteOptimizeDepsTarget {
   optimizeDeps?: {

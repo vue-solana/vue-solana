@@ -7,7 +7,7 @@ import {
   SolanaSignTransaction,
 } from "@solana/wallet-standard-features";
 import type { SolanaSignInInput, SolanaSignInOutput } from "@solana/wallet-standard-features";
-import bs58 from "bs58";
+import { getBase58Decoder } from "@solana/kit";
 import type { Address } from "../kit";
 import type {
   SolanaChain,
@@ -215,7 +215,7 @@ export function adaptSolanaStandardWallet(
             throw new Error("Solana wallet did not return a transaction signature");
           }
 
-          return { signature: bs58.encode(result.signature) };
+          return { signature: getBase58Decoder().decode(result.signature) };
         }
       : undefined,
     signAndSendTransactions: hasSignAndSendTransaction(wallet)
@@ -243,7 +243,7 @@ export function adaptSolanaStandardWallet(
               throw new Error("Solana wallet did not return a transaction signature");
             }
 
-            return bs58.encode(result.signature);
+            return getBase58Decoder().decode(result.signature);
           });
         }
       : undefined,

@@ -92,6 +92,12 @@ import { installSolanaBufferPolyfill } from "@vue-solana/core/buffer-polyfill";
 installSolanaBufferPolyfill();
 ```
 
+The `buffer-polyfill` subpath needs the `buffer` package, declared as an **optional peer dependency**. Apps that use serialization must install it explicitly:
+
+```sh
+pnpm add buffer
+```
+
 ## Configuration
 
 ```ts
@@ -213,6 +219,24 @@ For complete runnable Vue and Nuxt examples that use this package through the fr
 - [Live demo](https://vue-solana-docs.vercel.app/demo)
 - <a href="https://vue-solana-docs.vercel.app/examples/vue-vite" target="_blank" rel="noopener noreferrer"><code>examples/vue-vite</code></a>
 - <a href="https://vue-solana-docs.vercel.app/examples/nuxt" target="_blank" rel="noopener noreferrer"><code>examples/nuxt</code></a>
+
+## Bundle size and lean imports
+
+The root barrel (`@vue-solana/core`) intentionally re-exports the full `@solana/kit` mirror so apps do not need to install Kit directly. It is therefore roughly `117 KB` (minified) and is appropriate for most application code.
+
+Size-sensitive entries can avoid pulling the whole mirror by importing the narrow subpaths instead of the root:
+
+- `@vue-solana/core/address`
+- `@vue-solana/core/errors`
+- `@vue-solana/core/timeout`
+- `@vue-solana/core/clusters`
+- `@vue-solana/core/rpc`
+- `@vue-solana/core/types`
+- `@vue-solana/core/kit` (when you explicitly want the Kit surface)
+
+Avoid importing `@vue-solana/core/ios-wallet` or `@vue-solana/core/mobile-wallet` from lean code paths: they own `tweetnacl` and the Mobile Wallet Adapter protocol graph respectively. The `@vue-solana/core/mobile-wallet-support` subpath ships only the Android-support gate used to decide whether to lazy-load the MWA module.
+
+A repository-level guard (`scripts/check-lean-imports.mjs`, run via `pnpm size:packages`) verifies that these lean entries stay free of the heavy iOS/mobile-wallet edges. Add any new lean entrypoint there before publishing it.
 
 ## AI Agent Skill
 

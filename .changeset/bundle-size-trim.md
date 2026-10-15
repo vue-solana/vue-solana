@@ -153,11 +153,34 @@ in after setup without the `airdrop` capability throws
 call overwrite the settled state. `status` / `loading` / `error` / `data` keep
 their names and shapes; `data` is a `ShallowRef` again after a brief widening.
 
-## `bs58` is no longer a runtime dependency of `@vue-solana/vue`
+## `bs58` is no longer a runtime dependency
 
-Signature encoding now goes through Kit's `getBase58Encoder()`, so `bs58`
-moved to `devDependencies`. Apps that only used it via this package can drop it
-from their own `package.json`.
+Signature encoding now goes through Kit's `getBase58Encoder()`, so `bs58` is
+removed from the runtime dependencies of `@vue-solana/core` (and from
+`@vue-solana/vue` devDependencies, where only tests used it). Apps that import
+`bs58` directly should add it to their own `package.json`.
+
+## `buffer` is now an optional peer dependency
+
+The `buffer` package is only needed by the `@vue-solana/core/buffer-polyfill`
+subpath. It is now an optional peer dependency rather than a hard dependency or
+optional dependency, so consumers that do not serialize transactions no longer
+pull it transitively. Apps that use `buffer-polyfill` must install `buffer`
+themselves.
+
+## Lean imports and bundle budget
+
+`@vue-solana/core`'s root barrel keeps re-exporting the full `@solana/kit`
+mirror (~117 KB), while `address`, `errors`, `timeout`, `clusters`, and
+`types` stay free of iOS/mobile-wallet edges. The repository enforces that via
+`pnpm size:packages` (run in CI and release workflows). Prefer these subpaths
+when bundle size matters.
+
+## Nuxt optimize-deps no longer defeats the mobile-wallet lazy split
+
+The Nuxt module no longer pre-bundles `@solana-mobile/wallet-standard-mobile`
+or `bs58`, and drops the `tweetnacl/nacl-fast.js` alias chain. Dev
+pre-bundling now respects the lazy mobile-wallet import.
 
 Core input validation and error handling also lands in this release.
 
