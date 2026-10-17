@@ -1,4 +1,4 @@
-import { join } from "node:path";
+import { posix } from "node:path";
 
 const SOLANA_COMPOSABLE_IMPORTS = [
   ["useAccountInfo", "useSolanaAccountInfo"],
@@ -96,5 +96,12 @@ export function solanaSetupAutoImports(vueDist: string | undefined): SolanaAutoI
 }
 
 function vueSource(vueDist: string | undefined, subpath = "index"): string {
-  return vueDist ? join(vueDist, `${subpath}.mjs`) : `@vue-solana/vue/${subpath}`;
+  if (!vueDist) {
+    return `@vue-solana/vue/${subpath}`;
+  }
+
+  // Nuxt may be invoked on Windows, where `node:path`'s `join()` uses
+  // backslashes. Auto-import specifiers are paths inside generated `.d.ts`
+  // files, so they must always be POSIX separators regardless of host.
+  return posix.join(vueDist.replace(/\\/g, "/"), `${subpath}.mjs`);
 }

@@ -178,26 +178,20 @@ describe("Nuxt module", () => {
     expect(publicConfig.solana).toEqual({ cluster: "devnet" });
   });
 
-  it("adds Vite dependency optimization for mobile wallet dev interop", async () => {
+  it("does not merge Vite dependency optimization into the SSR config", async () => {
     const module = (await import("./module")).default as unknown as ModuleUnderTest;
     const vite: TestViteOptions = {
       optimizeDeps: {
-        include: ["existing-dependency", "qrcode"],
+        include: ["existing-dependency", "existing-sibling"],
       },
     };
 
     setupModule(module, {}, { vite });
 
-    expect(vite.optimizeDeps.include).toEqual([
-      "existing-dependency",
-      "qrcode",
-      "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > buffer",
-      "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > buffer/",
-      "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl",
-    ]);
-    expect(vite.optimizeDeps.needsInterop).toEqual([
-      "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl",
-    ]);
+    // The eager merge was removed so the SSR Vite config is not polluted;
+    // merging now happens only in the client-aware `vite:extendConfig` hook.
+    expect(vite.optimizeDeps.include).toEqual(["existing-dependency", "existing-sibling"]);
+    expect(vite.optimizeDeps.needsInterop).toBeUndefined();
   });
 
   it("forces Solana dependency optimization into the final Vite client config", async () => {

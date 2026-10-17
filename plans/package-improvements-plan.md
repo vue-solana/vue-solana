@@ -143,22 +143,22 @@ Status: planned.
 
 Tasks:
 
-- [ ] Windows backslash auto-import paths (`packages/nuxt/src/imports.ts:94` `vueSource` uses `node:path` `join()`). Normalize to posix (`replace(/\\/g, "/")` or `pathToFileURL`).
-- [ ] Eager optimize-deps merge pollutes SSR (`packages/nuxt/src/module.ts:73` runs unconditionally while `vite:extendConfig` correctly skips non-clients). Drop the eager merge or gate it identically.
-- [ ] Vue `entries` ↔ `exports` hand-synced (36 subpaths, `packages/vue/build.config.ts:4-41` vs `package.json:27-172`). Add a test asserting every `src/use*.ts` + `swr/kit/buffer-polyfill` has a matching entry + exports pair (same pattern as `src/kit-mirror.test.ts`).
-- [ ] Core export-map/docs test is regex-fragile and cross-package-coupled (`packages/core/src/export-map-docs.test.ts:87-96` scrapes `apps/docs/` and `packages/vue|nuxt` layouts). Move to repo-root tooling or parse `package.json` exports + `build.config.ts` instead of regex.
-- [ ] No package-level `attw`/`publint` (`packages/core/package.json:105-110`). Add `"attw": "attw --pack ."` or `publint` to CI to validate the ESM-only map.
-- [ ] No externals-bundling guard (`packages/core/build.config.ts:25-32` sets `hoistTransitiveImports: false`). Add a build-output test asserting `dist/*.mjs` contain no bundled `@solana/kit` code.
-- [ ] Pack-size invariant unguarded (`packages/nuxt/package.json:40-43`, and core/vue equivalents). Add a tarball file-list / byte-budget assertion covering the `.d.mts` exclusion.
-- [ ] Vue devDeps under-declared (`packages/vue/package.json:192-197`; tests import `@vue/test-utils`, `vitest` but only `bs58, typescript, unbuild, vue` listed). Declare `vitest` + `@vue/test-utils` (or document root-provided) so the package tests standalone.
-- [ ] Alias subpaths can drift (`packages/vue/src/useIdentity.ts:1`, `src/useSendTransactions.ts:1`, `build.config.ts:13,21`). Add comment/test that they stay aliases, or collapse to one entry each.
-- [ ] `tsc --noEmit` skips test helpers (`packages/vue/tsconfig.json:6` includes only `src/**/*.ts`; root `test-utils.ts` ships un-typechecked). Include/exclude explicitly.
-- [ ] Core declarations post-step is string-scan fragile (`packages/core/scripts/prepare-declarations.mjs:7,32` hardcoded `shims=["buffer.d.ts"]`, run as post-`unbuild` shell step in `package.json:106`). Convert to an `unbuild` hook or add a test asserting emitted `buffer-polyfill.d.*` has the triple-slash reference.
-- [ ] Core tsconfig misses the published shim (`packages/core/tsconfig.json:6` covers `../../types/**/*.d.ts` but not `packages/core/types/buffer.d.ts`). Include `types/**/*.d.ts` locally.
-- [ ] `kit.test.ts` leans on real Kit behavior (`packages/core/src/kit.test.ts:1-33,64` `'payer' in client` via real `createClient/extendClient`). Pin the assumption with a comment + Kit version assertion, or mock `createClient`.
+- [x] Windows backslash auto-import paths (`packages/nuxt/src/imports.ts:94` `vueSource` uses `node:path` `join()`). Normalize to posix (`replace(/\\/g, "/")` or `pathToFileURL`).
+- [x] Eager optimize-deps merge pollutes SSR (`packages/nuxt/src/module.ts:73` runs unconditionally while `vite:extendConfig` correctly skips non-clients). Drop the eager merge or gate it identically.
+- [x] Vue `entries` ↔ `exports` hand-synced (36 subpaths, `packages/vue/build.config.ts:4-41` vs `package.json:27-172`). Covered by `scripts/check-export-map.ts` (run as `pnpm check:entries`), which imports `build.config.ts` directly instead of regex-parsing it.
+- [x] Core export-map/docs test is regex-fragile and cross-package-coupled (`packages/core/src/export-map-docs.test.ts:87-96` scrapes `apps/docs/` and `packages/vue|nuxt` layouts). Move to repo-root tooling or parse `package.json` exports + `build.config.ts` instead of regex.
+- [x] No package-level `attw`/`publint` (`packages/core/package.json:105-110`). Add `"attw": "attw --pack ."` or `publint` to CI to validate the ESM-only map.
+- [x] No externals-bundling guard (`packages/core/build.config.ts:25-32` sets `hoistTransitiveImports: false`). Add a build-output test asserting `dist/*.mjs` contain no bundled `@solana/kit` code.
+- [x] Pack-size invariant unguarded (`packages/nuxt/package.json:40-43`, and core/vue equivalents). Add a tarball file-list / byte-budget assertion covering the `.d.mts` exclusion.
+- [x] Vue devDeps under-declared (`packages/vue/package.json:192-197`; tests import `@vue/test-utils`, `vitest` but only `bs58, typescript, unbuild, vue` listed). Declare `vitest` + `@vue/test-utils` (or document root-provided) so the package tests standalone.
+- [x] Alias subpaths can drift (`packages/vue/src/useIdentity.ts:1`, `src/useSendTransactions.ts:1`, `build.config.ts:13,21`). Add comment/test that they stay aliases, or collapse to one entry each.
+- [x] `tsc --noEmit` skips test helpers (`packages/vue/tsconfig.json:6` includes only `src/**/*.ts`; root `test-utils.ts` ships un-typechecked). Include/exclude explicitly.
+- [x] Core declarations post-step is string-scan fragile (`packages/core/scripts/prepare-declarations.mjs:7,32` hardcoded `shims=["buffer.d.ts"]`, run as post-`unbuild` shell step in `package.json:106`). Convert to an `unbuild` hook or add a test asserting emitted `buffer-polyfill.d.*` has the triple-slash reference.
+- [x] Core tsconfig misses the published shim (`packages/core/tsconfig.json:6` covers `../../types/**/*.d.ts` but not `packages/core/types/buffer.d.ts`). Include `types/**/*.d.ts` locally.
+- [x] `kit.test.ts` leans on real Kit behavior (`packages/core/src/kit.test.ts:1-33,64` `'payer' in client` via real `createClient/extendClient`). Pin the assumption with a comment + Kit version assertion, or mock `createClient`.
 - [ ] Nuxt `module.test.ts` never exercises real `defineNuxtModule` (`packages/nuxt/src/module.test.ts:5-14` mocks it as identity). Test against the real module (or add one `@nuxt/test-utils` integration test) covering defaults, `clientPlugin: false`, non-object `public.solana`.
-- [ ] `qrcode` ghost reference (`packages/nuxt/src/module.test.ts:177-201` fixture only). Rename fixture to a neutral name.
-- [ ] Root `vitest.config.ts` aliases only a subset of `@vue-solana/vue/*` subpaths. Replace enumerated aliases with a wildcard/filesystem-mapped alias or generate from `packages/vue/package.json` `exports`.
+- [x] `qrcode` ghost reference (`packages/nuxt/src/module.test.ts:177-201` fixture only). Rename fixture to a neutral name.
+- [x] Root `vitest.config.ts` aliases only a subset of `@vue-solana/vue/*` subpaths. Replace enumerated aliases with a wildcard/filesystem-mapped alias or generate from `packages/vue/package.json` `exports`.
 - [ ] Document the 5th-colliding-name procedure (`packages/core/src/kit.ts:140-156`, resolved in `src/index.ts:30-32`, guarded by `src/kit-mirror.test.ts:13-15`): when Kit adds a colliding name, add it to the explicit re-export list + test.
 
 Acceptance criteria:

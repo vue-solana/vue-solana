@@ -181,7 +181,8 @@
     "build": "NODE_OPTIONS=--max-old-space-size=8192 unbuild",
     "dev": "unbuild --stub",
     "typecheck": "tsc --noEmit",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "check:esm-map": "node ../../scripts/check-exports-map.mjs"
   },
   "dependencies": {
     "@vue-solana/core": "workspace:*"
@@ -190,8 +191,10 @@
     "vue": "^3.5.0"
   },
   "devDependencies": {
+    "@vue/test-utils": "^2.4.11",
     "typescript": "^5.8.3",
     "unbuild": "^3.5.0",
+    "vitest": "^4.1.8",
     "vue": "^3.5.16"
   }
 }

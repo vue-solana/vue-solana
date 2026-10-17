@@ -1,4 +1,9 @@
 // @vitest-environment node
+// Pinned assumption: this test relies on `@solana/kit`'s `solanaRpc()` plugin
+// installing `planTransaction`/`sendTransaction` (and on `rpcAirdrop()`). If a
+// future Kit release stops providing them, the assertions below fail and the
+// client construction in `src/kit.ts` must change. Keep the `@solana/kit`
+// range in `package.json` and `pnpm-workspace.yaml` overrides in sync.
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getBase58Decoder } from "@solana/kit";
 import nacl from "tweetnacl";

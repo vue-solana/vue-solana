@@ -39,6 +39,12 @@ export { SolanaError, isSolanaError } from "./errors";
 export type { SolanaErrorCode } from "./errors";
 export type { TransactionStatus } from "./types";
 
+// Colliding-name procedure: when `@solana/kit` gains another export whose name
+// also exists in this package's `errors`/`types`, add it to this explicit list
+// (so it resolves to our own instead of vanishing) AND to the explicit-reexport
+// list guarded by `src/kit-mirror.test.ts`, then run the kit-mirror tests.
+// The full resolver logic lives in `src/kit.ts`'s `export * from "@solana/kit"` mirror.
+
 // `./action` defines its own deprecated `isAbortError` alias (core's public
 // name), which shadows the `isAbortError` exported by `./kit` via `export *`.
 // Resolve it explicitly so the root barrel exposes core's deprecated alias

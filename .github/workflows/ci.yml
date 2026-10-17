@@ -52,6 +52,21 @@ jobs:
       - name: Size check packages
         run: pnpm size:packages
 
+      - name: Build entries vs exports map check
+        run: pnpm check:entries
+
+      - name: ESM-only exports map check
+        run: pnpm check:esm-map
+
+      - name: Externals bundling check
+        run: pnpm check:externals
+
+      - name: Buffer-polyfill declarations check
+        run: pnpm check:buffer-polyfill-declarations
+
+      - name: Pack size check
+        run: pnpm pack:size
+
       - name: E2E
         run: pnpm test:e2e
 

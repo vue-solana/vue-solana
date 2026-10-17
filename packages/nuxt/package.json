@@ -48,7 +48,8 @@
     "build": "unbuild",
     "dev": "unbuild --stub",
     "typecheck": "tsc --noEmit",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "check:esm-map": "node ../../scripts/check-exports-map.mjs"
   },
   "dependencies": {
     "@vue-solana/vue": "workspace:*"

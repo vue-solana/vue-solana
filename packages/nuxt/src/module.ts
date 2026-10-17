@@ -77,11 +77,11 @@ const module: NuxtModule<ModuleOptions> = defineNuxtModule<ModuleOptions>({
       ...options,
     });
 
-    mergeViteOptimizeDeps(nuxt.options.vite);
-
-    // Resolved from the module's own dependency, so the auto-import sources
-    // point at the copy the bundler will load, and the app keeps installing
-    // just `@vue-solana/nuxt`.
+    // Vite optimize-deps merging is deferred to `vite:extendConfig`, which
+    // is client-aware; doing it eagerly here polluted the SSR Vite config.
+    // `vueDist` is resolved from the module's own dependency, so the
+    // auto-import sources point at the copy the bundler will load, and the app
+    // keeps installing just `@vue-solana/nuxt`.
     const vueDist = resolveVueDist();
 
     nuxt.hook("vite:extendConfig", (config, { isClient }) => {

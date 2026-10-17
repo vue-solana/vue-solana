@@ -299,6 +299,11 @@ pnpm install
 pnpm typecheck
 pnpm build
 pnpm clean
+pnpm check:entries
+pnpm check:esm-map
+pnpm check:externals
+pnpm check:buffer-polyfill-declarations
+pnpm pack:size
 ```
 
 ## Commit Message Used/Suggested
