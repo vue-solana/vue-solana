@@ -7,7 +7,6 @@ export interface SolanaIosWalletAppIdentity {
 }
 
 export interface GetSolanaIosWalletsOptions {
-  appIdentity?: SolanaIosWalletAppIdentity;
   redirectUrl?: string;
   chains?: readonly SolanaChain[];
   cluster?: SolanaCluster;

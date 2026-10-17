@@ -1,10 +1,14 @@
+import { SolanaError } from "@vue-solana/core/errors";
 import { useSolanaClient } from "./useSolanaClient";
 
 /**
  * Thrown by {@link useClientCapability} when the installed Solana client does
  * not expose a requested capability.
+ *
+ * Subclasses core's {@link SolanaError} (code `MISSING_CLIENT_CAPABILITY`) so
+ * capability failures answer `isSolanaError()` the same way runtime failures do.
  */
-export class MissingClientCapabilityError extends Error {
+export class MissingClientCapabilityError extends SolanaError {
   /** Name of the hook that requested the capability, e.g. `usePayer`. */
   public readonly hookName: string;
   /** Human guidance for installing the capability on the client. */
@@ -14,9 +18,11 @@ export class MissingClientCapabilityError extends Error {
 
   constructor(hookName: string, capabilities: readonly string[], providerHint: string) {
     super(
+      "MISSING_CLIENT_CAPABILITY",
       `${hookName} requires the ${capabilities.map((capability) => `\`${capability}\``).join(" and ")} ` +
         `capabilit${capabilities.length === 1 ? "y" : "ies"} on the Solana client, but none ${capabilities.length === 1 ? "was" : "were"} found. ` +
         providerHint,
+      {},
     );
     this.name = "MissingClientCapabilityError";
     this.hookName = hookName;

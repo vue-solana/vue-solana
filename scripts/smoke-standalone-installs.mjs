@@ -39,7 +39,7 @@ function fileDependency(tarballPath, consumerDir) {
   return `file:${relative(consumerDir, tarballPath)}`;
 }
 
-function writeConsumer({ name, dependencies, devDependencies, overrides = {}, source }) {
+function writeConsumer({ name, dependencies, devDependencies, workspaceOverrides = {}, source }) {
   const consumerDir = join(tempRoot, name);
   mkdirSync(join(consumerDir, "src"), { recursive: true });
 
@@ -54,12 +54,29 @@ function writeConsumer({ name, dependencies, devDependencies, overrides = {}, so
         },
         dependencies,
         devDependencies,
-        pnpm: Object.keys(overrides).length > 0 ? { overrides } : undefined,
       },
       null,
       2,
     )}\n`,
   );
+
+  // pnpm 10 no longer reads the `pnpm.overrides` key in `package.json`, so
+  // overrides go in `pnpm-workspace.yaml` — otherwise transitive
+  // `@vue-solana/*` deps silently resolve from the npm registry instead of
+  // the packed tarballs, defeating the smoke test.
+  if (Object.keys(workspaceOverrides).length > 0) {
+    const lines = ["overrides:"];
+
+    for (const [spec, target] of Object.entries(workspaceOverrides)) {
+      lines.push(`  "${spec}": ${target}`);
+    }
+
+    // Nuxt-bound consumers pull postinstall-heavy transitive deps (esbuild,
+    // rolldown, lightningcss, ...). Approve them explicitly so the install
+    // step does not block on pnpm 10's build-script approval under `CI=1`.
+    lines.push("dangerouslyAllowAllBuilds: true");
+    writeFileSync(join(consumerDir, "pnpm-workspace.yaml"), `${lines.join("\n")}\n`);
+  }
 
   writeFileSync(
     join(consumerDir, "tsconfig.json"),
@@ -149,7 +166,7 @@ const commitment: Commitment = "confirmed";
     devDependencies: {
       typescript: "^5.8.3",
     },
-    overrides: {
+    workspaceOverrides: {
       "@vue-solana/core": fileDependency(packages.core.tarball, join(tempRoot, "vue-consumer")),
     },
     source: `import { defineComponent } from "vue";
@@ -188,7 +205,7 @@ export default defineComponent({
     devDependencies: {
       typescript: "^5.8.3",
     },
-    overrides: {
+    workspaceOverrides: {
       "@vue-solana/core": fileDependency(packages.core.tarball, join(tempRoot, "nuxt-consumer")),
       "@vue-solana/vue": fileDependency(packages.vue.tarball, join(tempRoot, "nuxt-consumer")),
     },

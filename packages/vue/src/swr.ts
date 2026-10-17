@@ -47,6 +47,7 @@ const PREFIX_REQUEST = "request:";
 const PREFIX_SUBSCRIPTION = "subscription:";
 const PREFIX_TRACKED = "tracked:";
 
+const SWR_CACHE_MAX_ENTRIES = 1024;
 const swrCache = new Map<string, SwrCacheEntry>();
 
 /**
@@ -55,6 +56,26 @@ const swrCache = new Map<string, SwrCacheEntry>();
  */
 export function clearSwrCache(): void {
   swrCache.clear();
+}
+
+/**
+ * Remove a single cached SWR entry by its full cache key (including the
+ * adapter prefix, e.g. `request:balance`). Prefer this over
+ * {@link clearSwrCache} when only one key's stale value needs to be discarded.
+ */
+export function deleteSwrKey(key: string): void {
+  swrCache.delete(key);
+}
+
+function evictSwrCacheIfNeeded(): void {
+  while (swrCache.size > SWR_CACHE_MAX_ENTRIES) {
+    const oldestKey = swrCache.keys().next().value;
+    if (oldestKey === undefined) {
+      break;
+    }
+
+    swrCache.delete(oldestKey);
+  }
 }
 
 function isPendingStatus(status: string): boolean {
@@ -80,11 +101,14 @@ function writeSwrResult(
 
   const previous = swrCache.get(key);
 
+  // Refresh insertion order so recently-written entries survive the size cap.
+  swrCache.delete(key);
   swrCache.set(key, {
     data: data !== undefined ? data : previous?.data,
     error,
     status,
   });
+  evictSwrCacheIfNeeded();
 }
 
 /**

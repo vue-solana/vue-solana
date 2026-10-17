@@ -1,4 +1,4 @@
-import bs58 from "bs58";
+import { getBase58Decoder, getBase58Encoder } from "@solana/kit";
 import * as nacl from "tweetnacl";
 import { vi } from "vitest";
 
@@ -21,11 +21,11 @@ export function setEncryptedConnectCallbackUrl({
   };
   const walletKeyPair = nacl.box.keyPair();
   const sharedSecret = nacl.box.before(
-    bs58.decode(bs58.encode(walletKeyPair.publicKey)),
-    bs58.decode(pending.dappEncryptionSecretKey),
+    walletKeyPair.publicKey,
+    Uint8Array.from(getBase58Encoder().encode(pending.dappEncryptionSecretKey)),
   );
   const nonce = nacl.randomBytes(nacl.box.nonceLength);
-  const data = bs58.encode(
+  const data = getBase58Decoder().decode(
     nacl.box.after(
       new TextEncoder().encode(
         JSON.stringify({
@@ -41,7 +41,7 @@ export function setEncryptedConnectCallbackUrl({
   history.replaceState(
     null,
     "",
-    `/?phantom_encryption_public_key=${bs58.encode(walletKeyPair.publicKey)}&nonce=${bs58.encode(nonce)}&data=${data}`,
+    `/?phantom_encryption_public_key=${getBase58Decoder().decode(walletKeyPair.publicKey)}&nonce=${getBase58Decoder().decode(nonce)}&data=${data}`,
   );
 }
 
@@ -62,10 +62,10 @@ export function setEncryptedSignAllTransactionsCallbackUrl({
       walletId: "phantom",
       publicKey: "11111111111111111111111111111111",
       session: "session-token",
-      dappEncryptionPublicKey: bs58.encode(dappKeyPair.publicKey),
-      dappEncryptionSecretKey: bs58.encode(dappKeyPair.secretKey),
-      walletEncryptionPublicKey: bs58.encode(walletKeyPair.publicKey),
-      sharedSecret: bs58.encode(sharedSecret),
+      dappEncryptionPublicKey: getBase58Decoder().decode(dappKeyPair.publicKey),
+      dappEncryptionSecretKey: getBase58Decoder().decode(dappKeyPair.secretKey),
+      walletEncryptionPublicKey: getBase58Decoder().decode(walletKeyPair.publicKey),
+      sharedSecret: getBase58Decoder().decode(sharedSecret),
     }),
   );
   sessionStorage.setItem(
@@ -74,8 +74,8 @@ export function setEncryptedSignAllTransactionsCallbackUrl({
       id: "request-id",
       walletId: "phantom",
       method: "signAllTransactions",
-      dappEncryptionPublicKey: bs58.encode(dappKeyPair.publicKey),
-      dappEncryptionSecretKey: bs58.encode(dappKeyPair.secretKey),
+      dappEncryptionPublicKey: getBase58Decoder().decode(dappKeyPair.publicKey),
+      dappEncryptionSecretKey: getBase58Decoder().decode(dappKeyPair.secretKey),
       redirectUrl: "https://example.com/callback",
       createdAt: Date.now(),
       requestedTransactionCount,
@@ -83,11 +83,11 @@ export function setEncryptedSignAllTransactionsCallbackUrl({
   );
 
   const nonce = nacl.randomBytes(nacl.box.nonceLength);
-  const data = bs58.encode(
+  const data = getBase58Decoder().decode(
     nacl.box.after(new TextEncoder().encode(JSON.stringify({ transactions })), nonce, sharedSecret),
   );
 
-  history.replaceState(null, "", `/?nonce=${bs58.encode(nonce)}&data=${data}`);
+  history.replaceState(null, "", `/?nonce=${getBase58Decoder().decode(nonce)}&data=${data}`);
 }
 
 export function mockIosNavigator() {

@@ -32,7 +32,13 @@
     "version-packages": "changeset version",
     "prepare": "husky",
     "release": "pnpm build:packages && changeset publish",
-    "smoke:standalone-installs": "node scripts/smoke-standalone-installs.mjs"
+    "smoke:standalone-installs": "node scripts/smoke-standalone-installs.mjs",
+    "size:packages": "node scripts/check-lean-imports.mjs",
+    "pack:size": "node scripts/check-pack-size.mjs",
+    "check:entries": "node --experimental-strip-types scripts/check-export-map.ts",
+    "check:esm-map": "node scripts/check-exports-map.mjs",
+    "check:externals": "node --experimental-strip-types scripts/check-externals.ts",
+    "check:buffer-polyfill-declarations": "node scripts/check-buffer-polyfill-declarations.mjs"
   },
   "devDependencies": {
     "@changesets/cli": "^2.31.0",

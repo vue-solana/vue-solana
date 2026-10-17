@@ -98,7 +98,7 @@ createApp(App).use(
 
 Supported clusters are `mainnet` (legacy alias `mainnet-beta`), `devnet`, `testnet`, and `localnet`. Use `mainnet` for Solana mainnet; this is Solana's official mainnet cluster name.
 
-`payer` and `payerSecretKey` are supported by direct Vue/core clients. A client-sent transaction requires a payer. Never put a raw secret or `payerSecretKey` in Nuxt public runtime config, and never ship a funded signing key to an end-user browser. The default `createSolanaPlugin()` client composes the official `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()` stack; the old custom fallback sender is not used.
+`payer` and `payerSecretKey` are supported by direct Vue/core clients. A client-sent transaction requires a payer. Never put a raw secret or `payerSecretKey` in Nuxt public runtime config, and never ship a funded signing key to an end-user browser. The default `createSolanaPlugin()` client composes `solanaRpc()` followed by `rpcAirdrop()`; `solanaRpc()` installs `rpcTransactionPlanner()`, `rpcTransactionPlanSigningExecutor()`, and `rpcTransactionPlanSendingExecutor()` itself, so the client exposes RPC reads and subscriptions plus `planTransaction(s)`, `signTransaction(s)`, and `sendTransaction(s)` with no extra plugin. The old custom fallback sender is not used.
 
 ### Plugin Options
 
@@ -312,7 +312,7 @@ async function signIn() {
 </template>
 ```
 
-Message signing proves wallet ownership for flows like authentication challenges. It does not sign, submit, or authorize Solana transactions. For authentication, issue a server-generated nonce, include domain and expiration details in the message, and verify the returned signature server-side.
+Message signing proves wallet ownership for flows like authentication challenges. It does not sign, submit, or authorize Solana transactions. For authentication, issue a server-generated nonce, include domain and expiration details in the message, and verify the returned signature server-side. The adapter also checks the signature against the account's public key before resolving, where Ed25519 (WebCrypto) is available — a best-effort client-side guard that rejects with `INVALID_SIGNATURE`, not a replacement for server-side verification.
 
 ## Transaction State
 
@@ -391,7 +391,7 @@ Configure a direct client with `payer` or `payerSecretKey`. `payerSecretKey` is 
 
 Use the client flow for automated or server-backed signing (airdrop faucet, cron jobs, relayer fees paid by your keypair), and the wallet flow when the end user must own and approve each transaction.
 
-**Default client composition.** `createSolanaPlugin()` and `createSolanaClient()` install the official `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()` plugins by default. The old custom fallback sender is not used, so `useSendTransaction()` and `useSendTransactions()` do not need a second manual plugin installation. The official executor waits for `confirmed` commitment before `execute()` resolves and the composable reports `sent`. A custom client must still provide the planner and sending executor and a `payer`.
+**Default client composition.** `createSolanaPlugin()` and `createSolanaClient()` compose `solanaRpc()` followed by `rpcAirdrop()` by default; `solanaRpc()` installs `rpcTransactionPlanner()`, `rpcTransactionPlanSigningExecutor()`, and `rpcTransactionPlanSendingExecutor()` itself. The old custom fallback sender is not used, so `useSendTransaction()` and `useSendTransactions()` do not need a second manual plugin installation. The official executor waits for `confirmed` commitment before `execute()` resolves and the composable reports `sent`. A custom client must still provide the planner and sending executor and a `payer`.
 
 ```ts
 import { useSendTransaction } from "@vue-solana/vue/useSendTransaction";
@@ -487,6 +487,8 @@ import { useRequestSwr } from "@vue-solana/vue/swr";
 
 const balance = useRequestSwr(["balance", address], () => client.rpc.getBalance(address).send());
 ```
+
+The SWR cache is module-level and shared across the whole app, including across SSR requests. Namespace cache keys per request (for example by including a request or session id) or call `clearSwrCache()` at the start of each server request to avoid leaking one request's cached data into another. On the client the cache is intentionally shared for stale-while-revalidate seeding.
 
 ### Cancellation & Timeouts
 
@@ -592,7 +594,9 @@ Docs: [Vue Solana Agent Skill](https://vue-solana-docs.vercel.app/agent-skill)
 | ------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
 | `createSolanaPlugin(options?)`                                                             | Installs the Vue Solana context.                                                                                                         |
 | `VueSolana`                                                                                | Alias for `createSolanaPlugin`.                                                                                                          |
-| `useSolana()`                                                                              | Returns the full injected Solana context.                                                                                                |
+| `useSolana()`                                                                              | Returns the full injected Solana context; throws when no plugin context is available.                                                    |
+| `tryUseSolana()`                                                                           | Returns the injected Solana context or `null` when no plugin context is available (SSR-safe).                                            |
+| `MissingClientCapabilityError`                                                             | Thrown by `useClientCapability()` (and client-sent composables) when the configured client lacks a required capability.                  |
 | `useRpc()`                                                                                 | Returns cluster, endpoint, connection status, latest blockhash, the Kit `client`, and `checkConnection()`.                               |
 | `useSolanaClient()`                                                                        | Returns the injected Kit client as `{ client, rpc }`. The recommended RPC path.                                                          |
 | `useConnection()`                                                                          | Returns the Kit `client`. Deprecated in favor of `useSolanaClient()`.                                                                    |

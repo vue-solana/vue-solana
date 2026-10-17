@@ -67,8 +67,7 @@ describe("createSolanaPlugin wallet discovery", () => {
     expect(getRegisteredSolanaWallets).toHaveBeenCalledOnce();
   });
 
-  it("logs mobile wallet registration failures without failing wallet refresh", async () => {
-    const { error: consoleError } = silenceConsole();
+  it("does not fail wallet refresh when mobile wallet registration throws", async () => {
     const registrationError = new Error("mobile registration failed");
     mockSolanaContext();
     mockWalletDiscovery([]);
@@ -78,13 +77,6 @@ describe("createSolanaPlugin wallet discovery", () => {
     const { solana } = mountSolanaPlugin();
 
     expect(() => solana?.refreshWallets()).not.toThrow();
-
-    await vi.waitFor(() => {
-      expect(consoleError).toHaveBeenCalledWith(
-        "[Vue Solana] Mobile wallet registration failed",
-        registrationError,
-      );
-    });
   });
 
   it("discovers and adapts iOS deep-link wallets through the unified wallet list", () => {

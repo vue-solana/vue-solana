@@ -1,5 +1,5 @@
 import { isAddress } from "@solana/kit";
-import bs58 from "bs58";
+import { getBase58Decoder, getBase58Encoder } from "@solana/kit";
 import { cleanCallbackUrl, hasIosWalletCallbackParams } from "./browser";
 import { decryptPayload, getSharedSecret } from "./crypto";
 import { getIosWalletDefinitionById } from "./definitions";
@@ -80,7 +80,7 @@ export function handleSolanaIosWalletCallback(
         dappEncryptionPublicKey: pending.dappEncryptionPublicKey,
         dappEncryptionSecretKey: pending.dappEncryptionSecretKey,
         walletEncryptionPublicKey,
-        sharedSecret: bs58.encode(sharedSecret),
+        sharedSecret: getBase58Decoder().decode(sharedSecret),
       });
     }
 
@@ -107,7 +107,9 @@ function createCallbackResult(
     return {
       walletId: pending.walletId,
       method: pending.method,
-      transaction: bs58.decode(getStringField(payload, "transaction")),
+      transaction: Uint8Array.from(
+        getBase58Encoder().encode(getStringField(payload, "transaction")),
+      ),
     };
   }
 
@@ -133,7 +135,9 @@ function createCallbackResult(
     return {
       walletId: pending.walletId,
       method: pending.method,
-      transactions: transactions.map((transaction) => bs58.decode(transaction as string)),
+      transactions: transactions.map((transaction) =>
+        Uint8Array.from(getBase58Encoder().encode(transaction as string)),
+      ),
     };
   }
 

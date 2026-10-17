@@ -33,9 +33,23 @@ export interface VueSolanaPlugin {
    * context to consumers that run outside a component setup.
    */
   context: VueSolanaContext | null;
+  /**
+   * Stops the wallet discovery subscription and the deferred bootstrap started
+   * by `install`. Vue has no plugin unmount hook, so call this from an app
+   * teardown hook (`app.onUnmount` in Nuxt, after `app.unmount()` in Vue).
+   * Safe to call more than once and before `install`. Without it the Wallet
+   * Standard subscription outlives the app that created it. After `dispose()`,
+   * `refreshWallets()` is a no-op, so a late mobile-wallet import or manual
+   * call cannot resurrect the subscription. A connected wallet stays
+   * connected; `dispose()` does not disconnect it or abort an in-flight
+   * `connect()`.
+   */
+  dispose(): void;
 }
 
 export function createSolanaPlugin(options: VueSolanaPluginOptions = {}): VueSolanaPlugin {
+  let teardown: (() => void) | null = null;
+
   const plugin: VueSolanaPlugin = {
     context: null,
     install(app: App) {
@@ -56,18 +70,18 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}): VueSol
       let mobileWalletRegistrationPromise: Promise<void> | null = null;
       let attemptedAutoConnectWallet: string | null = null;
       let rpcCheckId = 0;
+      let bootstrapId = 0;
+      // Set by `teardown`: once disposed, `refreshWallets()` must not
+      // (re)subscribe or kick off the lazy mobile-wallet import — a promise
+      // started before `dispose()` resolving afterwards would otherwise
+      // resurrect a subscription that can never be torn down.
+      let disposed = false;
 
       async function checkConnection() {
         const checkId = ++rpcCheckId;
 
         status.value = "checking";
         error.value = null;
-
-        console.info("[Vue Solana] Checking RPC connection", {
-          cluster: context.cluster,
-          endpoint: context.endpoint,
-          wsEndpoint: context.wsEndpoint,
-        });
 
         try {
           const response = await withTimeout(
@@ -86,13 +100,6 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}): VueSol
 
           latestBlockhash.value = blockhash.blockhash;
           status.value = "connected";
-
-          console.info("[Vue Solana] Connected", {
-            cluster: context.cluster,
-            endpoint: context.endpoint,
-            wsEndpoint: context.wsEndpoint,
-            blockhash,
-          });
         } catch (cause) {
           if (checkId !== rpcCheckId) {
             return;
@@ -100,12 +107,14 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}): VueSol
 
           status.value = "error";
           error.value = normalizeSolanaError(cause, "RPC_FAILURE");
-
-          console.error("[Vue Solana] Connection failed", cause);
         }
       }
 
       function refreshWallets() {
+        if (disposed) {
+          return;
+        }
+
         unsubscribeWallets ??= subscribeSolanaWallets(refreshWallets);
         walletRegistry.handleIosWalletCallback();
         wallets.value = walletRegistry.getDiscoveredWallets();
@@ -123,7 +132,6 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}): VueSol
           const persistedWallet = readSelectedWallet();
           if (persistedWallet.error) {
             error.value = persistedWallet.error;
-            console.error("[Vue Solana] Selected wallet restoration failed", persistedWallet.error);
           }
 
           restoredWallet = persistedWallet.wallet
@@ -151,8 +159,16 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}): VueSol
       }
 
       function registerMobileWallets() {
+        if (disposed) {
+          return;
+        }
+
         mobileWalletRegistrationPromise ??= import("@vue-solana/core/mobile-wallet")
           .then(({ registerSolanaMobileWallet }) => {
+            if (disposed) {
+              return;
+            }
+
             registerSolanaMobileWallet({
               chains: [getSolanaChain(context.cluster)],
               ...(options.mobileWallet || {}),
@@ -160,7 +176,7 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}): VueSol
             refreshWallets();
           })
           .catch((cause) => {
-            console.error("[Vue Solana] Mobile wallet registration failed", cause);
+            void cause;
           })
           .finally(() => {
             mobileWalletRegistrationPromise = null;
@@ -176,7 +192,6 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}): VueSol
 
         if (storageError) {
           error.value = storageError;
-          console.error("[Vue Solana] Selected wallet persistence failed", storageError);
         }
       }
 
@@ -201,7 +216,7 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}): VueSol
         void activeWallet
           .connect()
           .catch((cause) => {
-            console.error("[Vue Solana] Wallet auto-connect failed", cause);
+            void cause;
           })
           .finally(() => {
             triggerRef(wallet);
@@ -226,7 +241,6 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}): VueSol
 
           if (storageError) {
             error.value = storageError;
-            console.error("[Vue Solana] Selected wallet persistence failed", storageError);
           }
         },
       };
@@ -234,17 +248,37 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}): VueSol
       app.provide(solanaInjectionKey, vueContext);
       plugin.context = vueContext;
 
+      teardown = () => {
+        disposed = true;
+
+        if (typeof window !== "undefined") {
+          window.clearTimeout(bootstrapId);
+        }
+
+        unsubscribeWallets?.();
+        unsubscribeWallets = null;
+        // Release the Wallet Standard `change` subscriptions captured when
+        // wallets were adapted — they must not outlive the app either.
+        walletRegistry.disposeAllAdaptedWallets();
+        // A late in-flight RPC check must not write into a context nobody reads.
+        rpcCheckId += 1;
+        teardown = null;
+      };
+
       if (typeof window !== "undefined") {
-        window.setTimeout(() => {
+        bootstrapId = window.setTimeout(() => {
           try {
             refreshWallets();
           } catch (cause) {
-            console.error("[Vue Solana] Wallet refresh failed", cause);
+            void cause;
           }
 
           void checkConnection();
         }, 0);
       }
+    },
+    dispose() {
+      teardown?.();
     },
   };
 

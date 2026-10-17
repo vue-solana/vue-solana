@@ -103,7 +103,9 @@ Expires At: 2026-07-02T12:10:00Z
 
 ## 검증 경계
 
-Vue Solana는 지갑 서명을 요청하는 부분을 돕습니다. 서버 측 검증, nonce 저장, 만료 검사, 세션 생성은 앱의 책임입니다.
+Vue Solana는 환경이 Ed25519(WebCrypto)를 지원할 때 `signMessage()` / `signIn()`을 완료하기 전에 반환된 서명을 계정의 공개 키로 검증합니다. 이는 지갑이 잘못된 바이트에 대한 서명이나 다른 계정의 서명을 반환하는 경우를 막는 최선의 방어이며, 서버 측 검증을 대체하지 않고 Ed25519를 사용할 수 없는 환경에서는 건너뜁니다. 검증에 실패한 서명은 `INVALID_SIGNATURE`로 거부됩니다.
+
+서버 측 검증, nonce 저장, 만료 검사, 세션 생성은 여전히 앱의 책임입니다.
 
 일반 텍스트에 대한 서명을 토큰 전송이나 온체인 상태 변경 권한으로 취급하지 마세요.
 
@@ -122,6 +124,8 @@ const message = computed(() => {
       return "This wallet does not support message signing.";
     case "USER_REJECTED":
       return "The message signature was rejected.";
+    case "INVALID_SIGNATURE":
+      return "The wallet returned an invalid signature.";
     default:
       return null;
   }

@@ -1,4 +1,5 @@
 import type { SolanaCluster } from "./types";
+import { createSolanaError } from "./errors";
 
 export const DEFAULT_CLUSTER: SolanaCluster = "devnet";
 
@@ -27,7 +28,15 @@ export function getClusterWebSocketEndpoint(cluster: SolanaCluster = DEFAULT_CLU
 }
 
 export function getWebSocketEndpoint(endpoint: string): string {
-  const url = new URL(endpoint);
+  let url: URL;
+
+  try {
+    url = new URL(endpoint);
+  } catch (cause) {
+    throw createSolanaError("INVALID_INPUT", `Invalid Solana RPC endpoint: ${endpoint}`, {
+      cause,
+    });
+  }
 
   if (url.protocol === "https:") {
     url.protocol = "wss:";

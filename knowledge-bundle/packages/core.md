@@ -211,8 +211,14 @@ type SolanaErrorCode =
   | "WALLET_NOT_CONNECTED"
   | "WALLET_FEATURE_UNSUPPORTED"
   | "USER_REJECTED"
+  | "INVALID_SIGNATURE"
   | "INVALID_ADDRESS"
+  | "INVALID_INPUT"
   | "TRANSACTION_TIMEOUT"
+  | "TRANSACTION_NOT_FOUND"
+  | "TRANSACTION_FAILED"
+  | "REDIRECT_TIMEOUT"
+  | "DECRYPTION_FAILED"
   | "RPC_FAILURE"
   | "STORAGE_FAILURE";
 
@@ -231,6 +237,9 @@ Transaction confirmation types:
 interface ConfirmTransactionOptions {
   commitment?: Commitment;
   timeoutMs?: number;
+  pollIntervalMs?: number;
+  abortSignal?: AbortSignal;
+  searchTransactionHistory?: boolean;
 }
 
 type TransactionStatus = {
@@ -260,15 +269,15 @@ interface TransactionConfirmation {
 - `assertWalletConnected(wallet)`: throws if the wallet is not connected.
 - `assertWalletCanSign(wallet)`: throws if the wallet cannot sign transactions.
 - `assertWalletCanSignMessage(wallet)`: throws if the wallet cannot sign messages.
-- `parseAddress(value)`: validates and returns an `Address` from an `Address`, address string, ref-like object, getter, `null`, or `undefined`. Invalid address strings throw `INVALID_ADDRESS`.
+- `parseAddress(value)`: validates and returns an `Address` from an `Address`, address string, ref-like object, getter, `null`, or `undefined`. Invalid address strings throw `INVALID_ADDRESS`; numbers, booleans, and other non-string shapes throw `INVALID_ADDRESS` too instead of silently returning `null`.
 - `signAndSendTransaction(client, wallet, transaction, options?)`: signs and sends a transaction using wallet capabilities (raw wire bytes). Android Mobile Wallet Adapter wallets prefer `signTransaction` plus app-side RPC submission when available so the app can reliably return the submitted signature. Serializes signed bytes and calls `client.rpc.sendTransaction(...)`.
-- `confirmTransactionSignature(client, signature, options?)`: waits for a submitted signature to reach the requested commitment by polling `client.rpc.getSignatureStatuses([signature]).send()`. Defaults to `confirmed` commitment and a 60 second timeout. Returns `TransactionConfirmation` and throws a clear timeout or failed-confirmation error.
+- `confirmTransactionSignature(client, signature, options?)`: waits for a submitted signature to reach the requested commitment by polling `client.rpc.getSignatureStatuses([signature]).send()`. Defaults to `confirmed` commitment, a 60 second timeout, and a 1500 ms poll interval. Accepts `pollIntervalMs` (must be greater than `0`), `abortSignal`, and `searchTransactionHistory`. Returns `TransactionConfirmation`; a failed transaction throws `TRANSACTION_FAILED`, a signature that never appears throws `TRANSACTION_NOT_FOUND`, and an exhausted wait throws `TRANSACTION_TIMEOUT`. Pass `searchTransactionHistory: true` when the signature may have left the recent status cache — without it an older signature never appears in results and resolves to `TRANSACTION_NOT_FOUND` after the timeout.
 - Client-sent transactions use the official `ClientWithTransactionSending` capability installed by `createSolanaClient()`. The sender waits for `confirmed` commitment, exposes a single result signature at `data.context.signature`, and has no wallet popup.
 - `getSolanaChain(cluster)`: maps a package cluster to a Wallet Standard chain ID.
 - `isSolanaStandardWallet(wallet)`: checks whether a Wallet Standard wallet supports Solana.
 - `getRegisteredSolanaWallets()`: returns discovered Solana Wallet Standard wallets in browser environments, including Android Mobile Wallet Adapter after it is registered on supported clients.
 - `subscribeSolanaWallets(listener)`: subscribes to Wallet Standard register/unregister events.
-- `adaptSolanaStandardWallet(walletInfo, options?)`: adapts a discovered wallet into `SolanaWallet`.
+- `adaptSolanaStandardWallet(walletInfo, options?)`: adapts a discovered wallet into `SolanaWallet`. The result exposes `dispose()`, which releases the captured Wallet Standard `change` subscription (idempotent; the wallet stays connected).
 - `registerSolanaMobileWallet(options?)`: registers Android Mobile Wallet Adapter through Wallet Standard on supported Android Chrome clients.
 - `isSolanaMobileWalletSupported()`: returns whether the current runtime supports Android MWA web registration.
 - `getDefaultMobileWalletAppIdentity()`: derives a default Mobile Wallet Adapter app identity from the current document.

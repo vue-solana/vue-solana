@@ -7363,9 +7363,11 @@ Expira En: 2026-07-02T12:10:00Z
 
 ## Límite De Verificación
 
-Vue Solana ayuda a solicitar la firma a la wallet. Tu aplicación es responsable de la verificación del lado del servidor, el almacenamiento de nonces, las comprobaciones de expiración y la creación de sesiones.
+Vue Solana verifica la firma devuelta contra la clave pública de la cuenta antes de resolver `signMessage()` / `signIn()`, cuando el entorno admite Ed25519 (WebCrypto). Es una protección de mejor esfuerzo frente a una wallet que devuelve una firma sobre bytes incorrectos o para otra cuenta; no sustituye la verificación en el servidor y se omite donde Ed25519 no está disponible. Una firma que no supera la comprobación rechaza con `INVALID_SIGNATURE`.
 
-No trates una firma sobre texto generico como permiso para transferir tokens o cambiar estado on-chain.
+Tu aplicación sigue siendo responsable de la verificación del lado del servidor, el almacenamiento de nonces, las comprobaciones de expiración y la creación de sesiones.
+
+No trates una firma sobre texto genérico como permiso para transferir tokens o cambiar estado on-chain.
 
 ## Manejo De Errores
 
@@ -7382,6 +7384,8 @@ const message = computed(() => {
       return "Esta wallet no admite firma de mensajes.";
     case "USER_REJECTED":
       return "La firma del mensaje fue rechazada.";
+    case "INVALID_SIGNATURE":
+      return "La wallet devolvió una firma inválida.";
     default:
       return null;
   }
@@ -7502,7 +7506,9 @@ Expires At: 2026-07-02T12:10:00Z
 
 ## Verification Boundary
 
-Vue Solana helps request the wallet signature. Your app is responsible for server-side verification, nonce storage, expiration checks, and session creation.
+Vue Solana verifies the returned signature against the account's public key before resolving `signMessage()` / `signIn()`, when the environment supports Ed25519 (WebCrypto). This is a best-effort guard against a wallet returning a signature over the wrong bytes or for a different account — it is not a substitute for server-side verification, and it is skipped where Ed25519 is unavailable. A signature that fails the check rejects with `INVALID_SIGNATURE`.
+
+Your app is still responsible for server-side verification, nonce storage, expiration checks, and session creation.
 
 Do not treat a signature over generic text as permission to transfer tokens or change on-chain state.
 
@@ -7521,6 +7527,8 @@ const message = computed(() => {
       return "This wallet does not support message signing.";
     case "USER_REJECTED":
       return "The message signature was rejected.";
+    case "INVALID_SIGNATURE":
+      return "The wallet returned an invalid signature.";
     default:
       return null;
   }
@@ -7641,7 +7649,9 @@ Expires At: 2026-07-02T12:10:00Z
 
 ## 검증 경계
 
-Vue Solana는 지갑 서명을 요청하는 부분을 돕습니다. 서버 측 검증, nonce 저장, 만료 검사, 세션 생성은 앱의 책임입니다.
+Vue Solana는 환경이 Ed25519(WebCrypto)를 지원할 때 `signMessage()` / `signIn()`을 완료하기 전에 반환된 서명을 계정의 공개 키로 검증합니다. 이는 지갑이 잘못된 바이트에 대한 서명이나 다른 계정의 서명을 반환하는 경우를 막는 최선의 방어이며, 서버 측 검증을 대체하지 않고 Ed25519를 사용할 수 없는 환경에서는 건너뜁니다. 검증에 실패한 서명은 `INVALID_SIGNATURE`로 거부됩니다.
+
+서버 측 검증, nonce 저장, 만료 검사, 세션 생성은 여전히 앱의 책임입니다.
 
 일반 텍스트에 대한 서명을 토큰 전송이나 온체인 상태 변경 권한으로 취급하지 마세요.
 
@@ -7660,6 +7670,8 @@ const message = computed(() => {
       return "This wallet does not support message signing.";
     case "USER_REJECTED":
       return "The message signature was rejected.";
+    case "INVALID_SIGNATURE":
+      return "The wallet returned an invalid signature.";
     default:
       return null;
   }
@@ -7780,7 +7792,9 @@ Expires At: 2026-07-02T12:10:00Z
 
 ## 验证边界
 
-Vue Solana 帮助请求钱包签名。你的应用负责服务端验证、nonce 存储、过期检查和会话创建。
+当环境支持 Ed25519（WebCrypto）时，Vue Solana 会在完成 `signMessage()` / `signIn()` 之前，用账户公钥验证返回的签名。这是针对钱包返回错误字节的签名或返回其他账户签名的尽力防护，不能替代服务端验证，并且在 Ed25519 不可用的环境中会跳过。未通过验证的签名会以 `INVALID_SIGNATURE` 拒绝。
+
+你的应用仍然负责服务端验证、nonce 存储、过期检查和会话创建。
 
 不要把对通用文本的签名视为转移代币或更改链上状态的许可。
 
@@ -7799,6 +7813,8 @@ const message = computed(() => {
       return "此钱包不支持消息签名。";
     case "USER_REJECTED":
       return "消息签名已被拒绝。";
+    case "INVALID_SIGNATURE":
+      return "钱包返回了无效的签名。";
     default:
       return null;
   }
@@ -7846,8 +7862,14 @@ const error = new SolanaError("RPC_FAILURE", "Unable to reach RPC");
 - `WALLET_NOT_CONNECTED`: la wallet activa no está conectada o no tiene clave pública.
 - `WALLET_FEATURE_UNSUPPORTED`: la wallet activa no soporta la feature solicitada.
 - `USER_REJECTED`: el usuario rechazó una solicitud de wallet.
+- `INVALID_SIGNATURE`: una wallet devolvió una firma de mensaje o de inicio de sesión que no coincide con la clave de su cuenta.
 - `INVALID_ADDRESS`: un string de dirección no pudo parsearse como dirección de Solana.
+- `INVALID_INPUT`: un helper recibió un endpoint, timeout o valor de opción con formato inválido.
 - `TRANSACTION_TIMEOUT`: una operación relacionada con transacción agotó el tiempo de espera.
+- `TRANSACTION_NOT_FOUND`: una firma nunca apareció en los resultados de estado RPC antes del límite de confirmación.
+- `TRANSACTION_FAILED`: una transacción enviada falló antes de alcanzar el commitment solicitado.
+- `REDIRECT_TIMEOUT`: una wallet de iOS no redirigió de vuelta a la app a tiempo.
+- `DECRYPTION_FAILED`: un callback de wallet de iOS no pudo descifrarse o decodificarse.
 - `RPC_FAILURE`: falló un envío, lectura o confirmación RPC.
 - `STORAGE_FAILURE`: el storage del navegador no pudo leerse o escribirse.
 
@@ -8000,8 +8022,14 @@ const error = new SolanaError("RPC_FAILURE", "Unable to reach RPC");
 - `WALLET_NOT_CONNECTED`: the active wallet is not connected or has no public key.
 - `WALLET_FEATURE_UNSUPPORTED`: the active wallet does not support the requested feature.
 - `USER_REJECTED`: the user rejected a wallet request.
+- `INVALID_SIGNATURE`: a wallet returned a message or sign-in signature that does not match its account key.
 - `INVALID_ADDRESS`: an address string could not be parsed as a Solana address.
+- `INVALID_INPUT`: a helper received a malformed endpoint, timeout, or option value.
 - `TRANSACTION_TIMEOUT`: a transaction-related operation timed out.
+- `TRANSACTION_NOT_FOUND`: a signature never appeared in RPC status results before the confirmation deadline.
+- `TRANSACTION_FAILED`: a submitted transaction errored before reaching the requested commitment.
+- `REDIRECT_TIMEOUT`: an iOS wallet did not redirect back to the app in time.
+- `DECRYPTION_FAILED`: an iOS wallet callback could not be decrypted or decoded.
 - `RPC_FAILURE`: an RPC send, read, or confirmation failed.
 - `STORAGE_FAILURE`: browser storage could not be read or written.
 
@@ -8154,8 +8182,14 @@ const error = new SolanaError("RPC_FAILURE", "Unable to reach RPC");
 - `WALLET_NOT_CONNECTED`: 활성 지갑이 연결되어 있지 않거나 public key가 없습니다.
 - `WALLET_FEATURE_UNSUPPORTED`: 활성 지갑이 요청한 feature를 지원하지 않습니다.
 - `USER_REJECTED`: 사용자가 지갑 요청을 거절했습니다.
+- `INVALID_SIGNATURE`: 지갑이 계정 키와 일치하지 않는 메시지 또는 로그인 서명을 반환했습니다.
 - `INVALID_ADDRESS`: 주소 문자열을 Solana 주소로 파싱할 수 없습니다.
+- `INVALID_INPUT`: helper가 잘못된 endpoint, timeout 또는 옵션 값을 받았습니다.
 - `TRANSACTION_TIMEOUT`: 트랜잭션 관련 작업이 timeout되었습니다.
+- `TRANSACTION_NOT_FOUND`: 확인 deadline 전에 서명이 RPC 상태 결과에 나타나지 않았습니다.
+- `TRANSACTION_FAILED`: 제출된 트랜잭션이 요청한 commitment에 도달하기 전에 실패했습니다.
+- `REDIRECT_TIMEOUT`: iOS 지갑이 제시간에 앱으로 redirect되지 않았습니다.
+- `DECRYPTION_FAILED`: iOS 지갑 callback을 복호화하거나 디코딩할 수 없습니다.
 - `RPC_FAILURE`: RPC send, read, confirmation이 실패했습니다.
 - `STORAGE_FAILURE`: 브라우저 storage를 읽거나 쓸 수 없습니다.
 
@@ -8308,8 +8342,14 @@ const error = new SolanaError("RPC_FAILURE", "Unable to reach RPC");
 - `WALLET_NOT_CONNECTED`：活跃钱包未连接，或没有公钥。
 - `WALLET_FEATURE_UNSUPPORTED`：活跃钱包不支持请求的功能。
 - `USER_REJECTED`：用户拒绝了钱包请求。
+- `INVALID_SIGNATURE`：钱包返回的消息签名或登录签名与其账户密钥不匹配。
 - `INVALID_ADDRESS`：地址字符串无法解析为 Solana 地址。
+- `INVALID_INPUT`：辅助函数收到了格式错误的端点、超时或选项值。
 - `TRANSACTION_TIMEOUT`：与交易相关的操作超时。
+- `TRANSACTION_NOT_FOUND`：签名在确认截止前从未出现在 RPC 状态结果中。
+- `TRANSACTION_FAILED`：已提交的交易在达到请求的确认级别之前失败。
+- `REDIRECT_TIMEOUT`：iOS 钱包未能及时重定向回应用。
+- `DECRYPTION_FAILED`：无法解密或解码 iOS 钱包回调。
 - `RPC_FAILURE`：RPC 发送、读取或确认失败。
 - `STORAGE_FAILURE`：无法读取或写入浏览器存储。
 
@@ -9250,7 +9290,7 @@ Los clusters soportados son `mainnet` (alias heredado `mainnet-beta`), `testnet`
 
 `payer` es un `TransactionSigner` de Kit que se usa como payer de comisiones y signer del cliente para transacciones enviadas por el cliente. `payerSecretKey` es un keypair Ed25519 de 64 bytes codificado en base64, con la secret key primero; el cliente deriva su dirección al crearse e importa la signing key en el primer uso, así que un keypair cuya mitad publica no coincide con su seed se rechaza en la primera firma en vez de al crear el cliente. La dirección viene de la mitad publica sin verificar, así que trata `payer.address` como no confirmado hasta que la primera firma tenga éxito. La firma importa la key con WebCrypto, que los navegadores solo exponen en un contexto seguro (`https`, o `http` en `localhost`); fuera de uno, la primera llamada a `signTransactions()` lanza un error de WebCrypto en vez de un error de key invalida. Ambos son compatibles con clientes core/Vue directos.
 
-`createSolanaClient()` compone por defecto el stack oficial de `@solana/kit-plugin-rpc`: `solanaRpc()` y `rpcAirdrop()`. `solanaRpc()` instala por si mismo el planner de transacciones y los ejecutores de firma y envio de planes. El fallback custom anterior no se usa. El cliente expone lecturas y suscripciones RPC, `planTransaction(s)` y `sendTransaction(s)`. El executor oficial agrega un blockhash nuevo, maneja limites de recursos y preflight, firma con los signers disponibles, envia la transacción y espera al commitment `confirmed` antes de resolver el envio. Un envio del cliente requiere un signer `payer`.
+`createSolanaClient()` compone por defecto el stack oficial de `@solana/kit-plugin-rpc`: `solanaRpc()` y `rpcAirdrop()` cuando no hay `commitment` configurado (un `commitment` configurado construye el mismo stack explícitamente para que llegue a la capa RPC). `solanaRpc()` instala por si mismo el planner de transacciones y los ejecutores de firma y envio de planes. El fallback custom anterior no se usa. El cliente expone lecturas y suscripciones RPC, `planTransaction(s)` y `sendTransaction(s)`. El executor oficial agrega un blockhash nuevo, maneja limites de recursos y preflight, firma con los signers disponibles, envia la transacción y espera al commitment `confirmed` antes de resolver el envio. Un envio del cliente requiere un signer `payer`.
 
 Nunca pongas un secreto crudo o `payerSecretKey` en la configuración runtime publica de Nuxt. No envíes una clave de firma con fondos al navegador de un usuario final; usa un servidor o relayer, o un signer efimero sin fondos para demos.
 
@@ -9467,7 +9507,7 @@ const signedTransaction = await wallet.signTransaction(transaction);
 ### Transacciones
 
 - `signAndSendTransaction(client, wallet, transaction, options?)`: firma y envía bytes de transacción en la red (wire) usando una wallet configurada y devuelve la firma RPC. Se delega en las wallets que exponen `signAndSendTransaction`; en caso contrario, la transacción se firma con `wallet.signTransaction` y se envía mediante `client.rpc.sendTransaction(...).send()`. Las wallets Android Mobile Wallet Adapter prefieren firma más envío RPC del lado de la app para que la app controle el envío y devuelva de forma fiable la firma RPC después del traspaso a la wallet.
-- `confirmTransactionSignature(client, signature, options?)`: espera a que una firma enviada alcance un commitment solicitado. Usa por defecto commitment `confirmed`, timeout de 60 segundos y sondeo de `client.rpc.getSignatureStatuses([signature]).send()`.
+- `confirmTransactionSignature(client, signature, options?)`: espera a que una firma enviada alcance un commitment solicitado. Usa por defecto commitment `confirmed`, timeout de 60 segundos, intervalo de sondeo de 1500 ms y sondeo de `client.rpc.getSignatureStatuses([signature]).send()`. Acepta `pollIntervalMs` (debe ser mayor que `0`), `abortSignal` y `searchTransactionHistory`. Una transacción fallida lanza `TRANSACTION_FAILED`, una firma que nunca aparece lanza `TRANSACTION_NOT_FOUND` y una espera agotada lanza `TRANSACTION_TIMEOUT`. Pasa `searchTransactionHistory: true` cuando la firma pueda haber salido de la caché de estados recientes — sin ella, una firma antigua nunca aparece en los resultados y termina en `TRANSACTION_NOT_FOUND` tras el timeout.
 
 El flujo de envio del cliente es separado de este helper consciente de wallet. El cliente expone `sendTransaction()` y `sendTransactions()` mediante el `rpcTransactionPlanSendingExecutor()` oficial instalado por `createSolanaClient()`; los composables de Vue envuelven esos metodos. Planifican, firman, envian y esperan `confirmed`; el estado `sent` se establece solo cuando termina la operación de envio y confirmación. El resultado simple expone la firma en `data.context.signature`, y el resultado batch contiene el arbol completo del plan. El sender oficial no muestra popup de wallet.
 
@@ -9501,7 +9541,7 @@ if (balance) {
 - `createSolanaError(code, message, options?)`: crea un error Solana normalizado.
 - `isSolanaError(error)`: estrecha errores desconocidos a `SolanaError`.
 - `normalizeSolanaError(cause, fallbackCode, fallbackMessage?, options?)`: convierte fallos desconocidos en `SolanaError` y mapea rechazos comunes de wallet a `USER_REJECTED`.
-- `withTimeout(promise, timeoutMs, createError)`: compite una promise contra un error de timeout proporcionado por el llamador.
+- `withTimeout(promise, timeoutMs, createError?, options?)`: compite una promise contra un error de timeout proporcionado por el llamador. Rechaza `INVALID_INPUT` para timeouts `NaN`/negativos; `{ signal }` aborta la espera con la razón del signal, y `{ code, message }` fija el error de timeout por defecto.
 - `withSolanaTimeout(promise, timeoutMs, message)`: compite una promise contra un error `TRANSACTION_TIMEOUT`.
 
 ## Modelo de error
@@ -9522,6 +9562,12 @@ try {
       case "TRANSACTION_TIMEOUT":
         // La operación agotó el tiempo; comprueba el estado de la firma antes de reintentar.
         break;
+      case "TRANSACTION_NOT_FOUND":
+        // La firma nunca llegó; es seguro reintentar.
+        break;
+      case "TRANSACTION_FAILED":
+        // La transacción falló on-chain; ver error.cause.
+        break;
       case "RPC_FAILURE":
         // RPC o confirmación falló.
         console.error(error.cause);
@@ -9537,8 +9583,14 @@ Los códigos de error estables son:
 - `WALLET_NOT_CONNECTED`
 - `WALLET_FEATURE_UNSUPPORTED`
 - `USER_REJECTED`
+- `INVALID_SIGNATURE`
 - `INVALID_ADDRESS`
+- `INVALID_INPUT`
 - `TRANSACTION_TIMEOUT`
+- `TRANSACTION_NOT_FOUND`
+- `TRANSACTION_FAILED`
+- `REDIRECT_TIMEOUT`
+- `DECRYPTION_FAILED`
 - `RPC_FAILURE`
 - `STORAGE_FAILURE`
 
@@ -9853,7 +9905,7 @@ interface SolanaConfig {
 
 `payer`는 client fee payer와 client-sent transaction signer로 사용하는 Kit `TransactionSigner`입니다. `payerSecretKey`는 secret key가 먼저 오는 base64 64-byte Ed25519 keypair이며 client 생성 시 address를 파생하고 첫 사용 시 signing key를 import합니다. 그래서 public half가 seed와 맞지 않는 keypair는 client 생성이 아니라 첫 서명 시점에 거부됩니다. address는 검증되지 않은 public half에서 나오므로 첫 서명이 성공할 때까지 `payer.address`를 미확정으로 취급하세요. 서명은 WebCrypto로 key를 import하며, 브라우저는 secure context(`https`, 또는 `localhost`의 `http`)에서만 WebCrypto를 노출합니다. 그 밖의 환경에서는 첫 `signTransactions()` 호출이 잘못된 key 오류가 아니라 WebCrypto 오류를 던집니다. 두 옵션 모두 direct core/Vue client에서 지원됩니다.
 
-`createSolanaClient()`은 기본적으로 `@solana/kit-plugin-rpc`의 official `solanaRpc()`와 `rpcAirdrop()` 스택을 compose합니다. `solanaRpc()`가 transaction planner와 plan-signing/plan-sending executor를 직접 설치합니다. 기존 custom fallback sender는 사용하지 않습니다. client는 RPC read/subscription과 `planTransaction(s)`, `sendTransaction(s)`를 노출합니다. official executor는 새 blockhash, resource limit와 preflight 처리, client signer를 이용한 서명, RPC 제출을 수행하고 send가 resolve되기 전에 `confirmed` commitment을 기다립니다. client send에는 `payer` signer가 필요합니다.
+`createSolanaClient()`은 `commitment`가 설정되지 않았을 때 기본적으로 `@solana/kit-plugin-rpc`의 official `solanaRpc()`와 `rpcAirdrop()` 스택을 compose합니다(`commitment`가 설정되면 RPC 레이어에 전달되도록 같은 스택을 명시적으로 빌드합니다). `solanaRpc()`가 transaction planner와 plan-signing/plan-sending executor를 직접 설치합니다. 기존 custom fallback sender는 사용하지 않습니다. client는 RPC read/subscription과 `planTransaction(s)`, `sendTransaction(s)`를 노출합니다. official executor는 새 blockhash, resource limit와 preflight 처리, client signer를 이용한 서명, RPC 제출을 수행하고 send가 resolve되기 전에 `confirmed` commitment을 기다립니다. client send에는 `payer` signer가 필요합니다.
 
 Nuxt public runtime config에 raw secret이나 `payerSecretKey`를 넣지 마세요. end-user browser에 funded signing key를 배포하지 말고 server/relayer 경계 또는 demo용 ephemeral signer를 사용하세요.
 
@@ -10069,7 +10121,7 @@ const signedTransaction = await wallet.signTransaction(transaction);
 ### 트랜잭션
 
 - `signAndSendTransaction(client, wallet, transaction, options?)`: configured wallet로 raw wire transaction byte에 서명하고 전송한 뒤 RPC signature를 반환합니다. `signAndSendTransaction`을 노출하는 wallet은 해당 기능에 위임되고, 그렇지 않으면 트랜잭션은 `wallet.signTransaction`으로 서명된 뒤 `client.rpc.sendTransaction(...).send()`로 제출됩니다. Android Mobile Wallet Adapter wallet은 앱이 제출을 소유하고 wallet handoff 후 RPC signature를 안정적으로 반환할 수 있도록 서명과 app-side RPC 제출을 선호합니다.
-- `confirmTransactionSignature(client, signature, options?)`: 제출된 signature가 요청한 commitment에 도달할 때까지 기다립니다. 기본값은 `confirmed` commitment, 60초 timeout, `client.rpc.getSignatureStatuses([signature]).send()` 폴링입니다.
+- `confirmTransactionSignature(client, signature, options?)`: 제출된 signature가 요청한 commitment에 도달할 때까지 기다립니다. 기본값은 `confirmed` commitment, 60초 timeout, 1500 ms poll interval, `client.rpc.getSignatureStatuses([signature]).send()` 폴링입니다. `pollIntervalMs`(`0`보다 커야 함), `abortSignal`, `searchTransactionHistory`를 받습니다. 실패한 트랜잭션은 `TRANSACTION_FAILED`, 나타나지 않은 서명은 `TRANSACTION_NOT_FOUND`, 소진된 대기는 `TRANSACTION_TIMEOUT`을 throw합니다. 서명이 최근 상태 캐시를 벗어났을 수 있으면 `searchTransactionHistory: true`를 전달하세요 — 없으면 오래된 서명이 결과에 나타나지 않아 timeout 후 `TRANSACTION_NOT_FOUND`가 됩니다.
 
 wallet-aware helper와 client-sent flow는 별개입니다. client는 `createSolanaClient()`가 설치한 official `rpcTransactionPlanSendingExecutor()`를 통해 `sendTransaction()`과 `sendTransactions()`를 노출하고 Vue composable이 이 method들을 감쌉니다. plan, sign, submit 후 `confirmed` commitment을 기다리며, send-and-confirm가 완료된 뒤에만 `sent` 상태가 됩니다. 단일 결과의 `data.context.signature`에서 제출된 signature를 확인할 수 있고, batch 결과에는 전체 plan result tree가 포함됩니다. official sender는 wallet popup을 표시하지 않습니다.
 
@@ -10103,7 +10155,7 @@ if (balance) {
 - `createSolanaError(code, message, options?)`: 정규화된 Solana error를 만듭니다.
 - `isSolanaError(error)`: unknown error를 `SolanaError`로 narrow합니다.
 - `normalizeSolanaError(cause, fallbackCode, fallbackMessage?, options?)`: unknown failure를 `SolanaError`로 변환하고 일반 wallet rejection을 `USER_REJECTED`로 매핑합니다.
-- `withTimeout(promise, timeoutMs, createError)`: promise를 caller-provided timeout error와 race합니다.
+- `withTimeout(promise, timeoutMs, createError?, options?)`: promise를 caller-provided timeout error와 race합니다. `NaN`/음수 timeout에는 `INVALID_INPUT`를 reject하고, `{ signal }`은 signal reason으로 대기를 중단하며, `{ code, message }`는 기본 timeout error를 설정합니다.
 - `withSolanaTimeout(promise, timeoutMs, message)`: promise를 `TRANSACTION_TIMEOUT` error와 race합니다.
 
 ## 오류 모델
@@ -10124,6 +10176,12 @@ try {
       case "TRANSACTION_TIMEOUT":
         // The operation timed out; check signature state before retrying.
         break;
+      case "TRANSACTION_NOT_FOUND":
+        // 서명이 land하지 않았습니다. 재시도해도 안전합니다.
+        break;
+      case "TRANSACTION_FAILED":
+        // 트랜잭션이 on-chain에서 실패했습니다. error.cause를 확인하세요.
+        break;
       case "RPC_FAILURE":
         // RPC or confirmation failed.
         console.error(error.cause);
@@ -10139,8 +10197,14 @@ try {
 - `WALLET_NOT_CONNECTED`
 - `WALLET_FEATURE_UNSUPPORTED`
 - `USER_REJECTED`
+- `INVALID_SIGNATURE`
 - `INVALID_ADDRESS`
+- `INVALID_INPUT`
 - `TRANSACTION_TIMEOUT`
+- `TRANSACTION_NOT_FOUND`
+- `TRANSACTION_FAILED`
+- `REDIRECT_TIMEOUT`
+- `DECRYPTION_FAILED`
 - `RPC_FAILURE`
 - `STORAGE_FAILURE`
 
@@ -10258,7 +10322,7 @@ Supported clusters are `mainnet` (legacy alias `mainnet-beta`), `testnet`, `devn
 
 `payer` is a Kit `TransactionSigner` used as the client's fee payer and signer for client-sent transactions. `payerSecretKey` is a base64-encoded 64-byte Ed25519 keypair with the secret key first; the client derives its address at creation and imports the signing key on first use, so a keypair whose public half does not match its seed is rejected at the first signature instead of at client creation. The address comes from the unverified public half, so treat `payer.address` as unconfirmed until the first signature succeeds. Signing imports the key through WebCrypto, which browsers expose only in a secure context (`https`, or `http` on `localhost`); outside one, the first `signTransactions()` call throws rather than returning a generic invalid-key error. Both options are supported by direct core and Vue clients.
 
-`createSolanaClient()` composes the official `@solana/kit-plugin-rpc` stack by default: `solanaRpc()` followed by `rpcAirdrop()`. `solanaRpc()` installs `rpcTransactionPlanner()`, `rpcTransactionPlanSigningExecutor()`, and `rpcTransactionPlanSendingExecutor()` itself, so the client exposes RPC reads and subscriptions plus `planTransaction(s)`, `signTransaction(s)`, and `sendTransaction(s)` with no extra plugin. The old custom fallback sender is not used. Its official sending executor adds a fresh blockhash, resource-limit and preflight handling, signs with the available client signers, submits the transaction, and waits for `confirmed` commitment before the send resolves. A client send requires a `payer` signer.
+`createSolanaClient()` composes the official `@solana/kit-plugin-rpc` stack by default: `solanaRpc()` followed by `rpcAirdrop()` when no `commitment` is configured (a configured `commitment` builds the same stack explicitly so it reaches the RPC layer). `solanaRpc()` installs `rpcTransactionPlanner()`, `rpcTransactionPlanSigningExecutor()`, and `rpcTransactionPlanSendingExecutor()` itself, so the client exposes RPC reads and subscriptions plus `planTransaction(s)`, `signTransaction(s)`, and `sendTransaction(s)` with no extra plugin. The old custom fallback sender is not used. Its official sending executor adds a fresh blockhash, resource-limit and preflight handling, signs with the available client signers, submits the transaction, and waits for `confirmed` commitment before the send resolves. A client send requires a `payer` signer.
 
 Never put a raw secret or `payerSecretKey` in Nuxt public runtime config. Do not ship a funded signing key to an end-user browser; use a server or relayer boundary, or an ephemeral unfunded signer for demos.
 
@@ -10476,7 +10540,7 @@ const signedTransaction = await wallet.signTransaction(transaction);
 ### Transactions
 
 - `signAndSendTransaction(client, wallet, transaction, options?)`: signs and sends raw wire transaction bytes using a configured wallet and returns the RPC signature. Wallets that expose `signAndSendTransaction` are delegated to; otherwise the transaction is signed with `wallet.signTransaction` and submitted through `client.rpc.sendTransaction(...).send()`. Android Mobile Wallet Adapter wallets prefer signing plus app-side RPC submission so the app owns submission and reliably returns the RPC signature after the wallet handoff.
-- `confirmTransactionSignature(client, signature, options?)`: waits for a submitted signature to reach a requested commitment. Defaults to `confirmed` commitment, a 60 second timeout, and polling `client.rpc.getSignatureStatuses([signature]).send()`.
+- `confirmTransactionSignature(client, signature, options?)`: waits for a submitted signature to reach a requested commitment. Defaults to `confirmed` commitment, a 60 second timeout, a 1500 ms poll interval, and polling `client.rpc.getSignatureStatuses([signature]).send()`. Accepts `pollIntervalMs` (must be greater than `0`), `abortSignal`, and `searchTransactionHistory`. A failed transaction throws `TRANSACTION_FAILED`, a signature that never appears throws `TRANSACTION_NOT_FOUND`, and an exhausted wait throws `TRANSACTION_TIMEOUT`. Pass `searchTransactionHistory: true` when the signature may have left the recent status cache — without it an older signature never appears in results and resolves to `TRANSACTION_NOT_FOUND` after the timeout.
 
 The client-sent flow is separate from this wallet-aware helper. The client exposes `sendTransaction()` and `sendTransactions()` through the official `rpcTransactionPlanSendingExecutor()` that `solanaRpc()` installs inside `createSolanaClient()`; the Vue composables wrap those methods. They plan, sign, submit, and wait for `confirmed` commitment; the `sent` status is set only after that send-and-confirm operation completes. A single result exposes the submitted signature at `data.context.signature`, while a batch result contains the full plan result tree. The official sender does not show a wallet popup.
 
@@ -10510,7 +10574,7 @@ if (balance) {
 - `createSolanaError(code, message, options?)`: creates a normalized Solana error.
 - `isSolanaError(error)`: narrows unknown errors to `SolanaError`.
 - `normalizeSolanaError(cause, fallbackCode, fallbackMessage?, options?)`: converts unknown failures into `SolanaError` and maps common wallet rejections to `USER_REJECTED`.
-- `withTimeout(promise, timeoutMs, createError)`: races a promise against a caller-provided timeout error.
+- `withTimeout(promise, timeoutMs, createError?, options?)`: races a promise against a caller-provided timeout error. Rejects `INVALID_INPUT` for `NaN`/negative timeouts; `{ signal }` aborts the wait with the signal's reason, and `{ code, message }` sets the default timeout error.
 - `withSolanaTimeout(promise, timeoutMs, message)`: races a promise against a `TRANSACTION_TIMEOUT` error.
 
 ## Error Model
@@ -10531,6 +10595,12 @@ try {
       case "TRANSACTION_TIMEOUT":
         // The operation timed out; check signature state before retrying.
         break;
+      case "TRANSACTION_NOT_FOUND":
+        // The signature never landed; safe to retry.
+        break;
+      case "TRANSACTION_FAILED":
+        // The transaction errored on-chain; see error.cause.
+        break;
       case "RPC_FAILURE":
         // RPC or confirmation failed.
         console.error(error.cause);
@@ -10546,8 +10616,14 @@ Stable error codes are:
 - `WALLET_NOT_CONNECTED`
 - `WALLET_FEATURE_UNSUPPORTED`
 - `USER_REJECTED`
+- `INVALID_SIGNATURE`
 - `INVALID_ADDRESS`
+- `INVALID_INPUT`
 - `TRANSACTION_TIMEOUT`
+- `TRANSACTION_NOT_FOUND`
+- `TRANSACTION_FAILED`
+- `REDIRECT_TIMEOUT`
+- `DECRYPTION_FAILED`
 - `RPC_FAILURE`
 - `STORAGE_FAILURE`
 
@@ -10763,7 +10839,7 @@ interface SolanaConfig {
 
 `payer` 是 Kit `TransactionSigner`，用作客户端发送交易时的费用支付方和签名者。`payerSecretKey` 是 base64 编码的 64 字节 Ed25519 keypair，secret key 在前；client 会在创建时派生其 address，并在首次使用时导入 signing key，因此 public half 与 seed 不匹配的 keypair 会在第一次签名时被拒绝，而不是在创建 client 时。address 来自未经校验的 public half，所以在第一次签名成功之前请将 `payer.address` 视为未确认。签名通过 WebCrypto 导入 key，而浏览器只在 secure context（`https`，或 `localhost` 上的 `http`）中暴露 WebCrypto；在此之外，第一次 `signTransactions()` 调用会抛出 WebCrypto 错误，而不是 key 无效的错误。两个选项都支持 direct core/Vue client。
 
-`createSolanaClient()` 默认组合 `@solana/kit-plugin-rpc` 的官方 `solanaRpc()` 和 `rpcAirdrop()`。`solanaRpc()` 会自行安装 transaction planner 以及 plan-signing 和 plan-sending executor。旧的 custom fallback sender 不再使用。客户端暴露 RPC 读取和订阅，以及 `planTransaction(s)` 和 `sendTransaction(s)`。官方 executor 会获取新的 blockhash、处理 resource limit 和 preflight、使用可用 signer 签名、提交 RPC 交易，并在 send resolve 前等待 `confirmed` commitment。client-sent 交易需要 `payer` signer。
+`createSolanaClient()` 在未配置 `commitment` 时默认组合 `@solana/kit-plugin-rpc` 的官方 `solanaRpc()` 和 `rpcAirdrop()`（配置了 `commitment` 会显式构建相同 stack 使其到达 RPC 层）。`solanaRpc()` 会自行安装 transaction planner 以及 plan-signing 和 plan-sending executor。旧的 custom fallback sender 不再使用。客户端暴露 RPC 读取和订阅，以及 `planTransaction(s)` 和 `sendTransaction(s)`。官方 executor 会获取新的 blockhash、处理 resource limit 和 preflight、使用可用 signer 签名、提交 RPC 交易，并在 send resolve 前等待 `confirmed` commitment。client-sent 交易需要 `payer` signer。
 
 永远不要把 raw secret 或 `payerSecretKey` 放入 Nuxt public runtime config。不要把有资金的 signing key 发送到 end-user browser；请使用 server 或 relayer 边界，demo 则使用未充值的 ephemeral signer。
 
@@ -10979,7 +11055,7 @@ const signedTransaction = await wallet.signTransaction(transaction);
 ### 交易
 
 - `signAndSendTransaction(client, wallet, transaction, options?)`：使用配置的钱包签名并发送原始 wire 交易字节，返回 RPC signature。暴露 `signAndSendTransaction` 的钱包会委托给它；否则交易用 `wallet.signTransaction` 签名，并通过 `client.rpc.sendTransaction(...).send()` 提交。Android Mobile Wallet Adapter 钱包优先使用签名加应用侧 RPC 提交，让应用拥有提交过程，并能在钱包 handoff 后可靠返回 RPC signature。
-- `confirmTransactionSignature(client, signature, options?)`：等待已提交签名达到请求的 commitment。默认使用 `confirmed` commitment、60 秒超时，并轮询 `client.rpc.getSignatureStatuses([signature]).send()`。
+- `confirmTransactionSignature(client, signature, options?)`：等待已提交签名达到请求的 commitment。默认使用 `confirmed` commitment、60 秒超时、1500 毫秒轮询间隔，并轮询 `client.rpc.getSignatureStatuses([signature]).send()`。接受 `pollIntervalMs`（必须大于 `0`）、`abortSignal` 和 `searchTransactionHistory`。失败的交易抛出 `TRANSACTION_FAILED`，从未出现的签名抛出 `TRANSACTION_NOT_FOUND`，耗尽的等待抛出 `TRANSACTION_TIMEOUT`。当签名可能已离开近期状态缓存时，请传递 `searchTransactionHistory: true`——否则旧签名不会出现在结果中，超时后将得到 `TRANSACTION_NOT_FOUND`。
 
 client-sent flow 与这个感知钱包的 helper 分开。client 通过 `createSolanaClient()` 安装的官方 `rpcTransactionPlanSendingExecutor()` 暴露 `sendTransaction()` 和 `sendTransactions()`，Vue composable 包装这些方法。它们会 plan、sign、submit 并等待 `confirmed` commitment；只有 send-and-confirm 操作完成后状态才会变为 `sent`。单笔结果在 `data.context.signature` 提供已提交的签名，batch 结果包含完整的 plan result tree。官方 sender 不显示钱包弹窗。
 
@@ -11013,7 +11089,7 @@ if (balance) {
 - `createSolanaError(code, message, options?)`：创建规范化 Solana 错误。
 - `isSolanaError(error)`：把 unknown error 收窄为 `SolanaError`。
 - `normalizeSolanaError(cause, fallbackCode, fallbackMessage?, options?)`：把未知失败转换为 `SolanaError`，并把常见钱包拒绝映射到 `USER_REJECTED`。
-- `withTimeout(promise, timeoutMs, createError)`：用调用方提供的超时错误与 promise 竞争。
+- `withTimeout(promise, timeoutMs, createError?, options?)`：用调用方提供的超时错误与 promise 竞争。对 `NaN`/负数超时拒绝 `INVALID_INPUT`；`{ signal }` 以 signal 的原因中止等待，`{ code, message }` 设置默认超时错误。
 - `withSolanaTimeout(promise, timeoutMs, message)`：用 `TRANSACTION_TIMEOUT` 错误与 promise 竞争。
 
 ## 错误模型
@@ -11032,7 +11108,13 @@ try {
         // The user declined a wallet prompt.
         break;
       case "TRANSACTION_TIMEOUT":
-        // The operation timed out; check signature state before retrying.
+        // 操作超时；重试前请检查签名状态。
+        break;
+      case "TRANSACTION_NOT_FOUND":
+        // 签名从未落地；可安全重试。
+        break;
+      case "TRANSACTION_FAILED":
+        // 交易在链上失败；请查看 error.cause。
         break;
       case "RPC_FAILURE":
         // RPC or confirmation failed.
@@ -11049,8 +11131,14 @@ try {
 - `WALLET_NOT_CONNECTED`
 - `WALLET_FEATURE_UNSUPPORTED`
 - `USER_REJECTED`
+- `INVALID_SIGNATURE`
 - `INVALID_ADDRESS`
+- `INVALID_INPUT`
 - `TRANSACTION_TIMEOUT`
+- `TRANSACTION_NOT_FOUND`
+- `TRANSACTION_FAILED`
+- `REDIRECT_TIMEOUT`
+- `DECRYPTION_FAILED`
 - `RPC_FAILURE`
 - `STORAGE_FAILURE`
 
@@ -11139,7 +11227,7 @@ Los clusters soportados son `mainnet` (alias heredado `mainnet-beta`), `devnet`,
 
 `payer` y `payerSecretKey` son compatibles con clientes Vue/core directos. Un envio del cliente requiere un `payer`. `payerSecretKey` deriva su dirección al crear el cliente desde la mitad publica sin verificar, así que trata `payer.address` como no confirmado hasta que la primera firma tenga éxito, y un keypair que no coincide se rechaza en la primera firma en vez de al crear el cliente. La firma importa la key con WebCrypto, que los navegadores solo exponen en un contexto seguro (`https`, o `http` en `localhost`). Nunca pongas un secreto crudo o `payerSecretKey` en la configuración runtime publica de Nuxt, y nunca envíes una clave de firma con fondos al navegador de un usuario final.
 
-El cliente por defecto de `createSolanaPlugin()` usa la composición oficial `solanaRpc()` y `rpcAirdrop()`; `solanaRpc()` instala por si mismo el planner de transacciones y los ejecutores de firma y envio de planes. El fallback custom anterior no se usa. El executor oficial espera el commitment `confirmed` antes de que `execute()` resuelva y `status` sea `sent`.
+El cliente por defecto de `createSolanaPlugin()` usa la composición oficial `solanaRpc()` y `rpcAirdrop()` cuando no hay `commitment` configurado (un `commitment` configurado construye el mismo stack explícitamente para que llegue a la capa RPC); `solanaRpc()` instala por si mismo el planner de transacciones y los ejecutores de firma y envio de planes. El fallback custom anterior no se usa. El executor oficial espera el commitment `confirmed` antes de que `execute()` resuelva y `status` sea `sent`.
 
 ### Ciclo de vida del cliente y del plugin
 
@@ -11160,6 +11248,18 @@ import { computed, ref } from "vue";
 const cluster = ref<SolanaCluster>("devnet");
 const plugin = computed(() => createSolanaPlugin({ cluster: cluster.value }));
 ```
+
+Libera el plugin cuando desmontes tu app. `createSolanaPlugin()` inicia una suscripción de descubrimiento de Wallet Standard y un arranque diferido; `dispose()` detiene ambos para que no sobrevivan a la app:
+
+```ts
+export const solana = createSolanaPlugin({ cluster: "devnet" });
+const app = createApp(App).use(solana);
+
+app.unmount();
+solana.dispose();
+```
+
+Es seguro llamarlo más de una vez y antes de `use()`. Las apps de Nuxt no necesitan código adicional: el plugin de runtime del módulo lo conecta a `vueApp.onUnmount()`.
 
 Un cliente Kit ejecuta sus plugins `createClient().use(...)` durante la construcción. Cuando uno de esos plugins es asíncrono, el cliente — y cualquier contexto construido a partir de él — solo se activa después de que esa promesa se resuelva. Difiere el trabajo real de RPC y wallet a hooks del ciclo de vida del cliente o acciones del usuario después de la hidratación en lugar de ejecutarlo durante el setup o el SSR.
 
@@ -11623,6 +11723,8 @@ La wallet devuelve una firma sobre `signedMessage` — el mensaje SIWS que el us
 
 El servidor debe re-derivar el mensaje esperado a partir del nonce que emitió (o validar todos los campos del mensaje recibido) para rechazar nonces expirados o reutilizados.
 
+Antes de que `signMessage()` o `signIn()` se resuelvan, el adaptador también comprueba la firma devuelta contra el `publicKey` de la cuenta cuando Ed25519 (WebCrypto) está disponible, y rechaza con `INVALID_SIGNATURE` si no coincide. Es una protección de mejor esfuerzo del lado del cliente frente a una wallet que se comporta mal; se omite donde Ed25519 no está disponible, así que la comprobación en el servidor anterior es lo que realmente autentica al usuario.
+
 ## Composables de obtención de datos
 
 `useRequest`, `useSubscription` y `useTrackedData` son la capa de datos estilo SWR, construida sobre las primitivas de stores reactivos de Kit:
@@ -11868,25 +11970,25 @@ const { signature, confirmation, status, loading, error, confirm, reset } =
 await confirm("PASTE_SUBMITTED_SIGNATURE", { commitment: "finalized" });
 ```
 
-El composable conserva la `signature` enviada cuando la confirmación agota el tiempo o la llamada RPC falla, para que las apps aún puedan mostrar un enlace de explorador mientras muestran `error` al usuario.
+El composable conserva la `signature` enviada cuando la confirmación agota el tiempo o la llamada RPC falla, para que las apps aún puedan mostrar un enlace de explorador mientras muestran `error` al usuario. Las opciones se pasan a `confirmTransactionSignature()`: `commitment`, `timeoutMs`, `pollIntervalMs`, `abortSignal` y `searchTransactionHistory`. Una transacción fallida muestra `TRANSACTION_FAILED`, una firma que nunca aparece muestra `TRANSACTION_NOT_FOUND` y una espera agotada muestra `TRANSACTION_TIMEOUT`.
 
 ## Seguir estado de firma
 
 ```ts
 import { useSignatureStatus } from "@vue-solana/vue/useSignatureStatus";
 
-const { status, loading, error, refresh, stopPolling, stopSubscription } = useSignatureStatus(
+const { status, loading, error, refresh, stopPolling } = useSignatureStatus(
   "PASTE_SUBMITTED_SIGNATURE",
   {
     pollIntervalMs: 5_000,
     searchTransactionHistory: true,
-    subscribe: true,
-    commitment: "confirmed",
   },
 );
 ```
 
-El sondeo usa `getSignatureStatuses()` en cada intervalo, así que detenlo cuando la UI ya no necesite actualizaciones. Llamar a `stopPolling()` limpia el intervalo actual y evita reinicios automáticos del sondeo para esa instancia del composable. Las firmas inválidas limpian `status` obsoleto, establecen `error` y no llaman a RPC ni inician sondeo. Los valores inválidos de `pollIntervalMs` menores o iguales a `0` establecen un `RangeError` y no inician sondeo. `subscribe: true` usa `onSignature()` y elimina el listener al desmontar el componente. Llamar a `stopSubscription()` elimina el listener de firma actual y evita reinicios automáticos para esa instancia del composable.
+No existe una opción `commitment` por llamada: `getSignatureStatuses()` no acepta ninguna, así que las lecturas usan el commitment incluido en el endpoint. Configúralo en el endpoint o en `createSolanaPlugin()`. Para un commitment por llamada usa `useTransactionConfirmation()`.
+
+El sondeo usa `getSignatureStatuses()` con un `setTimeout` encadenado, así que un RPC lento retrasa el siguiente tick pero nunca se solapa consigo mismo. Llamar a `stopPolling()` limpia el temporizador actual e impide más ticks automáticos — hasta que la firma observada cambia, lo que reinicia el sondeo para la nueva firma. Las firmas inválidas limpian `status` obsoleto, establecen `error` y no llaman a RPC ni inician sondeo. Los valores inválidos de `pollIntervalMs` menores o iguales a `0` establecen un `SolanaError` con código `RPC_FAILURE` y no inician sondeo.
 
 ## App de ejemplo
 
@@ -11969,7 +12071,7 @@ createApp(App).use(
 
 `payer`와 `payerSecretKey`는 direct Vue/core client에서 지원됩니다. client-sent transaction에는 `payer`가 필요합니다. `payerSecretKey`는 client 생성 시 검증되지 않은 public half에서 address를 파생하므로 첫 서명이 성공할 때까지 `payer.address`를 미확정으로 취급하세요. 또한 맞지 않는 keypair는 client 생성이 아니라 첫 서명 시점에 거부됩니다. 서명은 WebCrypto로 key를 import하며, 브라우저는 secure context(`https`, 또는 `localhost`의 `http`)에서만 WebCrypto를 노출합니다. Nuxt public runtime config에 raw secret이나 `payerSecretKey`를 넣지 말고, funded signing key를 end-user browser에 보내지 마세요.
 
-`createSolanaPlugin()`의 default client는 official `solanaRpc()`와 `rpcAirdrop()` 구성을 사용하고, `solanaRpc()`가 transaction planner와 plan-signing/plan-sending executor를 직접 설치합니다. 기존 custom fallback sender는 사용하지 않습니다. official executor는 `execute()`가 resolve되고 `status`가 `sent`가 되기 전에 `confirmed` commitment을 기다립니다.
+`createSolanaPlugin()`의 default client는 `commitment`가 설정되지 않았을 때 official `solanaRpc()`와 `rpcAirdrop()` 구성을 사용하고(`commitment`가 설정되면 RPC 레이어에 전달되도록 같은 스택을 명시적으로 빌드합니다), `solanaRpc()`가 transaction planner와 plan-signing/plan-sending executor를 직접 설치합니다. 기존 custom fallback sender는 사용하지 않습니다. official executor는 `execute()`가 resolve되고 `status`가 `sent`가 되기 전에 `confirmed` commitment을 기다립니다.
 
 ### Client와 Plugin 수명 주기
 
@@ -11990,6 +12092,18 @@ import { computed, ref } from "vue";
 const cluster = ref<SolanaCluster>("devnet");
 const plugin = computed(() => createSolanaPlugin({ cluster: cluster.value }));
 ```
+
+App을 teardown할 때 plugin을 정리하세요. `createSolanaPlugin()`은 Wallet Standard discovery 구독과 지연된 bootstrap을 시작하며, `dispose()`가 둘 다 중단해 app이 사라진 뒤에도 남지 않게 합니다:
+
+```ts
+export const solana = createSolanaPlugin({ cluster: "devnet" });
+const app = createApp(App).use(solana);
+
+app.unmount();
+solana.dispose();
+```
+
+여러 번 호출해도 되고 `use()` 전에 호출해도 안전합니다. Nuxt app은 코드가 필요 없습니다. 모듈의 runtime plugin이 `vueApp.onUnmount()`에 연결해 줍니다.
 
 Kit client는 생성 중에 `createClient().use(...)` plugin을 실행합니다. 그중 하나가 async이면 client — 그리고 그로부터 만들어진 context — 는 그 promise가 resolve된 뒤에야 활성화됩니다. 실제 RPC와 wallet 작업은 setup이나 SSR 중에 실행하지 말고 hydration 이후 client lifecycle hook이나 사용자 동작으로 미루세요.
 
@@ -12453,6 +12567,8 @@ async function handleSignIn() {
 
 서버는 발급한 nonce로부터 기대하는 메시지를 다시 도출하거나 수신된 메시지의 모든 필드를 검증하여, 만료되었거나 재사용된 nonce를 거부해야 합니다.
 
+`signMessage()` 또는 `signIn()`이 완료되기 전에 어댑터는 Ed25519(WebCrypto)를 사용할 수 있는 경우 반환된 서명을 계정의 `publicKey`로도 검증하며, 일치하지 않으면 `INVALID_SIGNATURE`로 거부합니다. 이는 잘못 동작하는 지갑에 대비한 최선의 클라이언트 측 방어이며 Ed25519를 사용할 수 없는 곳에서는 건너뛰므로, 실제로 사용자를 인증하는 것은 위의 서버 측 검증입니다.
+
 ## 데이터 페칭 컴포저블
 
 `useRequest`, `useSubscription`, `useTrackedData`는 Kit reactive store 프리미티브 위에 구축된 SWR 스타일 데이터 레이어입니다:
@@ -12698,25 +12814,25 @@ const { signature, confirmation, status, loading, error, confirm, reset } =
 await confirm("PASTE_SUBMITTED_SIGNATURE", { commitment: "finalized" });
 ```
 
-이 composable은 confirmation timeout 또는 RPC failure가 발생해도 제출된 `signature`를 유지하므로, 앱은 사용자에게 `error`를 표시하면서도 explorer 링크를 계속 보여줄 수 있습니다.
+이 composable은 confirmation timeout 또는 RPC failure가 발생해도 제출된 `signature`를 유지하므로, 앱은 사용자에게 `error`를 표시하면서도 explorer 링크를 계속 보여줄 수 있습니다. 옵션은 `confirmTransactionSignature()`로 그대로 전달됩니다: `commitment`, `timeoutMs`, `pollIntervalMs`, `abortSignal`, `searchTransactionHistory`. 실패한 트랜잭션은 `TRANSACTION_FAILED`, 나타나지 않은 서명은 `TRANSACTION_NOT_FOUND`, 소진된 대기는 `TRANSACTION_TIMEOUT`으로 표시됩니다.
 
 ## Signature Status 추적
 
 ```ts
 import { useSignatureStatus } from "@vue-solana/vue/useSignatureStatus";
 
-const { status, loading, error, refresh, stopPolling, stopSubscription } = useSignatureStatus(
+const { status, loading, error, refresh, stopPolling } = useSignatureStatus(
   "PASTE_SUBMITTED_SIGNATURE",
   {
     pollIntervalMs: 5_000,
     searchTransactionHistory: true,
-    subscribe: true,
-    commitment: "confirmed",
   },
 );
 ```
 
-Polling은 interval마다 `getSignatureStatuses()`를 사용하므로 UI에 update가 더 이상 필요하지 않으면 polling을 중지하세요. `stopPolling()`은 현재 interval을 clear하고 해당 composable instance에서 automatic polling restart를 방지합니다. 잘못된 signature는 stale `status`를 clear하고 `error`를 설정하며 RPC를 호출하거나 polling을 시작하지 않습니다. `0` 이하의 잘못된 `pollIntervalMs` 값은 `RangeError`를 설정하고 polling을 시작하지 않습니다. `subscribe: true`는 `onSignature()`를 사용하고 component unmount 시 listener를 제거합니다. `stopSubscription()`은 현재 signature listener를 제거하고 해당 composable instance에서 automatic restart를 방지합니다.
+호출당 `commitment` 옵션은 없습니다. `getSignatureStatuses()`가 이를 받지 않으므로 읽기는 endpoint에 설정된 commitment를 사용합니다. endpoint 또는 `createSolanaPlugin()`에서 설정하세요. 호출당 commitment가 필요하면 `useTransactionConfirmation()`을 사용하세요.
+
+Polling은 체인된 `setTimeout`으로 `getSignatureStatuses()`를 사용하므로, 느린 RPC는 다음 tick을 지연시킬 뿐 절대 겹치지 않습니다. `stopPolling()`은 현재 타이머를 clear하고 이후 자동 tick을 막습니다 — 단 감시 중인 signature가 바뀌면 새 signature에 대한 polling이 다시 시작됩니다. 잘못된 signature는 stale `status`를 clear하고 `error`를 설정하며 RPC를 호출하거나 polling을 시작하지 않습니다. `0` 이하의 잘못된 `pollIntervalMs` 값은 코드가 `RPC_FAILURE`인 `SolanaError`를 설정하고 polling을 시작하지 않습니다.
 
 ## 예제 앱
 
@@ -12799,7 +12915,7 @@ Supported clusters are `mainnet` (legacy alias `mainnet-beta`), `devnet`, `testn
 
 `payer` and `payerSecretKey` are supported by direct Vue plugin/core clients. A client-sent transaction requires a `payer`. `payerSecretKey` derives its address at client creation from the unverified public half, so treat `payer.address` as unconfirmed until the first signature succeeds, and a mismatched keypair is rejected at the first signature rather than at creation. Signing imports the key through WebCrypto, which browsers expose only in a secure context (`https`, or `http` on `localhost`). Never put a raw secret or `payerSecretKey` in Nuxt public runtime config, and never ship a funded signing key to an end-user browser.
 
-The default client created by `createSolanaPlugin()` uses the official `solanaRpc()` + `rpcAirdrop()` composition; `solanaRpc()` itself installs the planner, the plan-signing executor, and the plan-sending executor. The old custom fallback sender is not used. The official sending executor waits for `confirmed` commitment before `execute()` resolves and sets `status` to `sent`.
+The default client created by `createSolanaPlugin()` uses the official `solanaRpc()` + `rpcAirdrop()` composition when no `commitment` is configured; `solanaRpc()` itself installs the planner, the plan-signing executor, and the plan-sending executor. A configured `commitment` builds the same stack explicitly so the commitment reaches the RPC layer. The old custom fallback sender is not used. The official sending executor waits for `confirmed` commitment before `execute()` resolves and sets `status` to `sent`.
 
 ### Client and Plugin Lifecycle
 
@@ -12820,6 +12936,18 @@ import { computed, ref } from "vue";
 const cluster = ref<SolanaCluster>("devnet");
 const plugin = computed(() => createSolanaPlugin({ cluster: cluster.value }));
 ```
+
+Dispose of the plugin when you tear your app down. `createSolanaPlugin()` starts a Wallet Standard discovery subscription and a deferred bootstrap; `dispose()` stops both so they do not outlive the app:
+
+```ts
+export const solana = createSolanaPlugin({ cluster: "devnet" });
+const app = createApp(App).use(solana);
+
+app.unmount();
+solana.dispose();
+```
+
+It is safe to call more than once and before `use()`. Nuxt apps need no code: the module's runtime plugin wires it to `vueApp.onUnmount()`.
 
 A Kit client runs its `createClient().use(...)` plugins during construction. When one of those plugins is async, the client — and any context built from it — only activates after that promise resolves. Defer real RPC and wallet work to client lifecycle hooks or user actions after hydration rather than running it during setup or SSR.
 
@@ -13286,6 +13414,8 @@ The wallet returns a signature over `signedMessage` — the SIWS message the use
 
 The server must re-derive the expected message from the nonce it issued (or validate every field of the received message) so expired or replayed nonces are rejected.
 
+Before either `signMessage()` or `signIn()` resolves, the adapter also checks the returned signature against the account's `publicKey` where Ed25519 (WebCrypto) is available, rejecting with `INVALID_SIGNATURE` on a mismatch. That is a best-effort client-side guard against a misbehaving wallet — it is skipped where Ed25519 is unavailable, so the server-side check above is what actually authenticates the user.
+
 ## Data Fetching Composables
 
 `useRequest`, `useSubscription`, and `useTrackedData` are the SWR-style data layer, built on the Kit reactive-store primitives:
@@ -13529,25 +13659,25 @@ const { signature, confirmation, status, loading, error, confirm, reset } =
 await confirm("PASTE_SUBMITTED_SIGNATURE", { commitment: "finalized" });
 ```
 
-The composable preserves the submitted `signature` when confirmation times out or the RPC call fails, so apps can still show an explorer link while surfacing `error` to the user.
+The composable preserves the submitted `signature` when confirmation times out or the RPC call fails, so apps can still show an explorer link while surfacing `error` to the user. Options pass through to `confirmTransactionSignature()`: `commitment`, `timeoutMs`, `pollIntervalMs`, `abortSignal`, and `searchTransactionHistory`. A failed transaction surfaces `TRANSACTION_FAILED`, a signature that never appears surfaces `TRANSACTION_NOT_FOUND`, and an exhausted wait surfaces `TRANSACTION_TIMEOUT`.
 
 ## Track Signature Status
 
 ```ts
 import { useSignatureStatus } from "@vue-solana/vue/useSignatureStatus";
 
-const { status, loading, error, refresh, stopPolling, stopSubscription } = useSignatureStatus(
+const { status, loading, error, refresh, stopPolling } = useSignatureStatus(
   "PASTE_SUBMITTED_SIGNATURE",
   {
     pollIntervalMs: 5_000,
     searchTransactionHistory: true,
-    subscribe: true,
-    commitment: "confirmed",
   },
 );
 ```
 
-Polling uses `getSignatureStatuses()` on every interval, so stop polling when the UI no longer needs updates. Calling `stopPolling()` clears the current interval and prevents automatic polling restarts for that composable instance. Invalid signatures clear stale `status`, set `error`, and do not call RPC or start polling. Invalid `pollIntervalMs` values less than or equal to `0` set a `RangeError` and do not start polling. `subscribe: true` uses `onSignature()` and removes the listener on component unmount. Calling `stopSubscription()` removes the current signature listener and prevents automatic restarts for that composable instance.
+There is no per-call `commitment` option: `getSignatureStatuses()` accepts none, so reads use the commitment baked into the endpoint. Set it on the endpoint or on `createSolanaPlugin()`. For a per-call commitment use `useTransactionConfirmation()`.
+
+Polling uses `getSignatureStatuses()` on a chained `setTimeout`, so a slow RPC delays the next tick but never overlaps itself. Calling `stopPolling()` clears the current timer and prevents further automatic ticks — until the watched signature changes, which restarts polling for the new signature. Invalid signatures clear stale `status`, set `error`, and do not call RPC or start polling. Invalid `pollIntervalMs` values less than or equal to `0` set an `RPC_FAILURE` `SolanaError` and do not start polling.
 
 ## Example App
 
@@ -13630,7 +13760,7 @@ createApp(App).use(
 
 `payer` 和 `payerSecretKey` 支持 direct Vue/core client。client-sent 交易需要 `payer`。`payerSecretKey` 在创建 client 时从未经校验的 public half 派生 address，因此在第一次签名成功之前请将 `payer.address` 视为未确认；不匹配的 keypair 会在第一次签名时被拒绝，而不是在创建时。签名通过 WebCrypto 导入 key，而浏览器只在 secure context（`https`，或 `localhost` 上的 `http`）中暴露 WebCrypto。永远不要把 raw secret 或 `payerSecretKey` 放入 Nuxt public runtime config，也不要把有资金的 signing key 发送到 end-user browser。
 
-`createSolanaPlugin()` 的默认 client 使用官方 `solanaRpc()` 和 `rpcAirdrop()` 组合，`solanaRpc()` 会自行安装 transaction planner 以及 plan-signing 和 plan-sending executor。旧的 custom fallback sender 不再使用。官方 executor 会在 `execute()` resolve、`status` 变为 `sent` 之前等待 `confirmed` commitment。
+`createSolanaPlugin()` 的默认 client 在未配置 `commitment` 时使用官方 `solanaRpc()` 和 `rpcAirdrop()` 组合（配置了 `commitment` 会显式构建相同 stack 使其到达 RPC 层），`solanaRpc()` 会自行安装 transaction planner 以及 plan-signing 和 plan-sending executor。旧的 custom fallback sender 不再使用。官方 executor 会在 `execute()` resolve、`status` 变为 `sent` 之前等待 `confirmed` commitment。
 
 ### 客户端与插件生命周期
 
@@ -13651,6 +13781,18 @@ import { computed, ref } from "vue";
 const cluster = ref<SolanaCluster>("devnet");
 const plugin = computed(() => createSolanaPlugin({ cluster: cluster.value }));
 ```
+
+拆除应用时请释放该 plugin。`createSolanaPlugin()` 会启动一个 Wallet Standard 发现订阅和一个延迟 bootstrap；`dispose()` 会同时停止它们，使它们不会比应用活得更久：
+
+```ts
+export const solana = createSolanaPlugin({ cluster: "devnet" });
+const app = createApp(App).use(solana);
+
+app.unmount();
+solana.dispose();
+```
+
+可以安全地多次调用，也可以在 `use()` 之前调用。Nuxt 应用无需任何代码：模块的 runtime plugin 会把它接到 `vueApp.onUnmount()` 上。
 
 Kit client 会在构建期间运行其 `createClient().use(...)` 插件。当其中某个插件是异步的，client——以及由它构建的任何 context——只会在该 promise resolve 后才激活。请把真正的 RPC 和钱包工作推迟到 hydration 之后的客户端生命周期钩子或用户操作，而不要在 setup 或 SSR 期间运行。
 
@@ -14114,6 +14256,8 @@ async function handleSignIn() {
 
 服务端必须从其签发的 nonce 重新推导预期消息（或验证收到消息的每个字段），以拒绝过期或重放的 nonce。
 
+在 `signMessage()` 或 `signIn()` 完成之前，当 Ed25519（WebCrypto）可用时，适配器还会用账户的 `publicKey` 校验返回的签名，不匹配时以 `INVALID_SIGNATURE` 拒绝。这是针对行为异常钱包的尽力客户端防护，在 Ed25519 不可用时会跳过，因此真正完成用户身份验证的是上面的服务端校验。
+
 ## 数据获取 Composables
 
 `useRequest`、`useSubscription` 和 `useTrackedData` 是构建在 Kit 响应式 store 原语之上的 SWR 风格数据层：
@@ -14359,25 +14503,25 @@ const { signature, confirmation, status, loading, error, confirm, reset } =
 await confirm("PASTE_SUBMITTED_SIGNATURE", { commitment: "finalized" });
 ```
 
-当确认超时或 RPC 调用失败时，该 composable 会保留已提交的 `signature`，因此应用仍然可以展示 explorer 链接，同时向用户展示 `error`。
+当确认超时或 RPC 调用失败时，该 composable 会保留已提交的 `signature`，因此应用仍然可以展示 explorer 链接，同时向用户展示 `error`。选项会透传给 `confirmTransactionSignature()`：`commitment`、`timeoutMs`、`pollIntervalMs`、`abortSignal` 和 `searchTransactionHistory`。失败的交易展示 `TRANSACTION_FAILED`，从未出现的签名展示 `TRANSACTION_NOT_FOUND`，耗尽的等待展示 `TRANSACTION_TIMEOUT`。
 
 ## 跟踪签名状态
 
 ```ts
 import { useSignatureStatus } from "@vue-solana/vue/useSignatureStatus";
 
-const { status, loading, error, refresh, stopPolling, stopSubscription } = useSignatureStatus(
+const { status, loading, error, refresh, stopPolling } = useSignatureStatus(
   "PASTE_SUBMITTED_SIGNATURE",
   {
     pollIntervalMs: 5_000,
     searchTransactionHistory: true,
-    subscribe: true,
-    commitment: "confirmed",
   },
 );
 ```
 
-轮询会在每个间隔调用 `getSignatureStatuses()`，因此 UI 不再需要更新时应停止轮询。调用 `stopPolling()` 会清除当前 interval，并阻止该 composable 实例自动重启轮询。无效签名会清除过期 `status`、设置 `error`，且不调用 RPC 或启动轮询。小于或等于 `0` 的无效 `pollIntervalMs` 会设置 `RangeError` 且不启动轮询。`subscribe: true` 使用 `onSignature()`，并在组件卸载时移除 listener。调用 `stopSubscription()` 会移除当前签名 listener，并阻止该 composable 实例自动重启。
+没有按次调用的 `commitment` 选项：`getSignatureStatuses()` 不接受该参数，因此读取使用的是 endpoint 自带的 commitment。请在 endpoint 或 `createSolanaPlugin()` 上设置。如果需要按次指定 commitment，请使用 `useTransactionConfirmation()`。
+
+轮询使用链式 `setTimeout` 调用 `getSignatureStatuses()`，因此慢速 RPC 只会延迟下一次 tick，而不会与自身重叠。调用 `stopPolling()` 会清除当前计时器并阻止后续自动 tick——直到被观察的签名发生变化，此时会为新签名重新启动轮询。无效签名会清除过期 `status`、设置 `error`，且不调用 RPC 或启动轮询。小于或等于 `0` 的无效 `pollIntervalMs` 会设置代码为 `RPC_FAILURE` 的 `SolanaError`，且不启动轮询。
 
 ## 示例应用
 
@@ -14506,7 +14650,7 @@ Consulta [Data Fetching Composables](/packages/vue#data-fetching-composables) pa
 
 Estos son aliases Nuxt para los composables de Vue.
 
-El cliente por defecto creado por el módulo compone los plugins oficiales `solanaRpc()` y `rpcAirdrop()`; `solanaRpc()` instala por si mismo el planner de transacciones y los ejecutores de firma y envio de planes. El fallback custom anterior no se usa. `useSolanaSendTransaction()` y `useSolanaSendTransactions()` exponen la capacidad de envio oficial, pero el módulo no configura un payer porque `payer` y `payerSecretKey` se omiten de `ModuleOptions`. Su estado `sent` se alcanza cuando el executor oficial completa la operación de envio y confirmación en `confirmed`.
+El cliente por defecto creado por el módulo compone los plugins oficiales `solanaRpc()` y `rpcAirdrop()` cuando no hay `commitment` configurado (un `commitment` configurado construye el mismo stack explícitamente para que llegue a la capa RPC); `solanaRpc()` instala por si mismo el planner de transacciones y los ejecutores de firma y envio de planes. El fallback custom anterior no se usa. `useSolanaSendTransaction()` y `useSolanaSendTransactions()` exponen la capacidad de envio oficial, pero el módulo no configura un payer porque `payer` y `payerSecretKey` se omiten de `ModuleOptions`. Su estado `sent` se alcanza cuando el executor oficial completa la operación de envio y confirmación en `confirmed`.
 
 El paquete Vue usa nombres cortos como `useRpc()` porque los llamadores los importan explícitamente desde `@vue-solana/vue/useRpc`.
 
@@ -14855,16 +14999,12 @@ Usa `useSolanaSignatureStatus()` cuando necesitas comprobaciones continuas de es
 ```vue
 <script setup lang="ts">
 const signature = ref("PASTE_TRANSACTION_SIGNATURE");
-const { status, loading, error, refresh, stopPolling, stopSubscription } = useSolanaSignatureStatus(
-  signature,
-  {
-    pollIntervalMs: 2_000,
-  },
-);
+const { status, loading, error, refresh, stopPolling } = useSolanaSignatureStatus(signature, {
+  pollIntervalMs: 2_000,
+});
 
 onBeforeUnmount(() => {
   stopPolling();
-  void stopSubscription();
 });
 </script>
 ```
@@ -15005,7 +15145,7 @@ request, subscription, tracked-data, SWR-cache composable의 전체 semantics는
 
 이들은 Vue composable의 Nuxt alias입니다.
 
-module이 만드는 default client는 official `solanaRpc()`와 `rpcAirdrop()` plugin을 compose하며, `solanaRpc()`가 transaction planner와 plan-signing/plan-sending executor를 직접 설치합니다. 기존 custom fallback sender는 사용하지 않습니다. `useSolanaSendTransaction()`과 `useSolanaSendTransactions()`는 official client-sending capability를 사용하지만, `ModuleOptions`에서 `payer`와 `payerSecretKey`를 제외하므로 module이 payer를 설정하지는 않습니다. `sent` 상태는 official executor가 `confirmed` commitment에서 send-and-confirm을 완료한 뒤에 도달합니다.
+module이 만드는 default client는 `commitment`가 설정되지 않았을 때 official `solanaRpc()`와 `rpcAirdrop()` plugin을 compose하며(`commitment`가 설정되면 RPC 레이어에 전달되도록 같은 스택을 명시적으로 빌드합니다), `solanaRpc()`가 transaction planner와 plan-signing/plan-sending executor를 직접 설치합니다. 기존 custom fallback sender는 사용하지 않습니다. `useSolanaSendTransaction()`과 `useSolanaSendTransactions()`는 official client-sending capability를 사용하지만, `ModuleOptions`에서 `payer`와 `payerSecretKey`를 제외하므로 module이 payer를 설정하지는 않습니다. `sent` 상태는 official executor가 `confirmed` commitment에서 send-and-confirm을 완료한 뒤에 도달합니다.
 
 Vue package는 caller가 `@vue-solana/vue/useRpc`에서 명시적으로 import하므로 `useRpc()` 같은 짧은 이름을 사용합니다.
 
@@ -15352,16 +15492,12 @@ async function confirmCurrentSignature() {
 ```vue
 <script setup lang="ts">
 const signature = ref("PASTE_TRANSACTION_SIGNATURE");
-const { status, loading, error, refresh, stopPolling, stopSubscription } = useSolanaSignatureStatus(
-  signature,
-  {
-    pollIntervalMs: 2_000,
-  },
-);
+const { status, loading, error, refresh, stopPolling } = useSolanaSignatureStatus(signature, {
+  pollIntervalMs: 2_000,
+});
 
 onBeforeUnmount(() => {
   stopPolling();
-  void stopSubscription();
 });
 </script>
 ```
@@ -15503,7 +15639,11 @@ See [Data Fetching Composables](/packages/vue#data-fetching-composables) for the
 
 These are Nuxt aliases for the Vue composables.
 
-The default client created by the Nuxt module composes the official `solanaRpc()` and `rpcAirdrop()` plugins; `solanaRpc()` installs the transaction planner and the plan-signing and plan-sending executors itself. The old custom fallback sender is not used. `useSolanaSendTransaction()` and `useSolanaSendTransactions()` therefore expose the official client-sending capability, but the module does not configure a payer because `payer` and `payerSecretKey` are intentionally omitted from `ModuleOptions`, so a client-sent transaction needs a `payer` installed in a client-only plugin with `clientPlugin: false`, as described in [Module Setup](#module-setup). Their `sent` status is reached after the official executor completes its send-and-confirm operation at `confirmed` commitment.
+- `useSolanaClientCapability()`: fails fast when the installed Kit client is missing a required capability.
+- `tryUseSolana()`: safe, non-throwing accessor for the injected Solana context.
+- `clearSwrCache()`: clears the module-level SWR cache (see [Data Fetching Composables](/packages/vue#data-fetching-composables)).
+
+The default client created by the Nuxt module composes the official `solanaRpc()` and `rpcAirdrop()` plugins when no `commitment` is configured (a configured `commitment` builds the same stack explicitly so it reaches the RPC layer); `solanaRpc()` installs the transaction planner and the plan-signing and plan-sending executors itself. The old custom fallback sender is not used. `useSolanaSendTransaction()` and `useSolanaSendTransactions()` therefore expose the official client-sending capability, but the module does not configure a payer because `payer` and `payerSecretKey` are intentionally omitted from `ModuleOptions`, so a client-sent transaction needs a `payer` installed in a client-only plugin with `clientPlugin: false`, as described in [Module Setup](#module-setup). Their `sent` status is reached after the official executor completes its send-and-confirm operation at `confirmed` commitment.
 
 The Vue package uses short names such as `useRpc()` because callers import them explicitly from `@vue-solana/vue/useRpc`.
 
@@ -15850,16 +15990,12 @@ Use `useSolanaSignatureStatus()` when you need ongoing status checks for a submi
 ```vue
 <script setup lang="ts">
 const signature = ref("PASTE_TRANSACTION_SIGNATURE");
-const { status, loading, error, refresh, stopPolling, stopSubscription } = useSolanaSignatureStatus(
-  signature,
-  {
-    pollIntervalMs: 2_000,
-  },
-);
+const { status, loading, error, refresh, stopPolling } = useSolanaSignatureStatus(signature, {
+  pollIntervalMs: 2_000,
+});
 
 onBeforeUnmount(() => {
   stopPolling();
-  void stopSubscription();
 });
 </script>
 ```
@@ -16000,7 +16136,7 @@ request、subscription、tracked-data 和 SWR-cache composable 的完整语义�
 
 这些是 Vue composable 的 Nuxt alias。
 
-模块创建的默认 client 会组合官方 `solanaRpc()` 和 `rpcAirdrop()` plugin；`solanaRpc()` 会自行安装 transaction planner 以及 plan-signing 和 plan-sending executor。旧的 custom fallback sender 不再使用。`useSolanaSendTransaction()` 和 `useSolanaSendTransactions()` 暴露官方 client-sending capability，但由于 `ModuleOptions` 省略了 `payer` 和 `payerSecretKey`，模块不会配置 payer。只有官方 executor 在 `confirmed` commitment 完成 send-and-confirm 后，状态才会变为 `sent`。
+模块创建的默认 client 在未配置 `commitment` 时会组合官方 `solanaRpc()` 和 `rpcAirdrop()` plugin（配置了 `commitment` 会显式构建相同 stack 使其到达 RPC 层）；`solanaRpc()` 会自行安装 transaction planner 以及 plan-signing 和 plan-sending executor。旧的 custom fallback sender 不再使用。`useSolanaSendTransaction()` 和 `useSolanaSendTransactions()` 暴露官方 client-sending capability，但由于 `ModuleOptions` 省略了 `payer` 和 `payerSecretKey`，模块不会配置 payer。只有官方 executor 在 `confirmed` commitment 完成 send-and-confirm 后，状态才会变为 `sent`。
 
 Vue 包使用 `useRpc()` 这样的短名称，因为调用方会从 `@vue-solana/vue/useRpc` 显式导入。
 
@@ -16347,16 +16483,12 @@ async function confirmCurrentSignature() {
 ```vue
 <script setup lang="ts">
 const signature = ref("PASTE_TRANSACTION_SIGNATURE");
-const { status, loading, error, refresh, stopPolling, stopSubscription } = useSolanaSignatureStatus(
-  signature,
-  {
-    pollIntervalMs: 2_000,
-  },
-);
+const { status, loading, error, refresh, stopPolling } = useSolanaSignatureStatus(signature, {
+  pollIntervalMs: 2_000,
+});
 
 onBeforeUnmount(() => {
   stopPolling();
-  void stopSubscription();
 });
 </script>
 ```

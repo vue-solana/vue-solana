@@ -103,7 +103,9 @@ Expires At: 2026-07-02T12:10:00Z
 
 ## 验证边界
 
-Vue Solana 帮助请求钱包签名。你的应用负责服务端验证、nonce 存储、过期检查和会话创建。
+当环境支持 Ed25519（WebCrypto）时，Vue Solana 会在完成 `signMessage()` / `signIn()` 之前，用账户公钥验证返回的签名。这是针对钱包返回错误字节的签名或返回其他账户签名的尽力防护，不能替代服务端验证，并且在 Ed25519 不可用的环境中会跳过。未通过验证的签名会以 `INVALID_SIGNATURE` 拒绝。
+
+你的应用仍然负责服务端验证、nonce 存储、过期检查和会话创建。
 
 不要把对通用文本的签名视为转移代币或更改链上状态的许可。
 
@@ -122,6 +124,8 @@ const message = computed(() => {
       return "此钱包不支持消息签名。";
     case "USER_REJECTED":
       return "消息签名已被拒绝。";
+    case "INVALID_SIGNATURE":
+      return "钱包返回了无效的签名。";
     default:
       return null;
   }

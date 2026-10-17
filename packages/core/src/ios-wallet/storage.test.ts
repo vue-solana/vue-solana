@@ -1,4 +1,4 @@
-import bs58 from "bs58";
+import { getBase58Decoder } from "@solana/kit";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import {
   clearPendingRequest,
@@ -13,6 +13,30 @@ import {
 } from "./storage";
 import { resetIosWalletTestEnvironment } from "./test-utils";
 import type { IosWalletSession, PendingIosWalletRequest } from "./types";
+
+// `bs58.decode` and Kit's `isAddress` agree on every real input, so a stored
+// address that passes the read check but fails decoding cannot be built from
+// real bytes. Toggle the failure through a hoisted flag instead; `encode`
+// always passes through so the other tests in this file are unaffected.
+const bs58Control = vi.hoisted(() => ({ failDecode: false }));
+
+vi.mock("@solana/kit", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@solana/kit")>();
+  const actualEncoderFactory = actual.getBase58Encoder;
+
+  return {
+    ...actual,
+    getBase58Encoder: () => ({
+      encode: (...args: Parameters<ReturnType<typeof actual.getBase58Encoder>["encode"]>) => {
+        if (bs58Control.failDecode) {
+          throw new Error("Non-base58 character");
+        }
+
+        return actualEncoderFactory().encode(...args);
+      },
+    }),
+  };
+});
 
 const pendingStorageKey = "vue-solana:ios-wallet:pending";
 const phantomSessionStorageKey = "vue-solana:ios-wallet:session:phantom";
@@ -42,8 +66,8 @@ describe("iOS wallet storage", () => {
     expect(request).toMatchObject({
       walletId: "phantom",
       method: "signAllTransactions",
-      dappEncryptionPublicKey: bs58.encode(new Uint8Array([1, 2, 3])),
-      dappEncryptionSecretKey: bs58.encode(new Uint8Array([4, 5, 6])),
+      dappEncryptionPublicKey: getBase58Decoder().decode(new Uint8Array([1, 2, 3])),
+      dappEncryptionSecretKey: getBase58Decoder().decode(new Uint8Array([4, 5, 6])),
       redirectUrl: "https://example.com/callback",
       createdAt: Date.parse("2026-01-01T00:00:00.000Z"),
       requestedTransactionCount: 2,
@@ -106,6 +130,20 @@ describe("iOS wallet storage", () => {
         chains: ["solana:devnet"],
       },
     ]);
+  });
+
+  it("purges sessions whose public key fails base58 decoding instead of throwing raw", () => {
+    storeSession(createSession());
+
+    bs58Control.failDecode = true;
+
+    try {
+      expect(getStoredIosWalletAccount("phantom", ["solana:devnet"])).toEqual([]);
+    } finally {
+      bs58Control.failDecode = false;
+    }
+
+    expect(sessionStorage.getItem(phantomSessionStorageKey)).toBeNull();
   });
 
   it("returns no accounts when no session is stored", () => {

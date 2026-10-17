@@ -103,7 +103,7 @@ interface SolanaConfig {
 
 `payer`는 client fee payer와 client-sent transaction signer로 사용하는 Kit `TransactionSigner`입니다. `payerSecretKey`는 secret key가 먼저 오는 base64 64-byte Ed25519 keypair이며 client 생성 시 address를 파생하고 첫 사용 시 signing key를 import합니다. 그래서 public half가 seed와 맞지 않는 keypair는 client 생성이 아니라 첫 서명 시점에 거부됩니다. address는 검증되지 않은 public half에서 나오므로 첫 서명이 성공할 때까지 `payer.address`를 미확정으로 취급하세요. 서명은 WebCrypto로 key를 import하며, 브라우저는 secure context(`https`, 또는 `localhost`의 `http`)에서만 WebCrypto를 노출합니다. 그 밖의 환경에서는 첫 `signTransactions()` 호출이 잘못된 key 오류가 아니라 WebCrypto 오류를 던집니다. 두 옵션 모두 direct core/Vue client에서 지원됩니다.
 
-`createSolanaClient()`은 기본적으로 `@solana/kit-plugin-rpc`의 official `solanaRpc()`와 `rpcAirdrop()` 스택을 compose합니다. `solanaRpc()`가 transaction planner와 plan-signing/plan-sending executor를 직접 설치합니다. 기존 custom fallback sender는 사용하지 않습니다. client는 RPC read/subscription과 `planTransaction(s)`, `sendTransaction(s)`를 노출합니다. official executor는 새 blockhash, resource limit와 preflight 처리, client signer를 이용한 서명, RPC 제출을 수행하고 send가 resolve되기 전에 `confirmed` commitment을 기다립니다. client send에는 `payer` signer가 필요합니다.
+`createSolanaClient()`은 `commitment`가 설정되지 않았을 때 기본적으로 `@solana/kit-plugin-rpc`의 official `solanaRpc()`와 `rpcAirdrop()` 스택을 compose합니다(`commitment`가 설정되면 RPC 레이어에 전달되도록 같은 스택을 명시적으로 빌드합니다). `solanaRpc()`가 transaction planner와 plan-signing/plan-sending executor를 직접 설치합니다. 기존 custom fallback sender는 사용하지 않습니다. client는 RPC read/subscription과 `planTransaction(s)`, `sendTransaction(s)`를 노출합니다. official executor는 새 blockhash, resource limit와 preflight 처리, client signer를 이용한 서명, RPC 제출을 수행하고 send가 resolve되기 전에 `confirmed` commitment을 기다립니다. client send에는 `payer` signer가 필요합니다.
 
 Nuxt public runtime config에 raw secret이나 `payerSecretKey`를 넣지 마세요. end-user browser에 funded signing key를 배포하지 말고 server/relayer 경계 또는 demo용 ephemeral signer를 사용하세요.
 
@@ -319,7 +319,7 @@ const signedTransaction = await wallet.signTransaction(transaction);
 ### 트랜잭션
 
 - `signAndSendTransaction(client, wallet, transaction, options?)`: configured wallet로 raw wire transaction byte에 서명하고 전송한 뒤 RPC signature를 반환합니다. `signAndSendTransaction`을 노출하는 wallet은 해당 기능에 위임되고, 그렇지 않으면 트랜잭션은 `wallet.signTransaction`으로 서명된 뒤 `client.rpc.sendTransaction(...).send()`로 제출됩니다. Android Mobile Wallet Adapter wallet은 앱이 제출을 소유하고 wallet handoff 후 RPC signature를 안정적으로 반환할 수 있도록 서명과 app-side RPC 제출을 선호합니다.
-- `confirmTransactionSignature(client, signature, options?)`: 제출된 signature가 요청한 commitment에 도달할 때까지 기다립니다. 기본값은 `confirmed` commitment, 60초 timeout, `client.rpc.getSignatureStatuses([signature]).send()` 폴링입니다.
+- `confirmTransactionSignature(client, signature, options?)`: 제출된 signature가 요청한 commitment에 도달할 때까지 기다립니다. 기본값은 `confirmed` commitment, 60초 timeout, 1500 ms poll interval, `client.rpc.getSignatureStatuses([signature]).send()` 폴링입니다. `pollIntervalMs`(`0`보다 커야 함), `abortSignal`, `searchTransactionHistory`를 받습니다. 실패한 트랜잭션은 `TRANSACTION_FAILED`, 나타나지 않은 서명은 `TRANSACTION_NOT_FOUND`, 소진된 대기는 `TRANSACTION_TIMEOUT`을 throw합니다. 서명이 최근 상태 캐시를 벗어났을 수 있으면 `searchTransactionHistory: true`를 전달하세요 — 없으면 오래된 서명이 결과에 나타나지 않아 timeout 후 `TRANSACTION_NOT_FOUND`가 됩니다.
 
 wallet-aware helper와 client-sent flow는 별개입니다. client는 `createSolanaClient()`가 설치한 official `rpcTransactionPlanSendingExecutor()`를 통해 `sendTransaction()`과 `sendTransactions()`를 노출하고 Vue composable이 이 method들을 감쌉니다. plan, sign, submit 후 `confirmed` commitment을 기다리며, send-and-confirm가 완료된 뒤에만 `sent` 상태가 됩니다. 단일 결과의 `data.context.signature`에서 제출된 signature를 확인할 수 있고, batch 결과에는 전체 plan result tree가 포함됩니다. official sender는 wallet popup을 표시하지 않습니다.
 
@@ -353,7 +353,7 @@ if (balance) {
 - `createSolanaError(code, message, options?)`: 정규화된 Solana error를 만듭니다.
 - `isSolanaError(error)`: unknown error를 `SolanaError`로 narrow합니다.
 - `normalizeSolanaError(cause, fallbackCode, fallbackMessage?, options?)`: unknown failure를 `SolanaError`로 변환하고 일반 wallet rejection을 `USER_REJECTED`로 매핑합니다.
-- `withTimeout(promise, timeoutMs, createError)`: promise를 caller-provided timeout error와 race합니다.
+- `withTimeout(promise, timeoutMs, createError?, options?)`: promise를 caller-provided timeout error와 race합니다. `NaN`/음수 timeout에는 `INVALID_INPUT`를 reject하고, `{ signal }`은 signal reason으로 대기를 중단하며, `{ code, message }`는 기본 timeout error를 설정합니다.
 - `withSolanaTimeout(promise, timeoutMs, message)`: promise를 `TRANSACTION_TIMEOUT` error와 race합니다.
 
 ## 오류 모델
@@ -374,6 +374,12 @@ try {
       case "TRANSACTION_TIMEOUT":
         // The operation timed out; check signature state before retrying.
         break;
+      case "TRANSACTION_NOT_FOUND":
+        // 서명이 land하지 않았습니다. 재시도해도 안전합니다.
+        break;
+      case "TRANSACTION_FAILED":
+        // 트랜잭션이 on-chain에서 실패했습니다. error.cause를 확인하세요.
+        break;
       case "RPC_FAILURE":
         // RPC or confirmation failed.
         console.error(error.cause);
@@ -389,8 +395,14 @@ try {
 - `WALLET_NOT_CONNECTED`
 - `WALLET_FEATURE_UNSUPPORTED`
 - `USER_REJECTED`
+- `INVALID_SIGNATURE`
 - `INVALID_ADDRESS`
+- `INVALID_INPUT`
 - `TRANSACTION_TIMEOUT`
+- `TRANSACTION_NOT_FOUND`
+- `TRANSACTION_FAILED`
+- `REDIRECT_TIMEOUT`
+- `DECRYPTION_FAILED`
 - `RPC_FAILURE`
 - `STORAGE_FAILURE`
 

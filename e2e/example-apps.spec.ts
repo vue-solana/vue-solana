@@ -97,7 +97,12 @@ test("discovers, selects, connects, signs, and disconnects a mocked Wallet Stand
   await expect(page.getByTestId("sign-message")).toBeEnabled();
 
   await page.getByTestId("sign-message").click();
-  await expect(page.getByTestId("message-signature")).toHaveText("Signature: AQIDBAUGBwg=");
+  // The mock wallet signs with a real Ed25519 key so the adapter's client-side
+  // verification passes, so the signature is 64 bytes of base64 rather than a
+  // fixed byte string.
+  await expect(page.getByTestId("message-signature")).toContainText(
+    /Signature: [A-Za-z0-9+/]{86}==/,
+  );
   await expect(page.getByTestId("signed-message")).toContainText("Signed message:");
 
   await page.getByTestId("disconnect-wallet").click();
@@ -194,15 +199,16 @@ test("funds the client payer and sends single and batch transactions", async ({ 
   }
 
   const rpc = await mockSolanaSubscriptions(page);
-  const connectionChecks: string[] = [];
-
-  page.on("console", (message) => {
-    if (message.text().includes("[Vue Solana] Checking RPC connection")) {
-      connectionChecks.push(message.text());
-    }
-  });
 
   await page.goto("/");
+
+  // Each `createSolanaPlugin` install runs one connection check (one
+  // `getLatestBlockhash`). Two installs mean two wallet subscriptions and two
+  // health checks for a single app, so wait for the mocked check to settle and
+  // pin the startup checks to exactly one — before any user interaction adds
+  // more.
+  await expect(page.getByTestId("rpc-status")).toHaveText("connected");
+  expect(rpc.rpcMethodCalls().filter((call) => call === "getLatestBlockhash")).toHaveLength(1);
 
   await expect(page.getByTestId("payer-status")).toHaveText(/^funding required · /);
   await expect(page.getByTestId("payer-fund-result")).toHaveText("Payer not funded");
@@ -240,10 +246,6 @@ test("funds the client payer and sends single and batch transactions", async ({ 
   expect(callCount("getSignatureStatuses")).toBeGreaterThanOrEqual(3);
   expect(callCount("sendTransaction")).toBeGreaterThanOrEqual(2);
   expect(callCount("simulateTransaction")).toBeGreaterThanOrEqual(2);
-  // Each `createSolanaPlugin` install runs one connection check. Two installs
-  // mean two wallet subscriptions and two health checks for a single app, so
-  // pin it to exactly one.
-  expect(connectionChecks).toHaveLength(1);
 });
 
 test("signs in with the mocked SIWS wallet and surfaces the account", async ({ page }) => {
@@ -310,12 +312,6 @@ test("runs the mock transaction helper", async ({ page }) => {
 
 async function registerMockWallets(page: Page) {
   await page.addInitScript(() => {
-    const account = {
-      address: "11111111111111111111111111111111",
-      publicKey: new Uint8Array(32),
-      chains: ["solana:devnet"],
-      features: [],
-    };
     const wallets = [
       createMockWallet("Mock Signer Wallet", true),
       createMockWallet("Mock Readonly Wallet", false),
@@ -330,6 +326,34 @@ async function registerMockWallets(page: Page) {
     }
 
     function createMockWallet(name: string, canSignMessage: boolean) {
+      let keyPairPromise: Promise<CryptoKeyPair> | undefined;
+
+      // Generated on first use so the init script can stay synchronous. The
+      // adapter verifies every message/sign-in signature against the account's
+      // public key, so the mock has to sign for real rather than return a fixed
+      // byte string.
+      const getKeyPair = () => {
+        keyPairPromise ??= crypto.subtle
+          .generateKey("Ed25519", true, ["sign", "verify"])
+          .then((keyPair) => keyPair as CryptoKeyPair);
+        return keyPairPromise;
+      };
+      const getPublicKey = async () =>
+        new Uint8Array(await crypto.subtle.exportKey("raw", (await getKeyPair()).publicKey));
+      const sign = async (message: Uint8Array) =>
+        new Uint8Array(
+          await crypto.subtle.sign("Ed25519", (await getKeyPair()).privateKey, message),
+        );
+
+      // The address stays the all-zero one the specs assert on; verification
+      // only looks at `publicKey`, which tracks the signing key pair.
+      const account = {
+        address: "11111111111111111111111111111111",
+        publicKey: new Uint8Array(32),
+        chains: ["solana:devnet"],
+        features: [],
+      };
+
       const wallet = {
         version: "1.0.0",
         name,
@@ -340,6 +364,7 @@ async function registerMockWallets(page: Page) {
           "standard:connect": {
             version: "1.0.0",
             connect: async () => {
+              account.publicKey = await getPublicKey();
               wallet.accounts = [account];
               return { accounts: wallet.accounts };
             },
@@ -361,7 +386,7 @@ async function registerMockWallets(page: Page) {
         wallet.features["solana:signMessage"] = {
           version: "1.0.0",
           signMessage: async ({ message }: { message: Uint8Array }) => [
-            { signedMessage: message, signature: Uint8Array.from([1, 2, 3, 4, 5, 6, 7, 8]) },
+            { signedMessage: message, signature: await sign(message) },
           ],
         };
         wallet.features["solana:signIn"] = {
@@ -369,17 +394,17 @@ async function registerMockWallets(page: Page) {
           signIn: async (input?: { domain?: string; statement?: string }) => {
             void input;
 
+            const signedMessage = new TextEncoder().encode("Welcome to Vue Solana");
+
             return [
               {
                 account: {
-                  address: "11111111111111111111111111111111",
-                  publicKey: new Uint8Array(32),
-                  chains: ["solana:devnet"],
-                  features: [],
+                  ...account,
+                  publicKey: await getPublicKey(),
                   label: "Mock Signer Wallet",
                 },
-                signedMessage: new TextEncoder().encode("Welcome to Vue Solana"),
-                signature: Uint8Array.from([9, 8, 7, 6, 5, 4, 3, 2]),
+                signedMessage,
+                signature: await sign(signedMessage),
                 signatureType: "ed25519",
               },
             ];

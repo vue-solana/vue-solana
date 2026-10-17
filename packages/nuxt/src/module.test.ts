@@ -1,3 +1,6 @@
+import { readFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { solanaAutoImports, solanaSetupAutoImports } from "./imports";
@@ -139,6 +142,7 @@ describe("Nuxt module", () => {
     expect(kit.addPlugin).toHaveBeenCalledWith({
       src: "resolved:./runtime/plugin",
       mode: "client",
+      order: -10,
     });
     const [imports] = kit.addImports.mock.calls[0] ?? [[]];
     const asNames = imports.map((entry: { as: string }) => entry.as);
@@ -174,30 +178,20 @@ describe("Nuxt module", () => {
     expect(publicConfig.solana).toEqual({ cluster: "devnet" });
   });
 
-  it("adds Vite dependency optimization for mobile wallet dev interop", async () => {
+  it("does not merge Vite dependency optimization into the SSR config", async () => {
     const module = (await import("./module")).default as unknown as ModuleUnderTest;
     const vite: TestViteOptions = {
       optimizeDeps: {
-        include: ["existing-dependency", "qrcode"],
+        include: ["existing-dependency", "existing-sibling"],
       },
     };
 
     setupModule(module, {}, { vite });
 
-    expect(vite.optimizeDeps.include).toEqual([
-      "existing-dependency",
-      "qrcode",
-      "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > @solana-mobile/wallet-standard-mobile",
-      "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > buffer",
-      "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > buffer/",
-      "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > bs58",
-      "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl",
-      "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl/nacl-fast.js",
-    ]);
-    expect(vite.optimizeDeps.needsInterop).toEqual([
-      "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl",
-      "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl/nacl-fast.js",
-    ]);
+    // The eager merge was removed so the SSR Vite config is not polluted;
+    // merging now happens only in the client-aware `vite:extendConfig` hook.
+    expect(vite.optimizeDeps.include).toEqual(["existing-dependency", "existing-sibling"]);
+    expect(vite.optimizeDeps.needsInterop).toBeUndefined();
   });
 
   it("forces Solana dependency optimization into the final Vite client config", async () => {
@@ -225,14 +219,12 @@ describe("Nuxt module", () => {
     );
     expect(clientConfig.optimizeDeps?.needsInterop).toEqual([
       "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl",
-      "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl/nacl-fast.js",
     ]);
     expect(clientConfig.environments?.client?.optimizeDeps?.include).toContain(
       "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl",
     );
     expect(clientConfig.environments?.client?.optimizeDeps?.needsInterop).toEqual([
       "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl",
-      "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl/nacl-fast.js",
     ]);
   });
 
@@ -251,6 +243,17 @@ describe("Nuxt module", () => {
 
     expect(serverConfig.optimizeDeps?.include).toEqual(["existing-dependency"]);
     expect(serverConfig.optimizeDeps?.needsInterop).toBeUndefined();
+  });
+
+  it("treats a non-object publicConfig.solana as empty before merging options", async () => {
+    const module = (await import("./module")).default as unknown as ModuleUnderTest;
+    const publicConfig: Record<string, unknown> = {
+      solana: "not-an-object" as never,
+    };
+
+    setupModule(module, { cluster: "testnet" }, { publicConfig });
+
+    expect(publicConfig.solana).toEqual({ cluster: "testnet" });
   });
 
   it("omits non-serializable wallet adapters from public runtime config", async () => {
@@ -351,8 +354,9 @@ describe("Nuxt module", () => {
     const dist = "/pkg/vue/dist";
 
     for (const { name, from } of solanaAutoImports(dist)) {
-      const isSwr = name.endsWith("Swr");
-      expect(from).toBe(`${dist}/${isSwr ? "swr" : name}.mjs`);
+      const isSwr = name.endsWith("Swr") || name === "clearSwrCache" || name === "deleteSwrKey";
+      const file = name === "tryUseSolana" ? "useSolana" : isSwr ? "swr" : name;
+      expect(from).toBe(`${dist}/${file}.mjs`);
     }
 
     // Falls back to the bare subpaths when the module cannot resolve its own
@@ -365,5 +369,33 @@ describe("Nuxt module", () => {
     for (const { from } of solanaSetupAutoImports(dist)) {
       expect(from).toBe(`${dist}/index.mjs`);
     }
+  });
+
+  it("ships the nuxt/schema augmentation with the module entry", () => {
+    // `src/runtime/types.d.ts` was removed: it never reached `dist/` (no
+    // build entry), so the `declare module "nuxt/schema"` block must live in
+    // `src/module.ts` — otherwise fresh consumers lose typed
+    // `runtimeConfig.public.solana`.
+    // Plain `join`, not `new URL(relative, import.meta.url)`: Vite rewrites
+    // the latter as an asset reference and `readFileSync` rejects it with
+    // "The URL must be of scheme file".
+    const here = dirname(fileURLToPath(import.meta.url));
+    const source = readFileSync(join(here, "module.ts"), "utf8");
+
+    expect(source).toContain('declare module "nuxt/schema"');
+    expect(source).toContain("solana?: ModuleOptions");
+  });
+
+  it("keeps a typed #app shim so the runtime plugin declaration is not unknown", () => {
+    // The shim once typed `defineNuxtPlugin(...): unknown`, which collapsed
+    // `dist/runtime/plugin.d.ts` to `declare const _default: unknown`. The
+    // passthrough return preserves the plugin's type; `app.d.ts` is not a
+    // build entry so it never reaches `dist/` itself.
+    const here = dirname(fileURLToPath(import.meta.url));
+    const shim = readFileSync(join(here, "runtime/app.d.ts"), "utf8");
+
+    expect(shim).toContain("defineNuxtPlugin");
+    expect(shim).not.toMatch(/defineNuxtPlugin.*:\s*unknown/);
+    expect(shim).toContain("nuxtApp");
   });
 });

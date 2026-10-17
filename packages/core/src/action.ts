@@ -1,6 +1,6 @@
 import {
   createReactiveActionStore,
-  isAbortError,
+  isAbortError as isKitAbortError,
   type ReactiveActionState,
   type ReactiveActionStore,
 } from "./kit";
@@ -35,8 +35,16 @@ export function createSolanaActionStore<TArgs extends readonly unknown[], TResul
  */
 export type SolanaActionState<TResult> = ReactiveActionState<TResult>;
 
-export { isAbortError };
-
+/**
+ * Detects abort errors from superseded action dispatches (Kit's
+ * `isAbortError`). Canonical name for this package.
+ */
 export function isSolanaActionAborted(error: unknown): boolean {
-  return isAbortError(error);
+  return isKitAbortError(error);
 }
+
+/**
+ * @deprecated Use {@link isSolanaActionAborted}. Kept as an alias for
+ * compatibility with earlier `@solana/kit` consumers.
+ */
+export const isAbortError = isSolanaActionAborted;

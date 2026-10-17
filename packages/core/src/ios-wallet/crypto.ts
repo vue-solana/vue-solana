@@ -1,18 +1,25 @@
-import bs58 from "bs58";
+import { getBase58Decoder, getBase58Encoder } from "@solana/kit";
 import * as naclModule from "tweetnacl";
 import { createSolanaError } from "../errors";
 
 let cachedNacl: typeof naclModule | undefined;
 
-// Resolved on first use rather than at module load. `tweetnacl` is 32 KB and the
-// iOS wallet flow is the only caller, so a module-scope call makes bundlers keep
-// it in the initial chunk of every app, iOS or not.
+// ponytail: `tweetnacl` is 32 KB — 42% of the 77 KB initial chunk for
+// `import { createSolanaPlugin } from "@vue-solana/vue"` — and the iOS wallet
+// flow is its only caller. `getNacl()` below does NOT get it out of that chunk:
+// the static import on line 2 is the edge bundlers follow, so the lazy call only
+// avoids re-running the module body. The only real fix is `await import()`, which
+// forces `getSharedSecret`, `encryptPayload`, `decryptPayload` and `createRequestId`
+// async, and that cascades through the sync entry points `getSolanaIosWallets`,
+// `handleSolanaIosWalletCallback`, `createPendingRequest` and `launchConnect`
+// into the iOS deep-link return handler `plugin.ts` runs at bootstrap — a race
+// against app startup. Revisit if a Kit/Wallet Standard API ever makes those async.
 export function getNacl() {
   return (cachedNacl ??= resolveTweetNaCl());
 }
 
 export function createRequestId() {
-  return bs58.encode(getNacl().randomBytes(16));
+  return getBase58Decoder().decode(getNacl().randomBytes(16));
 }
 
 export function getSharedSecret(
@@ -26,8 +33,8 @@ export function getSharedSecret(
   let walletPk: Uint8Array;
   let dappSk: Uint8Array;
   try {
-    walletPk = bs58.decode(walletEncryptionPublicKey);
-    dappSk = bs58.decode(dappSecretKey);
+    walletPk = Uint8Array.from(getBase58Encoder().encode(walletEncryptionPublicKey));
+    dappSk = Uint8Array.from(getBase58Encoder().encode(dappSecretKey));
   } catch (cause) {
     throw createSolanaError("INVALID_INPUT", "Invalid iOS wallet encryption key encoding", {
       cause,
@@ -56,7 +63,7 @@ export function encryptPayload(
     throw createSolanaError("INVALID_INPUT", "Invalid iOS wallet nonce length");
   }
   try {
-    return bs58.encode(getNacl().box.after(encodeJson(payload), nonce, sharedSecret));
+    return getBase58Decoder().decode(getNacl().box.after(encodeJson(payload), nonce, sharedSecret));
   } catch (cause) {
     throw createSolanaError("INVALID_INPUT", "Failed to encrypt iOS wallet payload", { cause });
   }
@@ -66,8 +73,8 @@ export function decryptPayload(data: string, nonce: string, sharedSecret: Uint8A
   let decodedData: Uint8Array;
   let decodedNonce: Uint8Array;
   try {
-    decodedData = bs58.decode(data);
-    decodedNonce = bs58.decode(nonce);
+    decodedData = Uint8Array.from(getBase58Encoder().encode(data));
+    decodedNonce = Uint8Array.from(getBase58Encoder().encode(nonce));
   } catch (cause) {
     throw createSolanaError("INVALID_INPUT", "Invalid iOS wallet callback encoding", { cause });
   }

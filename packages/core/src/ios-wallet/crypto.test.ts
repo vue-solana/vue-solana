@@ -1,4 +1,4 @@
-import bs58 from "bs58";
+import { getBase58Decoder, getBase58Encoder } from "@solana/kit";
 import * as tweetnacl from "tweetnacl";
 import { describe, expect, it } from "vitest";
 import {
@@ -16,15 +16,15 @@ describe("iOS wallet crypto", () => {
     const requestId = createRequestId();
 
     expect(typeof requestId).toBe("string");
-    expect(bs58.decode(requestId)).toHaveLength(16);
+    expect(Uint8Array.from(getBase58Encoder().encode(requestId))).toHaveLength(16);
   });
 
   it("getSharedSecret rejects missing wallet encryption public keys", () => {
     const dappKeyPair = nacl.box.keyPair();
 
-    expect(() => getSharedSecret(undefined, bs58.encode(dappKeyPair.secretKey))).toThrow(
-      "Missing iOS wallet encryption public key",
-    );
+    expect(() =>
+      getSharedSecret(undefined, getBase58Decoder().decode(dappKeyPair.secretKey)),
+    ).toThrow("Missing iOS wallet encryption public key");
   });
 
   it("getSharedSecret derives the same shared secret as tweetnacl", () => {
@@ -32,8 +32,8 @@ describe("iOS wallet crypto", () => {
     const walletKeyPair = nacl.box.keyPair();
 
     const sharedSecret = getSharedSecret(
-      bs58.encode(walletKeyPair.publicKey),
-      bs58.encode(dappKeyPair.secretKey),
+      getBase58Decoder().decode(walletKeyPair.publicKey),
+      getBase58Decoder().decode(dappKeyPair.secretKey),
     );
 
     expect(sharedSecret).toEqual(
@@ -52,7 +52,7 @@ describe("iOS wallet crypto", () => {
 
     const data = encryptPayload(payload, nonce, sharedSecret);
 
-    expect(decryptPayload(data, bs58.encode(nonce), sharedSecret)).toEqual(payload);
+    expect(decryptPayload(data, getBase58Decoder().decode(nonce), sharedSecret)).toEqual(payload);
   });
 
   it("decryptPayload rejects callbacks encrypted for a different shared secret", () => {
@@ -61,7 +61,7 @@ describe("iOS wallet crypto", () => {
     const nonce = nacl.randomBytes(nacl.box.nonceLength);
     const data = encryptPayload({ session: "session-token" }, nonce, sharedSecret);
 
-    expect(() => decryptPayload(data, bs58.encode(nonce), wrongSharedSecret)).toThrow(
+    expect(() => decryptPayload(data, getBase58Decoder().decode(nonce), wrongSharedSecret)).toThrow(
       "Unable to decrypt iOS wallet callback",
     );
   });
@@ -69,14 +69,18 @@ describe("iOS wallet crypto", () => {
   it("decryptPayload rejects corrupted callback data", () => {
     const sharedSecret = nacl.randomBytes(nacl.box.sharedKeyLength);
     const nonce = nacl.randomBytes(nacl.box.nonceLength);
-    const encrypted = bs58.decode(
-      encryptPayload({ session: "session-token" }, nonce, sharedSecret),
+    const encrypted = Uint8Array.from(
+      getBase58Encoder().encode(encryptPayload({ session: "session-token" }, nonce, sharedSecret)),
     );
 
     encrypted[0] = encrypted[0]! ^ 1;
 
-    expect(() => decryptPayload(bs58.encode(encrypted), bs58.encode(nonce), sharedSecret)).toThrow(
-      "Unable to decrypt iOS wallet callback",
-    );
+    expect(() =>
+      decryptPayload(
+        getBase58Decoder().decode(encrypted),
+        getBase58Decoder().decode(nonce),
+        sharedSecret,
+      ),
+    ).toThrow("Unable to decrypt iOS wallet callback");
   });
 });

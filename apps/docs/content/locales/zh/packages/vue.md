@@ -75,7 +75,7 @@ createApp(App).use(
 
 `payer` 和 `payerSecretKey` 支持 direct Vue/core client。client-sent 交易需要 `payer`。`payerSecretKey` 在创建 client 时从未经校验的 public half 派生 address，因此在第一次签名成功之前请将 `payer.address` 视为未确认；不匹配的 keypair 会在第一次签名时被拒绝，而不是在创建时。签名通过 WebCrypto 导入 key，而浏览器只在 secure context（`https`，或 `localhost` 上的 `http`）中暴露 WebCrypto。永远不要把 raw secret 或 `payerSecretKey` 放入 Nuxt public runtime config，也不要把有资金的 signing key 发送到 end-user browser。
 
-`createSolanaPlugin()` 的默认 client 使用官方 `solanaRpc()` 和 `rpcAirdrop()` 组合，`solanaRpc()` 会自行安装 transaction planner 以及 plan-signing 和 plan-sending executor。旧的 custom fallback sender 不再使用。官方 executor 会在 `execute()` resolve、`status` 变为 `sent` 之前等待 `confirmed` commitment。
+`createSolanaPlugin()` 的默认 client 在未配置 `commitment` 时使用官方 `solanaRpc()` 和 `rpcAirdrop()` 组合（配置了 `commitment` 会显式构建相同 stack 使其到达 RPC 层），`solanaRpc()` 会自行安装 transaction planner 以及 plan-signing 和 plan-sending executor。旧的 custom fallback sender 不再使用。官方 executor 会在 `execute()` resolve、`status` 变为 `sent` 之前等待 `confirmed` commitment。
 
 ### 客户端与插件生命周期
 
@@ -96,6 +96,18 @@ import { computed, ref } from "vue";
 const cluster = ref<SolanaCluster>("devnet");
 const plugin = computed(() => createSolanaPlugin({ cluster: cluster.value }));
 ```
+
+拆除应用时请释放该 plugin。`createSolanaPlugin()` 会启动一个 Wallet Standard 发现订阅和一个延迟 bootstrap；`dispose()` 会同时停止它们，使它们不会比应用活得更久：
+
+```ts
+export const solana = createSolanaPlugin({ cluster: "devnet" });
+const app = createApp(App).use(solana);
+
+app.unmount();
+solana.dispose();
+```
+
+可以安全地多次调用，也可以在 `use()` 之前调用。Nuxt 应用无需任何代码：模块的 runtime plugin 会把它接到 `vueApp.onUnmount()` 上。
 
 Kit client 会在构建期间运行其 `createClient().use(...)` 插件。当其中某个插件是异步的，client——以及由它构建的任何 context——只会在该 promise resolve 后才激活。请把真正的 RPC 和钱包工作推迟到 hydration 之后的客户端生命周期钩子或用户操作，而不要在 setup 或 SSR 期间运行。
 
@@ -559,6 +571,8 @@ async function handleSignIn() {
 
 服务端必须从其签发的 nonce 重新推导预期消息（或验证收到消息的每个字段），以拒绝过期或重放的 nonce。
 
+在 `signMessage()` 或 `signIn()` 完成之前，当 Ed25519（WebCrypto）可用时，适配器还会用账户的 `publicKey` 校验返回的签名，不匹配时以 `INVALID_SIGNATURE` 拒绝。这是针对行为异常钱包的尽力客户端防护，在 Ed25519 不可用时会跳过，因此真正完成用户身份验证的是上面的服务端校验。
+
 ## 数据获取 Composables
 
 `useRequest`、`useSubscription` 和 `useTrackedData` 是构建在 Kit 响应式 store 原语之上的 SWR 风格数据层：
@@ -804,25 +818,25 @@ const { signature, confirmation, status, loading, error, confirm, reset } =
 await confirm("PASTE_SUBMITTED_SIGNATURE", { commitment: "finalized" });
 ```
 
-当确认超时或 RPC 调用失败时，该 composable 会保留已提交的 `signature`，因此应用仍然可以展示 explorer 链接，同时向用户展示 `error`。
+当确认超时或 RPC 调用失败时，该 composable 会保留已提交的 `signature`，因此应用仍然可以展示 explorer 链接，同时向用户展示 `error`。选项会透传给 `confirmTransactionSignature()`：`commitment`、`timeoutMs`、`pollIntervalMs`、`abortSignal` 和 `searchTransactionHistory`。失败的交易展示 `TRANSACTION_FAILED`，从未出现的签名展示 `TRANSACTION_NOT_FOUND`，耗尽的等待展示 `TRANSACTION_TIMEOUT`。
 
 ## 跟踪签名状态
 
 ```ts
 import { useSignatureStatus } from "@vue-solana/vue/useSignatureStatus";
 
-const { status, loading, error, refresh, stopPolling, stopSubscription } = useSignatureStatus(
+const { status, loading, error, refresh, stopPolling } = useSignatureStatus(
   "PASTE_SUBMITTED_SIGNATURE",
   {
     pollIntervalMs: 5_000,
     searchTransactionHistory: true,
-    subscribe: true,
-    commitment: "confirmed",
   },
 );
 ```
 
-轮询会在每个间隔调用 `getSignatureStatuses()`，因此 UI 不再需要更新时应停止轮询。调用 `stopPolling()` 会清除当前 interval，并阻止该 composable 实例自动重启轮询。无效签名会清除过期 `status`、设置 `error`，且不调用 RPC 或启动轮询。小于或等于 `0` 的无效 `pollIntervalMs` 会设置 `RangeError` 且不启动轮询。`subscribe: true` 使用 `onSignature()`，并在组件卸载时移除 listener。调用 `stopSubscription()` 会移除当前签名 listener，并阻止该 composable 实例自动重启。
+没有按次调用的 `commitment` 选项：`getSignatureStatuses()` 不接受该参数，因此读取使用的是 endpoint 自带的 commitment。请在 endpoint 或 `createSolanaPlugin()` 上设置。如果需要按次指定 commitment，请使用 `useTransactionConfirmation()`。
+
+轮询使用链式 `setTimeout` 调用 `getSignatureStatuses()`，因此慢速 RPC 只会延迟下一次 tick，而不会与自身重叠。调用 `stopPolling()` 会清除当前计时器并阻止后续自动 tick——直到被观察的签名发生变化，此时会为新签名重新启动轮询。无效签名会清除过期 `status`、设置 `error`，且不调用 RPC 或启动轮询。小于或等于 `0` 的无效 `pollIntervalMs` 会设置代码为 `RPC_FAILURE` 的 `SolanaError`，且不启动轮询。
 
 ## 示例应用
 

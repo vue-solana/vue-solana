@@ -1,9 +1,14 @@
 import { addImports, addPlugin, createResolver, defineNuxtModule } from "@nuxt/kit";
+import type { NuxtModule } from "@nuxt/schema";
 import type { VueSolanaPluginOptions } from "@vue-solana/vue";
 import { existsSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { createRequire } from "node:module";
 import { solanaAutoImports, solanaSetupAutoImports } from "./imports";
+// Type-only: pulls `nuxt/schema` into the program so the augmentation below
+// resolves (TS2664 otherwise — nothing else in this package imports it).
+// Erased at build time, so no runtime or bundle impact.
+import type {} from "nuxt/schema";
 export type ModuleOptions = Omit<VueSolanaPluginOptions, "wallet" | "payer" | "payerSecretKey"> & {
   /**
    * Set to `false` to auto-import the composables without installing the Solana
@@ -13,7 +18,15 @@ export type ModuleOptions = Omit<VueSolanaPluginOptions, "wallet" | "payer" | "p
   clientPlugin?: boolean;
 };
 
-type DefinedNuxtModule = ReturnType<ReturnType<typeof defineNuxtModule<ModuleOptions>>["with"]>;
+// Shipped with the module entry (`dist/module.d.ts`), so fresh consumers get
+// typed `runtimeConfig.public.solana` with no local shim. A separate
+// `src/runtime/types.d.ts` never reached `dist/` (it was no build entry), so
+// the augmentation lives here instead.
+declare module "nuxt/schema" {
+  interface PublicRuntimeConfig {
+    solana?: ModuleOptions;
+  }
+}
 
 /**
  * Types only, so app code can name the public surface (`SolanaWalletInfo`,
@@ -24,18 +37,12 @@ type DefinedNuxtModule = ReturnType<ReturnType<typeof defineNuxtModule<ModuleOpt
 export type * from "@vue-solana/vue";
 
 const VITE_OPTIMIZE_DEPS = [
-  "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > @solana-mobile/wallet-standard-mobile",
   "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > buffer",
   "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > buffer/",
-  "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > bs58",
   "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl",
-  "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl/nacl-fast.js",
 ];
 
-const VITE_NEEDS_INTEROP = [
-  "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl",
-  "@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl/nacl-fast.js",
-];
+const VITE_NEEDS_INTEROP = ["@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl"];
 
 interface ViteOptimizeDepsTarget {
   optimizeDeps?: {
@@ -44,7 +51,7 @@ interface ViteOptimizeDepsTarget {
   };
 }
 
-const module: DefinedNuxtModule = defineNuxtModule<ModuleOptions>({
+const module: NuxtModule<ModuleOptions> = defineNuxtModule<ModuleOptions>({
   meta: {
     name: "@vue-solana/nuxt",
     configKey: "solana",
@@ -70,11 +77,11 @@ const module: DefinedNuxtModule = defineNuxtModule<ModuleOptions>({
       ...options,
     });
 
-    mergeViteOptimizeDeps(nuxt.options.vite);
-
-    // Resolved from the module's own dependency, so the auto-import sources
-    // point at the copy the bundler will load, and the app keeps installing
-    // just `@vue-solana/nuxt`.
+    // Vite optimize-deps merging is deferred to `vite:extendConfig`, which
+    // is client-aware; doing it eagerly here polluted the SSR Vite config.
+    // `vueDist` is resolved from the module's own dependency, so the
+    // auto-import sources point at the copy the bundler will load, and the app
+    // keeps installing just `@vue-solana/nuxt`.
     const vueDist = resolveVueDist();
 
     nuxt.hook("vite:extendConfig", (config, { isClient }) => {
@@ -92,6 +99,7 @@ const module: DefinedNuxtModule = defineNuxtModule<ModuleOptions>({
       addPlugin({
         src: resolver.resolve("./runtime/plugin"),
         mode: "client",
+        order: -10,
       });
 
       addImports(solanaAutoImports(vueDist));

@@ -75,7 +75,7 @@ Supported clusters are `mainnet` (legacy alias `mainnet-beta`), `devnet`, `testn
 
 `payer` and `payerSecretKey` are supported by direct Vue plugin/core clients. A client-sent transaction requires a `payer`. `payerSecretKey` derives its address at client creation from the unverified public half, so treat `payer.address` as unconfirmed until the first signature succeeds, and a mismatched keypair is rejected at the first signature rather than at creation. Signing imports the key through WebCrypto, which browsers expose only in a secure context (`https`, or `http` on `localhost`). Never put a raw secret or `payerSecretKey` in Nuxt public runtime config, and never ship a funded signing key to an end-user browser.
 
-The default client created by `createSolanaPlugin()` uses the official `solanaRpc()` + `rpcAirdrop()` composition; `solanaRpc()` itself installs the planner, the plan-signing executor, and the plan-sending executor. The old custom fallback sender is not used. The official sending executor waits for `confirmed` commitment before `execute()` resolves and sets `status` to `sent`.
+The default client created by `createSolanaPlugin()` uses the official `solanaRpc()` + `rpcAirdrop()` composition when no `commitment` is configured; `solanaRpc()` itself installs the planner, the plan-signing executor, and the plan-sending executor. A configured `commitment` builds the same stack explicitly so the commitment reaches the RPC layer. The old custom fallback sender is not used. The official sending executor waits for `confirmed` commitment before `execute()` resolves and sets `status` to `sent`.
 
 ### Client and Plugin Lifecycle
 
@@ -96,6 +96,18 @@ import { computed, ref } from "vue";
 const cluster = ref<SolanaCluster>("devnet");
 const plugin = computed(() => createSolanaPlugin({ cluster: cluster.value }));
 ```
+
+Dispose of the plugin when you tear your app down. `createSolanaPlugin()` starts a Wallet Standard discovery subscription and a deferred bootstrap; `dispose()` stops both so they do not outlive the app:
+
+```ts
+export const solana = createSolanaPlugin({ cluster: "devnet" });
+const app = createApp(App).use(solana);
+
+app.unmount();
+solana.dispose();
+```
+
+It is safe to call more than once and before `use()`. Nuxt apps need no code: the module's runtime plugin wires it to `vueApp.onUnmount()`.
 
 A Kit client runs its `createClient().use(...)` plugins during construction. When one of those plugins is async, the client — and any context built from it — only activates after that promise resolves. Defer real RPC and wallet work to client lifecycle hooks or user actions after hydration rather than running it during setup or SSR.
 
@@ -562,6 +574,8 @@ The wallet returns a signature over `signedMessage` — the SIWS message the use
 
 The server must re-derive the expected message from the nonce it issued (or validate every field of the received message) so expired or replayed nonces are rejected.
 
+Before either `signMessage()` or `signIn()` resolves, the adapter also checks the returned signature against the account's `publicKey` where Ed25519 (WebCrypto) is available, rejecting with `INVALID_SIGNATURE` on a mismatch. That is a best-effort client-side guard against a misbehaving wallet — it is skipped where Ed25519 is unavailable, so the server-side check above is what actually authenticates the user.
+
 ## Data Fetching Composables
 
 `useRequest`, `useSubscription`, and `useTrackedData` are the SWR-style data layer, built on the Kit reactive-store primitives:
@@ -805,25 +819,25 @@ const { signature, confirmation, status, loading, error, confirm, reset } =
 await confirm("PASTE_SUBMITTED_SIGNATURE", { commitment: "finalized" });
 ```
 
-The composable preserves the submitted `signature` when confirmation times out or the RPC call fails, so apps can still show an explorer link while surfacing `error` to the user.
+The composable preserves the submitted `signature` when confirmation times out or the RPC call fails, so apps can still show an explorer link while surfacing `error` to the user. Options pass through to `confirmTransactionSignature()`: `commitment`, `timeoutMs`, `pollIntervalMs`, `abortSignal`, and `searchTransactionHistory`. A failed transaction surfaces `TRANSACTION_FAILED`, a signature that never appears surfaces `TRANSACTION_NOT_FOUND`, and an exhausted wait surfaces `TRANSACTION_TIMEOUT`.
 
 ## Track Signature Status
 
 ```ts
 import { useSignatureStatus } from "@vue-solana/vue/useSignatureStatus";
 
-const { status, loading, error, refresh, stopPolling, stopSubscription } = useSignatureStatus(
+const { status, loading, error, refresh, stopPolling } = useSignatureStatus(
   "PASTE_SUBMITTED_SIGNATURE",
   {
     pollIntervalMs: 5_000,
     searchTransactionHistory: true,
-    subscribe: true,
-    commitment: "confirmed",
   },
 );
 ```
 
-Polling uses `getSignatureStatuses()` on every interval, so stop polling when the UI no longer needs updates. Calling `stopPolling()` clears the current interval and prevents automatic polling restarts for that composable instance. Invalid signatures clear stale `status`, set `error`, and do not call RPC or start polling. Invalid `pollIntervalMs` values less than or equal to `0` set a `RangeError` and do not start polling. `subscribe: true` uses `onSignature()` and removes the listener on component unmount. Calling `stopSubscription()` removes the current signature listener and prevents automatic restarts for that composable instance.
+There is no per-call `commitment` option: `getSignatureStatuses()` accepts none, so reads use the commitment baked into the endpoint. Set it on the endpoint or on `createSolanaPlugin()`. For a per-call commitment use `useTransactionConfirmation()`.
+
+Polling uses `getSignatureStatuses()` on a chained `setTimeout`, so a slow RPC delays the next tick but never overlaps itself. Calling `stopPolling()` clears the current timer and prevents further automatic ticks — until the watched signature changes, which restarts polling for the new signature. Invalid signatures clear stale `status`, set `error`, and do not call RPC or start polling. Invalid `pollIntervalMs` values less than or equal to `0` set an `RPC_FAILURE` `SolanaError` and do not start polling.
 
 ## Example App
 

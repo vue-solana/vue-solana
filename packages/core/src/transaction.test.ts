@@ -148,7 +148,10 @@ describe("confirmTransactionSignature", () => {
       signature: "signature",
       commitment: "confirmed",
     });
-    expect(client.rpc.getSignatureStatuses).toHaveBeenCalledWith([SIGNATURE]);
+    expect(client.rpc.getSignatureStatuses).toHaveBeenCalledWith(
+      [SIGNATURE],
+      expect.objectContaining({ searchTransactionHistory: false }),
+    );
   });
 
   it("supports caller-selected commitment", async () => {
@@ -195,7 +198,7 @@ describe("confirmTransactionSignature", () => {
       await confirmTransactionSignature(client, SIGNATURE);
     } catch (error) {
       expect(error).toBeInstanceOf(SolanaError);
-      expect((error as SolanaError).code).toBe("RPC_FAILURE");
+      expect((error as SolanaError).code).toBe("TRANSACTION_FAILED");
       expect((error as SolanaError).cause).toEqual(instructionError);
     }
   });
@@ -231,5 +234,124 @@ describe("confirmTransactionSignature", () => {
 
     await vi.runAllTimersAsync();
     await rejection;
+  });
+
+  it("rejects TRANSACTION_NOT_FOUND when the signature never appears", async () => {
+    vi.useFakeTimers();
+    const client = createRpcClient();
+    client.rpc.getSignatureStatuses.mockReturnValue({
+      send: vi.fn().mockResolvedValue({ value: [null] }),
+    });
+    const promise = confirmTransactionSignature(client, SIGNATURE, {
+      timeoutMs: 10,
+      pollIntervalMs: 5,
+    });
+    const rejection = promise.then(
+      () => {
+        throw new Error("Expected confirmation to report not-found.");
+      },
+      (error: unknown) => {
+        expect(error).toBeInstanceOf(SolanaError);
+        expect((error as SolanaError).code).toBe("TRANSACTION_NOT_FOUND");
+      },
+    );
+
+    await vi.runAllTimersAsync();
+    await rejection;
+  });
+
+  it("rejects TRANSACTION_FAILED when the transaction errored", async () => {
+    const client = createRpcClient();
+    const instructionError = { InstructionError: [0, "Custom"] };
+    client.rpc.getSignatureStatuses.mockReturnValue({
+      send: vi.fn().mockResolvedValue({
+        value: [
+          {
+            slot: 10n,
+            confirmations: null,
+            err: instructionError,
+            confirmationStatus: "confirmed",
+          },
+        ],
+      }),
+    });
+
+    try {
+      await confirmTransactionSignature(client, SIGNATURE);
+      throw new Error("Expected confirmation to reject.");
+    } catch (error) {
+      expect(error).toBeInstanceOf(SolanaError);
+      expect((error as SolanaError).code).toBe("TRANSACTION_FAILED");
+      expect((error as SolanaError).cause).toEqual(instructionError);
+    }
+  });
+
+  it("passes abortSignal and searchTransactionHistory through to the RPC", async () => {
+    const client = createRpcClient();
+    const send = vi.fn().mockResolvedValue({
+      value: [
+        {
+          slot: 10n,
+          confirmations: null,
+          err: null,
+          confirmationStatus: "finalized",
+        },
+      ],
+    });
+    client.rpc.getSignatureStatuses.mockReturnValue({ send });
+    const controller = new AbortController();
+
+    await confirmTransactionSignature(client, SIGNATURE, {
+      commitment: "finalized",
+      abortSignal: controller.signal,
+      searchTransactionHistory: true,
+    });
+
+    expect(client.rpc.getSignatureStatuses).toHaveBeenCalledWith([SIGNATURE], {
+      searchTransactionHistory: true,
+    });
+    expect(send).toHaveBeenCalledWith({ abortSignal: controller.signal });
+  });
+
+  it("rejects with the abort reason when the caller aborts mid-poll", async () => {
+    vi.useFakeTimers();
+    const client = createRpcClient();
+    client.rpc.getSignatureStatuses.mockReturnValue({
+      send: vi.fn().mockResolvedValue({
+        value: [
+          {
+            slot: 10n,
+            confirmations: 0n,
+            err: null,
+            confirmationStatus: "processed",
+          },
+        ],
+      }),
+    });
+    const controller = new AbortController();
+    const promise = confirmTransactionSignature(client, SIGNATURE, {
+      timeoutMs: 60_000,
+      abortSignal: controller.signal,
+    });
+    const rejection = expect(promise).rejects.toMatchObject({ name: "AbortError" });
+
+    controller.abort();
+    await vi.runAllTimersAsync();
+    await rejection;
+  });
+
+  it("throws INVALID_INPUT for invalid timeout and poll interval values", async () => {
+    const client = createRpcClient();
+
+    await expect(
+      confirmTransactionSignature(client, SIGNATURE, { timeoutMs: Number.NaN }),
+    ).rejects.toMatchObject({ code: "INVALID_INPUT" });
+    await expect(
+      confirmTransactionSignature(client, SIGNATURE, { pollIntervalMs: -1 }),
+    ).rejects.toMatchObject({ code: "INVALID_INPUT" });
+    await expect(
+      confirmTransactionSignature(client, SIGNATURE, { pollIntervalMs: 0 }),
+    ).rejects.toMatchObject({ code: "INVALID_INPUT" });
+    expect(client.rpc.getSignatureStatuses).not.toHaveBeenCalled();
   });
 });

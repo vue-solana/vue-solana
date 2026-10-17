@@ -55,7 +55,10 @@ describe("useSignAndSendTransaction", () => {
     expect(wallet.signAndSendTransaction).toHaveBeenCalledWith(transaction, {
       skipPreflight: false,
     });
-    expect(getSignatureStatuses).toHaveBeenCalledWith(["signature"]);
+    expect(getSignatureStatuses).toHaveBeenCalledWith(
+      ["signature"],
+      expect.objectContaining({ searchTransactionHistory: false }),
+    );
     expect(result.status.value).toBe("finalized");
     expect(result.confirmation.value?.commitment).toBe("finalized");
   });
@@ -79,7 +82,10 @@ describe("useSignAndSendTransaction", () => {
     });
 
     expect(result.status.value).toBe("processed");
-    expect(getSignatureStatuses).toHaveBeenCalledWith(["signature"]);
+    expect(getSignatureStatuses).toHaveBeenCalledWith(
+      ["signature"],
+      expect.objectContaining({ searchTransactionHistory: false }),
+    );
   });
 
   it("ignores an older send that resolves after a newer send", async () => {
@@ -151,6 +157,41 @@ describe("useSignAndSendTransaction", () => {
     expect(result.status.value).toBe("error");
     expect(result.error.value?.code).toBe("RPC_FAILURE");
     expect(result.error.value?.cause).toBe(failure);
+  });
+
+  it("keeps the signature when confirmation times out", async () => {
+    vi.useFakeTimers();
+    const wallet = createWallet();
+    const getSignatureStatuses = vi.fn(() => ({
+      send: vi.fn().mockResolvedValue({
+        value: [{ slot: 1n, confirmations: 0n, err: null, confirmationStatus: "processed" }],
+      }),
+    }));
+    const context = createMockSolanaContext({
+      wallet: shallowRef(wallet),
+      client: { rpc: { getSignatureStatuses } } as never,
+    });
+    const result = mountUseSignAndSendTransaction(context);
+
+    const execution = result.execute({} as SolanaTransaction, {
+      confirm: true,
+      confirmation: { timeoutMs: 10, pollIntervalMs: 5 },
+    });
+    const rejection = execution.then(
+      () => {
+        throw new Error("Expected confirmation to time out.");
+      },
+      (error: unknown) => {
+        expect(error).toBeInstanceOf(Error);
+      },
+    );
+
+    await vi.runAllTimersAsync();
+    await rejection;
+
+    expect(result.signature.value).toBe("signature");
+    expect(result.status.value).toBe("error");
+    expect(result.error.value?.code).toBe("TRANSACTION_TIMEOUT");
   });
 
   it("rejects when no wallet is configured", async () => {

@@ -103,7 +103,7 @@ interface SolanaConfig {
 
 `payer` 是 Kit `TransactionSigner`，用作客户端发送交易时的费用支付方和签名者。`payerSecretKey` 是 base64 编码的 64 字节 Ed25519 keypair，secret key 在前；client 会在创建时派生其 address，并在首次使用时导入 signing key，因此 public half 与 seed 不匹配的 keypair 会在第一次签名时被拒绝，而不是在创建 client 时。address 来自未经校验的 public half，所以在第一次签名成功之前请将 `payer.address` 视为未确认。签名通过 WebCrypto 导入 key，而浏览器只在 secure context（`https`，或 `localhost` 上的 `http`）中暴露 WebCrypto；在此之外，第一次 `signTransactions()` 调用会抛出 WebCrypto 错误，而不是 key 无效的错误。两个选项都支持 direct core/Vue client。
 
-`createSolanaClient()` 默认组合 `@solana/kit-plugin-rpc` 的官方 `solanaRpc()` 和 `rpcAirdrop()`。`solanaRpc()` 会自行安装 transaction planner 以及 plan-signing 和 plan-sending executor。旧的 custom fallback sender 不再使用。客户端暴露 RPC 读取和订阅，以及 `planTransaction(s)` 和 `sendTransaction(s)`。官方 executor 会获取新的 blockhash、处理 resource limit 和 preflight、使用可用 signer 签名、提交 RPC 交易，并在 send resolve 前等待 `confirmed` commitment。client-sent 交易需要 `payer` signer。
+`createSolanaClient()` 在未配置 `commitment` 时默认组合 `@solana/kit-plugin-rpc` 的官方 `solanaRpc()` 和 `rpcAirdrop()`（配置了 `commitment` 会显式构建相同 stack 使其到达 RPC 层）。`solanaRpc()` 会自行安装 transaction planner 以及 plan-signing 和 plan-sending executor。旧的 custom fallback sender 不再使用。客户端暴露 RPC 读取和订阅，以及 `planTransaction(s)` 和 `sendTransaction(s)`。官方 executor 会获取新的 blockhash、处理 resource limit 和 preflight、使用可用 signer 签名、提交 RPC 交易，并在 send resolve 前等待 `confirmed` commitment。client-sent 交易需要 `payer` signer。
 
 永远不要把 raw secret 或 `payerSecretKey` 放入 Nuxt public runtime config。不要把有资金的 signing key 发送到 end-user browser；请使用 server 或 relayer 边界，demo 则使用未充值的 ephemeral signer。
 
@@ -319,7 +319,7 @@ const signedTransaction = await wallet.signTransaction(transaction);
 ### 交易
 
 - `signAndSendTransaction(client, wallet, transaction, options?)`：使用配置的钱包签名并发送原始 wire 交易字节，返回 RPC signature。暴露 `signAndSendTransaction` 的钱包会委托给它；否则交易用 `wallet.signTransaction` 签名，并通过 `client.rpc.sendTransaction(...).send()` 提交。Android Mobile Wallet Adapter 钱包优先使用签名加应用侧 RPC 提交，让应用拥有提交过程，并能在钱包 handoff 后可靠返回 RPC signature。
-- `confirmTransactionSignature(client, signature, options?)`：等待已提交签名达到请求的 commitment。默认使用 `confirmed` commitment、60 秒超时，并轮询 `client.rpc.getSignatureStatuses([signature]).send()`。
+- `confirmTransactionSignature(client, signature, options?)`：等待已提交签名达到请求的 commitment。默认使用 `confirmed` commitment、60 秒超时、1500 毫秒轮询间隔，并轮询 `client.rpc.getSignatureStatuses([signature]).send()`。接受 `pollIntervalMs`（必须大于 `0`）、`abortSignal` 和 `searchTransactionHistory`。失败的交易抛出 `TRANSACTION_FAILED`，从未出现的签名抛出 `TRANSACTION_NOT_FOUND`，耗尽的等待抛出 `TRANSACTION_TIMEOUT`。当签名可能已离开近期状态缓存时，请传递 `searchTransactionHistory: true`——否则旧签名不会出现在结果中，超时后将得到 `TRANSACTION_NOT_FOUND`。
 
 client-sent flow 与这个感知钱包的 helper 分开。client 通过 `createSolanaClient()` 安装的官方 `rpcTransactionPlanSendingExecutor()` 暴露 `sendTransaction()` 和 `sendTransactions()`，Vue composable 包装这些方法。它们会 plan、sign、submit 并等待 `confirmed` commitment；只有 send-and-confirm 操作完成后状态才会变为 `sent`。单笔结果在 `data.context.signature` 提供已提交的签名，batch 结果包含完整的 plan result tree。官方 sender 不显示钱包弹窗。
 
@@ -353,7 +353,7 @@ if (balance) {
 - `createSolanaError(code, message, options?)`：创建规范化 Solana 错误。
 - `isSolanaError(error)`：把 unknown error 收窄为 `SolanaError`。
 - `normalizeSolanaError(cause, fallbackCode, fallbackMessage?, options?)`：把未知失败转换为 `SolanaError`，并把常见钱包拒绝映射到 `USER_REJECTED`。
-- `withTimeout(promise, timeoutMs, createError)`：用调用方提供的超时错误与 promise 竞争。
+- `withTimeout(promise, timeoutMs, createError?, options?)`：用调用方提供的超时错误与 promise 竞争。对 `NaN`/负数超时拒绝 `INVALID_INPUT`；`{ signal }` 以 signal 的原因中止等待，`{ code, message }` 设置默认超时错误。
 - `withSolanaTimeout(promise, timeoutMs, message)`：用 `TRANSACTION_TIMEOUT` 错误与 promise 竞争。
 
 ## 错误模型
@@ -372,7 +372,13 @@ try {
         // The user declined a wallet prompt.
         break;
       case "TRANSACTION_TIMEOUT":
-        // The operation timed out; check signature state before retrying.
+        // 操作超时；重试前请检查签名状态。
+        break;
+      case "TRANSACTION_NOT_FOUND":
+        // 签名从未落地；可安全重试。
+        break;
+      case "TRANSACTION_FAILED":
+        // 交易在链上失败；请查看 error.cause。
         break;
       case "RPC_FAILURE":
         // RPC or confirmation failed.
@@ -389,8 +395,14 @@ try {
 - `WALLET_NOT_CONNECTED`
 - `WALLET_FEATURE_UNSUPPORTED`
 - `USER_REJECTED`
+- `INVALID_SIGNATURE`
 - `INVALID_ADDRESS`
+- `INVALID_INPUT`
 - `TRANSACTION_TIMEOUT`
+- `TRANSACTION_NOT_FOUND`
+- `TRANSACTION_FAILED`
+- `REDIRECT_TIMEOUT`
+- `DECRYPTION_FAILED`
 - `RPC_FAILURE`
 - `STORAGE_FAILURE`
 

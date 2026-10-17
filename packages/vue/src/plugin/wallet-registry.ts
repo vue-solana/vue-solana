@@ -21,22 +21,58 @@ interface SolanaWalletRegistryOptions {
 
 export function createSolanaWalletRegistry(options: SolanaWalletRegistryOptions) {
   const adaptedWallets = new WeakMap<object, SolanaWallet>();
+  // Adapters for non-object `wallet` values have no stable object to key a
+  // `WeakMap` by, so they are cached here by wallet identity instead. The
+  // wallet list is tiny (a handful of entries), so a strong `Map` is fine.
+  const adaptedPrimitiveWallets = new Map<string, SolanaWallet>();
+  // Every adapter this registry has created. The caches above only cover
+  // adapters still reachable by key; a standard wallet unregistered from
+  // discovery before teardown would no longer be found through
+  // `options.getWalletInfos()`. Teardown iterates this set, so every
+  // adapter's Wallet Standard `change` subscription is released.
+  const trackedAdapters = new Set<SolanaWallet>();
+
+  function trackAdapter(adapter: SolanaWallet): SolanaWallet {
+    trackedAdapters.add(adapter);
+    return adapter;
+  }
 
   function getAdaptedWallet(walletInfo: SolanaWalletInfo) {
     if (isSolanaIosWalletInfo(walletInfo)) {
-      return adaptSolanaIosWallet(walletInfo, {
+      // iOS definitions are stable module-level objects, so unlike before
+      // they are cached like standard wallets: rebuilding per call would
+      // accumulate tracked adapters (and any future event subscription)
+      // with no way to release the older ones before teardown.
+      const cachedIosWallet = adaptedWallets.get(walletInfo.wallet);
+
+      if (cachedIosWallet) {
+        return cachedIosWallet;
+      }
+
+      const iosAdapter = adaptSolanaIosWallet(walletInfo, {
         chain: getSolanaChain(options.cluster),
         cluster: options.cluster,
         onChange: options.onWalletChange,
         ...(options.iosWallet || {}),
       });
+      adaptedWallets.set(walletInfo.wallet, iosAdapter);
+      return trackAdapter(iosAdapter);
     }
 
     if (!isObject(walletInfo.wallet)) {
-      return adaptSolanaStandardWallet(walletInfo, {
+      const primitiveKey = `${walletInfo.name}::${String(walletInfo.wallet)}`;
+      const cachedPrimitiveWallet = adaptedPrimitiveWallets.get(primitiveKey);
+
+      if (cachedPrimitiveWallet) {
+        return cachedPrimitiveWallet;
+      }
+
+      const primitiveAdapter = adaptSolanaStandardWallet(walletInfo, {
         chain: getSolanaChain(options.cluster),
         onChange: options.onWalletChange,
       });
+      adaptedPrimitiveWallets.set(primitiveKey, primitiveAdapter);
+      return trackAdapter(primitiveAdapter);
     }
 
     const cachedWallet = adaptedWallets.get(walletInfo.wallet);
@@ -76,7 +112,7 @@ export function createSolanaWalletRegistry(options: SolanaWalletRegistryOptions)
     }
 
     adaptedWallets.set(walletInfo.wallet, cachedAdapter);
-    return cachedAdapter;
+    return trackAdapter(cachedAdapter);
   }
 
   function getDiscoveredWallets() {
@@ -96,7 +132,7 @@ export function createSolanaWalletRegistry(options: SolanaWalletRegistryOptions)
     try {
       handleSolanaIosWalletCallback({ clearUrl: true });
     } catch (cause) {
-      console.error("[Vue Solana] iOS wallet callback failed", cause);
+      void cause;
     }
   }
 
@@ -112,10 +148,22 @@ export function createSolanaWalletRegistry(options: SolanaWalletRegistryOptions)
     }
   }
 
+  /**
+   * Releases every adapter's Wallet Standard `change` subscription. Called
+   * from plugin teardown so adapted wallets never outlive the app.
+   * Idempotent; wallets stay connected, only event delivery stops.
+   */
+  function disposeAllAdaptedWallets() {
+    for (const adapter of trackedAdapters) {
+      adapter.dispose?.();
+    }
+  }
+
   return {
     getAdaptedWallet,
     getDiscoveredWallets,
     handleIosWalletCallback,
+    disposeAllAdaptedWallets,
   };
 }
 

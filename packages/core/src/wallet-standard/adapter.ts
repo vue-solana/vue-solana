@@ -7,8 +7,9 @@ import {
   SolanaSignTransaction,
 } from "@solana/wallet-standard-features";
 import type { SolanaSignInInput, SolanaSignInOutput } from "@solana/wallet-standard-features";
-import bs58 from "bs58";
+import { getBase58Decoder } from "@solana/kit";
 import type { Address } from "../kit";
+import { assertWalletSignature } from "./verify-wallet-signature";
 import type {
   SolanaChain,
   SolanaSignInResult,
@@ -34,10 +35,19 @@ export interface AdaptSolanaWalletOptions {
   onChange?: () => void;
 }
 
+/**
+ * A Wallet Standard wallet adapted to {@link SolanaWallet}. `dispose` is
+ * always present here (optional on the base interface, where plain
+ * caller-supplied wallets typically omit it).
+ */
+export interface AdaptedSolanaWallet extends SolanaWallet {
+  dispose(): void;
+}
+
 export function adaptSolanaStandardWallet(
   walletInfo: SolanaWalletInfo,
   options: AdaptSolanaWalletOptions = {},
-): SolanaWallet {
+): AdaptedSolanaWallet {
   const wallet = walletInfo.wallet as Wallet;
   let accounts = wallet.accounts;
   let account = options.account;
@@ -49,7 +59,7 @@ export function adaptSolanaStandardWallet(
   const eventsFeature = wallet.features[StandardEvents] as
     | StandardEventsFeature[typeof StandardEvents]
     | undefined;
-  eventsFeature?.on("change", (properties) => {
+  const unsubscribeChange = eventsFeature?.on("change", (properties) => {
     if (properties.accounts) {
       accounts = properties.accounts;
       account =
@@ -60,9 +70,14 @@ export function adaptSolanaStandardWallet(
     }
   });
 
+  function dispose() {
+    unsubscribeChange?.();
+  }
+
   return {
     platform: walletInfo.platform,
     source: walletInfo.source,
+    dispose,
     get publicKey() {
       return account ? (account.address as Address) : null;
     },
@@ -133,7 +148,16 @@ export function adaptSolanaStandardWallet(
             throw new Error("Solana wallet did not return a sign-in result");
           }
 
-          return toSolanaSignInResult(result);
+          const signInResult = toSolanaSignInResult(result);
+
+          await assertWalletSignature(
+            signInResult.account.publicKey,
+            signInResult.signedMessage,
+            signInResult.signature,
+            "sign-in",
+          );
+
+          return signInResult;
         }
       : undefined,
     signMessage: hasSignMessage(wallet)
@@ -147,6 +171,13 @@ export function adaptSolanaStandardWallet(
           if (!result) {
             throw new Error("Solana wallet did not return a message signature");
           }
+
+          await assertWalletSignature(
+            activeAccount.publicKey,
+            result.signedMessage,
+            result.signature,
+            "message",
+          );
 
           return result;
         }
@@ -201,7 +232,7 @@ export function adaptSolanaStandardWallet(
             throw new Error("Solana wallet did not return a transaction signature");
           }
 
-          return { signature: bs58.encode(result.signature) };
+          return { signature: getBase58Decoder().decode(result.signature) };
         }
       : undefined,
     signAndSendTransactions: hasSignAndSendTransaction(wallet)
@@ -229,7 +260,7 @@ export function adaptSolanaStandardWallet(
               throw new Error("Solana wallet did not return a transaction signature");
             }
 
-            return bs58.encode(result.signature);
+            return getBase58Decoder().decode(result.signature);
           });
         }
       : undefined,
