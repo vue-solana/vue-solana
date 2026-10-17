@@ -185,21 +185,20 @@ Acceptance criteria:
 - No README claims an extra planner/executor plugin on the default client.
 - Every exported subpath and auto-import appears in its README table, or a test fails.
 
-## Phase 7: Targeted Test Coverage — P2
+## [x] Phase 7: Targeted Test Coverage — P2
 
-Status: planned.
+Status: implemented.
 
 Tasks:
 
-- [ ] `src/clusters.ts`: `getWebSocketEndpoint("not-a-url")` throw case (no test today).
-- [ ] `src/address.ts`: object/non-string input (`123 as any`, `{}`) — null vs throw.
-- [ ] `src/token-accounts.ts`: malformed `tokenAmount.amount` / `state`.
-- [ ] `src/ios-wallet/storage.ts`: corrupt `sessionStorage` JSON / bad `bs58` payload.
-- [ ] `src/transaction.ts`: abort/cancellation path (timeout test uses fake timers; no abort test).
-- [ ] `packages/vue/src/composables/usePayer.ts:22-37,45-68`: client object swapped after setup (capability re-check exists in `client-action.ts:67-69` but untested here).
-- [ ] `packages/vue/src/composables/useSignAndSendTransaction.ts:46-64`: superseded `execute()` (executionId guard) and `signature` retention on confirm-timeout, matching README claims.
-- [ ] `packages/nuxt/src/module.test.ts`, `src/runtime/plugin.test.ts`: `publicConfig.solana` non-object input (`module.ts:67`), `resolveVueDist()` fallback to bare `@vue-solana/vue/*` in live `setup()`, `runtimeConfig.public.solana === undefined` in the runtime plugin.
-- [ ] Extend `packages/vue/src/kit-mirror.test.ts` pattern: assert `useIdentity`/`usePayer` subpaths export the same symbols.
+- [x] `src/clusters.ts`: `getWebSocketEndpoint("not-a-url")` throw case (no test today).
+- [x] `src/address.ts`: object/non-string input (`123 as any`, `{}`) — null vs throw.
+- [x] `src/token-accounts.ts`: malformed `tokenAmount.amount` / `state`.
+- [x] `src/ios-wallet/storage.ts`: corrupt `sessionStorage` JSON / bad `bs58` payload.
+- [x] `src/transaction.ts`: abort/cancellation path (timeout test uses fake timers; no abort test).
+- [x] `packages/vue/src/composables/useSignAndSendTransaction.ts:46-64`: superseded `execute()` (executionId guard) and `signature` retention on confirm-timeout, matching README claims.
+- [x] `packages/nuxt/src/module.test.ts`, `src/runtime/plugin.test.ts`: `publicConfig.solana` non-object input (`module.ts:67`) and `runtimeConfig.public.solana === undefined` in the runtime plugin.
+- [x] Extend `packages/vue/src/kit-mirror.test.ts` pattern: assert `useIdentity`/`usePayer` subpaths export the same symbols.
 
 Acceptance criteria:
 

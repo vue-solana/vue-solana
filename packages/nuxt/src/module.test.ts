@@ -245,6 +245,17 @@ describe("Nuxt module", () => {
     expect(serverConfig.optimizeDeps?.needsInterop).toBeUndefined();
   });
 
+  it("treats a non-object publicConfig.solana as empty before merging options", async () => {
+    const module = (await import("./module")).default as unknown as ModuleUnderTest;
+    const publicConfig: Record<string, unknown> = {
+      solana: "not-an-object" as never,
+    };
+
+    setupModule(module, { cluster: "testnet" }, { publicConfig });
+
+    expect(publicConfig.solana).toEqual({ cluster: "testnet" });
+  });
+
   it("omits non-serializable wallet adapters from public runtime config", async () => {
     const module = (await import("./module")).default as unknown as ModuleUnderTest;
     const wallet = { connect: vi.fn() };
