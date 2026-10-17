@@ -128,7 +128,7 @@ Supported clusters are `mainnet` (legacy alias `mainnet-beta`), `testnet`, `devn
 
 `payer` is a Kit `TransactionSigner`; `payerSecretKey` is its serializable base64 64-byte Ed25519 keypair form. Both are supported by direct core/Vue clients. A client-sent transaction requires a payer. Never put a raw secret or `payerSecretKey` in Nuxt public runtime config, and never ship a funded keypair to an end-user browser.
 
-`createSolanaClient()` composes the official `@solana/kit-plugin-rpc` stack by default: `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()`. The old custom fallback sender is removed. The official sender adds a fresh blockhash, resource-limit and preflight handling, signs, submits, and waits for `confirmed` commitment before the send resolves.
+`createSolanaClient()` composes the official `@solana/kit-plugin-rpc` stack by default: `solanaRpc()` followed by `rpcAirdrop()` when no `commitment` is configured (a configured `commitment` builds the same stack explicitly so it reaches the RPC layer). `solanaRpc()` installs `rpcTransactionPlanner()`, `rpcTransactionPlanSigningExecutor()`, and `rpcTransactionPlanSendingExecutor()` itself, so the client exposes RPC reads and subscriptions plus `planTransaction(s)`, `signTransaction(s)`, and `sendTransaction(s)` with no extra plugin. The old custom fallback sender is not used. Its official sending executor adds a fresh blockhash, resource-limit and preflight handling, signs with the available client signers, submits the transaction, and waits for `confirmed` commitment before the send resolves. A client send requires a `payer` signer.
 
 Use `mainnet` for Solana mainnet. This is Solana's official mainnet cluster name. The legacy `mainnet-beta` spelling is still accepted and redirects to the same endpoint.
 
@@ -151,6 +151,7 @@ Direct subpaths:
 - `@vue-solana/core/ios-wallet`
 - `@vue-solana/core/kit`
 - `@vue-solana/core/mobile-wallet`
+- `@vue-solana/core/mobile-wallet-support`
 - `@vue-solana/core/rpc`
 - `@vue-solana/core/token-accounts`
 - `@vue-solana/core/timeout`
@@ -179,6 +180,15 @@ Direct subpaths:
 | `createSolanaActionStore(fn)`                                   | Wraps an async `(signal, ...args) => Promise` function into a `{ getState, subscribe, dispatch, reset, withSignal }` store; each dispatch aborts the prior in-flight call. |
 
 The client-sent API is the official Kit `ClientWithTransactionSending` capability installed by `createSolanaClient()`. It does not use a wallet popup; `sent` is reached after the RPC executor completes its send-and-confirm operation at `confirmed` commitment. Use a `payer`, and keep funded keys in a trusted server or relayer context.
+| `registerSolanaMobileWallet(config?)` | Registers an Android Mobile Wallet Adapter wallet through `@solana-mobile/wallet-standard-mobile`. |
+| `isSolanaMobileWalletSupported()` | Android-support gate used to decide whether to lazy-load the MWA module. |
+| `getSolanaIosWallets(options?)` | Builds iOS browser wallet entries (Phantom, Solflare, Backpack) as universal links. |
+| `handleSolanaIosWalletCallback()` | Completes a pending iOS wallet deep-link callback after redirect. |
+| `adaptSolanaStandardWallet(wallet)` | Adapts a Solana Wallet Standard wallet into `SolanaWallet`. |
+| `getRegisteredSolanaWallets()` | Returns the Wallet Standard wallets currently registered in the app. |
+| `withTimeout(promise, timeoutMs, options?)` | Races a promise against a timeout, with optional abort signal. |
+| `withSolanaTimeout(promise, timeoutMs, options?)` | Solana-specific timeout wrapper with abort and error-code support. |
+| `normalizeSolanaError(error)` | Normalizes an unknown error into a `SolanaError`. |
 | `isSolanaActionAborted(error)` | Detects abort errors from superseded action dispatches. |
 
 ## Wallet Interface

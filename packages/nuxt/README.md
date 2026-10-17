@@ -121,10 +121,14 @@ The module auto-imports these composables from direct `@vue-solana/vue/*` subpat
 - `useSolanaSignAndSendTransactions()`
 - `useSolanaTransactionConfirmation()`
 - `useSolanaSignatureStatus()`
+- `useSolanaTransaction()`
 - `useSolanaAction()`
 - `useSolanaRequest()`
 - `useSolanaSubscription()`
 - `useSolanaTrackedData()`
+- `useSolanaRequestSwr()`
+- `useSolanaSubscriptionSwr()`
+- `useSolanaTrackedDataSwr()`
 - `useSolanaSelectedWalletAccount()`
 - `useSolanaPayer()`
 - `useSolanaIdentity()`
@@ -154,10 +158,14 @@ The module auto-imports these composables from direct `@vue-solana/vue/*` subpat
 | `useSolanaSignAndSendTransactions()` | Batch sign-and-send returning one signature per transaction.                                                                                 |
 | `useSolanaTransactionConfirmation()` | Confirmation state for an already submitted signature.                                                                                       |
 | `useSolanaSignatureStatus()`         | Signature status reads with optional polling or websocket subscription.                                                                      |
+| `useSolanaTransaction()`             | Generic async transaction state helper with optional timeout settings.                                                                       |
 | `useSolanaAction()`                  | Generic async action state machine; each dispatch aborts the prior attempt.                                                                  |
 | `useSolanaRequest()`                 | One-shot Kit request with stale-while-revalidate as its source changes.                                                                      |
 | `useSolanaSubscription()`            | Live data over a Kit reactive stream store (e.g. RPC subscriptions).                                                                         |
 | `useSolanaTrackedData()`             | Slot-deduplicated fetch plus subscription over Kit's slot-tracking store.                                                                    |
+| `useSolanaRequestSwr()`              | Cache-keyed SWR adapter for one-shot Kit requests.                                                                                           |
+| `useSolanaSubscriptionSwr()`         | Cache-keyed SWR adapter for Kit reactive stream stores.                                                                                      |
+| `useSolanaTrackedDataSwr()`          | Cache-keyed SWR adapter for slot-tracked data.                                                                                               |
 | `useSolanaSelectedWalletAccount()`   | App-wide selected wallet account context provided by the runtime plugin.                                                                     |
 | `useSolanaPayer()`                   | Reactive Kit client `payer` signer ref. Nuxt config intentionally does not provide one; use a client-only plugin with `clientPlugin: false`. |
 | `useSolanaIdentity()`                | Reactive Kit client `identity` signer ref.                                                                                                   |
@@ -166,7 +174,7 @@ The module auto-imports these composables from direct `@vue-solana/vue/*` subpat
 | `useSolanaSendTransaction()`         | Plans, signs, submits, and confirms one transaction through the client.                                                                      |
 | `useSolanaSendTransactions()`        | Sends a batch of transactions (parallel or sequential) through the client.                                                                   |
 
-The default client built by the module composes the official `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()` plugins. The old custom fallback sender is not used. `useSolanaSendTransaction()` and `useSolanaSendTransactions()` therefore use the official client-sending capability, but the module does not configure a payer because `payer` and `payerSecretKey` are omitted from `ModuleOptions`. Their `sent` status is reached after the official executor completes its send-and-confirm operation at `confirmed` commitment.
+The default client built by the module composes `solanaRpc()` followed by `rpcAirdrop()` when no `commitment` is configured (a configured `commitment` builds the same stack explicitly so it reaches the RPC layer); `solanaRpc()` installs `rpcTransactionPlanner()`, `rpcTransactionPlanSigningExecutor()`, and `rpcTransactionPlanSendingExecutor()` itself. The old custom fallback sender is not used. `useSolanaSendTransaction()` and `useSolanaSendTransactions()` therefore use the official client-sending capability, but the module does not configure a payer because `payer` and `payerSecretKey` are omitted from `ModuleOptions`. Their `sent` status is reached after the official executor completes its send-and-confirm operation at `confirmed` commitment.
 
 The runtime plugin is client-only. Auto-imported composables can be called during SSR and return inert state until hydration provides the real client context. Trigger RPC and wallet work from client lifecycle hooks or user actions.
 
@@ -325,6 +333,7 @@ Docs: [Vue Solana Agent Skill](https://vue-solana-docs.vercel.app/agent-skill)
 ## Caveats
 
 - The runtime plugin is client-only. Auto-imported composables are SSR-safe, but real RPC and wallet work should run after hydration or in user actions.
+- The SWR cache (`useSolanaRequestSwr()`, `useSolanaSubscriptionSwr()`, `useSolanaTrackedDataSwr()`) is module-level and shared across SSR requests. Namespace cache keys per request or call `clearSwrCache()` (auto-imported) at the start of each server request to avoid leaking cached data between requests.
 - Nuxt module options are stored in public runtime config, so they must be JSON-serializable.
 - Public Solana RPC endpoints are useful for development, but production apps should use dedicated RPC infrastructure.
 - Broad `useSolanaProgramAccounts()` scans can be expensive or blocked on public RPC nodes. Prefer narrow filters and `dataSlice`.

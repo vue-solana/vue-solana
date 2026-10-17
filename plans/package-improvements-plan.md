@@ -167,18 +167,18 @@ Acceptance criteria:
 - New public composable without a Nuxt alias (or documented omission) fails CI.
 - `attw`/`publint`, externals, and pack-size guards run in CI.
 
-## Phase 6: Documentation Accuracy — P1
+## [x] Phase 6: Documentation Accuracy — P1
 
-Status: planned.
+Status: implemented.
 
 Tasks:
 
-- [ ] Fix the planner/executor claim in all three READMEs: `packages/core/README.md:125`, `packages/vue/README.md:101,394-395`, `packages/nuxt/README.md:169` say the default client composes `solanaRpc()` + `rpcTransactionPlanner()` + `rpcTransactionPlanSendingExecutor()`; code calls only `solanaRpc()` + `rpcAirdrop()` (`packages/core/src/kit.ts:37-44`, planner comes via `solanaRpc` itself per repo policy). Rewrite per `AGENTS.md`.
-- [ ] Sync core README API table (`packages/core/README.md:155-176`): add `registerSolanaMobileWallet`, `isSolanaMobileWalletSupported`, iOS helpers (`getSolanaIosWallets`, `handleSolanaIosWalletCallback`), wallet-standard helpers (`adaptSolanaStandardWallet`, `getRegisteredSolanaWallets`), `withTimeout/withSolanaTimeout`, `normalizeSolanaError`; add `@vue-solana/core/mobile-wallet-support` to the subpath list (`packages/core/package.json:68-71` exports it, README omits it). Generate the table or extend `export-map-docs.test.ts` to cover this README.
-- [ ] Sync nuxt README auto-imports (`packages/nuxt/README.md:105-134` omits `useSolanaTransaction()`, `useSolanaRequestSwr()`, `useSolanaSubscriptionSwr()`, `useSolanaTrackedDataSwr()` though `src/imports.ts:31,38-40` and the CHANGELOG advertise them). Add the four rows to bullet list + table.
-- [ ] Sync vue README API table (`packages/vue/README.md:591-630`): document `tryUseSolana()` vs `useSolana()` SSR behavior and `MissingClientCapabilityError`.
-- [ ] Surface the SWR SSR warning in docs (`packages/vue/src/swr.ts:31-34` comment only). Add the per-request namespacing / `clearSwrCache()` note to the vue + nuxt READMEs.
-- [ ] Docs correctly warn options must be JSON-serializable (`packages/nuxt/README.md:78-80`) but nothing enforces it. Add a dev-only serializability assertion or a test snapshotting that `mobileWallet` (`packages/core/src/mobile-wallet.ts:18-22`) and iOS options (`packages/core/src/ios-wallet/types.ts:9-14`) stay serializable.
+- [x] Fix the planner/executor claim in all three READMEs: `packages/core/README.md:125`, `packages/vue/README.md:101,394-395`, `packages/nuxt/README.md:169` say the default client composes `solanaRpc()` + `rpcTransactionPlanner()` + `rpcTransactionPlanSendingExecutor()`; code calls only `solanaRpc()` + `rpcAirdrop()` (`packages/core/src/kit.ts:37-44`, planner comes via `solanaRpc` itself per repo policy). Rewrite per `AGENTS.md`.
+- [x] Sync core README API table (`packages/core/README.md:155-176`): add `registerSolanaMobileWallet`, `isSolanaMobileWalletSupported`, iOS helpers (`getSolanaIosWallets`, `handleSolanaIosWalletCallback`), wallet-standard helpers (`adaptSolanaStandardWallet`, `getRegisteredSolanaWallets`), `withTimeout/withSolanaTimeout`, `normalizeSolanaError`; add `@vue-solana/core/mobile-wallet-support` to the subpath list (`packages/core/package.json:68-71` exports it, README omits it). Generate the table or extend `export-map-docs.test.ts` to cover this README.
+- [x] Sync nuxt README auto-imports (`packages/nuxt/README.md:105-134` omits `useSolanaTransaction()`, `useSolanaRequestSwr()`, `useSolanaSubscriptionSwr()`, `useSolanaTrackedDataSwr()` though `src/imports.ts:31,38-40` and the CHANGELOG advertise them). Add the four rows to bullet list + table.
+- [x] Sync vue README API table (`packages/vue/README.md:591-630`): document `tryUseSolana()` vs `useSolana()` SSR behavior and `MissingClientCapabilityError`.
+- [x] Surface the SWR SSR warning in docs (`packages/vue/src/swr.ts:31-34` comment only). Add the per-request namespacing / `clearSwrCache()` note to the vue + nuxt READMEs.
+- [x] Docs correctly warn options must be JSON-serializable (`packages/nuxt/README.md:78-80`) but nothing enforces it. Add a dev-only serializability assertion or a test snapshotting that `mobileWallet` (`packages/core/src/mobile-wallet.ts:18-22`) and iOS options (`packages/core/src/ios-wallet/types.ts:9-14`) stay serializable.
 
 Acceptance criteria:
 
