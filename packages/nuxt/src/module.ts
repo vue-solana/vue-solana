@@ -44,6 +44,17 @@ const VITE_OPTIMIZE_DEPS = [
 
 const VITE_NEEDS_INTEROP = ["@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl"];
 
+/**
+ * Module defaults, named so the setup merge can tell an untouched default apart
+ * from a value the user actually chose. `defineNuxtModule` bakes these into the
+ * `options` it hands `setup`, which is what used to make a default silently
+ * overwrite an explicit `runtimeConfig.public.solana` value.
+ */
+const MODULE_DEFAULTS = {
+  cluster: "devnet",
+  autoConnect: false,
+} as const satisfies Partial<ModuleOptions>;
+
 interface ViteOptimizeDepsTarget {
   optimizeDeps?: {
     include?: string[];
@@ -59,10 +70,7 @@ const module: NuxtModule<ModuleOptions> = defineNuxtModule<ModuleOptions>({
       nuxt: "^3.0.0 || ^4.0.0",
     },
   },
-  defaults: {
-    cluster: "devnet",
-    autoConnect: false,
-  },
+  defaults: MODULE_DEFAULTS,
   setup(options, nuxt) {
     const resolver = createResolver(import.meta.url);
     const publicConfig = nuxt.options.runtimeConfig.public;
@@ -70,12 +78,15 @@ const module: NuxtModule<ModuleOptions> = defineNuxtModule<ModuleOptions>({
     // Sanitize after the merge, not before: both inputs are user-controlled and
     // only the module options were being stripped, so a `runtimeConfig.public.solana`
     // carrying a `payerSecretKey` (or a `wallet`) reached the client bundle.
-    publicConfig.solana = toPublicSolanaConfig({
-      ...(typeof publicConfig.solana === "object" && publicConfig.solana !== null
-        ? publicConfig.solana
-        : {}),
-      ...options,
-    });
+    publicConfig.solana = toPublicSolanaConfig(
+      mergeSolanaSources({
+        publicSolana: isPlainObject(publicConfig.solana) ? publicConfig.solana : {},
+        options,
+        configuredSolana: isPlainObject((nuxt.options as { solana?: unknown }).solana)
+          ? ((nuxt.options as { solana?: Record<string, unknown> }).solana ?? {})
+          : {},
+      }),
+    );
 
     // Vite optimize-deps merging is deferred to `vite:extendConfig`, which
     // is client-aware; doing it eagerly here polluted the SSR Vite config.
@@ -115,11 +126,55 @@ const module: NuxtModule<ModuleOptions> = defineNuxtModule<ModuleOptions>({
 export default module;
 
 /**
- * The two user-controlled sources merged into `runtimeConfig.public.solana`
- * (the module's own options and a hand-written `runtimeConfig.public.solana`).
- * Both can carry signer/secret fields, so both are sanitized.
+ * A resolved module-options source (`solana` config key + inline module options,
+ * with defaults applied). Both that source and a hand-written
+ * `runtimeConfig.public.solana` can carry signer/secret fields, so the merged
+ * result is sanitized before it reaches the client bundle.
  */
 type SolanaConfigSource = VueSolanaPluginOptions & { clientPlugin?: boolean };
+
+/**
+ * Merges the three user/default sources for `runtimeConfig.public.solana` with
+ * per-key precedence, most specific first: an explicit module option, then a
+ * hand-written `runtimeConfig.public.solana` value, then the module default.
+ *
+ * `defineNuxtModule` hands `setup` the options *with defaults applied*, so the
+ * defaults cannot simply be spread last — doing that let `cluster: "devnet"`
+ * overwrite a `runtimeConfig.public.solana.cluster` the user had set. A default
+ * therefore only yields to a public-config value when the user never set the
+ * key either way (not in the `solana` config key, not as an inline option).
+ */
+function mergeSolanaSources({
+  publicSolana,
+  options,
+  configuredSolana,
+}: {
+  publicSolana: Record<string, unknown>;
+  options: SolanaConfigSource;
+  configuredSolana: Record<string, unknown>;
+}): SolanaConfigSource {
+  // Start from the public config so keys only it defines are forwarded.
+  const merged: Record<string, unknown> = { ...publicSolana };
+
+  for (const [key, value] of Object.entries(options)) {
+    const untouchedDefault =
+      key in MODULE_DEFAULTS &&
+      Object.is(value, MODULE_DEFAULTS[key as keyof typeof MODULE_DEFAULTS]) &&
+      !Object.hasOwn(configuredSolana, key);
+
+    if (untouchedDefault && Object.hasOwn(publicSolana, key)) {
+      continue;
+    }
+
+    merged[key] = value;
+  }
+
+  return merged as SolanaConfigSource;
+}
+
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
 
 function toPublicSolanaConfig(options: SolanaConfigSource): VueSolanaPluginOptions {
   const runtimeOptions: SolanaConfigSource = { ...options };

@@ -31,6 +31,7 @@ Initial scope:
 Deferred scope:
 
 - Async `tweetnacl` ECDH in `packages/core/src/ios-wallet/crypto.ts` (static `import * as naclModule` keeps ~32 KB in the chunk; making it `await import()` cascades through synchronous `getSolanaIosWallets` / `handleSolanaIosWalletCallback` / `createPendingRequest` / `launchConnect` — startup race documented by the `ponytail:` comment; do not attempt here).
+- iOS adapter lazy-load in the Vue plugin chunk (`packages/vue/src/plugin/wallet-registry.ts:1-7` statically imports `@vue-solana/core/ios-wallet`). The cost is real — `tweetnacl` alone is 32.1 KB of the ~77 KB `import { createSolanaPlugin } from "@vue-solana/vue"` initial chunk — but the refactor is not worth it yet: `getDiscoveredWallets()` and `handleIosWalletCallback()` are synchronous (`packages/vue/src/plugin.ts:119`), so an `await import()` cascades into the wallet-discovery flow and the iOS deep-link return handler that runs at bootstrap (startup race). Revisit together with the `tweetnacl` async item; `pnpm size:packages` guards the budget meanwhile.
 - Desktop native wallets beyond the unified flow (`plans/native-wallet-plan.md` owns this).
 - Solana Pay / QR work (`plans/solana-pay-qr-plan.md` owns this).
 - TanStack Query adapter (already recorded as out of scope in `plans/react-readme-parity-plan.md`).
@@ -67,7 +68,7 @@ Acceptance criteria:
 - Runtime plugin with deleted/undefined `public.solana` does not throw raw `TypeError`.
 - Changing signature after `stopPolling()` restarts polling; slow RPCs never overlap.
 
-## Phase 2: Core Input Validation And Error Handling — P0
+## [x] Phase 2: Core Input Validation And Error Handling — P0
 
 Status: implemented and verified. Gates green: `pnpm test` (699), `typecheck`, `lint`, `format`, `build:packages`, `build:examples`, `docs build`, `test:e2e` 24/24, `smoke:standalone-installs` (all three consumers install + typecheck against local tarballs; script fixed for pnpm 10 overrides/build-approval along the way).
 
@@ -90,7 +91,7 @@ Acceptance criteria:
 - Confirmation flow is cancellable, interval-configurable, and distinguishes not-found from failure.
 - `isSolanaError()` survives duplicate package copies.
 
-## Phase 3: DX And API Consistency — P1
+## [x] Phase 3: DX And API Consistency — P1
 
 Status: implemented.
 
@@ -116,9 +117,9 @@ Acceptance criteria:
 - Capability failures answer `isSolanaError()` the same way runtime failures do (or docs state the split).
 - No `console.*` fires in library hot paths by default.
 
-## Phase 4: Bundle And Performance — P1
+## [x] Phase 4: Bundle And Performance — P1
 
-Status: planned.
+Status: complete; the iOS adapter lazy-load item was evaluated and deferred — see `Deferred scope`.
 
 Tasks:
 
@@ -126,7 +127,7 @@ Tasks:
 - [x] `tweetnacl/nacl-fast.js` rows may be dead (`packages/nuxt/src/module.ts:31-32,36-37`; core `packages/core/src/kit.ts:23-45` uses Kit `createKeyPairFromBytes`/`signBytes`, only bare `tweetnacl` remains for iOS ECDH). Verify with bundle grep, drop if unreferenced.
 - [x] `bs58` duplicates Kit codecs (`packages/core/package.json:119`; 11 source files in `src/ios-wallet/*.ts` + `src/wallet-standard/adapter.ts`, while `src/kit.ts:6` already uses Kit `getBase58Encoder/getBase58Decoder`). Replace and drop the dep. Also drop `bs58` test-only devDep in vue (`packages/vue/src/composables/useSignatureStatus.test.ts:1` sole consumer) in favor of Kit codecs.
 - [x] `buffer` is a hard dep for one subpath (`packages/core/package.json:120`, only `src/buffer-polyfill.ts:1` needs it). Move to `optionalDependencies` or document as subpath-only peer.
-- [ ] Vue plugin chunk carries iOS + wallet-standard statically (`packages/vue/src/plugin/wallet-registry.ts:1-13`; only `mobile-wallet` is lazy). Lazy-load the iOS adapter behind `iosWallet !== false` + iOS-UA gate if the chunk proves heavy.
+- [x] Vue plugin chunk carries iOS + wallet-standard statically (`packages/vue/src/plugin/wallet-registry.ts:1-13`; only `mobile-wallet` is lazy). Evaluated, not lazy-loaded: the measured `tweetnacl` cost (32.1 KB of ~77 KB) is real, but the async cascade runs into synchronous discovery/bootstrap and becomes a startup race — deferred to the `Deferred scope` entry above, with `pnpm size:packages` guarding the budget.
 - [x] SWR module `Map` unbounded, all-or-nothing clear, sync-flush writes (`packages/vue/src/swr.ts:50,132-136`). Add per-key `deleteSwrKey()` / size cap (or document key hygiene); confirm `flush: "sync"` is intentional.
 - [x] Vue build pins 8 GB (`packages/vue/package.json:181` `NODE_OPTIONS=--max-old-space-size=8192 unbuild`). Investigate the OOM (likely kit mirror decl) rather than pinning memory in the script. _(OOM reproduced without the pin; pin retained.)_
 - [x] Document lean-import guidance: `import { … } from "@vue-solana/core/address|errors|timeout"` for size-sensitive entries (root is ~117 KB via the intentional kit mirror, `packages/core/src/kit-mirror.test.ts:28-31`); add a size-limit CI check so a Kit-heavy import into `address/errors/timeout/clusters` is caught. Same for vue root vs subpath chunks. (`scripts/check-lean-imports.mjs`, `pnpm size:packages`; core README updated.)
@@ -137,9 +138,9 @@ Acceptance criteria:
 - `bs58` / `nacl-fast.js` removals verified by bundle grep, not assumption.
 - Size guards fail CI before a new heavy import lands in a lean entry.
 
-## Phase 5: Maintainability And Tooling — P2
+## [x] Phase 5: Maintainability And Tooling — P2
 
-Status: planned.
+Status: complete.
 
 Tasks:
 
@@ -156,10 +157,10 @@ Tasks:
 - [x] Core declarations post-step is string-scan fragile (`packages/core/scripts/prepare-declarations.mjs:7,32` hardcoded `shims=["buffer.d.ts"]`, run as post-`unbuild` shell step in `package.json:106`). Convert to an `unbuild` hook or add a test asserting emitted `buffer-polyfill.d.*` has the triple-slash reference.
 - [x] Core tsconfig misses the published shim (`packages/core/tsconfig.json:6` covers `../../types/**/*.d.ts` but not `packages/core/types/buffer.d.ts`). Include `types/**/*.d.ts` locally.
 - [x] `kit.test.ts` leans on real Kit behavior (`packages/core/src/kit.test.ts:1-33,64` `'payer' in client` via real `createClient/extendClient`). Pin the assumption with a comment + Kit version assertion, or mock `createClient`.
-- [ ] Nuxt `module.test.ts` never exercises real `defineNuxtModule` (`packages/nuxt/src/module.test.ts:5-14` mocks it as identity). Test against the real module (or add one `@nuxt/test-utils` integration test) covering defaults, `clientPlugin: false`, non-object `public.solana`.
+- [x] Nuxt `module.test.ts` never exercises real `defineNuxtModule` (`packages/nuxt/src/module.test.ts:5-14` mocks it as identity). Added `packages/nuxt/src/module.integration.test.ts`, which loads the real module through `@nuxt/kit`'s `loadNuxt` against `packages/nuxt/test/fixture` (no build, no dev server) and covers defaults, module-option/public-config merge, secret stripping, non-object `public.solana`, the default plugin install, and the `clientPlugin: false` branch (plugin skipped, setup values imported via the real `imports:extend` hook). The mocked `module.test.ts` stays for the fast per-branch checks.
 - [x] `qrcode` ghost reference (`packages/nuxt/src/module.test.ts:177-201` fixture only). Rename fixture to a neutral name.
 - [x] Root `vitest.config.ts` aliases only a subset of `@vue-solana/vue/*` subpaths. Replace enumerated aliases with a wildcard/filesystem-mapped alias or generate from `packages/vue/package.json` `exports`.
-- [ ] Document the 5th-colliding-name procedure (`packages/core/src/kit.ts:140-156`, resolved in `src/index.ts:30-32`, guarded by `src/kit-mirror.test.ts:13-15`): when Kit adds a colliding name, add it to the explicit re-export list + test.
+- [x] Document the 5th-colliding-name procedure (`packages/core/src/kit.ts:140-156`, resolved in `src/index.ts:30-32`, guarded by `src/kit-mirror.test.ts:13-15`): when Kit adds a colliding name, add it to the explicit re-export list + test. Documented as the `Colliding-name procedure` comment in `packages/core/src/index.ts:42-46` by `abf9bd6`; the explicit-reexport list it points at is guarded by `src/kit-mirror.test.ts`.
 
 Acceptance criteria:
 
@@ -204,23 +205,23 @@ Acceptance criteria:
 
 - One new case per file above; all green under `pnpm test`.
 
-## Phase 8: Verification And Release Readiness
+## [x] Phase 8: Verification And Release Readiness
 
-Status: planned.
+Status: complete (branch `release/v4.0.0`). All gates green: `format`, `lint`, `test` (71 files / 718 tests), `typecheck` (all six workspace projects incl. docs + examples), `build:packages`, `build:examples`, `docs build`, `smoke:standalone-installs` (core/vue/nuxt standalone consumers install + typecheck, exit 0), `test:e2e` 24/24, `test:e2e:integration` (real devnet) 14 passed / 10 mock-only skipped, `/demo` load clean.
 
 Tasks:
 
-- [ ] Run `pnpm format`.
-- [ ] Run `pnpm lint`.
-- [ ] Run `pnpm test` (gates `locale-docs.test.ts`, export-map tests, new parity tests).
-- [ ] Run `pnpm typecheck` (includes `pnpm --filter docs typecheck` per repo policy).
-- [ ] Run `pnpm build:packages`.
-- [ ] Run `pnpm build:examples`.
-- [ ] Run `pnpm --filter docs build`.
-- [ ] Run `pnpm smoke:standalone-installs` (gate for any `exports`-map change).
-- [ ] Run `pnpm test:e2e` (mocks) and, when touching RPC/polling paths, `pnpm test:e2e:integration` (real devnet, `E2E_REAL_RPC=true`).
-- [ ] Load `/demo` and confirm no `Buffer is not defined` when touching `sideEffects`, Buffer injection, or barrel boundaries.
-- [ ] Add changesets for new public APIs and dropped/renamed exports (note: a `major` changeset `.changeset/bundle-size-trim.md` is already pending for 4.0.0 — core root drops `Buffer`/`installSolanaBufferPolyfill`, tarballs exclude `.d.mts`; coordinate, do not duplicate).
+- [x] Run `pnpm format`.
+- [x] Run `pnpm lint`.
+- [x] Run `pnpm test` (gates `locale-docs.test.ts`, export-map tests, new parity tests).
+- [x] Run `pnpm typecheck` (includes `pnpm --filter docs typecheck` per repo policy).
+- [x] Run `pnpm build:packages`.
+- [x] Run `pnpm build:examples`.
+- [x] Run `pnpm --filter docs build`.
+- [x] Run `pnpm smoke:standalone-installs` (gate for any `exports`-map change). Slow (~4 min: it rebuilds packages, then installs + typechecks three fresh consumers); run it with a background shell rather than a short tool timeout.
+- [x] Run `pnpm test:e2e` (mocks) and, when touching RPC/polling paths, `pnpm test:e2e:integration` (real devnet, `E2E_REAL_RPC=true`). Both run: the 4.0.0 changeset rewrites `useSignatureStatus` polling and the confirmation error codes, so the integration run was required. Mock-only specs self-skip under `E2E_REAL_RPC=true`.
+- [x] Load `/demo` and confirm no `Buffer is not defined` when touching `sideEffects`, Buffer injection, or barrel boundaries. Served `apps/docs/.output/server/index.mjs` and drove Chromium over `/demo` and `/`: HTTP 200, `typeof globalThis.Buffer === "function"`, zero `pageerror`s. The only console noise is the Vercel Insights script 404 and sibling-route `_payload.json` prefetch 404s, both artifacts of a self-hosted preview, not app errors. Note `apps/docs` pins the published packages, so this validates the docs app wiring; the workspace-side barrel trim is covered by the smoke consumers and the example-app e2e.
+- [x] Add changesets for new public APIs and dropped/renamed exports (note: a `major` changeset `.changeset/bundle-size-trim.md` is already pending for 4.0.0 — core root drops `Buffer`/`installSolanaBufferPolyfill`, tarballs exclude `.d.mts`; coordinate, do not duplicate). Audited by diffing the public export surface from the 3.0.1 release commit (`d97b585`) to HEAD. The existing changeset already covered everything except two items, which were appended to it rather than duplicated into a second file: `deleteSwrKey()` (new `@vue-solana/vue/swr` export, the single-key counterpart to `clearSwrCache()`) and the four new Nuxt auto-imports (`useSolanaClientCapability`, `tryUseSolana`, `clearSwrCache`, `deleteSwrKey`). `assertWalletSignature` needs no entry — it is internal, not re-exported from any core barrel.
 
 Acceptance criteria:
 
@@ -242,9 +243,9 @@ Phases 6 and 7 can run in parallel once Phases 1–2 land, since they are mostly
 
 ## Open Decisions
 
-- Decide whether `commitment` belongs in core client config (wire it into `buildSolanaClient`) or stays plugin-only (split `SolanaClientConfig` vs plugin config).
-- Decide the `MissingClientCapabilityError` hierarchy: subclass core `SolanaError` vs document the `instanceof` split.
-- Decide `useConnection()` internal removal vs keeping the deprecated proxy path for one more major.
-- Decide SWR eviction policy: per-key delete only, size cap, TTL, or LRU.
-- Decide `buffer` packaging: `optionalDependencies` vs subpath-only peer.
-- Decide whether the iOS adapter lazy-load is worth the async cascade, given the `tweetnacl` deferral above stays out of scope.
+- ~~Decide whether `commitment` belongs in core client config (wire it into `buildSolanaClient`) or stays plugin-only (split `SolanaClientConfig` vs plugin config).~~ Resolved in 4.0.0: core client config — `SolanaConfig.commitment` (`packages/core/src/types.ts:24`) flows through `createSolanaClient` → `buildSolanaClient` (`packages/core/src/kit.ts:123`), pinned by `kit.test.ts:73-85`. No `SolanaClientConfig` split.
+- ~~Decide the `MissingClientCapabilityError` hierarchy: subclass core `SolanaError` vs document the `instanceof` split.~~ Resolved in 4.0.0: subclasses core `SolanaError` (code `MISSING_CLIENT_CAPABILITY`) in `packages/vue/src/composables/useClientCapability.ts:11`, and `isSolanaError()` name-matches it across duplicate copies (`packages/core/src/errors.ts:71`).
+- `useConnection()` / `useSolanaConnection()` stays through 4.x: removal target 5.0.0. Deprecated since 2.0.0, but removing it now would churn both example apps, the package READMEs, and the four locale doc trees for no functional gain.
+- ~~Decide SWR eviction policy: per-key delete only, size cap, TTL, or LRU.~~ Resolved in 4.0.0: per-key `deleteSwrKey()` plus a 1024-entry size cap with oldest-first eviction (`packages/vue/src/swr.ts`).
+- ~~Decide `buffer` packaging: `optionalDependencies` vs subpath-only peer.~~ Resolved in 4.0.0: subpath-only optional peer — `peerDependencies.buffer` with `peerDependenciesMeta.buffer.optional = true` in `packages/core/package.json`.
+- ~~Decide whether the iOS adapter lazy-load is worth the async cascade, given the `tweetnacl` deferral above stays out of scope.~~ Resolved for 4.0.0: deferred — measured cost and the synchronous-discovery blocker recorded in `Deferred scope`.

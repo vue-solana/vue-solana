@@ -110,6 +110,12 @@ client-only/build-time keys (`wallet`, `payer`, `payerSecretKey`,
 defaults instead of throwing on `.cluster` access). Future options just work;
 the contract is covered by secret-strip / future-field / missing-config tests.
 
+Precedence is now explicit per key: a module option wins, then a hand-written
+`runtimeConfig.public.solana` value, then the module default. Previously the
+defaults were spread over the public config, so setting
+`runtimeConfig.public.solana.cluster` (without an equivalent module option) was
+silently overwritten by the `devnet` default.
+
 ## Fixed: `useSolana()` SSR fallback is per-call, not a singleton
 
 The uninjected fallback was a module-scoped object whose `wallet` / `status` /
@@ -181,6 +187,35 @@ when bundle size matters.
 The Nuxt module no longer pre-bundles `@solana-mobile/wallet-standard-mobile`
 or `bs58`, and drops the `tweetnacl/nacl-fast.js` alias chain. Dev
 pre-bundling now respects the lazy mobile-wallet import.
+
+## New: `deleteSwrKey()` and four more Nuxt auto-imports
+
+`@vue-solana/vue/swr` gains `deleteSwrKey(key)`, which evicts a single cached
+key instead of `clearSwrCache()`'s all-or-nothing wipe. The cache is capped at
+1024 entries with oldest-first eviction, so a long-lived app that cycles many
+query keys can drop the keys it knows are stale deterministically rather than
+waiting for the cap to push them out:
+
+```ts
+import { deleteSwrKey } from "@vue-solana/vue/swr";
+
+// Key includes the adapter prefix (`request:` / `subscription:` / `tracked:`).
+deleteSwrKey("request:balance");
+```
+
+The Nuxt module auto-imports four names it previously omitted:
+
+| Auto-import                   | Vue source              |
+| ----------------------------- | ----------------------- |
+| `useSolanaClientCapability()` | `useClientCapability()` |
+| `tryUseSolana()`              | `tryUseSolana()`        |
+| `clearSwrCache()`             | `clearSwrCache()`       |
+| `deleteSwrKey()`              | `deleteSwrKey()`        |
+
+`tryUseSolana()` returns the context or `undefined` outside a provider (the
+SSR-safe counterpart of `useSolana()`, which throws), and
+`useSolanaClientCapability()` fails fast with a `SolanaError` when the active
+client is missing a capability a composable needs.
 
 Core input validation and error handling also lands in this release.
 

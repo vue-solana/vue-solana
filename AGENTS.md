@@ -91,10 +91,11 @@ Kit 8 reactive-store note: the stores from `@solana/subscribable` call Node's `s
 
 Implemented files:
 
-- `src/module.ts`: Nuxt module with `solana` config key. It deliberately omits `wallet`, `payer`, and `payerSecretKey` from `ModuleOptions` and strips them from public runtime config. `solana.clientPlugin: false` skips the module's runtime plugin so the app can install `createSolanaPlugin` itself (for example to attach a client-only `payer`); installing both would create two contexts and two wallet subscriptions.
+- `src/module.ts`: Nuxt module with `solana` config key. It deliberately omits `wallet`, `payer`, and `payerSecretKey` from `ModuleOptions` and strips them from public runtime config. `runtimeConfig.public.solana` is merged per key with precedence explicit module option > `runtimeConfig.public.solana` > module default, so a default never clobbers an explicit public value. `solana.clientPlugin: false` skips the module's runtime plugin so the app can install `createSolanaPlugin` itself (for example to attach a client-only `payer`); installing both would create two contexts and two wallet subscriptions.
 - `src/imports.ts`: maps every composable to its `useSolana*` auto-import alias.
 - `src/runtime/plugin.ts`: installs the Vue Solana plugin using public runtime config.
 - `src/runtime/kit.ts`: re-export of the core Kit helpers (full `@solana/kit` mirror via core).
+- `src/module.integration.test.ts` + `test/fixture/`: loads the real module through `@nuxt/kit`'s `loadNuxt` (no build, no dev server) to cover defaults, public-config merge/strip, non-object `public.solana`, and the `clientPlugin: false` branch. The fast `src/module.test.ts` mocks `defineNuxtModule` as identity — keep both; the integration file is the only one that would catch a real-wrapper regression.
 - `nuxt/schema` augmentation: lives in `src/module.ts` (shipped with the module entry), not a separate runtime file.
 
 Auto-imported Nuxt composables (source of truth: `packages/nuxt/src/imports.ts`):
