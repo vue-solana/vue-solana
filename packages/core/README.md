@@ -248,7 +248,7 @@ Size-sensitive entries can avoid pulling the whole mirror by importing the narro
 
 Avoid importing `@vue-solana/core/ios-wallet` or `@vue-solana/core/mobile-wallet` from lean code paths: they own `tweetnacl` and the Mobile Wallet Adapter protocol graph respectively. The `@vue-solana/core/mobile-wallet-support` subpath ships only the Android-support gate used to decide whether to lazy-load the MWA module.
 
-A repository-level guard (`scripts/check-lean-imports.mjs`, run via `pnpm size:packages`) verifies that these lean entries stay free of the heavy iOS/mobile-wallet edges. Add any new lean entrypoint there before publishing it.
+A repository-level guard (`scripts/check-lean-imports.mjs`, run via `pnpm size:packages`) verifies that these lean entries stay free of the heavy iOS/mobile-wallet edges. Add any new lean entrypoint there before publishing it. The same script walks every `packages/vue/dist/*.mjs` static import graph: the Vue root may reach the iOS wallet entry (known, tracked debt), but no Vue subpath may, and `mobile-wallet`, `qrcode`, `@solana-mobile/*`, and `buffer` must stay behind dynamic imports or their dedicated subpaths.
 
 ## AI Agent Skill
 

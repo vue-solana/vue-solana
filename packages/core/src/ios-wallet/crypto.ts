@@ -4,16 +4,21 @@ import { createSolanaError } from "../errors";
 
 let cachedNacl: typeof naclModule | undefined;
 
-// ponytail: `tweetnacl` is 32 KB — 42% of the 77 KB initial chunk for
-// `import { createSolanaPlugin } from "@vue-solana/vue"` — and the iOS wallet
-// flow is its only caller. `getNacl()` below does NOT get it out of that chunk:
-// the static import on line 2 is the edge bundlers follow, so the lazy call only
-// avoids re-running the module body. The only real fix is `await import()`, which
-// forces `getSharedSecret`, `encryptPayload`, `decryptPayload` and `createRequestId`
-// async, and that cascades through the sync entry points `getSolanaIosWallets`,
-// `handleSolanaIosWalletCallback`, `createPendingRequest` and `launchConnect`
-// into the iOS deep-link return handler `plugin.ts` runs at bootstrap — a race
-// against app startup. Revisit if a Kit/Wallet Standard API ever makes those async.
+// ponytail: `tweetnacl` is 32.9 KB of the 67.4 KB eager chunk for
+// `import { createSolanaPlugin } from "@vue-solana/vue"` (measured 2026-10-21;
+// grep `plans/bundle-performance-followups.md` for the method) — and the iOS
+// wallet flow is its only caller. `getNacl()` below does NOT get it out of that
+// chunk: the static import on line 2 is the edge bundlers follow, and
+// `dist/ios-wallet.mjs` is one flat file, so any import from that entry pulls
+// it. The fix is `await import()`, and only ONE caller genuinely blocks that:
+// the public synchronous `handleSolanaIosWalletCallback` (callback.ts), which
+// `plugin.ts` runs at bootstrap. `getSolanaIosWallets` / `createPendingRequest`
+// reach this file only through `createRequestId`'s `nacl.randomBytes(16)` —
+// swap that for `crypto.getRandomValues` and the discovery path stops importing
+// crypto at all. `launchConnect` is internal and only called from `async
+// connect()`, so it can simply await. Non-breaking plan (thin crypto-free
+// entry + gated deep-link import) is in `plans/bundle-performance-followups.md`;
+// `scripts/check-lean-imports.mjs` fails CI if a new static edge lands.
 export function getNacl() {
   return (cachedNacl ??= resolveTweetNaCl());
 }

@@ -6,26 +6,35 @@ Tracks Phase 4 items intentionally left out of `package-improvements-plan.md`, g
 
 ### iOS wallet adapter lazy-loading
 
-Status: deferred (blocked on the async `tweetnacl` decision above).
+Status: deferred (re-measured 2026-10-21; blocker narrowed to one function).
 
-Trigger for revisit:
+Measured cost (esbuild, built `exports` map, splitting on, `vue` external):
 
-- A release candidate shows the iOS wallet code path regressing the vue initial chunk, or
-- An accepted change makes `getSharedSecret` / `encryptPayload` / `decryptPayload` / `createRequestId` async.
+- Eager chunk for `import { createSolanaPlugin } from "@vue-solana/vue"`: 67.4 KB minified.
+- `tweetnacl/nacl-fast.js`: 32.9 KB (49%), `ios-wallet/*` glue: 12.2 KB — ~38.9 KB removable (58%).
+- The 99.8 KB mobile-wallet/qrcode chunk is already split, so the Phase 4 lazy fix holds.
 
-Scope if attempted:
+Blockers, corrected (the earlier "four sync entry points" list was wrong):
 
-- Convert the static `@vue-solana/core/ios-wallet` import in `packages/vue/src/plugin/wallet-registry.ts` into a cached dynamic import.
-- Split sync-only work (`handleSolanaIosWalletCallback` for deep-link intake) from the async pieces so bootstrap callback handling does not race.
-- Keep `options.iosWallet === false` and non-iOS user agents on a zero-cost path.
+- `getSolanaIosWallets` / `createPendingRequest` — only reach crypto through `createRequestId()`'s `nacl.randomBytes(16)`; `crypto.getRandomValues` removes the edge and discovery stays synchronous.
+- `launchConnect` — internal only, single caller inside `async connect()`; safe to `await`.
+- `handleSolanaIosWalletCallback` — public, documented as synchronous, genuinely needs `box.before`/`box.open.after`. This is the only real constraint, and it does not block a non-breaking design.
+
+Scope if attempted (non-breaking, no core major):
+
+- WebCrypto request ids, so the discovery path stops importing `crypto.ts`.
+- `await import("./deep-links")` / `import("./callback")` inside the adapter's async `connect`/sign methods.
+- New crypto-free core entry (e.g. `@vue-solana/core/ios-wallet-discovery`) = adapter + browser + definitions + storage + types, imported by `wallet-registry.ts`.
+- Gated dynamic import of the full entry for deep-link intake (`hasIosWalletCallbackParams`) plus a generation-guarded second `refreshWallets()` pass; keep `options.iosWallet === false` and non-iOS agents on the zero-cost path.
+- Removing the `IOS_DEBT_*` exemptions in `scripts/check-lean-imports.mjs` is the definition of done; the check then forbids the edge.
 
 Current decision:
 
-- Stay static; ~24 KB is not worth the async cascade until the tweetnacl deferral is lifted.
+- Stay static for now. The blocker is understood and the win is large (~58% of the eager chunk), but the change touches bootstrap ordering, so it wants its own change set with deep-link-return tests rather than a drive-by. `pnpm size:packages` now walks every `packages/vue/dist/*.mjs` static graph and reports the iOS weight, so this cannot regress unnoticed.
 
-### Async tweetnacl ECDH (32 KB in initial chunk)
+### Async tweetnacl ECDH (32.9 KB in initial chunk)
 
-Status: deferred (open in AGENTS.md / package-improvements-plan.md deferred scope).
+Status: deferred, and now mostly unnecessary — see the iOS lazy-loading entry above. Only `handleSolanaIosWalletCallback` actually needs a synchronous `tweetnacl`; the rest of `crypto.ts` can load on demand through the adapter's async methods.
 
 Trigger for revisit:
 
@@ -34,7 +43,7 @@ Trigger for revisit:
 
 Why deferred:
 
-- `crypto.ts` is imported synchronously by `getSolanaIosWallets`, `handleSolanaIosWalletCallback`, `createPendingRequest`, and `launchConnect`; making it async cascades into plugin bootstrap.
+- `crypto.ts` is imported synchronously by the public `handleSolanaIosWalletCallback`, which the plugin runs during bootstrap. Making it async cascades into `refreshWallets()`; the thin-entry + gated-import design above avoids that cascade without changing the public signature.
 
 ### Bare package names in Nuxt optimize-deps
 
@@ -71,10 +80,11 @@ Status: partially implemented.
 Implemented:
 
 - `pnpm size:packages` guards lean core entries (`address`, `errors`, `timeout`, `clusters`, `types`) against heavy edges.
+- It also walks every `packages/vue/dist/*.mjs` static import graph: `@vue-solana/core/mobile-wallet`, `qrcode`, `@solana-mobile/*`, `buffer`, and `@vue-solana/core/buffer-polyfill` must stay behind dynamic imports or the dedicated subpath, no composable subpath may reach `@vue-solana/core/ios-wallet`/`tweetnacl`, and the root entry's known iOS debt is measured and printed. Dynamic `import()` edges are ignored on purpose.
 
 Open next step:
 
-- Add per-file byte budgets and decide whether vue/nuxt lean subpaths also need guards.
+- Decide whether nuxt runtime entries need the same graph walk (they import the vue plugin, so the vue check covers the client surface today).
 
 ## Verification ownership
 
