@@ -1,0 +1,12 @@
+{
+  "mode": "pre",
+  "tag": "rc",
+  "initialVersions": {
+    "@vue-solana/example-nuxt": "0.0.5",
+    "@vue-solana/example-vue-vite": "0.0.5",
+    "@vue-solana/core": "3.0.1",
+    "@vue-solana/nuxt": "3.0.1",
+    "@vue-solana/vue": "3.0.1"
+  },
+  "changesets": ["bundle-size-trim"]
+}
