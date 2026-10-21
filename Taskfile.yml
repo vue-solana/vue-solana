@@ -1,0 +1,172 @@
+# Release candidate helpers.
+#
+# Requires go-task (https://taskfile.dev) on PATH: `brew install go-task`.
+# Every task wraps the Changesets + pnpm commands documented in README.md, so
+# nothing here is a second source of truth - it only removes the memorised
+# incantations.
+#
+# The dist-tag is configurable: `task rc:enter RC_TAG=next`, or export RC_TAG.
+
+version: "3"
+
+vars:
+  RC_TAG:
+    sh: echo "${RC_TAG:-rc}"
+
+tasks:
+  default:
+    desc: Show the release-candidate state
+    cmds:
+      - task: rc:status
+
+  rc:status:
+    desc: Show the current pre-release state, versions, and pending changesets
+    cmds:
+      - |
+        set -e
+        if [ -f .changeset/pre.json ]; then
+          mode=$(node -p "require('./.changeset/pre.json').mode")
+          tag=$(node -p "require('./.changeset/pre.json').tag")
+          echo "pre mode  : $mode (tag: $tag)"
+        else
+          echo "pre mode  : inactive"
+        fi
+        for p in core vue nuxt; do
+          version=$(node -p "require('./packages/$p/package.json').version")
+          echo "version   : @vue-solana/$p@$version"
+        done
+        echo "changesets:"
+        found=0
+        for f in .changeset/*.md; do
+          [ -e "$f" ] || continue
+          case "$f" in *README.md) continue ;; esac
+          echo "  - $(basename "$f" .md)"
+          found=1
+        done
+        [ "$found" -eq 1 ] || echo "  (none)"
+
+  rc:enter:
+    desc: Enter pre-release mode (e.g. 4.0.0-rc.0)
+    preconditions:
+      - sh: test ! -f .changeset/pre.json
+        msg: "Already in pre mode - run 'task rc:exit' or 'task rc:reset' first"
+    cmds:
+      - pnpm changeset pre enter "{{.RC_TAG}}"
+      - task: rc:status
+
+  rc:bump:
+    desc: Bump to the next release candidate number (4.0.0-rc.0 -> 4.0.0-rc.1)
+    preconditions:
+      - sh: test -f .changeset/pre.json
+        msg: "Not in pre mode - run 'task rc:enter' first"
+    cmds:
+      - |
+        set -e
+        before=$(node -p "require('./packages/core/package.json').version")
+        tmp=.changeset/rc-bump.md
+        trap 'rm -f "$tmp"' EXIT
+        cat > "$tmp" <<'EOF'
+        ---
+        "@vue-solana/core": patch
+        "@vue-solana/vue": patch
+        "@vue-solana/nuxt": patch
+        ---
+
+        Release candidate refresh.
+        EOF
+        pnpm version-packages
+        after=$(node -p "require('./packages/core/package.json').version")
+        if [ "$before" = "$after" ]; then
+          echo "::error::version did not change ($after) - add a changeset with 'pnpm changeset' and retry"
+          exit 1
+        fi
+        echo "bumped $before -> $after"
+      - task: rc:status
+
+  rc:verify:
+    desc: Dry-run the publish and show exactly what would go to npm
+    cmds:
+      - pnpm --filter './packages/*' -r publish --dry-run --no-git-checks --tag "{{.RC_TAG}}"
+
+  rc:publish:
+    desc: Publish the release candidate to npm under the RC_TAG dist-tag
+    cmds:
+      - |
+        set -e
+        for p in core vue nuxt; do
+          name="@vue-solana/$p"
+          version=$(node -p "require('./packages/$p/package.json').version")
+          case "$version" in
+            *-"{{.RC_TAG}}".*) ;;
+            *)
+              echo "::error::$name@$version does not match the ${{.RC_TAG}} tag"
+              exit 1
+              ;;
+          esac
+          if npm view "$name@$version" version >/dev/null 2>&1; then
+            echo "::error::$name@$version is already published - run 'task rc:bump' first"
+            exit 1
+          fi
+        done
+        echo "publishing ${{.RC_TAG}}: $(node -p "require('./packages/core/package.json').version")"
+      - pnpm build:packages
+      - pnpm --filter './packages/*' -r publish --no-git-checks --tag "{{.RC_TAG}}"
+
+  rc:dispatch:
+    desc: Trigger the CI Release workflow for this branch and tag (needs gh auth)
+    cmds:
+      - |
+        set -e
+        command -v gh >/dev/null 2>&1 || {
+          echo "::error::the gh CLI is required (brew install gh)"
+          exit 1
+        }
+        gh auth status >/dev/null 2>&1 || {
+          echo "::error::gh is not authenticated - run 'gh auth login'"
+          exit 1
+        }
+        branch=$(git rev-parse --abbrev-ref HEAD)
+        gh workflow run release.yml -f tag="{{.RC_TAG}}" --ref "$branch"
+        echo "dispatched the Release workflow for {{.RC_TAG}} on $branch"
+
+  rc:exit:
+    desc: Leave pre-release mode (the pending changeset is kept)
+    preconditions:
+      - sh: test -f .changeset/pre.json
+        msg: "Not in pre mode - nothing to exit"
+    cmds:
+      - pnpm changeset pre exit
+
+  rc:finalize:
+    desc: Leave pre-release mode and cut the final version (consumes the changeset)
+    cmds:
+      - |
+        set -e
+        if [ -f .changeset/pre.json ]; then
+          pnpm changeset pre exit
+        fi
+        pnpm version-packages
+        echo "final version: $(node -p "require('./packages/core/package.json').version")"
+
+  rc:reset:
+    desc: Restore the branch to its pre-candidate state (versions, changelogs, pre.json)
+    preconditions:
+      - sh: test -f .changeset/pre.json
+        msg: "Not in pre mode - nothing to reset"
+    cmds:
+      - |
+        set -e
+        rc_commit=$(git log --format=%H --diff-filter=A -1 -- .changeset/pre.json || true)
+        if [ -z "$rc_commit" ]; then
+          echo "::error::could not find the commit that created .changeset/pre.json - commit it first"
+          exit 1
+        fi
+        base=$(git rev-parse "$rc_commit^")
+        echo "restoring packages and changelogs from $base"
+        git checkout "$base" -- \
+          packages/core/package.json packages/vue/package.json packages/nuxt/package.json \
+          packages/core/CHANGELOG.md packages/vue/CHANGELOG.md packages/nuxt/CHANGELOG.md
+        rm -f .changeset/pre.json
+        git add -A packages .changeset
+        echo "staged the reset - review with 'git diff --cached' and commit"
+      - task: rc:status
