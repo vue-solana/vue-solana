@@ -250,6 +250,23 @@ The release workflow does not use a long-lived `NPM_TOKEN` secret.
 
 To publish a pre-release from a branch instead of waiting for `main`, use Changesets pre-release mode. The version is bumped to a prerelease of the pending release (for example `4.0.0-rc.0`) and published under its own npm dist-tag, so the `latest` tag keeps pointing at the last stable release.
 
+The `Taskfile.yml` wraps the whole flow. It needs [go-task](https://taskfile.dev) on `PATH` (`brew install go-task`):
+
+```sh
+task rc:status     # show the current pre-release state, versions, and pending changesets
+task rc:enter      # enter pre-release mode
+task rc:bump       # next candidate number (4.0.0-rc.0 -> 4.0.0-rc.1)
+task rc:verify     # dry-run: show exactly what would be published
+task rc:publish    # publish to npm under the rc dist-tag
+task rc:dispatch   # trigger the CI Release workflow for this branch and tag
+task rc:exit       # leave pre-release mode, keeping the pending changeset
+task rc:reset      # restore the branch to its pre-candidate state (versions, changelogs, pre.json)
+```
+
+The dist-tag is configurable per run: `task rc:enter RC_TAG=next`, or export `RC_TAG`.
+
+The underlying commands, if you prefer to run them directly:
+
 ```sh
 pnpm changeset pre enter rc     # writes .changeset/pre.json with the rc tag
 pnpm version-packages            # core/vue/nuxt -> 4.0.0-rc.0, plus CHANGELOG entries
@@ -263,12 +280,13 @@ Consumers install a release candidate with an explicit tag:
 npm install @vue-solana/core@rc
 ```
 
-Do not pass `--tag` to `changeset publish` while in pre mode; Changesets rejects it and takes the tag from `.changeset/pre.json`. Every release candidate needs its own version number, so bump again by adding a changeset and running `pnpm version-packages` again (`4.0.0-rc.0` -> `4.0.0-rc.1`).
+Do not pass `--tag` to `changeset publish` while in pre mode; Changesets rejects it and takes the tag from `.changeset/pre.json`. Every release candidate needs its own version number, so bump again by adding a changeset and running `pnpm version-packages` again (`4.0.0-rc.0` -> `4.0.0-rc.1`). `task rc:bump` does that for you with a throwaway changeset.
 
 Publish the release candidate from CI to use npm Trusted Publishing instead of a local token. Run the `Release` workflow manually (`workflow_dispatch`) on the release branch and set the `tag` input; the workflow verifies that every package version matches that tag and then publishes with that dist-tag:
 
 ```sh
 # GitHub Actions -> Release -> Run workflow -> branch: release/v4.0.0 -> tag: rc
+# or, from the branch: task rc:dispatch
 npm view @vue-solana/core dist-tags
 ```
 
@@ -279,7 +297,7 @@ pnpm changeset pre exit
 pnpm version-packages            # -> 4.0.0
 ```
 
-Pre-release commits live on the release branch only. Do not merge the prerelease versions into `main`: the stable release is versioned from the pending changesets on `main`.
+Pre-release commits live on the release branch only. Do not merge the prerelease versions into `main`: the stable release is versioned from the pending changesets on `main`. Use `task rc:reset` to put the branch back into that shape (versions at the last stable release, changeset still pending, no `pre.json`) before merging it, so the normal "chore: version packages" flow still publishes `4.0.0` to `latest` on its own.
 
 ## Example Apps
 

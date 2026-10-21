@@ -46,3 +46,6 @@ temp/
 # Local opencode config
 opencode.json
 opencode.jsonc
+
+# Changesets
+.changeset/rc-bump.md

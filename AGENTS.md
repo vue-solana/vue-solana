@@ -235,6 +235,8 @@ Repeat per release rather than filing a one-time task. Two things to check by re
 
 A branch can ship a prerelease to npm without touching `main`, using Changesets pre-release mode. `pnpm changeset pre enter rc` writes `.changeset/pre.json` (`{ mode: "pre", tag: "rc" }`), `pnpm version-packages` then bumps core/vue/nuxt to the pending prerelease (`4.0.0-rc.0`) and writes CHANGELOG entries, and `pnpm changeset publish` publishes under the `rc` dist-tag. `latest` keeps pointing at the last stable release.
 
+`Taskfile.yml` (go-task, `brew install go-task`) wraps this flow: `task rc:status`, `rc:enter`, `rc:bump`, `rc:verify`, `rc:publish`, `rc:dispatch`, `rc:exit`, `rc:finalize`, `rc:reset`. The tasks only wrap the commands below — the Taskfile is not a second source of truth. The dist-tag is per-run configurable (`task rc:enter RC_TAG=next`). `rc:bump` writes a throwaway changeset (`.changeset/rc-bump.md`, gitignored) because Changesets refuses to bump a candidate number without a pending changeset. `rc:reset` restores the pre-candidate state by checking out the package.json/CHANGELOG files from the commit that created `pre.json`.
+
 Rules that are easy to get wrong:
 
 - **Never pass `--tag` to `changeset publish` in pre mode.** Changesets exits with "Releasing under custom tag is not allowed in pre mode"; the tag comes from `pre.json`.
