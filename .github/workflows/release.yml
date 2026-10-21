@@ -4,6 +4,12 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Pre-release dist-tag to publish under (e.g. rc, next)"
+        required: true
+        default: rc
 
 concurrency:
   group: release-${{ github.workflow }}-${{ github.ref }}
@@ -77,6 +83,7 @@ jobs:
           SKIP_STANDALONE_SMOKE_BUILD: 1
 
       - name: Create release PR or publish packages
+        if: github.event_name == 'push'
         uses: changesets/action@v1
         with:
           version: pnpm version-packages
@@ -86,3 +93,52 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_CONFIG_PROVENANCE: true
+
+  release-rc:
+    name: Release candidate
+    if: github.event_name == 'workflow_dispatch'
+    needs: release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      - name: Update npm for trusted publishing
+        run: npm install --global npm@11
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Verify prerelease versions match the requested tag
+        env:
+          RC_TAG: ${{ inputs.tag }}
+        run: |
+          for pkg in core vue nuxt; do
+            version=$(node -p "require('./packages/$pkg/package.json').version")
+            case "$version" in
+              *-"$RC_TAG".*) ;;
+              *)
+                echo "::error::packages/$pkg version $version does not match tag $RC_TAG"
+                exit 1
+                ;;
+            esac
+          done
+
+      - name: Build packages
+        run: pnpm build:packages
+
+      - name: Publish release candidate
+        env:
+          RC_TAG: ${{ inputs.tag }}
+          NPM_CONFIG_PROVENANCE: true
+        run: pnpm --filter './packages/*' -r publish --no-git-checks --tag "$RC_TAG"

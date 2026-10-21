@@ -246,6 +246,41 @@ Use these npm trusted publisher settings:
 
 The release workflow does not use a long-lived `NPM_TOKEN` secret.
 
+### Release candidates
+
+To publish a pre-release from a branch instead of waiting for `main`, use Changesets pre-release mode. The version is bumped to a prerelease of the pending release (for example `4.0.0-rc.0`) and published under its own npm dist-tag, so the `latest` tag keeps pointing at the last stable release.
+
+```sh
+pnpm changeset pre enter rc     # writes .changeset/pre.json with the rc tag
+pnpm version-packages            # core/vue/nuxt -> 4.0.0-rc.0, plus CHANGELOG entries
+pnpm build:packages
+pnpm changeset publish           # publishes under the "rc" dist-tag
+```
+
+Consumers install a release candidate with an explicit tag:
+
+```sh
+npm install @vue-solana/core@rc
+```
+
+Do not pass `--tag` to `changeset publish` while in pre mode; Changesets rejects it and takes the tag from `.changeset/pre.json`. Every release candidate needs its own version number, so bump again by adding a changeset and running `pnpm version-packages` again (`4.0.0-rc.0` -> `4.0.0-rc.1`).
+
+Publish the release candidate from CI to use npm Trusted Publishing instead of a local token. Run the `Release` workflow manually (`workflow_dispatch`) on the release branch and set the `tag` input; the workflow verifies that every package version matches that tag and then publishes with that dist-tag:
+
+```sh
+# GitHub Actions -> Release -> Run workflow -> branch: release/v4.0.0 -> tag: rc
+npm view @vue-solana/core dist-tags
+```
+
+To return to normal releases, leave pre mode and version again:
+
+```sh
+pnpm changeset pre exit
+pnpm version-packages            # -> 4.0.0
+```
+
+Pre-release commits live on the release branch only. Do not merge the prerelease versions into `main`: the stable release is versioned from the pending changesets on `main`.
+
 ## Example Apps
 
 Small usage snippets are included in the package docs for quick reference. For a complete runnable flow, use the example apps:

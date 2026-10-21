@@ -246,6 +246,19 @@ Repeat per release rather than filing a one-time task. Two things to check by re
 - **`sideEffects` changes** deserve the step-4 browser load. Both Buffer injection points in `apps/docs` (`nuxt.config.ts` virtual entry and `app/plugins/buffer-polyfill.client.ts`) bind a named import and call it, so they survive tree-shaking — but a bare side-effect import would not, and only a real page load catches that. Confirm `globalThis.Buffer` is defined in the browser rather than just grepping the bundle for a `Buffer??=` assignment.
 - **New or removed `exports` subpaths** need a `vitest.config.ts` alias in the root config if `apps/docs` imports them. Vite alias keys are prefix matches, so a subpath alias must be declared _before_ its bare parent. If app code starts needing a type from `@vue-solana/core`, that is a release-policy problem, not an alias problem — see `docs-import-policy.test.ts`.
 
+### Release Candidate Publishing
+
+A branch can ship a prerelease to npm without touching `main`, using Changesets pre-release mode. `pnpm changeset pre enter rc` writes `.changeset/pre.json` (`{ mode: "pre", tag: "rc" }`), `pnpm version-packages` then bumps core/vue/nuxt to the pending prerelease (`4.0.0-rc.0`) and writes CHANGELOG entries, and `pnpm changeset publish` publishes under the `rc` dist-tag. `latest` keeps pointing at the last stable release.
+
+Rules that are easy to get wrong:
+
+- **Never pass `--tag` to `changeset publish` in pre mode.** Changesets exits with "Releasing under custom tag is not allowed in pre mode"; the tag comes from `pre.json`.
+- **Pre mode does not consume changesets.** `.changeset/bundle-size-trim.md` survives `pre enter` + `version`, so the stable release on `main` still has its changeset. Snapshot mode (`changeset version --snapshot`) _does_ delete it — restore it with `git checkout -- .changeset/<name>.md` if you use that path.
+- **Every RC needs a new version number** (npm refuses to republish). Add a changeset and run `pnpm version-packages` again to get `4.0.0-rc.1`.
+- **Prerelease versions and `pre.json` never merge into `main`.** The stable release is versioned from the pending changesets on `main`; `pnpm changeset pre exit` + `pnpm version-packages` produces the final `4.0.0`.
+- **`pnpm publish` refuses to publish from a branch that is not `publish-branch`** (default `master|main`) and aborts non-interactively. `publish-branch` is an exact match, not a regex. The CI release-candidate job therefore uses `pnpm --filter './packages/*' -r publish --no-git-checks --tag "$RC_TAG"`, which also publishes in dependency order (core -> vue -> nuxt, because pnpm rewrites `workspace:*` to the concrete version at pack time).
+- **CI is the publish path.** `.github/workflows/release.yml` gained a `workflow_dispatch` trigger with a `tag` input and a `release-rc` job. It must stay in `release.yml` (not a new file) because npm Trusted Publishing is bound to the workflow filename, and the `changesets/action` step is now guarded with `if: github.event_name == 'push'` so a manual dispatch cannot open a version PR or publish from the main flow. The job fails fast when a package version does not match the requested tag.
+
 ### Dependency Policy (Kit-first)
 
 **Forbidden packages:** Do NOT add the following granular packages. They duplicate concerns already provided by `@solana/kit` and create type/instance duplication (notably `SolanaError`, subscription signals, transaction types):
