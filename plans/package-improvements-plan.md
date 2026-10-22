@@ -36,6 +36,8 @@ Deferred scope:
 - Solana Pay / QR work (`plans/solana-pay-qr-plan.md` owns this).
 - TanStack Query adapter (already recorded as out of scope in `plans/react-readme-parity-plan.md`).
 
+Phase 9 is outside the original audit scope: it records the post-`rc.0` review of the 4.0.0 branch (2026-10-21) and is tracked at the end of this file.
+
 ## Design Principles
 
 - Core stays DOM-free; browser APIs live in `@vue-solana/vue`.
@@ -228,6 +230,55 @@ Acceptance criteria:
 - All CI gates pass as listed in `Verification Status`.
 - Changesets cover every breaking export change.
 
+## [ ] Phase 9: 4.0.0 Release Review Follow-Ups — P0
+
+Status: open (2026-10-21). Source: full-branch review of `@vue-solana/core@3.0.1...HEAD` (142 files, 18 commits, `HEAD` = `1553c9e`) on `release/v4.0.0`. Every existing gate passes (`format`, `lint`, `test` 71 files / 718 tests, `typecheck` all six projects, `pack:size`, `check:entries`, `check:esm-map`, `check:externals`, `check:buffer-polyfill-declarations`, `size:packages`), so these are review-level defects, not build failures. Each unchecked item is intended to be its own change set. `4.0.0-rc.0` is already published, so behavior fixes ride the next candidate (`task rc:bump` → `4.0.0-rc.1`); fold their user-facing notes into `.changeset/bundle-size-trim.md` rather than opening a second changeset (pre mode does not consume it).
+
+Tasks:
+
+**P0 — correctness**
+
+- [x] `confirmTransactionSignature()` ignores custom abort reasons. `packages/core/src/transaction.ts:150-156` only rethrows when `isAbortErrorLike()` sees `name === "AbortError"` (`transaction.ts:195-201`), but `wait()` rejects with `signal.reason` (`transaction.ts:186-189`) and `throwIfAborted()` throws it verbatim. `controller.abort(new Error("navigation"))` therefore surfaces as `RPC_FAILURE`, contradicting `packages/core/src/types.ts:173` (“rejects with the signal's reason”). Fix: in the catch, `if (abortSignal?.aborted) throw abortSignal.reason;` before the name check. Add the custom-reason regression test under P2 below.
+- [x] Wallet failure paths became silent. This branch replaced every diagnostic `console.error` with `void cause;`: mobile-wallet registration (`packages/vue/src/plugin.ts:178-180`), persisted-wallet auto-connect (`plugin.ts:218-220`), initial `refreshWallets()` (`plugin.ts:272-274`), and the iOS callback (`packages/vue/src/plugin/wallet-registry.ts:131-137`, i.e. decryption / deep-link errors). None sets `error.value` and none logs, while RPC and storage failures still do (`plugin.ts:103-110`, `133-135`). Keep the `console.info` removal, but restore observability: set `error.value = normalizeSolanaError(cause, ...)` where a context exists and add a dev-only `console.error` or injectable logger. The iOS callback is the highest-value path.
+
+**P1 — security hardening and precedence**
+
+- [ ] `signIn` verifies the wallet-returned account, not the active one. `packages/core/src/wallet-standard/adapter.ts:151-158` verifies `signInResult.account.publicKey`, while `signMessage` correctly verifies `getActiveAccount(account).publicKey` (`adapter.ts:175-180`). When `input` is omitted the default input is built from the active account (`adapter.ts:144`), so a wallet returning a different account it controls passes the client check. Server-side SIWS verification still gates trust, but this is an account-substitution hole and an inconsistency. Fix: when `input?.address` is absent, verify the active account; when present, require the returned account to match `input.address`; reject any returned account absent from `wallet.accounts`.
+- [ ] Malformed signatures skip the length check when Ed25519 WebCrypto is unavailable. `packages/core/src/wallet-standard/verify-wallet-signature.ts:27-49` attempts `importKey` first and returns from the catch (line 38) before `isSignatureBytes(signature)` (line 44). On older Safari or an insecure context a wallet returning a 3-byte signature is accepted silently instead of throwing `INVALID_SIGNATURE`; the length check is crypto-independent. Fix: move the `isSignatureBytes` branch above the `importKey` try/catch. The existing fallback test (`packages/core/src/wallet-standard/adapter.test.ts:670`) uses a 64-byte signature, so it cannot catch this.
+- [ ] Nuxt inline module options equal to a default lose to public config. `packages/nuxt/src/module.ts:147-173` detects an “untouched default” by comparing `options[key]` with `MODULE_DEFAULTS[key]` (`module.ts:54`) and checking `nuxt.options.solana`. Inline options (`modules: [["@vue-solana/nuxt", { cluster: "devnet" }]]`) never appear in `nuxt.options.solana`, so an explicit value equal to the default is treated as untouched and `runtimeConfig.public.solana.cluster` wins. The `solana` config-key path is covered (`packages/nuxt/src/module.integration.test.ts:102`); the inline path is not. Fix: apply per-key defaults only after the merge for every key where explicitness matters (`cluster`, `autoConnect`), so `undefined` means “not set”, and add the inline-options integration case.
+
+**P2 — consistency, edge cases, tooling**
+
+- [ ] `toAddressInput()` recursion has no cycle guard. `packages/core/src/address.ts:39-58` unwraps getters and `{ value }` refs recursively, so `const a = () => a` throws `RangeError: Maximum call stack size exceeded` instead of `INVALID_ADDRESS`. Add a depth limit (e.g. 32) and throw a `SolanaError` with `INVALID_ADDRESS` when exceeded.
+- [ ] `useSignatureStatus` reports invalid input as `RPC_FAILURE`. `packages/vue/src/composables/useSignatureStatus.ts:146-147` uses `RPC_FAILURE` for `pollIntervalMs <= 0`, while core uses `INVALID_INPUT` for the same class (`packages/core/src/transaction.ts:89-94`, `timeout.ts`). Recommended: switch to `INVALID_INPUT` and update `apps/docs/content/packages/vue.md:840`, `knowledge-bundle/packages/vue.md:396`, and the three locale files in the same change set. This is a small behavior change, so record it in the changeset.
+- [ ] `Taskfile.yml` release-tool nits. `Taskfile.yml:102` and `:111` write `${{.RC_TAG}}`; Task renders `{{.RC_TAG}}` to `rc`, leaving the shell to expand an empty `$rc`, so the messages read `does not match the  tag` and `publishing : 4.0.0-rc.0`. Use `{{.RC_TAG}}` like line 113. Also `rc:finalize` (`Taskfile.yml:140-149`) deliberately runs outside pre mode, so running it on `main` consumes the pending changeset and cuts a final version; add a branch confirmation or precondition.
+
+**Documentation**
+
+- [ ] `MISSING_CLIENT_CAPABILITY` is undocumented. The code is new in this branch (`packages/core/src/errors.ts:19`, thrown by `packages/vue/src/composables/useClientCapability.ts:21`) but is missing from `apps/docs/content/guides/errors.md:29-42`, `apps/docs/content/packages/core.md:395-409`, `knowledge-bundle/packages/core.md:209+`, and the `es`/`ko`/`zh` copies of the two docs. Add the bullet plus a sentence in the client-capability section explaining hand-built clients. `INVALID_SIGNATURE` was added to all of these; this one was missed.
+- [ ] `deleteSwrKey()` and the 1024-entry cache cap are only in the changeset. `packages/vue/src/swr.ts:50,66-79` add both, but `apps/docs/content/packages/vue.md` (SWR section, ~655-676), the three locale copies, and `knowledge-bundle/packages/vue.md` still describe `clearSwrCache()` as the only eviction tool. Document the full-key prefixes (`request:` / `subscription:` / `tracked:`) and oldest-first eviction.
+- [ ] `apps/docs/content/packages/nuxt.md:106` says “the SWR adapters are not auto-imported. Import them explicitly from the Vue package subpath”, but `packages/nuxt/src/imports.ts:37-41` auto-imports `useSolanaRequestSwr`, `useSolanaSubscriptionSwr`, and `useSolanaTrackedDataSwr`. Pre-existing, but this release’s “four more Nuxt auto-imports” section makes it visible; fix in all locales.
+- [ ] `.changeset/bundle-size-trim.md` structure. Line 220 has a dangling lead-in (“Core input validation and error handling also lands in this release.”) immediately before the next `##` heading. The wallet-signature verification feature starts at line 329 as a bare paragraph inside “Other user-visible changes in this release” (line 313) with no heading, even though it introduces `INVALID_SIGNATURE`; give it its own `##` section like every other feature.
+- [ ] Stale “four colliding names” count. `AGENTS.md:128`, `packages/core/src/kit-mirror.test.ts:34`, and this plan’s own Design Principles section say four; `packages/core/src/index.ts:48-53` now also resolves `isAbortError`, so it is five (`SolanaError`, `isSolanaError`, `SolanaErrorCode`, `TransactionStatus`, `isAbortError`). Update all three.
+- [ ] `waitForRedirect()` is documented as user-facing but unreachable. `.changeset/bundle-size-trim.md:268` gives it a `##` section describing caller-visible behavior and options, but `packages/core/src/ios-wallet.ts` does not re-export it (only `packages/core/src/ios-wallet/browser.ts:103`), and `@vue-solana/core` exposes only the `./ios-wallet` subpath. Either export `waitForRedirect` + `WaitForRedirectOptions` from the barrel and its docs, or reword the changeset to describe an internal fix.
+
+**Tests**
+
+- [ ] SWR eviction cap is untested. `packages/vue/src/swr.test.ts:252` covers `deleteSwrKey` only. Add a case that inserts 1025 entries and asserts the oldest is evicted, plus one that re-writes an existing key and asserts the insertion-order refresh in `packages/vue/src/swr.ts:104-111` keeps it alive.
+- [ ] No test asserts a configured `commitment` reaches the wire. `packages/core/src/kit.test.ts:81-93` asserts only that the explicit stack is used and that `rpc`/`rpcSubscriptions` exist. Capture the transport request body and assert it contains `{"commitment":"processed"}`; that is the regression the explicit stack exists to prevent.
+- [x] No test for a custom abort reason. `packages/core/src/transaction.test.ts:316` calls `controller.abort()` with no reason. Add `controller.abort(new Error("stop"))` and assert the rejection _is_ that error (covers the P0 fix).
+- [ ] No test for inline-options-equal-default precedence. Add the `modules: [[module, { cluster: "devnet" }]]` + `runtimeConfig.public.solana.cluster = "mainnet"` case to `packages/nuxt/src/module.integration.test.ts` (covers the P1 fix). Include `autoConnect: true` vs `autoConnect: false` as the second key with the same shape.
+- [ ] No test for a malformed signature when WebCrypto is unavailable. Extend `packages/core/src/wallet-standard/adapter.test.ts:670` (or add a sibling) that mocks `importKey` rejection _and_ returns a short signature, asserting `INVALID_SIGNATURE` (covers the P1 fix).
+- [ ] No test for sign-in account substitution. Add a case to `packages/core/src/wallet-standard/adapter.test.ts` where the wallet returns a different account than the adapter’s active account, validly signing for itself, and assert rejection (covers the P1 fix).
+- [ ] Misnamed test. `packages/core/src/clusters.test.ts:34` says “throws `INVALID_ADDRESS` for malformed endpoints” but asserts `INVALID_INPUT` at line 42; rename it to match the behavior.
+
+Acceptance criteria:
+
+- Every P0 and P1 item is closed with a regression test that fails before the fix.
+- `pnpm format`, `pnpm lint`, `pnpm test`, `pnpm typecheck`, `pnpm build:packages`, and `pnpm pack:size` pass; run `pnpm test:e2e` when the confirmation/polling paths change (item 1 and the `useSignatureStatus` code change).
+- Documentation changes land in the same change set as their code, and every English doc edit is mirrored into `es`/`ko`/`zh` so `packages/core/src/locale-docs.test.ts` stays green; structural changes use the same heading levels so the structure check keeps passing.
+- User-facing fixes are appended to `.changeset/bundle-size-trim.md`; no second pending changeset is opened while pre mode is active.
+
 ## Suggested Implementation Order
 
 1. Phase 1: Critical Correctness.
@@ -238,8 +289,9 @@ Acceptance criteria:
 6. Phase 6: Documentation Accuracy.
 7. Phase 7: Targeted Test Coverage.
 8. Phase 8: Verification And Release Readiness.
+9. Phase 9: 4.0.0 Release Review Follow-Ups — land P0 first (one commit each), then P1 + their regression tests; documentation and tooling items can run in parallel with the P1 work.
 
-Phases 6 and 7 can run in parallel once Phases 1–2 land, since they are mostly additive.
+Phases 6 and 7 can run in parallel once Phases 1–2 land, since they are mostly additive. Phase 9 is post-rc.0 work: every behavior fix needs `task rc:bump` (or another changeset) before the stable 4.0.0 cut.
 
 ## Open Decisions
 

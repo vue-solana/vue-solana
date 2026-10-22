@@ -17,6 +17,7 @@ interface SolanaWalletRegistryOptions {
   iosWallet?: false | GetSolanaIosWalletsOptions;
   getWalletInfos: () => readonly SolanaWalletInfo[];
   onWalletChange: () => void;
+  onError?: (cause: unknown) => void;
 }
 
 export function createSolanaWalletRegistry(options: SolanaWalletRegistryOptions) {
@@ -132,7 +133,7 @@ export function createSolanaWalletRegistry(options: SolanaWalletRegistryOptions)
     try {
       handleSolanaIosWalletCallback({ clearUrl: true });
     } catch (cause) {
-      void cause;
+      options.onError?.(cause);
     }
   }
 

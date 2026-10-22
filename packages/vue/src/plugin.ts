@@ -65,6 +65,10 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}): VueSol
         iosWallet: options.iosWallet,
         getWalletInfos: () => wallets.value,
         onWalletChange: () => triggerRef(wallet),
+        onError: (cause) => {
+          error.value = normalizeSolanaError(cause, "DECRYPTION_FAILED");
+          logDevError("Failed to handle Solana iOS wallet callback", cause);
+        },
       });
       let unsubscribeWallets: (() => void) | null = null;
       let mobileWalletRegistrationPromise: Promise<void> | null = null;
@@ -176,7 +180,8 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}): VueSol
             refreshWallets();
           })
           .catch((cause) => {
-            void cause;
+            error.value = normalizeSolanaError(cause, "RPC_FAILURE");
+            logDevError("Failed to register Solana mobile wallet", cause);
           })
           .finally(() => {
             mobileWalletRegistrationPromise = null;
@@ -216,7 +221,8 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}): VueSol
         void activeWallet
           .connect()
           .catch((cause) => {
-            void cause;
+            error.value = normalizeSolanaError(cause, "RPC_FAILURE");
+            logDevError("Failed to auto-connect Solana wallet", cause);
           })
           .finally(() => {
             triggerRef(wallet);
@@ -270,7 +276,8 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}): VueSol
           try {
             refreshWallets();
           } catch (cause) {
-            void cause;
+            error.value = normalizeSolanaError(cause, "RPC_FAILURE");
+            logDevError("Failed to refresh Solana wallets", cause);
           }
 
           void checkConnection();
@@ -291,6 +298,27 @@ function isSameWallet(wallet: SolanaWalletInfo, selectedWallet: PersistedSelecte
     wallet.source === selectedWallet.source &&
     wallet.platform === selectedWallet.platform
   );
+}
+
+function isDevEnvironment(): boolean {
+  try {
+    if (
+      typeof import.meta !== "undefined" &&
+      (import.meta as { env?: { DEV?: boolean } }).env?.DEV
+    ) {
+      return true;
+    }
+  } catch {
+    // Ignore environments without import.meta.
+  }
+
+  return typeof process !== "undefined" && process.env?.NODE_ENV !== "production";
+}
+
+function logDevError(message: string, cause: unknown): void {
+  if (isDevEnvironment()) {
+    console.error(message, cause);
+  }
 }
 
 export const VueSolana = createSolanaPlugin;

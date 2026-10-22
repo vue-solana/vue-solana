@@ -148,6 +148,10 @@ export async function confirmTransactionSignature(
       `Timed out waiting for transaction ${signature} to reach ${commitment} commitment.`,
     );
   } catch (cause) {
+    if (abortSignal?.aborted) {
+      throw abortSignal.reason;
+    }
+
     if (isAbortErrorLike(cause)) {
       throw cause;
     }

@@ -340,6 +340,34 @@ describe("confirmTransactionSignature", () => {
     await rejection;
   });
 
+  it("rejects with the caller-supplied abort reason", async () => {
+    vi.useFakeTimers();
+    const client = createRpcClient();
+    client.rpc.getSignatureStatuses.mockReturnValue({
+      send: vi.fn().mockResolvedValue({
+        value: [
+          {
+            slot: 10n,
+            confirmations: 0n,
+            err: null,
+            confirmationStatus: "processed",
+          },
+        ],
+      }),
+    });
+    const controller = new AbortController();
+    const reason = new Error("stop");
+    const promise = confirmTransactionSignature(client, SIGNATURE, {
+      timeoutMs: 60_000,
+      abortSignal: controller.signal,
+    });
+    const rejection = expect(promise).rejects.toBe(reason);
+
+    controller.abort(reason);
+    await vi.runAllTimersAsync();
+    await rejection;
+  });
+
   it("throws INVALID_INPUT for invalid timeout and poll interval values", async () => {
     const client = createRpcClient();
 
