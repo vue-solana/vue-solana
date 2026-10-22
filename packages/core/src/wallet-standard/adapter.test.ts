@@ -428,7 +428,7 @@ describe("Wallet Standard adapter", () => {
 
   it("adapts sign-in when the wallet supports it", async () => {
     const { account: signerAccount, sign } = await createSigningTestAccount();
-    const standardWallet = createStandardWallet();
+    const standardWallet = createStandardWallet([signerAccount]);
     const signInInput = { statement: "Sign in to vue-solana" };
     const signedMessage = new Uint8Array([4, 5, 6]);
     const signature = await sign(signedMessage);
@@ -479,7 +479,7 @@ describe("Wallet Standard adapter", () => {
 
   it("rejects a sign-in signature the account did not make", async () => {
     const { account: signerAccount, sign } = await createSigningTestAccount();
-    const standardWallet = createStandardWallet();
+    const standardWallet = createStandardWallet([signerAccount]);
     const signIn = vi.fn().mockResolvedValue([
       {
         account: signerAccount,
@@ -505,9 +505,72 @@ describe("Wallet Standard adapter", () => {
     await expect(wallet.signIn?.({})).rejects.toMatchObject({ code: "INVALID_SIGNATURE" });
   });
 
+  it("rejects a sign-in result for a different account than the active one", async () => {
+    const active = await createSigningTestAccount();
+    const other = await createSigningTestAccount();
+    // Both accounts are exposed by the wallet, so only the active-account
+    // binding can catch the substitution.
+    const standardWallet = createStandardWallet([active.account, other.account]);
+    const signedMessage = new Uint8Array([4, 5, 6]);
+    const signIn = vi.fn().mockResolvedValue([
+      {
+        account: other.account,
+        signedMessage,
+        // A real signature, made by the substituted account itself.
+        signature: await other.sign(signedMessage),
+        signatureType: "ed25519",
+      },
+    ]);
+    (standardWallet.features as Record<string, unknown>)[SolanaSignIn] = {
+      version: "1.0.0",
+      signIn,
+    };
+    const walletInfo = {
+      name: standardWallet.name,
+      icon: standardWallet.icon,
+      chains: standardWallet.chains,
+      accounts: [],
+      wallet: standardWallet,
+    } satisfies SolanaWalletInfo;
+    const wallet = adaptSolanaStandardWallet(walletInfo, { account: active.account });
+
+    await expect(wallet.signIn?.()).rejects.toMatchObject({ code: "INVALID_SIGNATURE" });
+  });
+
+  it("rejects a sign-in result for an account the wallet does not expose", async () => {
+    const { account: signerAccount, sign } = await createSigningTestAccount();
+    const standardWallet = createStandardWallet();
+    const signedMessage = new Uint8Array([4, 5, 6]);
+    const signIn = vi.fn().mockResolvedValue([
+      {
+        account: signerAccount,
+        signedMessage,
+        signature: await sign(signedMessage),
+        signatureType: "ed25519",
+      },
+    ]);
+    (standardWallet.features as Record<string, unknown>)[SolanaSignIn] = {
+      version: "1.0.0",
+      signIn,
+    };
+    const walletInfo = {
+      name: standardWallet.name,
+      icon: standardWallet.icon,
+      chains: standardWallet.chains,
+      accounts: [],
+      wallet: standardWallet,
+    } satisfies SolanaWalletInfo;
+    const wallet = adaptSolanaStandardWallet(walletInfo);
+
+    await expect(wallet.signIn?.({ statement: "Sign in" })).rejects.toMatchObject({
+      code: "INVALID_SIGNATURE",
+    });
+  });
+
   it("sends a default domain and address when called without arguments", async () => {
     const { account: signerAccount, sign } = await createSigningTestAccount();
-    const standardWallet = createStandardWallet([account]);
+    const standardWallet = createStandardWallet([signerAccount]);
+    getConnectFeature(standardWallet).connect.mockResolvedValue({ accounts: [signerAccount] });
     const signedMessage = new Uint8Array([4, 5, 6]);
     const signIn = vi.fn().mockResolvedValue([
       {
@@ -533,7 +596,7 @@ describe("Wallet Standard adapter", () => {
     await wallet.connect();
     await wallet.signIn?.();
 
-    expect(signIn).toHaveBeenCalledWith({ domain: location.host, address: account.address });
+    expect(signIn).toHaveBeenCalledWith({ domain: location.host, address: signerAccount.address });
   });
 
   it("rejects sign-in without arguments when the wallet is not connected", async () => {
@@ -696,6 +759,43 @@ describe("Wallet Standard adapter", () => {
       await expect(wallet.signMessage?.(message)).resolves.toEqual({
         signedMessage: message,
         signature,
+      });
+    } finally {
+      importKey.mockRestore();
+    }
+  });
+
+  it("rejects a malformed message signature even where Ed25519 WebCrypto is unavailable", async () => {
+    const { account: signerAccount } = await createSigningTestAccount();
+    const standardWallet = createStandardWallet([signerAccount]);
+    const message = new Uint8Array([1, 2, 3]);
+    const signMessage = vi
+      .fn()
+      .mockResolvedValue([{ signedMessage: message, signature: new Uint8Array([1, 2, 3]) }]);
+    (standardWallet.features as Record<string, unknown>)[SolanaSignMessage] = {
+      version: "1.0.0",
+      signMessage,
+    };
+    const walletInfo = {
+      name: standardWallet.name,
+      icon: standardWallet.icon,
+      chains: standardWallet.chains,
+      accounts: [],
+      wallet: standardWallet,
+    } satisfies SolanaWalletInfo;
+    const wallet = adaptSolanaStandardWallet(walletInfo, {
+      account: signerAccount,
+      chain: "solana:devnet",
+    });
+    // The length check needs no crypto, so it must run before this fallback
+    // swallows verification entirely.
+    const importKey = vi
+      .spyOn(globalThis.crypto.subtle, "importKey")
+      .mockRejectedValue(new Error("Ed25519 is not supported"));
+
+    try {
+      await expect(wallet.signMessage?.(message)).rejects.toMatchObject({
+        code: "INVALID_SIGNATURE",
       });
     } finally {
       importKey.mockRestore();

@@ -11,8 +11,10 @@ import { createSolanaError } from "../errors";
  * environment (older Safari, insecure contexts). When the key cannot be imported
  * — no WebCrypto, no Ed25519, or a malformed key — this resolves without
  * checking rather than failing a wallet whose signature the server will verify
- * anyway. When verification *is* available and the signature is wrong, it throws
- * `INVALID_SIGNATURE`.
+ * anyway. A malformed signature is rejected before that environment check: the
+ * length check needs no crypto, so a 3-byte signature must never slip through
+ * just because WebCrypto is missing. When verification *is* available and the
+ * signature is wrong, it throws `INVALID_SIGNATURE`.
  *
  * `label` names the signed artifact in the error message ("message", "sign-in").
  */
@@ -22,6 +24,13 @@ export async function assertWalletSignature(
   signature: ReadonlyUint8Array,
   label: string,
 ): Promise<void> {
+  if (!isSignatureBytes(signature)) {
+    throw createSolanaError(
+      "INVALID_SIGNATURE",
+      `The wallet returned a malformed ${label} signature.`,
+    );
+  }
+
   let key: CryptoKey;
 
   try {
@@ -37,15 +46,9 @@ export async function assertWalletSignature(
     );
   } catch {
     // No WebCrypto/Ed25519 in this environment (or the key is malformed): leave
-    // verification to the server instead of rejecting a wallet prompt.
+    // verification to the server instead of rejecting a wallet prompt. The
+    // signature's length was already checked above.
     return;
-  }
-
-  if (!isSignatureBytes(signature)) {
-    throw createSolanaError(
-      "INVALID_SIGNATURE",
-      `The wallet returned a malformed ${label} signature.`,
-    );
   }
 
   let valid: boolean;

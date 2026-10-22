@@ -337,6 +337,46 @@ reported (upgraded to `USER_REJECTED` when the wallet's message says the user
 rejected the request). Apps that matched on the old error messages should
 switch to `error.code`.
 
+## Sign-in results are bound to the requested account
+
+`useSignIn()` / `SolanaWallet.signIn()` used to verify the returned signature
+against the account the wallet _reported_, not the account the caller expected.
+A wallet could therefore answer with a different account it controlled, sign for
+itself, and pass the client-side check. The adapter now:
+
+- rejects a sign-in account absent from `wallet.accounts` (`INVALID_SIGNATURE`);
+- rejects an account that does not match `input.address`, or the active account
+  when no input was passed (`INVALID_SIGNATURE`);
+- verifies the signature against the exposed account's public key.
+
+Server-side SIWS verification remains mandatory.
+
+## Malformed signatures are rejected without WebCrypto
+
+The signature-length check in `assertWalletSignature()` now runs before the
+WebCrypto/Ed25519 availability check. On older Safari or an insecure context,
+where Ed25519 import fails and verification is skipped, a wallet returning a
+3-byte signature used to resolve successfully; it now rejects with
+`INVALID_SIGNATURE` like any other malformed signature. Well-formed signatures
+are still left to server-side verification in those environments.
+
+## Nuxt: inline options equal to a default now win over `runtimeConfig.public.solana`
+
+The Nuxt module no longer passes `cluster` / `autoConnect` to
+`defineNuxtModule` as `defaults`. Nuxt's `defu` merge made an inline
+`{ cluster: "devnet" }` indistinguishable from an untouched default, so
+`runtimeConfig.public.solana.cluster` won. Defaults are applied after the
+per-key merge instead, so:
+
+- an inline option (`modules: [["@vue-solana/nuxt", { cluster: "devnet" }]]`)
+  wins over `runtimeConfig.public.solana.cluster`;
+- an unset option still yields to `runtimeConfig.public.solana` and otherwise
+  falls back to `devnet` / `false`.
+
+The resolved values remain in `runtimeConfig.public.solana` /
+`useRuntimeConfig()`; `nuxt.options.solana` no longer receives those two
+defaults.
+
 ## Other user-visible changes in this release
 
 - `MissingClientCapabilityError` now extends `SolanaError` (code

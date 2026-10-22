@@ -9,6 +9,7 @@ import {
 import type { SolanaSignInInput, SolanaSignInOutput } from "@solana/wallet-standard-features";
 import { getBase58Decoder } from "@solana/kit";
 import type { Address } from "../kit";
+import { createSolanaError } from "../errors";
 import { assertWalletSignature } from "./verify-wallet-signature";
 import type {
   SolanaChain,
@@ -150,8 +151,31 @@ export function adaptSolanaStandardWallet(
 
           const signInResult = toSolanaSignInResult(result);
 
+          // An omitted input is built from the active account, so the account
+          // the caller is asking about is either `input.address` or the active
+          // one. Verifying only the returned account let a wallet answer with a
+          // *different* account it controls, sign for itself, and pass.
+          const requestedAddress = input?.address ?? account?.address;
+          const signInAccount = accounts.find(
+            (candidate) => candidate.address === signInResult.account.address,
+          );
+
+          if (!signInAccount) {
+            throw createSolanaError(
+              "INVALID_SIGNATURE",
+              "The wallet returned a sign-in account it does not expose.",
+            );
+          }
+
+          if (requestedAddress !== undefined && requestedAddress !== signInAccount.address) {
+            throw createSolanaError(
+              "INVALID_SIGNATURE",
+              `The wallet signed in as ${signInResult.account.address} instead of the requested ${requestedAddress}.`,
+            );
+          }
+
           await assertWalletSignature(
-            signInResult.account.publicKey,
+            signInAccount.publicKey,
             signInResult.signedMessage,
             signInResult.signature,
             "sign-in",

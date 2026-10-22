@@ -7,7 +7,7 @@ import type { ModuleOptions } from "../src/module";
 
 // `./module.test.ts` mocks `@nuxt/kit.defineNuxtModule` as identity so it can
 // call `setup()` directly — fast, but it never proves the module survives the
-// real definition wrapper (option defaults, config merge, real `addPlugin` /
+// real definition wrapper (config-key/inline-option merge, real `addPlugin` /
 // `addImports` registration). These cases load the *real* module through
 // `loadNuxt` against the fixture app in `../test/fixture`. No build and no dev
 // server: `ready: false` plus an explicit `ready()` runs module setup only, so
@@ -88,9 +88,10 @@ describe("real defineNuxtModule setup", () => {
   });
 
   it("does not let module defaults clobber an explicit public.solana value", async () => {
-    // Regression: `defineNuxtModule` bakes the defaults into `options`, so a
-    // naive `{ ...publicSolana, ...options }` overwrote a user's
-    // `runtimeConfig.public.solana.cluster` with the `devnet` default.
+    // Regression: Nuxt's `defu` merge cannot tell an untouched default from a
+    // user value, so the defaults are applied only after this merge. A naive
+    // `{ ...publicSolana, ...options }` with module-level defaults overwrote a
+    // user's `runtimeConfig.public.solana.cluster` with `devnet`.
     const nuxt = await loadWithModule({}, { solana: { cluster: "mainnet", autoConnect: true } });
 
     expect(nuxt.options.runtimeConfig.public.solana).toMatchObject({
@@ -107,6 +108,26 @@ describe("real defineNuxtModule setup", () => {
     );
 
     expect(nuxt.options.runtimeConfig.public.solana).toMatchObject({ cluster: "devnet" });
+  });
+
+  it("lets inline options equal to a default win over public.solana", async () => {
+    // Regression: Nuxt's `defu` merge could not tell `{ cluster: "devnet" }`
+    // set inline apart from the module default, so the default path lost here.
+    const nuxt = await loadWithModule(
+      { cluster: "devnet", autoConnect: false },
+      { solana: { cluster: "mainnet", autoConnect: true } },
+    );
+
+    expect(nuxt.options.runtimeConfig.public.solana).toMatchObject({
+      cluster: "devnet",
+      autoConnect: false,
+    });
+  });
+
+  it("lets an inline autoConnect option win over public.solana", async () => {
+    const nuxt = await loadWithModule({ autoConnect: true }, { solana: { autoConnect: false } });
+
+    expect(nuxt.options.runtimeConfig.public.solana).toMatchObject({ autoConnect: true });
   });
 
   it("strips wallet/signer fields from public runtime config", async () => {

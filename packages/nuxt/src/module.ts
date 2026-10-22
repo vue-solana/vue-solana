@@ -45,10 +45,14 @@ const VITE_OPTIMIZE_DEPS = [
 const VITE_NEEDS_INTEROP = ["@vue-solana/nuxt > @vue-solana/vue > @vue-solana/core > tweetnacl"];
 
 /**
- * Module defaults, named so the setup merge can tell an untouched default apart
- * from a value the user actually chose. `defineNuxtModule` bakes these into the
- * `options` it hands `setup`, which is what used to make a default silently
- * overwrite an explicit `runtimeConfig.public.solana` value.
+ * Module defaults, applied by {@link mergeSolanaSources} *after* the merge.
+ *
+ * They are deliberately not passed to `defineNuxtModule` as `defaults`: Nuxt
+ * merges inline options, the `solana` config key, and those defaults with
+ * `defu`, so an inline option whose value equals a default (`cluster: "devnet"`)
+ * became indistinguishable from an untouched default and lost to
+ * `runtimeConfig.public.solana`. Without module-level defaults an absent key
+ * means "the user never set it", which is what the merge needs to know.
  */
 const MODULE_DEFAULTS = {
   cluster: "devnet",
@@ -70,7 +74,6 @@ const module: NuxtModule<ModuleOptions> = defineNuxtModule<ModuleOptions>({
       nuxt: "^3.0.0 || ^4.0.0",
     },
   },
-  defaults: MODULE_DEFAULTS,
   setup(options, nuxt) {
     const resolver = createResolver(import.meta.url);
     const publicConfig = nuxt.options.runtimeConfig.public;
@@ -82,9 +85,6 @@ const module: NuxtModule<ModuleOptions> = defineNuxtModule<ModuleOptions>({
       mergeSolanaSources({
         publicSolana: isPlainObject(publicConfig.solana) ? publicConfig.solana : {},
         options,
-        configuredSolana: isPlainObject((nuxt.options as { solana?: unknown }).solana)
-          ? ((nuxt.options as { solana?: Record<string, unknown> }).solana ?? {})
-          : {},
       }),
     );
 
@@ -126,47 +126,47 @@ const module: NuxtModule<ModuleOptions> = defineNuxtModule<ModuleOptions>({
 export default module;
 
 /**
- * A resolved module-options source (`solana` config key + inline module options,
- * with defaults applied). Both that source and a hand-written
- * `runtimeConfig.public.solana` can carry signer/secret fields, so the merged
- * result is sanitized before it reaches the client bundle.
+ * A resolved module-options source: the inline module options merged with the
+ * `solana` config key by `defineNuxtModule`, without defaults. Both that source
+ * and a hand-written `runtimeConfig.public.solana` can carry signer/secret
+ * fields, so the merged result is sanitized before it reaches the client bundle.
  */
 type SolanaConfigSource = VueSolanaPluginOptions & { clientPlugin?: boolean };
 
 /**
- * Merges the three user/default sources for `runtimeConfig.public.solana` with
- * per-key precedence, most specific first: an explicit module option, then a
+ * Merges the user sources for `runtimeConfig.public.solana` with per-key
+ * precedence, most specific first: an explicit module option (inline options or
+ * the `solana` config key, which `defineNuxtModule` already merged), then a
  * hand-written `runtimeConfig.public.solana` value, then the module default.
  *
- * `defineNuxtModule` hands `setup` the options *with defaults applied*, so the
- * defaults cannot simply be spread last — doing that let `cluster: "devnet"`
- * overwrite a `runtimeConfig.public.solana.cluster` the user had set. A default
- * therefore only yields to a public-config value when the user never set the
- * key either way (not in the `solana` config key, not as an inline option).
+ * The module intentionally defines no `defaults` in `defineNuxtModule`, so an
+ * absent key means the user never set it. Applying `MODULE_DEFAULTS` here — as
+ * the last step, only for keys nothing else defined — is what lets an explicit
+ * inline option equal to the default (`cluster: "devnet"`) still win over
+ * `runtimeConfig.public.solana`.
  */
 function mergeSolanaSources({
   publicSolana,
   options,
-  configuredSolana,
 }: {
   publicSolana: Record<string, unknown>;
   options: SolanaConfigSource;
-  configuredSolana: Record<string, unknown>;
 }): SolanaConfigSource {
   // Start from the public config so keys only it defines are forwarded.
   const merged: Record<string, unknown> = { ...publicSolana };
 
   for (const [key, value] of Object.entries(options)) {
-    const untouchedDefault =
-      key in MODULE_DEFAULTS &&
-      Object.is(value, MODULE_DEFAULTS[key as keyof typeof MODULE_DEFAULTS]) &&
-      !Object.hasOwn(configuredSolana, key);
-
-    if (untouchedDefault && Object.hasOwn(publicSolana, key)) {
+    if (value === undefined) {
       continue;
     }
 
     merged[key] = value;
+  }
+
+  for (const [key, value] of Object.entries(MODULE_DEFAULTS)) {
+    if (merged[key] === undefined) {
+      merged[key] = value;
+    }
   }
 
   return merged as SolanaConfigSource;
