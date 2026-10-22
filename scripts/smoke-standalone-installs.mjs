@@ -107,13 +107,10 @@ function writeConsumer({ name, dependencies, devDependencies, workspaceOverrides
 
 function installAndTypecheck(label, consumerDir) {
   console.log(`\n=== ${label} ===`);
-  // Try without --ignore-workspace first so pnpm 10 reads pnpm-workspace.yaml overrides.
-  try {
-    run(pnpm, ["install", "--no-frozen-lockfile"], { cwd: consumerDir });
-  } catch {
-    // Fallback in case workspace resolution behaves differently in some CI environments.
-    run(pnpm, ["install", "--ignore-workspace", "--no-frozen-lockfile"], { cwd: consumerDir });
-  }
+  // Do not pass --ignore-workspace: pnpm 10 reads pnpm-workspace.yaml overrides only
+  // when workspace resolution is enabled. The temp consumer dirs sit outside this
+  // repo, so they are not pulled into the workspace anyway.
+  run(pnpm, ["install", "--no-frozen-lockfile"], { cwd: consumerDir });
   run(pnpm, ["typecheck"], { cwd: consumerDir });
 }
 
