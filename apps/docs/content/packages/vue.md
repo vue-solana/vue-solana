@@ -407,6 +407,8 @@ watchEffect(() => {
 });
 ```
 
+The injected context `error` ref behind `useSolana()` and `useRpc()` is shared with wallet boot work: mobile-wallet registration, persisted-wallet auto-connect, and iOS callback handling write `WALLET_FAILURE` (or `USER_REJECTED` when the wallet reports a rejection) there. The next `checkConnection()` or a successful `connect()` clears it. Those wallet paths log to `console.error` with a `[Vue Solana]` prefix in development only.
+
 ## Read Account Info
 
 ```vue
@@ -819,7 +821,7 @@ const { signature, confirmation, status, loading, error, confirm, reset } =
 await confirm("PASTE_SUBMITTED_SIGNATURE", { commitment: "finalized" });
 ```
 
-The composable preserves the submitted `signature` when confirmation times out or the RPC call fails, so apps can still show an explorer link while surfacing `error` to the user. Options pass through to `confirmTransactionSignature()`: `commitment`, `timeoutMs`, `pollIntervalMs`, `abortSignal`, and `searchTransactionHistory`. A failed transaction surfaces `TRANSACTION_FAILED`, a signature that never appears surfaces `TRANSACTION_NOT_FOUND`, and an exhausted wait surfaces `TRANSACTION_TIMEOUT`.
+The composable preserves the submitted `signature` when confirmation times out or the RPC call fails, so apps can still show an explorer link while surfacing `error` to the user. Options pass through to `confirmTransactionSignature()`: `commitment`, `timeoutMs`, `pollIntervalMs`, `abortSignal`, and `searchTransactionHistory`. A failed transaction surfaces `TRANSACTION_FAILED`, a signature that never appears surfaces `TRANSACTION_NOT_FOUND`, and an exhausted wait surfaces `TRANSACTION_TIMEOUT`. Because this composable's `error` ref is always a `SolanaError`, aborting a confirmation normalizes the abort reason to `RPC_FAILURE` with the original reason on `error.cause`; call `confirmTransactionSignature()` directly when you need the raw abort reason.
 
 ## Track Signature Status
 

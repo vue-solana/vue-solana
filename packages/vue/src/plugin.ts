@@ -66,7 +66,7 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}): VueSol
         getWalletInfos: () => wallets.value,
         onWalletChange: () => triggerRef(wallet),
         onError: (cause) => {
-          error.value = normalizeSolanaError(cause, "DECRYPTION_FAILED");
+          error.value = normalizeSolanaError(cause, "WALLET_FAILURE");
           logDevError("Failed to handle Solana iOS wallet callback", cause);
         },
       });
@@ -111,6 +111,7 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}): VueSol
 
           status.value = "error";
           error.value = normalizeSolanaError(cause, "RPC_FAILURE");
+          logDevError("Connection failed", cause);
         }
       }
 
@@ -136,6 +137,7 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}): VueSol
           const persistedWallet = readSelectedWallet();
           if (persistedWallet.error) {
             error.value = persistedWallet.error;
+            logDevError("Failed to read the persisted Solana wallet", persistedWallet.error);
           }
 
           restoredWallet = persistedWallet.wallet
@@ -180,7 +182,7 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}): VueSol
             refreshWallets();
           })
           .catch((cause) => {
-            error.value = normalizeSolanaError(cause, "RPC_FAILURE");
+            error.value = normalizeSolanaError(cause, "WALLET_FAILURE");
             logDevError("Failed to register Solana mobile wallet", cause);
           })
           .finally(() => {
@@ -197,6 +199,7 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}): VueSol
 
         if (storageError) {
           error.value = storageError;
+          logDevError("Failed to persist the selected Solana wallet", storageError);
         }
       }
 
@@ -221,7 +224,7 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}): VueSol
         void activeWallet
           .connect()
           .catch((cause) => {
-            error.value = normalizeSolanaError(cause, "RPC_FAILURE");
+            error.value = normalizeSolanaError(cause, "WALLET_FAILURE");
             logDevError("Failed to auto-connect Solana wallet", cause);
           })
           .finally(() => {
@@ -247,6 +250,7 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}): VueSol
 
           if (storageError) {
             error.value = storageError;
+            logDevError("Failed to clear the persisted Solana wallet", storageError);
           }
         },
       };
@@ -273,14 +277,17 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}): VueSol
 
       if (typeof window !== "undefined") {
         bootstrapId = window.setTimeout(() => {
+          // Start the RPC check first: it clears the shared `error` ref
+          // synchronously, so a refresh failure reported below is not wiped
+          // before anything can read it.
+          void checkConnection();
+
           try {
             refreshWallets();
           } catch (cause) {
-            error.value = normalizeSolanaError(cause, "RPC_FAILURE");
+            error.value = normalizeSolanaError(cause, "WALLET_FAILURE");
             logDevError("Failed to refresh Solana wallets", cause);
           }
-
-          void checkConnection();
         }, 0);
       }
     },
@@ -302,22 +309,25 @@ function isSameWallet(wallet: SolanaWalletInfo, selectedWallet: PersistedSelecte
 
 function isDevEnvironment(): boolean {
   try {
-    if (
-      typeof import.meta !== "undefined" &&
-      (import.meta as { env?: { DEV?: boolean } }).env?.DEV
-    ) {
+    if ((import.meta as { env?: { DEV?: boolean } }).env?.DEV === true) {
       return true;
     }
   } catch {
-    // Ignore environments without import.meta.
+    // Ignore environments without `import.meta` (CommonJS bundling).
   }
 
-  return typeof process !== "undefined" && process.env?.NODE_ENV !== "production";
+  if (typeof process === "undefined") {
+    return false;
+  }
+
+  const mode = process.env?.NODE_ENV;
+
+  return mode === "development" || mode === "test";
 }
 
 function logDevError(message: string, cause: unknown): void {
   if (isDevEnvironment()) {
-    console.error(message, cause);
+    console.error(`[Vue Solana] ${message}`, cause);
   }
 }
 

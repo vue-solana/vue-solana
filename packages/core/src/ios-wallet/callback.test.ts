@@ -40,7 +40,30 @@ describe("iOS wallet callbacks", () => {
     history.replaceState(null, "", "/?nonce=nonce&data=data");
 
     expect(() => handleSolanaIosWalletCallback()).toThrow(
-      "Received an iOS wallet callback without a pending request",
+      expect.objectContaining({
+        code: "INVALID_INPUT",
+        message: "Received an iOS wallet callback without a pending request",
+      }),
+    );
+  });
+
+  it("rejects wallet-reported callback errors as WALLET_FAILURE", () => {
+    history.replaceState(null, "", "/?errorCode=WALLET_ERROR&errorMessage=The+wallet+failed");
+
+    expect(() => handleSolanaIosWalletCallback()).toThrow(
+      expect.objectContaining({ code: "WALLET_FAILURE", message: "The wallet failed" }),
+    );
+  });
+
+  it("maps a wallet-reported user rejection to USER_REJECTED", () => {
+    history.replaceState(
+      null,
+      "",
+      "/?errorCode=USER_REJECTED&errorMessage=User+rejected+the+request",
+    );
+
+    expect(() => handleSolanaIosWalletCallback()).toThrow(
+      expect.objectContaining({ code: "USER_REJECTED" }),
     );
   });
 
@@ -62,7 +85,10 @@ describe("iOS wallet callbacks", () => {
     history.replaceState(null, "", "/?nonce=nonce&data=data");
 
     expect(() => handleSolanaIosWalletCallback()).toThrow(
-      "Received an expired iOS wallet callback",
+      expect.objectContaining({
+        code: "REDIRECT_TIMEOUT",
+        message: "Received an expired iOS wallet callback",
+      }),
     );
     expect(sessionStorage.getItem("vue-solana:ios-wallet:pending")).toBeNull();
   });
@@ -77,7 +103,10 @@ describe("iOS wallet callbacks", () => {
     history.replaceState(null, "", "/?phantom_encryption_public_key=key&nonce=nonce");
 
     expect(() => handleSolanaIosWalletCallback()).toThrow(
-      "Received an incomplete iOS wallet callback",
+      expect.objectContaining({
+        code: "INVALID_INPUT",
+        message: "Received an incomplete iOS wallet callback",
+      }),
     );
     expect(sessionStorage.getItem("vue-solana:ios-wallet:pending")).toBeNull();
   });
@@ -92,7 +121,10 @@ describe("iOS wallet callbacks", () => {
     setEncryptedConnectCallbackUrl({ publicKey: "not-a-public-key" });
 
     expect(() => handleSolanaIosWalletCallback()).toThrow(
-      "iOS wallet callback returned an invalid public_key",
+      expect.objectContaining({
+        code: "DECRYPTION_FAILED",
+        message: "iOS wallet callback returned an invalid public_key",
+      }),
     );
     expect(sessionStorage.getItem("vue-solana:ios-wallet:pending")).toBeNull();
     expect(sessionStorage.getItem("vue-solana:ios-wallet:session:phantom")).toBeNull();
@@ -119,7 +151,10 @@ describe("iOS wallet callbacks", () => {
       });
 
       expect(() => handleSolanaIosWalletCallback()).toThrow(
-        `iOS wallet returned ${transactions.length} signed transactions for ${requestedTransactionCount} requested transactions`,
+        expect.objectContaining({
+          code: "WALLET_FAILURE",
+          message: `iOS wallet returned ${transactions.length} signed transactions for ${requestedTransactionCount} requested transactions`,
+        }),
       );
       expect(sessionStorage.getItem("vue-solana:ios-wallet:pending")).toBeNull();
     },

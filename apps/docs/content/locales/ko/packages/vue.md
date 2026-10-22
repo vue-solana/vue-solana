@@ -404,6 +404,8 @@ watchEffect(() => {
 });
 ```
 
+`useSolana()`와 `useRpc()` 뒤의 주입된 context `error` ref는 wallet 부팅 작업과 공유됩니다. mobile wallet 등록, 저장된 wallet auto-connect, iOS callback 처리는 `WALLET_FAILURE`(wallet이 거절을 보고하면 `USER_REJECTED`)를 기록합니다. 다음 `checkConnection()`이나 성공한 `connect()`가 이를 지웁니다. 이 wallet 경로는 development에서만 `[Vue Solana]` prefix와 함께 `console.error`로 기록합니다.
+
 ## Account Info 읽기
 
 ```vue
@@ -818,7 +820,7 @@ const { signature, confirmation, status, loading, error, confirm, reset } =
 await confirm("PASTE_SUBMITTED_SIGNATURE", { commitment: "finalized" });
 ```
 
-이 composable은 confirmation timeout 또는 RPC failure가 발생해도 제출된 `signature`를 유지하므로, 앱은 사용자에게 `error`를 표시하면서도 explorer 링크를 계속 보여줄 수 있습니다. 옵션은 `confirmTransactionSignature()`로 그대로 전달됩니다: `commitment`, `timeoutMs`, `pollIntervalMs`, `abortSignal`, `searchTransactionHistory`. 실패한 트랜잭션은 `TRANSACTION_FAILED`, 나타나지 않은 서명은 `TRANSACTION_NOT_FOUND`, 소진된 대기는 `TRANSACTION_TIMEOUT`으로 표시됩니다.
+이 composable은 confirmation timeout 또는 RPC failure가 발생해도 제출된 `signature`를 유지하므로, 앱은 사용자에게 `error`를 표시하면서도 explorer 링크를 계속 보여줄 수 있습니다. 옵션은 `confirmTransactionSignature()`로 그대로 전달됩니다: `commitment`, `timeoutMs`, `pollIntervalMs`, `abortSignal`, `searchTransactionHistory`. 실패한 트랜잭션은 `TRANSACTION_FAILED`, 나타나지 않은 서명은 `TRANSACTION_NOT_FOUND`, 소진된 대기는 `TRANSACTION_TIMEOUT`으로 표시됩니다. 이 composable의 `error` ref는 항상 `SolanaError`이므로 confirmation을 abort하면 abort reason이 `RPC_FAILURE`로 normalize되고 원래 reason은 `error.cause`에 남습니다. raw abort reason이 필요하면 `confirmTransactionSignature()`를 직접 호출하세요.
 
 ## Signature Status 추적
 

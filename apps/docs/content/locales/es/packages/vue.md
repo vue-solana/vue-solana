@@ -404,6 +404,8 @@ watchEffect(() => {
 });
 ```
 
+El ref `error` del contexto inyectado que hay detrás de `useSolana()` y `useRpc()` se comparte con el trabajo de arranque de wallets: el registro de la mobile wallet, la auto-conexión de una wallet persistida y el manejo del callback de iOS escriben `WALLET_FAILURE` (o `USER_REJECTED` cuando la wallet reporta un rechazo) ahí. El siguiente `checkConnection()` o un `connect()` exitoso lo limpia. Esas rutas de wallet escriben en `console.error` con el prefijo `[Vue Solana]` solo en desarrollo.
+
 ## Leer info de cuenta
 
 ```vue
@@ -818,7 +820,7 @@ const { signature, confirmation, status, loading, error, confirm, reset } =
 await confirm("PASTE_SUBMITTED_SIGNATURE", { commitment: "finalized" });
 ```
 
-El composable conserva la `signature` enviada cuando la confirmación agota el tiempo o la llamada RPC falla, para que las apps aún puedan mostrar un enlace de explorador mientras muestran `error` al usuario. Las opciones se pasan a `confirmTransactionSignature()`: `commitment`, `timeoutMs`, `pollIntervalMs`, `abortSignal` y `searchTransactionHistory`. Una transacción fallida muestra `TRANSACTION_FAILED`, una firma que nunca aparece muestra `TRANSACTION_NOT_FOUND` y una espera agotada muestra `TRANSACTION_TIMEOUT`.
+El composable conserva la `signature` enviada cuando la confirmación agota el tiempo o la llamada RPC falla, para que las apps aún puedan mostrar un enlace de explorador mientras muestran `error` al usuario. Las opciones se pasan a `confirmTransactionSignature()`: `commitment`, `timeoutMs`, `pollIntervalMs`, `abortSignal` y `searchTransactionHistory`. Una transacción fallida muestra `TRANSACTION_FAILED`, una firma que nunca aparece muestra `TRANSACTION_NOT_FOUND` y una espera agotada muestra `TRANSACTION_TIMEOUT`. Como el ref `error` de este composable siempre es un `SolanaError`, abortar una confirmación normaliza el motivo del aborto a `RPC_FAILURE` y deja el motivo original en `error.cause`; llama a `confirmTransactionSignature()` directamente cuando necesites el motivo de aborto sin procesar.
 
 ## Seguir estado de firma
 

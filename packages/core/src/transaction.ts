@@ -149,7 +149,9 @@ export async function confirmTransactionSignature(
     );
   } catch (cause) {
     if (abortSignal?.aborted) {
-      throw abortSignal.reason;
+      // `reason` is always set after `abort()` per spec; fall back to the
+      // thrown cause for non-conforming signals that report `undefined`.
+      throw abortSignal.reason ?? cause;
     }
 
     if (isAbortErrorLike(cause)) {

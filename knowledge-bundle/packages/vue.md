@@ -132,7 +132,7 @@ Returns RPC state and the injected Kit client:
 - `checkConnection()`
 - `client`
 
-`error` is `SolanaError | null`. For example, connection checks normalize RPC failures to `RPC_FAILURE` while preserving the original thrown value on `error.cause`.
+`error` is `SolanaError | null`. For example, connection checks normalize RPC failures to `RPC_FAILURE` while preserving the original thrown value on `error.cause`. Wallet boot failures (mobile-wallet registration, persisted-wallet auto-connect, iOS callback handling) report `WALLET_FAILURE`, or `USER_REJECTED` when the wallet reports a rejection; `checkConnection()` and a successful `connect()` clear the ref.
 
 ## `useConnection()`
 
@@ -373,6 +373,8 @@ Returns:
 - `reset()`
 
 For explorer links, render after `signature` is set. For devnet, use a URL such as `https://explorer.solana.com/tx/${signature}?cluster=devnet`. Treat both `mainnet` and the legacy `mainnet-beta` alias as the mainnet explorer cluster; use `testnet` or `localnet` to match the app cluster.
+
+An aborted confirmation rejects and stores `RPC_FAILURE` with the abort reason on `error.cause`: the composable's `error` ref is typed `SolanaError`, so it does not pass a raw abort reason through. Call `confirmTransactionSignature()` directly when you need the caller's reason unchanged.
 
 ## `useSignatureStatus(signature, options?)`
 

@@ -2,6 +2,11 @@ export type SolanaErrorCode =
   | "NO_WALLET_SELECTED"
   | "WALLET_NOT_CONNECTED"
   | "WALLET_FEATURE_UNSUPPORTED"
+  // Wallet-side work failed without a more specific code: connect/disconnect,
+  // persisted-wallet auto-connect, mobile-wallet registration, or iOS callback
+  // handling. Kept apart from `RPC_FAILURE` so an app does not show a network
+  // error for a problem that never reached the network.
+  | "WALLET_FAILURE"
   | "USER_REJECTED"
   | "INVALID_ADDRESS"
   | "TRANSACTION_TIMEOUT"

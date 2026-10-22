@@ -404,6 +404,8 @@ watchEffect(() => {
 });
 ```
 
+`useSolana()` 和 `useRpc()` 背后的注入 context `error` ref 与钱包启动工作共享：移动钱包注册、已保存钱包的自动连接和 iOS 回调处理会写入 `WALLET_FAILURE`（钱包报告拒绝时为 `USER_REJECTED`）。下一次 `checkConnection()` 或成功的 `connect()` 会清除它。这些钱包路径仅在开发环境以 `[Vue Solana]` 前缀写入 `console.error`。
+
 ## 读取账户信息
 
 ```vue
@@ -818,7 +820,7 @@ const { signature, confirmation, status, loading, error, confirm, reset } =
 await confirm("PASTE_SUBMITTED_SIGNATURE", { commitment: "finalized" });
 ```
 
-当确认超时或 RPC 调用失败时，该 composable 会保留已提交的 `signature`，因此应用仍然可以展示 explorer 链接，同时向用户展示 `error`。选项会透传给 `confirmTransactionSignature()`：`commitment`、`timeoutMs`、`pollIntervalMs`、`abortSignal` 和 `searchTransactionHistory`。失败的交易展示 `TRANSACTION_FAILED`，从未出现的签名展示 `TRANSACTION_NOT_FOUND`，耗尽的等待展示 `TRANSACTION_TIMEOUT`。
+当确认超时或 RPC 调用失败时，该 composable 会保留已提交的 `signature`，因此应用仍然可以展示 explorer 链接，同时向用户展示 `error`。选项会透传给 `confirmTransactionSignature()`：`commitment`、`timeoutMs`、`pollIntervalMs`、`abortSignal` 和 `searchTransactionHistory`。失败的交易展示 `TRANSACTION_FAILED`，从未出现的签名展示 `TRANSACTION_NOT_FOUND`，耗尽的等待展示 `TRANSACTION_TIMEOUT`。由于该 composable 的 `error` ref 始终是 `SolanaError`，中止确认会把中止原因归一化为 `RPC_FAILURE`，原始原因保留在 `error.cause`；需要原始中止原因时请直接调用 `confirmTransactionSignature()`。
 
 ## 跟踪签名状态
 

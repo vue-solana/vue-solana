@@ -263,7 +263,9 @@ instead of polling on), and `searchTransactionHistory` (forwarded to
 commitment parameter — the commitment check stays client-side, as before.
 A signature older than the recent-status cache never appears in results, so
 confirming one without `searchTransactionHistory: true` resolves to
-`TRANSACTION_NOT_FOUND` after the timeout.
+`TRANSACTION_NOT_FOUND` after the timeout. A caller-supplied abort reason
+(`controller.abort(new Error("navigation"))`) is now thrown verbatim; it used
+to be normalized to `RPC_FAILURE`.
 
 ## `waitForRedirect()` no longer hangs forever
 
@@ -309,6 +311,31 @@ were silently resolving `@vue-solana/core` (and `vue`) from the npm registry
 instead of the packed tarballs, and the install blocked on pnpm 10 build-script
 approval under `CI=1`. Overrides now go into a consumer `pnpm-workspace.yaml`
 with `dangerouslyAllowAllBuilds: true`.
+
+## Wallet failures are reported as `WALLET_FAILURE`
+
+`SolanaErrorCode` gains `WALLET_FAILURE` for wallet-side work that failed
+without a more specific code: `useWallet()` connect/disconnect, persisted-wallet
+auto-connect, mobile-wallet registration, and iOS callback handling. These used
+to surface as `RPC_FAILURE` — which the error docs reserve for RPC sends, reads,
+and confirmations — or were swallowed entirely.
+
+The Vue context `error` ref (through `useSolana()` and `useRpc()`) now receives
+those boot-time failures instead of leaving them in the console alone. The next
+`checkConnection()` or a successful `connect()` clears the ref, so a failed
+auto-connect does not linger beside a wallet that later connected. Debug
+logging for RPC, storage, and wallet boot failures is dev-only and prefixed
+with `[Vue Solana]`.
+
+## iOS wallet callback errors are typed
+
+`handleSolanaIosWalletCallback()` now throws `SolanaError`s instead of plain
+`Error`s: `REDIRECT_TIMEOUT` for an expired callback, `INVALID_INPUT` for one
+received without pending state or payload, `DECRYPTION_FAILED` for a payload
+that fails to decrypt or decode, and `WALLET_FAILURE` for a failure the wallet
+reported (upgraded to `USER_REJECTED` when the wallet's message says the user
+rejected the request). Apps that matched on the old error messages should
+switch to `error.code`.
 
 ## Other user-visible changes in this release
 

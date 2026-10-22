@@ -9,6 +9,18 @@ export function useWallet() {
   const connecting = ref(false);
   const disconnecting = ref(false);
 
+  // The context `error` ref is shared with `checkConnection()` and the plugin's
+  // boot paths. A wallet failure reported there (auto-connect, mobile-wallet
+  // registration, iOS callback) is stale once the user successfully connects,
+  // so clear it without touching an unrelated RPC or storage error.
+  function clearWalletError() {
+    const current = solana.error.value;
+
+    if (current?.code === "WALLET_FAILURE" || current?.code === "USER_REJECTED") {
+      solana.error.value = null;
+    }
+  }
+
   async function connect() {
     if (connecting.value || wallet.value?.connecting) {
       return;
@@ -28,9 +40,10 @@ export function useWallet() {
       triggerRef(wallet);
       await connection;
       assertWalletConnected(activeWallet);
+      clearWalletError();
       triggerRef(wallet);
     } catch (error) {
-      const normalizedError = normalizeSolanaError(error, "RPC_FAILURE");
+      const normalizedError = normalizeSolanaError(error, "WALLET_FAILURE");
 
       triggerRef(wallet);
       throw normalizedError;
@@ -50,9 +63,10 @@ export function useWallet() {
 
     try {
       await activeWallet.disconnect();
+      clearWalletError();
       triggerRef(wallet);
     } catch (error) {
-      const normalizedError = normalizeSolanaError(error, "RPC_FAILURE");
+      const normalizedError = normalizeSolanaError(error, "WALLET_FAILURE");
 
       triggerRef(wallet);
       throw normalizedError;
