@@ -196,6 +196,7 @@ type SolanaChain = "solana:mainnet" | "solana:testnet" | "solana:devnet" | "sola
 - `getRegisteredSolanaWallets()`: returns discovered Solana Wallet Standard wallets in browser environments, including Android Mobile Wallet Adapter after it is registered on supported clients.
 - `subscribeSolanaWallets(listener)`: subscribes to Wallet Standard register/unregister events.
 - `adaptSolanaStandardWallet(walletInfo, options?)`: adapts a discovered Wallet Standard wallet into `SolanaWallet`.
+- `disconnectSolanaStandardWallet(walletInfo)`: disconnects a discovered Wallet Standard wallet through its own `standard:disconnect` feature without adapting it, so a wallet the app never selects gets no `change` subscription. Resolves `false` when the wallet exposes no disconnect feature, and rejects with the wallet's own error.
 
 ## Mobile Wallet Helpers
 

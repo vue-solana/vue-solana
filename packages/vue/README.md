@@ -276,6 +276,8 @@ const { publicKey, connected, connecting, canSignMessage, connect, disconnect } 
 
 Browser extension wallets are discovered through the Solana Wallet Standard. Android Mobile Wallet Adapter wallets are registered through `@solana-mobile/wallet-standard-mobile` and exposed through the same `useWallets()` list on supported Android Chrome clients. iOS Phantom, Solflare, and Backpack entries are exposed through wallet-specific universal links on iOS browsers. `connect()` works after selecting a discovered wallet or configuring a custom `SolanaWallet`.
 
+Connecting a wallet also disconnects every other discovered wallet through its `standard:disconnect` feature, so only one wallet stays authorized for the app. An extension the user authorized in an earlier page session can otherwise keep answering signing requests, which is the usual cause of the wrong wallet prompting for a `signMessage` confirmation. A wallet that fails or never answers its disconnect is ignored after a 2 second timeout, and `connect()` resolves only after the sweep finishes.
+
 Selected discovered wallets are persisted under `localStorage["vue-solana:selected-wallet"]` as non-sensitive identity metadata: `name`, and `platform`/`source` when available. On reload, Vue Solana restores the selected wallet if the same wallet is discovered again. Pass `autoConnect: true` to opt into calling `connect()` for that restored wallet; arbitrary installed wallets are never auto-connected. Calling `selectWallet(null)` or `setWallet(customWallet)` clears the stored selection.
 
 Desktop native app wallet adapters are planned but not implemented yet.

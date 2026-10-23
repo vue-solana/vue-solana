@@ -520,7 +520,7 @@ const { publicKey, connected, connecting, connect, disconnect } = useWallet();
 </template>
 ```
 
-浏览器扩展钱包通过 Solana Wallet Standard 发现。Android Mobile Wallet Adapter 钱包通过 `@solana-mobile/wallet-standard-mobile` 注册，并在支持的 Android Chrome 客户端上暴露到同一个 `useWallets()` 列表中。iOS Phantom、Solflare 和 Backpack 条目通过 iOS 浏览器上的钱包专用 universal link 暴露。`refreshWallets()` 只更新已发现钱包列表，`selectWallet()` 只配置活跃钱包。即使扩展在页面刷新后暴露之前授权的账户，`connected` 也会在 `connect()` 成功前保持 false。
+浏览器扩展钱包通过 Solana Wallet Standard 发现。Android Mobile Wallet Adapter 钱包通过 `@solana-mobile/wallet-standard-mobile` 注册，并在支持的 Android Chrome 客户端上暴露到同一个 `useWallets()` 列表中。iOS Phantom、Solflare 和 Backpack 条目通过 iOS 浏览器上的钱包专用 universal link 暴露。`refreshWallets()` 只更新已发现钱包列表，`selectWallet()` 只配置活跃钱包。即使扩展在页面刷新后暴露之前授权的账户，`connected` 也会在 `connect()` 成功前保持 false。`connect()` 成功时还会通过各钱包自身的 `standard:disconnect` 能力断开所有其他已发现的钱包，使同一时间只有一个钱包对应用保持授权。
 
 尚未实现桌面原生应用钱包 adapter。桌面原生支持需要钱包专用 protocol link 或未来的原生 Wallet Standard 注册。
 

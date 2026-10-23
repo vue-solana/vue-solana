@@ -312,6 +312,41 @@ instead of the packed tarballs, and the install blocked on pnpm 10 build-script
 approval under `CI=1`. Overrides now go into a consumer `pnpm-workspace.yaml`
 with `dangerouslyAllowAllBuilds: true`.
 
+## One wallet at a time: connecting disconnects every other discovered wallet
+
+Connecting a wallet now closes the app's authorization with every other
+discovered wallet. Only one wallet stays authorized at a time, which matters
+because the previous sweep only touched wallets this page had already adapted:
+a wallet the user authorized in an earlier session has no adapter yet, kept its
+authorization, and could keep answering signing requests. The symptom was a
+Phantom connection whose `signMessage` opened Backpack instead — and with
+Backpack disabled, a promise that never settled at all.
+
+The sweep now runs over the discovered wallet list. Wallets with a cached
+adapter are disconnected through it (so the cached account is cleared too);
+uncached wallets are disconnected through their own `standard:disconnect`
+feature, read straight off the wallet by the new
+`disconnectSolanaStandardWallet()` export from
+`@vue-solana/core/wallet-standard`. That function disconnects without adapting
+the wallet, so a wallet the user never selects does not get a `change`
+subscription for the lifetime of the app. A discovered entry counts as the
+wallet being connected when the wallet object matches, or when `name` and
+`source` match — an extension that unregisters and re-registers comes back as a
+new wallet object and must not be deauthorized by its own connect.
+
+Per-wallet failures are swallowed and each disconnect is bounded by a 2-second
+timeout, so a disabled extension whose injected script is still in the page can
+never hold up a connect that already succeeded. `connect()` resolves only after
+the sweep, so the guarantee holds once the promise resolves; the worst-case
+extra latency is those 2 seconds.
+
+`connect` is replaced in place on the adapter, so adapter identity and the
+`publicKey` / `connected` getters behave exactly as before. Every adapter this
+library hands out sweeps, including the one returned by `useWallet()`, so
+calling `connect()` directly does not bypass it. An app that genuinely needs two
+wallets authorized at once has to build the adapter itself with
+`adaptSolanaStandardWallet()`, which does not install the sweep.
+
 ## Wallet failures are reported as `WALLET_FAILURE`
 
 `SolanaErrorCode` gains `WALLET_FAILURE` for wallet-side work that failed

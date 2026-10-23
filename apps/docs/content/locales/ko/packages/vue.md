@@ -520,7 +520,7 @@ const { publicKey, connected, connecting, connect, disconnect } = useWallet();
 </template>
 ```
 
-Browser extension wallet은 Solana Wallet Standard를 통해 발견됩니다. Android Mobile Wallet Adapter wallet은 `@solana-mobile/wallet-standard-mobile`을 통해 등록되며 지원되는 Android Chrome 클라이언트에서 같은 `useWallets()` 목록에 노출됩니다. iOS Phantom, Solflare, Backpack entry는 iOS 브라우저에서 wallet-specific universal link로 노출됩니다. `refreshWallets()`는 발견된 wallet list만 업데이트하고, `selectWallet()`은 active wallet만 설정합니다. Page refresh 후 extension이 이전에 승인된 account를 노출하더라도 `connect()`가 성공하기 전까지 `connected`는 false입니다.
+Browser extension wallet은 Solana Wallet Standard를 통해 발견됩니다. Android Mobile Wallet Adapter wallet은 `@solana-mobile/wallet-standard-mobile`을 통해 등록되며 지원되는 Android Chrome 클라이언트에서 같은 `useWallets()` 목록에 노출됩니다. iOS Phantom, Solflare, Backpack entry는 iOS 브라우저에서 wallet-specific universal link로 노출됩니다. `refreshWallets()`는 발견된 wallet list만 업데이트하고, `selectWallet()`은 active wallet만 설정합니다. Page refresh 후 extension이 이전에 승인된 account를 노출하더라도 `connect()`가 성공하기 전까지 `connected`는 false입니다. `connect()`가 성공하면 나머지 모든 발견된 wallet도 자체 `standard:disconnect` feature로 연결 해제되어, app에 대해 하나의 wallet만 authorized 상태로 유지됩니다.
 
 Desktop native app wallet adapter는 아직 구현되지 않았습니다. Desktop native support에는 wallet-specific protocol link 또는 향후 native Wallet Standard registration이 필요합니다.
 

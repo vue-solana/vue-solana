@@ -42,6 +42,7 @@ Vue Solana는 브라우저 확장 지갑, Android Mobile Wallet Adapter 지갑, 
 - 즉시 연결하지 않고 활성 지갑 하나를 선택.
 - 선택된 지갑 identity metadata를 optional reconnect flow를 위해 저장.
 - 선택된 지갑이 지원하면 연결, 연결 해제, 메시지 서명, 트랜잭션 서명, 트랜잭션 서명/전송.
+- 하나가 연결되면 나머지 모든 발견된 지갑을 연결 해제하여 하나의 지갑만 authorized 상태로 유지.
 - `canSignMessage`, `canSignTransaction`, `canSignAllTransactions`, `canSignAndSendTransaction`에서 unsupported-capability UI 렌더링.
 
 아직 포함되지 않는 것:
@@ -88,6 +89,8 @@ const { publicKey, connected, connecting, connect, disconnect } = useWallet();
 ```
 
 지갑 선택은 연결이 아닙니다. `connect()`가 성공적으로 resolve될 때까지 지갑은 disconnected 상태로 유지됩니다.
+
+지갑을 연결하면 나머지 모든 발견된 지갑도 연결 해제됩니다. 앱에 대해 한 번에 하나의 지갑만 authorized 상태로 남는데, 이전에 authorized된 extension이 계속 서명 요청에 응답할 수 있기 때문입니다. 엉뚱한 지갑이 `signMessage` 확인을 요청하는 흔한 원인입니다.
 
 ## Nuxt 지갑 Flow
 

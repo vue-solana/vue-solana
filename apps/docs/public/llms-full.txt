@@ -4294,6 +4294,7 @@ Lo que funciona hoy:
 - Seleccionar una wallet activa sin conectarla inmediatamente.
 - Persistir metadata de identidad de la wallet seleccionada para flujos de reconexión opcionales.
 - Conectar, desconectar, firmar mensajes, firmar transacciones y firmar/enviar transacciones cuando la wallet seleccionada admite esas capacidades.
+- Desconectar todas las demás wallets descubiertas al conectar una, para que solo una wallet quede autorizada.
 - Renderizar UI de capacidades no admitidas desde `canSignMessage`, `canSignTransaction`, `canSignAllTransactions` y `canSignAndSendTransaction`.
 
 Lo que no está incluido aún:
@@ -4340,6 +4341,8 @@ const { publicKey, connected, connecting, connect, disconnect } = useWallet();
 ```
 
 Seleccionar una wallet no la conecta. La wallet permanece desconectada hasta que `connect()` se resuelve correctamente.
+
+Conectar una wallet también desconecta todas las demás wallets descubiertas. Solo una wallet queda autorizada para la app a la vez, lo cual importa porque una extensión autorizada antes puede seguir respondiendo a solicitudes de firma: es la causa habitual de que la wallet equivocada pida confirmar un `signMessage`.
 
 ## Flujo De Wallet En Nuxt
 
@@ -4561,6 +4564,7 @@ What works today:
 - Selecting one active wallet without immediately connecting it.
 - Persisting selected wallet identity metadata for optional reconnect flows.
 - Connecting, disconnecting, signing messages, signing transactions, and signing/sending transactions when the selected wallet supports those capabilities.
+- Disconnecting every other discovered wallet when one connects, so only one wallet stays authorized.
 - Rendering unsupported-capability UI from `canSignMessage`, `canSignTransaction`, `canSignAllTransactions`, and `canSignAndSendTransaction`.
 
 What is not included yet:
@@ -4607,6 +4611,8 @@ const { publicKey, connected, connecting, connect, disconnect } = useWallet();
 ```
 
 Selecting a wallet does not connect it. The wallet remains disconnected until `connect()` resolves successfully.
+
+Connecting a wallet also disconnects every other discovered wallet. Only one wallet stays authorized for the app at a time, which matters because an extension the user authorized earlier can keep answering signing requests — the usual cause of the wrong wallet asking for a `signMessage` confirmation.
 
 ## Nuxt Wallet Flow
 
@@ -4828,6 +4834,7 @@ Vue Solana는 브라우저 확장 지갑, Android Mobile Wallet Adapter 지갑, 
 - 즉시 연결하지 않고 활성 지갑 하나를 선택.
 - 선택된 지갑 identity metadata를 optional reconnect flow를 위해 저장.
 - 선택된 지갑이 지원하면 연결, 연결 해제, 메시지 서명, 트랜잭션 서명, 트랜잭션 서명/전송.
+- 하나가 연결되면 나머지 모든 발견된 지갑을 연결 해제하여 하나의 지갑만 authorized 상태로 유지.
 - `canSignMessage`, `canSignTransaction`, `canSignAllTransactions`, `canSignAndSendTransaction`에서 unsupported-capability UI 렌더링.
 
 아직 포함되지 않는 것:
@@ -4874,6 +4881,8 @@ const { publicKey, connected, connecting, connect, disconnect } = useWallet();
 ```
 
 지갑 선택은 연결이 아닙니다. `connect()`가 성공적으로 resolve될 때까지 지갑은 disconnected 상태로 유지됩니다.
+
+지갑을 연결하면 나머지 모든 발견된 지갑도 연결 해제됩니다. 앱에 대해 한 번에 하나의 지갑만 authorized 상태로 남는데, 이전에 authorized된 extension이 계속 서명 요청에 응답할 수 있기 때문입니다. 엉뚱한 지갑이 `signMessage` 확인을 요청하는 흔한 원인입니다.
 
 ## Nuxt 지갑 Flow
 
@@ -5095,6 +5104,7 @@ Vue Solana 通过同一个钱包流程暴露浏览器扩展钱包、Android Mobi
 - 选择一个活跃钱包，而不立即连接它。
 - 持久化已选择的钱包身份元数据，用于可选的重新连接流程。
 - 当所选钱包支持相关能力时，连接、断开连接、签署消息、签署交易，以及签署并发送交易。
+- 当一个钱包连接后，断开所有其他已发现的钱包，使同一时间只有一个钱包保持授权。
 - 基于 `canSignMessage`、`canSignTransaction`、`canSignAllTransactions` 和 `canSignAndSendTransaction` 渲染不支持能力的 UI。
 
 尚未包含的内容：
@@ -5141,6 +5151,8 @@ const { publicKey, connected, connecting, connect, disconnect } = useWallet();
 ```
 
 选择钱包不会连接它。钱包会保持断开状态，直到 `connect()` 成功 resolve。
+
+连接钱包时也会断开所有其他已发现的钱包。同一时间只有一个钱包对应用保持授权，这一点很重要：之前授权的扩展仍可能继续响应签名请求，这正是错误钱包弹出 `signMessage` 确认的常见原因。
 
 ## Nuxt 钱包流程
 
@@ -9386,6 +9398,7 @@ type SolanaChain = "solana:mainnet" | "solana:testnet" | "solana:devnet" | "sola
 - `getRegisteredSolanaWallets()`: devuelve wallets Solana Wallet Standard descubiertas en entornos de navegador, incluido Android Mobile Wallet Adapter después de registrarlo en clientes soportados.
 - `subscribeSolanaWallets(listener)`: se suscribe a eventos de registro/anulación de registro de Wallet Standard.
 - `adaptSolanaStandardWallet(walletInfo, options?)`: adapta una wallet Wallet Standard descubierta a `SolanaWallet`.
+- `disconnectSolanaStandardWallet(walletInfo)`: desconecta una wallet Wallet Standard descubierta mediante su propia característica `standard:disconnect` sin adaptarla, de modo que una wallet que la app nunca selecciona no recibe ninguna suscripción `change`. Devuelve `false` cuando la wallet no expone ninguna característica de desconexión y rechaza con el error de la propia wallet.
 
 ## Helpers de wallet móvil
 
@@ -10002,6 +10015,7 @@ type SolanaChain = "solana:mainnet" | "solana:testnet" | "solana:devnet" | "sola
 - `getRegisteredSolanaWallets()`: browser 환경에서 발견된 Solana Wallet Standard wallet을 반환합니다. 지원 client에서 등록된 Android Mobile Wallet Adapter도 포함됩니다.
 - `subscribeSolanaWallets(listener)`: Wallet Standard register/unregister event를 구독합니다.
 - `adaptSolanaStandardWallet(walletInfo, options?)`: 발견된 Wallet Standard wallet을 `SolanaWallet`으로 adapt합니다.
+- `disconnectSolanaStandardWallet(walletInfo)`: 발견된 Wallet Standard wallet을 adapt하지 않고 자체 `standard:disconnect` feature로 연결 해제합니다. 따라서 app이 선택하지 않은 wallet에는 `change` subscription이 생기지 않습니다. wallet에 disconnect feature가 없으면 `false`를 반환하고, wallet 자체 오류로 reject합니다.
 
 ## Mobile Wallet Helper
 
@@ -10420,6 +10434,7 @@ type SolanaChain = "solana:mainnet" | "solana:testnet" | "solana:devnet" | "sola
 - `getRegisteredSolanaWallets()`: returns discovered Solana Wallet Standard wallets in browser environments, including Android Mobile Wallet Adapter after it is registered on supported clients.
 - `subscribeSolanaWallets(listener)`: subscribes to Wallet Standard register/unregister events.
 - `adaptSolanaStandardWallet(walletInfo, options?)`: adapts a discovered Wallet Standard wallet into `SolanaWallet`.
+- `disconnectSolanaStandardWallet(walletInfo)`: disconnects a discovered Wallet Standard wallet through its own `standard:disconnect` feature without adapting it, so a wallet the app never selects gets no `change` subscription. Resolves `false` when the wallet exposes no disconnect feature, and rejects with the wallet's own error.
 
 ## Mobile Wallet Helpers
 
@@ -10938,6 +10953,7 @@ type SolanaChain = "solana:mainnet" | "solana:testnet" | "solana:devnet" | "sola
 - `getRegisteredSolanaWallets()`：在浏览器环境返回已发现的 Solana Wallet Standard 钱包，包括在支持客户端注册后的 Android Mobile Wallet Adapter。
 - `subscribeSolanaWallets(listener)`：订阅 Wallet Standard register/unregister 事件。
 - `adaptSolanaStandardWallet(walletInfo, options?)`：把已发现的 Wallet Standard 钱包适配为 `SolanaWallet`。
+- `disconnectSolanaStandardWallet(walletInfo)`：通过钱包自身的 `standard:disconnect` 能力断开已发现的 Wallet Standard 钱包，不进行适配，因此应用从未选择过的钱包不会获得 `change` 订阅。钱包没有断开能力时返回 `false`，并会以钱包自身的错误 reject。
 
 ## 移动钱包 Helper
 
@@ -11680,7 +11696,7 @@ const { publicKey, connected, connecting, connect, disconnect } = useWallet();
 </template>
 ```
 
-Las wallets de extensión de navegador se descubren mediante Solana Wallet Standard. Las wallets Android Mobile Wallet Adapter se registran mediante `@solana-mobile/wallet-standard-mobile` y se exponen mediante la misma lista `useWallets()` en clientes Android Chrome soportados. Las entradas iOS Phantom, Solflare y Backpack se exponen mediante enlaces universales específicos de wallet en navegadores iOS. `refreshWallets()` solo actualiza la lista de wallets descubiertas, y `selectWallet()` solo configura la wallet activa. `connected` permanece false hasta que `connect()` tiene éxito, incluso si la extensión expone cuentas autorizadas previamente después de refrescar la página.
+Las wallets de extensión de navegador se descubren mediante Solana Wallet Standard. Las wallets Android Mobile Wallet Adapter se registran mediante `@solana-mobile/wallet-standard-mobile` y se exponen mediante la misma lista `useWallets()` en clientes Android Chrome soportados. Las entradas iOS Phantom, Solflare y Backpack se exponen mediante enlaces universales específicos de wallet en navegadores iOS. `refreshWallets()` solo actualiza la lista de wallets descubiertas, y `selectWallet()` solo configura la wallet activa. `connected` permanece false hasta que `connect()` tiene éxito, incluso si la extensión expone cuentas autorizadas previamente después de refrescar la página. Un `connect()` correcto también desconecta todas las demás wallets descubiertas mediante su característica `standard:disconnect`, de modo que solo una wallet quede autorizada para la app.
 
 Los adaptadores de wallet de app nativa de escritorio aún no están implementados. El soporte nativo de escritorio requiere enlaces de protocolo específicos de wallet o registro nativo futuro de Wallet Standard.
 
@@ -12526,7 +12542,7 @@ const { publicKey, connected, connecting, connect, disconnect } = useWallet();
 </template>
 ```
 
-Browser extension wallet은 Solana Wallet Standard를 통해 발견됩니다. Android Mobile Wallet Adapter wallet은 `@solana-mobile/wallet-standard-mobile`을 통해 등록되며 지원되는 Android Chrome 클라이언트에서 같은 `useWallets()` 목록에 노출됩니다. iOS Phantom, Solflare, Backpack entry는 iOS 브라우저에서 wallet-specific universal link로 노출됩니다. `refreshWallets()`는 발견된 wallet list만 업데이트하고, `selectWallet()`은 active wallet만 설정합니다. Page refresh 후 extension이 이전에 승인된 account를 노출하더라도 `connect()`가 성공하기 전까지 `connected`는 false입니다.
+Browser extension wallet은 Solana Wallet Standard를 통해 발견됩니다. Android Mobile Wallet Adapter wallet은 `@solana-mobile/wallet-standard-mobile`을 통해 등록되며 지원되는 Android Chrome 클라이언트에서 같은 `useWallets()` 목록에 노출됩니다. iOS Phantom, Solflare, Backpack entry는 iOS 브라우저에서 wallet-specific universal link로 노출됩니다. `refreshWallets()`는 발견된 wallet list만 업데이트하고, `selectWallet()`은 active wallet만 설정합니다. Page refresh 후 extension이 이전에 승인된 account를 노출하더라도 `connect()`가 성공하기 전까지 `connected`는 false입니다. `connect()`가 성공하면 나머지 모든 발견된 wallet도 자체 `standard:disconnect` feature로 연결 해제되어, app에 대해 하나의 wallet만 authorized 상태로 유지됩니다.
 
 Desktop native app wallet adapter는 아직 구현되지 않았습니다. Desktop native support에는 wallet-specific protocol link 또는 향후 native Wallet Standard registration이 필요합니다.
 
@@ -13375,7 +13391,7 @@ const { publicKey, connected, connecting, connect, disconnect } = useWallet();
 </template>
 ```
 
-Browser extension wallets are discovered through the Solana Wallet Standard. Android Mobile Wallet Adapter wallets are registered through `@solana-mobile/wallet-standard-mobile` and exposed through the same `useWallets()` list on supported Android Chrome clients. iOS Phantom, Solflare, and Backpack entries are exposed through wallet-specific universal links on iOS browsers. `refreshWallets()` only updates the discovered wallet list, and `selectWallet()` only configures the active wallet. `connected` remains false until `connect()` succeeds, even if the extension exposes previously authorized accounts after a page refresh.
+Browser extension wallets are discovered through the Solana Wallet Standard. Android Mobile Wallet Adapter wallets are registered through `@solana-mobile/wallet-standard-mobile` and exposed through the same `useWallets()` list on supported Android Chrome clients. iOS Phantom, Solflare, and Backpack entries are exposed through wallet-specific universal links on iOS browsers. `refreshWallets()` only updates the discovered wallet list, and `selectWallet()` only configures the active wallet. `connected` remains false until `connect()` succeeds, even if the extension exposes previously authorized accounts after a page refresh. A successful `connect()` also disconnects every other discovered wallet through its `standard:disconnect` feature, so only one wallet stays authorized for the app.
 
 Desktop native app wallet adapters are not implemented yet. Desktop native support requires wallet-specific protocol links or future native Wallet Standard registration.
 
@@ -14219,7 +14235,7 @@ const { publicKey, connected, connecting, connect, disconnect } = useWallet();
 </template>
 ```
 
-浏览器扩展钱包通过 Solana Wallet Standard 发现。Android Mobile Wallet Adapter 钱包通过 `@solana-mobile/wallet-standard-mobile` 注册，并在支持的 Android Chrome 客户端上暴露到同一个 `useWallets()` 列表中。iOS Phantom、Solflare 和 Backpack 条目通过 iOS 浏览器上的钱包专用 universal link 暴露。`refreshWallets()` 只更新已发现钱包列表，`selectWallet()` 只配置活跃钱包。即使扩展在页面刷新后暴露之前授权的账户，`connected` 也会在 `connect()` 成功前保持 false。
+浏览器扩展钱包通过 Solana Wallet Standard 发现。Android Mobile Wallet Adapter 钱包通过 `@solana-mobile/wallet-standard-mobile` 注册，并在支持的 Android Chrome 客户端上暴露到同一个 `useWallets()` 列表中。iOS Phantom、Solflare 和 Backpack 条目通过 iOS 浏览器上的钱包专用 universal link 暴露。`refreshWallets()` 只更新已发现钱包列表，`selectWallet()` 只配置活跃钱包。即使扩展在页面刷新后暴露之前授权的账户，`connected` 也会在 `connect()` 成功前保持 false。`connect()` 成功时还会通过各钱包自身的 `standard:disconnect` 能力断开所有其他已发现的钱包，使同一时间只有一个钱包对应用保持授权。
 
 尚未实现桌面原生应用钱包 adapter。桌面原生支持需要钱包专用 protocol link 或未来的原生 Wallet Standard 注册。
 

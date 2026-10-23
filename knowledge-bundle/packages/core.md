@@ -279,6 +279,7 @@ interface TransactionConfirmation {
 - `getRegisteredSolanaWallets()`: returns discovered Solana Wallet Standard wallets in browser environments, including Android Mobile Wallet Adapter after it is registered on supported clients.
 - `subscribeSolanaWallets(listener)`: subscribes to Wallet Standard register/unregister events.
 - `adaptSolanaStandardWallet(walletInfo, options?)`: adapts a discovered wallet into `SolanaWallet`. The result exposes `dispose()`, which releases the captured Wallet Standard `change` subscription (idempotent; the wallet stays connected).
+- `disconnectSolanaStandardWallet(walletInfo)`: disconnects a discovered wallet through its own `standard:disconnect` feature without adapting it, so no `change` subscription is captured. Resolves `false` when the wallet exposes no disconnect feature and rejects with the wallet's own error.
 - `registerSolanaMobileWallet(options?)`: registers Android Mobile Wallet Adapter through Wallet Standard on supported Android Chrome clients.
 - `isSolanaMobileWalletSupported()`: returns whether the current runtime supports Android MWA web registration.
 - `getDefaultMobileWalletAppIdentity()`: derives a default Mobile Wallet Adapter app identity from the current document.

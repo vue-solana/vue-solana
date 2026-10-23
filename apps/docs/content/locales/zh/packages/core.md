@@ -195,6 +195,7 @@ type SolanaChain = "solana:mainnet" | "solana:testnet" | "solana:devnet" | "sola
 - `getRegisteredSolanaWallets()`：在浏览器环境返回已发现的 Solana Wallet Standard 钱包，包括在支持客户端注册后的 Android Mobile Wallet Adapter。
 - `subscribeSolanaWallets(listener)`：订阅 Wallet Standard register/unregister 事件。
 - `adaptSolanaStandardWallet(walletInfo, options?)`：把已发现的 Wallet Standard 钱包适配为 `SolanaWallet`。
+- `disconnectSolanaStandardWallet(walletInfo)`：通过钱包自身的 `standard:disconnect` 能力断开已发现的 Wallet Standard 钱包，不进行适配，因此应用从未选择过的钱包不会获得 `change` 订阅。钱包没有断开能力时返回 `false`，并会以钱包自身的错误 reject。
 
 ## 移动钱包 Helper
 

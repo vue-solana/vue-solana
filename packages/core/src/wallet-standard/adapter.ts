@@ -291,6 +291,39 @@ export function adaptSolanaStandardWallet(
   };
 }
 
+/**
+ * Disconnects a discovered Wallet Standard wallet without adapting it.
+ *
+ * Reads `standard:disconnect` straight off the wallet instead of going through
+ * an adapter on purpose: a wallet the app authorized in an earlier page session
+ * has no adapter yet, so an adapter-only sweep misses it, and adapting it just
+ * to disconnect would register a `change` subscription for a wallet the user
+ * never selects. Resolves `false` when the wallet exposes no disconnect feature
+ * (for example an iOS deep-link definition); rejects with the wallet's own
+ * error, so a caller sweeping a list should catch per wallet.
+ */
+export async function disconnectSolanaStandardWallet(
+  walletInfo: SolanaWalletInfo,
+): Promise<boolean> {
+  const wallet = walletInfo.wallet as Partial<Wallet> | null | undefined;
+
+  if (typeof wallet !== "object" && typeof wallet !== "function") {
+    return false;
+  }
+
+  const features = wallet?.features as Record<string, unknown> | undefined;
+  const feature = features?.[StandardDisconnect] as
+    | StandardDisconnectFeature[typeof StandardDisconnect]
+    | undefined;
+
+  if (typeof feature?.disconnect !== "function") {
+    return false;
+  }
+
+  await feature.disconnect();
+  return true;
+}
+
 async function signAllThroughFeature(
   wallet: Wallet & { features: SolanaSignTransactionFeature },
   getAccount: () => WalletAccount,

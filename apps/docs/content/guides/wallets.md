@@ -42,6 +42,7 @@ What works today:
 - Selecting one active wallet without immediately connecting it.
 - Persisting selected wallet identity metadata for optional reconnect flows.
 - Connecting, disconnecting, signing messages, signing transactions, and signing/sending transactions when the selected wallet supports those capabilities.
+- Disconnecting every other discovered wallet when one connects, so only one wallet stays authorized.
 - Rendering unsupported-capability UI from `canSignMessage`, `canSignTransaction`, `canSignAllTransactions`, and `canSignAndSendTransaction`.
 
 What is not included yet:
@@ -88,6 +89,8 @@ const { publicKey, connected, connecting, connect, disconnect } = useWallet();
 ```
 
 Selecting a wallet does not connect it. The wallet remains disconnected until `connect()` resolves successfully.
+
+Connecting a wallet also disconnects every other discovered wallet. Only one wallet stays authorized for the app at a time, which matters because an extension the user authorized earlier can keep answering signing requests — the usual cause of the wrong wallet asking for a `signMessage` confirmation.
 
 ## Nuxt Wallet Flow
 

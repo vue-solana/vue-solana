@@ -42,6 +42,7 @@ Vue Solana 通过同一个钱包流程暴露浏览器扩展钱包、Android Mobi
 - 选择一个活跃钱包，而不立即连接它。
 - 持久化已选择的钱包身份元数据，用于可选的重新连接流程。
 - 当所选钱包支持相关能力时，连接、断开连接、签署消息、签署交易，以及签署并发送交易。
+- 当一个钱包连接后，断开所有其他已发现的钱包，使同一时间只有一个钱包保持授权。
 - 基于 `canSignMessage`、`canSignTransaction`、`canSignAllTransactions` 和 `canSignAndSendTransaction` 渲染不支持能力的 UI。
 
 尚未包含的内容：
@@ -88,6 +89,8 @@ const { publicKey, connected, connecting, connect, disconnect } = useWallet();
 ```
 
 选择钱包不会连接它。钱包会保持断开状态，直到 `connect()` 成功 resolve。
+
+连接钱包时也会断开所有其他已发现的钱包。同一时间只有一个钱包对应用保持授权，这一点很重要：之前授权的扩展仍可能继续响应签名请求，这正是错误钱包弹出 `signMessage` 确认的常见原因。
 
 ## Nuxt 钱包流程
 

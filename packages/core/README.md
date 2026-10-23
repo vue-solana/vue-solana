@@ -185,6 +185,7 @@ The client-sent API is the official Kit `ClientWithTransactionSending` capabilit
 | `getSolanaIosWallets(options?)` | Builds iOS browser wallet entries (Phantom, Solflare, Backpack) as universal links. |
 | `handleSolanaIosWalletCallback()` | Completes a pending iOS wallet deep-link callback after redirect. |
 | `adaptSolanaStandardWallet(wallet)` | Adapts a Solana Wallet Standard wallet into `SolanaWallet`. |
+| `disconnectSolanaStandardWallet(walletInfo)` | Disconnects a discovered Wallet Standard wallet through its own `standard:disconnect` feature, without adapting it. |
 | `getRegisteredSolanaWallets()` | Returns the Wallet Standard wallets currently registered in the app. |
 | `withTimeout(promise, timeoutMs, options?)` | Races a promise against a timeout, with optional abort signal. |
 | `withSolanaTimeout(promise, timeoutMs, options?)` | Solana-specific timeout wrapper with abort and error-code support. |

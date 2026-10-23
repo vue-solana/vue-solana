@@ -6,7 +6,7 @@ import {
   SolanaSignTransaction,
 } from "@solana/wallet-standard-features";
 import { getBase58Decoder } from "@solana/kit";
-import { adaptSolanaStandardWallet } from "./adapter";
+import { adaptSolanaStandardWallet, disconnectSolanaStandardWallet } from "./adapter";
 import type { SolanaWalletInfo } from "../types";
 import {
   account,
@@ -880,5 +880,59 @@ describe("Wallet Standard adapter", () => {
     expect(onChange).not.toHaveBeenCalled();
     // The wallet itself stays connected; only event delivery stops.
     expect(wallet.connected).toBe(true);
+  });
+});
+
+describe("disconnectSolanaStandardWallet", () => {
+  function createWalletInfo(standardWallet: ReturnType<typeof createStandardWallet>) {
+    return {
+      name: standardWallet.name,
+      icon: standardWallet.icon,
+      chains: standardWallet.chains,
+      accounts: [],
+      wallet: standardWallet,
+    } satisfies SolanaWalletInfo;
+  }
+
+  it("calls the wallet's own disconnect feature without adapting it", async () => {
+    const standardWallet = createStandardWallet();
+
+    await expect(disconnectSolanaStandardWallet(createWalletInfo(standardWallet))).resolves.toBe(
+      true,
+    );
+
+    expect(getDisconnectFeature(standardWallet).disconnect).toHaveBeenCalledOnce();
+  });
+
+  it("reports false when the wallet has no disconnect feature", async () => {
+    const standardWallet = createStandardWallet();
+    delete (standardWallet.features as Record<string, unknown>)["standard:disconnect"];
+
+    await expect(disconnectSolanaStandardWallet(createWalletInfo(standardWallet))).resolves.toBe(
+      false,
+    );
+  });
+
+  it("reports false for a non-Wallet-Standard entry", async () => {
+    // iOS deep-link definitions are plain metadata objects.
+    const walletInfo = {
+      name: "Phantom iOS",
+      icon: "",
+      chains: ["solana:devnet"],
+      source: "deep-link",
+      accounts: [],
+      wallet: "https://phantom.app/ul/v1/connect",
+    } satisfies SolanaWalletInfo;
+
+    await expect(disconnectSolanaStandardWallet(walletInfo)).resolves.toBe(false);
+  });
+
+  it("propagates the wallet's own failure to the caller", async () => {
+    const standardWallet = createStandardWallet();
+    getDisconnectFeature(standardWallet).disconnect.mockRejectedValue(new Error("user rejected"));
+
+    await expect(disconnectSolanaStandardWallet(createWalletInfo(standardWallet))).rejects.toThrow(
+      "user rejected",
+    );
   });
 });
