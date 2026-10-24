@@ -7,6 +7,16 @@
 
 Solana wallet, RPC, account, message signing, and transaction composables for Vue 3.
 
+## Related packages
+
+This package is part of the Vue Solana family. Choose based on your app framework:
+
+- [`@vue-solana/core`](https://www.npmjs.com/package/@vue-solana/core) — framework-agnostic Solana primitives: Kit RPC client helpers, wallet types, Android MWA registration, iOS browser wallet helpers, message signing, token account reads, and transaction helpers. **Use this directly** when you want shared RPC/wallet/transaction helpers without installing a Vue plugin (non-Vue apps, server/relayer code, or your own framework integration).
+- [`@vue-solana/vue`](https://www.npmjs.com/package/@vue-solana/vue) — Vue 3 plugin plus composables for RPC, account, balance, wallet, message signing, live data, and transactions. **Use this** in plain Vue 3 apps (Vite, etc.). (This package.)
+- [`@vue-solana/nuxt`](https://www.npmjs.com/package/@vue-solana/nuxt) — Nuxt module that installs the Vue plugin and auto-imports the composables. **Use this** in Nuxt 3/4 apps.
+
+This package builds on `@vue-solana/core`; install `@vue-solana/vue` for plain Vue apps and `@vue-solana/nuxt` for Nuxt apps.
+
 Use this package in Vue 3 apps that need Solana RPC access, balance reads, wallet state, message signing, and transaction helper state.
 
 New to Solana? Start with the official docs and the project concepts guide:
