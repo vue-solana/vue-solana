@@ -238,6 +238,7 @@ When you add, remove, or restructure sections in an English doc, translate the s
 - `examples/vue-vite` and `examples/nuxt` are the local development example apps. They should use workspace packages so they exercise unreleased package changes during development.
 - Do not treat `apps/docs/package.json` using pinned published `@vue-solana/*` versions as a bug unless the release/demo policy changes.
 - When testing unreleased package changes, use the example apps and package tests, not `apps/docs`.
+- `@nuxt/ui` must stay on `^4.11.0` or newer while the app runs `nuxt@4.6.x`. `@nuxt/ui@4.9.0` (and `4.10.x`) resolves `@unhead/vue@^2`, but Nuxt 4.6 ships unhead 3, and that combination throws `injectHead(...).hooks.hookOnce is not a function` from `@nuxt/ui`'s colors plugin. The branch only runs when `nuxtApp.isHydrating && !nuxtApp.payload.serverRendered`, i.e. on the `ssr: false` `/demo` route — so the symptom looked route-specific. The throw aborts Nuxt's plugin queue, `app/plugins/solana-client-capabilities.client.ts` never installs the demo payer, and `/demo` then dies with `useSendTransaction requires the 'payer' capability…` on a hard reload (client-side navigation from a prerendered page worked, which is the tell). `@nuxt/ui@4.11.0+` uses `head.hooks?.hook(...)` and is compatible; the bump also collapsed the duplicate `vue@3.5.35` copy that 4.9.0's peer graph carried.
 
 ### Post-Publish Release Checklist
 

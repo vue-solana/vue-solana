@@ -1,5 +1,13 @@
 # @vue-solana/nuxt
 
+## 4.0.0-rc.1
+
+### Patch Changes
+
+- Release candidate refresh.
+- Updated dependencies
+  - @vue-solana/vue@4.0.0-rc.1
+
 ## 4.0.0-rc.0
 
 ### Major Changes

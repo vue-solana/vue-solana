@@ -8,5 +8,5 @@
     "@vue-solana/nuxt": "3.0.1",
     "@vue-solana/vue": "3.0.1"
   },
-  "changesets": ["bundle-size-trim"]
+  "changesets": ["bundle-size-trim", "rc-bump"]
 }

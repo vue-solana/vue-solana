@@ -23,10 +23,14 @@ const localePrefix = computed(() => (locale.value === "en" ? "" : `/${locale.val
 // does not export, so the signature is taken from `search` instead of imported.
 const searchCurrentLocale = async (...args: Parameters<typeof search>) => {
   const results = await search(...args);
+  if (!Array.isArray(results)) {
+    return [];
+  }
   return results.filter((result) => {
-    const [segment = ""] = result.id.split("#");
-    return localePrefix.value
-      ? segment.startsWith(`${localePrefix.value}/`) || segment === localePrefix.value
+    const [segment = ""] = (result?.id ?? "").split("#");
+    const prefix = localePrefix.value ?? "";
+    return prefix
+      ? segment.startsWith(`${prefix}/`) || segment === prefix
       : !/^\/(es|ko|zh)(\/|$)/.test(segment);
   });
 };
