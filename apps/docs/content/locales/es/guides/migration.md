@@ -1,11 +1,100 @@
 ---
 title: "Guía de Migración"
-description: Cómo migrar entre versiones de Vue Solana. Cubre la actualización de v2 a v3 (ESM, espejo completo de Kit) y la migración de v1.x a v2 (API basada en Kit).
+description: Cómo migrar entre versiones de Vue Solana. Cubre la actualización de v3 a v4, v2 a v3 y la migración de v1.x a v2.
 ogSection: Guias
 surroundOrder: 13
 ---
 
-Esta guía cubre la migración entre versiones de Vue Solana. Hay dos migraciones importantes: la actualización de v2 a v3 (más reciente) y la migración de v1.x a v2.
+Esta guía cubre la migración entre versiones de Vue Solana. Hay tres migraciones importantes: la actualización de v3 a v4 (más reciente), v2 a v3 y la migración de v1.x a v2.
+
+## Migración: de v3 a v4
+
+v4.0.0 es la versión más reciente. Reduce el tamaño del bundle eliminando módulos pesados del barrel raíz de `@vue-solana/core` y publica tarballs más pequeños. También cambia algunas APIs de composables y respeta el `commitment` configurado.
+
+### ¿Qué ha cambiado?
+
+- **Barrel raíz recortado**: `@vue-solana/core` ya no re-exporta `Buffer`/`installSolanaBufferPolyfill`, `ios-wallet` ni `mobile-wallet` desde su barrel raíz. Usa las subrutas dedicadas.
+- **Tarballs más pequeños**: ya no se publican archivos de declaración `.d.mts`; todas las condiciones de `exports` apuntan a `.d.ts`.
+- **`useSignatureStatus`**: ya no acepta la opción `commitment`.
+- **`commitment` respetado**: `createSolanaClient()` / `createSolanaPlugin()` / `solana.commitment` de Nuxt ahora se aplican realmente a las llamadas RPC.
+- **`plugin.dispose()`**: `createSolanaPlugin()` ahora devuelve `dispose()`.
+- **Fallos de airdrop tipados**: los fallos de `useAirdrop()` son `SolanaError`s con código `RPC_FAILURE`.
+- **`buffer` dependencia peer opcional**: las apps que usan `buffer-polyfill` deben instalar `buffer` por su cuenta.
+- **`bs58` eliminado**: las apps que importan `bs58` directamente deben añadirlo a sus dependencias.
+- **Nuevas auto-importaciones (Nuxt)**: `useSolanaClientCapability()`, `tryUseSolana()`, `clearSwrCache()`, `deleteSwrKey()`.
+- **Nuevo `deleteSwrKey()`** en `@vue-solana/vue/swr`.
+
+### Cómo migrar
+
+#### 1. Actualizar dependencias
+
+```sh
+pnpm add @vue-solana/vue@^4.0.0
+# o
+pnpm add @vue-solana/nuxt@^4.0.0
+```
+
+Si usas `buffer-polyfill`, instala `buffer` tú mismo:
+
+```sh
+pnpm add buffer
+```
+
+Si importas `bs58` directamente, añádelo:
+
+```sh
+pnpm add bs58
+```
+
+#### 2. Actualizar imports de Buffer / Wallet
+
+```diff
+- import { Buffer, installSolanaBufferPolyfill } from "@vue-solana/core";
++ import { Buffer, installSolanaBufferPolyfill } from "@vue-solana/core/buffer-polyfill";
+- import { getSolanaIosWallets } from "@vue-solana/core";
++ import { getSolanaIosWallets } from "@vue-solana/core/ios-wallet";
+- import { registerSolanaMobileWallet } from "@vue-solana/core";
++ import { registerSolanaMobileWallet } from "@vue-solana/core/mobile-wallet";
+```
+
+(`@vue-solana/vue/buffer-polyfill` y `@vue-solana/nuxt/buffer-polyfill` no cambian.)
+
+#### 3. Actualizar `useSignatureStatus`
+
+```diff
+- useSignatureStatus(signature, { commitment: "confirmed" })
++ useSignatureStatus(signature)
+```
+
+Para un commitment por llamada, pasa `{ commitment }` a `confirm(signature, opts)` de `useTransactionConfirmation()`, o llama a `confirmTransactionSignature()` directamente desde `@vue-solana/core`.
+
+#### 4. Liberar plugins en Vue puro
+
+```ts
+const solana = createSolanaPlugin();
+createApp(App).use(solana);
+// al desmontar:
+app.unmount();
+solana.dispose();
+```
+
+(Nuxt lo conecta automáticamente.)
+
+#### 5. Manejar errores tipados de airdrop
+
+Los fallos de `useAirdrop()` son ahora `SolanaError`s con código `RPC_FAILURE`; el error original se conserva como `cause`.
+
+```ts
+import { isSolanaError } from "@vue-solana/core/kit";
+
+try {
+  await airdrop();
+} catch (error) {
+  if (isSolanaError(error, "RPC_FAILURE")) {
+    // manejar
+  }
+}
+```
 
 ## Migración: de v2 a v3
 

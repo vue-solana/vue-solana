@@ -1,13 +1,17 @@
 // @vitest-environment node
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { effectScope } from "vue";
 import type { Address, Lamports, Signature } from "@vue-solana/core/kit";
 import { useAirdrop } from "./useAirdrop";
+import { MissingClientCapabilityError } from "./useClientCapability";
 
-const { airdropMock } = vi.hoisted(() => ({ airdropMock: vi.fn() }));
+const { airdropMock, client } = vi.hoisted(() => ({
+  airdropMock: vi.fn(),
+  client: {} as Record<string, unknown>,
+}));
 
 vi.mock("./useSolanaClient", () => ({
-  useSolanaClient: () => ({ client: { rpc: {}, airdrop: airdropMock }, rpc: {} }),
+  useSolanaClient: () => ({ client, rpc: {} }),
 }));
 
 function deferred<T>(): { promise: Promise<T>; resolve: (value: T) => void } {
@@ -42,6 +46,11 @@ const amount = 1_000_000n as Lamports;
 const signature = "abc" as Signature;
 
 describe("useAirdrop", () => {
+  beforeEach(() => {
+    airdropMock.mockReset();
+    client.airdrop = airdropMock;
+  });
+
   it("dispatches an airdrop and exposes the returned signature", async () => {
     airdropMock.mockResolvedValue(signature);
     const { result } = setupInScope(() => useAirdrop());
@@ -132,5 +141,17 @@ describe("useAirdrop", () => {
     const { result } = setupInScope(() => useAirdrop());
 
     await expect(result.dispatch(address, amount)).rejects.toBe(boom);
+  });
+
+  it("throws MissingClientCapabilityError when the client loses `airdrop` after setup", async () => {
+    airdropMock.mockResolvedValue(signature);
+    const { result } = setupInScope(() => useAirdrop());
+
+    delete client.airdrop;
+
+    await expect(result.dispatch(address, amount)).rejects.toBeInstanceOf(
+      MissingClientCapabilityError,
+    );
+    expect(result.status.value).toBe("error");
   });
 });

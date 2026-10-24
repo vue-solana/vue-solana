@@ -48,6 +48,8 @@ async function signIn(nonce: string) {
 
 Server-side auth flows should generate a fresh nonce, verify the returned signature against the exact signed message bytes and wallet public key, expire used nonces, and bind the challenge to your origin and intended action.
 
+The Vue adapter also checks the returned signature against the account's public key before `signMessage()` / `signIn()` resolve, when the environment supports Ed25519 (WebCrypto). That is a best-effort, client-side guard (it rejects with `INVALID_SIGNATURE` and is skipped where Ed25519 is unavailable), so never rely on it in place of server-side verification.
+
 ## Related
 
 - [Wallet Support](./wallets.md)

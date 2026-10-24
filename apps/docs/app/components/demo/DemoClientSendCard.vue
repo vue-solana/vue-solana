@@ -8,6 +8,7 @@ const props = defineProps<{
   batchText?: string | null;
   loading: boolean;
   payerAddress?: string | null;
+  payerBalance?: number | null;
   payerReady: boolean;
   singleError?: string | null;
   singleStatus: string;
@@ -61,6 +62,9 @@ function statusColor(status: string) {
     <p class="mt-3 text-sm text-slate-600 dark:text-slate-300">
       <span class="font-bold">{{ $t("demo.clientSend.payer") }}:</span>
       <span v-if="payerAddress" class="wrap-anywhere">{{ payerAddress }}</span>
+      <span v-if="payerAddress && payerBalance != null" class="ml-2 text-slate-500"
+        >({{ (payerBalance / 1_000_000_000).toFixed(4) }} SOL)</span
+      >
       <span v-else class="italic">{{ $t("demo.clientSend.noPayer") }}</span>
     </p>
 

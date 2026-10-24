@@ -2,13 +2,30 @@ export type SolanaErrorCode =
   | "NO_WALLET_SELECTED"
   | "WALLET_NOT_CONNECTED"
   | "WALLET_FEATURE_UNSUPPORTED"
+  // Wallet-side work failed without a more specific code: connect/disconnect,
+  // persisted-wallet auto-connect, mobile-wallet registration, or iOS callback
+  // handling. Kept apart from `RPC_FAILURE` so an app does not show a network
+  // error for a problem that never reached the network.
+  | "WALLET_FAILURE"
   | "USER_REJECTED"
   | "INVALID_ADDRESS"
   | "TRANSACTION_TIMEOUT"
+  | "TRANSACTION_NOT_FOUND"
+  | "TRANSACTION_FAILED"
   | "RPC_FAILURE"
+  // Shared cross-package code: core never throws it (core stays DOM-free),
+  // but `@vue-solana/vue`'s selected-wallet `localStorage` persistence does.
+  // It lives here so every package answers `isSolanaError()` for it and the
+  // code vocabulary stays in one place.
   | "STORAGE_FAILURE"
   | "INVALID_INPUT"
-  | "DECRYPTION_FAILED";
+  | "DECRYPTION_FAILED"
+  | "REDIRECT_TIMEOUT"
+  | "MISSING_CLIENT_CAPABILITY"
+  // Client-side best-effort guard: a wallet returned a message or sign-in
+  // signature that does not match its own account key. Server-side verification
+  // stays mandatory; see `assertWalletSignature()`.
+  | "INVALID_SIGNATURE";
 
 export interface SolanaErrorOptions {
   cause?: unknown;
@@ -40,7 +57,26 @@ export function createSolanaError(
 }
 
 export function isSolanaError(error: unknown): error is SolanaError {
-  return error instanceof SolanaError;
+  if (error instanceof SolanaError) {
+    return true;
+  }
+
+  // Duplicate package copies mean `instanceof` can fail: two copies of
+  // `@vue-solana/core` ship two `SolanaError` classes. Fall back to a
+  // structural check. Kit's own `SolanaError` also uses
+  // `name === "SolanaError"` but carries a numeric `code`, so require a
+  // string `code` to avoid misclassifying Kit errors. `SolanaWalletError`
+  // extends this class (renaming to `"SolanaWalletError"`) and stays a
+  // `SolanaError` across copies too.
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    ((error as { name?: unknown }).name === "SolanaError" ||
+      (error as { name?: unknown }).name === "SolanaWalletError" ||
+      (error as { name?: unknown }).name === "MissingClientCapabilityError" ||
+      (error as { name?: unknown }).name === "PartialSignAndSendError") &&
+    typeof (error as { code?: unknown }).code === "string"
+  );
 }
 
 export function normalizeSolanaError(

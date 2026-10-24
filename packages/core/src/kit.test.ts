@@ -1,6 +1,11 @@
 // @vitest-environment node
+// Pinned assumption: this test relies on `@solana/kit`'s `solanaRpc()` plugin
+// installing `planTransaction`/`sendTransaction` (and on `rpcAirdrop()`). If a
+// future Kit release stops providing them, the assertions below fail and the
+// client construction in `src/kit.ts` must change. Keep the `@solana/kit`
+// range in `package.json` and `pnpm-workspace.yaml` overrides in sync.
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import bs58 from "bs58";
+import { getBase58Decoder } from "@solana/kit";
 import nacl from "tweetnacl";
 
 const { rpcAirdropMock, solanaRpcMock } = vi.hoisted(() => {
@@ -65,6 +70,28 @@ describe("createSolanaClient", () => {
     expect(typeof client.sendTransaction).toBe("function");
   });
 
+  it("uses the stock solanaRpc path when no commitment is configured", () => {
+    const client = createSolanaClient({ commitment: undefined });
+
+    expect(solanaRpcMock).toHaveBeenCalledOnce();
+    expect(rpcAirdropMock).toHaveBeenCalledOnce();
+    expect(typeof client.sendTransaction).toBe("function");
+  });
+
+  it("builds an explicit RPC stack carrying the commitment when one is configured", () => {
+    const client = createSolanaClient({ commitment: "processed" });
+
+    // Commitment path bypasses the stock `solanaRpc()` connection, which pins
+    // `DEFAULT_RPC_CONFIG` and would drop the configured commitment.
+    expect(solanaRpcMock).not.toHaveBeenCalled();
+    expect(rpcAirdropMock).toHaveBeenCalledOnce();
+    expect(typeof client.sendTransaction).toBe("function");
+    expect(typeof client.sendTransactions).toBe("function");
+    expect(typeof client.planTransaction).toBe("function");
+    expect((client as { rpc?: unknown }).rpc).toBeDefined();
+    expect((client as { rpcSubscriptions?: unknown }).rpcSubscriptions).toBeDefined();
+  });
+
   it("forwards explicit HTTP and WebSocket endpoints", () => {
     createSolanaClient({
       endpoint: "https://rpc.example.com/path",
@@ -109,7 +136,7 @@ describe("createSolanaClient", () => {
     const signatures = await payer.signTransactions([{ messageBytes }]);
     const signature = signatures[0]?.[payer.address];
 
-    expect(payer.address).toBe(bs58.encode(publicKey));
+    expect(payer.address).toBe(getBase58Decoder().decode(publicKey));
     expect(client.payer).toBe(payer);
     expect(signature).toBeDefined();
     expect(nacl.sign.detached.verify(messageBytes, signature!, publicKey)).toBe(true);

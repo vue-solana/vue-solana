@@ -253,6 +253,29 @@ describe("capability fail-fast", () => {
   });
 });
 
+describe("capability removed after setup", () => {
+  it("reports a capability removed after setup, not RPC_FAILURE", async () => {
+    const { planTransaction } = installPlanningClient();
+    planTransaction.mockResolvedValue(message);
+    const { result } = setupInScope(() => usePlanTransaction());
+    delete clientMock.planTransaction;
+
+    try {
+      const call = result.execute([{}] as never);
+
+      await expect(call).rejects.toBeInstanceOf(MissingClientCapabilityError);
+      await expect(call).rejects.toMatchObject({
+        hookName: "usePlanTransaction",
+        capabilities: ["planTransaction"],
+      });
+      expect(result.status.value).toBe("idle");
+      expect(result.transactionMessage.value).toBeNull();
+    } finally {
+      installPlanningClient();
+    }
+  });
+});
+
 describe("payer fail-fast", () => {
   it("throws at setup time and names `payer`", () => {
     installPlanningClient();

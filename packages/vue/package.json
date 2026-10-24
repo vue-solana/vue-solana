@@ -1,6 +1,6 @@
 {
   "name": "@vue-solana/vue",
-  "version": "3.0.1",
+  "version": "4.0.0-rc.1",
   "description": "Vue plugin and composables for Solana applications.",
   "license": "MIT",
   "keywords": [
@@ -171,7 +171,8 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "!dist/**/*.d.mts"
   ],
   "publishConfig": {
     "access": "public"
@@ -180,18 +181,20 @@
     "build": "NODE_OPTIONS=--max-old-space-size=8192 unbuild",
     "dev": "unbuild --stub",
     "typecheck": "tsc --noEmit",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "check:esm-map": "node ../../scripts/check-exports-map.mjs"
   },
   "dependencies": {
-    "@vue-solana/core": "workspace:*",
-    "bs58": "^6.0.0"
+    "@vue-solana/core": "workspace:*"
   },
   "peerDependencies": {
     "vue": "^3.5.0"
   },
   "devDependencies": {
+    "@vue/test-utils": "^2.4.11",
     "typescript": "^5.8.3",
     "unbuild": "^3.5.0",
+    "vitest": "^4.1.8",
     "vue": "^3.5.16"
   }
 }

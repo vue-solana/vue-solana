@@ -1,11 +1,100 @@
 ---
 title: "迁移指南"
-description: Vue Solana 版本迁移指南。涵盖 v2 到 v3 的升级以及 v1.x 到 v2 的迁移。
+description: Vue Solana 版本迁移指南。涵盖 v3 到 v4 的升级、v2 到 v3 的升级，以及 v1.x 到 v2 的迁移。
 ogSection: Guides
 surroundOrder: 13
 ---
 
-本指南涵盖 Vue Solana 版本间的迁移。有两个主要迁移：v2 到 v3 的升级（最新），以及 v1.x 到 v2 的迁移。
+本指南涵盖 Vue Solana 版本间的迁移。有三个主要迁移：v3 到 v4 的升级（最新）、v2 到 v3 的升级，以及 v1.x 到 v2 的迁移。
+
+## 迁移：v3 到 v4
+
+v4.0.0 是最新版本。它通过从 `@vue-solana/core` 的根 barrel 中移除重量级模块并发布更小的 tarball 来减小 bundle 体积。它还更改了一些 composable API，并真正应用配置的 `commitment`。
+
+### 变更内容
+
+- **根 barrel 精简**：`@vue-solana/core` 不再从根 barrel re-export `Buffer`/`installSolanaBufferPolyfill`、`ios-wallet` 或 `mobile-wallet`。请使用专用 subpath。
+- **更小的 tarball**：不再发布 `.d.mts` 声明文件；所有 `exports` 条件都指向 `.d.ts`。
+- **`useSignatureStatus`**：不再接受 `commitment` 选项。
+- **`commitment` 生效**：`createSolanaClient()` / `createSolanaPlugin()` / Nuxt 的 `solana.commitment` 现在真正应用于 RPC 调用。
+- **`plugin.dispose()`**：`createSolanaPlugin()` 现在返回 `dispose()`。
+- **类型化的 airdrop 失败**：`useAirdrop()` 的失败现在是代码为 `RPC_FAILURE` 的 `SolanaError`。
+- **`buffer` 可选 peer**：使用 `buffer-polyfill` 的应用必须自行安装 `buffer`。
+- **`bs58` 移除**：直接 import `bs58` 的应用必须将其加入自己的依赖。
+- **新的 auto-import（Nuxt）**：`useSolanaClientCapability()`、`tryUseSolana()`、`clearSwrCache()`、`deleteSwrKey()`。
+- **新增 `deleteSwrKey()`** 位于 `@vue-solana/vue/swr`。
+
+### 如何迁移
+
+#### 1. 更新依赖
+
+```sh
+pnpm add @vue-solana/vue@^4.0.0
+# 或
+pnpm add @vue-solana/nuxt@^4.0.0
+```
+
+如果你使用 `buffer-polyfill`，请自行安装 `buffer`：
+
+```sh
+pnpm add buffer
+```
+
+如果你直接 import `bs58`，请添加它：
+
+```sh
+pnpm add bs58
+```
+
+#### 2. 更新 Buffer / Wallet 导入
+
+```diff
+- import { Buffer, installSolanaBufferPolyfill } from "@vue-solana/core";
++ import { Buffer, installSolanaBufferPolyfill } from "@vue-solana/core/buffer-polyfill";
+- import { getSolanaIosWallets } from "@vue-solana/core";
++ import { getSolanaIosWallets } from "@vue-solana/core/ios-wallet";
+- import { registerSolanaMobileWallet } from "@vue-solana/core";
++ import { registerSolanaMobileWallet } from "@vue-solana/core/mobile-wallet";
+```
+
+（`@vue-solana/vue/buffer-polyfill` 和 `@vue-solana/nuxt/buffer-polyfill` 保持不变。）
+
+#### 3. 更新 `useSignatureStatus`
+
+```diff
+- useSignatureStatus(signature, { commitment: "confirmed" })
++ useSignatureStatus(signature)
+```
+
+如需按调用设置 commitment，请向 `useTransactionConfirmation()` 的 `confirm(signature, opts)` 传递 `{ commitment }`，或直接调用 `@vue-solana/core` 的 `confirmTransactionSignature()`。
+
+#### 4. 在纯 Vue 中 dispose 插件
+
+```ts
+const solana = createSolanaPlugin();
+createApp(App).use(solana);
+// 卸载时：
+app.unmount();
+solana.dispose();
+```
+
+（Nuxt 会自动接线。）
+
+#### 5. 处理类型化的 airdrop 错误
+
+`useAirdrop()` 的失败现在是代码为 `RPC_FAILURE` 的 `SolanaError`；原始错误作为 `cause` 保留。
+
+```ts
+import { isSolanaError } from "@vue-solana/core/kit";
+
+try {
+  await airdrop();
+} catch (error) {
+  if (isSolanaError(error, "RPC_FAILURE")) {
+    // 处理
+  }
+}
+```
 
 ## 迁移：v2 到 v3
 

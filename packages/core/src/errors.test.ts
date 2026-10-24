@@ -37,4 +37,28 @@ describe("SolanaError", () => {
     expect(error.code).toBe("USER_REJECTED");
     expect(error.message).toBe("User rejected the request");
   });
+
+  it("recognizes structurally identical errors from duplicate package copies", () => {
+    // Two copies of `@vue-solana/core` ship two `SolanaError` classes, so
+    // `instanceof` fails across the copy boundary. A plain object with the
+    // same `name`/`code` shape must still answer `true`.
+    const crossCopyError = {
+      name: "SolanaError",
+      code: "RPC_FAILURE",
+      message: "RPC failed",
+    };
+
+    expect(isSolanaError(crossCopyError)).toBe(true);
+    expect(normalizeSolanaError(crossCopyError, "TRANSACTION_TIMEOUT")).toEqual(crossCopyError);
+  });
+
+  it("recognizes cross-copy wallet errors", () => {
+    expect(isSolanaError({ name: "SolanaWalletError", code: "WALLET_NOT_CONNECTED" })).toBe(true);
+  });
+
+  it("does not misclassify Kit errors, which share the name but use numeric codes", () => {
+    expect(isSolanaError({ name: "SolanaError", code: 123456789 })).toBe(false);
+    expect(isSolanaError({ name: "SolanaError" })).toBe(false);
+    expect(isSolanaError(null)).toBe(false);
+  });
 });

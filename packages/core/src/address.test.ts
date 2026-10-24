@@ -37,4 +37,21 @@ describe("parseAddress", () => {
       expect((error as SolanaError).cause).toBeInstanceOf(Error);
     }
   });
+
+  it("throws INVALID_ADDRESS for numbers and objects instead of returning null", () => {
+    for (const value of [123, {}, true, [ADDRESS]] as unknown[]) {
+      try {
+        parseAddress(value as Parameters<typeof parseAddress>[0]);
+        throw new Error(`Expected parseAddress to throw for ${String(value)}.`);
+      } catch (error) {
+        expect(error).toBeInstanceOf(SolanaError);
+        expect((error as SolanaError).code).toBe("INVALID_ADDRESS");
+      }
+    }
+  });
+
+  it("unwraps nested getters and refs", () => {
+    expect(parseAddress(() => ({ value: ADDRESS }))).toBe(ADDRESS);
+    expect(parseAddress({ value: () => ADDRESS })).toBe(ADDRESS);
+  });
 });

@@ -104,7 +104,7 @@ Supported clusters are `mainnet` (legacy alias `mainnet-beta`), `testnet`, `devn
 
 `payer` is a Kit `TransactionSigner` used as the client's fee payer and signer for client-sent transactions. `payerSecretKey` is a base64-encoded 64-byte Ed25519 keypair with the secret key first; the client derives its address at creation and imports the signing key on first use, so a keypair whose public half does not match its seed is rejected at the first signature instead of at client creation. The address comes from the unverified public half, so treat `payer.address` as unconfirmed until the first signature succeeds. Signing imports the key through WebCrypto, which browsers expose only in a secure context (`https`, or `http` on `localhost`); outside one, the first `signTransactions()` call throws rather than returning a generic invalid-key error. Both options are supported by direct core and Vue clients.
 
-`createSolanaClient()` composes the official `@solana/kit-plugin-rpc` stack by default: `solanaRpc()` followed by `rpcAirdrop()`. `solanaRpc()` installs `rpcTransactionPlanner()`, `rpcTransactionPlanSigningExecutor()`, and `rpcTransactionPlanSendingExecutor()` itself, so the client exposes RPC reads and subscriptions plus `planTransaction(s)`, `signTransaction(s)`, and `sendTransaction(s)` with no extra plugin. The old custom fallback sender is not used. Its official sending executor adds a fresh blockhash, resource-limit and preflight handling, signs with the available client signers, submits the transaction, and waits for `confirmed` commitment before the send resolves. A client send requires a `payer` signer.
+`createSolanaClient()` composes the official `@solana/kit-plugin-rpc` stack by default: `solanaRpc()` followed by `rpcAirdrop()` when no `commitment` is configured (a configured `commitment` builds the same stack explicitly so it reaches the RPC layer). `solanaRpc()` installs `rpcTransactionPlanner()`, `rpcTransactionPlanSigningExecutor()`, and `rpcTransactionPlanSendingExecutor()` itself, so the client exposes RPC reads and subscriptions plus `planTransaction(s)`, `signTransaction(s)`, and `sendTransaction(s)` with no extra plugin. The old custom fallback sender is not used. Its official sending executor adds a fresh blockhash, resource-limit and preflight handling, signs with the available client signers, submits the transaction, and waits for `confirmed` commitment before the send resolves. A client send requires a `payer` signer.
 
 Never put a raw secret or `payerSecretKey` in Nuxt public runtime config. Do not ship a funded signing key to an end-user browser; use a server or relayer boundary, or an ephemeral unfunded signer for demos.
 
@@ -196,6 +196,7 @@ type SolanaChain = "solana:mainnet" | "solana:testnet" | "solana:devnet" | "sola
 - `getRegisteredSolanaWallets()`: returns discovered Solana Wallet Standard wallets in browser environments, including Android Mobile Wallet Adapter after it is registered on supported clients.
 - `subscribeSolanaWallets(listener)`: subscribes to Wallet Standard register/unregister events.
 - `adaptSolanaStandardWallet(walletInfo, options?)`: adapts a discovered Wallet Standard wallet into `SolanaWallet`.
+- `disconnectSolanaStandardWallet(walletInfo)`: disconnects a discovered Wallet Standard wallet through its own `standard:disconnect` feature without adapting it, so a wallet the app never selects gets no `change` subscription. Resolves `false` when the wallet exposes no disconnect feature, and rejects with the wallet's own error.
 
 ## Mobile Wallet Helpers
 
@@ -322,7 +323,7 @@ const signedTransaction = await wallet.signTransaction(transaction);
 ### Transactions
 
 - `signAndSendTransaction(client, wallet, transaction, options?)`: signs and sends raw wire transaction bytes using a configured wallet and returns the RPC signature. Wallets that expose `signAndSendTransaction` are delegated to; otherwise the transaction is signed with `wallet.signTransaction` and submitted through `client.rpc.sendTransaction(...).send()`. Android Mobile Wallet Adapter wallets prefer signing plus app-side RPC submission so the app owns submission and reliably returns the RPC signature after the wallet handoff.
-- `confirmTransactionSignature(client, signature, options?)`: waits for a submitted signature to reach a requested commitment. Defaults to `confirmed` commitment, a 60 second timeout, and polling `client.rpc.getSignatureStatuses([signature]).send()`.
+- `confirmTransactionSignature(client, signature, options?)`: waits for a submitted signature to reach a requested commitment. Defaults to `confirmed` commitment, a 60 second timeout, a 1500 ms poll interval, and polling `client.rpc.getSignatureStatuses([signature]).send()`. Accepts `pollIntervalMs` (must be greater than `0`), `abortSignal`, and `searchTransactionHistory`. A failed transaction throws `TRANSACTION_FAILED`, a signature that never appears throws `TRANSACTION_NOT_FOUND`, and an exhausted wait throws `TRANSACTION_TIMEOUT`. Pass `searchTransactionHistory: true` when the signature may have left the recent status cache — without it an older signature never appears in results and resolves to `TRANSACTION_NOT_FOUND` after the timeout.
 
 The client-sent flow is separate from this wallet-aware helper. The client exposes `sendTransaction()` and `sendTransactions()` through the official `rpcTransactionPlanSendingExecutor()` that `solanaRpc()` installs inside `createSolanaClient()`; the Vue composables wrap those methods. They plan, sign, submit, and wait for `confirmed` commitment; the `sent` status is set only after that send-and-confirm operation completes. A single result exposes the submitted signature at `data.context.signature`, while a batch result contains the full plan result tree. The official sender does not show a wallet popup.
 
@@ -356,7 +357,7 @@ if (balance) {
 - `createSolanaError(code, message, options?)`: creates a normalized Solana error.
 - `isSolanaError(error)`: narrows unknown errors to `SolanaError`.
 - `normalizeSolanaError(cause, fallbackCode, fallbackMessage?, options?)`: converts unknown failures into `SolanaError` and maps common wallet rejections to `USER_REJECTED`.
-- `withTimeout(promise, timeoutMs, createError)`: races a promise against a caller-provided timeout error.
+- `withTimeout(promise, timeoutMs, createError?, options?)`: races a promise against a caller-provided timeout error. Rejects `INVALID_INPUT` for `NaN`/negative timeouts; `{ signal }` aborts the wait with the signal's reason, and `{ code, message }` sets the default timeout error.
 - `withSolanaTimeout(promise, timeoutMs, message)`: races a promise against a `TRANSACTION_TIMEOUT` error.
 
 ## Error Model
@@ -377,6 +378,12 @@ try {
       case "TRANSACTION_TIMEOUT":
         // The operation timed out; check signature state before retrying.
         break;
+      case "TRANSACTION_NOT_FOUND":
+        // The signature never landed; safe to retry.
+        break;
+      case "TRANSACTION_FAILED":
+        // The transaction errored on-chain; see error.cause.
+        break;
       case "RPC_FAILURE":
         // RPC or confirmation failed.
         console.error(error.cause);
@@ -391,9 +398,16 @@ Stable error codes are:
 - `NO_WALLET_SELECTED`
 - `WALLET_NOT_CONNECTED`
 - `WALLET_FEATURE_UNSUPPORTED`
+- `WALLET_FAILURE`
 - `USER_REJECTED`
+- `INVALID_SIGNATURE`
 - `INVALID_ADDRESS`
+- `INVALID_INPUT`
 - `TRANSACTION_TIMEOUT`
+- `TRANSACTION_NOT_FOUND`
+- `TRANSACTION_FAILED`
+- `REDIRECT_TIMEOUT`
+- `DECRYPTION_FAILED`
 - `RPC_FAILURE`
 - `STORAGE_FAILURE`
 

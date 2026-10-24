@@ -1,6 +1,6 @@
 {
   "name": "@vue-solana/nuxt",
-  "version": "3.0.1",
+  "version": "4.0.0-rc.1",
   "description": "Nuxt module for Solana applications.",
   "license": "MIT",
   "keywords": [
@@ -22,10 +22,10 @@
   "type": "module",
   "sideEffects": false,
   "module": "./dist/module.mjs",
-  "types": "./dist/module.d.mts",
+  "types": "./dist/module.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/module.d.mts",
+      "types": "./dist/module.d.ts",
       "import": "./dist/module.mjs"
     },
     "./buffer-polyfill": {
@@ -38,7 +38,8 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "!dist/**/*.d.mts"
   ],
   "publishConfig": {
     "access": "public"
@@ -47,7 +48,8 @@
     "build": "unbuild",
     "dev": "unbuild --stub",
     "typecheck": "tsc --noEmit",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "check:esm-map": "node ../../scripts/check-exports-map.mjs"
   },
   "dependencies": {
     "@vue-solana/vue": "workspace:*"
@@ -57,6 +59,7 @@
   },
   "devDependencies": {
     "@nuxt/kit": "^4.4.6",
+    "@nuxt/schema": "^4.4.6",
     "nuxt": "^4.4.6",
     "typescript": "^5.8.3",
     "unbuild": "^3.5.0",

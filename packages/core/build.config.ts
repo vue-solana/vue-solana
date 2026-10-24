@@ -22,6 +22,7 @@ export default defineBuildConfig({
   ],
   declaration: true,
   clean: true,
+  externals: ["buffer", "buffer/"],
   rollup: {
     emitCJS: false,
     // rollup hoists transitively-imported externals into the entry facade as

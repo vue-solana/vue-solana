@@ -1,114 +1,49 @@
 import { fileURLToPath } from "node:url";
+import { readdirSync } from "node:fs";
 import { defineConfig } from "vitest/config";
+
+// Auto-aliases every top-level source file so tests can import
+// `@vue-solana/<pkg>/<name>` without an enumerated list. Parity with the
+// published exports map is enforced separately by scripts/check-export-map.ts
+// (run as `pnpm check:entries`).
+function aliasFor(packageName: string, sourceDir: string, entryFile: string) {
+  const alias: Record<string, string> = {};
+  for (const file of readdirSync(new URL(sourceDir, import.meta.url))) {
+    if (!file.endsWith(".ts")) continue;
+    const name = file.replace(/\.ts$/, "");
+    alias[`@vue-solana/${packageName}/${name}`] = fileURLToPath(
+      new URL(`${sourceDir}/${file}`, import.meta.url),
+    );
+  }
+  alias[`@vue-solana/${packageName}`] = fileURLToPath(
+    new URL(`${sourceDir}/${entryFile}`, import.meta.url),
+  );
+  return alias;
+}
+
+const alias = {
+  "#app": fileURLToPath(new URL("./test/stubs/nuxt-app.ts", import.meta.url)),
+  "buffer/": "node:buffer",
+  ...aliasFor("core", "./packages/core/src", "index.ts"),
+  ...aliasFor("vue", "./packages/vue/src", "index.ts"),
+};
+
+// Nuxt keeps its public entry in `src/module.ts` and runtime files in
+// `src/runtime`, so map those separately instead of the flat `src` layout.
+for (const file of readdirSync(new URL("./packages/nuxt/src/runtime", import.meta.url))) {
+  if (!file.endsWith(".ts")) continue;
+  const name = file.replace(/\.ts$/, "");
+  alias[`@vue-solana/nuxt/${name}`] = fileURLToPath(
+    new URL(`./packages/nuxt/src/runtime/${file}`, import.meta.url),
+  );
+}
+alias["@vue-solana/nuxt"] = fileURLToPath(
+  new URL("./packages/nuxt/src/module.ts", import.meta.url),
+);
 
 export default defineConfig({
   resolve: {
-    alias: {
-      "#app": fileURLToPath(new URL("./test/stubs/nuxt-app.ts", import.meta.url)),
-      "buffer/": "node:buffer",
-      "@vue-solana/core/action": fileURLToPath(
-        new URL("./packages/core/src/action.ts", import.meta.url),
-      ),
-      "@vue-solana/core/address": fileURLToPath(
-        new URL("./packages/core/src/address.ts", import.meta.url),
-      ),
-      "@vue-solana/core/buffer-polyfill": fileURLToPath(
-        new URL("./packages/core/src/buffer-polyfill.ts", import.meta.url),
-      ),
-      "@vue-solana/core/clusters": fileURLToPath(
-        new URL("./packages/core/src/clusters.ts", import.meta.url),
-      ),
-      "@vue-solana/core/errors": fileURLToPath(
-        new URL("./packages/core/src/errors.ts", import.meta.url),
-      ),
-      "@vue-solana/core/ios-wallet": fileURLToPath(
-        new URL("./packages/core/src/ios-wallet.ts", import.meta.url),
-      ),
-      "@vue-solana/core/mobile-wallet-support": fileURLToPath(
-        new URL("./packages/core/src/mobile-wallet-support.ts", import.meta.url),
-      ),
-      "@vue-solana/core/mobile-wallet": fileURLToPath(
-        new URL("./packages/core/src/mobile-wallet.ts", import.meta.url),
-      ),
-      "@vue-solana/core/rpc": fileURLToPath(new URL("./packages/core/src/rpc.ts", import.meta.url)),
-      "@vue-solana/core/timeout": fileURLToPath(
-        new URL("./packages/core/src/timeout.ts", import.meta.url),
-      ),
-      "@vue-solana/core/transaction": fileURLToPath(
-        new URL("./packages/core/src/transaction.ts", import.meta.url),
-      ),
-      "@vue-solana/core/types": fileURLToPath(
-        new URL("./packages/core/src/types.ts", import.meta.url),
-      ),
-      "@vue-solana/core/wallet": fileURLToPath(
-        new URL("./packages/core/src/wallet.ts", import.meta.url),
-      ),
-      "@vue-solana/core/wallet-standard": fileURLToPath(
-        new URL("./packages/core/src/wallet-standard.ts", import.meta.url),
-      ),
-      "@vue-solana/core/kit": fileURLToPath(new URL("./packages/core/src/kit.ts", import.meta.url)),
-      "@vue-solana/core/token-accounts": fileURLToPath(
-        new URL("./packages/core/src/token-accounts.ts", import.meta.url),
-      ),
-      "@vue-solana/core": fileURLToPath(new URL("./packages/core/src/index.ts", import.meta.url)),
-      "@vue-solana/nuxt/buffer-polyfill": fileURLToPath(
-        new URL("./packages/nuxt/src/runtime/buffer-polyfill.ts", import.meta.url),
-      ),
-      "@vue-solana/nuxt/kit": fileURLToPath(
-        new URL("./packages/nuxt/src/runtime/kit.ts", import.meta.url),
-      ),
-      "@vue-solana/nuxt": fileURLToPath(new URL("./packages/nuxt/src/module.ts", import.meta.url)),
-      "@vue-solana/vue/kit": fileURLToPath(new URL("./packages/vue/src/kit.ts", import.meta.url)),
-      "@vue-solana/vue/buffer-polyfill": fileURLToPath(
-        new URL("./packages/vue/src/buffer-polyfill.ts", import.meta.url),
-      ),
-      "@vue-solana/vue/useBalance": fileURLToPath(
-        new URL("./packages/vue/src/useBalance.ts", import.meta.url),
-      ),
-      "@vue-solana/vue/useAccountInfo": fileURLToPath(
-        new URL("./packages/vue/src/useAccountInfo.ts", import.meta.url),
-      ),
-      "@vue-solana/vue/useConnection": fileURLToPath(
-        new URL("./packages/vue/src/useConnection.ts", import.meta.url),
-      ),
-      "@vue-solana/vue/useProgramAccounts": fileURLToPath(
-        new URL("./packages/vue/src/useProgramAccounts.ts", import.meta.url),
-      ),
-      "@vue-solana/vue/useRpc": fileURLToPath(
-        new URL("./packages/vue/src/useRpc.ts", import.meta.url),
-      ),
-      "@vue-solana/vue/useSignAndSendTransaction": fileURLToPath(
-        new URL("./packages/vue/src/useSignAndSendTransaction.ts", import.meta.url),
-      ),
-      "@vue-solana/vue/useSignMessage": fileURLToPath(
-        new URL("./packages/vue/src/useSignMessage.ts", import.meta.url),
-      ),
-      "@vue-solana/vue/useSignatureStatus": fileURLToPath(
-        new URL("./packages/vue/src/useSignatureStatus.ts", import.meta.url),
-      ),
-      "@vue-solana/vue/useSolana": fileURLToPath(
-        new URL("./packages/vue/src/useSolana.ts", import.meta.url),
-      ),
-      "@vue-solana/vue/useTransaction": fileURLToPath(
-        new URL("./packages/vue/src/useTransaction.ts", import.meta.url),
-      ),
-      "@vue-solana/vue/useTransactionConfirmation": fileURLToPath(
-        new URL("./packages/vue/src/useTransactionConfirmation.ts", import.meta.url),
-      ),
-      "@vue-solana/vue/useWallet": fileURLToPath(
-        new URL("./packages/vue/src/useWallet.ts", import.meta.url),
-      ),
-      "@vue-solana/vue/useWallets": fileURLToPath(
-        new URL("./packages/vue/src/useWallets.ts", import.meta.url),
-      ),
-      "@vue-solana/vue/useTokenAccounts": fileURLToPath(
-        new URL("./packages/vue/src/useTokenAccounts.ts", import.meta.url),
-      ),
-      "@vue-solana/vue/useTokenBalance": fileURLToPath(
-        new URL("./packages/vue/src/useTokenBalance.ts", import.meta.url),
-      ),
-      "@vue-solana/vue": fileURLToPath(new URL("./packages/vue/src/index.ts", import.meta.url)),
-    },
+    alias,
   },
   test: {
     environment: "happy-dom",

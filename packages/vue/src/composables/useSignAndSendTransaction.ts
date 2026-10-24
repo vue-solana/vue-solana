@@ -10,7 +10,7 @@ import type {
 } from "@vue-solana/core/types";
 import { createNoWalletSelectedError } from "@vue-solana/core/wallet";
 import { computed, ref } from "vue";
-import { useConnection } from "./useConnection";
+import { useSolanaClient } from "./useSolanaClient";
 import { useWallet } from "./useWallet";
 import { getConfirmedTransactionStatus } from "./useTransactionConfirmation";
 
@@ -32,7 +32,7 @@ export interface SignAndSendTransactionOptions extends SendTransactionOptions {
 }
 
 export function useSignAndSendTransaction() {
-  const client = useConnection();
+  const client = useSolanaClient().client;
   const { wallet } = useWallet();
   const signature = ref<Signature | null>(null);
   const confirmation = ref<TransactionConfirmation | null>(null);

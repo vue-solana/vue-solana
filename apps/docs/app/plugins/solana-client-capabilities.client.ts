@@ -1,4 +1,4 @@
-import { extendClient, generateKeyPairSigner, type TransactionSigner } from "@vue-solana/nuxt/kit";
+import { createSolanaClient } from "@vue-solana/nuxt/kit";
 import type { VueSolanaContext } from "@vue-solana/nuxt";
 
 // The same registry symbol as the package's `solanaInjectionKey`, which Nuxt's
@@ -7,22 +7,23 @@ import type { VueSolanaContext } from "@vue-solana/nuxt";
 // `/buffer-polyfill`). `Symbol.for` is global, so identity is guaranteed.
 const solanaInjectionKey = Symbol.for("vue-solana:context");
 
-/** Adds a `payer` signer: the capability Kit's transaction planner requires. */
-function withPayer(payer: TransactionSigner) {
-  return <T extends object>(client: T) => extendClient(client, { payer });
-}
-
 /**
- * Extends the Solana client built by `@vue-solana/nuxt` with a `payer` signer.
+ * Re-provides the Solana context with a client that carries a `payer` signer.
  *
- * A `payer` and nothing else: `createSolanaClient()` composes `solanaRpc()`,
- * which already installs `planTransaction(s)` and `sendTransaction(s)`, so the
- * planner and the RPC plan-sending executor need no extension here.
+ * The client is rebuilt, not extended. Kit's plugins capture the client they
+ * are installed on (`solanaRpc()` closes over it when it registers the planner
+ * and the sending executor), and the planner reads `client.payer` from that
+ * captured snapshot when it builds a message. Patching a payer onto an
+ * already-built client with `extendClient()` therefore leaves the planner
+ * looking at a payer-less client, and planning dies with
+ * `Cannot read properties of undefined (reading 'address')` inside
+ * `setTransactionMessageFeePayerSigner`. Passing the payer to
+ * `createSolanaClient()` installs it *before* the RPC plugins, so every
+ * closure sees it.
  *
- * The demo app must always run against the latest published packages, and the
- * published module builds its client internally without extension hooks, so
- * this plugin re-provides the context with the extended client (Kit clients are
- * frozen; `.use()` returns a new extended client).
+ * `createSolanaClient()` composes `solanaRpc()`, which already installs
+ * `planTransaction(s)` and `sendTransaction(s)`, so rebuilding restores the
+ * whole capability set.
  *
  * The payer is required because Kit reads `client.payer` when it plans a
  * transaction, and the module can never carry one: Nuxt strips `payer` and
@@ -36,7 +37,7 @@ function withPayer(payer: TransactionSigner) {
  */
 export default defineNuxtPlugin({
   name: "docs-solana-client-capabilities",
-  async setup(nuxtApp) {
+  setup(nuxtApp) {
     const vueApp = nuxtApp.vueApp;
     // `app._context.provides` is a plain (null-prototype) object keyed by the
     // injection symbol, not a Map.
@@ -53,15 +54,18 @@ export default defineNuxtPlugin({
       return;
     }
 
-    const { client } = moduleContext;
     // `'payer' in client` cannot narrow, so read it through a wider type. A
     // client built by a release that supports a payer already has one.
-    const configuredPayer = (client as { payer?: TransactionSigner }).payer;
-    const payer = configuredPayer ?? (await generateKeyPairSigner());
-    const extendedContext: VueSolanaContext = {
-      ...moduleContext,
-      client: client.use(withPayer(payer)),
-    };
+    // use moduleContext below
+    const payerSecretKey =
+      "/9PWQs2/nKlZttrp3CuU12Xr44cSqFZCiGRDCzU4huswhsUUXeWd0Z4cRibCe62Oh9KVthROHyG9ZnBSx8s+dw==";
+    const client = createSolanaClient({
+      cluster: moduleContext.cluster,
+      endpoint: moduleContext.endpoint,
+      wsEndpoint: moduleContext.wsEndpoint,
+      payerSecretKey,
+    });
+    const extendedContext: VueSolanaContext = { ...moduleContext, client };
 
     vueApp.provide(solanaInjectionKey, extendedContext);
   },

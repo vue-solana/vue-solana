@@ -2,6 +2,12 @@
 
 This file tracks the current repository state, major changes made, and follow-up work so future AI agents can continue quickly.
 
+## Agent Workflow Rules
+
+- **Never commit, amend, or push unless the user explicitly asks for it in the current request.** "Fix", "implement", or "proceed with the plan" does not imply a commit; leave the changes in the working tree and report what changed.
+- Do not invent commit messages ahead of time. When asked to commit, use a conventional-commit message that describes the actual diff.
+- Treat uncommitted changes you did not make as the user's work: investigate before editing or reverting them.
+
 ## Repository Goal
 
 Build a monorepo for Vue and Nuxt libraries that help developers use Solana from Vue applications, similar in spirit to Solana's React libraries but idiomatic for Vue/Nuxt.
@@ -91,11 +97,12 @@ Kit 8 reactive-store note: the stores from `@solana/subscribable` call Node's `s
 
 Implemented files:
 
-- `src/module.ts`: Nuxt module with `solana` config key. It deliberately omits `wallet`, `payer`, and `payerSecretKey` from `ModuleOptions` and strips them from public runtime config. `solana.clientPlugin: false` skips the module's runtime plugin so the app can install `createSolanaPlugin` itself (for example to attach a client-only `payer`); installing both would create two contexts and two wallet subscriptions.
+- `src/module.ts`: Nuxt module with `solana` config key. It deliberately omits `wallet`, `payer`, and `payerSecretKey` from `ModuleOptions` and strips them from public runtime config. `runtimeConfig.public.solana` is merged per key with precedence explicit module option > `runtimeConfig.public.solana` > module default, so a default never clobbers an explicit public value. `solana.clientPlugin: false` skips the module's runtime plugin so the app can install `createSolanaPlugin` itself (for example to attach a client-only `payer`); installing both would create two contexts and two wallet subscriptions.
 - `src/imports.ts`: maps every composable to its `useSolana*` auto-import alias.
 - `src/runtime/plugin.ts`: installs the Vue Solana plugin using public runtime config.
 - `src/runtime/kit.ts`: re-export of the core Kit helpers (full `@solana/kit` mirror via core).
-- `src/runtime/types.ts`: augments Nuxt public runtime config.
+- `src/module.integration.test.ts` + `test/fixture/`: loads the real module through `@nuxt/kit`'s `loadNuxt` (no build, no dev server) to cover defaults, public-config merge/strip, non-object `public.solana`, and the `clientPlugin: false` branch. The fast `src/module.test.ts` mocks `defineNuxtModule` as identity — keep both; the integration file is the only one that would catch a real-wrapper regression.
+- `nuxt/schema` augmentation: lives in `src/module.ts` (shipped with the module entry), not a separate runtime file.
 
 Auto-imported Nuxt composables (source of truth: `packages/nuxt/src/imports.ts`):
 
@@ -103,7 +110,8 @@ Auto-imported Nuxt composables (source of truth: `packages/nuxt/src/imports.ts`)
 - `useSolanaBalance()`, `useSolanaAccountInfo()`, `useSolanaProgramAccounts()`
 - `useSolanaTokenAccounts()`, `useSolanaTokenBalance()`, `useSolanaSignatureStatus()`, `useSolanaTransactionConfirmation()`
 - `useSolanaWallet()`, `useSolanaWallets()`, `useSolanaSignMessage()`, `useSolanaSignIn()`
-- `useSolanaAirdrop()`, `useSolanaAction()`, `useSolanaRequest()`, `useSolanaSubscription()`, `useSolanaTrackedData()`
+- `useSolanaAirdrop()`, `useSolanaAction()`, `useSolanaClientCapability()`, `useSolanaRequest()`, `useSolanaSubscription()`, `useSolanaTrackedData()`
+- `tryUseSolana()`, `clearSwrCache()`
 - `useSolanaTransaction()`, `useSolanaRequestSwr()`, `useSolanaSubscriptionSwr()`, `useSolanaTrackedDataSwr()`
 - `useSolanaSelectedWalletAccount()`
 - `useSolanaSignTransactions()`, `useSolanaSignAndSendTransaction()`, `useSolanaSignAndSendTransactions()`
@@ -121,11 +129,11 @@ The code switched from `@solana/web3.js` to `@solana/web3-compat` in v1, then to
 
 Current package dependency:
 
-- `@solana/kit@^8.4.0` (with `@solana/kit-plugin-rpc` in `packages/core`). The `pnpm-workspace.yaml` `overrides` entry must always equal this range; two Kit copies mean two `SolanaError` classes, so `isSolanaError()` from one rejects errors thrown by the other.
+- `@solana/kit@^8.5.0` (with `@solana/kit-plugin-rpc` in `packages/core`). The `pnpm-workspace.yaml` `overrides` entry must always equal this range; two Kit copies mean two `SolanaError` classes, so `isSolanaError()` from one rejects errors thrown by the other.
 
 Kit surface rule: the `kit` subpaths of all three packages are a full `export * from "@solana/kit"` mirror, not a curated list. Consumers must never have to add `@solana/kit` to their own `package.json` (pnpm's strict `node_modules` does not even resolve it from `packages/vue`). The only names resolved by hand are the four listed above, and they are resolved in the root barrels only — never inside the `kit` subpaths, which must stay a faithful mirror.
 
-v3 module format: the packages publish ESM only (`emitCJS` and every `require` export condition are gone, and there is no top-level `main`). A CommonJS `require()` of the package or any subpath fails. This is documented as a breaking change in `.changeset/release-v-3.md` and as a troubleshooting entry in `apps/docs/content/troubleshooting.md`; keep those in sync if the format ever changes again. The `SMOKE_TEST` matrix in `scripts/smoke-standalone-installs.mjs` is the gate that catches a broken `exports` map.
+v3 module format: the packages publish ESM only (`emitCJS` and every `require` export condition are gone, and there is no top-level `main`). A CommonJS `require()` of the package or any subpath fails. This is documented as a troubleshooting entry in `apps/docs/content/troubleshooting.md` (changesets are consumed and deleted at release time, so cite that file rather than a `.changeset/*.md` name); keep them in sync if the format ever changes again. The `SMOKE_TEST` matrix in `scripts/smoke-standalone-installs.mjs` is the gate that catches a broken `exports` map.
 
 Client transaction stack:
 
@@ -137,6 +145,8 @@ Signer configuration and security:
 
 - `payer` (a Kit `TransactionSigner`) and `payerSecretKey` (base64-encoded 64-byte Ed25519 keypair, secret key first) stay available on direct core/Vue `createSolanaClient()` calls. `resolvePayerFromSecretKey()` validates the length, derives the public half, and throws when the pair is inconsistent.
 - Nuxt never accepts or forwards `payer` or `payerSecretKey`: they are omitted from `ModuleOptions` and stripped from public runtime config. Never put a raw secret or a funded key in browser-visible Nuxt config; use a trusted server/relayer boundary, or a client-only ephemeral signer for demos (`examples/nuxt/app/plugins/demo-payer.client.ts`).
+- The Wallet Standard adapter verifies `signMessage` / `signIn` results against the account's **public key bytes** with Kit's `verifySignature()` (`packages/core/src/wallet-standard/verify-wallet-signature.ts`) before resolving, throwing `INVALID_SIGNATURE` on mismatch. `signIn` additionally binds the result to the account the caller expected (explicit `input.address`, else the active account) and rejects any account absent from `wallet.accounts`, so a wallet cannot substitute an account it controls. It is best-effort: when Ed25519/WebCrypto is unavailable the key import fails and a well-formed signature resolves unverified, but the signature-length check runs first and still rejects malformed signatures. Transaction signatures are not verified. Server-side verification stays mandatory — the client check is defense-in-depth only.
+- Only one wallet stays authorized for the app. Every adapter built by `createSolanaWalletRegistry()` has its `connect` replaced in place (`makeConnectExclusive`, `packages/vue/src/plugin/wallet-registry.ts`) so a successful connect then disconnects **every other discovered wallet**. The sweep runs over discovery, not over the adapter cache: a wallet authorized in an earlier page session has no adapter and would otherwise keep answering signing requests (the reported symptom was a Phantom connection whose `signMessage` opened Backpack). Uncached wallets are disconnected through `disconnectSolanaStandardWallet()` (`packages/core/src/wallet-standard/adapter.ts`), which reads `standard:disconnect` straight off the wallet, and cached ones through their adapter (both the object and primitive caches) so the cached account clears too. A discovered entry counts as "the wallet being connected" when the wallet object matches **or** when `name` + `source` match, because an extension that unregisters and re-registers arrives as a new wallet object and must not be deauthorized by its own connect. Each disconnect is bounded by a 2 s timeout and `connect()` awaits the sweep, so the guarantee holds once the promise resolves. Per-wallet failures are swallowed so they never fail the connect that succeeded. `connect` is replaced in place, not wrapped in a `Proxy`, to keep adapter identity (the registry caches it) and the `publicKey`/`connected` getters interception-free.
 
 Development-time type shim:
 
@@ -150,6 +160,18 @@ Published package workaround:
 - `packages/core/scripts/prepare-declarations.mjs`
 
 The core build runs `prepare-declarations.mjs` after `unbuild` to add triple-slash references from generated declarations that mention `buffer/`, so fresh consumers do not need a local `buffer/` shim for `@vue-solana/core/buffer-polyfill`.
+
+## Bundle and Tarball Size Invariants
+
+These rules exist because they were measured regressions that were silently reintroduced once. Re-check them after touching any barrel, `exports` map, or `package.json` `files`.
+
+**1. The `@vue-solana/core` root barrel must NOT re-export `./buffer-polyfill`.** It was removed on 2026-10-05. `buffer-polyfill.ts` does `export { Buffer } from "buffer/"`, and `buffer/index.js` has module-level side effects, so a root-barrel re-export pinned the Node Buffer polyfill into the initial chunk of every consumer — 27 KB of the 145 KB a bare `import { createSolanaClient } from "@vue-solana/core"` cost. `@vue-solana/core/kit` was already 117.5 KB, which is exactly what the root barrel now costs. Only apps that serialize transactions in a browser need it, and they reach it through the `@vue-solana/core/buffer-polyfill` subpath (mirrored by `@vue-solana/vue/buffer-polyfill` and `@vue-solana/nuxt/buffer-polyfill`). Never add that `export *` back. `@vue-solana/vue/src/index.ts` never re-exported it, so vue was never affected.
+
+**2. The `@vue-solana/core` root barrel must NOT re-export `./ios-wallet` or `./mobile-wallet`.** Same class as rule 1: `ios-wallet/deep-links.ts` pulls `crypto.ts` (static `tweetnacl`, ~32 KB) and `mobile-wallet.ts` statically imports `@solana-mobile/wallet-standard-mobile` (~98 KB with its protocol graph). Only apps that use those wallets pay for them, through `@vue-solana/core/ios-wallet` and `@vue-solana/core/mobile-wallet`; the dependency-free `isSolanaMobileWalletSupported()` gate stays available through `@vue-solana/core/mobile-wallet-support`. Never add those `export *` back.
+
+**3. All three packages exclude `.d.mts` from their tarballs** via `"files": ["dist", "!dist/**/*.d.mts", ...]`. unbuild with `declaration: true` writes a byte-identical `.d.mts` next to every `.d.ts` (in `dist/shared/unbuild.*.mjs`, `.d.mts` is unconditional and `.d.ts` is the extra). That was 97 KB of dead weight across core and vue, plus 4 files in nuxt. `@vue-solana/nuxt` **used to** be exempt: its `exports` pointed `"types"` at `./dist/module.d.mts`. It was not — the byte-identical `module.d.ts` sits right next to it and resolves identically (the package is `"type": "module"`, so a `.d.ts` is already ESM). Both `types` fields now point at `.d.ts` and nuxt excludes them like the others. Before adding or removing an `exports` subpath, re-verify which `.d.mts` are actually referenced rather than assuming; a `files` negation is only safe because of that check.
+
+Known remaining weight, deliberately not fixed: the iOS wallet path is ~38.9 KB of the 67.4 KB eager chunk for `import { createSolanaPlugin } from "@vue-solana/vue"` (`tweetnacl/nacl-fast.js` 32.9 KB + `ios-wallet/*` glue 12.2 KB, measured 2026-10-21 with esbuild against the built `exports` map, excluding `vue` and the 117 KB Kit mirror). `getNacl()` does **not** defer it, because `ios-wallet/crypto.ts` holds a static `import * as naclModule from "tweetnacl"` and `dist/ios-wallet.mjs` is one flat file, so importing any symbol from that entry — even just `getSolanaIosWallets` — drags nacl in. The original "four synchronous blockers" note was wrong: `getSolanaIosWallets` and `createPendingRequest` only need `createRequestId`'s `nacl.randomBytes(16)` (replaceable with `crypto.getRandomValues`) and `launchConnect` is internal with a single caller inside `async connect()`. The only real constraint is the public synchronous `handleSolanaIosWalletCallback`. The non-breaking fix (WebCrypto request ids, `await import()` inside the adapter's async methods, a crypto-free `ios-wallet-discovery` entry, gated deep-link intake) is recorded in `plans/bundle-performance-followups.md`; the `ponytail:` comment at the top of `crypto.ts` records the constraint. mobile-wallet + qrcode (~98 KB) is correctly lazy behind `import("@vue-solana/core/mobile-wallet")` in `packages/vue/src/plugin.ts`, and `pnpm size:packages` now walks every `packages/vue/dist/*.mjs` static import graph so a new static heavy edge fails CI.
 
 ## Documentation
 
@@ -216,10 +238,11 @@ When you add, remove, or restructure sections in an English doc, translate the s
 - `examples/vue-vite` and `examples/nuxt` are the local development example apps. They should use workspace packages so they exercise unreleased package changes during development.
 - Do not treat `apps/docs/package.json` using pinned published `@vue-solana/*` versions as a bug unless the release/demo policy changes.
 - When testing unreleased package changes, use the example apps and package tests, not `apps/docs`.
+- `@nuxt/ui` must stay on `^4.11.0` or newer while the app runs `nuxt@4.6.x`. `@nuxt/ui@4.9.0` (and `4.10.x`) resolves `@unhead/vue@^2`, but Nuxt 4.6 ships unhead 3, and that combination throws `injectHead(...).hooks.hookOnce is not a function` from `@nuxt/ui`'s colors plugin. The branch only runs when `nuxtApp.isHydrating && !nuxtApp.payload.serverRendered`, i.e. on the `ssr: false` `/demo` route — so the symptom looked route-specific. The throw aborts Nuxt's plugin queue, `app/plugins/solana-client-capabilities.client.ts` never installs the demo payer, and `/demo` then dies with `useSendTransaction requires the 'payer' capability…` on a hard reload (client-side navigation from a prerendered page worked, which is the tell). `@nuxt/ui@4.11.0+` uses `head.hooks?.hook(...)` and is compatible; the bump also collapsed the duplicate `vue@3.5.35` copy that 4.9.0's peer graph carried.
 
 ### Post-Publish Release Checklist
 
-Run this after every npm publish of `@vue-solana/*`, once the version is confirmed live on npm. The 2.6.0 pass is the worked example: the pin moved, the lockfile moved, the type-only surface was checked, and the build proved the first `sideEffects: false` build.
+Run this after every npm publish of `@vue-solana/*`, once the version is confirmed live on npm. The 3.0.0 pass is the worked example: the pin moved, the lockfile moved, the type-only surface was checked, and the build proved the first `sideEffects: false` build.
 
 1. Bump the exact pin in `apps/docs/package.json` to the new version. Never a range, never `workspace:*`; `apps/docs/docs-package-policy.test.ts` fails both.
 2. Run `pnpm install` at the repo root and commit `pnpm-lock.yaml`. CI installs with `--frozen-lockfile`, so a missing lockfile change fails the build rather than the docs app.
@@ -227,6 +250,8 @@ Run this after every npm publish of `@vue-solana/*`, once the version is confirm
 4. Run `pnpm --filter docs build` and `pnpm smoke:standalone-installs`, then load `/demo` and confirm there is no `Buffer is not defined`.
 
 Repeat per release rather than filing a one-time task. Two things to check by reading the diff, not by assuming they carry over:
+
+- **A single Vue copy.** `apps/docs` typecheck fails with ~106 `TS2339` `$t` errors when the lock carries two Vue versions (for example `vue@3.5.35` for the app while `nuxt` peers resolve `vue@3.5.44`): `vue-i18n`'s `ComponentCustomProperties` augmentation then lands on a copy the SFC templates do not use. Any package.json edit that forces a re-resolution can create it, so run `pnpm dedupe` and re-run step 3 when the graph gains a second Vue; the deduped lock must be committed with the pin bump.
 
 - **`sideEffects` changes** deserve the step-4 browser load. Both Buffer injection points in `apps/docs` (`nuxt.config.ts` virtual entry and `app/plugins/buffer-polyfill.client.ts`) bind a named import and call it, so they survive tree-shaking — but a bare side-effect import would not, and only a real page load catches that. Confirm `globalThis.Buffer` is defined in the browser rather than just grepping the bundle for a `Buffer??=` assignment.
 - **New or removed `exports` subpaths** need a `vitest.config.ts` alias in the root config if `apps/docs` imports them. Vite alias keys are prefix matches, so a subpath alias must be declared _before_ its bare parent. If app code starts needing a type from `@vue-solana/core`, that is a release-policy problem, not an alias problem — see `docs-import-policy.test.ts`.
@@ -287,7 +312,8 @@ Plans live in the top-level `plans/` directory, separate from the knowledge bund
 
 ## Suggested Next Tasks
 
-- `apps/docs` is pinned to 2.6.0, which does **not** contain the `payerSecretKey` signing fix from `1456821`. The next publish (2.6.1) will. Per the Post-Publish Release Checklist, bump the docs pin again once 2.6.1 is live; no other `apps/docs` change is needed.
+- `apps/docs` is pinned to `3.0.0` and `3.0.1` is already live, so the pin is one release behind (read the real value from `apps/docs/package.json`, not from here). Per the Post-Publish Release Checklist the catch-up is steps 1-2 only: bump the exact pin and commit `pnpm-lock.yaml`. The old "`payerSecretKey` fix missing from the pin" item is closed — commit `1456821` is an ancestor of `@vue-solana/core@3.0.0`, so the current pin already has it.
+- A `major` changeset (`.changeset/bundle-size-trim.md`) is pending and will publish 4.0.0: the core root barrel dropped `Buffer`/`installSolanaBufferPolyfill` (breaking; use the `@vue-solana/core/buffer-polyfill` subpath) and core, vue, and nuxt tarballs exclude `.d.mts`. `@vue-solana/nuxt` takes the major only through dependency propagation.
 - Follow `apps/docs/content/roadmap.md` for upcoming features (core composables, wallet features, Ecosystem integrations, etc.).
 - `plans/native-wallet-plan.md` is complete except for one open item, "Future iOS Wallet Support" (line 19). Mobile native wallets, Android MWA, iOS browser wallets, and desktop native wallets all shipped through the unified `useWallets()` flow.
 - Re-check the `@solana/kit` and `@solana/kit-plugin-rpc` peer versions on every new release.
@@ -299,6 +325,11 @@ pnpm install
 pnpm typecheck
 pnpm build
 pnpm clean
+pnpm check:entries
+pnpm check:esm-map
+pnpm check:externals
+pnpm check:buffer-polyfill-declarations
+pnpm pack:size
 ```
 
 ## Commit Message Used/Suggested

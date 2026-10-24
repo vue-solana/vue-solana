@@ -75,7 +75,7 @@ createApp(App).use(
 
 `payer`와 `payerSecretKey`는 direct Vue/core client에서 지원됩니다. client-sent transaction에는 `payer`가 필요합니다. `payerSecretKey`는 client 생성 시 검증되지 않은 public half에서 address를 파생하므로 첫 서명이 성공할 때까지 `payer.address`를 미확정으로 취급하세요. 또한 맞지 않는 keypair는 client 생성이 아니라 첫 서명 시점에 거부됩니다. 서명은 WebCrypto로 key를 import하며, 브라우저는 secure context(`https`, 또는 `localhost`의 `http`)에서만 WebCrypto를 노출합니다. Nuxt public runtime config에 raw secret이나 `payerSecretKey`를 넣지 말고, funded signing key를 end-user browser에 보내지 마세요.
 
-`createSolanaPlugin()`의 default client는 official `solanaRpc()`와 `rpcAirdrop()` 구성을 사용하고, `solanaRpc()`가 transaction planner와 plan-signing/plan-sending executor를 직접 설치합니다. 기존 custom fallback sender는 사용하지 않습니다. official executor는 `execute()`가 resolve되고 `status`가 `sent`가 되기 전에 `confirmed` commitment을 기다립니다.
+`createSolanaPlugin()`의 default client는 `commitment`가 설정되지 않았을 때 official `solanaRpc()`와 `rpcAirdrop()` 구성을 사용하고(`commitment`가 설정되면 RPC 레이어에 전달되도록 같은 스택을 명시적으로 빌드합니다), `solanaRpc()`가 transaction planner와 plan-signing/plan-sending executor를 직접 설치합니다. 기존 custom fallback sender는 사용하지 않습니다. official executor는 `execute()`가 resolve되고 `status`가 `sent`가 되기 전에 `confirmed` commitment을 기다립니다.
 
 ### Client와 Plugin 수명 주기
 
@@ -96,6 +96,18 @@ import { computed, ref } from "vue";
 const cluster = ref<SolanaCluster>("devnet");
 const plugin = computed(() => createSolanaPlugin({ cluster: cluster.value }));
 ```
+
+App을 teardown할 때 plugin을 정리하세요. `createSolanaPlugin()`은 Wallet Standard discovery 구독과 지연된 bootstrap을 시작하며, `dispose()`가 둘 다 중단해 app이 사라진 뒤에도 남지 않게 합니다:
+
+```ts
+export const solana = createSolanaPlugin({ cluster: "devnet" });
+const app = createApp(App).use(solana);
+
+app.unmount();
+solana.dispose();
+```
+
+여러 번 호출해도 되고 `use()` 전에 호출해도 안전합니다. Nuxt app은 코드가 필요 없습니다. 모듈의 runtime plugin이 `vueApp.onUnmount()`에 연결해 줍니다.
 
 Kit client는 생성 중에 `createClient().use(...)` plugin을 실행합니다. 그중 하나가 async이면 client — 그리고 그로부터 만들어진 context — 는 그 promise가 resolve된 뒤에야 활성화됩니다. 실제 RPC와 wallet 작업은 setup이나 SSR 중에 실행하지 말고 hydration 이후 client lifecycle hook이나 사용자 동작으로 미루세요.
 
@@ -392,6 +404,8 @@ watchEffect(() => {
 });
 ```
 
+`useSolana()`와 `useRpc()` 뒤의 주입된 context `error` ref는 wallet 부팅 작업과 공유됩니다. mobile wallet 등록, 저장된 wallet auto-connect, iOS callback 처리는 `WALLET_FAILURE`(wallet이 거절을 보고하면 `USER_REJECTED`)를 기록합니다. 다음 `checkConnection()`이나 성공한 `connect()`가 이를 지웁니다. 이 wallet 경로는 development에서만 `[Vue Solana]` prefix와 함께 `console.error`로 기록합니다.
+
 ## Account Info 읽기
 
 ```vue
@@ -506,7 +520,7 @@ const { publicKey, connected, connecting, connect, disconnect } = useWallet();
 </template>
 ```
 
-Browser extension wallet은 Solana Wallet Standard를 통해 발견됩니다. Android Mobile Wallet Adapter wallet은 `@solana-mobile/wallet-standard-mobile`을 통해 등록되며 지원되는 Android Chrome 클라이언트에서 같은 `useWallets()` 목록에 노출됩니다. iOS Phantom, Solflare, Backpack entry는 iOS 브라우저에서 wallet-specific universal link로 노출됩니다. `refreshWallets()`는 발견된 wallet list만 업데이트하고, `selectWallet()`은 active wallet만 설정합니다. Page refresh 후 extension이 이전에 승인된 account를 노출하더라도 `connect()`가 성공하기 전까지 `connected`는 false입니다.
+Browser extension wallet은 Solana Wallet Standard를 통해 발견됩니다. Android Mobile Wallet Adapter wallet은 `@solana-mobile/wallet-standard-mobile`을 통해 등록되며 지원되는 Android Chrome 클라이언트에서 같은 `useWallets()` 목록에 노출됩니다. iOS Phantom, Solflare, Backpack entry는 iOS 브라우저에서 wallet-specific universal link로 노출됩니다. `refreshWallets()`는 발견된 wallet list만 업데이트하고, `selectWallet()`은 active wallet만 설정합니다. Page refresh 후 extension이 이전에 승인된 account를 노출하더라도 `connect()`가 성공하기 전까지 `connected`는 false입니다. `connect()`가 성공하면 나머지 모든 발견된 wallet도 자체 `standard:disconnect` feature로 연결 해제되어, app에 대해 하나의 wallet만 authorized 상태로 유지됩니다.
 
 Desktop native app wallet adapter는 아직 구현되지 않았습니다. Desktop native support에는 wallet-specific protocol link 또는 향후 native Wallet Standard registration이 필요합니다.
 
@@ -558,6 +572,8 @@ async function handleSignIn() {
 3. **세션 바인딩**: 메시지 검사와 서명 검증이 모두 통과된 후에만 세션을 생성하세요. `account.address`를 키로 사용합니다.
 
 서버는 발급한 nonce로부터 기대하는 메시지를 다시 도출하거나 수신된 메시지의 모든 필드를 검증하여, 만료되었거나 재사용된 nonce를 거부해야 합니다.
+
+`signMessage()` 또는 `signIn()`이 완료되기 전에 어댑터는 Ed25519(WebCrypto)를 사용할 수 있는 경우 반환된 서명을 계정의 `publicKey`로도 검증하며, 일치하지 않으면 `INVALID_SIGNATURE`로 거부합니다. 이는 잘못 동작하는 지갑에 대비한 최선의 클라이언트 측 방어이며 Ed25519를 사용할 수 없는 곳에서는 건너뛰므로, 실제로 사용자를 인증하는 것은 위의 서버 측 검증입니다.
 
 ## 데이터 페칭 컴포저블
 
@@ -804,25 +820,25 @@ const { signature, confirmation, status, loading, error, confirm, reset } =
 await confirm("PASTE_SUBMITTED_SIGNATURE", { commitment: "finalized" });
 ```
 
-이 composable은 confirmation timeout 또는 RPC failure가 발생해도 제출된 `signature`를 유지하므로, 앱은 사용자에게 `error`를 표시하면서도 explorer 링크를 계속 보여줄 수 있습니다.
+이 composable은 confirmation timeout 또는 RPC failure가 발생해도 제출된 `signature`를 유지하므로, 앱은 사용자에게 `error`를 표시하면서도 explorer 링크를 계속 보여줄 수 있습니다. 옵션은 `confirmTransactionSignature()`로 그대로 전달됩니다: `commitment`, `timeoutMs`, `pollIntervalMs`, `abortSignal`, `searchTransactionHistory`. 실패한 트랜잭션은 `TRANSACTION_FAILED`, 나타나지 않은 서명은 `TRANSACTION_NOT_FOUND`, 소진된 대기는 `TRANSACTION_TIMEOUT`으로 표시됩니다. 이 composable의 `error` ref는 항상 `SolanaError`이므로 confirmation을 abort하면 abort reason이 `RPC_FAILURE`로 normalize되고 원래 reason은 `error.cause`에 남습니다. raw abort reason이 필요하면 `confirmTransactionSignature()`를 직접 호출하세요.
 
 ## Signature Status 추적
 
 ```ts
 import { useSignatureStatus } from "@vue-solana/vue/useSignatureStatus";
 
-const { status, loading, error, refresh, stopPolling, stopSubscription } = useSignatureStatus(
+const { status, loading, error, refresh, stopPolling } = useSignatureStatus(
   "PASTE_SUBMITTED_SIGNATURE",
   {
     pollIntervalMs: 5_000,
     searchTransactionHistory: true,
-    subscribe: true,
-    commitment: "confirmed",
   },
 );
 ```
 
-Polling은 interval마다 `getSignatureStatuses()`를 사용하므로 UI에 update가 더 이상 필요하지 않으면 polling을 중지하세요. `stopPolling()`은 현재 interval을 clear하고 해당 composable instance에서 automatic polling restart를 방지합니다. 잘못된 signature는 stale `status`를 clear하고 `error`를 설정하며 RPC를 호출하거나 polling을 시작하지 않습니다. `0` 이하의 잘못된 `pollIntervalMs` 값은 `RangeError`를 설정하고 polling을 시작하지 않습니다. `subscribe: true`는 `onSignature()`를 사용하고 component unmount 시 listener를 제거합니다. `stopSubscription()`은 현재 signature listener를 제거하고 해당 composable instance에서 automatic restart를 방지합니다.
+호출당 `commitment` 옵션은 없습니다. `getSignatureStatuses()`가 이를 받지 않으므로 읽기는 endpoint에 설정된 commitment를 사용합니다. endpoint 또는 `createSolanaPlugin()`에서 설정하세요. 호출당 commitment가 필요하면 `useTransactionConfirmation()`을 사용하세요.
+
+Polling은 체인된 `setTimeout`으로 `getSignatureStatuses()`를 사용하므로, 느린 RPC는 다음 tick을 지연시킬 뿐 절대 겹치지 않습니다. `stopPolling()`은 현재 타이머를 clear하고 이후 자동 tick을 막습니다 — 단 감시 중인 signature가 바뀌면 새 signature에 대한 polling이 다시 시작됩니다. 잘못된 signature는 stale `status`를 clear하고 `error`를 설정하며 RPC를 호출하거나 polling을 시작하지 않습니다. `0` 이하의 잘못된 `pollIntervalMs` 값은 코드가 `RPC_FAILURE`인 `SolanaError`를 설정하고 polling을 시작하지 않습니다.
 
 ## 예제 앱
 

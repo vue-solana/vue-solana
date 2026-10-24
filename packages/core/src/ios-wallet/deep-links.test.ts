@@ -1,4 +1,4 @@
-import bs58 from "bs58";
+import { getBase58Decoder, getBase58Encoder } from "@solana/kit";
 import * as tweetnacl from "tweetnacl";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { decryptPayload } from "./crypto";
@@ -43,7 +43,7 @@ describe("iOS wallet deep links", () => {
     expect(url.searchParams.get("nonce")).toBeTruthy();
     expect(url.searchParams.get("payload")).toBeTruthy();
     expect(payload).toEqual({
-      transaction: bs58.encode(transaction),
+      transaction: getBase58Decoder().decode(transaction),
       session: "session-token",
     });
     expect(pending).toMatchObject({
@@ -69,7 +69,7 @@ describe("iOS wallet deep links", () => {
 
     expect(url.pathname).toBe("/ul/v1/signAllTransactions");
     expect(payload).toEqual({
-      transactions: transactions.map((transaction) => bs58.encode(transaction)),
+      transactions: transactions.map((transaction) => getBase58Decoder().decode(transaction)),
       session: "session-token",
     });
     expect(pending).toMatchObject({
@@ -96,10 +96,10 @@ function storeTestSession() {
     walletId: "phantom",
     publicKey: "11111111111111111111111111111111",
     session: "session-token",
-    dappEncryptionPublicKey: bs58.encode(dappKeyPair.publicKey),
-    dappEncryptionSecretKey: bs58.encode(dappKeyPair.secretKey),
-    walletEncryptionPublicKey: bs58.encode(walletKeyPair.publicKey),
-    sharedSecret: bs58.encode(sharedSecret),
+    dappEncryptionPublicKey: getBase58Decoder().decode(dappKeyPair.publicKey),
+    dappEncryptionSecretKey: getBase58Decoder().decode(dappKeyPair.secretKey),
+    walletEncryptionPublicKey: getBase58Decoder().decode(walletKeyPair.publicKey),
+    sharedSecret: getBase58Decoder().decode(sharedSecret),
   };
 
   storeSession(session);
@@ -111,6 +111,6 @@ function decryptLaunchedPayload(url: URL, sharedSecret: string) {
   return decryptPayload(
     url.searchParams.get("payload")!,
     url.searchParams.get("nonce")!,
-    bs58.decode(sharedSecret),
+    Uint8Array.from(getBase58Encoder().encode(sharedSecret)),
   );
 }

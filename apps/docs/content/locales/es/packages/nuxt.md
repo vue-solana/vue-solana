@@ -121,7 +121,7 @@ Consulta [Data Fetching Composables](/packages/vue#data-fetching-composables) pa
 
 Estos son aliases Nuxt para los composables de Vue.
 
-El cliente por defecto creado por el módulo compone los plugins oficiales `solanaRpc()` y `rpcAirdrop()`; `solanaRpc()` instala por si mismo el planner de transacciones y los ejecutores de firma y envio de planes. El fallback custom anterior no se usa. `useSolanaSendTransaction()` y `useSolanaSendTransactions()` exponen la capacidad de envio oficial, pero el módulo no configura un payer porque `payer` y `payerSecretKey` se omiten de `ModuleOptions`. Su estado `sent` se alcanza cuando el executor oficial completa la operación de envio y confirmación en `confirmed`.
+El cliente por defecto creado por el módulo compone los plugins oficiales `solanaRpc()` y `rpcAirdrop()` cuando no hay `commitment` configurado (un `commitment` configurado construye el mismo stack explícitamente para que llegue a la capa RPC); `solanaRpc()` instala por si mismo el planner de transacciones y los ejecutores de firma y envio de planes. El fallback custom anterior no se usa. `useSolanaSendTransaction()` y `useSolanaSendTransactions()` exponen la capacidad de envio oficial, pero el módulo no configura un payer porque `payer` y `payerSecretKey` se omiten de `ModuleOptions`. Su estado `sent` se alcanza cuando el executor oficial completa la operación de envio y confirmación en `confirmed`.
 
 El paquete Vue usa nombres cortos como `useRpc()` porque los llamadores los importan explícitamente desde `@vue-solana/vue/useRpc`.
 
@@ -470,16 +470,12 @@ Usa `useSolanaSignatureStatus()` cuando necesitas comprobaciones continuas de es
 ```vue
 <script setup lang="ts">
 const signature = ref("PASTE_TRANSACTION_SIGNATURE");
-const { status, loading, error, refresh, stopPolling, stopSubscription } = useSolanaSignatureStatus(
-  signature,
-  {
-    pollIntervalMs: 2_000,
-  },
-);
+const { status, loading, error, refresh, stopPolling } = useSolanaSignatureStatus(signature, {
+  pollIntervalMs: 2_000,
+});
 
 onBeforeUnmount(() => {
   stopPolling();
-  void stopSubscription();
 });
 </script>
 ```

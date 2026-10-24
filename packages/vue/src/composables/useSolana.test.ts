@@ -55,6 +55,33 @@ describe("useSolana", () => {
     expect(result).toBe(context);
   });
 
+  it("returns a fresh SSR-safe context per call, never shared across requests", () => {
+    const Component = defineComponent({
+      setup() {
+        first = useSolana();
+        second = useSolana();
+
+        return () => h("div");
+      },
+    });
+    let first: ReturnType<typeof useSolana> | undefined;
+    let second: ReturnType<typeof useSolana> | undefined;
+
+    mount(Component);
+
+    // A module-scope singleton would share `wallet` / `status` / `wallets`
+    // refs across concurrent SSR requests, leaking one user's wallet state
+    // into another's render.
+    expect(first).toBeDefined();
+    expect(second).toBeDefined();
+    expect(first).not.toBe(second);
+    expect(first?.wallet).not.toBe(second?.wallet);
+    expect(first?.status).not.toBe(second?.status);
+    expect(first?.wallets).not.toBe(second?.wallets);
+    expect(first?.wallet.value).toBeNull();
+    expect(first?.status.value).toBe("idle");
+  });
+
   it("returns SSR-safe state when the plugin has not provided context", () => {
     const Component = defineComponent({
       setup() {

@@ -2,7 +2,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { effectScope, nextTick, ref } from "vue";
 import type { ReactiveState, ReactiveStreamStore } from "@vue-solana/core/kit";
-import { clearSwrCache, useRequestSwr, useSubscriptionSwr } from "./swr";
+import { clearSwrCache, deleteSwrKey, useRequestSwr, useSubscriptionSwr } from "./swr";
 
 function runInScope<T>(setupFn: () => T): { result: T; scope: ReturnType<typeof effectScope> } {
   let result: T | undefined;
@@ -244,6 +244,24 @@ describe("useSubscriptionSwr", () => {
     const second = runInScope(() => useSubscriptionSwr<string>("toggleable", source));
 
     expect(second.result.status.value).toBe("disabled");
+    expect(second.result.data.value).toBeUndefined();
+    second.scope.stop();
+  });
+});
+
+describe("deleteSwrKey", () => {
+  it("removes a single cached SWR entry", async () => {
+    clearSwrCache();
+    const first = runInScope(() => useRequestSwr<string>("drop-me", async () => "value"));
+
+    await vi.waitFor(() => {
+      expect(first.result.data.value).toBe("value");
+    });
+    first.scope.stop();
+
+    deleteSwrKey("request:drop-me");
+
+    const second = runInScope(() => useRequestSwr<string>("drop-me", async () => "fresh"));
     expect(second.result.data.value).toBeUndefined();
     second.scope.stop();
   });

@@ -54,6 +54,8 @@ Use `useWallets()` to list discovered wallets and select one. Use `useWallet()` 
 
 Discovery, selection, and connection are separate steps. `refreshWallets()` only updates the list of installed wallets, and `selectWallet()` only configures which wallet the app should use. `connected` stays `false` until `connect()` resolves successfully, even when a browser extension exposes previously authorized accounts after a page refresh.
 
+Connecting a wallet also disconnects every other discovered wallet through its `standard:disconnect` feature, so only one wallet stays authorized for the app at a time. A wallet the user authorized in an earlier page session has no adapter here yet, so the sweep runs over discovery rather than over this app's adapted wallets. Per-wallet failures are swallowed and bounded by a 2 second timeout; `connect()` resolves only after the sweep finishes.
+
 ```vue
 <script setup lang="ts">
 import { useWallet } from "@vue-solana/vue/useWallet";

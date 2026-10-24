@@ -103,7 +103,9 @@ Expires At: 2026-07-02T12:10:00Z
 
 ## Verification Boundary
 
-Vue Solana helps request the wallet signature. Your app is responsible for server-side verification, nonce storage, expiration checks, and session creation.
+Vue Solana verifies the returned signature against the account's public key before resolving `signMessage()` / `signIn()`, when the environment supports Ed25519 (WebCrypto). This is a best-effort guard against a wallet returning a signature over the wrong bytes or for a different account — it is not a substitute for server-side verification, and it is skipped where Ed25519 is unavailable. A signature that fails the check rejects with `INVALID_SIGNATURE`.
+
+Your app is still responsible for server-side verification, nonce storage, expiration checks, and session creation.
 
 Do not treat a signature over generic text as permission to transfer tokens or change on-chain state.
 
@@ -122,6 +124,8 @@ const message = computed(() => {
       return "This wallet does not support message signing.";
     case "USER_REJECTED":
       return "The message signature was rejected.";
+    case "INVALID_SIGNATURE":
+      return "The wallet returned an invalid signature.";
     default:
       return null;
   }
