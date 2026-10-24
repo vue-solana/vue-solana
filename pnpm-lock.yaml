@@ -96,8 +96,8 @@ importers:
         specifier: ^2.0.1
         version: 2.0.1(44caa86776c2401a00d903b0b4a150ae)
       '@vue-solana/nuxt':
-        specifier: 4.0.0-rc.0
-        version: 4.0.0-rc.0(buffer@6.0.3)(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(nuxt@4.6.2(@babel/plugin-proposal-decorators@7.29.7(@babel/core@7.29.7))(@babel/plugin-syntax-jsx@7.29.7(@babel/core@7.29.7))(@babel/plugin-syntax-typescript@7.29.7(@babel/core@7.29.7))(@oxc-project/types@0.155.0)(@parcel/watcher@2.5.6)(@types/node@24.12.4)(@vue/compiler-sfc@3.5.44)(acorn@8.16.0)(better-sqlite3@12.10.0)(bufferutil@4.1.0)(confbox@0.3.1)(db0@0.3.4(better-sqlite3@12.10.0))(dotenv@17.4.2)(esbuild@0.28.0)(eslint@10.4.1(jiti@2.7.0))(giget@3.2.0)(ioredis@5.11.0)(lightningcss@1.33.0)(mlly@1.8.2)(optionator@0.9.4)(oxc-parser@0.138.0)(rolldown@1.2.15)(rollup-plugin-visualizer@7.0.1(rolldown@1.2.15)(rollup@4.61.0))(rollup@4.61.0)(srvx@1.0.6)(terser@5.48.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(vite@8.3.5(@types/node@24.12.4)(esbuild@0.28.0)(jiti@2.7.0)(terser@5.48.0)(yaml@2.9.0))(vue-tsc@3.3.3(typescript@5.9.3))(yaml@2.9.0))(typescript@5.9.3)(utf-8-validate@6.0.6)(vue@3.5.44(typescript@5.9.3))
+        specifier: 4.0.0-rc.1
+        version: 4.0.0-rc.1(8dfcefab1c7f0f22fa84d155334ecd3c)
       minimark:
         specifier: ^0.2.0
         version: 0.2.0
@@ -1068,20 +1068,11 @@ packages:
   '@fingerprintjs/botd@2.0.0':
     resolution: {integrity: sha512-yhuz23NKEcBDTHmGz/ULrXlGnbHenO+xZmVwuBkuqHUkqvaZ5TAA0kAgcRy4Wyo5dIBdkIf57UXX8/c9UlMLJg==}
 
-  '@floating-ui/core@1.7.5':
-    resolution: {integrity: sha512-1Ih4WTWyw0+lKyFMcBHGbb5U5FtuHJuujoyyr5zTaWS5EYMeT6Jb2AuDeftsCsEuchO+mM2ij5+q9crhydzLhQ==}
-
   '@floating-ui/core@1.8.0':
     resolution: {integrity: sha512-0CIZ5itps/8x7BG8dEIhs53BvCUH2PCoogtakwRTut+Arm58sJooJ0AuZhLw2HJYIR5cMLNPBSS728sPho2khQ==}
 
-  '@floating-ui/dom@1.7.6':
-    resolution: {integrity: sha512-9gZSAI5XM36880PPMm//9dfiEngYoC6Am2izES1FF406YFsjvyBMmeJ2g4SAju3xWwtuynNRFL2s9hgxpLI5SQ==}
-
   '@floating-ui/dom@1.8.0':
     resolution: {integrity: sha512-yXSrzeHZBTZadLOlfyhCkJHNeLJnHRnRInwdZ40L7ZiaAtrBwoYlsDrX3v5zB1Utk7CLfzcOVnVVWoXEky7Ceg==}
-
-  '@floating-ui/utils@0.2.11':
-    resolution: {integrity: sha512-RiB/yIh78pcIxl6lLMG0CgBXAZ2Y0eVHqMPYugu+9U0AeT6YBeiJpf7lbdJNIugFP5SIjwNRgo4DhR1Qxi26Gg==}
 
   '@floating-ui/utils@0.2.12':
     resolution: {integrity: sha512-HpCo8tmWzLVad5s2d19EhAz5zqrrQ6s69qd6moPMQvkOuSwDT1YgRfWSVuc4ennqrgv3OHppiOGMQ7oC13yIww==}
@@ -3959,21 +3950,21 @@ packages:
       vue:
         optional: true
 
-  '@vue-solana/core@4.0.0-rc.0':
-    resolution: {integrity: sha512-yqqxxBU3lf3RnzJfXPB7Lo/Ibmxi/7WzmVTEucTsb+5QxIa3fifnWOhNIifOE2Jd6lhb/7GIpdqQ6rzOZBDbrA==}
+  '@vue-solana/core@4.0.0-rc.1':
+    resolution: {integrity: sha512-prJLRQiOAl2GpeWEaTwTa78JoM4f3SIFO9N0tD1B4cTRX8RbBI7MpTgZhItca6iEg3oE70EFDUVB/OeuItsRhA==}
     peerDependencies:
       buffer: ^6.0.3
     peerDependenciesMeta:
       buffer:
         optional: true
 
-  '@vue-solana/nuxt@4.0.0-rc.0':
-    resolution: {integrity: sha512-DaBGYONNjyzA6ld3gmoFDLnQGLP9QakefklIK4N8HvrVoTWej7b/RTS1dYBXNCPHc2cCpTg5CeU6v/MHfuzywQ==}
+  '@vue-solana/nuxt@4.0.0-rc.1':
+    resolution: {integrity: sha512-xmUhKyn2uSjjsvwwGN/eov3mr9W/rvcafhpKhVKxkfRXTl2pd6rOT/Y+uutr0dKhc71OIKj6LKFa+hIqLMEidg==}
     peerDependencies:
       nuxt: ^3.0.0 || ^4.0.0
 
-  '@vue-solana/vue@4.0.0-rc.0':
-    resolution: {integrity: sha512-DIbhhBVLiDYJgyIjMYqopkzwYnR8YBRc+wN7EuKPqyYbC0JuAWoxQN2GgNg8udWIN8tC1X8Via0USl/AI7uMBg==}
+  '@vue-solana/vue@4.0.0-rc.1':
+    resolution: {integrity: sha512-G78YjDOweAaMPNnAWoHVW7fdvgc+SlylZfKAr1TSTtdN6Qr8Ky6vJTdCG1v34PObGNI1qJI/Rn0CFfx7c/oZrw==}
     peerDependencies:
       vue: ^3.5.0
 
@@ -9836,25 +9827,14 @@ snapshots:
 
   '@fingerprintjs/botd@2.0.0': {}
 
-  '@floating-ui/core@1.7.5':
-    dependencies:
-      '@floating-ui/utils': 0.2.11
-
   '@floating-ui/core@1.8.0':
     dependencies:
       '@floating-ui/utils': 0.2.12
-
-  '@floating-ui/dom@1.7.6':
-    dependencies:
-      '@floating-ui/core': 1.7.5
-      '@floating-ui/utils': 0.2.11
 
   '@floating-ui/dom@1.8.0':
     dependencies:
       '@floating-ui/core': 1.8.0
       '@floating-ui/utils': 0.2.12
-
-  '@floating-ui/utils@0.2.11': {}
 
   '@floating-ui/utils@0.2.12': {}
 
@@ -11038,7 +11018,7 @@ snapshots:
       klona: 2.0.6
       mocked-exports: 0.1.1
       my-bad: 0.2.11(vite@8.3.5(@types/node@24.12.4)(esbuild@0.28.0)(jiti@2.7.0)(terser@5.48.0)(yaml@2.9.0))
-      nitropack: 2.13.4(better-sqlite3@12.10.0)(oxc-parser@0.138.0)(rolldown@1.2.15)(srvx@1.0.6)(vite@8.3.5(@types/node@24.12.4)(esbuild@0.28.0)(jiti@2.7.0)(terser@5.48.0)(yaml@2.9.0))
+      nitropack: 2.13.4(better-sqlite3@12.10.0)(rolldown@1.2.15)(srvx@1.0.6)(vite@8.3.5(@types/node@24.12.4)(esbuild@0.28.0)(jiti@2.7.0)(terser@5.48.0)(yaml@2.9.0))
       nostics: 1.3.0
       nuxt: 4.6.2(@babel/plugin-proposal-decorators@7.29.7(@babel/core@7.29.7))(@babel/plugin-syntax-jsx@7.29.7(@babel/core@7.29.7))(@babel/plugin-syntax-typescript@7.29.7(@babel/core@7.29.7))(@oxc-project/types@0.155.0)(@parcel/watcher@2.5.6)(@types/node@24.12.4)(@vue/compiler-sfc@3.5.44)(acorn@8.19.0)(better-sqlite3@12.10.0)(bufferutil@4.1.0)(confbox@0.3.1)(db0@0.3.4(better-sqlite3@12.10.0))(dotenv@17.4.2)(esbuild@0.28.0)(eslint@10.4.1(jiti@2.7.0))(giget@3.2.0)(ioredis@5.11.0)(lightningcss@1.33.0)(mlly@1.8.2)(optionator@0.9.4)(rolldown@1.2.15)(rollup-plugin-visualizer@7.0.1(rolldown@1.2.15)(rollup@4.61.0))(rollup@4.61.0)(srvx@1.0.6)(terser@5.48.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(vite@8.3.5(@types/node@24.12.4)(esbuild@0.28.0)(jiti@2.7.0)(terser@5.48.0)(yaml@2.9.0))(vue-tsc@3.3.3(typescript@5.9.3))(yaml@2.9.0)
       ohash: 2.0.12
@@ -13484,7 +13464,7 @@ snapshots:
 
   '@tiptap/extension-bubble-menu@3.25.0(@tiptap/core@3.25.0(@tiptap/pm@3.25.0))(@tiptap/pm@3.25.0)':
     dependencies:
-      '@floating-ui/dom': 1.7.6
+      '@floating-ui/dom': 1.8.0
       '@tiptap/core': 3.25.0(@tiptap/pm@3.25.0)
       '@tiptap/pm': 3.25.0
 
@@ -13521,7 +13501,7 @@ snapshots:
 
   '@tiptap/extension-drag-handle@3.25.0(@tiptap/core@3.25.0(@tiptap/pm@3.25.0))(@tiptap/extension-collaboration@3.25.0(@tiptap/core@3.25.0(@tiptap/pm@3.25.0))(@tiptap/pm@3.25.0)(@tiptap/y-tiptap@3.0.4(prosemirror-model@1.25.7)(prosemirror-state@1.4.4)(prosemirror-view@1.41.8)(y-protocols@1.0.7(yjs@13.6.31))(yjs@13.6.31))(yjs@13.6.31))(@tiptap/extension-node-range@3.25.0(@tiptap/core@3.25.0(@tiptap/pm@3.25.0))(@tiptap/pm@3.25.0))(@tiptap/pm@3.25.0)(@tiptap/y-tiptap@3.0.4(prosemirror-model@1.25.7)(prosemirror-state@1.4.4)(prosemirror-view@1.41.8)(y-protocols@1.0.7(yjs@13.6.31))(yjs@13.6.31))':
     dependencies:
-      '@floating-ui/dom': 1.7.6
+      '@floating-ui/dom': 1.8.0
       '@tiptap/core': 3.25.0(@tiptap/pm@3.25.0)
       '@tiptap/extension-collaboration': 3.25.0(@tiptap/core@3.25.0(@tiptap/pm@3.25.0))(@tiptap/pm@3.25.0)(@tiptap/y-tiptap@3.0.4(prosemirror-model@1.25.7)(prosemirror-state@1.4.4)(prosemirror-view@1.41.8)(y-protocols@1.0.7(yjs@13.6.31))(yjs@13.6.31))(yjs@13.6.31)
       '@tiptap/extension-node-range': 3.25.0(@tiptap/core@3.25.0(@tiptap/pm@3.25.0))(@tiptap/pm@3.25.0)
@@ -14163,7 +14143,7 @@ snapshots:
     optionalDependencies:
       vue: 3.5.44(typescript@5.9.3)
 
-  '@vue-solana/core@4.0.0-rc.0(buffer@6.0.3)(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)(utf-8-validate@6.0.6)':
+  '@vue-solana/core@4.0.0-rc.1(buffer@6.0.3)(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(react-native@0.85.3(@babel/core@7.29.7)(bufferutil@4.1.0)(react@19.2.7)(utf-8-validate@6.0.6))(typescript@5.9.3)(utf-8-validate@6.0.6)':
     dependencies:
       '@solana-mobile/wallet-standard-mobile': 0.5.3(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(react-native@0.85.3(@babel/core@7.29.7)(bufferutil@4.1.0)(react@19.2.7)(utf-8-validate@6.0.6))(typescript@5.9.3)(utf-8-validate@6.0.6)
       '@solana/kit': 8.5.0(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)(utf-8-validate@6.0.6)
@@ -14182,9 +14162,9 @@ snapshots:
       - typescript
       - utf-8-validate
 
-  '@vue-solana/nuxt@4.0.0-rc.0(buffer@6.0.3)(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(nuxt@4.6.2(@babel/plugin-proposal-decorators@7.29.7(@babel/core@7.29.7))(@babel/plugin-syntax-jsx@7.29.7(@babel/core@7.29.7))(@babel/plugin-syntax-typescript@7.29.7(@babel/core@7.29.7))(@oxc-project/types@0.155.0)(@parcel/watcher@2.5.6)(@types/node@24.12.4)(@vue/compiler-sfc@3.5.44)(acorn@8.16.0)(better-sqlite3@12.10.0)(bufferutil@4.1.0)(confbox@0.3.1)(db0@0.3.4(better-sqlite3@12.10.0))(dotenv@17.4.2)(esbuild@0.28.0)(eslint@10.4.1(jiti@2.7.0))(giget@3.2.0)(ioredis@5.11.0)(lightningcss@1.33.0)(mlly@1.8.2)(optionator@0.9.4)(oxc-parser@0.138.0)(rolldown@1.2.15)(rollup-plugin-visualizer@7.0.1(rolldown@1.2.15)(rollup@4.61.0))(rollup@4.61.0)(srvx@1.0.6)(terser@5.48.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(vite@8.3.5(@types/node@24.12.4)(esbuild@0.28.0)(jiti@2.7.0)(terser@5.48.0)(yaml@2.9.0))(vue-tsc@3.3.3(typescript@5.9.3))(yaml@2.9.0))(typescript@5.9.3)(utf-8-validate@6.0.6)(vue@3.5.44(typescript@5.9.3))':
+  '@vue-solana/nuxt@4.0.0-rc.1(8dfcefab1c7f0f22fa84d155334ecd3c)':
     dependencies:
-      '@vue-solana/vue': 4.0.0-rc.0(buffer@6.0.3)(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)(utf-8-validate@6.0.6)(vue@3.5.44(typescript@5.9.3))
+      '@vue-solana/vue': 4.0.0-rc.1(buffer@6.0.3)(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(react-native@0.85.3(@babel/core@7.29.7)(bufferutil@4.1.0)(react@19.2.7)(utf-8-validate@6.0.6))(typescript@5.9.3)(utf-8-validate@6.0.6)(vue@3.5.44(typescript@5.9.3))
       nuxt: 4.6.2(@babel/plugin-proposal-decorators@7.29.7(@babel/core@7.29.7))(@babel/plugin-syntax-jsx@7.29.7(@babel/core@7.29.7))(@babel/plugin-syntax-typescript@7.29.7(@babel/core@7.29.7))(@oxc-project/types@0.155.0)(@parcel/watcher@2.5.6)(@types/node@24.12.4)(@vue/compiler-sfc@3.5.44)(acorn@8.16.0)(better-sqlite3@12.10.0)(bufferutil@4.1.0)(confbox@0.3.1)(db0@0.3.4(better-sqlite3@12.10.0))(dotenv@17.4.2)(esbuild@0.28.0)(eslint@10.4.1(jiti@2.7.0))(giget@3.2.0)(ioredis@5.11.0)(lightningcss@1.33.0)(mlly@1.8.2)(optionator@0.9.4)(oxc-parser@0.138.0)(rolldown@1.2.15)(rollup-plugin-visualizer@7.0.1(rolldown@1.2.15)(rollup@4.61.0))(rollup@4.61.0)(srvx@1.0.6)(terser@5.48.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(vite@8.3.5(@types/node@24.12.4)(esbuild@0.28.0)(jiti@2.7.0)(terser@5.48.0)(yaml@2.9.0))(vue-tsc@3.3.3(typescript@5.9.3))(yaml@2.9.0)
     transitivePeerDependencies:
       - buffer
@@ -14195,9 +14175,9 @@ snapshots:
       - utf-8-validate
       - vue
 
-  '@vue-solana/vue@4.0.0-rc.0(buffer@6.0.3)(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)(utf-8-validate@6.0.6)(vue@3.5.44(typescript@5.9.3))':
+  '@vue-solana/vue@4.0.0-rc.1(buffer@6.0.3)(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(react-native@0.85.3(@babel/core@7.29.7)(bufferutil@4.1.0)(react@19.2.7)(utf-8-validate@6.0.6))(typescript@5.9.3)(utf-8-validate@6.0.6)(vue@3.5.44(typescript@5.9.3))':
     dependencies:
-      '@vue-solana/core': 4.0.0-rc.0(buffer@6.0.3)(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3)(utf-8-validate@6.0.6)
+      '@vue-solana/core': 4.0.0-rc.1(buffer@6.0.3)(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(react-native@0.85.3(@babel/core@7.29.7)(bufferutil@4.1.0)(react@19.2.7)(utf-8-validate@6.0.6))(typescript@5.9.3)(utf-8-validate@6.0.6)
       vue: 3.5.44(typescript@5.9.3)
     transitivePeerDependencies:
       - buffer
@@ -17575,6 +17555,118 @@ snapshots:
       unctx: 2.5.0
       unenv: 2.0.0-rc.24
       unimport: 6.3.0(esbuild@0.28.0)(rolldown@1.2.15)(rollup@4.61.0)(vite@8.3.5(@types/node@22.19.19)(esbuild@0.28.0)(jiti@2.7.0)(terser@5.48.0)(yaml@2.9.0))
+      unplugin-utils: 0.3.2
+      unstorage: 1.17.5(db0@0.3.4(better-sqlite3@12.10.0))(ioredis@5.11.0)
+      untyped: 2.0.0
+      unwasm: 0.5.3
+      youch: 4.1.1
+      youch-core: 0.3.3
+    transitivePeerDependencies:
+      - '@azure/app-configuration'
+      - '@azure/cosmos'
+      - '@azure/data-tables'
+      - '@azure/identity'
+      - '@azure/keyvault-secrets'
+      - '@azure/storage-blob'
+      - '@capacitor/preferences'
+      - '@deno/kv'
+      - '@electric-sql/pglite'
+      - '@farmfe/core'
+      - '@libsql/client'
+      - '@netlify/blobs'
+      - '@planetscale/database'
+      - '@rsbuild/core'
+      - '@rspack/core'
+      - '@upstash/redis'
+      - '@vercel/blob'
+      - '@vercel/functions'
+      - '@vercel/kv'
+      - aws4fetch
+      - bare-abort-controller
+      - bare-buffer
+      - better-sqlite3
+      - bun-types-no-globals
+      - drizzle-orm
+      - encoding
+      - idb-keyval
+      - mysql2
+      - oxc-parser
+      - react-native-b4a
+      - rolldown
+      - sqlite3
+      - srvx
+      - supports-color
+      - unloader
+      - uploadthing
+      - vite
+      - webpack
+
+  nitropack@2.13.4(better-sqlite3@12.10.0)(rolldown@1.2.15)(srvx@1.0.6)(vite@8.3.5(@types/node@24.12.4)(esbuild@0.28.0)(jiti@2.7.0)(terser@5.48.0)(yaml@2.9.0)):
+    dependencies:
+      '@cloudflare/kv-asset-handler': 0.4.2
+      '@rollup/plugin-alias': 6.0.0(rollup@4.61.0)
+      '@rollup/plugin-commonjs': 29.0.3(rollup@4.61.0)
+      '@rollup/plugin-inject': 5.0.5(rollup@4.61.0)
+      '@rollup/plugin-json': 6.1.0(rollup@4.61.0)
+      '@rollup/plugin-node-resolve': 16.0.3(rollup@4.61.0)
+      '@rollup/plugin-replace': 6.0.3(rollup@4.61.0)
+      '@rollup/plugin-terser': 1.0.0(rollup@4.61.0)
+      '@vercel/nft': 1.10.2(rollup@4.61.0)
+      archiver: 7.0.1
+      c12: 3.3.4(magicast@0.5.5)
+      chokidar: 5.0.0
+      citty: 0.2.2
+      compatx: 0.2.0
+      confbox: 0.2.4
+      consola: 3.4.2
+      cookie-es: 2.0.1
+      croner: 10.0.1
+      crossws: 0.3.5
+      db0: 0.3.4(better-sqlite3@12.10.0)
+      defu: 6.1.7
+      destr: 2.0.5
+      dot-prop: 10.1.0
+      esbuild: 0.28.0
+      escape-string-regexp: 5.0.0
+      etag: 1.8.1
+      exsolve: 1.1.3
+      globby: 16.2.0
+      gzip-size: 7.0.0
+      h3: 1.15.11
+      hookable: 5.5.3
+      httpxy: 0.5.3
+      ioredis: 5.11.0
+      jiti: 2.7.0
+      klona: 2.0.6
+      knitwork: 1.3.0
+      listhen: 1.10.0(srvx@1.0.6)
+      magic-string: 0.30.21
+      magicast: 0.5.5
+      mime: 4.1.0
+      mlly: 1.8.2
+      node-fetch-native: 1.6.7
+      node-mock-http: 1.0.4
+      ofetch: 1.5.1
+      ohash: 2.0.12
+      pathe: 2.0.3
+      perfect-debounce: 2.1.0
+      pkg-types: 2.4.0
+      pretty-bytes: 7.1.0
+      radix3: 1.1.2
+      rollup: 4.61.0
+      rollup-plugin-visualizer: 7.0.1(rolldown@1.2.15)(rollup@4.61.0)
+      scule: 1.3.0
+      semver: 7.8.5
+      serve-placeholder: 2.0.2
+      serve-static: 2.2.1
+      source-map: 0.7.6
+      std-env: 4.3.0
+      ufo: 1.6.4
+      ultrahtml: 1.7.0
+      uncrypto: 0.1.3
+      unctx: 2.5.0
+      unenv: 2.0.0-rc.24
+      unimport: 6.3.0(esbuild@0.28.0)(oxc-parser@0.138.0)(rolldown@1.2.15)(rollup@4.61.0)(vite@8.3.5(@types/node@24.12.4)(esbuild@0.28.0)(jiti@2.7.0)(terser@5.48.0)(yaml@2.9.0))
       unplugin-utils: 0.3.2
       unstorage: 1.17.5(db0@0.3.4(better-sqlite3@12.10.0))(ioredis@5.11.0)
       untyped: 2.0.0
