@@ -1,6 +1,15 @@
 import {
   createClient,
+  createDefaultRpcSubscriptionsTransport,
+  createDefaultRpcTransport,
+  createDefaultSolanaRpcSubscriptionsChannelCreator,
   createKeyPairFromBytes,
+  createRpc,
+  createSolanaRpcApi,
+  createSolanaRpcSubscriptionsApi,
+  createSubscriptionRpc,
+  DEFAULT_RPC_CONFIG,
+  DEFAULT_RPC_SUBSCRIPTIONS_CONFIG,
   extendClient,
   getBase58Decoder,
   getBase64Encoder,
@@ -8,10 +17,18 @@ import {
   signBytes,
   SOLANA_ERROR__KEYS__PUBLIC_KEY_MUST_MATCH_PRIVATE_KEY,
   type Address,
+  type Commitment,
   type TransactionPartialSigner,
   type TransactionSigner,
 } from "@solana/kit";
-import { rpcAirdrop, solanaRpc } from "@solana/kit-plugin-rpc";
+import {
+  rpcAirdrop,
+  rpcGetMinimumBalance,
+  rpcTransactionPlanner,
+  rpcTransactionPlanSendingExecutor,
+  rpcTransactionPlanSigningExecutor,
+  solanaRpc,
+} from "@solana/kit-plugin-rpc";
 import {
   DEFAULT_CLUSTER,
   getClusterEndpoint,
@@ -24,7 +41,15 @@ function buildSolanaClient(
   endpoint: string,
   wsEndpoint: string,
   payer: TransactionSigner | undefined,
+  commitment: Commitment | undefined,
 ) {
+  // `solanaRpc` composes the connection, planner, signer, and executor, but the
+  // connection path (`createSolanaRpcFromTransport`) pins
+  // `DEFAULT_RPC_CONFIG`, so a configured `commitment` would never reach the
+  // request transformer. Build the same stack explicitly so the RPC `api`
+  // configs carry the commitment when one is configured — and only then, so
+  // Kit's own defaults rule when `commitment` is unset.
+  //
   // `solanaRpc` is typed as requiring `client.payer`, but the planner only reads
   // `payer` lazily — and only when it must build a message from an instruction
   // plan. So a payer-less client extends with nothing: casting the empty
@@ -34,14 +59,46 @@ function buildSolanaClient(
     extendClient(current, payer ? { payer } : ({} as { payer: TransactionSigner })),
   );
 
-  return client
-    .use(
-      solanaRpc({
-        rpcUrl: endpoint,
-        rpcSubscriptionsUrl: wsEndpoint,
-      }),
-    )
-    .use(rpcAirdrop());
+  const rpc = commitment
+    ? createRpc({
+        api: createSolanaRpcApi({ ...DEFAULT_RPC_CONFIG, defaultCommitment: commitment }),
+        transport: createDefaultRpcTransport({ url: endpoint }),
+      })
+    : undefined;
+
+  const rpcSubscriptions = commitment
+    ? createSubscriptionRpc({
+        api: createSolanaRpcSubscriptionsApi({
+          ...DEFAULT_RPC_SUBSCRIPTIONS_CONFIG,
+          defaultCommitment: commitment,
+        }),
+        transport: createDefaultRpcSubscriptionsTransport({
+          createChannel: createDefaultSolanaRpcSubscriptionsChannelCreator({
+            url: wsEndpoint,
+          }),
+        }),
+      })
+    : undefined;
+
+  if (!rpc || !rpcSubscriptions) {
+    // No commitment configured: the stock connection keeps Kit's own defaults
+    // (`confirmed`) without this wrapper having to name them.
+    return client
+      .use(solanaRpc({ rpcUrl: endpoint, rpcSubscriptionsUrl: wsEndpoint }))
+      .use(rpcAirdrop());
+  }
+
+  return (
+    client
+      // Order mirrors `solanaRpc`: connection, balance, planner, signer,
+      // sender, then airdrop.
+      .use((current) => extendClient(current, { rpc, rpcSubscriptions }))
+      .use(rpcGetMinimumBalance())
+      .use(rpcTransactionPlanner())
+      .use(rpcTransactionPlanSigningExecutor())
+      .use(rpcTransactionPlanSendingExecutor())
+      .use(rpcAirdrop())
+  );
 }
 
 type SolanaClientWithPayer = ReturnType<typeof buildSolanaClient>;
@@ -63,7 +120,7 @@ export function createSolanaClient(
     (config.endpoint ? getWebSocketEndpoint(endpoint) : getClusterWebSocketEndpoint(cluster));
   const payer = config.payer ?? resolvePayerFromSecretKey(config.payerSecretKey);
 
-  return buildSolanaClient(endpoint, wsEndpoint, payer);
+  return buildSolanaClient(endpoint, wsEndpoint, payer, config.commitment);
 }
 
 function resolvePayerFromSecretKey(

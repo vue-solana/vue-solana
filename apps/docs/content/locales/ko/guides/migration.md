@@ -1,11 +1,100 @@
 ---
 title: "마이그레이션 가이드"
-description: Vue Solana 버전 간 마이그레이션 가이드입니다. v2에서 v3으로 업그레이드와 v1.x에서 v2로 마이그레이션을 다룹니다.
+description: Vue Solana 버전 간 마이그레이션 가이드입니다. v3에서 v4로 업그레이드, v2에서 v3으로 업그레이드, v1.x에서 v2로 마이그레이션을 다룹니다.
 ogSection: Guides
 surroundOrder: 13
 ---
 
-이 가이드는 Vue Solana 버전 간 마이그레이션을 다룹니다. 두 가지 주요 마이그레이션이 있습니다: v2에서 v3으로 업그레이드(최신)와 v1.x에서 v2로 마이그레이션.
+이 가이드는 Vue Solana 버전 간 마이그레이션을 다룹니다. 세 가지 주요 마이그레이션이 있습니다: v3에서 v4로 업그레이드(최신), v2에서 v3으로 업그레이드, v1.x에서 v2로 마이그레이션.
+
+## 마이그레이션: v3에서 v4로
+
+v4.0.0은 최신 릴리스입니다. `@vue-solana/core`의 루트 배럴에서 무거운 모듈을 제거하고 더 작은 tarball을 제공하여 번들 크기를 줄입니다. 일부 composable API도 변경되었으며 설정된 `commitment`가 실제로 적용됩니다.
+
+### 변경 사항
+
+- **루트 배럴 축소**: `@vue-solana/core`는 더 이상 루트 배럴에서 `Buffer`/`installSolanaBufferPolyfill`, `ios-wallet`, `mobile-wallet`을 re-export하지 않습니다. 전용 subpath를 사용하세요.
+- **더 작은 tarball**: `.d.mts` 선언 파일은 더 이상 제공되지 않으며, 모든 `exports` 조건은 `.d.ts`를 가리킵니다.
+- **`useSignatureStatus`**: 더 이상 `commitment` 옵션을 받지 않습니다.
+- **`commitment` 적용**: `createSolanaClient()` / `createSolanaPlugin()` / Nuxt의 `solana.commitment`가 이제 RPC 호출에 실제로 적용됩니다.
+- **`plugin.dispose()`**: `createSolanaPlugin()`이 이제 `dispose()`를 반환합니다.
+- **타입된 airdrop 실패**: `useAirdrop()` 실패는 이제 코드 `RPC_FAILURE`의 `SolanaError`입니다.
+- **`buffer` 선택적 peer**: `buffer-polyfill`을 사용하는 앱은 `buffer`를 직접 설치해야 합니다.
+- **`bs58` 제거**: `bs58`를 직접 import하는 앱은 자신의 의존성에 추가해야 합니다.
+- **새 auto-import (Nuxt)**: `useSolanaClientCapability()`, `tryUseSolana()`, `clearSwrCache()`, `deleteSwrKey()`.
+- **새 `deleteSwrKey()`** in `@vue-solana/vue/swr`.
+
+### 마이그레이션 방법
+
+#### 1. 의존성 업데이트
+
+```sh
+pnpm add @vue-solana/vue@^4.0.0
+# 또는
+pnpm add @vue-solana/nuxt@^4.0.0
+```
+
+`buffer-polyfill`을 사용한다면 `buffer`를 직접 설치하세요:
+
+```sh
+pnpm add buffer
+```
+
+`bs58`을 직접 import한다면 추가하세요:
+
+```sh
+pnpm add bs58
+```
+
+#### 2. Buffer / Wallet import 업데이트
+
+```diff
+- import { Buffer, installSolanaBufferPolyfill } from "@vue-solana/core";
++ import { Buffer, installSolanaBufferPolyfill } from "@vue-solana/core/buffer-polyfill";
+- import { getSolanaIosWallets } from "@vue-solana/core";
++ import { getSolanaIosWallets } from "@vue-solana/core/ios-wallet";
+- import { registerSolanaMobileWallet } from "@vue-solana/core";
++ import { registerSolanaMobileWallet } from "@vue-solana/core/mobile-wallet";
+```
+
+(`@vue-solana/vue/buffer-polyfill`와 `@vue-solana/nuxt/buffer-polyfill`은 변경 없습니다.)
+
+#### 3. `useSignatureStatus` 업데이트
+
+```diff
+- useSignatureStatus(signature, { commitment: "confirmed" })
++ useSignatureStatus(signature)
+```
+
+호출별 commitment가 필요하면 `useTransactionConfirmation()`의 `confirm(signature, opts)`에 `{ commitment }`를 전달하거나 `@vue-solana/core`의 `confirmTransactionSignature()`를 직접 호출하세요.
+
+#### 4. 순수 Vue에서 플러그인 dispose
+
+```ts
+const solana = createSolanaPlugin();
+createApp(App).use(solana);
+// 해제 시:
+app.unmount();
+solana.dispose();
+```
+
+(Nuxt는 자동으로 연결합니다.)
+
+#### 5. 타입된 airdrop 오류 처리
+
+`useAirdrop()` 실패는 이제 코드 `RPC_FAILURE`의 `SolanaError`이며, 원래 오류는 `cause`로 보존됩니다.
+
+```ts
+import { isSolanaError } from "@vue-solana/core/kit";
+
+try {
+  await airdrop();
+} catch (error) {
+  if (isSolanaError(error, "RPC_FAILURE")) {
+    // 처리
+  }
+}
+```
 
 ## 마이그레이션: v2에서 v3으로
 

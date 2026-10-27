@@ -1,7 +1,7 @@
 import type { Address, Commitment, JsonParsedTokenAccount } from "@solana/kit";
-import { address } from "@solana/kit";
+import { address, isAddress } from "@solana/kit";
 import type { SolanaClient } from "./kit";
-import { normalizeSolanaError } from "./errors";
+import { createSolanaError, normalizeSolanaError } from "./errors";
 
 const TOKEN_PROGRAM_ADDRESS = address("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
 const TOKEN_2022_PROGRAM_ADDRESS = address("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb");
@@ -140,6 +140,15 @@ function tokenAccountInfoFromParsed(
     throw new Error(`Token account ${address} has no parsed data`);
   }
 
+  const mismatches = validateParsedTokenAccount(parsed);
+
+  if (mismatches.length > 0) {
+    throw createSolanaError(
+      "RPC_FAILURE",
+      `Token account ${address} returned malformed data (${mismatches.join(", ")})`,
+    );
+  }
+
   return {
     address,
     mint: parsed.mint,
@@ -149,4 +158,50 @@ function tokenAccountInfoFromParsed(
     state: parsed.state,
     isNative: parsed.isNative,
   };
+}
+
+/**
+ * Names every malformed field so the `RPC_FAILURE` message says what the RPC
+ * returned instead of surfacing a raw `BigInt()` throw. Empty means the
+ * payload is safe to construct from.
+ */
+function validateParsedTokenAccount(parsed: JsonParsedTokenAccount): string[] {
+  const mismatches: string[] = [];
+
+  // `typeof` guards first: Kit's `isAddress` takes a string, and a
+  // non-string `mint`/`owner` from an untrusted RPC payload must read as a
+  // mismatch, never a raw throw from inside the codec.
+  if (typeof parsed.mint !== "string" || !isAddress(parsed.mint)) {
+    mismatches.push("mint");
+  }
+
+  if (typeof parsed.owner !== "string" || !isAddress(parsed.owner)) {
+    mismatches.push("owner");
+  }
+
+  if (typeof parsed.tokenAmount?.amount !== "string" || !/^\d+$/.test(parsed.tokenAmount.amount)) {
+    mismatches.push("tokenAmount.amount");
+  }
+
+  if (
+    typeof parsed.tokenAmount?.decimals !== "number" ||
+    !Number.isInteger(parsed.tokenAmount.decimals) ||
+    parsed.tokenAmount.decimals < 0
+  ) {
+    mismatches.push("tokenAmount.decimals");
+  }
+
+  if (
+    parsed.state !== "frozen" &&
+    parsed.state !== "initialized" &&
+    parsed.state !== "uninitialized"
+  ) {
+    mismatches.push("state");
+  }
+
+  if (typeof parsed.isNative !== "boolean") {
+    mismatches.push("isNative");
+  }
+
+  return mismatches;
 }

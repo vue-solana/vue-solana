@@ -7,8 +7,10 @@ import {
   SolanaSignTransaction,
 } from "@solana/wallet-standard-features";
 import type { SolanaSignInInput, SolanaSignInOutput } from "@solana/wallet-standard-features";
-import bs58 from "bs58";
+import { getBase58Decoder } from "@solana/kit";
 import type { Address } from "../kit";
+import { createSolanaError } from "../errors";
+import { assertWalletSignature } from "./verify-wallet-signature";
 import type {
   SolanaChain,
   SolanaSignInResult,
@@ -34,10 +36,19 @@ export interface AdaptSolanaWalletOptions {
   onChange?: () => void;
 }
 
+/**
+ * A Wallet Standard wallet adapted to {@link SolanaWallet}. `dispose` is
+ * always present here (optional on the base interface, where plain
+ * caller-supplied wallets typically omit it).
+ */
+export interface AdaptedSolanaWallet extends SolanaWallet {
+  dispose(): void;
+}
+
 export function adaptSolanaStandardWallet(
   walletInfo: SolanaWalletInfo,
   options: AdaptSolanaWalletOptions = {},
-): SolanaWallet {
+): AdaptedSolanaWallet {
   const wallet = walletInfo.wallet as Wallet;
   let accounts = wallet.accounts;
   let account = options.account;
@@ -49,7 +60,7 @@ export function adaptSolanaStandardWallet(
   const eventsFeature = wallet.features[StandardEvents] as
     | StandardEventsFeature[typeof StandardEvents]
     | undefined;
-  eventsFeature?.on("change", (properties) => {
+  const unsubscribeChange = eventsFeature?.on("change", (properties) => {
     if (properties.accounts) {
       accounts = properties.accounts;
       account =
@@ -60,9 +71,14 @@ export function adaptSolanaStandardWallet(
     }
   });
 
+  function dispose() {
+    unsubscribeChange?.();
+  }
+
   return {
     platform: walletInfo.platform,
     source: walletInfo.source,
+    dispose,
     get publicKey() {
       return account ? (account.address as Address) : null;
     },
@@ -133,7 +149,39 @@ export function adaptSolanaStandardWallet(
             throw new Error("Solana wallet did not return a sign-in result");
           }
 
-          return toSolanaSignInResult(result);
+          const signInResult = toSolanaSignInResult(result);
+
+          // An omitted input is built from the active account, so the account
+          // the caller is asking about is either `input.address` or the active
+          // one. Verifying only the returned account let a wallet answer with a
+          // *different* account it controls, sign for itself, and pass.
+          const requestedAddress = input?.address ?? account?.address;
+          const signInAccount = accounts.find(
+            (candidate) => candidate.address === signInResult.account.address,
+          );
+
+          if (!signInAccount) {
+            throw createSolanaError(
+              "INVALID_SIGNATURE",
+              "The wallet returned a sign-in account it does not expose.",
+            );
+          }
+
+          if (requestedAddress !== undefined && requestedAddress !== signInAccount.address) {
+            throw createSolanaError(
+              "INVALID_SIGNATURE",
+              `The wallet signed in as ${signInResult.account.address} instead of the requested ${requestedAddress}.`,
+            );
+          }
+
+          await assertWalletSignature(
+            signInAccount.publicKey,
+            signInResult.signedMessage,
+            signInResult.signature,
+            "sign-in",
+          );
+
+          return signInResult;
         }
       : undefined,
     signMessage: hasSignMessage(wallet)
@@ -147,6 +195,13 @@ export function adaptSolanaStandardWallet(
           if (!result) {
             throw new Error("Solana wallet did not return a message signature");
           }
+
+          await assertWalletSignature(
+            activeAccount.publicKey,
+            result.signedMessage,
+            result.signature,
+            "message",
+          );
 
           return result;
         }
@@ -201,7 +256,7 @@ export function adaptSolanaStandardWallet(
             throw new Error("Solana wallet did not return a transaction signature");
           }
 
-          return { signature: bs58.encode(result.signature) };
+          return { signature: getBase58Decoder().decode(result.signature) };
         }
       : undefined,
     signAndSendTransactions: hasSignAndSendTransaction(wallet)
@@ -229,11 +284,44 @@ export function adaptSolanaStandardWallet(
               throw new Error("Solana wallet did not return a transaction signature");
             }
 
-            return bs58.encode(result.signature);
+            return getBase58Decoder().decode(result.signature);
           });
         }
       : undefined,
   };
+}
+
+/**
+ * Disconnects a discovered Wallet Standard wallet without adapting it.
+ *
+ * Reads `standard:disconnect` straight off the wallet instead of going through
+ * an adapter on purpose: a wallet the app authorized in an earlier page session
+ * has no adapter yet, so an adapter-only sweep misses it, and adapting it just
+ * to disconnect would register a `change` subscription for a wallet the user
+ * never selects. Resolves `false` when the wallet exposes no disconnect feature
+ * (for example an iOS deep-link definition); rejects with the wallet's own
+ * error, so a caller sweeping a list should catch per wallet.
+ */
+export async function disconnectSolanaStandardWallet(
+  walletInfo: SolanaWalletInfo,
+): Promise<boolean> {
+  const wallet = walletInfo.wallet as Partial<Wallet> | null | undefined;
+
+  if (typeof wallet !== "object" && typeof wallet !== "function") {
+    return false;
+  }
+
+  const features = wallet?.features as Record<string, unknown> | undefined;
+  const feature = features?.[StandardDisconnect] as
+    | StandardDisconnectFeature[typeof StandardDisconnect]
+    | undefined;
+
+  if (typeof feature?.disconnect !== "function") {
+    return false;
+  }
+
+  await feature.disconnect();
+  return true;
 }
 
 async function signAllThroughFeature(

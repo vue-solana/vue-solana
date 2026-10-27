@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import type { Address } from "./kit";
 import type { SolanaClient } from "./kit";
+import { SolanaError } from "./errors";
 import { getTokenAccountsByOwner, getTokenAccount, getTokenBalance } from "./token-accounts";
 
 const OWNER = "11111111111111111111111111111111" as Address;
@@ -113,6 +114,71 @@ describe("getTokenAccountsByOwner", () => {
     tokenAccounts.mockRejectedValue(new Error("RPC down"));
 
     await expect(getTokenAccountsByOwner(client, OWNER)).rejects.toThrow("RPC down");
+  });
+
+  it("throws RPC_FAILURE for malformed token amounts instead of a raw BigInt throw", async () => {
+    const { client, tokenAccounts } = mockClient();
+    tokenAccounts.mockResolvedValue({
+      value: [
+        parsedTokenAccountResponse({
+          account: {
+            ...(parsedTokenAccountResponse().account as Record<string, unknown>),
+            data: {
+              ...((parsedTokenAccountResponse().account as Record<string, unknown>).data as Record<
+                string,
+                unknown
+              >),
+              parsed: {
+                info: {
+                  isNative: false,
+                  mint: MINT,
+                  owner: OWNER,
+                  state: "initialized",
+                  tokenAmount: { amount: "not-a-number", decimals: 6 },
+                },
+                type: "account",
+              },
+            },
+          },
+        }),
+      ],
+    });
+
+    const error = await getTokenAccountsByOwner(client, OWNER).then(
+      () => {
+        throw new Error("Expected malformed token data to reject.");
+      },
+      (cause: unknown) => cause,
+    );
+
+    expect(error).toBeInstanceOf(SolanaError);
+    expect((error as SolanaError).code).toBe("RPC_FAILURE");
+    expect((error as SolanaError).message).toContain("tokenAmount.amount");
+  });
+
+  it("throws RPC_FAILURE for unknown token account states", async () => {
+    const { accountInfo, client } = mockClient();
+    const response = parsedTokenAccountResponse().account as Record<string, unknown>;
+    const data = response.data as Record<string, unknown>;
+    const parsed = data.parsed as Record<string, unknown>;
+    const info = parsed.info as Record<string, unknown>;
+    accountInfo.mockResolvedValue({
+      value: {
+        ...response,
+        data: { ...data, parsed: { ...parsed, info: { ...info, state: "melted" } } },
+      },
+    });
+
+    const error = await getTokenAccount(client, TOKEN_ACCOUNT).then(
+      () => {
+        throw new Error("Expected malformed token state to reject.");
+      },
+      (cause: unknown) => cause,
+    );
+
+    expect(error).toBeInstanceOf(SolanaError);
+    expect((error as SolanaError).code).toBe("RPC_FAILURE");
+    expect((error as SolanaError).message).toContain("state");
   });
 });
 

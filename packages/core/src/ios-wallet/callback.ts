@@ -1,5 +1,6 @@
 import { isAddress } from "@solana/kit";
-import bs58 from "bs58";
+import { getBase58Decoder, getBase58Encoder } from "@solana/kit";
+import { createSolanaError, normalizeSolanaError } from "../errors";
 import { cleanCallbackUrl, hasIosWalletCallbackParams } from "./browser";
 import { decryptPayload, getSharedSecret } from "./crypto";
 import { getIosWalletDefinitionById } from "./definitions";
@@ -31,20 +32,29 @@ export function handleSolanaIosWalletCallback(
   if (errorCode || errorMessage) {
     clearPendingRequest();
     cleanCallbackUrl(url, options.clearUrl);
-    throw new Error(errorMessage || `iOS wallet request failed: ${errorCode}`);
+    // The wallet reports its own failure over the deep link. `normalizeSolanaError`
+    // upgrades a user-rejection message to `USER_REJECTED`; everything else is a
+    // wallet failure, never a decryption failure.
+    throw normalizeSolanaError(
+      new Error(errorMessage || `iOS wallet request failed: ${errorCode}`),
+      "WALLET_FAILURE",
+    );
   }
 
   const pending = getPendingRequest();
 
   if (!pending) {
     cleanCallbackUrl(url, options.clearUrl);
-    throw new Error("Received an iOS wallet callback without a pending request");
+    throw createSolanaError(
+      "INVALID_INPUT",
+      "Received an iOS wallet callback without a pending request",
+    );
   }
 
   if (isPendingRequestExpired(pending)) {
     clearPendingRequest();
     cleanCallbackUrl(url, options.clearUrl);
-    throw new Error("Received an expired iOS wallet callback");
+    throw createSolanaError("REDIRECT_TIMEOUT", "Received an expired iOS wallet callback");
   }
 
   const definition = getIosWalletDefinitionById(pending.walletId);
@@ -55,7 +65,7 @@ export function handleSolanaIosWalletCallback(
   if (!nonce || !data) {
     clearPendingRequest();
     cleanCallbackUrl(url, options.clearUrl);
-    throw new Error("Received an incomplete iOS wallet callback");
+    throw createSolanaError("INVALID_INPUT", "Received an incomplete iOS wallet callback");
   }
 
   try {
@@ -68,7 +78,10 @@ export function handleSolanaIosWalletCallback(
 
     if (pending.method === "connect") {
       if (!walletEncryptionPublicKey) {
-        throw new Error("iOS wallet connect callback did not include an encryption public key");
+        throw createSolanaError(
+          "DECRYPTION_FAILED",
+          "iOS wallet connect callback did not include an encryption public key",
+        );
       }
 
       const publicKey = getPublicKeyField(payload, "public_key");
@@ -80,7 +93,7 @@ export function handleSolanaIosWalletCallback(
         dappEncryptionPublicKey: pending.dappEncryptionPublicKey,
         dappEncryptionSecretKey: pending.dappEncryptionSecretKey,
         walletEncryptionPublicKey,
-        sharedSecret: bs58.encode(sharedSecret),
+        sharedSecret: getBase58Decoder().decode(sharedSecret),
       });
     }
 
@@ -107,7 +120,9 @@ function createCallbackResult(
     return {
       walletId: pending.walletId,
       method: pending.method,
-      transaction: bs58.decode(getStringField(payload, "transaction")),
+      transaction: Uint8Array.from(
+        getBase58Encoder().encode(getStringField(payload, "transaction")),
+      ),
     };
   }
 
@@ -118,14 +133,18 @@ function createCallbackResult(
       !Array.isArray(transactions) ||
       transactions.some((transaction) => typeof transaction !== "string")
     ) {
-      throw new Error("iOS wallet returned invalid signed transactions");
+      throw createSolanaError(
+        "DECRYPTION_FAILED",
+        "iOS wallet returned invalid signed transactions",
+      );
     }
 
     if (
       typeof pending.requestedTransactionCount === "number" &&
       transactions.length !== pending.requestedTransactionCount
     ) {
-      throw new Error(
+      throw createSolanaError(
+        "WALLET_FAILURE",
         `iOS wallet returned ${transactions.length} signed transactions for ${pending.requestedTransactionCount} requested transactions`,
       );
     }
@@ -133,7 +152,9 @@ function createCallbackResult(
     return {
       walletId: pending.walletId,
       method: pending.method,
-      transactions: transactions.map((transaction) => bs58.decode(transaction as string)),
+      transactions: transactions.map((transaction) =>
+        Uint8Array.from(getBase58Encoder().encode(transaction as string)),
+      ),
     };
   }
 
@@ -148,7 +169,7 @@ function getStringField(payload: Record<string, unknown>, field: string) {
   const value = payload[field];
 
   if (typeof value !== "string" || !value) {
-    throw new Error(`iOS wallet callback is missing ${field}`);
+    throw createSolanaError("DECRYPTION_FAILED", `iOS wallet callback is missing ${field}`);
   }
 
   return value;
@@ -158,7 +179,10 @@ function getPublicKeyField(payload: Record<string, unknown>, field: string) {
   const value = getStringField(payload, field);
 
   if (!isAddress(value)) {
-    throw new Error(`iOS wallet callback returned an invalid ${field}`);
+    throw createSolanaError(
+      "DECRYPTION_FAILED",
+      `iOS wallet callback returned an invalid ${field}`,
+    );
   }
 
   return value;

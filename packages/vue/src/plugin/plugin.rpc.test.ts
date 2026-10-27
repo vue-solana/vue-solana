@@ -45,7 +45,7 @@ describe("createSolanaPlugin RPC connection", () => {
 
   it("checks the RPC connection when startup wallet refresh fails", async () => {
     vi.useFakeTimers();
-    const { error: consoleError } = silenceConsole();
+    silenceConsole();
     const discoveryError = new Error("wallet discovery failed");
     const getLatestBlockhash = createGetLatestBlockhashMock();
     createSolanaContext.mockReturnValue({
@@ -66,7 +66,6 @@ describe("createSolanaPlugin RPC connection", () => {
     });
 
     expect(getLatestBlockhash).toHaveBeenCalledTimes(1);
-    expect(consoleError).toHaveBeenCalledWith("[Vue Solana] Wallet refresh failed", discoveryError);
   });
 
   it("stores connection check errors", async () => {

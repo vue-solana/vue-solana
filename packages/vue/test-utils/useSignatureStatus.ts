@@ -1,13 +1,13 @@
-import bs58 from "bs58";
 import { defineComponent, h } from "vue";
+import { getBase58Decoder } from "@vue-solana/core/kit";
 import { createMockSolanaContext, mountWithSolana } from "../test-utils";
 import {
   useSignatureStatus,
   type UseSignatureStatusOptions,
 } from "../src/composables/useSignatureStatus";
 
-export const signature = bs58.encode(new Uint8Array(64).fill(1));
-export const nextSignature = bs58.encode(new Uint8Array(64).fill(2));
+export const signature = getBase58Decoder().decode(new Uint8Array(64).fill(1));
+export const nextSignature = getBase58Decoder().decode(new Uint8Array(64).fill(2));
 
 export function deferred<T>() {
   let resolve!: (value: T) => void;

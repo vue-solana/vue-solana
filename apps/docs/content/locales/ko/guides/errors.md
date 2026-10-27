@@ -29,9 +29,16 @@ const error = new SolanaError("RPC_FAILURE", "Unable to reach RPC");
 - `NO_WALLET_SELECTED`: 활성 지갑이 선택되지 않았습니다.
 - `WALLET_NOT_CONNECTED`: 활성 지갑이 연결되어 있지 않거나 public key가 없습니다.
 - `WALLET_FEATURE_UNSUPPORTED`: 활성 지갑이 요청한 feature를 지원하지 않습니다.
+- `WALLET_FAILURE`: 더 구체적인 code 없이 지갑 측 작업이 실패했습니다. 연결/해제, 저장된 지갑 auto-connect, mobile wallet 등록, iOS callback 처리가 포함됩니다.
 - `USER_REJECTED`: 사용자가 지갑 요청을 거절했습니다.
+- `INVALID_SIGNATURE`: 지갑이 계정 키와 일치하지 않는 메시지 또는 로그인 서명을 반환했습니다.
 - `INVALID_ADDRESS`: 주소 문자열을 Solana 주소로 파싱할 수 없습니다.
+- `INVALID_INPUT`: helper가 잘못된 endpoint, timeout 또는 옵션 값을 받았습니다.
 - `TRANSACTION_TIMEOUT`: 트랜잭션 관련 작업이 timeout되었습니다.
+- `TRANSACTION_NOT_FOUND`: 확인 deadline 전에 서명이 RPC 상태 결과에 나타나지 않았습니다.
+- `TRANSACTION_FAILED`: 제출된 트랜잭션이 요청한 commitment에 도달하기 전에 실패했습니다.
+- `REDIRECT_TIMEOUT`: iOS 지갑이 제시간에 앱으로 redirect되지 않았습니다.
+- `DECRYPTION_FAILED`: iOS 지갑 callback을 복호화하거나 디코딩할 수 없습니다.
 - `RPC_FAILURE`: RPC send, read, confirmation이 실패했습니다.
 - `STORAGE_FAILURE`: 브라우저 storage를 읽거나 쓸 수 없습니다.
 

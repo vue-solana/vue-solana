@@ -90,6 +90,7 @@ const {
   airdropErrorText,
   airdropSignature,
   clientSendPayerAddress,
+  clientSendPayerBalance,
   clientSendTransaction,
   clientSendTransactionError,
   clientSendTransactionStatus,
@@ -269,6 +270,7 @@ const sections = computed(() => [
           :batch-text="sendTransactionsText"
           :batch-error="clientSendTransactionsError"
           :payer-address="clientSendPayerAddress"
+          :payer-balance="clientSendPayerBalance"
           @send-single="runClientSend"
           @send-batch="runClientSendBatch"
         />

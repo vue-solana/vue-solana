@@ -85,15 +85,26 @@ createApp(App).use(
 
 `VueSolana` is an alias for `createSolanaPlugin`.
 
+The returned object exposes `context` (the live injected context, available after `install()`) and `dispose()`, which stops the Wallet Standard discovery subscription and the deferred bootstrap. Vue has no plugin unmount hook, so call it from your own teardown:
+
+```ts
+const solana = createSolanaPlugin({ cluster: "devnet" });
+createApp(App).use(solana);
+// on teardown
+solana.dispose();
+```
+
+It is safe to call repeatedly and before `install()`. Nuxt apps need no code: the module's runtime plugin wires it to `vueApp.onUnmount()`.
+
 `mobileWallet` controls Android Mobile Wallet Adapter registration. It defaults to enabled on supported Android Chrome clients, accepts `RegisterSolanaMobileWalletOptions`, and can be disabled with `mobileWallet: false`.
 
 `iosWallet` controls iOS browser wallet universal-link entries. It defaults to enabled on iOS browser clients, accepts app identity and redirect URL options, and can be disabled with `iosWallet: false`.
 
-The plugin accepts `payer` as a Kit `TransactionSigner` and `payerSecretKey` as a base64 64-byte Ed25519 keypair (secret key first). A client-sent transaction requires one of those signers. `payerSecretKey` derives its address at client creation from the unverified public half, so treat `payer.address` as unconfirmed until the first signature succeeds, and a mismatched keypair is rejected at the first signature rather than at creation. Signing imports the key through WebCrypto, which browsers expose only in a secure context (`https`, or `http` on `localhost`). These options are for direct Vue/core clients only: Nuxt's public runtime config must never receive a raw secret or `payerSecretKey`. The default client uses the official `solanaRpc()` and `rpcAirdrop()` composition, and `solanaRpc()` installs the transaction planner and the plan-signing and plan-sending executors itself; the old custom fallback sender is not used.
+The plugin accepts `payer` as a Kit `TransactionSigner` and `payerSecretKey` as a base64 64-byte Ed25519 keypair (secret key first). A client-sent transaction requires one of those signers. `payerSecretKey` derives its address at client creation from the unverified public half, so treat `payer.address` as unconfirmed until the first signature succeeds, and a mismatched keypair is rejected at the first signature rather than at creation. Signing imports the key through WebCrypto, which browsers expose only in a secure context (`https`, or `http` on `localhost`). These options are for direct Vue/core clients only: Nuxt's public runtime config must never receive a raw secret or `payerSecretKey`. The default client uses the official `solanaRpc()` and `rpcAirdrop()` composition when no `commitment` is configured (a configured `commitment` builds the same stack explicitly so it reaches the RPC layer), and `solanaRpc()` installs the transaction planner and the plan-signing and plan-sending executors itself; the old custom fallback sender is not used.
 
-## `useSolana()`
+## `useSolana()` / `tryUseSolana()`
 
-Returns the full injected Vue Solana context. If the plugin has not been installed, such as during Nuxt SSR before the client-only plugin runs, it returns inert SSR-safe state instead of throwing. Runtime RPC and wallet actions still require the plugin-provided client context.
+`useSolana()` returns the full injected Vue Solana context. If the plugin has not been installed, such as during Nuxt SSR before the client-only plugin runs, it returns a fresh inert SSR-safe context per call (not a singleton) instead of throwing. Runtime RPC and wallet actions still require the plugin-provided client context. `tryUseSolana()` returns the injected context or `null` without creating a fallback.
 
 ## `useSolanaClient()`
 
@@ -121,7 +132,7 @@ Returns RPC state and the injected Kit client:
 - `checkConnection()`
 - `client`
 
-`error` is `SolanaError | null`. For example, connection checks normalize RPC failures to `RPC_FAILURE` while preserving the original thrown value on `error.cause`.
+`error` is `SolanaError | null`. For example, connection checks normalize RPC failures to `RPC_FAILURE` while preserving the original thrown value on `error.cause`. Wallet boot failures (mobile-wallet registration, persisted-wallet auto-connect, iOS callback handling) report `WALLET_FAILURE`, or `USER_REJECTED` when the wallet reports a rejection; `checkConnection()` and a successful `connect()` clear the ref.
 
 ## `useConnection()`
 
@@ -363,15 +374,18 @@ Returns:
 
 For explorer links, render after `signature` is set. For devnet, use a URL such as `https://explorer.solana.com/tx/${signature}?cluster=devnet`. Treat both `mainnet` and the legacy `mainnet-beta` alias as the mainnet explorer cluster; use `testnet` or `localnet` to match the app cluster.
 
+An aborted confirmation rejects and stores `RPC_FAILURE` with the abort reason on `error.cause`: the composable's `error` ref is typed `SolanaError`, so it does not pass a raw abort reason through. Call `confirmTransactionSignature()` directly when you need the caller's reason unchanged.
+
 ## `useSignatureStatus(signature, options?)`
 
 Reads the current status for a submitted signature. Pass `pollIntervalMs` to poll. Polling intervals are cleaned up on component unmount.
 
 Options:
 
-- `commitment`: commitment used for signature status reads.
 - `pollIntervalMs`: interval in milliseconds for repeated `getSignatureStatuses()` calls.
 - `searchTransactionHistory`: forwards to `getSignatureStatuses()` for older signatures.
+
+There is no per-call `commitment`: `getSignatureStatuses` accepts none, so reads use the commitment baked into the endpoint. Set it on the endpoint or `createSolanaPlugin`. For a per-call commitment use `useTransactionConfirmation()`, or `confirmTransactionSignature()` in `@vue-solana/core`.
 
 Returns:
 
@@ -381,7 +395,7 @@ Returns:
 - `refresh()`
 - `stopPolling()`
 
-Null input clears state without calling RPC. Invalid signatures are rejected before RPC: the signature must be base58-encoded and decode to exactly 64 bytes. Invalid `pollIntervalMs` values less than or equal to `0` set a `RangeError` and do not start polling.
+Null input clears state without calling RPC. Invalid signatures are rejected before RPC: the signature must be base58-encoded and decode to exactly 64 bytes. Invalid `pollIntervalMs` values less than or equal to `0` set an `RPC_FAILURE` `SolanaError` and do not start polling. Calling `stopPolling()` clears the current timer and prevents further automatic ticks — until the watched signature changes, which restarts polling for the new signature.
 
 ## `useAction(action, options?)`
 
@@ -553,7 +567,7 @@ The mappers receive the unwrapped value; the returned `data` keeps the envelope.
 
 ## SWR Cache Adapters (`@vue-solana/vue/swr`)
 
-`useRequestSwr(key, source, options?)`, `useSubscriptionSwr(key, source, options?)`, and `useTrackedDataSwr(key, source, options?)` wrap the composables above with cache keying. Components mounted with the same key seed from the last-known value while their own request revalidates; results are written back for the next mount. Keys are namespaced per adapter, a `null` source disables and clears the key, and `clearSwrCache()` empties the cache (use per-request namespacing or clearing on the server). There is no `useAction` adapter: actions are mutations, not cacheable reads.
+`useRequestSwr(key, source, options?)`, `useSubscriptionSwr(key, source, options?)`, and `useTrackedDataSwr(key, source, options?)` wrap the composables above with cache keying. Components mounted with the same key seed from the last-known value while their own request revalidates; results are written back for the next mount. Keys are namespaced per adapter, a `null` source disables and clears the key, and `clearSwrCache()` empties the cache (use per-request namespacing or clearing on the server). The cache is capped at 1024 entries with oldest-first eviction; `deleteSwrKey(key)` evicts a single entry by its full cache key (full key includes the adapter prefix). There is no `useAction` adapter: actions are mutations, not cacheable reads.
 
 ## `useSignIn()`
 

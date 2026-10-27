@@ -29,9 +29,16 @@ const error = new SolanaError("RPC_FAILURE", "Unable to reach RPC");
 - `NO_WALLET_SELECTED`：没有选中的活跃钱包。
 - `WALLET_NOT_CONNECTED`：活跃钱包未连接，或没有公钥。
 - `WALLET_FEATURE_UNSUPPORTED`：活跃钱包不支持请求的功能。
+- `WALLET_FAILURE`：钱包侧操作失败且没有更具体的 code，包括连接/断开、已保存钱包的自动连接、移动钱包注册或 iOS 回调处理。
 - `USER_REJECTED`：用户拒绝了钱包请求。
+- `INVALID_SIGNATURE`：钱包返回的消息签名或登录签名与其账户密钥不匹配。
 - `INVALID_ADDRESS`：地址字符串无法解析为 Solana 地址。
+- `INVALID_INPUT`：辅助函数收到了格式错误的端点、超时或选项值。
 - `TRANSACTION_TIMEOUT`：与交易相关的操作超时。
+- `TRANSACTION_NOT_FOUND`：签名在确认截止前从未出现在 RPC 状态结果中。
+- `TRANSACTION_FAILED`：已提交的交易在达到请求的确认级别之前失败。
+- `REDIRECT_TIMEOUT`：iOS 钱包未能及时重定向回应用。
+- `DECRYPTION_FAILED`：无法解密或解码 iOS 钱包回调。
 - `RPC_FAILURE`：RPC 发送、读取或确认失败。
 - `STORAGE_FAILURE`：无法读取或写入浏览器存储。
 

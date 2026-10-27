@@ -29,9 +29,16 @@ const error = new SolanaError("RPC_FAILURE", "Unable to reach RPC");
 - `NO_WALLET_SELECTED`: no active wallet is selected.
 - `WALLET_NOT_CONNECTED`: the active wallet is not connected or has no public key.
 - `WALLET_FEATURE_UNSUPPORTED`: the active wallet does not support the requested feature.
+- `WALLET_FAILURE`: a wallet-side operation failed without a more specific code — connect/disconnect, persisted-wallet auto-connect, mobile-wallet registration, or iOS callback handling.
 - `USER_REJECTED`: the user rejected a wallet request.
+- `INVALID_SIGNATURE`: a wallet returned a message or sign-in signature that does not match its account key.
 - `INVALID_ADDRESS`: an address string could not be parsed as a Solana address.
+- `INVALID_INPUT`: a helper received a malformed endpoint, timeout, or option value.
 - `TRANSACTION_TIMEOUT`: a transaction-related operation timed out.
+- `TRANSACTION_NOT_FOUND`: a signature never appeared in RPC status results before the confirmation deadline.
+- `TRANSACTION_FAILED`: a submitted transaction errored before reaching the requested commitment.
+- `REDIRECT_TIMEOUT`: an iOS wallet did not redirect back to the app in time.
+- `DECRYPTION_FAILED`: an iOS wallet callback could not be decrypted or decoded.
 - `RPC_FAILURE`: an RPC send, read, or confirmation failed.
 - `STORAGE_FAILURE`: browser storage could not be read or written.
 

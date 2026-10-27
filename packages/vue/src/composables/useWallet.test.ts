@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { defineComponent, h, shallowRef } from "vue";
+import { defineComponent, h, ref, shallowRef } from "vue";
 import type { SolanaWallet } from "@vue-solana/core";
-import type { SolanaError } from "@vue-solana/core/errors";
+import { createSolanaError, type SolanaError } from "@vue-solana/core/errors";
 import { createMockSolanaContext, mountWithSolana } from "../../test-utils";
 import { useWallet } from "./useWallet";
 
@@ -54,12 +54,6 @@ describe("useWallet", () => {
 
     expect(wallet.connect).toHaveBeenCalledOnce();
     expect(wallet.disconnect).toHaveBeenCalledOnce();
-    expect(console.info).toHaveBeenCalledWith("[Vue Solana] Wallet connected", {
-      publicKey: "public-key",
-    });
-    expect(console.info).toHaveBeenCalledWith("[Vue Solana] Wallet disconnected", {
-      publicKey: "public-key",
-    });
   });
 
   it("refreshes computed state after a wallet mutates during disconnect", async () => {
@@ -250,9 +244,53 @@ describe("useWallet", () => {
     const result = mountUseWallet(context);
 
     await expect(result.disconnect()).rejects.toMatchObject({
-      code: "RPC_FAILURE",
+      code: "WALLET_FAILURE",
       cause,
     } satisfies Partial<SolanaError>);
+  });
+
+  it("clears a stale wallet failure from the context error on a successful connect", async () => {
+    const wallet = {
+      publicKey,
+      connected: false,
+      connecting: false,
+      connect: vi.fn(async () => {
+        wallet.connected = true;
+      }),
+      disconnect: vi.fn(),
+    } as unknown as SolanaWallet;
+    const walletError = createSolanaError("WALLET_FAILURE", "Failed to auto-connect Solana wallet");
+    const context = createMockSolanaContext({
+      wallet: shallowRef(wallet),
+      error: ref(walletError),
+    });
+    const result = mountUseWallet(context);
+
+    await result.connect();
+
+    expect(context.error.value).toBeNull();
+  });
+
+  it("keeps a non-wallet context error after a successful connect", async () => {
+    const wallet = {
+      publicKey,
+      connected: false,
+      connecting: false,
+      connect: vi.fn(async () => {
+        wallet.connected = true;
+      }),
+      disconnect: vi.fn(),
+    } as unknown as SolanaWallet;
+    const rpcError = createSolanaError("RPC_FAILURE", "Unable to reach RPC");
+    const context = createMockSolanaContext({
+      wallet: shallowRef(wallet),
+      error: ref(rpcError),
+    });
+    const result = mountUseWallet(context);
+
+    await result.connect();
+
+    expect(context.error.value).toBe(rpcError);
   });
 });
 

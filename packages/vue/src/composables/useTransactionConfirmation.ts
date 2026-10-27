@@ -3,7 +3,7 @@ import { confirmTransactionSignature } from "@vue-solana/core/transaction";
 import type { ConfirmTransactionOptions, TransactionConfirmation } from "@vue-solana/core/types";
 import { ref } from "vue";
 import { useExecution } from "./use-execution";
-import { useConnection } from "./useConnection";
+import { useSolanaClient } from "./useSolanaClient";
 
 export type TransactionConfirmationStatus =
   | "idle"
@@ -24,7 +24,7 @@ export function getConfirmedTransactionStatus(
 }
 
 export function useTransactionConfirmation(defaultOptions: ConfirmTransactionOptions = {}) {
-  const client = useConnection();
+  const client = useSolanaClient().client;
   const signature = ref<Signature | null>(null);
   const confirmation = ref<TransactionConfirmation | null>(null);
   const {

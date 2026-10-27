@@ -75,7 +75,7 @@ Los clusters soportados son `mainnet` (alias heredado `mainnet-beta`), `devnet`,
 
 `payer` y `payerSecretKey` son compatibles con clientes Vue/core directos. Un envio del cliente requiere un `payer`. `payerSecretKey` deriva su dirección al crear el cliente desde la mitad publica sin verificar, así que trata `payer.address` como no confirmado hasta que la primera firma tenga éxito, y un keypair que no coincide se rechaza en la primera firma en vez de al crear el cliente. La firma importa la key con WebCrypto, que los navegadores solo exponen en un contexto seguro (`https`, o `http` en `localhost`). Nunca pongas un secreto crudo o `payerSecretKey` en la configuración runtime publica de Nuxt, y nunca envíes una clave de firma con fondos al navegador de un usuario final.
 
-El cliente por defecto de `createSolanaPlugin()` usa la composición oficial `solanaRpc()` y `rpcAirdrop()`; `solanaRpc()` instala por si mismo el planner de transacciones y los ejecutores de firma y envio de planes. El fallback custom anterior no se usa. El executor oficial espera el commitment `confirmed` antes de que `execute()` resuelva y `status` sea `sent`.
+El cliente por defecto de `createSolanaPlugin()` usa la composición oficial `solanaRpc()` y `rpcAirdrop()` cuando no hay `commitment` configurado (un `commitment` configurado construye el mismo stack explícitamente para que llegue a la capa RPC); `solanaRpc()` instala por si mismo el planner de transacciones y los ejecutores de firma y envio de planes. El fallback custom anterior no se usa. El executor oficial espera el commitment `confirmed` antes de que `execute()` resuelva y `status` sea `sent`.
 
 ### Ciclo de vida del cliente y del plugin
 
@@ -96,6 +96,18 @@ import { computed, ref } from "vue";
 const cluster = ref<SolanaCluster>("devnet");
 const plugin = computed(() => createSolanaPlugin({ cluster: cluster.value }));
 ```
+
+Libera el plugin cuando desmontes tu app. `createSolanaPlugin()` inicia una suscripción de descubrimiento de Wallet Standard y un arranque diferido; `dispose()` detiene ambos para que no sobrevivan a la app:
+
+```ts
+export const solana = createSolanaPlugin({ cluster: "devnet" });
+const app = createApp(App).use(solana);
+
+app.unmount();
+solana.dispose();
+```
+
+Es seguro llamarlo más de una vez y antes de `use()`. Las apps de Nuxt no necesitan código adicional: el plugin de runtime del módulo lo conecta a `vueApp.onUnmount()`.
 
 Un cliente Kit ejecuta sus plugins `createClient().use(...)` durante la construcción. Cuando uno de esos plugins es asíncrono, el cliente — y cualquier contexto construido a partir de él — solo se activa después de que esa promesa se resuelva. Difiere el trabajo real de RPC y wallet a hooks del ciclo de vida del cliente o acciones del usuario después de la hidratación en lugar de ejecutarlo durante el setup o el SSR.
 
@@ -392,6 +404,8 @@ watchEffect(() => {
 });
 ```
 
+El ref `error` del contexto inyectado que hay detrás de `useSolana()` y `useRpc()` se comparte con el trabajo de arranque de wallets: el registro de la mobile wallet, la auto-conexión de una wallet persistida y el manejo del callback de iOS escriben `WALLET_FAILURE` (o `USER_REJECTED` cuando la wallet reporta un rechazo) ahí. El siguiente `checkConnection()` o un `connect()` exitoso lo limpia. Esas rutas de wallet escriben en `console.error` con el prefijo `[Vue Solana]` solo en desarrollo.
+
 ## Leer info de cuenta
 
 ```vue
@@ -506,7 +520,7 @@ const { publicKey, connected, connecting, connect, disconnect } = useWallet();
 </template>
 ```
 
-Las wallets de extensión de navegador se descubren mediante Solana Wallet Standard. Las wallets Android Mobile Wallet Adapter se registran mediante `@solana-mobile/wallet-standard-mobile` y se exponen mediante la misma lista `useWallets()` en clientes Android Chrome soportados. Las entradas iOS Phantom, Solflare y Backpack se exponen mediante enlaces universales específicos de wallet en navegadores iOS. `refreshWallets()` solo actualiza la lista de wallets descubiertas, y `selectWallet()` solo configura la wallet activa. `connected` permanece false hasta que `connect()` tiene éxito, incluso si la extensión expone cuentas autorizadas previamente después de refrescar la página.
+Las wallets de extensión de navegador se descubren mediante Solana Wallet Standard. Las wallets Android Mobile Wallet Adapter se registran mediante `@solana-mobile/wallet-standard-mobile` y se exponen mediante la misma lista `useWallets()` en clientes Android Chrome soportados. Las entradas iOS Phantom, Solflare y Backpack se exponen mediante enlaces universales específicos de wallet en navegadores iOS. `refreshWallets()` solo actualiza la lista de wallets descubiertas, y `selectWallet()` solo configura la wallet activa. `connected` permanece false hasta que `connect()` tiene éxito, incluso si la extensión expone cuentas autorizadas previamente después de refrescar la página. Un `connect()` correcto también desconecta todas las demás wallets descubiertas mediante su característica `standard:disconnect`, de modo que solo una wallet quede autorizada para la app.
 
 Los adaptadores de wallet de app nativa de escritorio aún no están implementados. El soporte nativo de escritorio requiere enlaces de protocolo específicos de wallet o registro nativo futuro de Wallet Standard.
 
@@ -558,6 +572,8 @@ La wallet devuelve una firma sobre `signedMessage` — el mensaje SIWS que el us
 3. **Vincula la sesión**: solo después de que el mensaje pase las comprobaciones y la firma se verifique debes crear la sesión — asociada a `account.address`.
 
 El servidor debe re-derivar el mensaje esperado a partir del nonce que emitió (o validar todos los campos del mensaje recibido) para rechazar nonces expirados o reutilizados.
+
+Antes de que `signMessage()` o `signIn()` se resuelvan, el adaptador también comprueba la firma devuelta contra el `publicKey` de la cuenta cuando Ed25519 (WebCrypto) está disponible, y rechaza con `INVALID_SIGNATURE` si no coincide. Es una protección de mejor esfuerzo del lado del cliente frente a una wallet que se comporta mal; se omite donde Ed25519 no está disponible, así que la comprobación en el servidor anterior es lo que realmente autentica al usuario.
 
 ## Composables de obtención de datos
 
@@ -804,25 +820,25 @@ const { signature, confirmation, status, loading, error, confirm, reset } =
 await confirm("PASTE_SUBMITTED_SIGNATURE", { commitment: "finalized" });
 ```
 
-El composable conserva la `signature` enviada cuando la confirmación agota el tiempo o la llamada RPC falla, para que las apps aún puedan mostrar un enlace de explorador mientras muestran `error` al usuario.
+El composable conserva la `signature` enviada cuando la confirmación agota el tiempo o la llamada RPC falla, para que las apps aún puedan mostrar un enlace de explorador mientras muestran `error` al usuario. Las opciones se pasan a `confirmTransactionSignature()`: `commitment`, `timeoutMs`, `pollIntervalMs`, `abortSignal` y `searchTransactionHistory`. Una transacción fallida muestra `TRANSACTION_FAILED`, una firma que nunca aparece muestra `TRANSACTION_NOT_FOUND` y una espera agotada muestra `TRANSACTION_TIMEOUT`. Como el ref `error` de este composable siempre es un `SolanaError`, abortar una confirmación normaliza el motivo del aborto a `RPC_FAILURE` y deja el motivo original en `error.cause`; llama a `confirmTransactionSignature()` directamente cuando necesites el motivo de aborto sin procesar.
 
 ## Seguir estado de firma
 
 ```ts
 import { useSignatureStatus } from "@vue-solana/vue/useSignatureStatus";
 
-const { status, loading, error, refresh, stopPolling, stopSubscription } = useSignatureStatus(
+const { status, loading, error, refresh, stopPolling } = useSignatureStatus(
   "PASTE_SUBMITTED_SIGNATURE",
   {
     pollIntervalMs: 5_000,
     searchTransactionHistory: true,
-    subscribe: true,
-    commitment: "confirmed",
   },
 );
 ```
 
-El sondeo usa `getSignatureStatuses()` en cada intervalo, así que detenlo cuando la UI ya no necesite actualizaciones. Llamar a `stopPolling()` limpia el intervalo actual y evita reinicios automáticos del sondeo para esa instancia del composable. Las firmas inválidas limpian `status` obsoleto, establecen `error` y no llaman a RPC ni inician sondeo. Los valores inválidos de `pollIntervalMs` menores o iguales a `0` establecen un `RangeError` y no inician sondeo. `subscribe: true` usa `onSignature()` y elimina el listener al desmontar el componente. Llamar a `stopSubscription()` elimina el listener de firma actual y evita reinicios automáticos para esa instancia del composable.
+No existe una opción `commitment` por llamada: `getSignatureStatuses()` no acepta ninguna, así que las lecturas usan el commitment incluido en el endpoint. Configúralo en el endpoint o en `createSolanaPlugin()`. Para un commitment por llamada usa `useTransactionConfirmation()`.
+
+El sondeo usa `getSignatureStatuses()` con un `setTimeout` encadenado, así que un RPC lento retrasa el siguiente tick pero nunca se solapa consigo mismo. Llamar a `stopPolling()` limpia el temporizador actual e impide más ticks automáticos — hasta que la firma observada cambia, lo que reinicia el sondeo para la nueva firma. Las firmas inválidas limpian `status` obsoleto, establecen `error` y no llaman a RPC ni inician sondeo. Los valores inválidos de `pollIntervalMs` menores o iguales a `0` establecen un `SolanaError` con código `RPC_FAILURE` y no inician sondeo.
 
 ## App de ejemplo
 

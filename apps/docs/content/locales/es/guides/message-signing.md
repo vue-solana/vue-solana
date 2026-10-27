@@ -103,9 +103,11 @@ Expira En: 2026-07-02T12:10:00Z
 
 ## Límite De Verificación
 
-Vue Solana ayuda a solicitar la firma a la wallet. Tu aplicación es responsable de la verificación del lado del servidor, el almacenamiento de nonces, las comprobaciones de expiración y la creación de sesiones.
+Vue Solana verifica la firma devuelta contra la clave pública de la cuenta antes de resolver `signMessage()` / `signIn()`, cuando el entorno admite Ed25519 (WebCrypto). Es una protección de mejor esfuerzo frente a una wallet que devuelve una firma sobre bytes incorrectos o para otra cuenta; no sustituye la verificación en el servidor y se omite donde Ed25519 no está disponible. Una firma que no supera la comprobación rechaza con `INVALID_SIGNATURE`.
 
-No trates una firma sobre texto generico como permiso para transferir tokens o cambiar estado on-chain.
+Tu aplicación sigue siendo responsable de la verificación del lado del servidor, el almacenamiento de nonces, las comprobaciones de expiración y la creación de sesiones.
+
+No trates una firma sobre texto genérico como permiso para transferir tokens o cambiar estado on-chain.
 
 ## Manejo De Errores
 
@@ -122,6 +124,8 @@ const message = computed(() => {
       return "Esta wallet no admite firma de mensajes.";
     case "USER_REJECTED":
       return "La firma del mensaje fue rechazada.";
+    case "INVALID_SIGNATURE":
+      return "La wallet devolvió una firma inválida.";
     default:
       return null;
   }

@@ -7,6 +7,16 @@
 
 Framework-agnostic Solana primitives for Vue Solana libraries and apps that want shared RPC, wallet, and transaction helpers without installing a Vue plugin.
 
+## Related packages
+
+This package is part of the Vue Solana family. Choose based on your app framework:
+
+- [`@vue-solana/core`](https://www.npmjs.com/package/@vue-solana/core) — framework-agnostic Solana primitives: Kit RPC client helpers, wallet types, Android MWA registration, iOS browser wallet helpers, message signing, token account reads, and transaction helpers. **Use this directly** when you want shared RPC/wallet/transaction helpers without installing a Vue plugin (non-Vue apps, server/relayer code, or your own framework integration).
+- [`@vue-solana/vue`](https://www.npmjs.com/package/@vue-solana/vue) — Vue 3 plugin plus composables for RPC, account, balance, wallet, message signing, live data, and transactions. **Use this** in plain Vue 3 apps (Vite, etc.).
+- [`@vue-solana/nuxt`](https://www.npmjs.com/package/@vue-solana/nuxt) — Nuxt module that installs the Vue plugin and auto-imports the composables. **Use this** in Nuxt 3/4 apps.
+
+This package (`@vue-solana/core`) is the foundation the other two build on; most apps should install `@vue-solana/vue` or `@vue-solana/nuxt` rather than this package directly.
+
 Use this package directly when you want Kit RPC client helpers, shared wallet types, Android Mobile Wallet Adapter registration helpers, message signing support, token account reads, and transaction helpers without installing the Vue plugin.
 
 `@vue-solana/core` builds on `@solana/kit`. It exposes `createSolanaClient()` and re-exports all of `@solana/kit` from `@vue-solana/core/kit`. The legacy `@solana/web3-compat` surface and the `web3` subpaths were removed in v2.0.0; transactions flow through the packages as raw `Uint8Array` wire bytes.
@@ -44,7 +54,7 @@ Full Vue Solana docs:
 | ------------- | ----------------------------------------------------------------- |
 | Runtime       | ESM only (modern bundlers; Node needs ESM)                        |
 | TypeScript    | TypeScript 5.x recommended                                        |
-| Solana client | `@solana/kit@^8.4.0` (and `@solana/kit-plugin-rpc`)               |
+| Solana client | `@solana/kit@^8.5.0` (and `@solana/kit-plugin-rpc`)               |
 | Clusters      | `mainnet` (alias `mainnet-beta`), `devnet`, `testnet`, `localnet` |
 
 Since v3.0.0 this package is ESM only: there is no `require` export condition and no top-level `main`, so `require("@vue-solana/core")` fails with `No "exports" main defined`. Pin to `@vue-solana/core@^2` if you must stay on CommonJS.
@@ -92,6 +102,12 @@ import { installSolanaBufferPolyfill } from "@vue-solana/core/buffer-polyfill";
 installSolanaBufferPolyfill();
 ```
 
+The `buffer-polyfill` subpath needs the `buffer` package, declared as an **optional peer dependency**. Apps that use serialization must install it explicitly:
+
+```sh
+pnpm add buffer
+```
+
 ## Configuration
 
 ```ts
@@ -122,7 +138,7 @@ Supported clusters are `mainnet` (legacy alias `mainnet-beta`), `testnet`, `devn
 
 `payer` is a Kit `TransactionSigner`; `payerSecretKey` is its serializable base64 64-byte Ed25519 keypair form. Both are supported by direct core/Vue clients. A client-sent transaction requires a payer. Never put a raw secret or `payerSecretKey` in Nuxt public runtime config, and never ship a funded keypair to an end-user browser.
 
-`createSolanaClient()` composes the official `@solana/kit-plugin-rpc` stack by default: `solanaRpc()`, `rpcTransactionPlanner()`, and `rpcTransactionPlanSendingExecutor()`. The old custom fallback sender is removed. The official sender adds a fresh blockhash, resource-limit and preflight handling, signs, submits, and waits for `confirmed` commitment before the send resolves.
+`createSolanaClient()` composes the official `@solana/kit-plugin-rpc` stack by default: `solanaRpc()` followed by `rpcAirdrop()` when no `commitment` is configured (a configured `commitment` builds the same stack explicitly so it reaches the RPC layer). `solanaRpc()` installs `rpcTransactionPlanner()`, `rpcTransactionPlanSigningExecutor()`, and `rpcTransactionPlanSendingExecutor()` itself, so the client exposes RPC reads and subscriptions plus `planTransaction(s)`, `signTransaction(s)`, and `sendTransaction(s)` with no extra plugin. The old custom fallback sender is not used. Its official sending executor adds a fresh blockhash, resource-limit and preflight handling, signs with the available client signers, submits the transaction, and waits for `confirmed` commitment before the send resolves. A client send requires a `payer` signer.
 
 Use `mainnet` for Solana mainnet. This is Solana's official mainnet cluster name. The legacy `mainnet-beta` spelling is still accepted and redirects to the same endpoint.
 
@@ -145,6 +161,7 @@ Direct subpaths:
 - `@vue-solana/core/ios-wallet`
 - `@vue-solana/core/kit`
 - `@vue-solana/core/mobile-wallet`
+- `@vue-solana/core/mobile-wallet-support`
 - `@vue-solana/core/rpc`
 - `@vue-solana/core/token-accounts`
 - `@vue-solana/core/timeout`
@@ -173,6 +190,16 @@ Direct subpaths:
 | `createSolanaActionStore(fn)`                                   | Wraps an async `(signal, ...args) => Promise` function into a `{ getState, subscribe, dispatch, reset, withSignal }` store; each dispatch aborts the prior in-flight call. |
 
 The client-sent API is the official Kit `ClientWithTransactionSending` capability installed by `createSolanaClient()`. It does not use a wallet popup; `sent` is reached after the RPC executor completes its send-and-confirm operation at `confirmed` commitment. Use a `payer`, and keep funded keys in a trusted server or relayer context.
+| `registerSolanaMobileWallet(config?)` | Registers an Android Mobile Wallet Adapter wallet through `@solana-mobile/wallet-standard-mobile`. |
+| `isSolanaMobileWalletSupported()` | Android-support gate used to decide whether to lazy-load the MWA module. |
+| `getSolanaIosWallets(options?)` | Builds iOS browser wallet entries (Phantom, Solflare, Backpack) as universal links. |
+| `handleSolanaIosWalletCallback()` | Completes a pending iOS wallet deep-link callback after redirect. |
+| `adaptSolanaStandardWallet(wallet)` | Adapts a Solana Wallet Standard wallet into `SolanaWallet`. |
+| `disconnectSolanaStandardWallet(walletInfo)` | Disconnects a discovered Wallet Standard wallet through its own `standard:disconnect` feature, without adapting it. Resolves `false` if the wallet has no disconnect feature, and ignores failures after a 2 s timeout. |
+| `getRegisteredSolanaWallets()` | Returns the Wallet Standard wallets currently registered in the app. |
+| `withTimeout(promise, timeoutMs, options?)` | Races a promise against a timeout, with optional abort signal. |
+| `withSolanaTimeout(promise, timeoutMs, options?)` | Solana-specific timeout wrapper with abort and error-code support. |
+| `normalizeSolanaError(error)` | Normalizes an unknown error into a `SolanaError`. |
 | `isSolanaActionAborted(error)` | Detects abort errors from superseded action dispatches. |
 
 ## Wallet Interface
@@ -194,6 +221,8 @@ const wallet: SolanaWallet = {
 
 Browser extension wallets discovered through the Solana Wallet Standard are adapted into `SolanaWallet`. Android Mobile Wallet Adapter is registered through `@solana-mobile/wallet-standard-mobile` and then adapted through the same Wallet Standard adapter on supported Android Chrome clients. iOS browser wallet entries for Phantom, Solflare, and Backpack are adapted through wallet-specific universal links. Wallet capability metadata exposes whether each wallet supports message signing, transaction signing, and sign-and-send flows. You can also provide a custom object that implements `SolanaWallet` for tests or custom adapters.
 
+The Wallet Standard adapter verifies the signature a wallet returns from `signMessage` / `signIn` against the account's public key before resolving, where Ed25519 (WebCrypto) is available. A signature over the wrong bytes or from a different account rejects with `INVALID_SIGNATURE`. `signIn` also binds the result to the requested account (or active account) and rejects if the account is absent from `wallet.accounts`. This is a best-effort, client-side guard — a malformed signature is rejected even if Ed25519 verification is unavailable, but full verification is skipped where Ed25519 is unavailable — so server-side verification remains mandatory for auth flows. Connecting a wallet disconnects every other discovered wallet (swept over discovery, uncached wallets disconnected via `standard:disconnect`), so only one wallet stays authorized.
+
 Current wallet support:
 
 - Browser extension wallets through Wallet Standard packages.
@@ -213,6 +242,24 @@ For complete runnable Vue and Nuxt examples that use this package through the fr
 - [Live demo](https://vue-solana-docs.vercel.app/demo)
 - <a href="https://vue-solana-docs.vercel.app/examples/vue-vite" target="_blank" rel="noopener noreferrer"><code>examples/vue-vite</code></a>
 - <a href="https://vue-solana-docs.vercel.app/examples/nuxt" target="_blank" rel="noopener noreferrer"><code>examples/nuxt</code></a>
+
+## Bundle size and lean imports
+
+The root barrel (`@vue-solana/core`) intentionally re-exports the full `@solana/kit` mirror so apps do not need to install Kit directly. It is therefore roughly `117 KB` (minified) and is appropriate for most application code.
+
+Size-sensitive entries can avoid pulling the whole mirror by importing the narrow subpaths instead of the root:
+
+- `@vue-solana/core/address`
+- `@vue-solana/core/errors`
+- `@vue-solana/core/timeout`
+- `@vue-solana/core/clusters`
+- `@vue-solana/core/rpc`
+- `@vue-solana/core/types`
+- `@vue-solana/core/kit` (when you explicitly want the Kit surface)
+
+Avoid importing `@vue-solana/core/ios-wallet` or `@vue-solana/core/mobile-wallet` from lean code paths: they own `tweetnacl` and the Mobile Wallet Adapter protocol graph respectively. The `@vue-solana/core/mobile-wallet-support` subpath ships only the Android-support gate used to decide whether to lazy-load the MWA module.
+
+A repository-level guard (`scripts/check-lean-imports.mjs`, run via `pnpm size:packages`) verifies that these lean entries stay free of the heavy iOS/mobile-wallet edges. Add any new lean entrypoint there before publishing it. The same script walks every `packages/vue/dist/*.mjs` static import graph: the Vue root may reach the iOS wallet entry (known, tracked debt), but no Vue subpath may, and `mobile-wallet`, `qrcode`, `@solana-mobile/*`, and `buffer` must stay behind dynamic imports or their dedicated subpaths.
 
 ## AI Agent Skill
 

@@ -60,7 +60,10 @@ describe("useTransactionConfirmation", () => {
     expect(result.status.value).toBe("confirmed");
     expect(result.signature.value).toBe("signature");
     expect(result.confirmation.value?.commitment).toBe("confirmed");
-    expect(getSignatureStatuses).toHaveBeenCalledWith(["signature"]);
+    expect(getSignatureStatuses).toHaveBeenCalledWith(
+      ["signature"],
+      expect.objectContaining({ searchTransactionHistory: false }),
+    );
   });
 
   it("marks finalized when finalized commitment is requested", async () => {
@@ -72,7 +75,10 @@ describe("useTransactionConfirmation", () => {
     await result.confirm(SIGNATURE);
 
     expect(result.status.value).toBe("finalized");
-    expect(getSignatureStatuses).toHaveBeenCalledWith(["signature"]);
+    expect(getSignatureStatuses).toHaveBeenCalledWith(
+      ["signature"],
+      expect.objectContaining({ searchTransactionHistory: false }),
+    );
   });
 
   it("marks processed when processed commitment is requested", async () => {
@@ -84,7 +90,10 @@ describe("useTransactionConfirmation", () => {
     await result.confirm(SIGNATURE);
 
     expect(result.status.value).toBe("processed");
-    expect(getSignatureStatuses).toHaveBeenCalledWith(["signature"]);
+    expect(getSignatureStatuses).toHaveBeenCalledWith(
+      ["signature"],
+      expect.objectContaining({ searchTransactionHistory: false }),
+    );
   });
 
   it("ignores an older confirmation that resolves after a newer confirmation", async () => {

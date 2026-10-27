@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from "vitest";
 import type { SolanaWallet } from "@vue-solana/core/types";
 import {
   account,
+  createSigningTestAccount,
   createStandardWallet,
   createWalletInfo,
   getConnectFeature,
@@ -36,16 +37,20 @@ describe("createSolanaPlugin wallet selection", () => {
 
   it("preserves message signing capability on selected standard wallets", async () => {
     silenceConsole();
-    const signMessage = vi.fn(async ({ message }: { message: Uint8Array }) => [
-      { signedMessage: message, signature: Uint8Array.from([1, 2, 3]) },
-    ]);
+    const { account: signerAccount, sign } = await createSigningTestAccount();
+    const message = new Uint8Array([4, 5, 6]);
+    const signature = await sign(message);
+    const signMessage = vi.fn(async () => [{ signedMessage: message, signature }]);
     const { standardWallet, walletInfo } = mockStandardWalletDiscovery();
     standardWallet.features["solana:signMessage"] = {
       version: "1.0.0",
       signMessage,
     };
+    standardWallet.features["standard:connect"] = {
+      version: "1.0.0",
+      connect: vi.fn().mockResolvedValue({ accounts: [signerAccount] }),
+    };
     const { solana, wallet } = mountSolanaPlugin(undefined, { wallet: true });
-    const message = new Uint8Array([4, 5, 6]);
 
     solana?.refreshWallets();
     solana?.selectWallet(walletInfo);
@@ -53,8 +58,8 @@ describe("createSolanaPlugin wallet selection", () => {
     const result = await wallet?.wallet.value?.signMessage?.(message);
 
     expect(wallet?.canSignMessage.value).toBe(true);
-    expect(signMessage).toHaveBeenCalledWith({ account, message });
-    expect(result).toEqual({ signedMessage: message, signature: Uint8Array.from([1, 2, 3]) });
+    expect(signMessage).toHaveBeenCalledWith({ account: signerAccount, message });
+    expect(result).toEqual({ signedMessage: message, signature });
   });
 
   it("keeps an explicitly configured wallet active when a persisted selection exists", () => {

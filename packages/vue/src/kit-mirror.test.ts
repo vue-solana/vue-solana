@@ -57,3 +57,14 @@ describe("@vue-solana/vue root", () => {
     expectTypeOf<vue.TransactionStatus>().toEqualTypeOf<TransactionStatus>();
   });
 });
+
+describe("@vue-solana/vue usePayer/useIdentity subpaths", () => {
+  it("export the same useIdentity symbol from both subpaths", async () => {
+    const payerModule = await import("@vue-solana/vue/usePayer");
+    const identityModule = await import("@vue-solana/vue/useIdentity");
+
+    expect(identityModule.useIdentity).toBe(payerModule.useIdentity);
+    expect("useIdentity" in payerModule).toBe(true);
+    expect("useIdentity" in identityModule).toBe(true);
+  });
+});

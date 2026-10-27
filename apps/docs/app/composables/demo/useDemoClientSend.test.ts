@@ -11,6 +11,10 @@ const executeBatch = vi.fn();
 const airdropDispatch = vi.fn();
 const payer = shallowRef<{ address: Address } | undefined>({ address: PAYER_ADDRESS });
 
+/** Lamports the balance read reports; tests flip it to exercise the guard. */
+let payerLamports: number | null = 1_000_000_000;
+const refreshPayerBalance = vi.fn(async () => payerLamports);
+
 vi.stubGlobal("useSolanaSendTransaction", () => ({
   data: ref(null),
   error: ref(null),
@@ -29,6 +33,12 @@ vi.stubGlobal("useSolanaAirdrop", () => ({
   error: ref(null),
 }));
 vi.stubGlobal("useSolanaPayer", () => payer);
+vi.stubGlobal("useSolanaBalance", () => ({
+  balance: shallowRef(payerLamports),
+  error: ref(null),
+  loading: ref(false),
+  refresh: refreshPayerBalance,
+}));
 
 /** The memo note carried by an instruction; it is what makes plans distinct. */
 function memoNote(instruction: Instruction): string {
@@ -39,6 +49,7 @@ describe("useDemoClientSend", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     payer.value = { address: PAYER_ADDRESS };
+    payerLamports = 1_000_000_000;
   });
 
   it("submits a single memo instruction", async () => {
@@ -76,6 +87,31 @@ describe("useDemoClientSend", () => {
     expect(execute).not.toHaveBeenCalled();
     expect(executeBatch).not.toHaveBeenCalled();
     expect(airdropDispatch).not.toHaveBeenCalled();
+  });
+
+  it("explains an unfunded payer instead of attempting the send", async () => {
+    payerLamports = 0;
+    const demo = useDemoClientSend();
+
+    await demo.runClientSend();
+    await demo.runClientSendBatch();
+
+    expect(execute).not.toHaveBeenCalled();
+    expect(executeBatch).not.toHaveBeenCalled();
+    expect(demo.clientSendTransactionError.value).toContain("no devnet SOL");
+    expect(demo.clientSendTransactionsError.value).toContain("no devnet SOL");
+    expect(demo.clientSendTransactionStatus.value).toBe("error");
+    expect(demo.clientSendTransactionsStatus.value).toBe("error");
+  });
+
+  it("still sends when the balance read fails", async () => {
+    refreshPayerBalance.mockRejectedValueOnce(new Error("RPC unavailable"));
+    const demo = useDemoClientSend();
+
+    await demo.runClientSend();
+
+    expect(execute).toHaveBeenCalledTimes(1);
+    expect(demo.clientSendTransactionError.value).toBeNull();
   });
 
   it("funds the client payer that pays the fee", async () => {
