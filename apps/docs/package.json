@@ -31,5 +31,6 @@
   },
   "devDependencies": {
     "vue-tsc": "^3.2.6"
-  }
+  },
+  "version": null
 }
