@@ -39,8 +39,10 @@ The Nuxt module installs the runtime plugin on the client only and auto-imports 
 - `useSolana()`
 - `useSolanaAccountInfo()`
 - `useSolanaAction()`
+- `useSolanaAirdrop()`
 - `useSolanaBalance()`
 - `useSolanaClient()`
+- `useSolanaClientCapability()`
 - `useSolanaConnection()`
 - `useSolanaIdentity()`
 - `useSolanaPayer()`
@@ -48,6 +50,7 @@ The Nuxt module installs the runtime plugin on the client only and auto-imports 
 - `useSolanaPlanTransactions()`
 - `useSolanaProgramAccounts()`
 - `useSolanaRequest()`
+- `useSolanaRequestSwr()`
 - `useSolanaRpc()`
 - `useSolanaSelectedWalletAccount()`
 - `useSolanaSendTransaction()`
@@ -59,12 +62,18 @@ The Nuxt module installs the runtime plugin on the client only and auto-imports 
 - `useSolanaSignTransactions()`
 - `useSolanaSignatureStatus()`
 - `useSolanaSubscription()`
+- `useSolanaSubscriptionSwr()`
 - `useSolanaTokenAccounts()`
 - `useSolanaTokenBalance()`
 - `useSolanaTrackedData()`
+- `useSolanaTrackedDataSwr()`
+- `useSolanaTransaction()`
 - `useSolanaTransactionConfirmation()`
 - `useSolanaWallet()`
 - `useSolanaWallets()`
+- `tryUseSolana()`
+- `clearSwrCache()`
+- `deleteSwrKey()`
 
 The Nuxt runtime plugin also installs the selected wallet account context app-wide (via `createSelectedWalletAccountContext`), so `useSolanaSelectedWalletAccount()` works in any component without an explicit provider. Apps that need a custom filter or storage can mount `SelectedWalletAccountProvider` deeper in the component tree to shadow the default context.
 

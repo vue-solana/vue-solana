@@ -167,7 +167,9 @@ The module auto-imports these composables from direct `@vue-solana/vue/*` subpat
 | `useSolanaSignTransactions()`        | Batch transaction signing (falls back to `signAllTransactions`).                                                                             |
 | `useSolanaSignAndSendTransactions()` | Batch sign-and-send returning one signature per transaction.                                                                                 |
 | `useSolanaTransactionConfirmation()` | Confirmation state for an already submitted signature.                                                                                       |
-| `useSolanaSignatureStatus()`         | Signature status reads with optional polling or websocket subscription.                                                                      |
+| `useSolanaSignatureStatus()`         | Signature status reads with optional polling.                                                                                                |
+| `useSolanaClientCapability()`        | Fails fast when the installed client is missing a required capability.                                                                       |
+| `tryUseSolana()`                     | Returns the injected Solana context or `null` when no plugin context is available.                                                           |
 | `useSolanaTransaction()`             | Generic async transaction state helper with optional timeout settings.                                                                       |
 | `useSolanaAction()`                  | Generic async action state machine; each dispatch aborts the prior attempt.                                                                  |
 | `useSolanaRequest()`                 | One-shot Kit request with stale-while-revalidate as its source changes.                                                                      |
@@ -176,6 +178,10 @@ The module auto-imports these composables from direct `@vue-solana/vue/*` subpat
 | `useSolanaRequestSwr()`              | Cache-keyed SWR adapter for one-shot Kit requests.                                                                                           |
 | `useSolanaSubscriptionSwr()`         | Cache-keyed SWR adapter for Kit reactive stream stores.                                                                                      |
 | `useSolanaTrackedDataSwr()`          | Cache-keyed SWR adapter for slot-tracked data.                                                                                               |
+| `clearSwrCache()`                    | Clears every cached SWR entry.                                                                                                               |
+| `deleteSwrKey()`                     | Removes a single cached SWR entry by full cache key.                                                                                         |
+| `useSolanaClientCapability()`        | Fails fast when the installed client is missing a required capability.                                                                       |
+| `tryUseSolana()`                     | Returns the injected Solana context or `null` when no plugin context is available.                                                           |
 | `useSolanaSelectedWalletAccount()`   | App-wide selected wallet account context provided by the runtime plugin.                                                                     |
 | `useSolanaPayer()`                   | Reactive Kit client `payer` signer ref. Nuxt config intentionally does not provide one; use a client-only plugin with `clientPlugin: false`. |
 | `useSolanaIdentity()`                | Reactive Kit client `identity` signer ref.                                                                                                   |
@@ -310,7 +316,7 @@ async function signIn() {
 </template>
 ```
 
-Message signing is for wallet ownership or authentication challenges. It is separate from transaction signing and does not authorize on-chain activity. For auth flows, use a server-issued nonce and verify the returned signature server-side. The adapter also checks the signature against the account's public key before resolving, where Ed25519 (WebCrypto) is available — a best-effort client-side guard that rejects with `INVALID_SIGNATURE`, not a replacement for server-side verification.
+Message signing is for wallet ownership or authentication challenges. It is separate from transaction signing and does not authorize on-chain activity. For auth flows, use a server-issued nonce and verify the returned signature server-side. The adapter also checks the signature against the account's public key before resolving, where Ed25519 (WebCrypto) is available — a best-effort client-side guard that rejects with `INVALID_SIGNATURE`, not a replacement for server-side verification. Sign-in results are bound to the requested account; a mismatch is rejected with `INVALID_SIGNATURE`. Connecting a wallet disconnects every other discovered wallet so only one wallet stays authorized.
 
 ## Client-Sent Transactions
 
@@ -343,7 +349,7 @@ Docs: [Vue Solana Agent Skill](https://vue-solana-docs.vercel.app/agent-skill)
 ## Caveats
 
 - The runtime plugin is client-only. Auto-imported composables are SSR-safe, but real RPC and wallet work should run after hydration or in user actions.
-- The SWR cache (`useSolanaRequestSwr()`, `useSolanaSubscriptionSwr()`, `useSolanaTrackedDataSwr()`) is module-level and shared across SSR requests. Namespace cache keys per request or call `clearSwrCache()` (auto-imported) at the start of each server request to avoid leaking cached data between requests.
+- The SWR cache (`useSolanaRequestSwr()`, `useSolanaSubscriptionSwr()`, `useSolanaTrackedDataSwr()`) is module-level and shared across SSR requests. Namespace cache keys per request or call `clearSwrCache()` (auto-imported) at the start of each server request to avoid leaking cached data between requests. The cache is capped at 1024 entries with oldest-first eviction; `deleteSwrKey()` (auto-imported) evicts a single key by its full cache key.
 - Nuxt module options are stored in public runtime config, so they must be JSON-serializable.
 - Public Solana RPC endpoints are useful for development, but production apps should use dedicated RPC infrastructure.
 - Broad `useSolanaProgramAccounts()` scans can be expensive or blocked on public RPC nodes. Prefer narrow filters and `dataSlice`.

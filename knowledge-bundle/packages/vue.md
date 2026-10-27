@@ -102,9 +102,9 @@ It is safe to call repeatedly and before `install()`. Nuxt apps need no code: th
 
 The plugin accepts `payer` as a Kit `TransactionSigner` and `payerSecretKey` as a base64 64-byte Ed25519 keypair (secret key first). A client-sent transaction requires one of those signers. `payerSecretKey` derives its address at client creation from the unverified public half, so treat `payer.address` as unconfirmed until the first signature succeeds, and a mismatched keypair is rejected at the first signature rather than at creation. Signing imports the key through WebCrypto, which browsers expose only in a secure context (`https`, or `http` on `localhost`). These options are for direct Vue/core clients only: Nuxt's public runtime config must never receive a raw secret or `payerSecretKey`. The default client uses the official `solanaRpc()` and `rpcAirdrop()` composition when no `commitment` is configured (a configured `commitment` builds the same stack explicitly so it reaches the RPC layer), and `solanaRpc()` installs the transaction planner and the plan-signing and plan-sending executors itself; the old custom fallback sender is not used.
 
-## `useSolana()`
+## `useSolana()` / `tryUseSolana()`
 
-Returns the full injected Vue Solana context. If the plugin has not been installed, such as during Nuxt SSR before the client-only plugin runs, it returns inert SSR-safe state instead of throwing. Runtime RPC and wallet actions still require the plugin-provided client context.
+`useSolana()` returns the full injected Vue Solana context. If the plugin has not been installed, such as during Nuxt SSR before the client-only plugin runs, it returns a fresh inert SSR-safe context per call (not a singleton) instead of throwing. Runtime RPC and wallet actions still require the plugin-provided client context. `tryUseSolana()` returns the injected context or `null` without creating a fallback.
 
 ## `useSolanaClient()`
 
@@ -567,7 +567,7 @@ The mappers receive the unwrapped value; the returned `data` keeps the envelope.
 
 ## SWR Cache Adapters (`@vue-solana/vue/swr`)
 
-`useRequestSwr(key, source, options?)`, `useSubscriptionSwr(key, source, options?)`, and `useTrackedDataSwr(key, source, options?)` wrap the composables above with cache keying. Components mounted with the same key seed from the last-known value while their own request revalidates; results are written back for the next mount. Keys are namespaced per adapter, a `null` source disables and clears the key, and `clearSwrCache()` empties the cache (use per-request namespacing or clearing on the server). There is no `useAction` adapter: actions are mutations, not cacheable reads.
+`useRequestSwr(key, source, options?)`, `useSubscriptionSwr(key, source, options?)`, and `useTrackedDataSwr(key, source, options?)` wrap the composables above with cache keying. Components mounted with the same key seed from the last-known value while their own request revalidates; results are written back for the next mount. Keys are namespaced per adapter, a `null` source disables and clears the key, and `clearSwrCache()` empties the cache (use per-request namespacing or clearing on the server). The cache is capped at 1024 entries with oldest-first eviction; `deleteSwrKey(key)` evicts a single entry by its full cache key (full key includes the adapter prefix). There is no `useAction` adapter: actions are mutations, not cacheable reads.
 
 ## `useSignIn()`
 

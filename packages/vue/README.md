@@ -74,20 +74,22 @@ import { createApp } from "vue";
 import { createSolanaPlugin } from "@vue-solana/vue";
 import App from "./App.vue";
 
-createApp(App)
-  .use(
-    createSolanaPlugin({
-      cluster: "devnet",
-      mobileWallet: {
-        appIdentity: {
-          name: "My Vue Solana App",
-          uri: "https://example.com",
-          icon: "favicon.ico",
-        },
-      },
-    }),
-  )
-  .mount("#app");
+const solana = createSolanaPlugin({
+  cluster: "devnet",
+  mobileWallet: {
+    appIdentity: {
+      name: "My Vue Solana App",
+      uri: "https://example.com",
+      icon: "favicon.ico",
+    },
+  },
+});
+
+createApp(App).use(solana).mount("#app");
+
+// On teardown:
+// app.unmount();
+// solana.dispose();
 ```
 
 Android Mobile Wallet Adapter registration is enabled by default on supported Android Chrome clients. Pass `mobileWallet` options to customize the MWA app identity, or pass `mobileWallet: false` to disable Android mobile wallet registration.
@@ -236,6 +238,8 @@ const signatureStatus = useSignatureStatus(signature, {
   searchTransactionHistory: true,
 });
 ```
+
+There is no per-call `commitment` option for `useSignatureStatus()`; `getSignatureStatuses` takes no per-call commitment, so reads use the commitment baked into the endpoint. Polling uses chained timeouts and `stopPolling()` prevents further ticks until the watched signature changes (which restarts polling). Invalid `pollIntervalMs` values return an `RPC_FAILURE` `SolanaError`.
 
 Read SPL token accounts and balances through Kit RPC `jsonParsed`:
 
@@ -500,7 +504,7 @@ import { useRequestSwr } from "@vue-solana/vue/swr";
 const balance = useRequestSwr(["balance", address], () => client.rpc.getBalance(address).send());
 ```
 
-The SWR cache is module-level and shared across the whole app, including across SSR requests. Namespace cache keys per request (for example by including a request or session id) or call `clearSwrCache()` at the start of each server request to avoid leaking one request's cached data into another. On the client the cache is intentionally shared for stale-while-revalidate seeding.
+The SWR cache is module-level and shared across the whole app, including across SSR requests. Namespace cache keys per request (for example by including a request or session id) or call `clearSwrCache()` at the start of each server request to avoid leaking one request's cached data into another. On the client the cache is intentionally shared for stale-while-revalidate seeding. It is capped at 1024 entries with oldest-first eviction. Use `deleteSwrKey(key)` to evict a single entry by its full cache key (including the adapter prefix like `request:`).
 
 ### Cancellation & Timeouts
 
@@ -604,9 +608,9 @@ Docs: [Vue Solana Agent Skill](https://vue-solana-docs.vercel.app/agent-skill)
 
 | API                                                                                        | Description                                                                                                                              |
 | ------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `createSolanaPlugin(options?)`                                                             | Installs the Vue Solana context.                                                                                                         |
+| `createSolanaPlugin(options?)`                                                             | Installs the Vue Solana context and returns `{ install, context, dispose }`. `dispose()` stops wallet discovery/subscriptions.           |
 | `VueSolana`                                                                                | Alias for `createSolanaPlugin`.                                                                                                          |
-| `useSolana()`                                                                              | Returns the full injected Solana context; throws when no plugin context is available.                                                    |
+| `useSolana()`                                                                              | Returns the full injected Solana context; throws when no plugin context is available (SSR fallback uses a fresh inert context per call). |
 | `tryUseSolana()`                                                                           | Returns the injected Solana context or `null` when no plugin context is available (SSR-safe).                                            |
 | `MissingClientCapabilityError`                                                             | Thrown by `useClientCapability()` (and client-sent composables) when the configured client lacks a required capability.                  |
 | `useRpc()`                                                                                 | Returns cluster, endpoint, connection status, latest blockhash, the Kit `client`, and `checkConnection()`.                               |
@@ -631,12 +635,14 @@ Docs: [Vue Solana Agent Skill](https://vue-solana-docs.vercel.app/agent-skill)
 | `useTrackedData(source, options?)`                                                         | Slot-deduplicated fetch plus subscription over Kit's slot-tracking store.                                                                |
 | `useRequestSwr(key, ...)` / `useSubscriptionSwr(key, ...)` / `useTrackedDataSwr(key, ...)` | Cache-keyed SWR adapters seeding fresh mounts from the last-known result.                                                                |
 | `clearSwrCache()`                                                                          | Clears every cached SWR entry.                                                                                                           |
+| `deleteSwrKey(key)`                                                                        | Removes a single cached SWR entry by full cache key (including adapter prefix).                                                          |
 | `useSignIn(input?)`                                                                        | Sign In With Solana (SIWS) trigger returning `{ account, signedMessage, signature }` for server-side verification.                       |
 | `useSelectedWalletAccount()`                                                               | App-wide selected wallet account context: `[selectedAccount, setSelectedAccount, filteredWallets]`.                                      |
 | `SelectedWalletAccountProvider`                                                            | Component that provides the selected wallet account context to its subtree.                                                              |
 | `useSignTransactions()`                                                                    | Batch-signs transactions through the wallet, preferring `signTransactions` and falling back to `signAllTransactions`.                    |
 | `useSignAndSendTransactions()`                                                             | Signs and sends multiple transactions, returning one signature each, with a singular sequential fallback.                                |
 | `useClientCapability(capability, options?)`                                                | Fails fast with a clear error when the configured Solana client lacks a requested capability.                                            |
+| `tryUseSolana()`                                                                           | Returns the injected Solana context or `null` when no plugin context is available (SSR-safe).                                            |
 | `usePayer()`                                                                               | Reactive Kit client `payer` signer ref. The default client exposes a configured payer when supplied.                                     |
 | `useIdentity()`                                                                            | Reactive Kit client `identity` signer ref (requires an identity signer on a custom client).                                              |
 | `usePlanTransaction()`                                                                     | Plans a single transaction message from instruction inputs without signing or sending; the default client includes the official planner. |

@@ -195,7 +195,7 @@ The client-sent API is the official Kit `ClientWithTransactionSending` capabilit
 | `getSolanaIosWallets(options?)` | Builds iOS browser wallet entries (Phantom, Solflare, Backpack) as universal links. |
 | `handleSolanaIosWalletCallback()` | Completes a pending iOS wallet deep-link callback after redirect. |
 | `adaptSolanaStandardWallet(wallet)` | Adapts a Solana Wallet Standard wallet into `SolanaWallet`. |
-| `disconnectSolanaStandardWallet(walletInfo)` | Disconnects a discovered Wallet Standard wallet through its own `standard:disconnect` feature, without adapting it. |
+| `disconnectSolanaStandardWallet(walletInfo)` | Disconnects a discovered Wallet Standard wallet through its own `standard:disconnect` feature, without adapting it. Resolves `false` if the wallet has no disconnect feature, and ignores failures after a 2 s timeout. |
 | `getRegisteredSolanaWallets()` | Returns the Wallet Standard wallets currently registered in the app. |
 | `withTimeout(promise, timeoutMs, options?)` | Races a promise against a timeout, with optional abort signal. |
 | `withSolanaTimeout(promise, timeoutMs, options?)` | Solana-specific timeout wrapper with abort and error-code support. |
@@ -221,7 +221,7 @@ const wallet: SolanaWallet = {
 
 Browser extension wallets discovered through the Solana Wallet Standard are adapted into `SolanaWallet`. Android Mobile Wallet Adapter is registered through `@solana-mobile/wallet-standard-mobile` and then adapted through the same Wallet Standard adapter on supported Android Chrome clients. iOS browser wallet entries for Phantom, Solflare, and Backpack are adapted through wallet-specific universal links. Wallet capability metadata exposes whether each wallet supports message signing, transaction signing, and sign-and-send flows. You can also provide a custom object that implements `SolanaWallet` for tests or custom adapters.
 
-The Wallet Standard adapter verifies the signature a wallet returns from `signMessage` / `signIn` against the account's public key before resolving, where Ed25519 (WebCrypto) is available. A signature over the wrong bytes or from a different account rejects with `INVALID_SIGNATURE`. This is a best-effort, client-side guard — it is skipped where Ed25519 is unavailable — so server-side verification remains mandatory for auth flows.
+The Wallet Standard adapter verifies the signature a wallet returns from `signMessage` / `signIn` against the account's public key before resolving, where Ed25519 (WebCrypto) is available. A signature over the wrong bytes or from a different account rejects with `INVALID_SIGNATURE`. `signIn` also binds the result to the requested account (or active account) and rejects if the account is absent from `wallet.accounts`. This is a best-effort, client-side guard — a malformed signature is rejected even if Ed25519 verification is unavailable, but full verification is skipped where Ed25519 is unavailable — so server-side verification remains mandatory for auth flows. Connecting a wallet disconnects every other discovered wallet (swept over discovery, uncached wallets disconnected via `standard:disconnect`), so only one wallet stays authorized.
 
 Current wallet support:
 
