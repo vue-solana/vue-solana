@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { useSolanaPay } from "./useSolanaPay";
+import type { TransferRequestURLFields } from "@vue-solana/core/solana-pay";
 import { useSolanaClient } from "./useSolanaClient";
 
 vi.mock("./useSolanaClient", () => ({
@@ -72,7 +73,7 @@ describe("useSolanaPay", () => {
 
   it("parses a request", () => {
     const { parseRequest, parsedRequest } = useSolanaPay();
-    const parsed = parseRequest('solana:{"recipient":"addr"}');
+    const parsed = parseRequest('solana:{"recipient":"addr"}') as TransferRequestURLFields;
     expect(parsed.recipient).toBe("addr");
     expect(parsedRequest.value).toEqual(parsed);
   });
