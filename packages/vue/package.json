@@ -109,6 +109,22 @@
       "types": "./dist/useSolanaClient.d.ts",
       "import": "./dist/useSolanaClient.mjs"
     },
+    "./useSolanaPay": {
+      "types": "./dist/useSolanaPay.d.ts",
+      "import": "./dist/useSolanaPay.mjs"
+    },
+    "./useSolanaPayConfirmation": {
+      "types": "./dist/useSolanaPayConfirmation.d.ts",
+      "import": "./dist/useSolanaPayConfirmation.mjs"
+    },
+    "./useSolanaQrCode": {
+      "types": "./dist/useSolanaQrCode.d.ts",
+      "import": "./dist/useSolanaQrCode.mjs"
+    },
+    "./useSolanaQrScanner": {
+      "types": "./dist/useSolanaQrScanner.d.ts",
+      "import": "./dist/useSolanaQrScanner.mjs"
+    },
     "./useRpc": {
       "types": "./dist/useRpc.d.ts",
       "import": "./dist/useRpc.mjs"

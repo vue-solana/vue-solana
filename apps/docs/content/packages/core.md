@@ -74,6 +74,9 @@ Direct subpaths:
 - `@vue-solana/core/wallet`
 - `@vue-solana/core/wallet-standard`
 - `@vue-solana/core/token-accounts`
+- `@vue-solana/core/solana-pay`
+- `@vue-solana/core/solana-pay-confirmation`
+- `@vue-solana/core/solana-pay-status`
 
 ## Related Guides
 

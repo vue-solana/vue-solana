@@ -142,6 +142,10 @@ Direct package subpaths:
 - `@vue-solana/vue/swr`
 - `@vue-solana/vue/useSolana`
 - `@vue-solana/vue/useSolanaClient`
+- `@vue-solana/vue/useSolanaPay`
+- `@vue-solana/vue/useSolanaPayConfirmation`
+- `@vue-solana/vue/useSolanaQrCode`
+- `@vue-solana/vue/useSolanaQrScanner`
 - `@vue-solana/vue/useRpc`
 - `@vue-solana/vue/useConnection`
 - `@vue-solana/vue/useAccountInfo`
