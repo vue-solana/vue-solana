@@ -23,7 +23,7 @@ export function useSolanaPay() {
     try {
       const refAddr = await createSolanaPayReference();
       reference.value = refAddr;
-      const url = encodeURL({ ...input, reference: refAddr });
+      const url = encodeURL({ ...input, reference: refAddr } as never);
       requestUrl.value = url.toString();
       parsedRequest.value = parseURL(url.toString());
       status.value = "pending";
@@ -39,7 +39,7 @@ export function useSolanaPay() {
 
   function parseRequest(value: string) {
     try {
-      const parsed = parseURL(value);
+      const parsed = parseURL(value) as unknown;
       parsedRequest.value = parsed;
       error.value = null;
       return parsed;
@@ -64,9 +64,14 @@ export function useSolanaPay() {
       const p = parsed as { recipient?: string; amount?: bigint; splToken?: string } | null;
       const result = await verifySolanaPayPayment(rpc.value as unknown, {
         reference: String(reference.value),
-        expectedRecipient: (options as Record<string, unknown>).expectedRecipient ?? p?.recipient,
-        expectedAmount: (options as Record<string, unknown>).expectedAmount ?? p?.amount,
-        expectedTokenMint: (options as Record<string, unknown>).expectedTokenMint ?? p?.splToken,
+        expectedRecipient: String(
+          (options as Record<string, unknown>).expectedRecipient ?? p?.recipient ?? "",
+        ),
+        expectedAmount:
+          ((options as Record<string, unknown>).expectedAmount as bigint | undefined) ?? p?.amount,
+        expectedTokenMint:
+          ((options as Record<string, unknown>).expectedTokenMint as string | undefined) ??
+          p?.splToken,
         ...(options as Record<string, unknown>),
       });
       status.value = (result as { status: typeof status.value }).status;
