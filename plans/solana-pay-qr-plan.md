@@ -8,10 +8,9 @@ Solana Pay references:
 
 - https://solana.com/docs/payments/accept-payments/solana-pay (Commerce Kit)
 - https://solana.com/docs/tools/solana-pay
-- Official package: `@solana-commerce/solana-pay` (compatible with `@solana/kit`)
 - Legacy spec: https://docs.solanapay.com/spec
 
-The official Commerce Kit already provides `encodeURL`, `parseURL`, `createTransfer`, `createQR`, and `createStyledQRCode`, all Kit-compatible. We should depend on it rather than reimplementing the spec, and expose its capabilities through our packages.
+The official Commerce Kit (`@solana-commerce/solana-pay`) was originally used for `encodeURL`, `parseURL`, and `createQR`, but it statically imports `gill`, which is a second Kit wrapper with its own `@solana/kit` range. That produced a duplicate-Kit graph and broke the example builds with `MISSING_EXPORT` against Kit 8.x, so the primitives are now implemented directly on `@solana/kit` (with `qrcode` for the QR encoder).
 
 ## Scope
 
@@ -40,7 +39,7 @@ Deferred scope:
 
 ## Phase 1: Core Solana Pay Transfer Primitives (completed)
 
-Status: done (via `@solana-commerce/solana-pay` re-export).
+Status: done (implemented on `@solana/kit`; no `gill` dependency).
 
 Tasks:
 
@@ -236,8 +235,8 @@ Acceptance criteria:
 
 ## Open Decisions
 
-- ~~Decide whether to depend on official `@solana/pay` or implement a minimal Solana Pay transfer parser and builder directly in `@vue-solana/core`.~~ **Resolved:** depend on `@solana-commerce/solana-pay` (Kit-compatible) and re-export/wrap its primitives; do not reimplement the spec.
-- ~~Decide which QR generation package to use if no existing dependency is suitable.~~ **Resolved:** use `createQR` / `createStyledQRCode` from `@solana-commerce/solana-pay`.
+- ~~Decide whether to depend on official `@solana/pay` or implement a minimal Solana Pay transfer parser and builder directly in `@vue-solana/core`.~~ **Resolved:** reimplement the transfer URL encode/parse helpers directly on `@solana/kit`. `@solana-commerce/solana-pay` was removed because it pulls `gill`, a second Kit wrapper, which duplicates `@solana/kit` and broke Kit 8.x builds.
+- ~~Decide which QR generation package to use if no existing dependency is suitable.~~ **Resolved:** use `qrcode` directly (`createQR` / `createStyledQRCode` / `createQRDataURL` / `createQRCanvas` in `@vue-solana/core/solana-pay`), loaded lazily so URL-only consumers do not bundle the encoder.
 - Decide whether QR scanner fallback support should be built into `@vue-solana/vue` or documented as an app-level dependency.
 - Decide the exact public composable names before adding package export maps.
 - Decide whether Solana Pay transaction request URLs belong in the next milestone after transfer requests (still deferred; requires HTTPS GET/POST handling).

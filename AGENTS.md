@@ -282,6 +282,7 @@ Rules that are easy to get wrong:
 - `@solana/transactions`
 - `@solana/web3.js` (legacy; removed)
 - `@solana/web3-compat` (removed)
+- `gill` and `@solana-commerce/solana-pay` (removed 2026-10-29). `gill` is a Kit wrapper with its own `@solana/kit` range, and `@solana-commerce/solana-pay` statically imports it. Together they installed a second Kit copy and failed the example builds with `MISSING_EXPORT` (`isDurableNonceTransaction`, `getComputeUnitEstimateForTransactionMessageFactory`) against Kit 8.x. Solana Pay URL encode/parse lives in `packages/core/src/solana-pay/` and uses Kit directly; `qrcode` is the only extra dependency, imported lazily from `create-qr.ts`.
 
 **Wallet Standard:** Use `@wallet-standard/app`, `@wallet-standard/base`, `@wallet-standard/features`. Do NOT add React-specific `@wallet-standard/react`, `@wallet-standard/ui`, or `@wallet-standard/ui-registry`.
 
