@@ -2,7 +2,7 @@
 title: "@vue-solana/vue"
 description: 用于 Solana 应用的 Vue 插件和 composable。
 ogSection: 包
-surroundOrder: 15
+surroundOrder: 16
 ---
 
 [`@vue-solana/vue`](https://www.npmjs.com/package/@vue-solana/vue) 提供用于 Solana RPC 访问、余额读取、钱包状态和交易 helper 状态的 Vue 插件与 composable。
@@ -129,6 +129,10 @@ import { useWallet } from "@vue-solana/vue/useWallet";
 - `@vue-solana/vue/useSubscription`
 - `@vue-solana/vue/useTrackedData`
 - `@vue-solana/vue/useSignIn`
+- `@vue-solana/vue/useSolanaPay`
+- `@vue-solana/vue/useSolanaPayConfirmation`
+- `@vue-solana/vue/useSolanaQrCode`
+- `@vue-solana/vue/useSolanaQrScanner`
 - `@vue-solana/vue/useSelectedWalletAccount`
 - `@vue-solana/vue/useSignTransactions`
 - `@vue-solana/vue/useSignAndSendTransactions`
@@ -180,6 +184,10 @@ import { useWallet } from "@vue-solana/vue/useWallet";
 - `useSubscription(source, options?)`：来自 RPC 订阅和其他响应式流源的实时数据。
 - `useTrackedData(source, options?)`：由单次请求播种的 RPC 订阅，按 slot 去重。
 - `useSignIn()`：触发钱包的 Sign In With Solana（SIWS）功能。
+- `useSolanaPay()`：构建和解析 Solana Pay 转账请求 URL，并按引用跟踪确认状态。
+- `useSolanaPayConfirmation()`：轮询 Solana Pay 引用的支付状态。
+- `useSolanaQrCode()`：将 Solana Pay URL 渲染为 SVG 二维码。
+- `useSolanaQrScanner()`：通过摄像头和 `BarcodeDetector` 扫描 Solana Pay 二维码。
 - `useSelectedWalletAccount()`：读取应用级选中钱包账户 context，带持久化和过滤。
 - `useSignTransactions()` / `useSignAndSendTransactions()`：在一次钱包请求中签署（或签署并发送）多笔交易。
 - `usePayer()` / `useIdentity()`：Kit client 的响应式 signer。默认 Vue client 会暴露配置的 payer，custom client 可以安装 signer。
@@ -194,6 +202,7 @@ import { useWallet } from "@vue-solana/vue/useWallet";
 - [账户读取](/zh/guides/account-reads)：读取余额、账户信息、program accounts 和签名状态。
 - [交易](/zh/guides/transactions)：签名、发送、确认并展示交易进度。
 - [消息签名](/zh/guides/message-signing)：签署链下认证或所有权 challenge。
+- [Solana Pay](/zh/guides/solana-pay)：用 `useSolanaPay()` 构建支付请求并渲染或扫描二维码。
 - [E2E 测试](/zh/guides/e2e-testing)：在 Playwright 测试中模拟 RPC、RPC 订阅和钱包。
 - [错误](/zh/guides/errors)：把 composable `error` ref 映射为安全 UI 消息。
 

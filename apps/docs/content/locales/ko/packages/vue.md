@@ -2,7 +2,7 @@
 title: "@vue-solana/vue"
 description: Solana 앱을 위한 Vue 플러그인과 컴포저블입니다.
 ogSection: 패키지
-surroundOrder: 15
+surroundOrder: 16
 ---
 
 [`@vue-solana/vue`](https://www.npmjs.com/package/@vue-solana/vue)는 Solana RPC 접근, 잔액 읽기, 지갑 상태, 트랜잭션 helper 상태를 위한 Vue 플러그인과 컴포저블을 제공합니다.
@@ -129,6 +129,10 @@ Direct package subpath:
 - `@vue-solana/vue/useSubscription`
 - `@vue-solana/vue/useTrackedData`
 - `@vue-solana/vue/useSignIn`
+- `@vue-solana/vue/useSolanaPay`
+- `@vue-solana/vue/useSolanaPayConfirmation`
+- `@vue-solana/vue/useSolanaQrCode`
+- `@vue-solana/vue/useSolanaQrScanner`
 - `@vue-solana/vue/useSelectedWalletAccount`
 - `@vue-solana/vue/useSignTransactions`
 - `@vue-solana/vue/useSignAndSendTransactions`
@@ -180,6 +184,10 @@ Buffer polyfill이 필요한 브라우저 트랜잭션 코드에는 `@vue-solana
 - `useSubscription(source, options?)`: RPC 구독 및 기타 reactive stream 소스의 실시간 데이터입니다.
 - `useTrackedData(source, options?)`: one-shot fetch로 시드되는 RPC 구독으로, slot 기준 deduplicate됩니다.
 - `useSignIn()`: 지갑의 Sign In With Solana(SIWS) 기능을 트리거합니다.
+- `useSolanaPay()`: Solana Pay 전송 요청 URL을 만들고 파싱하며 reference별 확인 상태를 추적합니다.
+- `useSolanaPayConfirmation()`: Solana Pay reference의 결제 상태를 주기적으로 조회합니다.
+- `useSolanaQrCode()`: Solana Pay URL을 SVG QR 코드로 렌더링합니다.
+- `useSolanaQrScanner()`: 카메라와 `BarcodeDetector`로 Solana Pay QR 코드를 스캔합니다.
 - `useSelectedWalletAccount()`: 지속성과 필터링이 있는 앱 전역 selected wallet account context를 읽습니다.
 - `useSignTransactions()` / `useSignAndSendTransactions()`: 지갑 요청 한 번으로 여러 transaction을 서명하거나 서명 후 전송합니다.
 - `usePayer()` / `useIdentity()`: Kit client의 reactive signer입니다. default Vue client는 설정된 payer를 노출하고, custom client는 signer를 설치할 수 있습니다.
@@ -194,6 +202,7 @@ Buffer polyfill이 필요한 브라우저 트랜잭션 코드에는 `@vue-solana
 - [계정 읽기](/ko/guides/account-reads): balance, account info, program accounts, signature status를 읽습니다.
 - [트랜잭션](/ko/guides/transactions): transaction을 sign, send, confirm하고 진행 상태를 표시합니다.
 - [메시지 서명](/ko/guides/message-signing): 오프체인 인증 또는 소유권 challenge에 서명합니다.
+- [Solana Pay](/ko/guides/solana-pay): `useSolanaPay()`로 결제 요청을 만들고 QR 코드를 렌더링·스캔합니다.
 - [E2E 테스팅](/ko/guides/e2e-testing): Playwright 테스트에서 RPC, RPC 구독, 지갑을 모킹합니다.
 - [오류](/ko/guides/errors): composable `error` ref를 안전한 UI 메시지로 매핑합니다.
 

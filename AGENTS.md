@@ -45,6 +45,9 @@ Implemented files:
 - `src/errors.ts`: `SolanaError` codes shared by the packages.
 - `src/timeout.ts`: `withTimeout()` helper.
 - `src/token-accounts.ts`: token account info types.
+- `src/solana-pay.ts` + `src/solana-pay/*`: Solana Pay URL encode/parse, reference helpers, and QR rendering, implemented directly on Kit with a lazily imported `qrcode`.
+- `src/solana-pay-confirmation.ts`: `createSolanaPayReference()` and `verifySolanaPayPayment()` polling over `getSignaturesForAddress(reference)`.
+- `src/solana-pay-status.ts`: `getSolanaPayPaymentStatus()` non-verifying status read.
 - `src/buffer-polyfill.ts`: `installSolanaBufferPolyfill()`.
 - `src/wallet-standard.ts` + `src/wallet-standard/*`: Wallet Standard discovery, chain support, and adapter.
 - `src/mobile-wallet.ts`: Android MWA registration via `@solana-mobile/wallet-standard-mobile`.
@@ -79,6 +82,10 @@ Implemented files:
 - `src/composables/useSubscription.ts`: live data over Kit reactive stream stores.
 - `src/composables/useTrackedData.ts`: slot-deduplicated fetch + subscription over Kit's slot-tracking store.
 - `src/composables/useSignIn.ts`: wallet Sign In With Solana (SIWS) trigger.
+- `src/composables/useSolanaPay.ts`: builds/parses Solana Pay transfer requests with a generated reference and verifies settlement.
+- `src/composables/useSolanaPayConfirmation.ts`: interval polling of `getSolanaPayPaymentStatus()`.
+- `src/composables/useSolanaQrCode.ts`: SVG QR rendering through `createQR()`.
+- `src/composables/useSolanaQrScanner.ts`: camera + `BarcodeDetector` scanning with `parseURL()` validation, browser-only.
 - `src/composables/useSelectedWalletAccount.ts`: app-wide selected wallet account context (persistence via `src/plugin/selected-wallet-account-storage.ts`, component in `src/components/SelectedWalletAccountProvider.ts`).
 - `src/composables/useSignTransactions.ts` / `useSignAndSendTransactions.ts`: batch wallet requests with singular fallbacks.
 - `src/composables/useClientCapability.ts`: fail-fast client capability assertions.
@@ -118,6 +125,7 @@ Auto-imported Nuxt composables (source of truth: `packages/nuxt/src/imports.ts`)
 - `useSolanaPayer()`, `useSolanaIdentity()`
 - `useSolanaPlanTransaction()`, `useSolanaPlanTransactions()`
 - `useSolanaSendTransaction()`, `useSolanaSendTransactions()`
+- `useSolanaPay()`, `useSolanaPayConfirmation()`, `useSolanaQrCode()`, `useSolanaQrScanner()`
 
 The module also auto-imports the four values an app needs when it sets `solana.clientPlugin: false` to install a client-only `payer`: `createSolanaPlugin()`, `solanaInjectionKey()`, `selectedWalletAccountInjectionKey()`, and `createSelectedWalletAccountContext()`.
 
@@ -180,6 +188,7 @@ Known remaining weight, deliberately not fixed: the iOS wallet path is ~38.9 KB 
 - `knowledge-bundle/guides/getting-started.md`: install snippets, Vue setup, Nuxt setup, and detailed manual devnet testing guide.
 - `plans/`: implementation tracker for the multistep tasks and implementations.
 - `examples/vue-vite/README.md` and `examples/nuxt/README.md`: runnable example app walkthroughs.
+- `apps/docs/content/guides/`: the docs site guides, each mirrored in `apps/docs/content/locales/{es,ko,zh}/guides/`. Solana Pay lives in `solana-pay.md` (transfer request + QR, scan/validate, settlement by reference); Phase 8 of `plans/solana-pay-qr-plan.md` still lists the example-app QR panels as open.
 
 The manual testing guide explains:
 

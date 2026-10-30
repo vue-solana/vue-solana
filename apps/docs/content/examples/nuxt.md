@@ -2,7 +2,7 @@
 title: Nuxt Example
 description: Runnable Nuxt example app for @vue-solana/nuxt.
 ogSection: Examples
-surroundOrder: 18
+surroundOrder: 19
 ---
 
 The Nuxt example is a runnable Nuxt app for `@vue-solana/nuxt`.

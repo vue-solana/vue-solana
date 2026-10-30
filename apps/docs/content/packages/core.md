@@ -83,6 +83,7 @@ Direct subpaths:
 - [RPC and Clusters](/guides/rpc-and-clusters): configure cluster names, custom RPC endpoints, WebSocket endpoints, and client helpers.
 - [Wallets](/guides/wallets): discover Wallet Standard wallets, register mobile wallet sources, and check wallet capabilities.
 - [Transactions](/guides/transactions): sign, send, confirm, and handle transaction timeouts safely.
+- [Solana Pay](/guides/solana-pay): encode payment requests, render and scan QR codes, and confirm settlement by reference.
 - [Errors](/guides/errors): branch on stable `SolanaError` codes and keep raw causes out of user-facing UI.
 
 ## Configuration
@@ -353,6 +354,32 @@ if (balance) {
   console.log(`${balance.amount} (${balance.decimals} decimals)`);
 }
 ```
+
+### Solana Pay
+
+The Solana Pay helpers are implemented directly on `@solana/kit`; no extra Solana Pay or `gill` package is required.
+
+- `encodeURL(fields)` / `encodeTransferRequestURL(fields)` / `encodeTransactionRequestURL(fields)`: build `solana:` transfer or transaction request URLs. `amount` is a `bigint` in lamports and is encoded as a decimal SOL string.
+- `parseURL(value)`: validates and parses a transfer request into typed `recipient`, `amount`, `splToken`, `reference`, `label`, `message`, and `memo` fields. Throws `ParseURLError` for an invalid protocol, recipient, token mint, reference, amount, or malformed URL.
+- `createQR(url, size?, background?, color?)`: renders a QR code as an SVG string. `createQRDataURL()` and `createQRCanvas()` provide alternative render targets. The `qrcode` encoder is loaded lazily, so URL-only consumers do not bundle it.
+- `createRecipient(address)`, `createSPLToken(address)`, `isValidSolanaAddress(value)`: address validation helpers.
+- `createSolanaPayReference()` and `verifySolanaPayPayment()` live in `@vue-solana/core/solana-pay-confirmation`; `getSolanaPayPaymentStatus()` lives in `@vue-solana/core/solana-pay-status`.
+
+```ts
+import { createQR, encodeURL, parseURL } from "@vue-solana/core/solana-pay";
+import { address } from "@vue-solana/core/kit";
+
+const url = encodeURL({
+  recipient: address("PASTE_A_SOLANA_ADDRESS"),
+  amount: 100_000_000n,
+  label: "Example store",
+});
+
+const parsed = parseURL(url.toString());
+const svg = await createQR(url);
+```
+
+Reference values are Kit `Address` strings. Parse scanner output with `parseURL()` and show the recipient, amount, token, label, and message to the user before signing anything.
 
 ### Errors and Timeouts
 

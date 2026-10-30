@@ -23,6 +23,7 @@ export default {
       wallets: "钱包",
       accountReads: "账户读取",
       transactions: "交易",
+      solanaPay: "Solana Pay",
       messageSigning: "消息签名",
       errors: "错误",
       packages: "包",

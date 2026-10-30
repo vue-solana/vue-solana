@@ -2,7 +2,7 @@
 title: Ejemplo Vue Vite
 description: App de ejemplo ejecutable con Vue 3 y Vite para @vue-solana/vue.
 ogSection: Ejemplos
-surroundOrder: 17
+surroundOrder: 18
 ---
 
 El ejemplo Vue Vite es una app Vue 3 ejecutable para `@vue-solana/vue`.

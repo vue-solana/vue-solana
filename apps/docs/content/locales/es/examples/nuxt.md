@@ -2,7 +2,7 @@
 title: Ejemplo Nuxt
 description: App de ejemplo Nuxt ejecutable para @vue-solana/nuxt.
 ogSection: Ejemplos
-surroundOrder: 18
+surroundOrder: 19
 ---
 
 El ejemplo Nuxt es una app Nuxt ejecutable para `@vue-solana/nuxt`.

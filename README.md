@@ -2,7 +2,7 @@
 
 Vue and Nuxt libraries for building Solana applications.
 
-Vue Solana provides RPC reads, account reads, balance reads, browser extension wallets, Android mobile wallets, iOS browser wallets, message signing, and transaction helpers for Vue and Nuxt apps.
+Vue Solana provides RPC reads, account reads, balance reads, browser extension wallets, Android mobile wallets, iOS browser wallets, message signing, transaction helpers, and Solana Pay request URLs with QR rendering for Vue and Nuxt apps.
 
 ## Packages
 

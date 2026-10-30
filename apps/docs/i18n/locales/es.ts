@@ -23,6 +23,7 @@ export default {
       wallets: "Wallets",
       accountReads: "Lecturas de cuentas",
       transactions: "Transacciones",
+      solanaPay: "Solana Pay",
       messageSigning: "Firma de mensajes",
       errors: "Errores",
       packages: "Paquetes",

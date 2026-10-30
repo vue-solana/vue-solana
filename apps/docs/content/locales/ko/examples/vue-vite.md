@@ -2,7 +2,7 @@
 title: Vue Vite 예제
 description: @vue-solana/vue를 위한 실행 가능한 Vue 3 및 Vite 예제 앱입니다.
 ogSection: 예제
-surroundOrder: 17
+surroundOrder: 18
 ---
 
 Vue Vite 예제는 `@vue-solana/vue`를 위한 실행 가능한 Vue 3 앱입니다.

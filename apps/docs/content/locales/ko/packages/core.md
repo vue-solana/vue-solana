@@ -79,6 +79,7 @@ Direct subpath:
 - [RPC와 클러스터](/ko/guides/rpc-and-clusters): cluster name, custom RPC endpoint, WebSocket endpoint, client helper를 설정합니다.
 - [지갑](/ko/guides/wallets): Wallet Standard 지갑을 검색하고, mobile wallet source를 등록하고, wallet capability를 확인합니다.
 - [트랜잭션](/ko/guides/transactions): transaction을 안전하게 서명, 전송, 확인하고 timeout을 처리합니다.
+- [Solana Pay](/ko/guides/solana-pay): 결제 요청을 인코딩하고 QR 코드를 렌더링·스캔하며 reference로 정산을 확인합니다.
 - [오류](/ko/guides/errors): 안정적인 `SolanaError` code로 분기하고 raw cause를 사용자 UI에서 숨깁니다.
 
 ## 설정
@@ -347,6 +348,32 @@ if (balance) {
   console.log(`${balance.amount} (${balance.decimals} decimals)`);
 }
 ```
+
+### Solana Pay
+
+Solana Pay helper는 `@solana/kit` 위에 직접 구현되어 있습니다. 추가 Solana Pay 패키지나 `gill`이 필요하지 않습니다.
+
+- `encodeURL(fields)` / `encodeTransferRequestURL(fields)` / `encodeTransactionRequestURL(fields)`: `solana:` 전송 또는 트랜잭션 요청 URL을 만듭니다. `amount`는 lamport 단위의 `bigint`이며 소수점 SOL 문자열로 인코딩됩니다.
+- `parseURL(value)`: 전송 요청을 `recipient`, `amount`, `splToken`, `reference`, `label`, `message`, `memo` 타입 필드로 검증하고 파싱합니다. 잘못된 프로토콜, recipient, token mint, reference, amount 또는 잘못된 URL이면 `ParseURLError`를 던집니다.
+- `createQR(url, size?, background?, color?)`: QR 코드를 SVG 문자열로 렌더링합니다. `createQRDataURL()`과 `createQRCanvas()`는 다른 렌더 대상을 제공합니다. `qrcode` 인코더는 지연 로드되므로 URL만 사용하는 소비자는 번들에 포함하지 않습니다.
+- `createRecipient(address)`, `createSPLToken(address)`, `isValidSolanaAddress(value)`: 주소 검증 helper.
+- `createSolanaPayReference()`와 `verifySolanaPayPayment()`는 `@vue-solana/core/solana-pay-confirmation`에 있고, `getSolanaPayPaymentStatus()`는 `@vue-solana/core/solana-pay-status`에 있습니다.
+
+```ts
+import { createQR, encodeURL, parseURL } from "@vue-solana/core/solana-pay";
+import { address } from "@vue-solana/core/kit";
+
+const url = encodeURL({
+  recipient: address("PASTE_A_SOLANA_ADDRESS"),
+  amount: 100_000_000n,
+  label: "Example store",
+});
+
+const parsed = parseURL(url.toString());
+const svg = await createQR(url);
+```
+
+참조 값은 Kit `Address` 문자열입니다. 스캐너 출력은 `parseURL()`로 파싱하고, 서명하기 전에 사용자에게 recipient, amount, token, label, message를 보여 주세요.
 
 ### 오류와 Timeout
 

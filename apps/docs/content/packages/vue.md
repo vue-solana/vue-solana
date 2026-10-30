@@ -2,7 +2,7 @@
 title: "@vue-solana/vue"
 description: Vue plugin and composables for Solana applications.
 ogSection: Packages
-surroundOrder: 15
+surroundOrder: 16
 ---
 
 [`@vue-solana/vue`](https://www.npmjs.com/package/@vue-solana/vue) provides a Vue plugin and composables for Solana RPC access, balance reads, wallet state, and transaction helper state.
@@ -186,6 +186,10 @@ Use `@vue-solana/vue/buffer-polyfill` for browser transaction code that needs th
 - `useSubscription(source, options?)`: live data from RPC subscriptions and other reactive stream sources.
 - `useTrackedData(source, options?)`: RPC subscription seeded by a one-shot fetch, slot-deduplicated.
 - `useSignIn()`: triggers a wallet's Sign In With Solana (SIWS) feature.
+- `useSolanaPay()`: builds and parses Solana Pay transfer request URLs and tracks confirmation status by reference.
+- `useSolanaPayConfirmation()`: polls payment status for a Solana Pay reference.
+- `useSolanaQrCode()`: renders a Solana Pay URL as an SVG QR code.
+- `useSolanaQrScanner()`: scans Solana Pay QR codes through the camera and `BarcodeDetector`.
 - `useSelectedWalletAccount()`: reads the app-wide selected wallet account from `SelectedWalletAccountProvider` (or `provideSelectedWalletAccount()`).
 - `useSignTransactions()`: signs multiple serialized transactions in one wallet request.
 - `useSignAndSendTransactions()`: signs and sends multiple transactions in one wallet request.
@@ -201,6 +205,7 @@ Use `@vue-solana/vue/buffer-polyfill` for browser transaction code that needs th
 - [Account Reads](/guides/account-reads): read balances, account info, program accounts, and signature status.
 - [Transactions](/guides/transactions): sign, send, confirm, and show transaction progress.
 - [Message Signing](/guides/message-signing): sign off-chain authentication or ownership challenges.
+- [Solana Pay](/guides/solana-pay): build payment requests with `useSolanaPay()` and render or scan QR codes.
 - [E2E Testing](/guides/e2e-testing): mock RPC, RPC subscriptions, and wallets in Playwright tests.
 - [Errors](/guides/errors): map composable `error` refs to safe UI messages.
 

@@ -79,6 +79,7 @@ import type { SolanaConfig } from "@vue-solana/core/types";
 - [RPC 和 Clusters](/zh/guides/rpc-and-clusters)：配置 cluster 名称、自定义 RPC endpoint、WebSocket endpoint 和客户端 helper。
 - [钱包](/zh/guides/wallets)：发现 Wallet Standard 钱包、注册移动钱包来源并检查钱包能力。
 - [交易](/zh/guides/transactions)：安全地签名、发送、确认并处理交易超时。
+- [Solana Pay](/zh/guides/solana-pay)：编码支付请求，渲染和扫描二维码，并按引用确认结算。
 - [错误](/zh/guides/errors)：基于稳定 `SolanaError` code 分支，并避免把原始 cause 暴露给用户 UI。
 
 ## 配置
@@ -347,6 +348,32 @@ if (balance) {
   console.log(`${balance.amount} (${balance.decimals} decimals)`);
 }
 ```
+
+### Solana Pay
+
+Solana Pay 辅助函数直接基于 `@solana/kit` 实现；无需额外的 Solana Pay 包或 `gill`。
+
+- `encodeURL(fields)` / `encodeTransferRequestURL(fields)` / `encodeTransactionRequestURL(fields)`：构建 `solana:` 转账或交易请求 URL。`amount` 是以 lamport 为单位的 `bigint`，会编码为十进制 SOL 字符串。
+- `parseURL(value)`：校验并解析转账请求，返回带类型的 `recipient`、`amount`、`splToken`、`reference`、`label`、`message` 和 `memo` 字段。协议、收款方、代币 mint、引用、金额无效或 URL 格式错误时抛出 `ParseURLError`。
+- `createQR(url, size?, background?, color?)`：将二维码渲染为 SVG 字符串。`createQRDataURL()` 和 `createQRCanvas()` 提供其他渲染目标。`qrcode` 编码器按需延迟加载，因此只使用 URL 的消费者不会把它打进 bundle。
+- `createRecipient(address)`、`createSPLToken(address)`、`isValidSolanaAddress(value)`：地址校验辅助函数。
+- `createSolanaPayReference()` 和 `verifySolanaPayPayment()` 位于 `@vue-solana/core/solana-pay-confirmation`；`getSolanaPayPaymentStatus()` 位于 `@vue-solana/core/solana-pay-status`。
+
+```ts
+import { createQR, encodeURL, parseURL } from "@vue-solana/core/solana-pay";
+import { address } from "@vue-solana/core/kit";
+
+const url = encodeURL({
+  recipient: address("PASTE_A_SOLANA_ADDRESS"),
+  amount: 100_000_000n,
+  label: "Example store",
+});
+
+const parsed = parseURL(url.toString());
+const svg = await createQR(url);
+```
+
+引用值是 Kit `Address` 字符串。使用 `parseURL()` 解析扫描器输出，并在签名前向用户展示收款方、金额、代币、标签和消息。
 
 ### 错误和超时
 

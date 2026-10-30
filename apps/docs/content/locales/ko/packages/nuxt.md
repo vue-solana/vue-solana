@@ -2,7 +2,7 @@
 title: "@vue-solana/nuxt"
 description: Solana 앱을 위한 Nuxt 모듈입니다.
 ogSection: 패키지
-surroundOrder: 16
+surroundOrder: 17
 ---
 
 [`@vue-solana/nuxt`](https://www.npmjs.com/package/@vue-solana/nuxt)는 Nuxt 앱에 Vue Solana 플러그인을 설치하고 컴포저블을 자동 import합니다.
@@ -101,6 +101,10 @@ export default defineNuxtConfig({
 - `useSolanaSubscription(source, options?)`: RPC subscription 및 기타 reactive stream source의 live data입니다.
 - `useSolanaTrackedData(source, options?)`: one-shot fetch로 seed되고 slot으로 deduplicate되는 RPC subscription입니다.
 - `useSolanaSignIn()`: wallet의 Sign In With Solana(SIWS) 기능을 트리거합니다.
+- `useSolanaPay()`: Solana Pay 전송 요청 URL을 만들고 파싱하며 reference별 확인 상태를 추적합니다.
+- `useSolanaPayConfirmation()`: Solana Pay reference의 결제 상태를 주기적으로 조회합니다.
+- `useSolanaQrCode()`: Solana Pay URL을 SVG QR 코드로 렌더링합니다.
+- `useSolanaQrScanner()`: 카메라와 `BarcodeDetector`로 Solana Pay QR 코드를 스캔합니다.
 
 mount 간 cache keying을 위해 SWR adapter는 auto-import되지 않습니다. Vue package subpath에서 명시적으로 import하세요.
 
@@ -165,6 +169,7 @@ Android Mobile Wallet Adapter 등록도 client에서만 실행됩니다. Android
 - [계정 읽기](/ko/guides/account-reads): balance, account data, program accounts, signature status를 읽습니다.
 - [트랜잭션](/ko/guides/transactions): Nuxt에서 transaction을 sign, send, confirm하고 status를 처리합니다.
 - [메시지 서명](/ko/guides/message-signing): 오프체인 메시지에 대한 wallet signature를 요청합니다.
+- [Solana Pay](/ko/guides/solana-pay): auto-import된 Solana Pay 컴포저블로 결제와 QR 코드를 처리합니다.
 - [E2E 테스트](/ko/guides/e2e-testing): Playwright test에서 RPC, RPC subscription, wallet을 mock합니다.
 - [오류](/ko/guides/errors): auto-imported composable error를 안전한 UI 메시지로 매핑합니다.
 

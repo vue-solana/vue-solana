@@ -2,7 +2,7 @@
 title: Vue Vite 示例
 description: 面向 @vue-solana/vue 的可运行 Vue 3 和 Vite 示例应用。
 ogSection: 示例
-surroundOrder: 17
+surroundOrder: 18
 ---
 
 Vue Vite 示例是一个用于 `@vue-solana/vue` 的可运行 Vue 3 应用。

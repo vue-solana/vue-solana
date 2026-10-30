@@ -2,7 +2,7 @@
 title: Contacto
 description: Como contactar al equipo de Vue Solana para soporte, reportes de seguridad y prensa.
 ogSection: Proyecto
-surroundOrder: 21
+surroundOrder: 22
 ---
 
 No hay mesa de soporte de pago ni telefono: Vue Solana es un proyecto de código abierto, y todos los canales siguientes son publicos o gratuitos. Elige el canal que se ajuste a lo que necesitas.

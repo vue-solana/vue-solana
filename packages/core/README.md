@@ -46,6 +46,7 @@ Full Vue Solana docs:
 - iOS browser wallet link helpers for supported wallets.
 - Transaction submission and confirmation helpers.
 - SPL token account reads through Kit RPC `jsonParsed`.
+- Solana Pay transfer request URL encoding and parsing plus QR rendering, implemented directly on Kit.
 - A framework-agnostic action state machine (`createSolanaActionStore`) for async Solana work with per-attempt `AbortSignal` handling.
 
 ## Compatibility
@@ -164,30 +165,36 @@ Direct subpaths:
 - `@vue-solana/core/mobile-wallet-support`
 - `@vue-solana/core/rpc`
 - `@vue-solana/core/token-accounts`
+- `@vue-solana/core/solana-pay`
+- `@vue-solana/core/solana-pay-confirmation`
+- `@vue-solana/core/solana-pay-status`
 - `@vue-solana/core/timeout`
 - `@vue-solana/core/transaction`
 - `@vue-solana/core/wallet`
 - `@vue-solana/core/wallet-standard`
 
-| API                                                             | Description                                                                                                                                                                |
-| --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `DEFAULT_CLUSTER`                                               | Default cluster, currently `devnet`.                                                                                                                                       |
-| `parseAddress(value)`                                           | Parses an `Address`, address string, ref-like `{ value }`, getter, `null`, or `undefined` into an `Address \| null`. Invalid strings throw `INVALID_ADDRESS`.              |
-| `createSolanaClient(config?)`                                   | Creates a Kit client exposing `rpc`, `rpcSubscriptions`, the official transaction planner, and the official RPC transaction-sending executor.                              |
-| `createSolanaContext(config?)`                                  | Creates `{ cluster, endpoint, wsEndpoint, client }`.                                                                                                                       |
-| `getClusterEndpoint(cluster?)`                                  | Returns the HTTP RPC endpoint for a cluster.                                                                                                                               |
-| `getClusterWebSocketEndpoint(cluster?)`                         | Returns the WebSocket endpoint for a cluster.                                                                                                                              |
-| `getWebSocketEndpoint(endpoint)`                                | Converts `http`/`https` RPC URLs to `ws`/`wss` URLs.                                                                                                                       |
-| `isWalletConnected(wallet)`                                     | Checks whether a wallet is connected and has an address.                                                                                                                   |
-| `assertWalletConnected(wallet)`                                 | Throws if the wallet is not connected.                                                                                                                                     |
-| `assertWalletCanSignMessage(wallet)`                            | Throws if the wallet is disconnected or cannot sign messages.                                                                                                              |
-| `assertWalletCanSign(wallet)`                                   | Throws if the wallet cannot sign transactions.                                                                                                                             |
-| `signAndSendTransaction(client, wallet, transaction, options?)` | Signs and sends raw wire bytes (`SolanaTransaction = Uint8Array`) using a configured wallet.                                                                               |
-| `confirmTransactionSignature(client, signature, options?)`      | Waits for a submitted signature to reach a requested commitment by polling `getSignatureStatuses`. Defaults to `confirmed` and a 60 second timeout.                        |
-| `getTokenAccountsByOwner(client, owner, options?)`              | Returns SPL token accounts for an owner (token and token-2022 programs by default).                                                                                        |
-| `getTokenAccount(client, address, commitment?)`                 | Reads a single token account, returning `null` when it does not exist.                                                                                                     |
-| `getTokenBalance(client, mint, owner, commitment?)`             | Reads the token balance for an owner's associated token account as `{ amount, decimals }`.                                                                                 |
-| `createSolanaActionStore(fn)`                                   | Wraps an async `(signal, ...args) => Promise` function into a `{ getState, subscribe, dispatch, reset, withSignal }` store; each dispatch aborts the prior in-flight call. |
+| API                                                             | Description                                                                                                                                                                          |
+| --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `DEFAULT_CLUSTER`                                               | Default cluster, currently `devnet`.                                                                                                                                                 |
+| `parseAddress(value)`                                           | Parses an `Address`, address string, ref-like `{ value }`, getter, `null`, or `undefined` into an `Address \| null`. Invalid strings throw `INVALID_ADDRESS`.                        |
+| `createSolanaClient(config?)`                                   | Creates a Kit client exposing `rpc`, `rpcSubscriptions`, the official transaction planner, and the official RPC transaction-sending executor.                                        |
+| `createSolanaContext(config?)`                                  | Creates `{ cluster, endpoint, wsEndpoint, client }`.                                                                                                                                 |
+| `getClusterEndpoint(cluster?)`                                  | Returns the HTTP RPC endpoint for a cluster.                                                                                                                                         |
+| `getClusterWebSocketEndpoint(cluster?)`                         | Returns the WebSocket endpoint for a cluster.                                                                                                                                        |
+| `getWebSocketEndpoint(endpoint)`                                | Converts `http`/`https` RPC URLs to `ws`/`wss` URLs.                                                                                                                                 |
+| `isWalletConnected(wallet)`                                     | Checks whether a wallet is connected and has an address.                                                                                                                             |
+| `assertWalletConnected(wallet)`                                 | Throws if the wallet is not connected.                                                                                                                                               |
+| `assertWalletCanSignMessage(wallet)`                            | Throws if the wallet is disconnected or cannot sign messages.                                                                                                                        |
+| `assertWalletCanSign(wallet)`                                   | Throws if the wallet cannot sign transactions.                                                                                                                                       |
+| `signAndSendTransaction(client, wallet, transaction, options?)` | Signs and sends raw wire bytes (`SolanaTransaction = Uint8Array`) using a configured wallet.                                                                                         |
+| `confirmTransactionSignature(client, signature, options?)`      | Waits for a submitted signature to reach a requested commitment by polling `getSignatureStatuses`. Defaults to `confirmed` and a 60 second timeout.                                  |
+| `getTokenAccountsByOwner(client, owner, options?)`              | Returns SPL token accounts for an owner (token and token-2022 programs by default).                                                                                                  |
+| `getTokenAccount(client, address, commitment?)`                 | Reads a single token account, returning `null` when it does not exist.                                                                                                               |
+| `getTokenBalance(client, mint, owner, commitment?)`             | Reads the token balance for an owner's associated token account as `{ amount, decimals }`.                                                                                           |
+| `encodeURL(fields)`                                             | Builds a `solana:` transfer or transaction request URL from Kit `Address` values; transfer amounts are `bigint` lamports encoded as decimal SOL.                                     |
+| `parseURL(value)`                                               | Parses a transfer request into typed `recipient`, `amount`, `splToken`, `reference`, `label`, `message`, and `memo` fields, or a transaction request `link`. Throws `ParseURLError`. |
+| `createQR(url, size?, background?, color?)`                     | Renders a Solana Pay URL as an SVG string; `createQRDataURL()` and `createQRCanvas()` cover the other render targets. The `qrcode` encoder loads lazily.                             |
+| `createSolanaActionStore(fn)`                                   | Wraps an async `(signal, ...args) => Promise` function into a `{ getState, subscribe, dispatch, reset, withSignal }` store; each dispatch aborts the prior in-flight call.           |
 
 The client-sent API is the official Kit `ClientWithTransactionSending` capability installed by `createSolanaClient()`. It does not use a wallet popup; `sent` is reached after the RPC executor completes its send-and-confirm operation at `confirmed` commitment. Use a `payer`, and keep funded keys in a trusted server or relayer context.
 | `registerSolanaMobileWallet(config?)` | Registers an Android Mobile Wallet Adapter wallet through `@solana-mobile/wallet-standard-mobile`. |
