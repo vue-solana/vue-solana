@@ -2,7 +2,7 @@
 title: "E2E Testing"
 description: Run the Playwright e2e suite and mock Solana RPC, RPC subscriptions, and wallets for UI tests.
 ogSection: Guides
-surroundOrder: 14
+surroundOrder: 15
 ---
 
 The repository's example apps are covered by a Playwright suite in `e2e/`. The suite runs the built Vue Vite and Nuxt example apps against deterministic RPC mocks by default, and against real devnet in a separate integration run.

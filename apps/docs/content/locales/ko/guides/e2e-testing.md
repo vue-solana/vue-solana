@@ -2,7 +2,7 @@
 title: "E2E 테스팅"
 description: Playwright e2e 스위트를 실행하고 UI 테스트를 위해 Solana RPC, RPC 구독, 지갑을 모킹합니다.
 ogSection: Guides
-surroundOrder: 14
+surroundOrder: 15
 ---
 
 이 리포지토리의 예제 앱은 `e2e/`의 Playwright 스위트로 커버됩니다. 스위트는 기본적으로 결정론적 RPC 모킹에 대해 빌드된 Vue Vite 및 Nuxt 예제 앱을 실행하고, 별도의 통합 실행에서는 실제 devnet에 대해 실행합니다.

@@ -2,7 +2,7 @@
 title: "Solana Pay"
 description: Crea solicitudes de transferencia de Solana Pay, renderiza y escanea códigos QR y confirma la liquidación por referencia.
 ogSection: Guides
-surroundOrder: 15
+surroundOrder: 11
 ---
 
 Solana Pay es un estándar de URL para solicitudes de pago. Una solicitud de transferencia codifica el destinatario, un importe opcional, un mint de token SPL opcional y campos de presentación opcionales. Las wallets y las apps de pago leen esa URL y preparan una transferencia que coincide.

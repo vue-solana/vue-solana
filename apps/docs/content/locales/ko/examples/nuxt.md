@@ -2,7 +2,7 @@
 title: Nuxt 예제
 description: @vue-solana/nuxt를 위한 실행 가능한 Nuxt 예제 앱입니다.
 ogSection: 예제
-surroundOrder: 19
+surroundOrder: 20
 ---
 
 Nuxt 예제는 `@vue-solana/nuxt`를 위한 실행 가능한 Nuxt 앱입니다.

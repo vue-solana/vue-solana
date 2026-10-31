@@ -2,7 +2,7 @@
 title: "@vue-solana/nuxt"
 description: Solana 앱을 위한 Nuxt 모듈입니다.
 ogSection: 패키지
-surroundOrder: 17
+surroundOrder: 18
 ---
 
 [`@vue-solana/nuxt`](https://www.npmjs.com/package/@vue-solana/nuxt)는 Nuxt 앱에 Vue Solana 플러그인을 설치하고 컴포저블을 자동 import합니다.

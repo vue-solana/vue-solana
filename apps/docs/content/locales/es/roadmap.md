@@ -2,7 +2,7 @@
 title: Roadmap
 description: Funcionalidades y mejoras planificadas para Vue Solana.
 ogSection: Roadmap
-surroundOrder: 20
+surroundOrder: 21
 ---
 
 Los paquetes son estables para producción con lecturas RPC, descubrimiento y conexión de wallets, consulta de balance, transacciones, lecturas de cuentas, firma de mensajes, manejo de errores normalizado, Sign In With Solana, firma y envío de transacciones en lote, planificación de transacciones, adaptadores de caché SWR y helpers de tokens SPL. Esta hoja de ruta describe lo que viene a continuación, ordenado por impacto y sin vincularse a una versión concreta.

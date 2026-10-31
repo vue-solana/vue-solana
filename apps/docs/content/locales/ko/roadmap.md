@@ -2,7 +2,7 @@
 title: 로드맵
 description: Vue Solana의 계획된 기능과 개선 사항.
 ogSection: 로드맵
-surroundOrder: 20
+surroundOrder: 21
 ---
 
 패키지는 RPC 읽기, 지갑 탐색 및 연결, 잔액 조회, 트랜잭션, 계정 읽기, 메시지 서명, 정규화된 오류 처리, Sign In With Solana, 배치 트랜잭션 서명 및 전송, 트랜잭션 계획, SWR 캐시 adapter, SPL token 헬퍼를 위해 프로덕션 사용이 안정적입니다. 이 로드맵은 특정 릴리스에 얽매이지 않고 영향도 순으로 다음에 올 내용을 설명합니다.

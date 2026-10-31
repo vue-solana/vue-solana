@@ -2,7 +2,7 @@
 title: "E2E 测试"
 description: 运行 Playwright e2e 测试套件，并在 UI 测试中模拟 Solana RPC、RPC 订阅和钱包。
 ogSection: Guides
-surroundOrder: 14
+surroundOrder: 15
 ---
 
 本仓库的示例应用由 `e2e/` 中的 Playwright 测试套件覆盖。默认情况下，该套件针对确定性 RPC 模拟运行构建后的 Vue Vite 和 Nuxt 示例应用；在单独的集成运行中则针对真实 devnet 运行。

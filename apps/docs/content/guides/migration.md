@@ -2,7 +2,7 @@
 title: "Migration Guide"
 description: How to migrate between Vue Solana versions. Covers upgrading from v3 to v4, v2 to v3, and migrating from v1.x to v2.
 ogSection: Guides
-surroundOrder: 13
+surroundOrder: 14
 ---
 
 This guide covers migrating between Vue Solana versions. There are three major migrations: upgrading from v3 to v4 (latest), v2 to v3, and migrating from v1.x to v2.

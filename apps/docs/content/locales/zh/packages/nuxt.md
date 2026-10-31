@@ -2,7 +2,7 @@
 title: "@vue-solana/nuxt"
 description: 用于 Solana 应用的 Nuxt 模块。
 ogSection: 包
-surroundOrder: 17
+surroundOrder: 18
 ---
 
 [`@vue-solana/nuxt`](https://www.npmjs.com/package/@vue-solana/nuxt) 会在 Nuxt 应用中安装 Vue Solana 插件并自动导入 composable。

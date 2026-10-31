@@ -2,7 +2,7 @@
 title: Contact
 description: How to reach the Vue Solana team for support, security reports, and press.
 ogSection: Project
-surroundOrder: 22
+surroundOrder: 23
 ---
 
 There is no paid support desk or phone line: Vue Solana is an open-source project, and every channel below is public or free to use. Pick the channel that matches what you need.

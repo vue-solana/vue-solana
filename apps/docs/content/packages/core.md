@@ -2,7 +2,7 @@
 title: "@vue-solana/core"
 description: Framework-agnostic Solana configuration, RPC, wallet types, and transaction helpers.
 ogSection: Packages
-surroundOrder: 14
+surroundOrder: 16
 ---
 
 [`@vue-solana/core`](https://www.npmjs.com/package/@vue-solana/core) contains framework-agnostic Solana primitives used by the Vue Solana packages.

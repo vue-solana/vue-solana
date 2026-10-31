@@ -2,7 +2,7 @@
 title: 路线图
 description: Vue Solana 规划中的功能与改进。
 ogSection: 路线图
-surroundOrder: 20
+surroundOrder: 21
 ---
 
 这些包在生产环境中已经稳定支持 RPC 读取、钱包发现与连接、余额查询、交易、账户读取、消息签名、标准化错误处理、Sign In With Solana、批量交易签名与发送、交易规划、SWR 缓存适配器和 SPL token 辅助函数。本路线图描述接下来的计划，按影响力排序，而不与特定版本绑定。

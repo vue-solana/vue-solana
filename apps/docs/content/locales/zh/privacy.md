@@ -2,7 +2,7 @@
 title: 隐私
 description: 本文档网站收集什么、不收集什么，以及分析数据的处理方式。
 ogSection: 项目
-surroundOrder: 23
+surroundOrder: 24
 ---
 
 本站是一个文档网站。它没有账号、没有登录、没有访客数据库，也不会直接索取或处理个人数据。

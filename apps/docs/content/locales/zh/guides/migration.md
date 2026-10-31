@@ -2,7 +2,7 @@
 title: "迁移指南"
 description: Vue Solana 版本迁移指南。涵盖 v3 到 v4 的升级、v2 到 v3 的升级，以及 v1.x 到 v2 的迁移。
 ogSection: Guides
-surroundOrder: 13
+surroundOrder: 14
 ---
 
 本指南涵盖 Vue Solana 版本间的迁移。有三个主要迁移：v3 到 v4 的升级（最新）、v2 到 v3 的升级，以及 v1.x 到 v2 的迁移。

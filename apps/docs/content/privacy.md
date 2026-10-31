@@ -2,7 +2,7 @@
 title: Privacy
 description: What this documentation site collects, what it does not, and how analytics are handled.
 ogSection: Project
-surroundOrder: 23
+surroundOrder: 24
 ---
 
 This site is a documentation website. It has no accounts, no login, no database of visitors, and it does not ask for or process personal data directly.

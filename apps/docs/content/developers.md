@@ -2,7 +2,7 @@
 title: Developer Portal
 description: Quickstart, machine-readable endpoints, and integration conventions for building against Vue Solana.
 ogSection: Project
-surroundOrder: 24
+surroundOrder: 25
 ---
 
 This portal is the entry point for developers and AI agents integrating with Vue Solana — both the Vue/Nuxt libraries themselves and the machine-readable surface of this documentation site.

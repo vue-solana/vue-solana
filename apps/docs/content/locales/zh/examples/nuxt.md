@@ -2,7 +2,7 @@
 title: Nuxt 示例
 description: 面向 @vue-solana/nuxt 的可运行 Nuxt 示例应用。
 ogSection: 示例
-surroundOrder: 19
+surroundOrder: 20
 ---
 
 Nuxt 示例是一个用于 `@vue-solana/nuxt` 的可运行 Nuxt 应用。

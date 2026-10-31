@@ -2,7 +2,7 @@
 title: 소개
 description: Vue Solana가 무엇인지, 누가 유지보수하는지, 프로젝트가 어떻게 운영되는지 설명합니다.
 ogSection: 프로젝트
-surroundOrder: 21
+surroundOrder: 22
 ---
 
 Vue Solana는 Solana 애플리케이션 구축을 위한 Vue 및 Nuxt 라이브러리를 공개하는 오픈 소스 프로젝트입니다. 공식 Solana JavaScript SDK(Solana Kit)를 타입이 지정된 반응형 컴포저블로 감싸서 Vue 3 및 Nuxt 개발자가 RPC 배관을 직접 만들지 않고도 잔액 조회, 지갑 검색, 메시지 서명, 트랜잭션 전송을 할 수 있게 해줍니다.

@@ -2,7 +2,7 @@
 title: "Solana Pay"
 description: Create Solana Pay transfer requests, render and scan QR codes, and confirm settlement by reference.
 ogSection: Guides
-surroundOrder: 15
+surroundOrder: 11
 ---
 
 Solana Pay is a URL standard for payment requests. A transfer request encodes the recipient, an optional amount, an optional SPL token mint, and optional display fields. Wallets and payment apps read that URL and prepare a matching transfer.
