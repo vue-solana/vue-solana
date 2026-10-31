@@ -2,7 +2,7 @@
 title: 联系
 description: 如何就支持、安全报告和媒体事务联系 Vue Solana 团队。
 ogSection: 项目
-surroundOrder: 22
+surroundOrder: 23
 ---
 
 本项目没有付费支持热线或电话：Vue Solana 是一个开源项目，以下所有渠道都是公开或免费的。请根据需求选择对应的渠道。

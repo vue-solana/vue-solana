@@ -2,7 +2,7 @@
 title: "@vue-solana/core"
 description: 프레임워크 독립 Solana 설정, RPC, 지갑 타입, 트랜잭션 helper입니다.
 ogSection: 패키지
-surroundOrder: 14
+surroundOrder: 16
 ---
 
 [`@vue-solana/core`](https://www.npmjs.com/package/@vue-solana/core)는 Vue Solana 패키지가 사용하는 프레임워크 독립 Solana primitive를 포함합니다.

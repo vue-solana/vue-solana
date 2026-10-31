@@ -2,7 +2,7 @@
 title: 开发者门户
 description: 构建 Vue Solana 集成的快速上手、机器可读端点与集成约定。
 ogSection: 项目
-surroundOrder: 24
+surroundOrder: 25
 ---
 
 本门户是开发者和 AI 代理与 Vue Solana 集成的入口——既包括 Vue/Nuxt 库本身，也包括本文档网站的机器可读表面。

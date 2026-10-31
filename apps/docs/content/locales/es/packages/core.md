@@ -2,7 +2,7 @@
 title: "@vue-solana/core"
 description: Configuración Solana independiente del framework, RPC, tipos de wallet y helpers de transacción.
 ogSection: Packages
-surroundOrder: 14
+surroundOrder: 16
 ---
 
 [`@vue-solana/core`](https://www.npmjs.com/package/@vue-solana/core) contiene primitivas Solana independientes del framework usadas por los paquetes Vue Solana.

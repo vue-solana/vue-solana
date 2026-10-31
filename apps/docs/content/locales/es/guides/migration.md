@@ -2,7 +2,7 @@
 title: "Guía de Migración"
 description: Cómo migrar entre versiones de Vue Solana. Cubre la actualización de v3 a v4, v2 a v3 y la migración de v1.x a v2.
 ogSection: Guias
-surroundOrder: 13
+surroundOrder: 14
 ---
 
 Esta guía cubre la migración entre versiones de Vue Solana. Hay tres migraciones importantes: la actualización de v3 a v4 (más reciente), v2 a v3 y la migración de v1.x a v2.

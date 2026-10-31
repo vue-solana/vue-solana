@@ -2,7 +2,7 @@
 title: 关于
 description: Vue Solana 是什么、由谁维护，以及项目的运作方式。
 ogSection: 项目
-surroundOrder: 21
+surroundOrder: 22
 ---
 
 Vue Solana 是一个开源项目，发布用于构建 Solana 应用的 Vue 和 Nuxt 库。它将官方 Solana JavaScript SDK（Solana Kit）封装为带类型的响应式 composables，让 Vue 3 和 Nuxt 开发者无需手写 RPC 基础设施即可读取余额、发现钱包、签名消息和发送交易。

@@ -2,7 +2,7 @@
 title: "마이그레이션 가이드"
 description: Vue Solana 버전 간 마이그레이션 가이드입니다. v3에서 v4로 업그레이드, v2에서 v3으로 업그레이드, v1.x에서 v2로 마이그레이션을 다룹니다.
 ogSection: Guides
-surroundOrder: 13
+surroundOrder: 14
 ---
 
 이 가이드는 Vue Solana 버전 간 마이그레이션을 다룹니다. 세 가지 주요 마이그레이션이 있습니다: v3에서 v4로 업그레이드(최신), v2에서 v3으로 업그레이드, v1.x에서 v2로 마이그레이션.

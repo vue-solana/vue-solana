@@ -2,7 +2,7 @@
 title: "@vue-solana/vue"
 description: Solana 앱을 위한 Vue 플러그인과 컴포저블입니다.
 ogSection: 패키지
-surroundOrder: 16
+surroundOrder: 17
 ---
 
 [`@vue-solana/vue`](https://www.npmjs.com/package/@vue-solana/vue)는 Solana RPC 접근, 잔액 읽기, 지갑 상태, 트랜잭션 helper 상태를 위한 Vue 플러그인과 컴포저블을 제공합니다.

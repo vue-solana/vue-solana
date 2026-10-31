@@ -2,7 +2,7 @@
 title: "Solana Pay"
 description: 创建 Solana Pay 转账请求，渲染和扫描二维码，并按引用确认结算。
 ogSection: 指南
-surroundOrder: 15
+surroundOrder: 11
 ---
 
 Solana Pay 是用于支付请求的 URL 标准。转账请求会编码收款方、可选金额、可选 SPL 代币 mint 以及可选展示字段。钱包和支付应用读取该 URL 并准备匹配的转账。

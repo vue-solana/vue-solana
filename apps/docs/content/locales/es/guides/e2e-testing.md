@@ -2,7 +2,7 @@
 title: "Pruebas E2E"
 description: Ejecuta la suite e2e de Playwright y simula RPC de Solana, suscripciones RPC y wallets para pruebas de UI.
 ogSection: Guides
-surroundOrder: 14
+surroundOrder: 15
 ---
 
 Las apps de ejemplo del repositorio están cubiertas por una suite de Playwright en `e2e/`. La suite ejecuta las apps de ejemplo Vue Vite y Nuxt compiladas contra mocks deterministas de RPC por defecto, y contra devnet real en una ejecución de integración separada.

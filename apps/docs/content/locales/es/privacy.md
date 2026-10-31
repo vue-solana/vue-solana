@@ -2,7 +2,7 @@
 title: Privacidad
 description: Que recoge este sitio de documentación, que no recoge, y como se gestionan las analiticas.
 ogSection: Proyecto
-surroundOrder: 23
+surroundOrder: 24
 ---
 
 Este sitio es una web de documentación. No tiene cuentas, ni inicio de sesión, ni base de datos de visitantes, y no solicita ni procesa datos personales directamente.

@@ -2,7 +2,7 @@
 title: "Solana Pay"
 description: Solana Pay 전송 요청을 만들고, QR 코드를 렌더링하고 스캔하며, reference로 정산을 확인합니다.
 ogSection: 가이드
-surroundOrder: 15
+surroundOrder: 11
 ---
 
 Solana Pay는 결제 요청을 위한 URL 표준입니다. 전송 요청에는 recipient, 선택적 amount, 선택적 SPL token mint, 선택적 표시 필드가 인코딩됩니다. 지갑과 결제 앱은 이 URL을 읽고 일치하는 전송을 준비합니다.

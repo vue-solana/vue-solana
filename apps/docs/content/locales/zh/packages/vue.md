@@ -2,7 +2,7 @@
 title: "@vue-solana/vue"
 description: 用于 Solana 应用的 Vue 插件和 composable。
 ogSection: 包
-surroundOrder: 16
+surroundOrder: 17
 ---
 
 [`@vue-solana/vue`](https://www.npmjs.com/package/@vue-solana/vue) 提供用于 Solana RPC 访问、余额读取、钱包状态和交易 helper 状态的 Vue 插件与 composable。

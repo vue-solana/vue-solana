@@ -2,7 +2,7 @@
 title: "@vue-solana/core"
 description: 框架无关的 Solana 配置、RPC、钱包类型和交易 helper。
 ogSection: 包
-surroundOrder: 14
+surroundOrder: 16
 ---
 
 [`@vue-solana/core`](https://www.npmjs.com/package/@vue-solana/core) 包含 Vue Solana 包使用的框架无关 Solana primitive。
