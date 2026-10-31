@@ -10,6 +10,9 @@ export * from "./timeout";
 export * from "./types";
 export * from "./wallet";
 export * from "./wallet-standard";
+export * from "./solana-pay";
+export * from "./solana-pay-confirmation";
+export * from "./solana-pay-status";
 
 // `./buffer-polyfill` is deliberately NOT re-exported here. It does
 // `export { Buffer } from "buffer/"`, and `buffer/index.js` has module-level

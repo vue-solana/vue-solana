@@ -29,6 +29,10 @@ Available package subpaths:
 - `@vue-solana/vue/useSubscription`
 - `@vue-solana/vue/useTrackedData`
 - `@vue-solana/vue/useSignIn`
+- `@vue-solana/vue/useSolanaPay`
+- `@vue-solana/vue/useSolanaPayConfirmation`
+- `@vue-solana/vue/useSolanaQrCode`
+- `@vue-solana/vue/useSolanaQrScanner`
 - `@vue-solana/vue/useSelectedWalletAccount`
 - `@vue-solana/vue/useSignTransactions`
 - `@vue-solana/vue/useSignAndSendTransactions`
@@ -583,5 +587,16 @@ const { account, signedMessage, signature } = await signIn({
 ```
 
 Statuses: `idle`, `signing-in`, `signed-in`, `error`. The result must be verified server-side (signature over `signedMessage` against `account.publicKey`, nonce check) before creating a session.
+
+## Solana Pay Composables
+
+Solana Pay URL and QR primitives come from `@vue-solana/core/solana-pay` (implemented on `@solana/kit`). The Vue layer wraps them:
+
+- `useSolanaPay()`: `createTransferRequest`, `parseRequest`, `createReference`, `confirmTransfer`, and `reset`. State is exposed as `requestUrl`, `parsedRequest`, `reference`, `status`, `loading`, and `error`. Amounts are `bigint` lamports.
+- `useSolanaPayConfirmation()`: `check(rpc, reference)`, `startPolling(rpc, reference, interval?)`, and `stopPolling()` over `getSolanaPayPaymentStatus()`.
+- `useSolanaQrCode()`: `generate(url, options?)` returns SVG text through `createQR()`.
+- `useSolanaQrScanner()`: `start({ video?, scanIntervalMs? })`, `stop()`, `reset()`, and `scanFromText(text)`. Requires a browser with `navigator.mediaDevices` and optionally `BarcodeDetector`; never call it during SSR.
+
+Scanned input is untrusted: parse it, show recipient/amount/token/memo to the user, and only then use the normal wallet signing flow. There is no auto-send path.
 
 RPC cost note: `useAccountInfo()` performs one `getAccountInfo()` call per refresh, and subscriptions consume websocket resources until cleaned up. `useSignatureStatus()` polling calls `getSignatureStatuses()` on every interval, so prefer modest intervals and stop polling once the signature reaches the status your UI needs. `useProgramAccounts()` is the highest-risk read in this group because broad program scans can consume significant RPC credits, hit rate limits, or time out. Use filters, data slicing, caching, pagination/indexing strategies, or dedicated RPC infrastructure for production-scale reads.

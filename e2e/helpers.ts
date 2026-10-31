@@ -339,6 +339,17 @@ function createRpcResponse(id: string | number, method?: string, params?: unknow
     return { jsonrpc: "2.0", id, result: MOCK_SIGNATURE };
   }
 
+  if (method === "getSignaturesForAddress") {
+    // Solana Pay settlement checks poll this for the generated reference. An
+    // empty array is "no payment yet", which is what the example panel expects
+    // from the mocks.
+    return { jsonrpc: "2.0", id, result: [] };
+  }
+
+  if (method === "getTransaction") {
+    return { jsonrpc: "2.0", id, result: null };
+  }
+
   if (method === "getSignatureStatuses") {
     const signatures =
       Array.isArray(params) && Array.isArray(params[0]) ? (params[0] as unknown[]) : [];

@@ -2,7 +2,7 @@
 title: 문의
 description: 지원, 보안 보고, 언론 문의를 위해 Vue Solana 팀에 연락하는 방법.
 ogSection: 프로젝트
-surroundOrder: 21
+surroundOrder: 22
 ---
 
 유료 지원 센터나 전화 번호는 없습니다: Vue Solana는 오픈 소스 프로젝트이며 아래의 모든 채널은 공개되어 있거나 무료입니다. 필요한 것에 맞는 채널을 선택하세요.

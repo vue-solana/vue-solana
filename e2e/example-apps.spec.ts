@@ -310,6 +310,128 @@ test("runs the mock transaction helper", async ({ page }) => {
   );
 });
 
+test("creates a Solana Pay request, renders a QR code, and verifies settlement", async ({
+  page,
+}) => {
+  await page.goto("/");
+
+  await expect(page.getByTestId("pay-disabled-reason")).toHaveText(
+    "Enter a valid recipient address.",
+  );
+  await expect(page.getByTestId("create-pay-request")).toBeDisabled();
+
+  await page.getByTestId("pay-recipient").fill("11111111111111111111111111111111");
+  await page.getByTestId("pay-amount").fill("0.001");
+  await page.getByTestId("pay-label").fill("Example store");
+  await page.getByTestId("pay-message").fill("Order 1042");
+  await page.getByTestId("pay-memo").fill("order-1042");
+
+  await page.getByTestId("create-pay-request").click();
+
+  await expect(page.getByTestId("pay-request-url")).toContainText(
+    "solana:11111111111111111111111111111111",
+  );
+  await expect(page.getByTestId("pay-request-url")).toContainText("amount=0.001");
+  await expect(page.getByTestId("pay-request-url")).toContainText("label=Example+store");
+  await expect(page.getByTestId("pay-reference")).not.toHaveText("No reference yet");
+  await expect(page.getByTestId("pay-parsed-recipient")).toHaveText(
+    "11111111111111111111111111111111",
+  );
+  await expect(page.getByTestId("pay-parsed-amount")).toHaveText("0.001 SOL");
+  await expect(page.getByTestId("pay-parsed-label")).toHaveText("Example store");
+  await expect(page.getByTestId("pay-parsed-memo")).toHaveText("order-1042");
+  await expect(page.getByTestId("pay-reference-count")).toHaveText("1");
+  await expect(page.getByTestId("pay-qr").locator("svg")).toBeVisible();
+
+  // No payment exists for a freshly generated reference, so the verifying read
+  // has to report an expiry rather than a confirmation.
+  await page.getByTestId("verify-payment").click();
+  await expect(page.getByTestId("pay-verification")).toContainText("expired");
+  await expect(page.getByTestId("pay-verification")).toContainText("no");
+
+  // The non-verifying status read only reports pending/found/error.
+  await page.getByTestId("toggle-payment-watch").click();
+  await expect(page.getByTestId("pay-polling-status")).toHaveText("pending");
+  await page.getByTestId("toggle-payment-watch").click();
+  await expect(page.getByTestId("pay-polling-status")).toHaveText("not polling");
+
+  await page.getByTestId("reset-pay-request").click();
+  await expect(page.getByTestId("pay-request-url")).toHaveText("No request yet");
+  await expect(page.getByTestId("pay-reference")).toHaveText("No reference yet");
+  await expect(page.getByTestId("pay-qr")).toHaveCount(0);
+});
+
+test("validates a pasted Solana Pay URL and previews it without sending", async ({ page }) => {
+  await page.goto("/");
+
+  await page.getByTestId("scan-url-input").fill("https://example.com");
+  await page.getByTestId("validate-payment-url").click();
+  await expect(page.getByTestId("scanner-error")).toContainText("protocol invalid");
+
+  const paymentUrl =
+    "solana:11111111111111111111111111111111?amount=0.001&label=Example+store&message=Order+1042&memo=order-1042";
+  await page.getByTestId("scan-url-input").fill(paymentUrl);
+  await page.getByTestId("validate-payment-url").click();
+
+  await expect(page.getByTestId("scanner-preview")).toBeVisible();
+  await expect(page.getByTestId("scanner-error")).toHaveCount(0);
+  await expect(page.getByTestId("scanner-kind")).toHaveText("transfer request");
+  await expect(page.getByTestId("scanner-recipient")).toHaveText(
+    "11111111111111111111111111111111",
+  );
+  await expect(page.getByTestId("scanner-amount")).toHaveText("0.001 SOL");
+  await expect(page.getByTestId("scanner-label")).toHaveText("Example store");
+  await expect(page.getByTestId("scanner-message")).toHaveText("Order 1042");
+  await expect(page.getByTestId("scanner-memo")).toHaveText("order-1042");
+  await expect(page.getByTestId("scanner-open-wallet")).toHaveAttribute("href", /^solana:/);
+});
+
+test("scans a mocked QR code through the camera path", async ({ page }) => {
+  await page.addInitScript(() => {
+    const canvas = document.createElement("canvas");
+    canvas.width = 64;
+    canvas.height = 64;
+    canvas.getContext("2d")?.fillRect(0, 0, 64, 64);
+
+    const stream = canvas.captureStream(5);
+    Object.defineProperty(window, "__mockQrValue", { writable: true, value: null });
+    Object.defineProperty(navigator, "mediaDevices", {
+      configurable: true,
+      value: { getUserMedia: async () => stream },
+    });
+    Object.defineProperty(window, "BarcodeDetector", {
+      configurable: true,
+      value: class {
+        static async getSupportedFormats() {
+          return ["qr_code"];
+        }
+
+        async detect() {
+          const value = (window as unknown as { __mockQrValue: string | null }).__mockQrValue;
+          return value ? [{ rawValue: value }] : [];
+        }
+      },
+    });
+  });
+
+  await page.goto("/");
+  await page.evaluate(() => {
+    (window as unknown as { __mockQrValue: string }).__mockQrValue =
+      "solana:11111111111111111111111111111111?amount=0.0005&label=Coffee";
+  });
+
+  await page.getByTestId("start-scanner").click();
+  await expect(page.getByTestId("scanner-status")).toHaveText("scanning");
+  await expect(page.getByTestId("scanner-recipient")).toHaveText(
+    "11111111111111111111111111111111",
+  );
+  await expect(page.getByTestId("scanner-amount")).toHaveText("0.0005 SOL");
+  await expect(page.getByTestId("scanner-label")).toHaveText("Coffee");
+
+  await page.getByTestId("stop-scanner").click();
+  await expect(page.getByTestId("scanner-status")).toHaveText("idle");
+});
+
 async function registerMockWallets(page: Page) {
   await page.addInitScript(() => {
     const wallets = [

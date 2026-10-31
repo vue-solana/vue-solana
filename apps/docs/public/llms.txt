@@ -90,10 +90,10 @@ How an agent should use this site:
 - [Errors](https://vue-solana-docs.vercel.app/guides/errors): Handle normalized Solana errors from core helpers and Vue/Nuxt composables.
 - [오류](https://vue-solana-docs.vercel.app/ko/guides/errors): core helper와 Vue/Nuxt 컴포저블에서 정규화된 Solana 오류를 처리합니다.
 - [错误](https://vue-solana-docs.vercel.app/zh/guides/errors): 处理来自核心辅助函数和 Vue/Nuxt 组合式函数的标准化 Solana 错误。
-- [Guía de Migración](https://vue-solana-docs.vercel.app/es/guides/migration): Cómo migrar entre versiones de Vue Solana. Cubre la actualización de v2 a v3 (ESM, espejo completo de Kit) y la migración de v1.x a v2 (API basada en Kit).
-- [Migration Guide](https://vue-solana-docs.vercel.app/guides/migration): How to migrate between Vue Solana versions. Covers upgrading from v2 to v3 and migrating from v1.x to v2.
-- [마이그레이션 가이드](https://vue-solana-docs.vercel.app/ko/guides/migration): Vue Solana 버전 간 마이그레이션 가이드입니다. v2에서 v3으로 업그레이드와 v1.x에서 v2로 마이그레이션을 다룹니다.
-- [迁移指南](https://vue-solana-docs.vercel.app/zh/guides/migration): Vue Solana 版本迁移指南。涵盖 v2 到 v3 的升级以及 v1.x 到 v2 的迁移。
+- [Guía de Migración](https://vue-solana-docs.vercel.app/es/guides/migration): Cómo migrar entre versiones de Vue Solana. Cubre la actualización de v3 a v4, v2 a v3 y la migración de v1.x a v2.
+- [Migration Guide](https://vue-solana-docs.vercel.app/guides/migration): How to migrate between Vue Solana versions. Covers upgrading from v3 to v4, v2 to v3, and migrating from v1.x to v2.
+- [마이그레이션 가이드](https://vue-solana-docs.vercel.app/ko/guides/migration): Vue Solana 버전 간 마이그레이션 가이드입니다. v3에서 v4로 업그레이드, v2에서 v3으로 업그레이드, v1.x에서 v2로 마이그레이션을 다룹니다.
+- [迁移指南](https://vue-solana-docs.vercel.app/zh/guides/migration): Vue Solana 版本迁移指南。涵盖 v3 到 v4 的升级、v2 到 v3 的升级，以及 v1.x 到 v2 的迁移。
 - [Pruebas E2E](https://vue-solana-docs.vercel.app/es/guides/e2e-testing): Ejecuta la suite e2e de Playwright y simula RPC de Solana, suscripciones RPC y wallets para pruebas de UI.
 - [@vue-solana/core](https://vue-solana-docs.vercel.app/es/packages/core): Configuración Solana independiente del framework, RPC, tipos de wallet y helpers de transacción.
 - [E2E Testing](https://vue-solana-docs.vercel.app/guides/e2e-testing): Run the Playwright e2e suite and mock Solana RPC, RPC subscriptions, and wallets for UI tests.
@@ -102,6 +102,10 @@ How an agent should use this site:
 - [@vue-solana/core](https://vue-solana-docs.vercel.app/packages/core): Framework-agnostic Solana configuration, RPC, wallet types, and transaction helpers.
 - [E2E 测试](https://vue-solana-docs.vercel.app/zh/guides/e2e-testing): 运行 Playwright e2e 测试套件，并在 UI 测试中模拟 Solana RPC、RPC 订阅和钱包。
 - [@vue-solana/core](https://vue-solana-docs.vercel.app/zh/packages/core): 框架无关的 Solana 配置、RPC、钱包类型和交易 helper。
+- [Solana Pay](https://vue-solana-docs.vercel.app/es/guides/solana-pay): Crea solicitudes de transferencia de Solana Pay, renderiza y escanea códigos QR y confirma la liquidación por referencia.
+- [Solana Pay](https://vue-solana-docs.vercel.app/guides/solana-pay): Create Solana Pay transfer requests, render and scan QR codes, and confirm settlement by reference.
+- [Solana Pay](https://vue-solana-docs.vercel.app/ko/guides/solana-pay): Solana Pay 전송 요청을 만들고, QR 코드를 렌더링하고 스캔하며, reference로 정산을 확인합니다.
+- [Solana Pay](https://vue-solana-docs.vercel.app/zh/guides/solana-pay): 创建 Solana Pay 转账请求，渲染和扫描二维码，并按引用确认结算。
 - [@vue-solana/vue](https://vue-solana-docs.vercel.app/es/packages/vue): Plugin de Vue y composables para aplicaciones Solana.
 - [@vue-solana/vue](https://vue-solana-docs.vercel.app/ko/packages/vue): Solana 앱을 위한 Vue 플러그인과 컴포저블입니다.
 - [@vue-solana/vue](https://vue-solana-docs.vercel.app/packages/vue): Vue plugin and composables for Solana applications.

@@ -2,7 +2,7 @@
 title: "@vue-solana/nuxt"
 description: 用于 Solana 应用的 Nuxt 模块。
 ogSection: 包
-surroundOrder: 16
+surroundOrder: 17
 ---
 
 [`@vue-solana/nuxt`](https://www.npmjs.com/package/@vue-solana/nuxt) 会在 Nuxt 应用中安装 Vue Solana 插件并自动导入 composable。
@@ -101,6 +101,10 @@ export default defineNuxtConfig({
 - `useSolanaSubscription(source, options?)`：来自 RPC 订阅和其他响应式 stream source 的实时数据。
 - `useSolanaTrackedData(source, options?)`：由一次性 fetch 播种、按 slot 去重的 RPC 订阅。
 - `useSolanaSignIn()`：触发钱包的 Sign In With Solana（SIWS）功能。
+- `useSolanaPay()`：构建和解析 Solana Pay 转账请求 URL，并按引用跟踪确认状态。
+- `useSolanaPayConfirmation()`：轮询 Solana Pay 引用的支付状态。
+- `useSolanaQrCode()`：将 Solana Pay URL 渲染为 SVG 二维码。
+- `useSolanaQrScanner()`：通过摄像头和 `BarcodeDetector` 扫描 Solana Pay 二维码。
 
 为了在多次挂载之间进行 cache keying，SWR adapter 不会自动导入。请从 Vue 包 subpath 显式导入：
 
@@ -165,6 +169,7 @@ Android Mobile Wallet Adapter 注册也只在客户端运行。在 Android Chrom
 - [账户读取](/zh/guides/account-reads)：读取余额、账户数据、program accounts 和签名状态。
 - [交易](/zh/guides/transactions)：从 Nuxt 签名、发送、确认并处理交易状态。
 - [消息签名](/zh/guides/message-signing)：为链下消息请求钱包签名。
+- [Solana Pay](/zh/guides/solana-pay)：使用自动导入的 Solana Pay 组合式函数处理支付和二维码。
 - [E2E Testing](/zh/guides/e2e-testing)：在 Playwright 测试中 mock RPC、RPC 订阅和钱包。
 - [错误](/zh/guides/errors)：把自动导入 composable 的错误映射为安全 UI 消息。
 

@@ -63,6 +63,7 @@ export const docsNavSections: DocsNavSection[] = [
       { labelKey: "navigation.sidebar.wallets", to: "/guides/wallets" },
       { labelKey: "navigation.sidebar.accountReads", to: "/guides/account-reads" },
       { labelKey: "navigation.sidebar.transactions", to: "/guides/transactions" },
+      { labelKey: "navigation.sidebar.solanaPay", to: "/guides/solana-pay" },
       { labelKey: "navigation.sidebar.messageSigning", to: "/guides/message-signing" },
       { labelKey: "navigation.sidebar.errors", to: "/guides/errors" },
       { labelKey: "navigation.sidebar.migration", to: "/guides/migration" },

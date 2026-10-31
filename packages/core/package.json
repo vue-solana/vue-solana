@@ -92,6 +92,18 @@
     "./token-accounts": {
       "types": "./dist/token-accounts.d.ts",
       "import": "./dist/token-accounts.mjs"
+    },
+    "./solana-pay": {
+      "types": "./dist/solana-pay.d.ts",
+      "import": "./dist/solana-pay.mjs"
+    },
+    "./solana-pay-confirmation": {
+      "types": "./dist/solana-pay-confirmation.d.ts",
+      "import": "./dist/solana-pay-confirmation.mjs"
+    },
+    "./solana-pay-status": {
+      "types": "./dist/solana-pay-status.d.ts",
+      "import": "./dist/solana-pay-status.mjs"
     }
   },
   "files": [
@@ -117,9 +129,11 @@
     "@wallet-standard/app": "^1.1.1",
     "@wallet-standard/base": "^1.1.1",
     "@wallet-standard/features": "^1.1.1",
+    "qrcode": "^1.5.4",
     "tweetnacl": "^1.0.3"
   },
   "devDependencies": {
+    "@types/qrcode": "^1.5.5",
     "typescript": "^5.8.3",
     "unbuild": "^3.5.0"
   },

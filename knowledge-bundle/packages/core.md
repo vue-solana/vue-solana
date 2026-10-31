@@ -30,6 +30,9 @@ The root export remains supported. Direct subpath exports are also available whe
 - `@vue-solana/core/transaction`
 - `@vue-solana/core/wallet`
 - `@vue-solana/core/token-accounts`
+- `@vue-solana/core/solana-pay`
+- `@vue-solana/core/solana-pay-confirmation`
+- `@vue-solana/core/solana-pay-status`
 - `@vue-solana/core/wallet-standard`
 
 ## Configuration
@@ -307,3 +310,22 @@ interface TokenAccountInfo {
 - `getTokenAccountsByOwner(client, owner, options?)`: fetches all token accounts for an owner address. Queries both `TOKEN_PROGRAM_ID` and `TOKEN_2022_PROGRAM_ID` by default, or a single `programId` via options. Returns `TokenAccountInfo[]`.
 - `getTokenAccount(client, address, commitment?)`: fetches and parses a single token account by address. Returns `TokenAccountInfo | null`.
 - `getTokenBalance(client, mint, owner, commitment?)`: reads the balance of an owner's associated token account for a mint. Returns `{ amount: bigint, decimals: number } | null`.
+
+## Solana Pay (`@vue-solana/core/solana-pay`)
+
+Implemented directly on `@solana/kit`; no `@solana-commerce/solana-pay` or `gill` dependency. Transfer request amounts are `bigint` lamports and are encoded as decimal SOL strings.
+
+- `encodeURL(fields)` / `encodeTransferRequestURL(fields)` / `encodeTransactionRequestURL(fields)`: build `solana:` transfer or transaction request URLs. Transfer fields are `recipient`, `amount`, `splToken`, `reference`, `label`, `message`, and `memo`.
+- `parseURL(value)`: returns typed transfer fields or a transaction `link`. Throws `ParseURLError` for invalid protocol, recipient, token mint, reference, amount, or malformed input.
+- `createQR(url, size?, background?, color?)`: renders an SVG string. `createQRDataURL(url, options)` returns a `data:` URL and `createQRCanvas(canvas, url, options)` writes to a canvas. `qrcode` is loaded lazily.
+- `createRecipient(address)`, `createSPLToken(address)`, `isValidSolanaAddress(value)`: address helpers.
+- `createSolanaPayReference()` / `verifySolanaPayPayment()` are exported from `@vue-solana/core/solana-pay-confirmation`. `getSolanaPayPaymentStatus()` is exported from `@vue-solana/core/solana-pay-status`.
+
+```ts
+import { createQR, encodeURL, parseURL } from "@vue-solana/core/solana-pay";
+import { address } from "@vue-solana/core/kit";
+
+const url = encodeURL({ recipient: address("PASTE_A_SOLANA_ADDRESS"), amount: 100_000_000n });
+const parsed = parseURL(url.toString());
+const svg = await createQR(url);
+```

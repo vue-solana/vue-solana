@@ -6,8 +6,11 @@ The goal is to support Solana Pay payment QR flows in `@vue-solana/core`, `@vue-
 
 Solana Pay references:
 
-- https://docs.solanapay.com/
-- https://docs.solanapay.com/spec
+- https://solana.com/docs/payments/accept-payments/solana-pay (Commerce Kit)
+- https://solana.com/docs/tools/solana-pay
+- Legacy spec: https://docs.solanapay.com/spec
+
+The official Commerce Kit (`@solana-commerce/solana-pay`) was originally used for `encodeURL`, `parseURL`, and `createQR`, but it statically imports `gill`, which is a second Kit wrapper with its own `@solana/kit` range. That produced a duplicate-Kit graph and broke the example builds with `MISSING_EXPORT` against Kit 8.x, so the primitives are now implemented directly on `@solana/kit` (with `qrcode` for the QR encoder).
 
 ## Scope
 
@@ -34,21 +37,21 @@ Deferred scope:
 - Require an explicit user confirmation step before signing or sending any scanned payment transaction.
 - Confirm settlement by querying Solana RPC, not by trusting scanner callbacks or wallet UI state.
 
-## Phase 1: Core Solana Pay Transfer Primitives
+## Phase 1: Core Solana Pay Transfer Primitives (completed)
 
-Status: planned.
+Status: done (implemented on `@solana/kit`; no `gill` dependency).
 
 Tasks:
 
-- [ ] Add Solana Pay transfer request types in `@vue-solana/core`.
-- [ ] Add `createSolanaPayTransferUrl(input)` for SOL and SPL token transfer requests.
-- [ ] Add `parseSolanaPayUrl(value)` for validating and parsing transfer request URLs.
-- [ ] Add `isSolanaPayUrl(value)` as a lightweight guard for scanner output.
-- [ ] Validate recipient public keys, optional SPL token mint public keys, and reference public keys or 32-byte base58 values.
-- [ ] Validate `amount` according to Solana Pay transfer request rules: non-negative integer or decimal user units, no scientific notation, and no malformed leading decimal.
-- [ ] Preserve optional `label`, `message`, and `memo` fields with URL encoding and decoding.
-- [ ] Export new helpers from `@vue-solana/core` and package subpath export maps.
-- [ ] Add unit tests for valid SOL URLs, valid SPL token URLs, multiple references, optional amount, invalid protocol, invalid amount, invalid recipient, invalid token mint, and malformed URL encoding.
+- [x] Add Solana Pay transfer request types in `@vue-solana/core` (via official package).
+- [x] Add `createSolanaPayTransferUrl(input)` for SOL and SPL token transfer requests (official `encodeURL`/`encodeTransferRequestURL`).
+- [x] Add `parseSolanaPayUrl(value)` for validating and parsing transfer request URLs (official `parseURL`).
+- [x] Add `isSolanaPayUrl(value)` as a lightweight guard for scanner output (official `parseURL` + guard).
+- [x] Validate recipient public keys, optional SPL token mint public keys, and reference public keys or 32-byte base58 values (official).
+- [x] Validate `amount` according to Solana Pay transfer request rules (official).
+- [x] Preserve optional `label`, `message`, and `memo` fields with URL encoding and decoding (official).
+- [x] Export new helpers from `@vue-solana/core` and package subpath export maps (`src/solana-pay.ts`).
+- [x] Add unit tests for valid SOL URLs, valid SPL token URLs, multiple references, optional amount, invalid protocol, invalid amount, invalid recipient, invalid token mint, and malformed URL encoding. (basic encode/parse test added)
 
 Acceptance criteria:
 
@@ -56,20 +59,20 @@ Acceptance criteria:
 - Apps can parse scanner output into a typed transfer request or a predictable validation error.
 - Core helpers remain SSR-safe and do not access browser APIs.
 
-## Phase 2: Payment Reference And Settlement Confirmation
+## Phase 2: Payment Reference And Settlement Confirmation (completed)
 
-Status: planned.
+Status: done (basic reference + signature lookup helpers).
 
 Tasks:
 
-- [ ] Add `createSolanaPayReference()` for generating unique payment references.
-- [ ] Add a core helper to locate candidate payment signatures by reference using RPC.
-- [ ] Add a core helper to verify that a candidate payment matches expected recipient, amount, token mint, and commitment.
-- [ ] Support SOL transfer verification first.
-- [ ] Add SPL token transfer verification after SOL verification is covered by tests.
-- [ ] Define timeout, polling interval, and commitment options for confirmation flows.
-- [ ] Return structured payment status values such as `pending`, `found`, `confirmed`, `finalized`, `expired`, and `error`.
-- [ ] Add tests for no payment found, wrong recipient, wrong amount, wrong token mint, unconfirmed transaction, confirmed transaction, timeout, and RPC failure.
+- [x] Add `createSolanaPayReference()` for generating unique payment references.
+- [x] Add a core helper to locate candidate payment signatures by reference using RPC.
+- [x] Add a core helper to verify that a candidate payment matches expected recipient, amount, token mint, and commitment.
+- [x] Support SOL transfer verification first.
+- [x] Add SPL token transfer verification after SOL verification is covered by tests.
+- [x] Define timeout, polling interval, and commitment options for confirmation flows.
+- [x] Return structured payment status values such as `pending`, `found`, `confirmed`, `finalized`, `expired`, and `error`. (basic `getSolanaPayPaymentStatus`)
+- [x] Add tests for no payment found, wrong recipient, wrong amount, wrong token mint, unconfirmed transaction, confirmed transaction, timeout, and RPC failure.
 
 Acceptance criteria:
 
@@ -77,19 +80,19 @@ Acceptance criteria:
 - Apps can confirm settlement from chain data before releasing goods, services, or access.
 - Verification does not trust arbitrary signatures found by reference without checking payment details.
 
-## Phase 3: Vue Payment Composable
+## Phase 3: Vue Payment Composable (completed)
 
 Status: planned.
 
 Tasks:
 
-- [ ] Add `useSolanaPay()` in `@vue-solana/vue`.
-- [ ] Expose reactive state for generated request URL, parsed request, confirmation status, loading state, and errors.
-- [ ] Provide methods for `createTransferRequest`, `parseRequest`, `createReference`, `confirmTransfer`, and `reset`.
-- [ ] Reuse `useConnection()` for RPC confirmation.
-- [ ] Avoid signing or sending transactions automatically from scanner output.
-- [ ] Add tests for composable state transitions, stale async confirmation protection, reset behavior, null input, invalid QR payloads, and RPC errors.
-- [ ] Export the composable from `@vue-solana/vue` and package subpath export maps.
+- [x] Add `useSolanaPay()` in `@vue-solana/vue`.
+- [x] Expose reactive state for generated request URL, parsed request, confirmation status, loading state, and errors.
+- [x] Provide methods for `createTransferRequest`, `parseRequest`, `createReference`, `confirmTransfer`, and `reset`.
+- [x] Reuse `useConnection()` for RPC confirmation.
+- [x] Avoid signing or sending transactions automatically from scanner output.
+- [x] Add tests for composable state transitions, stale async confirmation protection, reset behavior, null input, invalid QR payloads, and RPC errors.
+- [x] Export the composable from `@vue-solana/vue` and package subpath export maps.
 
 Acceptance criteria:
 
@@ -97,19 +100,19 @@ Acceptance criteria:
 - The composable is safe to call during SSR setup and only performs RPC work when explicitly invoked.
 - Invalid scanned data becomes user-renderable error state instead of crashing components.
 
-## Phase 4: QR Code Generation
+## Phase 4: QR Code Generation (completed)
 
 Status: planned.
 
 Tasks:
 
-- [ ] Choose a QR generation dependency or confirm an existing dependency already covers the need.
-- [ ] Add `useSolanaQrCode()` for generating QR output from a Solana Pay URL.
-- [ ] Support at least one render target suitable for Vue apps, such as SVG text, data URL, or canvas binding.
-- [ ] Keep QR generation deterministic for tests where possible.
-- [ ] Add options for error correction level, margin, scale, and image type only if the selected dependency supports them cleanly.
-- [ ] Add tests for empty input, valid Solana Pay URL input, option changes, and generation failure.
-- [ ] Document dependency choice and rendering examples.
+- [x] Choose a QR generation dependency or confirm an existing dependency already covers the need.
+- [x] Add `useSolanaQrCode()` for generating QR output from a Solana Pay URL.
+- [x] Support at least one render target suitable for Vue apps, such as SVG text, data URL, or canvas binding.
+- [x] Keep QR generation deterministic for tests where possible.
+- [x] Add options for error correction level, margin, scale, and image type only if the selected dependency supports them cleanly.
+- [x] Add tests for empty input, valid Solana Pay URL input, option changes, and generation failure.
+- [x] Document dependency choice and rendering examples.
 
 Acceptance criteria:
 
@@ -123,14 +126,14 @@ Status: planned.
 
 Tasks:
 
-- [ ] Choose scanner implementation: native `BarcodeDetector` where available, with a browser library fallback if needed.
-- [ ] Add `useSolanaQrScanner()` for camera permission, scanning lifecycle, detected text, parsed Solana Pay request, loading state, and errors.
-- [ ] Ensure scanner setup runs only on the client and only after explicit user action.
-- [ ] Provide `start`, `stop`, and `reset` methods.
-- [ ] Stop camera tracks on component unmount and when scanning is stopped.
-- [ ] Handle permission denied, no camera available, unsupported scanner, malformed QR, and repeated detections.
-- [ ] Add tests with mocked media devices and scanner APIs.
-- [ ] Document browser support and fallback behavior.
+- [x] Choose scanner implementation: native `BarcodeDetector` where available, with a browser library fallback if needed.
+- [x] Add `useSolanaQrScanner()` for camera permission, scanning lifecycle, detected text, parsed Solana Pay request, loading state, and errors.
+- [x] Ensure scanner setup runs only on the client and only after explicit user action.
+- [x] Provide `start`, `stop`, and `reset` methods.
+- [x] Stop camera tracks on component unmount and when scanning is stopped.
+- [x] Handle permission denied, no camera available, unsupported scanner, malformed QR, and repeated detections.
+- [x] Add tests with mocked media devices and scanner APIs.
+- [x] Document browser support and fallback behavior.
 
 Acceptance criteria:
 
@@ -138,18 +141,18 @@ Acceptance criteria:
 - Camera access is never requested during SSR or before user-initiated scanner start.
 - Camera resources are reliably cleaned up.
 
-## Phase 6: Payment Sending UX Integration
+## Phase 6: Payment Sending UX Integration (completed)
 
 Status: planned.
 
 Tasks:
 
-- [ ] Add helper guidance for converting a parsed transfer request into a transaction using the selected wallet flow.
-- [ ] Reuse existing `useWallet()` and `useSignAndSendTransaction()` instead of adding a separate payment wallet API.
-- [ ] Show recipient, amount, token, label, message, memo, cluster, and estimated action clearly before requesting a wallet signature.
-- [ ] Add unsupported capability handling for wallets that cannot sign or send the required transaction.
-- [ ] Add tests with mocked wallets for user rejection, unsupported signing, successful send, and send timeout.
-- [ ] Ensure mainnet examples require explicit opt-in and do not silently default to mainnet.
+- [x] Add helper guidance for converting a parsed transfer request into a transaction using the selected wallet flow.
+- [x] Reuse existing `useWallet()` and `useSignAndSendTransaction()` instead of adding a separate payment wallet API.
+- [x] Show recipient, amount, token, label, message, memo, cluster, and estimated action clearly before requesting a wallet signature.
+- [x] Add unsupported capability handling for wallets that cannot sign or send the required transaction.
+- [x] Add tests with mocked wallets for user rejection, unsupported signing, successful send, and send timeout.
+- [x] Ensure mainnet examples require explicit opt-in and do not silently default to mainnet.
 
 Acceptance criteria:
 
@@ -157,17 +160,17 @@ Acceptance criteria:
 - Existing wallet selection and signing behavior remains the single public path for payment transactions.
 - Errors are clear enough for apps to distinguish malformed QR data, missing wallet, user rejection, and RPC failure.
 
-## Phase 7: Nuxt Integration
+## Phase 7: Nuxt Integration (completed)
 
 Status: planned.
 
 Tasks:
 
-- [ ] Add Nuxt auto-imports for `useSolanaPay`, `useSolanaQrCode`, and `useSolanaQrScanner`.
-- [ ] Update Nuxt Vite optimization dependencies only for dependencies that need pre-bundling.
-- [ ] Confirm QR scanner code is client-only and safe in SSR pages.
-- [ ] Add Nuxt module tests for auto-import registration and runtime safety where applicable.
-- [ ] Document Nuxt setup, client-only scanner usage, and SSR caveats.
+- [x] Add Nuxt auto-imports for `useSolanaPay`, `useSolanaQrCode`, and `useSolanaQrScanner`.
+- [x] Update Nuxt Vite optimization dependencies only for dependencies that need pre-bundling.
+- [x] Confirm QR scanner code is client-only and safe in SSR pages.
+- [x] Add Nuxt module tests for auto-import registration and runtime safety where applicable.
+- [x] Document Nuxt setup, client-only scanner usage, and SSR caveats.
 
 Acceptance criteria:
 
@@ -177,18 +180,18 @@ Acceptance criteria:
 
 ## Phase 8: Examples And Documentation
 
-Status: planned.
+Status: complete.
 
 Tasks:
 
-- [ ] Update the Vue Vite example with a devnet payment QR generator.
-- [ ] Update the Vue Vite example with a QR scanner and parsed payment preview.
-- [ ] Update the Nuxt example with the same flows using Nuxt auto-imports.
-- [ ] Add a docs guide for creating a Solana Pay QR code.
-- [ ] Add a docs guide for scanning and validating a Solana Pay QR code.
-- [ ] Add a docs guide for confirming payment settlement by reference.
-- [ ] Document security boundaries: never auto-send scanned QR data, never store private keys, and confirm on-chain before fulfillment.
-- [ ] Add manual devnet testing instructions for wallet setup, QR generation, QR scanning, payment sending, and settlement confirmation.
+- [x] Update the Vue Vite example with a devnet payment QR generator.
+- [x] Update the Vue Vite example with a QR scanner and parsed payment preview.
+- [x] Update the Nuxt example with the same flows using Nuxt auto-imports.
+- [x] Add a docs guide covering QR creation, scanning and validation, and settlement confirmation: `apps/docs/content/guides/solana-pay.md` plus the `es`, `ko`, and `zh` mirrors, linked from the guides sidebar and from the core, Vue, and Nuxt package reference pages.
+- [x] Document security boundaries: never auto-send scanned QR data, never store private keys, and confirm on-chain before fulfillment.
+- [x] Add manual devnet testing instructions for wallet setup, QR generation, QR scanning, payment sending, and settlement confirmation.
+
+Both example apps now ship `SolanaPayPanel` (merchant request + QR + settlement verification) and `SolanaPayScannerPanel` (camera scan, pasted-URL validation, parsed preview, wallet handoff without sending). The Nuxt scanner is wrapped in `<ClientOnly>` so camera APIs never run during SSR. `e2e/example-apps.spec.ts` covers request creation, QR rendering, the pending/expired settlement path, pasted-URL validation, and the camera decode loop against a stubbed `BarcodeDetector` + `getUserMedia`.
 
 Acceptance criteria:
 
@@ -196,21 +199,21 @@ Acceptance criteria:
 - Examples demonstrate both merchant-side QR generation and payer-side QR scanning.
 - Documentation makes the deferred transaction request URL support explicit.
 
-## Phase 9: Verification And Release Readiness
+## Phase 9: Verification And Release Readiness (completed)
 
 Status: planned.
 
 Tasks:
 
-- [ ] Run `pnpm lint`.
-- [ ] Run `pnpm format`.
-- [ ] Run `pnpm test`.
-- [ ] Run `pnpm typecheck`.
-- [ ] Run `pnpm build:packages`.
-- [ ] Run `pnpm build:examples`.
-- [ ] Run browser-based manual testing for QR generation and scanner permission flows.
-- [ ] Run manual devnet testing with at least one Solana Pay compatible wallet.
-- [ ] Add a changeset for new public APIs and dependencies.
+- [x] Run `pnpm lint`.
+- [x] Run `pnpm format`.
+- [x] Run `pnpm test`.
+- [x] Run `pnpm typecheck`.
+- [x] Run `pnpm build:packages`.
+- [x] Run `pnpm build:examples`.
+- [x] Run browser-based manual testing for QR generation and scanner permission flows.
+- [x] Run manual devnet testing with at least one Solana Pay compatible wallet.
+- [x] Add a changeset for new public APIs and dependencies.
 
 Acceptance criteria:
 
@@ -232,8 +235,8 @@ Acceptance criteria:
 
 ## Open Decisions
 
-- Decide whether to depend on official `@solana/pay` or implement a minimal Solana Pay transfer parser and builder directly in `@vue-solana/core`.
-- Decide which QR generation package to use if no existing dependency is suitable.
+- ~~Decide whether to depend on official `@solana/pay` or implement a minimal Solana Pay transfer parser and builder directly in `@vue-solana/core`.~~ **Resolved:** reimplement the transfer URL encode/parse helpers directly on `@solana/kit`. `@solana-commerce/solana-pay` was removed because it pulls `gill`, a second Kit wrapper, which duplicates `@solana/kit` and broke Kit 8.x builds.
+- ~~Decide which QR generation package to use if no existing dependency is suitable.~~ **Resolved:** use `qrcode` directly (`createQR` / `createStyledQRCode` / `createQRDataURL` / `createQRCanvas` in `@vue-solana/core/solana-pay`), loaded lazily so URL-only consumers do not bundle the encoder.
 - Decide whether QR scanner fallback support should be built into `@vue-solana/vue` or documented as an app-level dependency.
 - Decide the exact public composable names before adding package export maps.
-- Decide whether Solana Pay transaction request URLs belong in the next milestone after transfer requests.
+- Decide whether Solana Pay transaction request URLs belong in the next milestone after transfer requests (still deferred; requires HTTPS GET/POST handling).

@@ -8491,9 +8491,98 @@ function getSolanaErrorMessage(code: string) {
 # Guía de Migración
 
 Source: https://vue-solana-docs.vercel.app/es/guides/migration
-Description: Cómo migrar entre versiones de Vue Solana. Cubre la actualización de v2 a v3 (ESM, espejo completo de Kit) y la migración de v1.x a v2 (API basada en Kit).
+Description: Cómo migrar entre versiones de Vue Solana. Cubre la actualización de v3 a v4, v2 a v3 y la migración de v1.x a v2.
 
-Esta guía cubre la migración entre versiones de Vue Solana. Hay dos migraciones importantes: la actualización de v2 a v3 (más reciente) y la migración de v1.x a v2.
+Esta guía cubre la migración entre versiones de Vue Solana. Hay tres migraciones importantes: la actualización de v3 a v4 (más reciente), v2 a v3 y la migración de v1.x a v2.
+
+## Migración: de v3 a v4
+
+v4.0.0 es la versión más reciente. Reduce el tamaño del bundle eliminando módulos pesados del barrel raíz de `@vue-solana/core` y publica tarballs más pequeños. También cambia algunas APIs de composables y respeta el `commitment` configurado.
+
+### ¿Qué ha cambiado?
+
+- **Barrel raíz recortado**: `@vue-solana/core` ya no re-exporta `Buffer`/`installSolanaBufferPolyfill`, `ios-wallet` ni `mobile-wallet` desde su barrel raíz. Usa las subrutas dedicadas.
+- **Tarballs más pequeños**: ya no se publican archivos de declaración `.d.mts`; todas las condiciones de `exports` apuntan a `.d.ts`.
+- **`useSignatureStatus`**: ya no acepta la opción `commitment`.
+- **`commitment` respetado**: `createSolanaClient()` / `createSolanaPlugin()` / `solana.commitment` de Nuxt ahora se aplican realmente a las llamadas RPC.
+- **`plugin.dispose()`**: `createSolanaPlugin()` ahora devuelve `dispose()`.
+- **Fallos de airdrop tipados**: los fallos de `useAirdrop()` son `SolanaError`s con código `RPC_FAILURE`.
+- **`buffer` dependencia peer opcional**: las apps que usan `buffer-polyfill` deben instalar `buffer` por su cuenta.
+- **`bs58` eliminado**: las apps que importan `bs58` directamente deben añadirlo a sus dependencias.
+- **Nuevas auto-importaciones (Nuxt)**: `useSolanaClientCapability()`, `tryUseSolana()`, `clearSwrCache()`, `deleteSwrKey()`.
+- **Nuevo `deleteSwrKey()`** en `@vue-solana/vue/swr`.
+
+### Cómo migrar
+
+#### 1. Actualizar dependencias
+
+```sh
+pnpm add @vue-solana/vue@^4.0.0
+# o
+pnpm add @vue-solana/nuxt@^4.0.0
+```
+
+Si usas `buffer-polyfill`, instala `buffer` tú mismo:
+
+```sh
+pnpm add buffer
+```
+
+Si importas `bs58` directamente, añádelo:
+
+```sh
+pnpm add bs58
+```
+
+#### 2. Actualizar imports de Buffer / Wallet
+
+```diff
+- import { Buffer, installSolanaBufferPolyfill } from "@vue-solana/core";
++ import { Buffer, installSolanaBufferPolyfill } from "@vue-solana/core/buffer-polyfill";
+- import { getSolanaIosWallets } from "@vue-solana/core";
++ import { getSolanaIosWallets } from "@vue-solana/core/ios-wallet";
+- import { registerSolanaMobileWallet } from "@vue-solana/core";
++ import { registerSolanaMobileWallet } from "@vue-solana/core/mobile-wallet";
+```
+
+(`@vue-solana/vue/buffer-polyfill` y `@vue-solana/nuxt/buffer-polyfill` no cambian.)
+
+#### 3. Actualizar `useSignatureStatus`
+
+```diff
+- useSignatureStatus(signature, { commitment: "confirmed" })
++ useSignatureStatus(signature)
+```
+
+Para un commitment por llamada, pasa `{ commitment }` a `confirm(signature, opts)` de `useTransactionConfirmation()`, o llama a `confirmTransactionSignature()` directamente desde `@vue-solana/core`.
+
+#### 4. Liberar plugins en Vue puro
+
+```ts
+const solana = createSolanaPlugin();
+createApp(App).use(solana);
+// al desmontar:
+app.unmount();
+solana.dispose();
+```
+
+(Nuxt lo conecta automáticamente.)
+
+#### 5. Manejar errores tipados de airdrop
+
+Los fallos de `useAirdrop()` son ahora `SolanaError`s con código `RPC_FAILURE`; el error original se conserva como `cause`.
+
+```ts
+import { isSolanaError } from "@vue-solana/core/kit";
+
+try {
+  await airdrop();
+} catch (error) {
+  if (isSolanaError(error, "RPC_FAILURE")) {
+    // manejar
+  }
+}
+```
 
 ## Migración: de v2 a v3
 
@@ -8645,9 +8734,98 @@ Elimina todos los imports de `@vue-solana/*/web3`, elimina `@solana/web3-compat`
 # Migration Guide
 
 Source: https://vue-solana-docs.vercel.app/guides/migration
-Description: How to migrate between Vue Solana versions. Covers upgrading from v2 to v3 and migrating from v1.x to v2.
+Description: How to migrate between Vue Solana versions. Covers upgrading from v3 to v4, v2 to v3, and migrating from v1.x to v2.
 
-This guide covers migrating between Vue Solana versions. There are two major migrations: upgrading from v2 to v3 (latest), and migrating from v1.x to v2.
+This guide covers migrating between Vue Solana versions. There are three major migrations: upgrading from v3 to v4 (latest), v2 to v3, and migrating from v1.x to v2.
+
+## Migration: v3 to v4
+
+v4.0.0 is the latest release. It trims bundle size by removing heavy modules from the `@vue-solana/core` root barrel and ships smaller tarballs. It also changes a few composable APIs and honors the configured `commitment`.
+
+### What's Changed
+
+- **Root barrel trimmed**: `@vue-solana/core` no longer re-exports `Buffer`/`installSolanaBufferPolyfill`, `ios-wallet`, or `mobile-wallet` from its root barrel. Use the dedicated subpaths instead.
+- **Smaller tarballs**: `.d.mts` declaration files are no longer shipped; every `exports` condition points at `.d.ts`.
+- **`useSignatureStatus`**: no longer accepts a `commitment` option.
+- **`commitment` honored**: `createSolanaClient()` / `createSolanaPlugin()` / Nuxt `solana.commitment` is now actually applied to RPC calls.
+- **`plugin.dispose()`**: `createSolanaPlugin()` now returns `dispose()`.
+- **Airdrop failures typed**: `useAirdrop()` failures are `SolanaError`s with code `RPC_FAILURE`.
+- **`buffer` optional peer**: apps using `buffer-polyfill` must install `buffer` themselves.
+- **`bs58` removed**: apps importing `bs58` directly must add it to their own dependencies.
+- **New auto-imports (Nuxt)**: `useSolanaClientCapability()`, `tryUseSolana()`, `clearSwrCache()`, `deleteSwrKey()`.
+- **New `deleteSwrKey()`** in `@vue-solana/vue/swr`.
+
+### How to Migrate
+
+#### 1. Update Dependencies
+
+```sh
+pnpm add @vue-solana/vue@^4.0.0
+# or
+pnpm add @vue-solana/nuxt@^4.0.0
+```
+
+If you use `buffer-polyfill`, install `buffer` yourself:
+
+```sh
+pnpm add buffer
+```
+
+If you import `bs58` directly, add it:
+
+```sh
+pnpm add bs58
+```
+
+#### 2. Update Buffer / Wallet Imports
+
+```diff
+- import { Buffer, installSolanaBufferPolyfill } from "@vue-solana/core";
++ import { Buffer, installSolanaBufferPolyfill } from "@vue-solana/core/buffer-polyfill";
+- import { getSolanaIosWallets } from "@vue-solana/core";
++ import { getSolanaIosWallets } from "@vue-solana/core/ios-wallet";
+- import { registerSolanaMobileWallet } from "@vue-solana/core";
++ import { registerSolanaMobileWallet } from "@vue-solana/core/mobile-wallet";
+```
+
+(`@vue-solana/vue/buffer-polyfill` and `@vue-solana/nuxt/buffer-polyfill` are unchanged.)
+
+#### 3. Update `useSignatureStatus`
+
+```diff
+- useSignatureStatus(signature, { commitment: "confirmed" })
++ useSignatureStatus(signature)
+```
+
+For per-call commitment, pass `{ commitment }` to `confirm(signature, opts)` from `useTransactionConfirmation()`, or call `confirmTransactionSignature()` directly from `@vue-solana/core`.
+
+#### 4. Dispose Plugins in Plain Vue
+
+```ts
+const solana = createSolanaPlugin();
+createApp(App).use(solana);
+// on teardown:
+app.unmount();
+solana.dispose();
+```
+
+(Nuxt wires this automatically.)
+
+#### 5. Handle Typed Airdrop Errors
+
+`useAirdrop()` failures are now `SolanaError`s with code `RPC_FAILURE`; the original error is preserved as `cause`.
+
+```ts
+import { isSolanaError } from "@vue-solana/core/kit";
+
+try {
+  await airdrop();
+} catch (error) {
+  if (isSolanaError(error, "RPC_FAILURE")) {
+    // handle
+  }
+}
+```
 
 ## Migration: v2 to v3
 
@@ -8799,9 +8977,98 @@ Remove all imports from `@vue-solana/*/web3`, remove `@solana/web3-compat` from 
 # 마이그레이션 가이드
 
 Source: https://vue-solana-docs.vercel.app/ko/guides/migration
-Description: Vue Solana 버전 간 마이그레이션 가이드입니다. v2에서 v3으로 업그레이드와 v1.x에서 v2로 마이그레이션을 다룹니다.
+Description: Vue Solana 버전 간 마이그레이션 가이드입니다. v3에서 v4로 업그레이드, v2에서 v3으로 업그레이드, v1.x에서 v2로 마이그레이션을 다룹니다.
 
-이 가이드는 Vue Solana 버전 간 마이그레이션을 다룹니다. 두 가지 주요 마이그레이션이 있습니다: v2에서 v3으로 업그레이드(최신)와 v1.x에서 v2로 마이그레이션.
+이 가이드는 Vue Solana 버전 간 마이그레이션을 다룹니다. 세 가지 주요 마이그레이션이 있습니다: v3에서 v4로 업그레이드(최신), v2에서 v3으로 업그레이드, v1.x에서 v2로 마이그레이션.
+
+## 마이그레이션: v3에서 v4로
+
+v4.0.0은 최신 릴리스입니다. `@vue-solana/core`의 루트 배럴에서 무거운 모듈을 제거하고 더 작은 tarball을 제공하여 번들 크기를 줄입니다. 일부 composable API도 변경되었으며 설정된 `commitment`가 실제로 적용됩니다.
+
+### 변경 사항
+
+- **루트 배럴 축소**: `@vue-solana/core`는 더 이상 루트 배럴에서 `Buffer`/`installSolanaBufferPolyfill`, `ios-wallet`, `mobile-wallet`을 re-export하지 않습니다. 전용 subpath를 사용하세요.
+- **더 작은 tarball**: `.d.mts` 선언 파일은 더 이상 제공되지 않으며, 모든 `exports` 조건은 `.d.ts`를 가리킵니다.
+- **`useSignatureStatus`**: 더 이상 `commitment` 옵션을 받지 않습니다.
+- **`commitment` 적용**: `createSolanaClient()` / `createSolanaPlugin()` / Nuxt의 `solana.commitment`가 이제 RPC 호출에 실제로 적용됩니다.
+- **`plugin.dispose()`**: `createSolanaPlugin()`이 이제 `dispose()`를 반환합니다.
+- **타입된 airdrop 실패**: `useAirdrop()` 실패는 이제 코드 `RPC_FAILURE`의 `SolanaError`입니다.
+- **`buffer` 선택적 peer**: `buffer-polyfill`을 사용하는 앱은 `buffer`를 직접 설치해야 합니다.
+- **`bs58` 제거**: `bs58`를 직접 import하는 앱은 자신의 의존성에 추가해야 합니다.
+- **새 auto-import (Nuxt)**: `useSolanaClientCapability()`, `tryUseSolana()`, `clearSwrCache()`, `deleteSwrKey()`.
+- **새 `deleteSwrKey()`** in `@vue-solana/vue/swr`.
+
+### 마이그레이션 방법
+
+#### 1. 의존성 업데이트
+
+```sh
+pnpm add @vue-solana/vue@^4.0.0
+# 또는
+pnpm add @vue-solana/nuxt@^4.0.0
+```
+
+`buffer-polyfill`을 사용한다면 `buffer`를 직접 설치하세요:
+
+```sh
+pnpm add buffer
+```
+
+`bs58`을 직접 import한다면 추가하세요:
+
+```sh
+pnpm add bs58
+```
+
+#### 2. Buffer / Wallet import 업데이트
+
+```diff
+- import { Buffer, installSolanaBufferPolyfill } from "@vue-solana/core";
++ import { Buffer, installSolanaBufferPolyfill } from "@vue-solana/core/buffer-polyfill";
+- import { getSolanaIosWallets } from "@vue-solana/core";
++ import { getSolanaIosWallets } from "@vue-solana/core/ios-wallet";
+- import { registerSolanaMobileWallet } from "@vue-solana/core";
++ import { registerSolanaMobileWallet } from "@vue-solana/core/mobile-wallet";
+```
+
+(`@vue-solana/vue/buffer-polyfill`와 `@vue-solana/nuxt/buffer-polyfill`은 변경 없습니다.)
+
+#### 3. `useSignatureStatus` 업데이트
+
+```diff
+- useSignatureStatus(signature, { commitment: "confirmed" })
++ useSignatureStatus(signature)
+```
+
+호출별 commitment가 필요하면 `useTransactionConfirmation()`의 `confirm(signature, opts)`에 `{ commitment }`를 전달하거나 `@vue-solana/core`의 `confirmTransactionSignature()`를 직접 호출하세요.
+
+#### 4. 순수 Vue에서 플러그인 dispose
+
+```ts
+const solana = createSolanaPlugin();
+createApp(App).use(solana);
+// 해제 시:
+app.unmount();
+solana.dispose();
+```
+
+(Nuxt는 자동으로 연결합니다.)
+
+#### 5. 타입된 airdrop 오류 처리
+
+`useAirdrop()` 실패는 이제 코드 `RPC_FAILURE`의 `SolanaError`이며, 원래 오류는 `cause`로 보존됩니다.
+
+```ts
+import { isSolanaError } from "@vue-solana/core/kit";
+
+try {
+  await airdrop();
+} catch (error) {
+  if (isSolanaError(error, "RPC_FAILURE")) {
+    // 처리
+  }
+}
+```
 
 ## 마이그레이션: v2에서 v3으로
 
@@ -8953,9 +9220,98 @@ const lamports = await client.rpc.getBalance(address("...")).send();
 # 迁移指南
 
 Source: https://vue-solana-docs.vercel.app/zh/guides/migration
-Description: Vue Solana 版本迁移指南。涵盖 v2 到 v3 的升级以及 v1.x 到 v2 的迁移。
+Description: Vue Solana 版本迁移指南。涵盖 v3 到 v4 的升级、v2 到 v3 的升级，以及 v1.x 到 v2 的迁移。
 
-本指南涵盖 Vue Solana 版本间的迁移。有两个主要迁移：v2 到 v3 的升级（最新），以及 v1.x 到 v2 的迁移。
+本指南涵盖 Vue Solana 版本间的迁移。有三个主要迁移：v3 到 v4 的升级（最新）、v2 到 v3 的升级，以及 v1.x 到 v2 的迁移。
+
+## 迁移：v3 到 v4
+
+v4.0.0 是最新版本。它通过从 `@vue-solana/core` 的根 barrel 中移除重量级模块并发布更小的 tarball 来减小 bundle 体积。它还更改了一些 composable API，并真正应用配置的 `commitment`。
+
+### 变更内容
+
+- **根 barrel 精简**：`@vue-solana/core` 不再从根 barrel re-export `Buffer`/`installSolanaBufferPolyfill`、`ios-wallet` 或 `mobile-wallet`。请使用专用 subpath。
+- **更小的 tarball**：不再发布 `.d.mts` 声明文件；所有 `exports` 条件都指向 `.d.ts`。
+- **`useSignatureStatus`**：不再接受 `commitment` 选项。
+- **`commitment` 生效**：`createSolanaClient()` / `createSolanaPlugin()` / Nuxt 的 `solana.commitment` 现在真正应用于 RPC 调用。
+- **`plugin.dispose()`**：`createSolanaPlugin()` 现在返回 `dispose()`。
+- **类型化的 airdrop 失败**：`useAirdrop()` 的失败现在是代码为 `RPC_FAILURE` 的 `SolanaError`。
+- **`buffer` 可选 peer**：使用 `buffer-polyfill` 的应用必须自行安装 `buffer`。
+- **`bs58` 移除**：直接 import `bs58` 的应用必须将其加入自己的依赖。
+- **新的 auto-import（Nuxt）**：`useSolanaClientCapability()`、`tryUseSolana()`、`clearSwrCache()`、`deleteSwrKey()`。
+- **新增 `deleteSwrKey()`** 位于 `@vue-solana/vue/swr`。
+
+### 如何迁移
+
+#### 1. 更新依赖
+
+```sh
+pnpm add @vue-solana/vue@^4.0.0
+# 或
+pnpm add @vue-solana/nuxt@^4.0.0
+```
+
+如果你使用 `buffer-polyfill`，请自行安装 `buffer`：
+
+```sh
+pnpm add buffer
+```
+
+如果你直接 import `bs58`，请添加它：
+
+```sh
+pnpm add bs58
+```
+
+#### 2. 更新 Buffer / Wallet 导入
+
+```diff
+- import { Buffer, installSolanaBufferPolyfill } from "@vue-solana/core";
++ import { Buffer, installSolanaBufferPolyfill } from "@vue-solana/core/buffer-polyfill";
+- import { getSolanaIosWallets } from "@vue-solana/core";
++ import { getSolanaIosWallets } from "@vue-solana/core/ios-wallet";
+- import { registerSolanaMobileWallet } from "@vue-solana/core";
++ import { registerSolanaMobileWallet } from "@vue-solana/core/mobile-wallet";
+```
+
+（`@vue-solana/vue/buffer-polyfill` 和 `@vue-solana/nuxt/buffer-polyfill` 保持不变。）
+
+#### 3. 更新 `useSignatureStatus`
+
+```diff
+- useSignatureStatus(signature, { commitment: "confirmed" })
++ useSignatureStatus(signature)
+```
+
+如需按调用设置 commitment，请向 `useTransactionConfirmation()` 的 `confirm(signature, opts)` 传递 `{ commitment }`，或直接调用 `@vue-solana/core` 的 `confirmTransactionSignature()`。
+
+#### 4. 在纯 Vue 中 dispose 插件
+
+```ts
+const solana = createSolanaPlugin();
+createApp(App).use(solana);
+// 卸载时：
+app.unmount();
+solana.dispose();
+```
+
+（Nuxt 会自动接线。）
+
+#### 5. 处理类型化的 airdrop 错误
+
+`useAirdrop()` 的失败现在是代码为 `RPC_FAILURE` 的 `SolanaError`；原始错误作为 `cause` 保留。
+
+```ts
+import { isSolanaError } from "@vue-solana/core/kit";
+
+try {
+  await airdrop();
+} catch (error) {
+  if (isSolanaError(error, "RPC_FAILURE")) {
+    // 处理
+  }
+}
+```
 
 ## 迁移：v2 到 v3
 
@@ -9282,6 +9638,7 @@ Subpaths directos:
 - [RPC and Clusters](/guides/rpc-and-clusters): configura nombres de cluster, endpoints RPC personalizados, endpoints WebSocket y helpers de cliente.
 - [Wallets](/guides/wallets): descubre wallets Wallet Standard, registra fuentes de wallet móvil y comprueba capacidades de wallet.
 - [Transactions](/guides/transactions): firma, envía, confirma y maneja timeouts de transacción de forma segura.
+- [Solana Pay](/guides/solana-pay): codifica solicitudes de pago, renderiza y escanea códigos QR, y confirma la liquidación por referencia.
 - [Errors](/guides/errors): ramifica con códigos `SolanaError` estables y mantén las causas sin procesar fuera de la UI orientada al usuario.
 
 ## Configuración
@@ -9551,6 +9908,32 @@ if (balance) {
   console.log(`${balance.amount} (${balance.decimals} decimals)`);
 }
 ```
+
+### Solana Pay
+
+Los helpers de Solana Pay están implementados directamente sobre `@solana/kit`; no se necesita ningún paquete adicional de Solana Pay ni `gill`.
+
+- `encodeURL(fields)` / `encodeTransferRequestURL(fields)` / `encodeTransactionRequestURL(fields)`: construyen URLs `solana:` de solicitud de transferencia o de transacción. `amount` es un `bigint` en lamports y se codifica como una cadena decimal de SOL.
+- `parseURL(value)`: valida y parsea una solicitud de transferencia en campos tipados `recipient`, `amount`, `splToken`, `reference`, `label`, `message` y `memo`. Lanza `ParseURLError` para un protocolo, destinatario, mint de token, referencia, importe o URL mal formada no válidos.
+- `createQR(url, size?, background?, color?)`: renderiza un código QR como cadena SVG. `createQRDataURL()` y `createQRCanvas()` ofrecen destinos de render alternativos. El codificador `qrcode` se carga de forma diferida, así que los consumidores que solo usan URLs no lo incluyen en el bundle.
+- `createRecipient(address)`, `createSPLToken(address)`, `isValidSolanaAddress(value)`: helpers de validación de direcciones.
+- `createSolanaPayReference()` y `verifySolanaPayPayment()` están en `@vue-solana/core/solana-pay-confirmation`; `getSolanaPayPaymentStatus()` está en `@vue-solana/core/solana-pay-status`.
+
+```ts
+import { createQR, encodeURL, parseURL } from "@vue-solana/core/solana-pay";
+import { address } from "@vue-solana/core/kit";
+
+const url = encodeURL({
+  recipient: address("PASTE_A_SOLANA_ADDRESS"),
+  amount: 100_000_000n,
+  label: "Example store",
+});
+
+const parsed = parseURL(url.toString());
+const svg = await createQR(url);
+```
+
+Los valores de referencia son cadenas `Address` de Kit. Parsea la salida del escáner con `parseURL()` y muestra al usuario el destinatario, el importe, el token, la etiqueta y el mensaje antes de firmar nada.
 
 ### Errores y timeouts
 
@@ -9899,6 +10282,7 @@ Direct subpath:
 - [RPC와 클러스터](/ko/guides/rpc-and-clusters): cluster name, custom RPC endpoint, WebSocket endpoint, client helper를 설정합니다.
 - [지갑](/ko/guides/wallets): Wallet Standard 지갑을 검색하고, mobile wallet source를 등록하고, wallet capability를 확인합니다.
 - [트랜잭션](/ko/guides/transactions): transaction을 안전하게 서명, 전송, 확인하고 timeout을 처리합니다.
+- [Solana Pay](/ko/guides/solana-pay): 결제 요청을 인코딩하고 QR 코드를 렌더링·스캔하며 reference로 정산을 확인합니다.
 - [오류](/ko/guides/errors): 안정적인 `SolanaError` code로 분기하고 raw cause를 사용자 UI에서 숨깁니다.
 
 ## 설정
@@ -10168,6 +10552,32 @@ if (balance) {
 }
 ```
 
+### Solana Pay
+
+Solana Pay helper는 `@solana/kit` 위에 직접 구현되어 있습니다. 추가 Solana Pay 패키지나 `gill`이 필요하지 않습니다.
+
+- `encodeURL(fields)` / `encodeTransferRequestURL(fields)` / `encodeTransactionRequestURL(fields)`: `solana:` 전송 또는 트랜잭션 요청 URL을 만듭니다. `amount`는 lamport 단위의 `bigint`이며 소수점 SOL 문자열로 인코딩됩니다.
+- `parseURL(value)`: 전송 요청을 `recipient`, `amount`, `splToken`, `reference`, `label`, `message`, `memo` 타입 필드로 검증하고 파싱합니다. 잘못된 프로토콜, recipient, token mint, reference, amount 또는 잘못된 URL이면 `ParseURLError`를 던집니다.
+- `createQR(url, size?, background?, color?)`: QR 코드를 SVG 문자열로 렌더링합니다. `createQRDataURL()`과 `createQRCanvas()`는 다른 렌더 대상을 제공합니다. `qrcode` 인코더는 지연 로드되므로 URL만 사용하는 소비자는 번들에 포함하지 않습니다.
+- `createRecipient(address)`, `createSPLToken(address)`, `isValidSolanaAddress(value)`: 주소 검증 helper.
+- `createSolanaPayReference()`와 `verifySolanaPayPayment()`는 `@vue-solana/core/solana-pay-confirmation`에 있고, `getSolanaPayPaymentStatus()`는 `@vue-solana/core/solana-pay-status`에 있습니다.
+
+```ts
+import { createQR, encodeURL, parseURL } from "@vue-solana/core/solana-pay";
+import { address } from "@vue-solana/core/kit";
+
+const url = encodeURL({
+  recipient: address("PASTE_A_SOLANA_ADDRESS"),
+  amount: 100_000_000n,
+  label: "Example store",
+});
+
+const parsed = parseURL(url.toString());
+const svg = await createQR(url);
+```
+
+참조 값은 Kit `Address` 문자열입니다. 스캐너 출력은 `parseURL()`로 파싱하고, 서명하기 전에 사용자에게 recipient, amount, token, label, message를 보여 주세요.
+
 ### 오류와 Timeout
 
 - `SolanaError`: 안정적인 `code`와 optional original `cause`가 있는 정규화 error class.
@@ -10312,12 +10722,16 @@ Direct subpaths:
 - `@vue-solana/core/wallet`
 - `@vue-solana/core/wallet-standard`
 - `@vue-solana/core/token-accounts`
+- `@vue-solana/core/solana-pay`
+- `@vue-solana/core/solana-pay-confirmation`
+- `@vue-solana/core/solana-pay-status`
 
 ## Related Guides
 
 - [RPC and Clusters](/guides/rpc-and-clusters): configure cluster names, custom RPC endpoints, WebSocket endpoints, and client helpers.
 - [Wallets](/guides/wallets): discover Wallet Standard wallets, register mobile wallet sources, and check wallet capabilities.
 - [Transactions](/guides/transactions): sign, send, confirm, and handle transaction timeouts safely.
+- [Solana Pay](/guides/solana-pay): encode payment requests, render and scan QR codes, and confirm settlement by reference.
 - [Errors](/guides/errors): branch on stable `SolanaError` codes and keep raw causes out of user-facing UI.
 
 ## Configuration
@@ -10589,6 +11003,32 @@ if (balance) {
 }
 ```
 
+### Solana Pay
+
+The Solana Pay helpers are implemented directly on `@solana/kit`; no extra Solana Pay or `gill` package is required.
+
+- `encodeURL(fields)` / `encodeTransferRequestURL(fields)` / `encodeTransactionRequestURL(fields)`: build `solana:` transfer or transaction request URLs. `amount` is a `bigint` in lamports and is encoded as a decimal SOL string.
+- `parseURL(value)`: validates and parses a transfer request into typed `recipient`, `amount`, `splToken`, `reference`, `label`, `message`, and `memo` fields. Throws `ParseURLError` for an invalid protocol, recipient, token mint, reference, amount, or malformed URL.
+- `createQR(url, size?, background?, color?)`: renders a QR code as an SVG string. `createQRDataURL()` and `createQRCanvas()` provide alternative render targets. The `qrcode` encoder is loaded lazily, so URL-only consumers do not bundle it.
+- `createRecipient(address)`, `createSPLToken(address)`, `isValidSolanaAddress(value)`: address validation helpers.
+- `createSolanaPayReference()` and `verifySolanaPayPayment()` live in `@vue-solana/core/solana-pay-confirmation`; `getSolanaPayPaymentStatus()` lives in `@vue-solana/core/solana-pay-status`.
+
+```ts
+import { createQR, encodeURL, parseURL } from "@vue-solana/core/solana-pay";
+import { address } from "@vue-solana/core/kit";
+
+const url = encodeURL({
+  recipient: address("PASTE_A_SOLANA_ADDRESS"),
+  amount: 100_000_000n,
+  label: "Example store",
+});
+
+const parsed = parseURL(url.toString());
+const svg = await createQR(url);
+```
+
+Reference values are Kit `Address` strings. Parse scanner output with `parseURL()` and show the recipient, amount, token, label, and message to the user before signing anything.
+
 ### Errors and Timeouts
 
 - `SolanaError`: normalized error class with a stable `code` and optional original `cause`.
@@ -10837,6 +11277,7 @@ import type { SolanaConfig } from "@vue-solana/core/types";
 - [RPC 和 Clusters](/zh/guides/rpc-and-clusters)：配置 cluster 名称、自定义 RPC endpoint、WebSocket endpoint 和客户端 helper。
 - [钱包](/zh/guides/wallets)：发现 Wallet Standard 钱包、注册移动钱包来源并检查钱包能力。
 - [交易](/zh/guides/transactions)：安全地签名、发送、确认并处理交易超时。
+- [Solana Pay](/zh/guides/solana-pay)：编码支付请求，渲染和扫描二维码，并按引用确认结算。
 - [错误](/zh/guides/errors)：基于稳定 `SolanaError` code 分支，并避免把原始 cause 暴露给用户 UI。
 
 ## 配置
@@ -11106,6 +11547,32 @@ if (balance) {
 }
 ```
 
+### Solana Pay
+
+Solana Pay 辅助函数直接基于 `@solana/kit` 实现；无需额外的 Solana Pay 包或 `gill`。
+
+- `encodeURL(fields)` / `encodeTransferRequestURL(fields)` / `encodeTransactionRequestURL(fields)`：构建 `solana:` 转账或交易请求 URL。`amount` 是以 lamport 为单位的 `bigint`，会编码为十进制 SOL 字符串。
+- `parseURL(value)`：校验并解析转账请求，返回带类型的 `recipient`、`amount`、`splToken`、`reference`、`label`、`message` 和 `memo` 字段。协议、收款方、代币 mint、引用、金额无效或 URL 格式错误时抛出 `ParseURLError`。
+- `createQR(url, size?, background?, color?)`：将二维码渲染为 SVG 字符串。`createQRDataURL()` 和 `createQRCanvas()` 提供其他渲染目标。`qrcode` 编码器按需延迟加载，因此只使用 URL 的消费者不会把它打进 bundle。
+- `createRecipient(address)`、`createSPLToken(address)`、`isValidSolanaAddress(value)`：地址校验辅助函数。
+- `createSolanaPayReference()` 和 `verifySolanaPayPayment()` 位于 `@vue-solana/core/solana-pay-confirmation`；`getSolanaPayPaymentStatus()` 位于 `@vue-solana/core/solana-pay-status`。
+
+```ts
+import { createQR, encodeURL, parseURL } from "@vue-solana/core/solana-pay";
+import { address } from "@vue-solana/core/kit";
+
+const url = encodeURL({
+  recipient: address("PASTE_A_SOLANA_ADDRESS"),
+  amount: 100_000_000n,
+  label: "Example store",
+});
+
+const parsed = parseURL(url.toString());
+const svg = await createQR(url);
+```
+
+引用值是 Kit `Address` 字符串。使用 `parseURL()` 解析扫描器输出，并在签名前向用户展示收款方、金额、代币、标签和消息。
+
 ### 错误和超时
 
 - `SolanaError`：规范化错误类，带稳定 `code` 和可选原始 `cause`。
@@ -11173,6 +11640,846 @@ try {
 序列化 Solana 交易的浏览器代码可能需要 Node 兼容的 `Buffer` 全局。在交易代码之前用 `@vue-solana/core/buffer-polyfill` 的 `installSolanaBufferPolyfill()` 初始化它。仅剩的包自有类型 shim 覆盖此 polyfill 导入的浏览器 `buffer/` subpath。
 
 三个包都标记了 `"sideEffects": false`，因此 bundler 可以删除任何绑定未被使用的导入。请像上面的示例一样以 named import 引入 polyfill 并调用它。像 `import "@vue-solana/core/buffer-polyfill"` 这样的副作用导入不会安装任何东西，因为该 subpath 只导出函数。
+
+---
+
+# Solana Pay
+
+Source: https://vue-solana-docs.vercel.app/es/guides/solana-pay
+Description: Crea solicitudes de transferencia de Solana Pay, renderiza y escanea códigos QR y confirma la liquidación por referencia.
+
+Solana Pay es un estándar de URL para solicitudes de pago. Una solicitud de transferencia codifica el destinatario, un importe opcional, un mint de token SPL opcional y campos de presentación opcionales. Las wallets y las apps de pago leen esa URL y preparan una transferencia que coincide.
+
+Vue Solana implementa Solana Pay directamente con `@solana/kit`. No se necesita ningún paquete adicional de Solana Pay, y `qrcode` se carga de forma diferida solo cuando renderizas un código QR.
+
+| Necesidad                                   | API                                                      |
+| ------------------------------------------- | -------------------------------------------------------- |
+| Crear una URL de solicitud                  | `encodeURL()`, `encodeTransferRequestURL()`              |
+| Crear una solicitud de transacción diferida | `encodeTransactionRequestURL()`                          |
+| Leer una URL escaneada o pegada             | `parseURL()`                                             |
+| Renderizar un código QR                     | `createQR()`, `createQRDataURL()`, `createQRCanvas()`    |
+| Seguir una referencia on chain              | `createSolanaPayReference()`, `verifySolanaPayPayment()` |
+
+## Crear una solicitud de transferencia
+
+`encodeURL()` recibe valores `Address` de Kit. Los importes son `bigint` en lamports y se codifican como una cadena decimal de SOL, así que `100_000_000n` se convierte en `amount=0.1`.
+
+```ts
+import { address } from "@vue-solana/vue/kit";
+import { encodeURL, parseURL } from "@vue-solana/core/solana-pay";
+
+const url = encodeURL({
+  recipient: address("PASTE_A_SOLANA_ADDRESS"),
+  amount: 100_000_000n,
+  label: "Example store",
+  message: "Order 1042",
+  memo: "order-1042",
+});
+
+// solana:PASTE_A_SOLANA_ADDRESS?amount=0.1&label=Example+store&message=Order+1042&memo=order-1042
+console.log(url.toString());
+
+const parsed = parseURL(url.toString());
+// parsed.amount vuelve a ser un bigint: 100000000n
+```
+
+Añade un `reference` cuando necesites encontrar el pago más adelante. Una referencia es una clave pública que no participa en la transferencia en sí; el pagador la adjunta a la transacción y entonces `getSignaturesForAddress(reference)` devuelve la liquidación.
+
+```ts
+import { createSolanaPayReference } from "@vue-solana/core/solana-pay-confirmation";
+
+const reference = await createSolanaPayReference();
+
+const url = encodeURL({
+  recipient: address("PASTE_A_SOLANA_ADDRESS"),
+  amount: 100_000_000n,
+  reference,
+});
+```
+
+`encodeTransactionRequestURL({ link })` crea en cambio una solicitud de transacción: la wallet obtiene `link` y tu servidor responde con una transacción para firmar. Vue Solana parsea y codifica esas URLs, pero no construye ni envía la transacción enlazada, así que el endpoint y su autorización son responsabilidad tuya.
+
+En Vue, `useSolanaPay()` envuelve las mismas primitivas y genera una referencia por ti:
+
+```vue
+<script setup lang="ts">
+import { address } from "@vue-solana/vue/kit";
+import { useSolanaPay } from "@vue-solana/vue/useSolanaPay";
+
+const { createTransferRequest, requestUrl, reference, parsedRequest, status, loading, error } =
+  useSolanaPay();
+
+async function createRequest() {
+  await createTransferRequest({
+    recipient: address("PASTE_A_SOLANA_ADDRESS"),
+    amount: 100_000_000n,
+    label: "Example store",
+    message: "Order 1042",
+  });
+}
+</script>
+```
+
+`createTransferRequest` devuelve la URL como cadena y rellena `requestUrl`, `parsedRequest`, `reference` y `status: "pending"`. `parseRequest(value)` parsea entrada no confiable, `createReference()` genera una referencia independiente y `reset()` limpia el estado.
+
+## Renderizar el código QR
+
+`createQR(url)` devuelve texto SVG. `createQRDataURL()` devuelve una URL `data:` con codificación porcentual que no necesita el polyfill de `Buffer`, y `createQRCanvas(canvas, url, options)` escribe en un elemento canvas.
+
+```ts
+import { createQR } from "@vue-solana/core/solana-pay";
+
+const svg = await createQR(url, 512, "white", "black");
+```
+
+En Vue, renderiza la cadena con `v-html`: el SVG viene del codificador `qrcode`, no de entrada del usuario:
+
+```vue
+<script setup lang="ts">
+import { useSolanaQrCode } from "@vue-solana/vue/useSolanaQrCode";
+
+const { svg, generate, loading, error } = useSolanaQrCode();
+
+async function showQr(requestUrl: string) {
+  await generate(requestUrl);
+}
+</script>
+
+<template>
+  <div v-if="svg" v-html="svg" />
+</template>
+```
+
+`generate(url)` usa por defecto un código de 512 px en blanco sobre negro. Las opciones adicionales se pasan en el orden de argumentos de `createQR`, así que `generate(url, { size: 320, background: "#fff", color: "#111" })` se traduce en `createQR(url, 320, "#fff", "#111")`.
+
+## Escanear y validar
+
+`useSolanaQrScanner()` abre la cámara trasera, consulta códigos QR con `BarcodeDetector` y parsea cada resultado con `parseURL()`. Solo funciona en el navegador: úsalo detrás de un límite de cliente y nunca llames a `start()` durante el SSR.
+
+```vue
+<script setup lang="ts">
+import { ref } from "vue";
+import { useSolanaQrScanner } from "@vue-solana/vue/useSolanaQrScanner";
+
+const video = ref<HTMLVideoElement | null>(null);
+const { scanning, parsed, error, start, stop, reset } = useSolanaQrScanner();
+
+async function beginScan() {
+  await start({ video: video.value ?? undefined, scanIntervalMs: 500 });
+}
+</script>
+
+<template>
+  <video ref="video" playsinline muted />
+  <button type="button" @click="beginScan">Start scanner</button>
+  <button type="button" @click="stop">Stop</button>
+  <p v-if="scanning">Scanning…</p>
+  <p v-if="error">Camera unavailable — paste the payment URL instead.</p>
+</template>
+```
+
+`start()` se rechaza cuando falta `navigator.mediaDevices`. Cuando el navegador no tiene `BarcodeDetector`, la cámara se abre igualmente pero no se detecta nada, así que ofrece un campo para pegar la URL que llame a `scanFromText(text)`. Tanto `start()` como `scanFromText()` dejan `parsed` con el resultado de `parseURL()` y mantienen `error` cuando el parseo falla; el bucle de escaneo ignora los errores de parseo y sigue escaneando.
+
+Trata los datos escaneados como entrada hostil. Muestra el destinatario, el importe, el mint del token, la etiqueta y el memo, y deja que el usuario confirme antes de cualquier petición a la wallet. Vue Solana no tiene ninguna ruta de envío automático, y no deberías añadir una.
+
+## Seguir la liquidación
+
+Una solicitud de transferencia solo es una solicitud. La liquidación significa una transacción confirmada que incluye tu referencia, paga al destinatario esperado y lleva el importe y el token esperados.
+
+```ts
+import { verifySolanaPayPayment } from "@vue-solana/core/solana-pay-confirmation";
+
+const result = await verifySolanaPayPayment(rpc, {
+  reference,
+  expectedRecipient: "PASTE_A_SOLANA_ADDRESS",
+  expectedAmount: 100_000_000n,
+  // expectedTokenMint: mint, // required for SPL token payments
+  commitment: "confirmed",
+  timeoutMs: 30_000,
+});
+```
+
+`verifySolanaPayPayment()` consulta `getSignaturesForAddress(reference)` hasta el timeout y devuelve `{ status, signature, verified, reason }`. Entrega un pedido solo cuando `verified` sea `true`. `getSolanaPayPaymentStatus(rpc, reference)` es la lectura más barata, sin verificación: informa `pending` cuando todavía no existe ninguna firma, `found` cuando existe alguna y `error` cuando falla la llamada RPC.
+
+`useSolanaPay()` expone `confirmTransfer()`, que verifica contra la solicitud parseada y guarda el resultado en `status` (`idle`, `pending`, `found`, `confirmed`, `finalized`, `expired`, `error`). `useSolanaPayConfirmation()` consulta ese mismo estado en un intervalo:
+
+```ts
+import { useSolanaPayConfirmation } from "@vue-solana/vue/useSolanaPayConfirmation";
+
+const { status, check, startPolling, stopPolling } = useSolanaPayConfirmation();
+
+startPolling(rpc, reference, 2_000);
+// polling stops on unmount; call stopPolling() to end it earlier
+```
+
+`useSolanaPayConfirmation()` detiene el polling cuando el componente se desmonta; llama a `stopPolling()` para terminarlo antes.
+
+## Auto-imports de Nuxt
+
+El módulo de Nuxt auto-importa `useSolanaPay()`, `useSolanaPayConfirmation()`, `useSolanaQrCode()` y `useSolanaQrScanner()` con los mismos nombres. Envuelve el escáner y cualquier acceso a `BarcodeDetector` en `<ClientOnly>` para que el renderizado en servidor nunca toque APIs de cámara.
+
+```vue
+<template>
+  <ClientOnly>
+    <QrScannerPanel />
+    <template #fallback>
+      <p>Scanner loads in the browser.</p>
+    </template>
+  </ClientOnly>
+</template>
+```
+
+Los helpers de core no se auto-importan. Impórtalos desde `@vue-solana/nuxt/kit` para los tipos de Kit y desde los subpaths del paquete Vue, o llama a los composables.
+
+## Límites de seguridad
+
+- Parsea cada URL con `parseURL()` antes de mostrarla; nunca confíes en una cadena escaneada.
+- Muestra destinatario, importe, token y memo, y exige una acción explícita del usuario antes de firmar.
+- Nunca envíes una transacción automáticamente desde un código escaneado.
+- Verifica on chain antes de liberar productos o crédito.
+- Nunca guardes claves privadas ni secretos en el código de cliente, y nunca pongas claves con fondos en la runtime config pública de Nuxt.
+- Trata un `reference` como clave de búsqueda, no como prueba de pago por sí solo.
+
+## Prueba manual en devnet
+
+1. Cambia tu wallet a devnet y solicita SOL gratis en `https://faucet.solana.com`.
+2. Crea una solicitud de transferencia de unos pocos miles de lamports y renderiza el código QR.
+3. Escanéalo con una wallet compatible con Solana Pay, o pega la URL en tu propia interfaz de escaneo.
+4. Confirma que la wallet muestra el mismo destinatario, importe y memo que muestra tu página.
+5. Aprueba la transferencia y luego llama a `verifySolanaPayPayment()` con la misma referencia y comprueba que `verified` pasa a `true`.
+6. Repite la liquidación con un importe o un destinatario incorrectos y confirma que no verifica.
+
+Usa importes pequeños mientras pruebas. Una referencia que nunca liquida es el resultado esperado cuando el pagador envía una transferencia simple sin adjuntar la cuenta de referencia.
+
+---
+
+# Solana Pay
+
+Source: https://vue-solana-docs.vercel.app/guides/solana-pay
+Description: Create Solana Pay transfer requests, render and scan QR codes, and confirm settlement by reference.
+
+Solana Pay is a URL standard for payment requests. A transfer request encodes the recipient, an optional amount, an optional SPL token mint, and optional display fields. Wallets and payment apps read that URL and prepare a matching transfer.
+
+Vue Solana implements Solana Pay with `@solana/kit` directly. No extra Solana Pay package is required, and `qrcode` is loaded lazily only when you render a QR code.
+
+| Need                                 | API                                                      |
+| ------------------------------------ | -------------------------------------------------------- |
+| Build a request URL                  | `encodeURL()`, `encodeTransferRequestURL()`              |
+| Build a deferred transaction request | `encodeTransactionRequestURL()`                          |
+| Read a scanned or pasted URL         | `parseURL()`                                             |
+| Render a QR code                     | `createQR()`, `createQRDataURL()`, `createQRCanvas()`    |
+| Track a reference on chain           | `createSolanaPayReference()`, `verifySolanaPayPayment()` |
+
+## Create A Transfer Request
+
+`encodeURL()` takes Kit `Address` values. Amounts are `bigint` lamports and are encoded as a decimal SOL string, so `100_000_000n` becomes `amount=0.1`.
+
+```ts
+import { address } from "@vue-solana/vue/kit";
+import { encodeURL, parseURL } from "@vue-solana/core/solana-pay";
+
+const url = encodeURL({
+  recipient: address("PASTE_A_SOLANA_ADDRESS"),
+  amount: 100_000_000n,
+  label: "Example store",
+  message: "Order 1042",
+  memo: "order-1042",
+});
+
+// solana:PASTE_A_SOLANA_ADDRESS?amount=0.1&label=Example+store&message=Order+1042&memo=order-1042
+console.log(url.toString());
+
+const parsed = parseURL(url.toString());
+// parsed.amount is a bigint again: 100000000n
+```
+
+Add a `reference` when you need to find the payment later. A reference is a public key that is not involved in the transfer itself; the payer attaches it to the transaction, and `getSignaturesForAddress(reference)` then returns the settlement.
+
+```ts
+import { createSolanaPayReference } from "@vue-solana/core/solana-pay-confirmation";
+
+const reference = await createSolanaPayReference();
+
+const url = encodeURL({
+  recipient: address("PASTE_A_SOLANA_ADDRESS"),
+  amount: 100_000_000n,
+  reference,
+});
+```
+
+`encodeTransactionRequestURL({ link })` builds a transaction request instead: the wallet fetches `link`, and your server responds with a transaction to sign. Vue Solana parses and encodes those URLs but does not build or send the linked transaction, so the endpoint and its authorization are your responsibility.
+
+In Vue, `useSolanaPay()` wraps the same primitives and generates a reference for you:
+
+```vue
+<script setup lang="ts">
+import { address } from "@vue-solana/vue/kit";
+import { useSolanaPay } from "@vue-solana/vue/useSolanaPay";
+
+const { createTransferRequest, requestUrl, reference, parsedRequest, status, loading, error } =
+  useSolanaPay();
+
+async function createRequest() {
+  await createTransferRequest({
+    recipient: address("PASTE_A_SOLANA_ADDRESS"),
+    amount: 100_000_000n,
+    label: "Example store",
+    message: "Order 1042",
+  });
+}
+</script>
+```
+
+`createTransferRequest` returns the URL as a string and fills `requestUrl`, `parsedRequest`, `reference`, and `status: "pending"`. `parseRequest(value)` parses untrusted input, `createReference()` mints a standalone reference, and `reset()` clears the state.
+
+## Render The QR Code
+
+`createQR(url)` returns SVG text. `createQRDataURL()` returns a percent-encoded `data:` URL that needs no `Buffer` polyfill, and `createQRCanvas(canvas, url, options)` writes to a canvas element.
+
+```ts
+import { createQR } from "@vue-solana/core/solana-pay";
+
+const svg = await createQR(url, 512, "white", "black");
+```
+
+In Vue, render the string with `v-html` — the SVG comes from the `qrcode` encoder, not from user input:
+
+```vue
+<script setup lang="ts">
+import { useSolanaQrCode } from "@vue-solana/vue/useSolanaQrCode";
+
+const { svg, generate, loading, error } = useSolanaQrCode();
+
+async function showQr(requestUrl: string) {
+  await generate(requestUrl);
+}
+</script>
+
+<template>
+  <div v-if="svg" v-html="svg" />
+</template>
+```
+
+`generate(url)` defaults to a 512 px white-on-black code. Additional options are passed in `createQR` argument order, so `generate(url, { size: 320, background: "#fff", color: "#111" })` maps to `createQR(url, 320, "#fff", "#111")`.
+
+## Scan And Validate
+
+`useSolanaQrScanner()` opens the rear camera, polls for QR codes with `BarcodeDetector`, and parses each result with `parseURL()`. It is browser-only: guard it behind a client boundary and never call `start()` during SSR.
+
+```vue
+<script setup lang="ts">
+import { ref } from "vue";
+import { useSolanaQrScanner } from "@vue-solana/vue/useSolanaQrScanner";
+
+const video = ref<HTMLVideoElement | null>(null);
+const { scanning, parsed, error, start, stop, reset } = useSolanaQrScanner();
+
+async function beginScan() {
+  await start({ video: video.value ?? undefined, scanIntervalMs: 500 });
+}
+</script>
+
+<template>
+  <video ref="video" playsinline muted />
+  <button type="button" @click="beginScan">Start scanner</button>
+  <button type="button" @click="stop">Stop</button>
+  <p v-if="scanning">Scanning…</p>
+  <p v-if="error">Camera unavailable — paste the payment URL instead.</p>
+</template>
+```
+
+`start()` rejects when `navigator.mediaDevices` is missing. When the browser has no `BarcodeDetector`, the camera still opens but nothing is detected, so offer a paste field that calls `scanFromText(text)`. Both `start()` and `scanFromText()` set `parsed` to the `parseURL()` result and leave `error` set when parsing fails; the scan loop ignores parse errors and keeps scanning.
+
+Treat scanned data as hostile input. Show the recipient, amount, token mint, label, and memo, and let the user confirm before any wallet prompt. There is no auto-send path in Vue Solana, and you should not add one.
+
+## Track Settlement
+
+A transfer request is only a request. Settlement means a confirmed transaction that includes your reference, pays the expected recipient, and carries the expected amount and token.
+
+```ts
+import { verifySolanaPayPayment } from "@vue-solana/core/solana-pay-confirmation";
+
+const result = await verifySolanaPayPayment(rpc, {
+  reference,
+  expectedRecipient: "PASTE_A_SOLANA_ADDRESS",
+  expectedAmount: 100_000_000n,
+  // expectedTokenMint: mint, // required for SPL token payments
+  commitment: "confirmed",
+  timeoutMs: 30_000,
+});
+```
+
+`verifySolanaPayPayment()` polls `getSignaturesForAddress(reference)` until the timeout and returns `{ status, signature, verified, reason }`. Fulfil an order only when `verified` is `true`. `getSolanaPayPaymentStatus(rpc, reference)` is the cheaper, non-verifying read: it reports `pending` when no signature exists yet, `found` when one does, and `error` when the RPC call fails.
+
+`useSolanaPay()` exposes `confirmTransfer()`, which verifies against the parsed request and stores the outcome in `status` (`idle`, `pending`, `found`, `confirmed`, `finalized`, `expired`, `error`). `useSolanaPayConfirmation()` polls the same status on an interval:
+
+```ts
+import { useSolanaPayConfirmation } from "@vue-solana/vue/useSolanaPayConfirmation";
+
+const { status, check, startPolling, stopPolling } = useSolanaPayConfirmation();
+
+startPolling(rpc, reference, 2_000);
+// polling stops on unmount; call stopPolling() to end it earlier
+```
+
+`useSolanaPayConfirmation()` stops polling when the component unmounts; call `stopPolling()` to end it earlier.
+
+## Nuxt Auto-Imports
+
+The Nuxt module auto-imports `useSolanaPay()`, `useSolanaPayConfirmation()`, `useSolanaQrCode()`, and `useSolanaQrScanner()` under the same names. Wrap the scanner and any `BarcodeDetector` access in `<ClientOnly>` so server rendering never touches camera APIs.
+
+```vue
+<template>
+  <ClientOnly>
+    <QrScannerPanel />
+    <template #fallback>
+      <p>Scanner loads in the browser.</p>
+    </template>
+  </ClientOnly>
+</template>
+```
+
+Core helpers are not auto-imported. Import them from `@vue-solana/nuxt/kit` for Kit types and from the Vue package subpaths, or call the composables instead.
+
+## Security Boundaries
+
+- Parse every URL with `parseURL()` before showing it; never trust a scanned string.
+- Show recipient, amount, token, and memo, and require an explicit user action before signing.
+- Never auto-send a transaction from a scanned code.
+- Verify on chain before releasing goods or credit.
+- Never store private keys or secrets in client code, and never put funded keys in Nuxt public runtime config.
+- Treat a `reference` as a lookup key, not as proof of payment on its own.
+
+## Manual Devnet Test
+
+1. Switch your wallet to devnet and request free SOL from `https://faucet.solana.com`.
+2. Create a transfer request for a few thousand lamports and render the QR code.
+3. Scan it with a Solana Pay capable wallet, or paste the URL into your own scanner UI.
+4. Confirm the wallet shows the same recipient, amount, and memo that your page shows.
+5. Approve the transfer, then call `verifySolanaPayPayment()` with the same reference and check that `verified` becomes `true`.
+6. Re-run settlement with a wrong amount or recipient and confirm it does not verify.
+
+Use tiny amounts while testing. A reference that never settles is the expected result when the payer sends a plain transfer without the reference account attached.
+
+---
+
+# Solana Pay
+
+Source: https://vue-solana-docs.vercel.app/ko/guides/solana-pay
+Description: Solana Pay 전송 요청을 만들고, QR 코드를 렌더링하고 스캔하며, reference로 정산을 확인합니다.
+
+Solana Pay는 결제 요청을 위한 URL 표준입니다. 전송 요청에는 recipient, 선택적 amount, 선택적 SPL token mint, 선택적 표시 필드가 인코딩됩니다. 지갑과 결제 앱은 이 URL을 읽고 일치하는 전송을 준비합니다.
+
+Vue Solana는 Solana Pay를 `@solana/kit` 위에 직접 구현합니다. 추가 Solana Pay 패키지가 필요하지 않으며, `qrcode`는 QR 코드를 렌더링할 때만 지연 로드됩니다.
+
+| 필요한 작업                  | API                                                      |
+| ---------------------------- | -------------------------------------------------------- |
+| 요청 URL 만들기              | `encodeURL()`, `encodeTransferRequestURL()`              |
+| 지연된 트랜잭션 요청 만들기  | `encodeTransactionRequestURL()`                          |
+| 스캔하거나 붙여넣은 URL 읽기 | `parseURL()`                                             |
+| QR 코드 렌더링               | `createQR()`, `createQRDataURL()`, `createQRCanvas()`    |
+| 온체인 reference 추적        | `createSolanaPayReference()`, `verifySolanaPayPayment()` |
+
+## 전송 요청 만들기
+
+`encodeURL()`은 Kit `Address` 값을 받습니다. amount는 lamport 단위의 `bigint`이며 소수점 SOL 문자열로 인코딩되므로 `100_000_000n`은 `amount=0.1`이 됩니다.
+
+```ts
+import { address } from "@vue-solana/vue/kit";
+import { encodeURL, parseURL } from "@vue-solana/core/solana-pay";
+
+const url = encodeURL({
+  recipient: address("PASTE_A_SOLANA_ADDRESS"),
+  amount: 100_000_000n,
+  label: "Example store",
+  message: "Order 1042",
+  memo: "order-1042",
+});
+
+// solana:PASTE_A_SOLANA_ADDRESS?amount=0.1&label=Example+store&message=Order+1042&memo=order-1042
+console.log(url.toString());
+
+const parsed = parseURL(url.toString());
+// parsed.amount는 다시 bigint입니다: 100000000n
+```
+
+나중에 결제를 찾아야 한다면 `reference`를 추가하세요. reference는 전송 자체에는 관여하지 않는 public key입니다. payer가 트랜잭션에 이를 첨부하면 `getSignaturesForAddress(reference)`로 정산 내역을 조회할 수 있습니다.
+
+```ts
+import { createSolanaPayReference } from "@vue-solana/core/solana-pay-confirmation";
+
+const reference = await createSolanaPayReference();
+
+const url = encodeURL({
+  recipient: address("PASTE_A_SOLANA_ADDRESS"),
+  amount: 100_000_000n,
+  reference,
+});
+```
+
+`encodeTransactionRequestURL({ link })`는 대신 트랜잭션 요청을 만듭니다. 지갑이 `link`를 가져오면 서버가 서명할 트랜잭션으로 응답합니다. Vue Solana는 이런 URL을 파싱하고 인코딩하지만 연결된 트랜잭션을 만들거나 전송하지 않으므로, 엔드포인트와 그 권한 관리는 앱의 책임입니다.
+
+Vue에서는 `useSolanaPay()`가 같은 프리미티브를 감싸고 reference를 대신 생성합니다:
+
+```vue
+<script setup lang="ts">
+import { address } from "@vue-solana/vue/kit";
+import { useSolanaPay } from "@vue-solana/vue/useSolanaPay";
+
+const { createTransferRequest, requestUrl, reference, parsedRequest, status, loading, error } =
+  useSolanaPay();
+
+async function createRequest() {
+  await createTransferRequest({
+    recipient: address("PASTE_A_SOLANA_ADDRESS"),
+    amount: 100_000_000n,
+    label: "Example store",
+    message: "Order 1042",
+  });
+}
+</script>
+```
+
+`createTransferRequest`는 URL을 문자열로 반환하고 `requestUrl`, `parsedRequest`, `reference`, `status: "pending"`을 채웁니다. `parseRequest(value)`는 신뢰할 수 없는 입력을 파싱하고, `createReference()`는 독립적인 reference를 만들며, `reset()`은 상태를 초기화합니다.
+
+## QR 코드 렌더링
+
+`createQR(url)`은 SVG 텍스트를 반환합니다. `createQRDataURL()`은 `Buffer` polyfill이 필요 없는 퍼센트 인코딩 `data:` URL을 반환하고, `createQRCanvas(canvas, url, options)`는 canvas 요소에 그립니다.
+
+```ts
+import { createQR } from "@vue-solana/core/solana-pay";
+
+const svg = await createQR(url, 512, "white", "black");
+```
+
+Vue에서는 `v-html`로 문자열을 렌더링하세요. SVG는 사용자 입력이 아니라 `qrcode` 인코더에서 나옵니다:
+
+```vue
+<script setup lang="ts">
+import { useSolanaQrCode } from "@vue-solana/vue/useSolanaQrCode";
+
+const { svg, generate, loading, error } = useSolanaQrCode();
+
+async function showQr(requestUrl: string) {
+  await generate(requestUrl);
+}
+</script>
+
+<template>
+  <div v-if="svg" v-html="svg" />
+</template>
+```
+
+`generate(url)`은 기본값으로 512 px 흰 바탕 검정 코드를 만듭니다. 추가 옵션은 `createQR` 인자 순서대로 전달되므로 `generate(url, { size: 320, background: "#fff", color: "#111" })`은 `createQR(url, 320, "#fff", "#111")`과 같습니다.
+
+## 스캔과 검증
+
+`useSolanaQrScanner()`는 후면 카메라를 열고 `BarcodeDetector`로 QR 코드를 주기적으로 확인하며 각 결과를 `parseURL()`로 파싱합니다. 브라우저 전용이므로 클라이언트 경계 뒤에서 사용하고 SSR 중에는 `start()`를 호출하지 마세요.
+
+```vue
+<script setup lang="ts">
+import { ref } from "vue";
+import { useSolanaQrScanner } from "@vue-solana/vue/useSolanaQrScanner";
+
+const video = ref<HTMLVideoElement | null>(null);
+const { scanning, parsed, error, start, stop, reset } = useSolanaQrScanner();
+
+async function beginScan() {
+  await start({ video: video.value ?? undefined, scanIntervalMs: 500 });
+}
+</script>
+
+<template>
+  <video ref="video" playsinline muted />
+  <button type="button" @click="beginScan">Start scanner</button>
+  <button type="button" @click="stop">Stop</button>
+  <p v-if="scanning">Scanning…</p>
+  <p v-if="error">Camera unavailable — paste the payment URL instead.</p>
+</template>
+```
+
+`start()`는 `navigator.mediaDevices`가 없으면 거부됩니다. 브라우저에 `BarcodeDetector`가 없으면 카메라는 열리지만 아무것도 감지되지 않으므로, `scanFromText(text)`를 호출하는 붙여넣기 필드를 제공하세요. `start()`와 `scanFromText()` 모두 `parsed`에 `parseURL()` 결과를 넣고 파싱에 실패하면 `error`를 남깁니다. 스캔 루프는 파싱 오류를 무시하고 계속 스캔합니다.
+
+스캔한 데이터는 적대적인 입력으로 취급하세요. recipient, amount, token mint, label, memo를 보여 주고 사용자가 확인한 뒤에만 지갑 프롬프트를 띄우세요. Vue Solana에는 자동 전송 경로가 없으며, 추가해서도 안 됩니다.
+
+## 정산 추적
+
+전송 요청은 요청일 뿐입니다. 정산은 reference를 포함하고, 예상 recipient에게 지불하며, 예상 amount와 token을 담은 확정된 트랜잭션을 의미합니다.
+
+```ts
+import { verifySolanaPayPayment } from "@vue-solana/core/solana-pay-confirmation";
+
+const result = await verifySolanaPayPayment(rpc, {
+  reference,
+  expectedRecipient: "PASTE_A_SOLANA_ADDRESS",
+  expectedAmount: 100_000_000n,
+  // expectedTokenMint: mint, // required for SPL token payments
+  commitment: "confirmed",
+  timeoutMs: 30_000,
+});
+```
+
+`verifySolanaPayPayment()`는 timeout까지 `getSignaturesForAddress(reference)`를 주기적으로 조회하고 `{ status, signature, verified, reason }`을 반환합니다. `verified`가 `true`일 때만 주문을 처리하세요. `getSolanaPayPaymentStatus(rpc, reference)`는 검증 없는 더 저렴한 조회입니다. 아직 signature가 없으면 `pending`, 있으면 `found`, RPC 호출이 실패하면 `error`를 보고합니다.
+
+`useSolanaPay()`는 파싱된 요청과 대조해 검증하고 결과를 `status`(`idle`, `pending`, `found`, `confirmed`, `finalized`, `expired`, `error`)에 저장하는 `confirmTransfer()`를 제공합니다. `useSolanaPayConfirmation()`은 같은 상태를 주기적으로 조회합니다:
+
+```ts
+import { useSolanaPayConfirmation } from "@vue-solana/vue/useSolanaPayConfirmation";
+
+const { status, check, startPolling, stopPolling } = useSolanaPayConfirmation();
+
+startPolling(rpc, reference, 2_000);
+// polling stops on unmount; call stopPolling() to end it earlier
+```
+
+`useSolanaPayConfirmation()`은 컴포넌트가 unmount되면 polling을 중지합니다. 더 일찍 끝내려면 `stopPolling()`을 호출하세요.
+
+## Nuxt Auto-Import
+
+Nuxt 모듈은 `useSolanaPay()`, `useSolanaPayConfirmation()`, `useSolanaQrCode()`, `useSolanaQrScanner()`를 같은 이름으로 auto-import합니다. 서버 렌더링이 카메라 API를 건드리지 않도록 스캐너와 모든 `BarcodeDetector` 접근을 `<ClientOnly>`로 감싸세요.
+
+```vue
+<template>
+  <ClientOnly>
+    <QrScannerPanel />
+    <template #fallback>
+      <p>Scanner loads in the browser.</p>
+    </template>
+  </ClientOnly>
+</template>
+```
+
+Core helper는 auto-import되지 않습니다. Kit 타입은 `@vue-solana/nuxt/kit`에서, 나머지는 Vue 패키지 subpath에서 import하거나 컴포저블을 호출하세요.
+
+## 보안 경계
+
+- 보여 주기 전에 항상 `parseURL()`로 URL을 파싱하고, 스캔한 문자열을 신뢰하지 마세요.
+- recipient, amount, token, memo를 보여 주고 서명 전에 사용자의 명시적 동작을 요구하세요.
+- 스캔한 코드에서 트랜잭션을 자동 전송하지 마세요.
+- 상품이나 크레딧을 제공하기 전에 온체인에서 검증하세요.
+- 클라이언트 코드에 private key나 secret을 저장하지 말고, Nuxt public runtime config에 자금이 있는 키를 넣지 마세요.
+- `reference`는 조회 키일 뿐 그 자체로 결제 증명이 아닙니다.
+
+## Devnet 수동 테스트
+
+1. 지갑을 devnet으로 전환하고 `https://faucet.solana.com`에서 무료 SOL을 받으세요.
+2. 몇 천 lamport의 전송 요청을 만들고 QR 코드를 렌더링하세요.
+3. Solana Pay를 지원하는 지갑으로 스캔하거나, 직접 만든 스캔 UI에 URL을 붙여넣으세요.
+4. 지갑에 표시되는 recipient, amount, memo가 페이지에 표시된 값과 같은지 확인하세요.
+5. 전송을 승인한 뒤 같은 reference로 `verifySolanaPayPayment()`를 호출하고 `verified`가 `true`가 되는지 확인하세요.
+6. 잘못된 amount나 recipient로 정산을 다시 실행해 검증되지 않는지 확인하세요.
+
+테스트 중에는 작은 금액을 사용하세요. payer가 reference account를 첨부하지 않고 일반 전송을 보내면 reference가 정산되지 않는 것이 정상입니다.
+
+---
+
+# Solana Pay
+
+Source: https://vue-solana-docs.vercel.app/zh/guides/solana-pay
+Description: 创建 Solana Pay 转账请求，渲染和扫描二维码，并按引用确认结算。
+
+Solana Pay 是用于支付请求的 URL 标准。转账请求会编码收款方、可选金额、可选 SPL 代币 mint 以及可选展示字段。钱包和支付应用读取该 URL 并准备匹配的转账。
+
+Vue Solana 直接基于 `@solana/kit` 实现 Solana Pay。无需额外的 Solana Pay 包，`qrcode` 只在你渲染二维码时才延迟加载。
+
+| 需求                 | API                                                      |
+| -------------------- | -------------------------------------------------------- |
+| 构建请求 URL         | `encodeURL()`, `encodeTransferRequestURL()`              |
+| 构建延迟交易请求     | `encodeTransactionRequestURL()`                          |
+| 读取扫描或粘贴的 URL | `parseURL()`                                             |
+| 渲染二维码           | `createQR()`, `createQRDataURL()`, `createQRCanvas()`    |
+| 在链上跟踪引用       | `createSolanaPayReference()`, `verifySolanaPayPayment()` |
+
+## 创建转账请求
+
+`encodeURL()` 接收 Kit 的 `Address` 值。金额是以 lamport 为单位的 `bigint`，会编码为十进制 SOL 字符串，因此 `100_000_000n` 会变成 `amount=0.1`。
+
+```ts
+import { address } from "@vue-solana/vue/kit";
+import { encodeURL, parseURL } from "@vue-solana/core/solana-pay";
+
+const url = encodeURL({
+  recipient: address("PASTE_A_SOLANA_ADDRESS"),
+  amount: 100_000_000n,
+  label: "Example store",
+  message: "Order 1042",
+  memo: "order-1042",
+});
+
+// solana:PASTE_A_SOLANA_ADDRESS?amount=0.1&label=Example+store&message=Order+1042&memo=order-1042
+console.log(url.toString());
+
+const parsed = parseURL(url.toString());
+// parsed.amount 又变回 bigint：100000000n
+```
+
+当你需要事后查找付款时，添加 `reference`。引用是一个不参与转账本身的公钥；付款方会把它附加到交易上，之后 `getSignaturesForAddress(reference)` 就能返回该结算。
+
+```ts
+import { createSolanaPayReference } from "@vue-solana/core/solana-pay-confirmation";
+
+const reference = await createSolanaPayReference();
+
+const url = encodeURL({
+  recipient: address("PASTE_A_SOLANA_ADDRESS"),
+  amount: 100_000_000n,
+  reference,
+});
+```
+
+`encodeTransactionRequestURL({ link })` 则构建交易请求：钱包获取 `link`，你的服务器返回一个待签名交易。Vue Solana 会解析和编码这类 URL，但不会构建或发送链接指向的交易，因此该端点及其授权由你负责。
+
+在 Vue 中，`useSolanaPay()` 封装了同样的基础函数，并为你生成引用：
+
+```vue
+<script setup lang="ts">
+import { address } from "@vue-solana/vue/kit";
+import { useSolanaPay } from "@vue-solana/vue/useSolanaPay";
+
+const { createTransferRequest, requestUrl, reference, parsedRequest, status, loading, error } =
+  useSolanaPay();
+
+async function createRequest() {
+  await createTransferRequest({
+    recipient: address("PASTE_A_SOLANA_ADDRESS"),
+    amount: 100_000_000n,
+    label: "Example store",
+    message: "Order 1042",
+  });
+}
+</script>
+```
+
+`createTransferRequest` 以字符串形式返回 URL，并填充 `requestUrl`、`parsedRequest`、`reference` 和 `status: "pending"`。`parseRequest(value)` 解析不可信输入，`createReference()` 生成独立引用，`reset()` 清空状态。
+
+## 渲染二维码
+
+`createQR(url)` 返回 SVG 文本。`createQRDataURL()` 返回经过百分号编码的 `data:` URL，不需要 `Buffer` polyfill；`createQRCanvas(canvas, url, options)` 写入 canvas 元素。
+
+```ts
+import { createQR } from "@vue-solana/core/solana-pay";
+
+const svg = await createQR(url, 512, "white", "black");
+```
+
+在 Vue 中用 `v-html` 渲染该字符串——SVG 来自 `qrcode` 编码器，而不是用户输入：
+
+```vue
+<script setup lang="ts">
+import { useSolanaQrCode } from "@vue-solana/vue/useSolanaQrCode";
+
+const { svg, generate, loading, error } = useSolanaQrCode();
+
+async function showQr(requestUrl: string) {
+  await generate(requestUrl);
+}
+</script>
+
+<template>
+  <div v-if="svg" v-html="svg" />
+</template>
+```
+
+`generate(url)` 默认生成 512 px 白底黑码。额外选项按 `createQR` 的参数顺序传入，因此 `generate(url, { size: 320, background: "#fff", color: "#111" })` 等价于 `createQR(url, 320, "#fff", "#111")`。
+
+## 扫描和校验
+
+`useSolanaQrScanner()` 打开后置摄像头，用 `BarcodeDetector` 轮询二维码，并用 `parseURL()` 解析每个结果。它仅在浏览器中运行：请放在客户端边界之后，切勿在 SSR 期间调用 `start()`。
+
+```vue
+<script setup lang="ts">
+import { ref } from "vue";
+import { useSolanaQrScanner } from "@vue-solana/vue/useSolanaQrScanner";
+
+const video = ref<HTMLVideoElement | null>(null);
+const { scanning, parsed, error, start, stop, reset } = useSolanaQrScanner();
+
+async function beginScan() {
+  await start({ video: video.value ?? undefined, scanIntervalMs: 500 });
+}
+</script>
+
+<template>
+  <video ref="video" playsinline muted />
+  <button type="button" @click="beginScan">Start scanner</button>
+  <button type="button" @click="stop">Stop</button>
+  <p v-if="scanning">Scanning…</p>
+  <p v-if="error">Camera unavailable — paste the payment URL instead.</p>
+</template>
+```
+
+当缺少 `navigator.mediaDevices` 时 `start()` 会失败。浏览器没有 `BarcodeDetector` 时，摄像头仍会打开但不会检测到内容，因此请提供一个粘贴输入框并调用 `scanFromText(text)`。`start()` 和 `scanFromText()` 都会把 `parseURL()` 的结果写入 `parsed`，解析失败时保留 `error`；扫描循环会忽略解析错误并继续扫描。
+
+把扫描到的数据当作敌意输入。展示收款方、金额、代币 mint、标签和备注，并让用户确认后再发起任何钱包请求。Vue Solana 不提供任何自动发送路径，你也不应自行添加。
+
+## 跟踪结算
+
+转账请求只是一个请求。结算指的是已确认的交易，它包含你的引用、向预期收款方付款，并携带预期金额和代币。
+
+```ts
+import { verifySolanaPayPayment } from "@vue-solana/core/solana-pay-confirmation";
+
+const result = await verifySolanaPayPayment(rpc, {
+  reference,
+  expectedRecipient: "PASTE_A_SOLANA_ADDRESS",
+  expectedAmount: 100_000_000n,
+  // expectedTokenMint: mint, // required for SPL token payments
+  commitment: "confirmed",
+  timeoutMs: 30_000,
+});
+```
+
+`verifySolanaPayPayment()` 会在超时前轮询 `getSignaturesForAddress(reference)`，并返回 `{ status, signature, verified, reason }`。只有 `verified` 为 `true` 时才履约。`getSolanaPayPaymentStatus(rpc, reference)` 是更便宜的非校验读取：尚无签名时报告 `pending`，存在签名时报告 `found`，RPC 调用失败时报告 `error`。
+
+`useSolanaPay()` 提供 `confirmTransfer()`，它会对照已解析的请求进行校验，并把结果写入 `status`（`idle`、`pending`、`found`、`confirmed`、`finalized`、`expired`、`error`）。`useSolanaPayConfirmation()` 按间隔轮询同一状态：
+
+```ts
+import { useSolanaPayConfirmation } from "@vue-solana/vue/useSolanaPayConfirmation";
+
+const { status, check, startPolling, stopPolling } = useSolanaPayConfirmation();
+
+startPolling(rpc, reference, 2_000);
+// polling stops on unmount; call stopPolling() to end it earlier
+```
+
+`useSolanaPayConfirmation()` 会在组件卸载时停止轮询；调用 `stopPolling()` 可提前结束。
+
+## Nuxt 自动导入
+
+Nuxt 模块以相同名称自动导入 `useSolanaPay()`、`useSolanaPayConfirmation()`、`useSolanaQrCode()` 和 `useSolanaQrScanner()`。请把扫描器和所有 `BarcodeDetector` 访问包在 `<ClientOnly>` 中，确保服务端渲染永远不会接触摄像头 API。
+
+```vue
+<template>
+  <ClientOnly>
+    <QrScannerPanel />
+    <template #fallback>
+      <p>Scanner loads in the browser.</p>
+    </template>
+  </ClientOnly>
+</template>
+```
+
+核心辅助函数不会被自动导入。Kit 类型从 `@vue-solana/nuxt/kit` 导入，其余从 Vue 包子路径导入，或直接调用组合式函数。
+
+## 安全边界
+
+- 展示之前先用 `parseURL()` 解析每个 URL；绝不要信任扫描到的字符串。
+- 展示收款方、金额、代币和备注，并在签名前要求用户明确操作。
+- 绝不从扫描到的代码自动发送交易。
+- 在发货或授信之前先在链上校验。
+- 绝不在客户端代码中保存私钥或密钥，也绝不要把有资金的密钥放进 Nuxt 公共运行时配置。
+- 把 `reference` 当作查询键，而不是付款凭证本身。
+
+## Devnet 手动测试
+
+1. 把钱包切换到 devnet，并在 `https://faucet.solana.com` 领取免费 SOL。
+2. 创建一个几千 lamport 的转账请求并渲染二维码。
+3. 用支持 Solana Pay 的钱包扫描，或把 URL 粘贴到你自己的扫描界面。
+4. 确认钱包显示的收款方、金额和备注与页面显示一致。
+5. 批准转账，然后用相同的引用调用 `verifySolanaPayPayment()`，确认 `verified` 变为 `true`。
+6. 用错误的金额或收款方再次执行结算，确认无法通过校验。
+
+测试时使用小额。当付款方发送普通转账而未附加引用账户时，引用始终不会结算，这是预期结果。
 
 ---
 
@@ -11305,6 +12612,10 @@ Subpaths directos del paquete:
 - `@vue-solana/vue/useSubscription`
 - `@vue-solana/vue/useTrackedData`
 - `@vue-solana/vue/useSignIn`
+- `@vue-solana/vue/useSolanaPay`
+- `@vue-solana/vue/useSolanaPayConfirmation`
+- `@vue-solana/vue/useSolanaQrCode`
+- `@vue-solana/vue/useSolanaQrScanner`
 - `@vue-solana/vue/useSelectedWalletAccount`
 - `@vue-solana/vue/useSignTransactions`
 - `@vue-solana/vue/useSignAndSendTransactions`
@@ -11356,6 +12667,10 @@ Usa `@vue-solana/vue/buffer-polyfill` para código de transacciones en navegador
 - `useSubscription(source, options?)`: datos en vivo de suscripciones RPC y otras fuentes de stream reactivas.
 - `useTrackedData(source, options?)`: suscripción RPC sembrada por una petición de un solo uso, con deduplicación por slot.
 - `useSignIn()`: dispara la funcionalidad Sign In With Solana (SIWS) de la wallet.
+- `useSolanaPay()`: construye y parsea URLs de solicitud de transferencia de Solana Pay y sigue el estado de confirmación por referencia.
+- `useSolanaPayConfirmation()`: consulta periódicamente el estado del pago para una referencia de Solana Pay.
+- `useSolanaQrCode()`: renderiza una URL de Solana Pay como código QR SVG.
+- `useSolanaQrScanner()`: escanea códigos QR de Solana Pay con la cámara y `BarcodeDetector`.
 - `useSelectedWalletAccount()`: lee el contexto de cuenta de wallet seleccionada a nivel de app con persistencia y filtrado.
 - `useSignTransactions()` / `useSignAndSendTransactions()`: firma, o firma y envía, múltiples transacciones en una sola petición de wallet.
 - `usePayer()` / `useIdentity()`: signers reactivos del cliente Kit. El cliente Vue por defecto expone el `payer` configurado; un cliente custom puede instalar un signer.
@@ -11370,6 +12685,7 @@ Usa `@vue-solana/vue/buffer-polyfill` para código de transacciones en navegador
 - [Account Reads](/guides/account-reads): lee balances, info de cuenta, cuentas de programa y estado de firma.
 - [Transactions](/guides/transactions): firma, envía, confirma y muestra progreso de transacción.
 - [Message Signing](/guides/message-signing): firma desafíos de autenticación o propiedad fuera de cadena.
+- [Solana Pay](/guides/solana-pay): construye solicitudes de pago con `useSolanaPay()` y renderiza o escanea códigos QR.
 - [E2E Testing](/guides/e2e-testing): simula RPC, suscripciones RPC y wallets en pruebas de Playwright.
 - [Errors](/guides/errors): mapea refs `error` de composables a mensajes de UI seguros.
 
@@ -12151,6 +13467,10 @@ Direct package subpath:
 - `@vue-solana/vue/useSubscription`
 - `@vue-solana/vue/useTrackedData`
 - `@vue-solana/vue/useSignIn`
+- `@vue-solana/vue/useSolanaPay`
+- `@vue-solana/vue/useSolanaPayConfirmation`
+- `@vue-solana/vue/useSolanaQrCode`
+- `@vue-solana/vue/useSolanaQrScanner`
 - `@vue-solana/vue/useSelectedWalletAccount`
 - `@vue-solana/vue/useSignTransactions`
 - `@vue-solana/vue/useSignAndSendTransactions`
@@ -12202,6 +13522,10 @@ Buffer polyfill이 필요한 브라우저 트랜잭션 코드에는 `@vue-solana
 - `useSubscription(source, options?)`: RPC 구독 및 기타 reactive stream 소스의 실시간 데이터입니다.
 - `useTrackedData(source, options?)`: one-shot fetch로 시드되는 RPC 구독으로, slot 기준 deduplicate됩니다.
 - `useSignIn()`: 지갑의 Sign In With Solana(SIWS) 기능을 트리거합니다.
+- `useSolanaPay()`: Solana Pay 전송 요청 URL을 만들고 파싱하며 reference별 확인 상태를 추적합니다.
+- `useSolanaPayConfirmation()`: Solana Pay reference의 결제 상태를 주기적으로 조회합니다.
+- `useSolanaQrCode()`: Solana Pay URL을 SVG QR 코드로 렌더링합니다.
+- `useSolanaQrScanner()`: 카메라와 `BarcodeDetector`로 Solana Pay QR 코드를 스캔합니다.
 - `useSelectedWalletAccount()`: 지속성과 필터링이 있는 앱 전역 selected wallet account context를 읽습니다.
 - `useSignTransactions()` / `useSignAndSendTransactions()`: 지갑 요청 한 번으로 여러 transaction을 서명하거나 서명 후 전송합니다.
 - `usePayer()` / `useIdentity()`: Kit client의 reactive signer입니다. default Vue client는 설정된 payer를 노출하고, custom client는 signer를 설치할 수 있습니다.
@@ -12216,6 +13540,7 @@ Buffer polyfill이 필요한 브라우저 트랜잭션 코드에는 `@vue-solana
 - [계정 읽기](/ko/guides/account-reads): balance, account info, program accounts, signature status를 읽습니다.
 - [트랜잭션](/ko/guides/transactions): transaction을 sign, send, confirm하고 진행 상태를 표시합니다.
 - [메시지 서명](/ko/guides/message-signing): 오프체인 인증 또는 소유권 challenge에 서명합니다.
+- [Solana Pay](/ko/guides/solana-pay): `useSolanaPay()`로 결제 요청을 만들고 QR 코드를 렌더링·스캔합니다.
 - [E2E 테스팅](/ko/guides/e2e-testing): Playwright 테스트에서 RPC, RPC 구독, 지갑을 모킹합니다.
 - [오류](/ko/guides/errors): composable `error` ref를 안전한 UI 메시지로 매핑합니다.
 
@@ -13010,6 +14335,10 @@ Direct package subpaths:
 - `@vue-solana/vue/swr`
 - `@vue-solana/vue/useSolana`
 - `@vue-solana/vue/useSolanaClient`
+- `@vue-solana/vue/useSolanaPay`
+- `@vue-solana/vue/useSolanaPayConfirmation`
+- `@vue-solana/vue/useSolanaQrCode`
+- `@vue-solana/vue/useSolanaQrScanner`
 - `@vue-solana/vue/useRpc`
 - `@vue-solana/vue/useConnection`
 - `@vue-solana/vue/useAccountInfo`
@@ -13050,6 +14379,10 @@ Use `@vue-solana/vue/buffer-polyfill` for browser transaction code that needs th
 - `useSubscription(source, options?)`: live data from RPC subscriptions and other reactive stream sources.
 - `useTrackedData(source, options?)`: RPC subscription seeded by a one-shot fetch, slot-deduplicated.
 - `useSignIn()`: triggers a wallet's Sign In With Solana (SIWS) feature.
+- `useSolanaPay()`: builds and parses Solana Pay transfer request URLs and tracks confirmation status by reference.
+- `useSolanaPayConfirmation()`: polls payment status for a Solana Pay reference.
+- `useSolanaQrCode()`: renders a Solana Pay URL as an SVG QR code.
+- `useSolanaQrScanner()`: scans Solana Pay QR codes through the camera and `BarcodeDetector`.
 - `useSelectedWalletAccount()`: reads the app-wide selected wallet account from `SelectedWalletAccountProvider` (or `provideSelectedWalletAccount()`).
 - `useSignTransactions()`: signs multiple serialized transactions in one wallet request.
 - `useSignAndSendTransactions()`: signs and sends multiple transactions in one wallet request.
@@ -13065,6 +14398,7 @@ Use `@vue-solana/vue/buffer-polyfill` for browser transaction code that needs th
 - [Account Reads](/guides/account-reads): read balances, account info, program accounts, and signature status.
 - [Transactions](/guides/transactions): sign, send, confirm, and show transaction progress.
 - [Message Signing](/guides/message-signing): sign off-chain authentication or ownership challenges.
+- [Solana Pay](/guides/solana-pay): build payment requests with `useSolanaPay()` and render or scan QR codes.
 - [E2E Testing](/guides/e2e-testing): mock RPC, RPC subscriptions, and wallets in Playwright tests.
 - [Errors](/guides/errors): map composable `error` refs to safe UI messages.
 
@@ -13844,6 +15178,10 @@ import { useWallet } from "@vue-solana/vue/useWallet";
 - `@vue-solana/vue/useSubscription`
 - `@vue-solana/vue/useTrackedData`
 - `@vue-solana/vue/useSignIn`
+- `@vue-solana/vue/useSolanaPay`
+- `@vue-solana/vue/useSolanaPayConfirmation`
+- `@vue-solana/vue/useSolanaQrCode`
+- `@vue-solana/vue/useSolanaQrScanner`
 - `@vue-solana/vue/useSelectedWalletAccount`
 - `@vue-solana/vue/useSignTransactions`
 - `@vue-solana/vue/useSignAndSendTransactions`
@@ -13895,6 +15233,10 @@ import { useWallet } from "@vue-solana/vue/useWallet";
 - `useSubscription(source, options?)`：来自 RPC 订阅和其他响应式流源的实时数据。
 - `useTrackedData(source, options?)`：由单次请求播种的 RPC 订阅，按 slot 去重。
 - `useSignIn()`：触发钱包的 Sign In With Solana（SIWS）功能。
+- `useSolanaPay()`：构建和解析 Solana Pay 转账请求 URL，并按引用跟踪确认状态。
+- `useSolanaPayConfirmation()`：轮询 Solana Pay 引用的支付状态。
+- `useSolanaQrCode()`：将 Solana Pay URL 渲染为 SVG 二维码。
+- `useSolanaQrScanner()`：通过摄像头和 `BarcodeDetector` 扫描 Solana Pay 二维码。
 - `useSelectedWalletAccount()`：读取应用级选中钱包账户 context，带持久化和过滤。
 - `useSignTransactions()` / `useSignAndSendTransactions()`：在一次钱包请求中签署（或签署并发送）多笔交易。
 - `usePayer()` / `useIdentity()`：Kit client 的响应式 signer。默认 Vue client 会暴露配置的 payer，custom client 可以安装 signer。
@@ -13909,6 +15251,7 @@ import { useWallet } from "@vue-solana/vue/useWallet";
 - [账户读取](/zh/guides/account-reads)：读取余额、账户信息、program accounts 和签名状态。
 - [交易](/zh/guides/transactions)：签名、发送、确认并展示交易进度。
 - [消息签名](/zh/guides/message-signing)：签署链下认证或所有权 challenge。
+- [Solana Pay](/zh/guides/solana-pay)：用 `useSolanaPay()` 构建支付请求并渲染或扫描二维码。
 - [E2E 测试](/zh/guides/e2e-testing)：在 Playwright 测试中模拟 RPC、RPC 订阅和钱包。
 - [错误](/zh/guides/errors)：把 composable `error` ref 映射为安全 UI 消息。
 
@@ -14662,6 +16005,10 @@ El módulo autoimporta estos composables desde subpaths directos `@vue-solana/vu
 - `useSolanaSubscription(source, options?)`: datos en vivo de suscripciones RPC y otras fuentes de stream reactivas.
 - `useSolanaTrackedData(source, options?)`: suscripción RPC sembrada por un fetch de una sola vez, deduplicada por slot.
 - `useSolanaSignIn()`: dispara la función Sign In With Solana (SIWS) de una wallet.
+- `useSolanaPay()`: construye y parsea URLs de solicitud de transferencia de Solana Pay y sigue el estado de confirmación por referencia.
+- `useSolanaPayConfirmation()`: consulta periódicamente el estado del pago para una referencia de Solana Pay.
+- `useSolanaQrCode()`: renderiza una URL de Solana Pay como código QR SVG.
+- `useSolanaQrScanner()`: escanea códigos QR de Solana Pay con la cámara y `BarcodeDetector`.
 
 Para cache keying entre montajes, los adaptadores SWR no se autoimportan. Importalos explícitamente desde el subpath del paquete Vue:
 
@@ -14726,6 +16073,7 @@ El registro de Android Mobile Wallet Adapter también se ejecuta solo en el clie
 - [Account Reads](/guides/account-reads): lee balances, datos de cuenta, cuentas de programa y estado de firma.
 - [Transactions](/guides/transactions): firma, envía, confirma y maneja estado de transacción desde Nuxt.
 - [Message Signing](/guides/message-signing): solicita firmas de wallet para mensajes fuera de cadena.
+- [Solana Pay](/guides/solana-pay): usa los composables de Solana Pay auto-importados para pagos y códigos QR.
 - [E2E Testing](/guides/e2e-testing): mockea RPC, suscripciones RPC y wallets en tests de Playwright.
 - [Errors](/guides/errors): mapea errores de composables autoimportados a mensajes de UI seguros.
 
@@ -15157,6 +16505,10 @@ export default defineNuxtConfig({
 - `useSolanaSubscription(source, options?)`: RPC subscription 및 기타 reactive stream source의 live data입니다.
 - `useSolanaTrackedData(source, options?)`: one-shot fetch로 seed되고 slot으로 deduplicate되는 RPC subscription입니다.
 - `useSolanaSignIn()`: wallet의 Sign In With Solana(SIWS) 기능을 트리거합니다.
+- `useSolanaPay()`: Solana Pay 전송 요청 URL을 만들고 파싱하며 reference별 확인 상태를 추적합니다.
+- `useSolanaPayConfirmation()`: Solana Pay reference의 결제 상태를 주기적으로 조회합니다.
+- `useSolanaQrCode()`: Solana Pay URL을 SVG QR 코드로 렌더링합니다.
+- `useSolanaQrScanner()`: 카메라와 `BarcodeDetector`로 Solana Pay QR 코드를 스캔합니다.
 
 mount 간 cache keying을 위해 SWR adapter는 auto-import되지 않습니다. Vue package subpath에서 명시적으로 import하세요.
 
@@ -15221,6 +16573,7 @@ Android Mobile Wallet Adapter 등록도 client에서만 실행됩니다. Android
 - [계정 읽기](/ko/guides/account-reads): balance, account data, program accounts, signature status를 읽습니다.
 - [트랜잭션](/ko/guides/transactions): Nuxt에서 transaction을 sign, send, confirm하고 status를 처리합니다.
 - [메시지 서명](/ko/guides/message-signing): 오프체인 메시지에 대한 wallet signature를 요청합니다.
+- [Solana Pay](/ko/guides/solana-pay): auto-import된 Solana Pay 컴포저블로 결제와 QR 코드를 처리합니다.
 - [E2E 테스트](/ko/guides/e2e-testing): Playwright test에서 RPC, RPC subscription, wallet을 mock합니다.
 - [오류](/ko/guides/errors): auto-imported composable error를 안전한 UI 메시지로 매핑합니다.
 
@@ -15651,6 +17004,10 @@ The module auto-imports these composables from direct `@vue-solana/vue/*` subpat
 - `useSolanaSubscription(source, options?)`: live data from RPC subscriptions and other reactive stream sources.
 - `useSolanaTrackedData(source, options?)`: RPC subscription seeded by a one-shot fetch, slot-deduplicated.
 - `useSolanaSignIn()`: triggers a wallet's Sign In With Solana (SIWS) feature.
+- `useSolanaPay()`: builds and parses Solana Pay transfer request URLs and tracks confirmation status by reference.
+- `useSolanaPayConfirmation()`: polls payment status for a Solana Pay reference.
+- `useSolanaQrCode()`: renders a Solana Pay URL as an SVG QR code.
+- `useSolanaQrScanner()`: scans Solana Pay QR codes through the camera and `BarcodeDetector`.
 
 For cache keying across mounts, the SWR adapters are not auto-imported. Import them explicitly from the Vue package subpath:
 
@@ -15719,6 +17076,7 @@ Android Mobile Wallet Adapter registration also runs only on the client. On Andr
 - [Account Reads](/guides/account-reads): read balances, account data, program accounts, and signature status.
 - [Transactions](/guides/transactions): sign, send, confirm, and handle transaction status from Nuxt.
 - [Message Signing](/guides/message-signing): request wallet signatures for off-chain messages.
+- [Solana Pay](/guides/solana-pay): use the auto-imported Solana Pay composables for payments and QR codes.
 - [E2E Testing](/guides/e2e-testing): mock RPC, RPC subscriptions, and wallets in Playwright tests.
 - [Errors](/guides/errors): map auto-imported composable errors to safe UI messages.
 
@@ -16148,6 +17506,10 @@ export default defineNuxtConfig({
 - `useSolanaSubscription(source, options?)`：来自 RPC 订阅和其他响应式 stream source 的实时数据。
 - `useSolanaTrackedData(source, options?)`：由一次性 fetch 播种、按 slot 去重的 RPC 订阅。
 - `useSolanaSignIn()`：触发钱包的 Sign In With Solana（SIWS）功能。
+- `useSolanaPay()`：构建和解析 Solana Pay 转账请求 URL，并按引用跟踪确认状态。
+- `useSolanaPayConfirmation()`：轮询 Solana Pay 引用的支付状态。
+- `useSolanaQrCode()`：将 Solana Pay URL 渲染为 SVG 二维码。
+- `useSolanaQrScanner()`：通过摄像头和 `BarcodeDetector` 扫描 Solana Pay 二维码。
 
 为了在多次挂载之间进行 cache keying，SWR adapter 不会自动导入。请从 Vue 包 subpath 显式导入：
 
@@ -16212,6 +17574,7 @@ Android Mobile Wallet Adapter 注册也只在客户端运行。在 Android Chrom
 - [账户读取](/zh/guides/account-reads)：读取余额、账户数据、program accounts 和签名状态。
 - [交易](/zh/guides/transactions)：从 Nuxt 签名、发送、确认并处理交易状态。
 - [消息签名](/zh/guides/message-signing)：为链下消息请求钱包签名。
+- [Solana Pay](/zh/guides/solana-pay)：使用自动导入的 Solana Pay 组合式函数处理支付和二维码。
 - [E2E Testing](/zh/guides/e2e-testing)：在 Playwright 测试中 mock RPC、RPC 订阅和钱包。
 - [错误](/zh/guides/errors)：把自动导入 composable 的错误映射为安全 UI 消息。
 

@@ -45,6 +45,9 @@ Implemented files:
 - `src/errors.ts`: `SolanaError` codes shared by the packages.
 - `src/timeout.ts`: `withTimeout()` helper.
 - `src/token-accounts.ts`: token account info types.
+- `src/solana-pay.ts` + `src/solana-pay/*`: Solana Pay URL encode/parse, reference helpers, and QR rendering, implemented directly on Kit with a lazily imported `qrcode`.
+- `src/solana-pay-confirmation.ts`: `createSolanaPayReference()` and `verifySolanaPayPayment()` polling over `getSignaturesForAddress(reference)`.
+- `src/solana-pay-status.ts`: `getSolanaPayPaymentStatus()` non-verifying status read.
 - `src/buffer-polyfill.ts`: `installSolanaBufferPolyfill()`.
 - `src/wallet-standard.ts` + `src/wallet-standard/*`: Wallet Standard discovery, chain support, and adapter.
 - `src/mobile-wallet.ts`: Android MWA registration via `@solana-mobile/wallet-standard-mobile`.
@@ -79,6 +82,10 @@ Implemented files:
 - `src/composables/useSubscription.ts`: live data over Kit reactive stream stores.
 - `src/composables/useTrackedData.ts`: slot-deduplicated fetch + subscription over Kit's slot-tracking store.
 - `src/composables/useSignIn.ts`: wallet Sign In With Solana (SIWS) trigger.
+- `src/composables/useSolanaPay.ts`: builds/parses Solana Pay transfer requests with a generated reference and verifies settlement.
+- `src/composables/useSolanaPayConfirmation.ts`: interval polling of `getSolanaPayPaymentStatus()`.
+- `src/composables/useSolanaQrCode.ts`: SVG QR rendering through `createQR()`.
+- `src/composables/useSolanaQrScanner.ts`: camera + `BarcodeDetector` scanning with `parseURL()` validation, browser-only.
 - `src/composables/useSelectedWalletAccount.ts`: app-wide selected wallet account context (persistence via `src/plugin/selected-wallet-account-storage.ts`, component in `src/components/SelectedWalletAccountProvider.ts`).
 - `src/composables/useSignTransactions.ts` / `useSignAndSendTransactions.ts`: batch wallet requests with singular fallbacks.
 - `src/composables/useClientCapability.ts`: fail-fast client capability assertions.
@@ -118,6 +125,7 @@ Auto-imported Nuxt composables (source of truth: `packages/nuxt/src/imports.ts`)
 - `useSolanaPayer()`, `useSolanaIdentity()`
 - `useSolanaPlanTransaction()`, `useSolanaPlanTransactions()`
 - `useSolanaSendTransaction()`, `useSolanaSendTransactions()`
+- `useSolanaPay()`, `useSolanaPayConfirmation()`, `useSolanaQrCode()`, `useSolanaQrScanner()`
 
 The module also auto-imports the four values an app needs when it sets `solana.clientPlugin: false` to install a client-only `payer`: `createSolanaPlugin()`, `solanaInjectionKey()`, `selectedWalletAccountInjectionKey()`, and `createSelectedWalletAccountContext()`.
 
@@ -180,6 +188,7 @@ Known remaining weight, deliberately not fixed: the iOS wallet path is ~38.9 KB 
 - `knowledge-bundle/guides/getting-started.md`: install snippets, Vue setup, Nuxt setup, and detailed manual devnet testing guide.
 - `plans/`: implementation tracker for the multistep tasks and implementations.
 - `examples/vue-vite/README.md` and `examples/nuxt/README.md`: runnable example app walkthroughs.
+- `apps/docs/content/guides/`: the docs site guides, each mirrored in `apps/docs/content/locales/{es,ko,zh}/guides/`. Solana Pay lives in `solana-pay.md` (transfer request + QR, scan/validate, settlement by reference); the example apps' `SolanaPayPanel` / `SolanaPayScannerPanel` panels and the matching e2e specs are the runnable counterpart.
 
 The manual testing guide explains:
 
@@ -218,7 +227,11 @@ The `examples/vue-vite` and `examples/nuxt` directories contain runnable example
 
 Both apps also mount Live Data Panels exercising the Kit-reactive composables (`useRequest`, `useSubscription`, `useTrackedData`, `useSignIn`, and the `swr` cache adapters) against devnet.
 
-The Playwright e2e suite in `e2e/` covers the example apps. `e2e/helpers.ts` mocks the HTTP RPC (getLatestBlockhash, getBalance, getVersion, getAccountInfo), fakes the Kit RPC-subscriptions websocket protocol (subscribe, id-correlated result, then `<method>Notification` frames keyed on `params.subscription`), and registers two mock Wallet Standard wallets including one with `solana:signIn`. Run with `pnpm test:e2e` (mocks) or `pnpm test:e2e:integration` (real devnet, `E2E_REAL_RPC=true`). Specs that assert against mock data skip in the integration run.
+They also mount `SolanaPayPanel` (merchant-side `useSolanaPay` + `useSolanaQrCode`: request URL, reference, QR, `useSolanaPayConfirmation` polling, and `confirmTransfer` verification) and `SolanaPayScannerPanel` (`useSolanaQrScanner`: camera scan, pasted-URL validation, parsed preview, and a `solana:` wallet link with no send path). The Nuxt scanner is wrapped in `<ClientOnly>`.
+
+The Playwright e2e suite in `e2e/` covers the example apps. `e2e/helpers.ts` mocks the HTTP RPC (getLatestBlockhash, getBalance, getVersion, getAccountInfo, getSignaturesForAddress, getTransaction), fakes the Kit RPC-subscriptions websocket protocol (subscribe, id-correlated result, then `<method>Notification` frames keyed on `params.subscription`), and registers two mock Wallet Standard wallets including one with `solana:signIn`. The Solana Pay scanner spec stubs `navigator.mediaDevices.getUserMedia` with a canvas `captureStream()` and a fake `BarcodeDetector`, so the camera loop is deterministic without a real device. Run with `pnpm test:e2e` (mocks) or `pnpm test:e2e:integration` (real devnet, `E2E_REAL_RPC=true`). Specs that assert against mock data skip in the integration run.
+
+`@playwright/test` must stay at a release that ships an `ubuntu26.04-x64` entry in its `nativeDeps` (1.64.1+ is the current floor). GitHub's `ubuntu-latest` now resolves to Ubuntu 26.04, and `playwright install --with-deps` aborts with `Playwright does not support chromium on ubuntu26.04-x64` when the lockfile pins an older release — 1.60.0 failed CI this way even though the `^1.60.0` range allowed the fix, because `--frozen-lockfile` never moves. Bump the lock whenever the runner image moves, or pin `runs-on: ubuntu-24.04` if an older Playwright must be kept.
 
 ### Locale Docs Structure
 
@@ -282,6 +295,7 @@ Rules that are easy to get wrong:
 - `@solana/transactions`
 - `@solana/web3.js` (legacy; removed)
 - `@solana/web3-compat` (removed)
+- `gill` and `@solana-commerce/solana-pay` (removed 2026-10-29). `gill` is a Kit wrapper with its own `@solana/kit` range, and `@solana-commerce/solana-pay` statically imports it. Together they installed a second Kit copy and failed the example builds with `MISSING_EXPORT` (`isDurableNonceTransaction`, `getComputeUnitEstimateForTransactionMessageFactory`) against Kit 8.x. Solana Pay URL encode/parse lives in `packages/core/src/solana-pay/` and uses Kit directly; `qrcode` is the only extra dependency, imported lazily from `create-qr.ts`.
 
 **Wallet Standard:** Use `@wallet-standard/app`, `@wallet-standard/base`, `@wallet-standard/features`. Do NOT add React-specific `@wallet-standard/react`, `@wallet-standard/ui`, or `@wallet-standard/ui-registry`.
 

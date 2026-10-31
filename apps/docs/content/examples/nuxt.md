@@ -2,7 +2,7 @@
 title: Nuxt Example
 description: Runnable Nuxt example app for @vue-solana/nuxt.
 ogSection: Examples
-surroundOrder: 18
+surroundOrder: 19
 ---
 
 The Nuxt example is a runnable Nuxt app for `@vue-solana/nuxt`.
@@ -28,6 +28,7 @@ Live demo: [vue-solana-docs.vercel.app/demo](/demo)
 - Building cluster-aware Solana Explorer links for submitted signatures.
 - Using `useTransaction()` from `@vue-solana/vue/useTransaction` for generic async transaction state.
 - Exercising the Kit-reactive data layer in the Live Data Panels with auto-imported composables: `useSolanaRequest()` for one-shot requests, `useSolanaSubscription()` for live slot notifications, `useSolanaTrackedData()` for fetch-seeded account data, `useSolanaSignIn()` for Sign In With Solana, `useSolanaAirdrop()` for devnet faucet requests, `useSolanaPayer()` to inspect the client's fee-payer signer, `useSolanaSendTransaction()` and `useSolanaSendTransactions()` for client-sent SPL Memo transactions with no wallet popup, and the `@vue-solana/vue/swr` cache adapter across remounts.
+- Building and rendering Solana Pay transfer requests with auto-imported `useSolanaPay()` and `useSolanaQrCode()`, verifying settlement by reference with `useSolanaPayConfirmation()`, and previewing scanned or pasted payment URLs with `useSolanaQrScanner()` inside `<ClientOnly>` so camera APIs never run during SSR.
 - Generating an ephemeral demo fee payer with `generateKeyPairSigner()` in the client-only `app/plugins/demo-payer.client.ts` plugin. The payer starts unfunded; the `useSolanaPayer` panel airdrops 1 devnet SOL into it. The Nuxt module intentionally omits `payer` and `payerSecretKey`, and raw secrets must never be placed in public runtime config.
 
 The app uses `devnet` by default. Devnet SOL has no real value.
@@ -59,6 +60,7 @@ Open the Nuxt URL printed in the terminal, usually `http://localhost:3000`.
 - Watch the transaction move from submitted signature to confirmation status.
 - Open the explorer link and verify it includes `?cluster=devnet`.
 - In the Live Data Panels, airdrop 1 SOL to the demo payer with the `useSolanaPayer` panel, then send a client-signed SPL Memo with `useSolanaSendTransaction()` (no wallet popup) or a batch of two with `useSolanaSendTransactions()`, and watch the status move from `sending` to `sent` after the official executor reaches `confirmed` commitment.
+- In the Solana Pay panels, create a transfer request with a reference and render its QR code, then paste the same URL into the scanner panel to inspect the parsed recipient, amount, token, and memo. `Verify settlement` reports `expired` until a payment lands under that reference; the scanner only opens the request in a wallet and never sends it.
 
 The demo payer is generated in a client-only plugin and is not configured in `nuxt.config.ts` or public runtime config. The example sets `solana.clientPlugin: false` so the module skips its own plugin; installing both would create two Solana contexts. The module's default client still uses the official `solanaRpc()` stack, which installs the transaction planner and the plan-signing and plan-sending executors itself; the old custom fallback sender is not used. Never put a funded secret in a Nuxt public runtime value.
 

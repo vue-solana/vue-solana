@@ -2,7 +2,7 @@
 title: "@vue-solana/nuxt"
 description: Nuxt module for Solana applications.
 ogSection: Packages
-surroundOrder: 16
+surroundOrder: 17
 ---
 
 [`@vue-solana/nuxt`](https://www.npmjs.com/package/@vue-solana/nuxt) installs the Vue Solana plugin in Nuxt apps and auto-imports composables.
@@ -102,6 +102,10 @@ The module auto-imports these composables from direct `@vue-solana/vue/*` subpat
 - `useSolanaSubscription(source, options?)`: live data from RPC subscriptions and other reactive stream sources.
 - `useSolanaTrackedData(source, options?)`: RPC subscription seeded by a one-shot fetch, slot-deduplicated.
 - `useSolanaSignIn()`: triggers a wallet's Sign In With Solana (SIWS) feature.
+- `useSolanaPay()`: builds and parses Solana Pay transfer request URLs and tracks confirmation status by reference.
+- `useSolanaPayConfirmation()`: polls payment status for a Solana Pay reference.
+- `useSolanaQrCode()`: renders a Solana Pay URL as an SVG QR code.
+- `useSolanaQrScanner()`: scans Solana Pay QR codes through the camera and `BarcodeDetector`.
 
 For cache keying across mounts, the SWR adapters are not auto-imported. Import them explicitly from the Vue package subpath:
 
@@ -170,6 +174,7 @@ Android Mobile Wallet Adapter registration also runs only on the client. On Andr
 - [Account Reads](/guides/account-reads): read balances, account data, program accounts, and signature status.
 - [Transactions](/guides/transactions): sign, send, confirm, and handle transaction status from Nuxt.
 - [Message Signing](/guides/message-signing): request wallet signatures for off-chain messages.
+- [Solana Pay](/guides/solana-pay): use the auto-imported Solana Pay composables for payments and QR codes.
 - [E2E Testing](/guides/e2e-testing): mock RPC, RPC subscriptions, and wallets in Playwright tests.
 - [Errors](/guides/errors): map auto-imported composable errors to safe UI messages.
 

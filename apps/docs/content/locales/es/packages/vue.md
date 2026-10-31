@@ -2,7 +2,7 @@
 title: "@vue-solana/vue"
 description: Plugin de Vue y composables para aplicaciones Solana.
 ogSection: Packages
-surroundOrder: 15
+surroundOrder: 16
 ---
 
 [`@vue-solana/vue`](https://www.npmjs.com/package/@vue-solana/vue) proporciona un plugin de Vue y composables para acceso RPC de Solana, lecturas de balance, estado de wallet y estado de helpers de transacción.
@@ -129,6 +129,10 @@ Subpaths directos del paquete:
 - `@vue-solana/vue/useSubscription`
 - `@vue-solana/vue/useTrackedData`
 - `@vue-solana/vue/useSignIn`
+- `@vue-solana/vue/useSolanaPay`
+- `@vue-solana/vue/useSolanaPayConfirmation`
+- `@vue-solana/vue/useSolanaQrCode`
+- `@vue-solana/vue/useSolanaQrScanner`
 - `@vue-solana/vue/useSelectedWalletAccount`
 - `@vue-solana/vue/useSignTransactions`
 - `@vue-solana/vue/useSignAndSendTransactions`
@@ -180,6 +184,10 @@ Usa `@vue-solana/vue/buffer-polyfill` para código de transacciones en navegador
 - `useSubscription(source, options?)`: datos en vivo de suscripciones RPC y otras fuentes de stream reactivas.
 - `useTrackedData(source, options?)`: suscripción RPC sembrada por una petición de un solo uso, con deduplicación por slot.
 - `useSignIn()`: dispara la funcionalidad Sign In With Solana (SIWS) de la wallet.
+- `useSolanaPay()`: construye y parsea URLs de solicitud de transferencia de Solana Pay y sigue el estado de confirmación por referencia.
+- `useSolanaPayConfirmation()`: consulta periódicamente el estado del pago para una referencia de Solana Pay.
+- `useSolanaQrCode()`: renderiza una URL de Solana Pay como código QR SVG.
+- `useSolanaQrScanner()`: escanea códigos QR de Solana Pay con la cámara y `BarcodeDetector`.
 - `useSelectedWalletAccount()`: lee el contexto de cuenta de wallet seleccionada a nivel de app con persistencia y filtrado.
 - `useSignTransactions()` / `useSignAndSendTransactions()`: firma, o firma y envía, múltiples transacciones en una sola petición de wallet.
 - `usePayer()` / `useIdentity()`: signers reactivos del cliente Kit. El cliente Vue por defecto expone el `payer` configurado; un cliente custom puede instalar un signer.
@@ -194,6 +202,7 @@ Usa `@vue-solana/vue/buffer-polyfill` para código de transacciones en navegador
 - [Account Reads](/guides/account-reads): lee balances, info de cuenta, cuentas de programa y estado de firma.
 - [Transactions](/guides/transactions): firma, envía, confirma y muestra progreso de transacción.
 - [Message Signing](/guides/message-signing): firma desafíos de autenticación o propiedad fuera de cadena.
+- [Solana Pay](/guides/solana-pay): construye solicitudes de pago con `useSolanaPay()` y renderiza o escanea códigos QR.
 - [E2E Testing](/guides/e2e-testing): simula RPC, suscripciones RPC y wallets en pruebas de Playwright.
 - [Errors](/guides/errors): mapea refs `error` de composables a mensajes de UI seguros.
 

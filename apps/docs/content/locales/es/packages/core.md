@@ -79,6 +79,7 @@ Subpaths directos:
 - [RPC and Clusters](/guides/rpc-and-clusters): configura nombres de cluster, endpoints RPC personalizados, endpoints WebSocket y helpers de cliente.
 - [Wallets](/guides/wallets): descubre wallets Wallet Standard, registra fuentes de wallet móvil y comprueba capacidades de wallet.
 - [Transactions](/guides/transactions): firma, envía, confirma y maneja timeouts de transacción de forma segura.
+- [Solana Pay](/guides/solana-pay): codifica solicitudes de pago, renderiza y escanea códigos QR, y confirma la liquidación por referencia.
 - [Errors](/guides/errors): ramifica con códigos `SolanaError` estables y mantén las causas sin procesar fuera de la UI orientada al usuario.
 
 ## Configuración
@@ -348,6 +349,32 @@ if (balance) {
   console.log(`${balance.amount} (${balance.decimals} decimals)`);
 }
 ```
+
+### Solana Pay
+
+Los helpers de Solana Pay están implementados directamente sobre `@solana/kit`; no se necesita ningún paquete adicional de Solana Pay ni `gill`.
+
+- `encodeURL(fields)` / `encodeTransferRequestURL(fields)` / `encodeTransactionRequestURL(fields)`: construyen URLs `solana:` de solicitud de transferencia o de transacción. `amount` es un `bigint` en lamports y se codifica como una cadena decimal de SOL.
+- `parseURL(value)`: valida y parsea una solicitud de transferencia en campos tipados `recipient`, `amount`, `splToken`, `reference`, `label`, `message` y `memo`. Lanza `ParseURLError` para un protocolo, destinatario, mint de token, referencia, importe o URL mal formada no válidos.
+- `createQR(url, size?, background?, color?)`: renderiza un código QR como cadena SVG. `createQRDataURL()` y `createQRCanvas()` ofrecen destinos de render alternativos. El codificador `qrcode` se carga de forma diferida, así que los consumidores que solo usan URLs no lo incluyen en el bundle.
+- `createRecipient(address)`, `createSPLToken(address)`, `isValidSolanaAddress(value)`: helpers de validación de direcciones.
+- `createSolanaPayReference()` y `verifySolanaPayPayment()` están en `@vue-solana/core/solana-pay-confirmation`; `getSolanaPayPaymentStatus()` está en `@vue-solana/core/solana-pay-status`.
+
+```ts
+import { createQR, encodeURL, parseURL } from "@vue-solana/core/solana-pay";
+import { address } from "@vue-solana/core/kit";
+
+const url = encodeURL({
+  recipient: address("PASTE_A_SOLANA_ADDRESS"),
+  amount: 100_000_000n,
+  label: "Example store",
+});
+
+const parsed = parseURL(url.toString());
+const svg = await createQR(url);
+```
+
+Los valores de referencia son cadenas `Address` de Kit. Parsea la salida del escáner con `parseURL()` y muestra al usuario el destinatario, el importe, el token, la etiqueta y el mensaje antes de firmar nada.
 
 ### Errores y timeouts
 

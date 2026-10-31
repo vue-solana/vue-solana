@@ -637,6 +637,10 @@ Docs: [Vue Solana Agent Skill](https://vue-solana-docs.vercel.app/agent-skill)
 | `clearSwrCache()`                                                                          | Clears every cached SWR entry.                                                                                                           |
 | `deleteSwrKey(key)`                                                                        | Removes a single cached SWR entry by full cache key (including adapter prefix).                                                          |
 | `useSignIn(input?)`                                                                        | Sign In With Solana (SIWS) trigger returning `{ account, signedMessage, signature }` for server-side verification.                       |
+| `useSolanaPay()`                                                                           | Builds/parses Solana Pay transfer request URLs and tracks confirmation status by reference.                                              |
+| `useSolanaPayConfirmation()`                                                               | Polls payment status for a Solana Pay reference.                                                                                         |
+| `useSolanaQrCode()`                                                                        | Renders a Solana Pay URL as an SVG QR code.                                                                                              |
+| `useSolanaQrScanner()`                                                                     | Scans Solana Pay QR codes through the camera and `BarcodeDetector`.                                                                      |
 | `useSelectedWalletAccount()`                                                               | App-wide selected wallet account context: `[selectedAccount, setSelectedAccount, filteredWallets]`.                                      |
 | `SelectedWalletAccountProvider`                                                            | Component that provides the selected wallet account context to its subtree.                                                              |
 | `useSignTransactions()`                                                                    | Batch-signs transactions through the wallet, preferring `signTransactions` and falling back to `signAllTransactions`.                    |
@@ -674,6 +678,10 @@ Direct composable subpaths:
 - `@vue-solana/vue/useSubscription`
 - `@vue-solana/vue/useTrackedData`
 - `@vue-solana/vue/useSignIn`
+- `@vue-solana/vue/useSolanaPay`
+- `@vue-solana/vue/useSolanaPayConfirmation`
+- `@vue-solana/vue/useSolanaQrCode`
+- `@vue-solana/vue/useSolanaQrScanner`
 - `@vue-solana/vue/useSelectedWalletAccount`
 - `@vue-solana/vue/useSignTransactions`
 - `@vue-solana/vue/useSignAndSendTransactions`

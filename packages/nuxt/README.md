@@ -126,6 +126,10 @@ The module auto-imports these composables from direct `@vue-solana/vue/*` subpat
 - `useSolanaWallets()`
 - `useSolanaSignMessage()`
 - `useSolanaSignIn()`
+- `useSolanaPay()`
+- `useSolanaPayConfirmation()`
+- `useSolanaQrCode()`
+- `useSolanaQrScanner()`
 - `useSolanaSignAndSendTransaction()`
 - `useSolanaSignTransactions()`
 - `useSolanaSignAndSendTransactions()`
@@ -163,6 +167,10 @@ The module auto-imports these composables from direct `@vue-solana/vue/*` subpat
 | `useSolanaWallets()`                 | Wallet discovery, selected wallet state, and selection actions.                                                                              |
 | `useSolanaSignMessage()`             | Wallet message signing.                                                                                                                      |
 | `useSolanaSignIn()`                  | Sign In With Solana (SIWS) trigger returning a server-verifiable result.                                                                     |
+| `useSolanaPay()`                     | Builds/parses Solana Pay transfer request URLs and tracks confirmation status by reference.                                                  |
+| `useSolanaPayConfirmation()`         | Polls payment status for a Solana Pay reference.                                                                                             |
+| `useSolanaQrCode()`                  | Renders a Solana Pay URL as an SVG QR code.                                                                                                  |
+| `useSolanaQrScanner()`               | Scans Solana Pay QR codes through the camera and `BarcodeDetector`.                                                                          |
 | `useSolanaSignAndSendTransaction()`  | Wallet transaction signing, sending, and optional confirmation.                                                                              |
 | `useSolanaSignTransactions()`        | Batch transaction signing (falls back to `signAllTransactions`).                                                                             |
 | `useSolanaSignAndSendTransactions()` | Batch sign-and-send returning one signature per transaction.                                                                                 |

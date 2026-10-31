@@ -23,6 +23,7 @@ export default {
       wallets: "지갑",
       accountReads: "계정 읽기",
       transactions: "트랜잭션",
+      solanaPay: "Solana Pay",
       messageSigning: "메시지 서명",
       errors: "오류",
       packages: "패키지",

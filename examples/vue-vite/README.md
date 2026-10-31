@@ -13,6 +13,7 @@ This example demonstrates:
 - Tracking async transaction state with `useTransaction()`.
 - Sending a real transfer with `useSignAndSendTransaction()`. The example uses devnet by default for safe testing.
 - Sending client-signed transactions with an ephemeral `payer` from `src/main.ts`, using `usePayer()`, `usePlanTransaction()`, and `useSendTransaction()` / `useSendTransactions()`.
+- Building Solana Pay transfer requests with `useSolanaPay()`, rendering them as QR codes with `useSolanaQrCode()`, verifying settlement by reference, and previewing pasted or scanned payment URLs with `useSolanaQrScanner()`.
 - Streaming live data with the `Live Data Panels` section, exercising `useRequest()` stale-while-revalidate reads, `useSubscription()` RPC subscriptions, slot-deduplicated `useTrackedData()`, `useSignIn()` Sign In With Solana, and the SWR cache adapters from `@vue-solana/vue/swr`.
 
 The app uses `devnet` by default. Devnet SOL has no real value.
@@ -48,6 +49,7 @@ pnpm --filter @vue-solana/example-vue-vite dev
 - Run the generic mock transaction.
 - Enter a recipient address and amount, then send a real transfer. Keep the example on devnet while testing.
 - In the Live Data Panels, airdrop devnet SOL to the demo payer with the `usePayer` panel, then send an SPL Memo signed by the client with `useSendTransaction()` (no wallet popup) or a batch of two with `useSendTransactions()`, and watch the status go from `sending` to `sent`.
+- In the Solana Pay panels, create a transfer request with a reference and render its QR code, then paste the same URL into the scanner panel to inspect the parsed recipient, amount, and memo. Settlement verification reports `expired` until a payment actually lands under the reference, and the scanner opens the request in a wallet rather than sending it.
 - Change the tracked address in the Live Data Panels section and watch the request, subscription, and tracked data panels re-fire.
 - Connect a wallet that supports Sign In With Solana and click `Sign In` in the Live Data Panels.
 - Toggle the SWR card off and on to see the stale-while-revalidate handoff from cached to fresh data.
