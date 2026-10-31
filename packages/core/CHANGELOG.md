@@ -1,5 +1,11 @@
 # @vue-solana/core
 
+## 4.1.0
+
+### Minor Changes
+
+- 3ea686e: Add Solana Pay support with transfer URL encoding/parsing, payment reference generation, confirmation verification, QR code generation/composables, and scanner utilities. Exported from core/vue/nuxt with new composables and auto-imports.
+
 ## 4.0.0
 
 ### Major Changes
