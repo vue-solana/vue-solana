@@ -27,6 +27,7 @@ Live demo: [vue-solana-docs.vercel.app/demo](/demo)
 - Sending a real transfer with `useSignAndSendTransaction()` and showing submitted vs confirmed transaction status. The example uses devnet by default for safe testing.
 - Building cluster-aware Solana Explorer links for submitted signatures.
 - Exercising the Kit-reactive data layer in the Live Data Panels: `useRequest()` for one-shot requests, `useSubscription()` for live slot notifications over websocket, `useTrackedData()` for fetch-seeded account data updated by account notifications, `useSignIn()` for Sign In With Solana, `useAirdrop()` for devnet faucet requests, `usePayer()` to inspect the client's fee-payer signer, `useSendTransaction()` and `useSendTransactions()` for client-sent SPL Memo transactions with no wallet popup, and `useRequestSwr()` from `@vue-solana/vue/swr` for cache-keyed stale-while-revalidate across remounts.
+- Building and rendering Solana Pay transfer requests with `useSolanaPay()` and `useSolanaQrCode()`, verifying settlement by reference with `useSolanaPayConfirmation()`, and previewing scanned or pasted payment URLs with `useSolanaQrScanner()` without ever auto-sending them.
 - Configuring a demo `payer` signer (`generateKeyPairSigner()` from `@vue-solana/vue/kit`) in `main.ts` so client-sent transactions can pay fees. The payer starts unfunded; the `usePayer` panel airdrops 1 devnet SOL into it.
 - Using the default official `solanaRpc()` client composition, which installs the transaction planner and the plan-signing and plan-sending executors itself. The client-send demo waits for `confirmed` commitment before showing `sent`; it does not use a custom fallback sender.
 
@@ -61,6 +62,7 @@ Open the Vite URL printed in the terminal, usually `http://localhost:5173`.
 - In the Live Data Panels, change the tracked address and watch the request, subscription, and tracked-data panels re-fire.
 - In the Live Data Panels, airdrop 1 SOL to the demo payer with the `usePayer` panel, then send a client-signed SPL Memo with `useSendTransaction()` (no wallet popup) or a batch of two with `useSendTransactions()`, and watch the status move from `sending` to `sent` after the official executor reaches `confirmed` commitment.
 - Toggle the SWR card off and on and observe the cached value appear immediately (stale) before the revalidated request replaces it.
+- In the Solana Pay panels, create a transfer request with a reference and render its QR code, then paste the same URL into the scanner panel to inspect the parsed recipient, amount, token, and memo. `Verify settlement` reports `expired` until a payment lands under that reference; the scanner only opens the request in a wallet and never sends it.
 
 The generated demo payer exists only in the browser session and is not configured in `nuxt.config.ts` or any public runtime config. Use a server-held signer for production relayers, and never ship a funded keypair to an end-user browser.
 

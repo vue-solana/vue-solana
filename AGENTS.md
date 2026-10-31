@@ -188,7 +188,7 @@ Known remaining weight, deliberately not fixed: the iOS wallet path is ~38.9 KB 
 - `knowledge-bundle/guides/getting-started.md`: install snippets, Vue setup, Nuxt setup, and detailed manual devnet testing guide.
 - `plans/`: implementation tracker for the multistep tasks and implementations.
 - `examples/vue-vite/README.md` and `examples/nuxt/README.md`: runnable example app walkthroughs.
-- `apps/docs/content/guides/`: the docs site guides, each mirrored in `apps/docs/content/locales/{es,ko,zh}/guides/`. Solana Pay lives in `solana-pay.md` (transfer request + QR, scan/validate, settlement by reference); Phase 8 of `plans/solana-pay-qr-plan.md` still lists the example-app QR panels as open.
+- `apps/docs/content/guides/`: the docs site guides, each mirrored in `apps/docs/content/locales/{es,ko,zh}/guides/`. Solana Pay lives in `solana-pay.md` (transfer request + QR, scan/validate, settlement by reference); the example apps' `SolanaPayPanel` / `SolanaPayScannerPanel` panels and the matching e2e specs are the runnable counterpart.
 
 The manual testing guide explains:
 
@@ -227,7 +227,9 @@ The `examples/vue-vite` and `examples/nuxt` directories contain runnable example
 
 Both apps also mount Live Data Panels exercising the Kit-reactive composables (`useRequest`, `useSubscription`, `useTrackedData`, `useSignIn`, and the `swr` cache adapters) against devnet.
 
-The Playwright e2e suite in `e2e/` covers the example apps. `e2e/helpers.ts` mocks the HTTP RPC (getLatestBlockhash, getBalance, getVersion, getAccountInfo), fakes the Kit RPC-subscriptions websocket protocol (subscribe, id-correlated result, then `<method>Notification` frames keyed on `params.subscription`), and registers two mock Wallet Standard wallets including one with `solana:signIn`. Run with `pnpm test:e2e` (mocks) or `pnpm test:e2e:integration` (real devnet, `E2E_REAL_RPC=true`). Specs that assert against mock data skip in the integration run.
+They also mount `SolanaPayPanel` (merchant-side `useSolanaPay` + `useSolanaQrCode`: request URL, reference, QR, `useSolanaPayConfirmation` polling, and `confirmTransfer` verification) and `SolanaPayScannerPanel` (`useSolanaQrScanner`: camera scan, pasted-URL validation, parsed preview, and a `solana:` wallet link with no send path). The Nuxt scanner is wrapped in `<ClientOnly>`.
+
+The Playwright e2e suite in `e2e/` covers the example apps. `e2e/helpers.ts` mocks the HTTP RPC (getLatestBlockhash, getBalance, getVersion, getAccountInfo, getSignaturesForAddress, getTransaction), fakes the Kit RPC-subscriptions websocket protocol (subscribe, id-correlated result, then `<method>Notification` frames keyed on `params.subscription`), and registers two mock Wallet Standard wallets including one with `solana:signIn`. The Solana Pay scanner spec stubs `navigator.mediaDevices.getUserMedia` with a canvas `captureStream()` and a fake `BarcodeDetector`, so the camera loop is deterministic without a real device. Run with `pnpm test:e2e` (mocks) or `pnpm test:e2e:integration` (real devnet, `E2E_REAL_RPC=true`). Specs that assert against mock data skip in the integration run.
 
 ### Locale Docs Structure
 

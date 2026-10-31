@@ -188,6 +188,8 @@ Nuxt 모듈은 `useSolanaPay()`, `useSolanaPayConfirmation()`, `useSolanaQrCode(
 
 Core helper는 auto-import되지 않습니다. Kit 타입은 `@vue-solana/nuxt/kit`에서, 나머지는 Vue 패키지 subpath에서 import하거나 컴포저블을 호출하세요.
 
+두 예제 앱 모두 이 컴포저블을 실행 가능한 merchant(`SolanaPayPanel`) 및 scanner(`SolanaPayScannerPanel`) 패널로 연결합니다. Nuxt scanner는 `<ClientOnly>` 안에 있으며, scanner 패널은 요청을 wallet에서 열기만 하고 전송하지 않습니다.
+
 ## 보안 경계
 
 - 보여 주기 전에 항상 `parseURL()`로 URL을 파싱하고, 스캔한 문자열을 신뢰하지 마세요.

@@ -28,6 +28,7 @@ Nuxt 예제는 `@vue-solana/nuxt`를 위한 실행 가능한 Nuxt 앱입니다.
 - 제출된 signature에 대해 클러스터를 반영한 Solana Explorer 링크를 만듭니다.
 - generic async transaction 상태에는 `@vue-solana/vue/useTransaction`의 `useTransaction()`을 사용합니다.
 - Live Data Panels에서 자동 import된 composable로 Kit 반응형 데이터 레이어를 사용합니다: 일회성 요청에는 `useSolanaRequest()`, 실시간 slot 알림에는 `useSolanaSubscription()`, fetch 기반 계정 데이터에는 `useSolanaTrackedData()`, Sign In With Solana에는 `useSolanaSignIn()`, devnet faucet 요청에는 `useSolanaAirdrop()`, client fee-payer signer 확인에는 `useSolanaPayer()`, wallet popup 없는 client-sent SPL Memo 트랜잭션에는 `useSolanaSendTransaction()`과 `useSolanaSendTransactions()`, remount 전반에 걸친 `@vue-solana/vue/swr` 캐시 어댑터를 사용합니다.
+- 자동 import된 `useSolanaPay()`와 `useSolanaQrCode()`로 Solana Pay 전송 요청을 만들고 QR 코드로 렌더링하며, `useSolanaPayConfirmation()`로 reference별 정산을 확인하고, `useSolanaQrScanner()`로 스캔하거나 붙여넣은 결제 URL을 `<ClientOnly>` 안에서 미리 봅니다. 카메라 API는 SSR 중에 실행되지 않습니다.
 - client-only `app/plugins/demo-payer.client.ts` plugin에서 `generateKeyPairSigner()`로 ephemeral demo fee payer를 생성합니다. payer는 처음에 unfunded이며 `useSolanaPayer` panel이 devnet SOL 1개를 airdrop합니다. Nuxt module은 `payer`와 `payerSecretKey`를 의도적으로 제외하며 raw secret은 public runtime config에 없어야 합니다.
 
 앱은 기본적으로 `devnet`을 사용합니다. Devnet SOL은 실제 가치가 없습니다.
@@ -59,6 +60,7 @@ pnpm dev:nuxt
 - 트랜잭션이 submitted signature에서 confirmation status로 이동하는지 확인합니다.
 - Explorer 링크를 열고 `?cluster=devnet`이 포함되어 있는지 확인합니다.
 - Live Data Panels에서 `useSolanaPayer` panel로 demo payer에 1 SOL을 에어드랍한 뒤 `useSolanaSendTransaction()`(wallet popup 없음)으로 client-signed SPL Memo를 보내거나 `useSolanaSendTransactions()`로 두 건을 batch로 보내고, official executor가 `confirmed`에 도달한 뒤 status가 `sending`에서 `sent`로 이동하는지 확인합니다.
+- Solana Pay 패널에서 reference가 포함된 전송 요청을 만들고 QR 코드를 렌더링한 뒤, 같은 URL을 스캐너 패널에 붙여넣어 파싱된 수취인, 금액, 토큰, memo 미리보기를 확인합니다. `Verify settlement`는 해당 reference로 결제가 정산되기 전까지 `expired`를 보고하며, 스캐너는 요청을 wallet에서 열기만 하고 전송하지 않습니다.
 
 demo payer는 client-only plugin에서 생성되며 `nuxt.config.ts`나 public runtime config에 설정되지 않습니다. 예제는 `solana.clientPlugin: false`를 설정해 module이 자체 plugin을 건너뛰도록 하며, 둘 다 설치하면 Solana context가 두 개 생깁니다. module의 default client도 official `solanaRpc()`와 `rpcAirdrop()` stack을 사용하며, `solanaRpc()`가 transaction planner와 plan-signing/plan-sending executor를 직접 설치합니다. 기존 custom fallback sender는 사용하지 않습니다. Nuxt public runtime value에 funded secret을 넣지 마세요.
 

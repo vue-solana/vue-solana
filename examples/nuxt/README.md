@@ -14,6 +14,7 @@ This example demonstrates:
 - Sending a real transfer with `useSolanaSignAndSendTransaction()`. The example uses devnet by default for safe testing.
 - Using `useTransaction()` from `@vue-solana/vue/useTransaction` for generic async transaction state.
 - Sending client-signed transactions with an ephemeral `payer` from `app/plugins/demo-payer.client.ts`, using `useSolanaPayer()`, `useSolanaPlanTransaction()`, and `useSolanaSendTransaction()` / `useSolanaSendTransactions()`. The example sets `solana.clientPlugin: false` so the module skips its own plugin; installing both would create two Solana contexts.
+- Building Solana Pay transfer requests with auto-imported `useSolanaPay()`, rendering them as QR codes with `useSolanaQrCode()`, verifying settlement by reference with `useSolanaPayConfirmation()`, and previewing scanned or pasted payment URLs with `useSolanaQrScanner()` inside `<ClientOnly>` so the camera APIs never run during SSR.
 - Streaming live data with the `Live Data Panels` section, exercising auto-imported `useSolanaRequest()` stale-while-revalidate reads, `useSolanaSubscription()` RPC subscriptions, slot-deduplicated `useSolanaTrackedData()`, `useSolanaSignIn()` Sign In With Solana, and the SWR cache adapters from `@vue-solana/vue/swr`.
 
 The app uses `devnet` by default. Devnet SOL has no real value.
@@ -49,6 +50,7 @@ pnpm --filter @vue-solana/example-nuxt dev
 - Run the generic mock transaction.
 - Enter a recipient address and amount, then send a real transfer. Keep the example on devnet while testing.
 - In the Live Data Panels, airdrop devnet SOL to the demo payer with the `useSolanaPayer` panel, then send an SPL Memo signed by the client with `useSolanaSendTransaction()` (no wallet popup) or a batch of two with `useSolanaSendTransactions()`, and watch the status go from `sending` to `sent`.
+- In the Solana Pay panels, create a transfer request with a reference and render its QR code, then paste the same URL into the scanner panel to inspect the parsed recipient, amount, and memo. Settlement verification reports `expired` until a payment actually lands under the reference, and the scanner opens the request in a wallet rather than sending it.
 - Change the tracked address in the Live Data Panels section and watch the request, subscription, and tracked data panels re-fire.
 - Connect a wallet that supports Sign In With Solana and click `Sign In` in the Live Data Panels.
 - Toggle the SWR card off and on to see the stale-while-revalidate handoff from cached to fresh data.

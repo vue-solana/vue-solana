@@ -151,6 +151,53 @@ code {
   margin-top: 1rem;
 }
 
+.pay-form {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.pay-open-link {
+  display: inline-flex;
+  padding: 0.62rem 0.9rem;
+  border: 1px solid hsla(160, 100%, 37%, 0.4);
+  border-radius: 999px;
+  background: hsla(160, 100%, 37%, 0.12);
+  color: var(--color-heading);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.solana-pay-qr {
+  display: grid;
+  place-items: center;
+  width: fit-content;
+  max-width: 100%;
+  margin-top: 1rem;
+  padding: 0.75rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.9rem;
+  background: #fff;
+}
+
+.solana-pay-qr svg {
+  display: block;
+  width: 100%;
+  max-width: 260px;
+  height: auto;
+}
+
+.solana-pay-video {
+  width: 100%;
+  max-width: 320px;
+  margin-top: 1rem;
+  border: 1px solid var(--color-border);
+  border-radius: 0.9rem;
+  aspect-ratio: 4 / 3;
+  background: #000;
+  object-fit: cover;
+}
+
 .wallet-list {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
@@ -209,9 +256,22 @@ code {
   color: hsl(48, 100%, 42%);
 }
 
-.status-pill--checking {
+.status-pill--checking,
+.status-pill--pending,
+.status-pill--found,
+.status-pill--scanning {
   border-color: hsla(48, 100%, 45%, 0.5);
   color: hsl(48, 100%, 42%);
+}
+
+.status-pill--idle {
+  border-color: var(--color-border);
+  color: var(--color-text);
+}
+
+.status-pill--expired {
+  border-color: hsla(0, 100%, 45%, 0.45);
+  color: hsl(0, 80%, 55%);
 }
 
 .status-pill--error {

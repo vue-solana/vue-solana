@@ -180,18 +180,18 @@ Acceptance criteria:
 
 ## Phase 8: Examples And Documentation
 
-Status: docs done; example QR panels still open.
+Status: complete.
 
 Tasks:
 
-- [ ] Update the Vue Vite example with a devnet payment QR generator.
-- [ ] Update the Vue Vite example with a QR scanner and parsed payment preview.
-- [ ] Update the Nuxt example with the same flows using Nuxt auto-imports.
+- [x] Update the Vue Vite example with a devnet payment QR generator.
+- [x] Update the Vue Vite example with a QR scanner and parsed payment preview.
+- [x] Update the Nuxt example with the same flows using Nuxt auto-imports.
 - [x] Add a docs guide covering QR creation, scanning and validation, and settlement confirmation: `apps/docs/content/guides/solana-pay.md` plus the `es`, `ko`, and `zh` mirrors, linked from the guides sidebar and from the core, Vue, and Nuxt package reference pages.
 - [x] Document security boundaries: never auto-send scanned QR data, never store private keys, and confirm on-chain before fulfillment.
 - [x] Add manual devnet testing instructions for wallet setup, QR generation, QR scanning, payment sending, and settlement confirmation.
 
-The example apps currently exercise the client-sent and wallet flows only, so the three example checkboxes stay unchecked until the QR panels land.
+Both example apps now ship `SolanaPayPanel` (merchant request + QR + settlement verification) and `SolanaPayScannerPanel` (camera scan, pasted-URL validation, parsed preview, wallet handoff without sending). The Nuxt scanner is wrapped in `<ClientOnly>` so camera APIs never run during SSR. `e2e/example-apps.spec.ts` covers request creation, QR rendering, the pending/expired settlement path, pasted-URL validation, and the camera decode loop against a stubbed `BarcodeDetector` + `getUserMedia`.
 
 Acceptance criteria:
 

@@ -188,6 +188,8 @@ Nuxt 模块以相同名称自动导入 `useSolanaPay()`、`useSolanaPayConfirmat
 
 核心辅助函数不会被自动导入。Kit 类型从 `@vue-solana/nuxt/kit` 导入，其余从 Vue 包子路径导入，或直接调用组合式函数。
 
+两个示例应用都将这些组合式函数接入可运行的商户（`SolanaPayPanel`）和扫描器（`SolanaPayScannerPanel`）面板。Nuxt 扫描器始终位于 `<ClientOnly>` 内，扫描器面板只会在钱包中打开请求，绝不会发送。
+
 ## 安全边界
 
 - 展示之前先用 `parseURL()` 解析每个 URL；绝不要信任扫描到的字符串。

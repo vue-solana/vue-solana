@@ -188,6 +188,8 @@ El módulo de Nuxt auto-importa `useSolanaPay()`, `useSolanaPayConfirmation()`, 
 
 Los helpers de core no se auto-importan. Impórtalos desde `@vue-solana/nuxt/kit` para los tipos de Kit y desde los subpaths del paquete Vue, o llama a los composables.
 
+Ambas apps de ejemplo integran estos composables en paneles ejecutables de comercio (`SolanaPayPanel`) y de escáner (`SolanaPayScannerPanel`). El escáner de Nuxt permanece dentro de `<ClientOnly>`, y los paneles del escáner solo abren la solicitud en una wallet; nunca la envían.
+
 ## Límites de seguridad
 
 - Parsea cada URL con `parseURL()` antes de mostrarla; nunca confíes en una cadena escaneada.

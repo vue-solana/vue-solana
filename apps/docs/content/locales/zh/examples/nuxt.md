@@ -28,6 +28,7 @@ Live demo: [vue-solana-docs.vercel.app/demo](/zh/demo)
 - 为已提交的签名构建带有集群信息的 Solana Explorer 链接。
 - 使用来自 `@vue-solana/vue/useTransaction` 的 `useTransaction()` 处理通用异步交易状态。
 - 在 Live Data Panels 中使用自动导入的组合式函数演练基于 Kit 的响应式数据层：`useSolanaRequest()` 用于一次性请求，`useSolanaSubscription()` 用于实时 slot 通知，`useSolanaTrackedData()` 用于基于 fetch 种子的账户数据，`useSolanaSignIn()` 用于 Sign In With Solana，`useSolanaAirdrop()` 用于 devnet faucet 请求，`useSolanaPayer()` 用于检查客户端的 fee-payer signer，`useSolanaSendTransaction()` 和 `useSolanaSendTransactions()` 用于不显示 wallet popup 的 client-sent SPL Memo 交易，以及跨重新挂载使用的 `@vue-solana/vue/swr` 缓存适配器。
+- 使用自动导入的 `useSolanaPay()` 和 `useSolanaQrCode()` 构建并渲染 Solana Pay 转账请求，使用 `useSolanaPayConfirmation()` 按引用确认结算，并在 `<ClientOnly>` 内使用 `useSolanaQrScanner()` 预览扫描或粘贴的支付 URL，确保摄像头 API 绝不在 SSR 期间运行。
 - 在 client-only `app/plugins/demo-payer.client.ts` plugin 中使用 `generateKeyPairSigner()` 生成 ephemeral demo fee payer。payer 初始没有资金，`useSolanaPayer` panel 会空投 1 devnet SOL。Nuxt module 有意省略 `payer` 和 `payerSecretKey`，raw secret 不得放入 public runtime config。
 
 该应用默认使用 `devnet`。Devnet SOL 没有真实价值。
@@ -59,6 +60,7 @@ pnpm dev:nuxt
 - 观察交易从已提交签名移动到确认状态。
 - 打开 explorer 链接，并确认其中包含 `?cluster=devnet`。
 - 在 Live Data Panels 中用 `useSolanaPayer` panel 向 demo payer 空投 1 SOL，然后使用 `useSolanaSendTransaction()`（不显示 wallet popup）发送 client-signed SPL Memo，或使用 `useSolanaSendTransactions()` 批量发送两笔，并观察官方 executor 达到 `confirmed` 后 status 从 `sending` 变为 `sent`。
+- 在 Solana Pay 面板中创建带引用的转账请求并渲染二维码，然后将同一 URL 粘贴到扫描器面板，检查解析后的收款地址、金额、代币和 memo。在该引用下真正结算之前，`Verify settlement` 会报告 `expired`；扫描器只会在钱包中打开请求，绝不会发送。
 
 demo payer 在 client-only plugin 中生成，不配置在 `nuxt.config.ts` 或 public runtime config 中。示例设置了 `solana.clientPlugin: false` 使模块跳过自己的 plugin；两者同时安装会产生两个 Solana context。模块的默认 client 也使用官方 `solanaRpc()` 和 `rpcAirdrop()` stack，`solanaRpc()` 会自行安装 transaction planner 以及 plan-signing 和 plan-sending executor，旧的 custom fallback sender 不再使用。永远不要把有资金的 secret 放入 Nuxt public runtime value。
 

@@ -24,6 +24,17 @@ installSolanaBufferPolyfill();
     <MessageSigningPanel />
     <TransferPanel />
 
+    <SolanaPayPanel />
+
+    <ClientOnly>
+      <SolanaPayScannerPanel />
+      <template #fallback>
+        <section class="panel panel--wide">
+          <p>Solana Pay scanner loads in the browser.</p>
+        </section>
+      </template>
+    </ClientOnly>
+
     <LiveDataPanels />
   </main>
 </template>

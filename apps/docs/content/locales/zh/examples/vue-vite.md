@@ -27,6 +27,7 @@ Live demo: [vue-solana-docs.vercel.app/demo](/zh/demo)
 - 使用 `useSignAndSendTransaction()` 发送真实转账，并显示已提交和已确认的交易状态。示例默认使用 devnet，以便安全测试。
 - 为已提交的签名构建带有集群信息的 Solana Explorer 链接。
 - 在 Live Data Panels 中演练基于 Kit 的响应式数据层：`useRequest()` 用于一次性请求，`useSubscription()` 用于通过 websocket 的实时 slot 通知，`useTrackedData()` 用于由账户通知更新的、基于 fetch 种子的账户数据，`useSignIn()` 用于 Sign In With Solana，`useAirdrop()` 用于 devnet faucet 请求，`usePayer()` 用于检查客户端的 fee-payer signer，`useSendTransaction()` 和 `useSendTransactions()` 用于不显示 wallet popup 的 client-sent SPL Memo 交易，以及来自 `@vue-solana/vue/swr` 的 `useRequestSwr()` 用于跨重新挂载的缓存键控 stale-while-revalidate。
+- 使用 `useSolanaPay()` 和 `useSolanaQrCode()` 构建并渲染 Solana Pay 转账请求，使用 `useSolanaPayConfirmation()` 按引用确认结算，并使用 `useSolanaQrScanner()` 预览扫描或粘贴的支付 URL，绝不会自动发送。
 - 在 `main.ts` 中配置 demo `payer` signer（来自 `@vue-solana/vue/kit` 的 `generateKeyPairSigner()`），让 client-sent 交易能够支付费用。payer 初始没有资金，`usePayer` panel 会空投 1 devnet SOL。
 - 使用默认 client 的官方 `solanaRpc()` 组合，`solanaRpc()` 会自行安装 transaction planner 以及 plan-signing 和 plan-sending executor。client-send demo 会等待 `confirmed` 后才显示 `sent`，不使用 custom fallback sender。
 
@@ -60,6 +61,7 @@ pnpm dev:vue
 - 打开 explorer 链接，并确认其中包含 `?cluster=devnet`。
 - 在 Live Data Panels 中更改跟踪的地址，观察 request、subscription 和 tracked-data 面板重新触发。
 - 在 Live Data Panels 中用 `usePayer` panel 向 demo payer 空投 1 SOL，然后使用 `useSendTransaction()`（不显示 wallet popup）发送 client-signed SPL Memo，或使用 `useSendTransactions()` 批量发送两笔，并观察官方 executor 达到 `confirmed` 后 status 从 `sending` 变为 `sent`。
+- 在 Solana Pay 面板中创建带引用的转账请求并渲染二维码，然后将同一 URL 粘贴到扫描器面板，检查解析后的收款地址、金额、代币和 memo。在该引用下真正结算之前，`Verify settlement` 会报告 `expired`；扫描器只会在钱包中打开请求，绝不会发送。
 - 打开再关闭 SWR 卡片，观察缓存值立即出现（过期数据），然后被重新验证的请求替换。
 
 生成的 demo payer 只存在于 browser session 中，不配置在 `nuxt.config.ts` 或任何 public runtime config 中。生产 relayer 请使用 server-held signer，永远不要把有资金的 keypair 发送到 end-user browser。
