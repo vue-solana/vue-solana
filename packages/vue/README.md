@@ -40,6 +40,7 @@ New to Solana? Start with the official docs and the project concepts guide:
 - Sign In With Solana (SIWS) authentication through `useSignIn()`.
 - App-wide selected wallet account context with persistence.
 - Transaction submission and confirmation state helpers, including batch signing and sign-and-send.
+- Solana Pay request building, QR rendering and scanning, and reference-based settlement confirmation (`useSolanaPay`, `useSolanaPayConfirmation`, `useSolanaQrCode`, `useSolanaQrScanner`).
 - Live data composables over Kit reactive stores (`useRequest`, `useSubscription`, `useTrackedData`) plus SWR cache adapters.
 - A generic async action state machine (`useAction`) built on `@vue-solana/core/action`.
 - Reactive Kit client signers (`usePayer`, `useIdentity`) and transaction planning (`usePlanTransaction`, `usePlanTransactions`) with fail-fast client capability assertions.
@@ -637,7 +638,7 @@ Docs: [Vue Solana Agent Skill](https://vue-solana-docs.vercel.app/agent-skill)
 | `clearSwrCache()`                                                                          | Clears every cached SWR entry.                                                                                                           |
 | `deleteSwrKey(key)`                                                                        | Removes a single cached SWR entry by full cache key (including adapter prefix).                                                          |
 | `useSignIn(input?)`                                                                        | Sign In With Solana (SIWS) trigger returning `{ account, signedMessage, signature }` for server-side verification.                       |
-| `useSolanaPay()`                                                                           | Builds/parses Solana Pay transfer request URLs and tracks confirmation status by reference.                                              |
+| `useSolanaPay()`                                                                           | Builds/parses Solana Pay transfer request URLs, generates a reference, and verifies settlement against it.                               |
 | `useSolanaPayConfirmation()`                                                               | Polls payment status for a Solana Pay reference.                                                                                         |
 | `useSolanaQrCode()`                                                                        | Renders a Solana Pay URL as an SVG QR code.                                                                                              |
 | `useSolanaQrScanner()`                                                                     | Scans Solana Pay QR codes through the camera and `BarcodeDetector`.                                                                      |

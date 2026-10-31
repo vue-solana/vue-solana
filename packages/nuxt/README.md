@@ -32,7 +32,7 @@ New to Solana? Start with the official docs and the project concepts guide:
 ## Features
 
 - Installs the Vue Solana plugin automatically.
-- Auto-imports Solana RPC, wallet, account, token, message signing, live data, and transaction composables.
+- Auto-imports Solana RPC, wallet, account, token, message signing, Solana Pay and QR, live data, and transaction composables.
 - Builds the default client with the official Kit RPC planner and transaction-sending executor; payer secrets are never accepted through public runtime config.
 - Uses direct Vue package subpaths to avoid pulling unrelated runtime code into Nuxt bundles.
 - Client-only runtime plugin with SSR-safe inert composable state before hydration.
@@ -167,7 +167,7 @@ The module auto-imports these composables from direct `@vue-solana/vue/*` subpat
 | `useSolanaWallets()`                 | Wallet discovery, selected wallet state, and selection actions.                                                                              |
 | `useSolanaSignMessage()`             | Wallet message signing.                                                                                                                      |
 | `useSolanaSignIn()`                  | Sign In With Solana (SIWS) trigger returning a server-verifiable result.                                                                     |
-| `useSolanaPay()`                     | Builds/parses Solana Pay transfer request URLs and tracks confirmation status by reference.                                                  |
+| `useSolanaPay()`                     | Builds/parses Solana Pay transfer request URLs, generates a reference, and verifies settlement against it.                                   |
 | `useSolanaPayConfirmation()`         | Polls payment status for a Solana Pay reference.                                                                                             |
 | `useSolanaQrCode()`                  | Renders a Solana Pay URL as an SVG QR code.                                                                                                  |
 | `useSolanaQrScanner()`               | Scans Solana Pay QR codes through the camera and `BarcodeDetector`.                                                                          |
