@@ -2,12 +2,13 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import de from "./i18n/locales/de";
 import en from "./i18n/locales/en";
 import es from "./i18n/locales/es";
 import ko from "./i18n/locales/ko";
 import zh from "./i18n/locales/zh";
 
-const LOCALES = { en, es, ko, zh } as const;
+const LOCALES = { en, de, es, ko, zh } as const;
 // `new URL(relative, import.meta.url)` is not usable here: happy-dom's `URL`
 // resolves against `location.href` and ignores the base, so it yields
 // `http://localhost:3000/...` and `fileURLToPath` rejects it.

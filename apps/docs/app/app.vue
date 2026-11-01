@@ -19,6 +19,15 @@ const { search, status: searchStatus } = useSearchCollection("content");
 
 const localePrefix = computed(() => (locale.value === "en" ? "" : `/${locale.value}`));
 
+// Locale pages are served under `/<code>/…`, the default locale is unprefixed.
+// Derived from the configured locales so a new locale needs no second edit.
+const nonDefaultLocalePrefixes = computed(() =>
+  locales.value
+    .map((availableLocale) => availableLocale.code)
+    .filter((code) => code !== "en")
+    .map((code) => `/${code}`),
+);
+
 // `SearchCollectionOptions` and `SearchResult` only exist in subpaths `@nuxt/content`
 // does not export, so the signature is taken from `search` instead of imported.
 const searchCurrentLocale = async (...args: Parameters<typeof search>) => {
@@ -31,7 +40,9 @@ const searchCurrentLocale = async (...args: Parameters<typeof search>) => {
     const prefix = localePrefix.value ?? "";
     return prefix
       ? segment.startsWith(`${prefix}/`) || segment === prefix
-      : !/^\/(es|ko|zh)(\/|$)/.test(segment);
+      : !nonDefaultLocalePrefixes.value.some(
+          (other) => segment === other || segment.startsWith(`${other}/`),
+        );
   });
 };
 

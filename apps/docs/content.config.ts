@@ -10,6 +10,10 @@ export default defineContentConfig({
           exclude: ["locales/**"],
         },
         {
+          include: "locales/de/**",
+          prefix: "/de",
+        },
+        {
           include: "locales/es/**",
           prefix: "/es",
         },

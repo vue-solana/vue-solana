@@ -12,7 +12,9 @@ Nuxt module for Solana wallet, RPC, account, token, message signing, live data, 
 This package is part of the Vue Solana family. Choose based on your app framework:
 
 - [`@vue-solana/core`](https://www.npmjs.com/package/@vue-solana/core) — framework-agnostic Solana primitives: Kit RPC client helpers, wallet types, Android MWA registration, iOS browser wallet helpers, message signing, token account reads, and transaction helpers. **Use this directly** when you want shared RPC/wallet/transaction helpers without installing a Vue plugin (non-Vue apps, server/relayer code, or your own framework integration).
+
 - [`@vue-solana/vue`](https://www.npmjs.com/package/@vue-solana/vue) — Vue 3 plugin plus composables for RPC, account, balance, wallet, message signing, live data, and transactions. **Use this** in plain Vue 3 apps (Vite, etc.).
+
 - [`@vue-solana/nuxt`](https://www.npmjs.com/package/@vue-solana/nuxt) — Nuxt module that installs the Vue plugin and auto-imports the composables. **Use this** in Nuxt 3/4 apps. (This package.)
 
 This package builds on `@vue-solana/vue` and `@vue-solana/core`; it is the recommended entry point for Nuxt apps.
@@ -22,22 +24,35 @@ Use this package in Nuxt apps that need the Vue Solana plugin installed automati
 New to Solana? Start with the official docs and the project concepts guide:
 
 - [Solana Documentation](https://solana.com/docs)
+
 - [Solana RPC Methods](https://solana.com/docs/rpc)
+
 - [Solana Clusters](https://solana.com/docs/references/clusters)
+
 - [Vue Solana Concepts Guide](https://vue-solana-docs.vercel.app/concepts/solana-for-vue-developers)
+
 - [`@vue-solana/nuxt` docs](https://vue-solana-docs.vercel.app/packages/nuxt)
+
 - [Agent Skill](https://vue-solana-docs.vercel.app/agent-skill)
+
 - [Live demo](https://vue-solana-docs.vercel.app/demo)
 
 ## Features
 
 - Installs the Vue Solana plugin automatically.
+
 - Auto-imports Solana RPC, wallet, account, token, message signing, Solana Pay and QR, live data, and transaction composables.
+
 - Builds the default client with the official Kit RPC planner and transaction-sending executor; payer secrets are never accepted through public runtime config.
+
 - Uses direct Vue package subpaths to avoid pulling unrelated runtime code into Nuxt bundles.
+
 - Client-only runtime plugin with SSR-safe inert composable state before hydration.
+
 - Unified wallet discovery for browser extensions, Android Mobile Wallet Adapter, and supported iOS browser wallets.
+
 - App-wide selected wallet account context installed by the runtime plugin.
+
 - Nuxt 3 and Nuxt 4 support.
 
 ## Compatibility
@@ -113,42 +128,79 @@ https://faucet.solana.com
 The module auto-imports these composables from direct `@vue-solana/vue/*` subpaths rather than the root Vue package barrel. This keeps Nuxt SSR bundles from pulling in unrelated Solana runtime code just because a page uses one composable.
 
 - `useSolana()`
+
 - `useSolanaClient()`
+
 - `useSolanaRpc()`
+
 - `useSolanaConnection()`
+
 - `useSolanaAccountInfo()`
+
 - `useSolanaAirdrop()`
+
 - `useSolanaBalance()`
+
 - `useSolanaProgramAccounts()`
+
 - `useSolanaTokenAccounts()`
+
 - `useSolanaTokenBalance()`
+
 - `useSolanaWallet()`
+
 - `useSolanaWallets()`
+
 - `useSolanaSignMessage()`
+
 - `useSolanaSignIn()`
+
 - `useSolanaPay()`
+
 - `useSolanaPayConfirmation()`
+
 - `useSolanaQrCode()`
+
 - `useSolanaQrScanner()`
+
 - `useSolanaSignAndSendTransaction()`
+
 - `useSolanaSignTransactions()`
+
 - `useSolanaSignAndSendTransactions()`
+
 - `useSolanaTransactionConfirmation()`
+
 - `useSolanaSignatureStatus()`
+
 - `useSolanaTransaction()`
+
 - `useSolanaAction()`
+
 - `useSolanaRequest()`
+
 - `useSolanaSubscription()`
+
 - `useSolanaTrackedData()`
+
 - `useSolanaRequestSwr()`
+
 - `useSolanaSubscriptionSwr()`
+
 - `useSolanaTrackedDataSwr()`
+
 - `useSolanaSelectedWalletAccount()`
+
 - `useSolanaPayer()`
+
 - `useSolanaIdentity()`
+
 - `useSolanaPlanTransaction()`
+
 - `useSolanaPlanTransactions()`
+
 - `useSolanaSendTransaction()`
+
 - `useSolanaSendTransactions()`
 
 | Composable                           | Purpose                                                                                                                                      |
@@ -209,6 +261,7 @@ The module also installs the app-wide selected wallet account context, so `useSo
 The package also exposes Solana helper subpaths for Nuxt apps that need Kit re-exports or the browser Buffer polyfill without importing lower-level packages directly:
 
 - `@vue-solana/nuxt/kit`
+
 - `@vue-solana/nuxt/buffer-polyfill`
 
 ## Read RPC State
@@ -357,11 +410,17 @@ Docs: [Vue Solana Agent Skill](https://vue-solana-docs.vercel.app/agent-skill)
 ## Caveats
 
 - The runtime plugin is client-only. Auto-imported composables are SSR-safe, but real RPC and wallet work should run after hydration or in user actions.
+
 - The SWR cache (`useSolanaRequestSwr()`, `useSolanaSubscriptionSwr()`, `useSolanaTrackedDataSwr()`) is module-level and shared across SSR requests. Namespace cache keys per request or call `clearSwrCache()` (auto-imported) at the start of each server request to avoid leaking cached data between requests. The cache is capped at 1024 entries with oldest-first eviction; `deleteSwrKey()` (auto-imported) evicts a single key by its full cache key.
+
 - Nuxt module options are stored in public runtime config, so they must be JSON-serializable.
+
 - Public Solana RPC endpoints are useful for development, but production apps should use dedicated RPC infrastructure.
+
 - Broad `useSolanaProgramAccounts()` scans can be expensive or blocked on public RPC nodes. Prefer narrow filters and `dataSlice`.
+
 - Use `mainnet` for Solana mainnet. This is Solana's official mainnet cluster name; the legacy `mainnet-beta` spelling is still accepted and redirects to the same endpoint.
+
 - Desktop native app wallets are planned but not implemented yet.
 
 ## Status

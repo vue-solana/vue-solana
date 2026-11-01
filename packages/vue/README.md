@@ -12,7 +12,9 @@ Solana wallet, RPC, account, message signing, and transaction composables for Vu
 This package is part of the Vue Solana family. Choose based on your app framework:
 
 - [`@vue-solana/core`](https://www.npmjs.com/package/@vue-solana/core) — framework-agnostic Solana primitives: Kit RPC client helpers, wallet types, Android MWA registration, iOS browser wallet helpers, message signing, token account reads, and transaction helpers. **Use this directly** when you want shared RPC/wallet/transaction helpers without installing a Vue plugin (non-Vue apps, server/relayer code, or your own framework integration).
+
 - [`@vue-solana/vue`](https://www.npmjs.com/package/@vue-solana/vue) — Vue 3 plugin plus composables for RPC, account, balance, wallet, message signing, live data, and transactions. **Use this** in plain Vue 3 apps (Vite, etc.). (This package.)
+
 - [`@vue-solana/nuxt`](https://www.npmjs.com/package/@vue-solana/nuxt) — Nuxt module that installs the Vue plugin and auto-imports the composables. **Use this** in Nuxt 3/4 apps.
 
 This package builds on `@vue-solana/core`; install `@vue-solana/vue` for plain Vue apps and `@vue-solana/nuxt` for Nuxt apps.
@@ -22,29 +24,49 @@ Use this package in Vue 3 apps that need Solana RPC access, balance reads, walle
 New to Solana? Start with the official docs and the project concepts guide:
 
 - [Solana Documentation](https://solana.com/docs)
+
 - [Solana RPC Methods](https://solana.com/docs/rpc)
+
 - [Solana Clusters](https://solana.com/docs/references/clusters)
+
 - [Vue Solana Concepts Guide](https://vue-solana-docs.vercel.app/concepts/solana-for-vue-developers)
+
 - [`@vue-solana/vue` docs](https://vue-solana-docs.vercel.app/packages/vue)
+
 - [Agent Skill](https://vue-solana-docs.vercel.app/agent-skill)
+
 - [Live demo](https://vue-solana-docs.vercel.app/demo)
 
 ## Features
 
 - Vue plugin for shared Solana RPC and wallet context.
+
 - SSR-safe composables that return inert state when no client plugin context is available.
+
 - RPC status and latest blockhash reads.
+
 - Balance, account info, program account, signature status, token account, and token balance composables.
+
 - Unified wallet discovery and selection for browser extensions, Android Mobile Wallet Adapter, and supported iOS browser wallets.
+
 - Message signing helpers for wallet ownership and authentication challenges.
+
 - Sign In With Solana (SIWS) authentication through `useSignIn()`.
+
 - App-wide selected wallet account context with persistence.
+
 - Transaction submission and confirmation state helpers, including batch signing and sign-and-send.
+
 - Solana Pay request building, QR rendering and scanning, and reference-based settlement confirmation (`useSolanaPay`, `useSolanaPayConfirmation`, `useSolanaQrCode`, `useSolanaQrScanner`).
+
 - Live data composables over Kit reactive stores (`useRequest`, `useSubscription`, `useTrackedData`) plus SWR cache adapters.
+
 - A generic async action state machine (`useAction`) built on `@vue-solana/core/action`.
+
 - Reactive Kit client signers (`usePayer`, `useIdentity`) and transaction planning (`usePlanTransaction`, `usePlanTransactions`) with fail-fast client capability assertions.
+
 - Client-sent transactions through the official Kit planner and RPC plan-sending executor installed by the default client.
+
 - Direct subpath exports for narrower imports.
 
 ## Compatibility
@@ -384,8 +406,11 @@ await execute(transaction);
 Return shapes:
 
 - `useSignMessage().execute(bytes)` resolves to `{ signedMessage, signature }`, both `Uint8Array`.
+
 - `useSignTransactions().execute(transactions)` resolves to the signed `Uint8Array[]` (also exposed as `signedTransactions`); pass a single-element array for one transaction.
+
 - `useSignAndSendTransaction().execute(transaction)` resolves to the submitted `signature` string; with `confirm: true` it also fills `confirmation`.
+
 - `useSignAndSendTransactions().execute(transactions)` resolves to a `string[]` of signatures (also exposed as `signatures`).
 
 A wallet may modify the message or transaction before signing — for example to add its own instruction or change the fee payer — and the Wallet Standard explicitly allows it. Re-read the returned `signedMessage` or signed transaction bytes instead of assuming they match your input byte-for-byte.
@@ -537,7 +562,9 @@ await dispatch(inputB); // aborts dispatch(inputA) before starting
 ```
 
 - `useAction` keeps the handler in a ref — every `dispatch` runs the latest closure, so there is no deps array to keep in sync. In-flight calls keep running with the closure they started with.
+
 - `dispatch` returns a `Promise<TResult>`. If a newer dispatch supersedes it, the older promise rejects with an abort error; awaiters should treat that as "superseded", not a failure, and fresh awaits win.
+
 - Calling `dispatch` again aborts the prior in-flight call with a fresh `AbortSignal`, and resets state to `idle` before the new run starts.
 
 ### Sign In With Solana
@@ -658,55 +685,97 @@ Docs: [Vue Solana Agent Skill](https://vue-solana-docs.vercel.app/agent-skill)
 Direct composable subpaths:
 
 - `@vue-solana/vue/useSolana`
+
 - `@vue-solana/vue/useSolanaClient`
+
 - `@vue-solana/vue/useRpc`
+
 - `@vue-solana/vue/useConnection`
+
 - `@vue-solana/vue/useAccountInfo`
+
 - `@vue-solana/vue/useAirdrop`
+
 - `@vue-solana/vue/useBalance`
+
 - `@vue-solana/vue/useProgramAccounts`
+
 - `@vue-solana/vue/useWallet`
+
 - `@vue-solana/vue/useWallets`
+
 - `@vue-solana/vue/useSignMessage`
+
 - `@vue-solana/vue/useTransaction`
+
 - `@vue-solana/vue/useTransactionConfirmation`
+
 - `@vue-solana/vue/useSignatureStatus`
+
 - `@vue-solana/vue/useSignAndSendTransaction`
+
 - `@vue-solana/vue/useTokenAccounts`
+
 - `@vue-solana/vue/useTokenBalance`
+
 - `@vue-solana/vue/useAction`
+
 - `@vue-solana/vue/useRequest`
+
 - `@vue-solana/vue/useSubscription`
+
 - `@vue-solana/vue/useTrackedData`
+
 - `@vue-solana/vue/useSignIn`
+
 - `@vue-solana/vue/useSolanaPay`
+
 - `@vue-solana/vue/useSolanaPayConfirmation`
+
 - `@vue-solana/vue/useSolanaQrCode`
+
 - `@vue-solana/vue/useSolanaQrScanner`
+
 - `@vue-solana/vue/useSelectedWalletAccount`
+
 - `@vue-solana/vue/useSignTransactions`
+
 - `@vue-solana/vue/useSignAndSendTransactions`
+
 - `@vue-solana/vue/useClientCapability`
+
 - `@vue-solana/vue/usePayer`
+
 - `@vue-solana/vue/useIdentity`
+
 - `@vue-solana/vue/usePlanTransaction`
+
 - `@vue-solana/vue/usePlanTransactions`
+
 - `@vue-solana/vue/useSendTransaction`
+
 - `@vue-solana/vue/useSendTransactions`
 
 Other direct subpaths:
 
 - `@vue-solana/vue/swr`
+
 - `@vue-solana/vue/kit`
+
 - `@vue-solana/vue/buffer-polyfill`
 
 ## Caveats
 
 - Wallet and RPC operations require the plugin-provided client context. Composables are SSR-safe, but real wallet work should run after hydration or in user actions.
+
 - Public Solana RPC endpoints are useful for development, but production apps should use dedicated RPC infrastructure.
+
 - Broad `useProgramAccounts()` scans can be expensive or blocked on public RPC nodes. Prefer narrow filters and `dataSlice`.
+
 - Use `mainnet` for Solana mainnet. This is Solana's official mainnet cluster name; the legacy `mainnet-beta` spelling is still accepted and redirects to the same endpoint.
+
 - v2.0.0 removed `@solana/web3-compat` and the `web3` subpaths. Build transaction messages with `@vue-solana/vue/kit` and pass raw `Uint8Array` wire bytes to wallet flows. See the [Kit Migration guide](https://vue-solana-docs.vercel.app/guides/kit-migration) for migrating from v1.
+
 - Desktop native app wallets are planned but not implemented yet.
 
 ## Status
