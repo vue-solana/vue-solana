@@ -109,6 +109,7 @@ const sections = computed(() => [
   { id: "balances", label: t("demo.sections.balances.title") },
   { id: "wallets", label: t("demo.sections.wallets.title") },
   { id: "signing", label: t("demo.sections.signing.title") },
+  { id: "pay", label: t("demo.sections.pay.title") },
   { id: "live", label: t("demo.sections.live.title") },
 ]);
 </script>
@@ -274,6 +275,18 @@ const sections = computed(() => [
           @send-single="runClientSend"
           @send-batch="runClientSendBatch"
         />
+      </DemoSection>
+
+      <DemoSection
+        id="pay"
+        data-demo-section
+        :eyebrow="t('demo.sections.pay.eyebrow')"
+        :title="t('demo.sections.pay.title')"
+        :description="t('demo.sections.pay.description')"
+      >
+        <DemoPayRequestPanel />
+
+        <DemoPayScannerPanel />
       </DemoSection>
 
       <DemoSection
