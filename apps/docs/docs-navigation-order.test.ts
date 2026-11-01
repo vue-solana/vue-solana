@@ -17,7 +17,7 @@ import { docsNavSections } from "./app/utils/docsNavigation";
  */
 
 const CONTENT_DIR = join(dirname(fileURLToPath(import.meta.url)), "content");
-const LOCALE_CODES = ["es", "ko", "zh"];
+const LOCALE_CODES = ["de", "es", "ko", "zh"];
 
 type PageOrder = { route: string; order: number | null };
 

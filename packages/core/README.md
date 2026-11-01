@@ -12,7 +12,9 @@ Framework-agnostic Solana primitives for Vue Solana libraries and apps that want
 This package is part of the Vue Solana family. Choose based on your app framework:
 
 - [`@vue-solana/core`](https://www.npmjs.com/package/@vue-solana/core) — framework-agnostic Solana primitives: Kit RPC client helpers, wallet types, Android MWA registration, iOS browser wallet helpers, message signing, token account reads, and transaction helpers. **Use this directly** when you want shared RPC/wallet/transaction helpers without installing a Vue plugin (non-Vue apps, server/relayer code, or your own framework integration).
+
 - [`@vue-solana/vue`](https://www.npmjs.com/package/@vue-solana/vue) — Vue 3 plugin plus composables for RPC, account, balance, wallet, message signing, live data, and transactions. **Use this** in plain Vue 3 apps (Vite, etc.).
+
 - [`@vue-solana/nuxt`](https://www.npmjs.com/package/@vue-solana/nuxt) — Nuxt module that installs the Vue plugin and auto-imports the composables. **Use this** in Nuxt 3/4 apps.
 
 This package (`@vue-solana/core`) is the foundation the other two build on; most apps should install `@vue-solana/vue` or `@vue-solana/nuxt` rather than this package directly.
@@ -24,29 +26,45 @@ Use this package directly when you want Kit RPC client helpers, shared wallet ty
 Official Solana docs:
 
 - [Solana Documentation](https://solana.com/docs)
+
 - [Solana RPC Methods](https://solana.com/docs/rpc)
+
 - [Solana Clusters](https://solana.com/docs/references/clusters)
 
 Full Vue Solana docs:
 
 - [`@vue-solana/core`](https://vue-solana-docs.vercel.app/packages/core)
+
 - [Live demo](https://vue-solana-docs.vercel.app/demo)
+
 - [Getting Started](https://vue-solana-docs.vercel.app/getting-started)
+
 - [Agent Skill](https://vue-solana-docs.vercel.app/agent-skill)
+
 - [Troubleshooting](https://vue-solana-docs.vercel.app/troubleshooting)
 
 ## Features
 
 - Cluster-aware RPC helpers with HTTP and WebSocket endpoint defaults.
+
 - A Kit `client` with lazy `rpc` and `rpcSubscriptions` plus the official transaction planner and RPC plan-sending executor through `createSolanaClient()` / `createSolanaContext()`.
+
 - Shared `SolanaConfig`, `SolanaContext`, and `SolanaWallet` types for framework integrations.
+
 - Wallet capability assertions for connection, message signing, and transaction signing flows.
+
 - Browser Wallet Standard adaptation primitives.
+
 - Android Mobile Wallet Adapter registration helpers.
+
 - iOS browser wallet link helpers for supported wallets.
+
 - Transaction submission and confirmation helpers.
+
 - SPL token account reads through Kit RPC `jsonParsed`.
+
 - Solana Pay transfer request URL encoding and parsing, QR rendering, and reference-based settlement confirmation, implemented directly on Kit.
+
 - A framework-agnostic action state machine (`createSolanaActionStore`) for async Solana work with per-attempt `AbortSignal` handling.
 
 ## Compatibility
@@ -154,23 +172,41 @@ https://faucet.solana.com
 Direct subpaths:
 
 - `@vue-solana/core/action`
+
 - `@vue-solana/core/types`
+
 - `@vue-solana/core/address`
+
 - `@vue-solana/core/buffer-polyfill`
+
 - `@vue-solana/core/clusters`
+
 - `@vue-solana/core/errors`
+
 - `@vue-solana/core/ios-wallet`
+
 - `@vue-solana/core/kit`
+
 - `@vue-solana/core/mobile-wallet`
+
 - `@vue-solana/core/mobile-wallet-support`
+
 - `@vue-solana/core/rpc`
+
 - `@vue-solana/core/token-accounts`
+
 - `@vue-solana/core/solana-pay`
+
 - `@vue-solana/core/solana-pay-confirmation`
+
 - `@vue-solana/core/solana-pay-status`
+
 - `@vue-solana/core/timeout`
+
 - `@vue-solana/core/transaction`
+
 - `@vue-solana/core/wallet`
+
 - `@vue-solana/core/wallet-standard`
 
 | API                                                                                    | Description                                                                                                                                                                                                             |
@@ -240,9 +276,13 @@ The Wallet Standard adapter verifies the signature a wallet returns from `signMe
 Current wallet support:
 
 - Browser extension wallets through Wallet Standard packages.
+
 - Android native mobile wallets through `@solana-mobile/wallet-standard-mobile` on Android Chrome and Chrome PWAs.
+
 - iOS browser wallets for Phantom, Solflare, and Backpack through wallet-specific universal links.
+
 - Message signing when the active wallet exposes `signMessage`.
+
 - Manual/custom wallet objects that implement `SolanaWallet`.
 
 Planned but not supported yet:
@@ -254,7 +294,9 @@ Planned but not supported yet:
 For complete runnable Vue and Nuxt examples that use this package through the framework integrations, see:
 
 - [Live demo](https://vue-solana-docs.vercel.app/demo)
+
 - <a href="https://vue-solana-docs.vercel.app/examples/vue-vite" target="_blank" rel="noopener noreferrer"><code>examples/vue-vite</code></a>
+
 - <a href="https://vue-solana-docs.vercel.app/examples/nuxt" target="_blank" rel="noopener noreferrer"><code>examples/nuxt</code></a>
 
 ## Bundle size and lean imports
@@ -264,11 +306,17 @@ The root barrel (`@vue-solana/core`) intentionally re-exports the full `@solana/
 Size-sensitive entries can avoid pulling the whole mirror by importing the narrow subpaths instead of the root:
 
 - `@vue-solana/core/address`
+
 - `@vue-solana/core/errors`
+
 - `@vue-solana/core/timeout`
+
 - `@vue-solana/core/clusters`
+
 - `@vue-solana/core/rpc`
+
 - `@vue-solana/core/types`
+
 - `@vue-solana/core/kit` (when you explicitly want the Kit surface)
 
 Avoid importing `@vue-solana/core/ios-wallet` or `@vue-solana/core/mobile-wallet` from lean code paths: they own `tweetnacl` and the Mobile Wallet Adapter protocol graph respectively. The `@vue-solana/core/mobile-wallet-support` subpath ships only the Android-support gate used to decide whether to lazy-load the MWA module.
@@ -288,9 +336,13 @@ Docs: [Vue Solana Agent Skill](https://vue-solana-docs.vercel.app/agent-skill)
 ## Caveats
 
 - Public Solana RPC endpoints are useful for development, but production apps should use dedicated RPC infrastructure.
+
 - Use `mainnet` for Solana mainnet. This is Solana's official mainnet cluster name; the legacy `mainnet-beta` spelling is still accepted and redirects to the same endpoint.
+
 - Transactions are raw wire bytes. Build transaction messages with `@vue-solana/core/kit` (`createTransactionMessage()`, `compileTransaction()`) and serialize them before passing them to wallet flows.
+
 - v2.0.0 removed `@solana/web3-compat` and the `web3` subpaths. See the [Kit Migration guide](https://vue-solana-docs.vercel.app/guides/kit-migration) for migrating from v1.
+
 - Desktop native app wallets are planned but not implemented yet.
 
 ## Status

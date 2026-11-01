@@ -18,7 +18,7 @@ function contentUrls(dir: string): string[] {
   );
 }
 
-const sitemapUrls = ["", "es", "ko", "zh"].flatMap((locale) =>
+const sitemapUrls = ["", "de", "es", "ko", "zh"].flatMap((locale) =>
   contentUrls(locale ? `locales/${locale}` : "").map((route) =>
     locale ? (route === "/" ? `/${locale}` : `/${locale}${route}`) : route,
   ),
@@ -97,6 +97,7 @@ export default defineNuxtConfig({
     vueI18n: "./i18n.config.ts",
     locales: [
       { code: "en", name: "English", language: "en-US" },
+      { code: "de", name: "Deutsch", language: "de-DE" },
       { code: "es", name: "Español", language: "es-ES" },
       { code: "ko", name: "한국어", language: "ko-KR" },
       { code: "zh", name: "中文", language: "zh-CN" },
@@ -110,12 +111,14 @@ export default defineNuxtConfig({
       },
     },
     "/demo": { ssr: false, prerender: false },
+    "/de/demo": { ssr: false, prerender: false },
     "/es/demo": { ssr: false, prerender: false },
     "/ko/demo": { ssr: false, prerender: false },
     "/zh/demo": { ssr: false, prerender: false },
     // Not in the sitemap (they are redirects, so `contentUrls` never derives
     // them) but they are still live inbound links from the pre-2.4 docs.
     "/concepts/wallets": { redirect: "/guides/wallets" },
+    "/de/concepts/wallets": { redirect: "/de/guides/wallets" },
     "/es/concepts/wallets": { redirect: "/es/guides/wallets" },
     "/ko/concepts/wallets": { redirect: "/ko/guides/wallets" },
     "/zh/concepts/wallets": { redirect: "/zh/guides/wallets" },

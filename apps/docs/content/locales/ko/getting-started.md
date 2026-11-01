@@ -399,6 +399,26 @@ Signature가 반환된 뒤 confirmation이 timeout되면 즉시 다시 제출하
 
 client-send demo는 default client에 설치된 official `rpcTransactionPlanSendingExecutor()`를 사용합니다. `signTransaction`을 지원하는 wallet을 연결하고 예제에 필요한 demo payer를 funding한 뒤 `useSendTransaction()` 또는 `useSendTransactions()`를 사용하세요. executor는 transaction을 제출하고 `confirmed` commitment을 기다린 뒤 composable이 `sent`를 표시하므로 별도 send popup이 없습니다. Nuxt에서는 demo payer를 `nuxt.config.ts`가 아니라 client-only plugin에서 만들고 `clientPlugin: false`를 설정해 module이 자체 plugin을 건너뛰게 하세요.
 
+## Solana Pay로 결제 받기
+
+Vue Solana는 [Solana Pay](https://docs.solanapay.com/)를 기본적으로 지원합니다. 전송 요청 URL을 생성하고, 지갑에서 스캔할 QR 코드를 렌더링하며, 참조를 통해 결제 정산을 확인할 수 있습니다.
+
+```ts
+import { address } from "@vue-solana/vue/kit";
+import { encodeURL } from "@vue-solana/core/solana-pay";
+import { createSolanaPayReference } from "@vue-solana/core/solana-pay-confirmation";
+
+const reference = await createSolanaPayReference();
+const url = encodeURL({
+  recipient: address("PASTE_A_SOLANA_ADDRESS"),
+  amount: 100_000_000n,
+  reference,
+  label: "내 스토어",
+});
+```
+
+Vue에서는 `useSolanaPay()`, `useSolanaQrCode()`, `useSolanaQrScanner()`를 사용하여 요청을 생성하고, QR 코드를 렌더링하며, 결제 요청을 스캔하고 결제를 확인할 수 있습니다. 자세한 내용은 [Solana Pay 가이드](/ko/guides/solana-pay)를 참조하세요.
+
 ## 최종 검증
 
 앱 flow에 의존하기 전에 devnet에서 다음 동작을 확인하세요.

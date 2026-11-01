@@ -399,6 +399,26 @@ function explorerUrl(signature: string, cluster: string) {
 
 client-send 演示使用默认 client 安装的官方 `rpcTransactionPlanSendingExecutor()`。连接支持 `signTransaction` 的钱包，在示例需要时为 demo payer 充值，然后使用 `useSendTransaction()` 或 `useSendTransactions()`。executor 提交交易并等待 `confirmed` commitment，随后 composable 才显示 `sent`；没有单独的发送弹窗。在 Nuxt 中，请在 client-only plugin 中创建 demo payer，而不是放在 `nuxt.config.ts`，并设置 `clientPlugin: false` 使模块跳过自己的 plugin。
 
+## 使用 Solana Pay 接受付款
+
+Vue Solana 原生支持 [Solana Pay](https://docs.solanapay.com/)。你可以构建转账请求 URL、渲染二维码供钱包扫描，并通过引用验证结算。
+
+```ts
+import { address } from "@vue-solana/vue/kit";
+import { encodeURL } from "@vue-solana/core/solana-pay";
+import { createSolanaPayReference } from "@vue-solana/core/solana-pay-confirmation";
+
+const reference = await createSolanaPayReference();
+const url = encodeURL({
+  recipient: address("PASTE_A_SOLANA_ADDRESS"),
+  amount: 100_000_000n,
+  reference,
+  label: "我的商店",
+});
+```
+
+在 Vue 中，使用 `useSolanaPay()`、`useSolanaQrCode()` 和 `useSolanaQrScanner()` 来创建请求、渲染二维码、扫描付款请求并确认付款。详见 [Solana Pay 指南](/zh/guides/solana-pay)。
+
 ## 最终验证
 
 在依赖某个应用流程前，在 devnet 上验证这些行为：

@@ -399,6 +399,26 @@ Si la confirmación agota el tiempo después de devolver una firma, no reenvies 
 
 El demo de envio del cliente usa el `rpcTransactionPlanSendingExecutor()` oficial instalado por el cliente por defecto. Conecta una wallet compatible con `signTransaction`, fondea el payer de demo cuando el ejemplo lo requiera y usa `useSendTransaction()` o `useSendTransactions()`. El executor envia la transacción y espera `confirmed` antes de que el composable muestre `sent`; no hay un popup de envio separado. En Nuxt, crea cualquier payer de demo en un plugin solo de cliente, no en `nuxt.config.ts`, y define `clientPlugin: false` para que el modulo omita su propio plugin.
 
+## Aceptar pagos con Solana Pay
+
+Vue Solana tiene soporte integrado para [Solana Pay](https://docs.solanapay.com/). Puedes crear URLs de solicitud de transferencia, renderizar códigos QR para que las wallets los escaneen y verificar la liquidación por referencia.
+
+```ts
+import { address } from "@vue-solana/vue/kit";
+import { encodeURL } from "@vue-solana/core/solana-pay";
+import { createSolanaPayReference } from "@vue-solana/core/solana-pay-confirmation";
+
+const reference = await createSolanaPayReference();
+const url = encodeURL({
+  recipient: address("PASTE_A_SOLANA_ADDRESS"),
+  amount: 100_000_000n,
+  reference,
+  label: "Mi tienda",
+});
+```
+
+En Vue, usa `useSolanaPay()`, `useSolanaQrCode()` y `useSolanaQrScanner()` para crear solicitudes, renderizar códigos QR, escanear solicitudes de pago y confirmar pagos. Consulta la [guía de Solana Pay](/es/guides/solana-pay) para más detalles.
+
 ## Verificación final
 
 Antes de confiar en un flujo de app, verifica estos comportamientos en devnet:

@@ -1,0 +1,324 @@
+export default {
+  navigation: {
+    primary: {
+      getStarted: "Erste Schritte",
+      concepts: "Konzepte",
+      guides: "Anleitungen",
+      demo: "Demo",
+      roadmap: "Roadmap",
+    },
+    sidebar: {
+      ariaLabel: "Dokumentationsnavigation",
+      start: "Start",
+      overview: "Übersicht",
+      gettingStarted: "Erste Schritte",
+      agentSkill: "Agent-Skill",
+      troubleshooting: "Fehlerbehebung",
+      concepts: "Konzepte",
+      solanaForVueDevelopers: "Solana für Vue-Entwickler",
+      clusters: "Cluster",
+      guides: "Anleitungen",
+      migration: "Migrationsleitfaden",
+      rpcAndClusters: "RPC und Cluster",
+      wallets: "Wallets",
+      accountReads: "Kontolesevorgänge",
+      transactions: "Transaktionen",
+      solanaPay: "Solana Pay",
+      messageSigning: "Nachrichtensignierung",
+      errors: "Fehler",
+      packages: "Pakete",
+      corePackage: "{'@'}vue-solana/core",
+      vuePackage: "{'@'}vue-solana/vue",
+      nuxtPackage: "{'@'}vue-solana/nuxt",
+      examples: "Beispiele",
+      liveDemo: "Live-Demo",
+      vueVite: "Vue Vite",
+      nuxt: "Nuxt",
+      roadmap: "Roadmap",
+      roadmapPage: "Roadmap",
+      developers: "Entwickler",
+      project: "Projekt",
+      about: "Über",
+      contact: "Kontakt",
+      privacy: "Datenschutz",
+    },
+    external: {
+      ariaLabel: "Externe Links",
+      github: "GitHub",
+      npm: "npm",
+    },
+    language: {
+      label: "Sprache",
+      change: "Sprache ändern, aktuelle Sprache ist {language}",
+    },
+  },
+  search: {
+    placeholder: "Dokumentation durchsuchen...",
+  },
+  common: {
+    no: "Nein",
+    yes: "Ja",
+  },
+  footer: {
+    releasedUnder: "Veröffentlicht unter der",
+    mitLicense: "MIT-Lizenz.",
+  },
+  demo: {
+    seo: {
+      title: "Live-Demo - Vue Solana",
+      description:
+        "Entdecke Vue-Solana-Composables für Devnet-RPC, Wallet-Erkennung, Nachrichtensignierung und Transaktionen.",
+    },
+    fallback: {
+      noBalance: "Kein Guthaben geladen",
+      noSignature: "Noch keine Signatur",
+      notConnected: "Nicht verbunden",
+      notLoaded: "Noch nicht geladen",
+      none: "Keine",
+    },
+    status: {
+      connected: "verbunden",
+      error: "Fehler",
+      idle: "inaktiv",
+      loading: "lädt",
+      planned: "geplant",
+      planning: "wird geplant",
+      ready: "bereit",
+      running: "läuft",
+      sent: "gesendet",
+      sending: "wird gesendet",
+      signed: "signiert",
+      signing: "wird signiert",
+      success: "Erfolg",
+      waiting: "wartet",
+    },
+    hero: {
+      eyebrow: "Live-Devnet-Demo",
+      title: "Vue Solana in einer echten Nuxt-App",
+      description:
+        "Diese Seite verwendet die neuesten veröffentlichten Vue-Solana-Pakete. Probiere RPC-Lesevorgänge, Guthabenabfragen, Wallet-Standard-Erkennung, Verbinden/Trennen, Nachrichtensignierung, eine kleine echte Devnet-Überweisung, clientseitig gesendete Transaktionen und Devnet-Airdrops aus.",
+      versionsLabel: "Versionen der Vue-Solana-Pakete",
+    },
+    rpc: {
+      title: "Modul- und RPC-Status",
+      checkAgain: "RPC erneut prüfen",
+      labels: {
+        pluginInstalled: "Plugin installiert",
+        cluster: "Cluster",
+        endpoint: "RPC-Endpunkt",
+        wsEndpoint: "WebSocket-Endpunkt",
+        latestBlockhash: "Neuester Blockhash",
+        error: "RPC-Fehler",
+      },
+    },
+    directConnection: {
+      title: "Direkter Kit-Client-Aufruf",
+      description: "Ruft {method} direkt über die RPC des Kit-Clients auf.",
+      load: "Blockhash laden",
+      blockhash: "Blockhash:",
+    },
+    balance: {
+      title: "Guthabenabfrage",
+      publicKey: "Adresse",
+      publicKeyPlaceholder: "Solana-Adresse eingeben",
+      refresh: "Guthaben aktualisieren",
+      lamports: "Lamports:",
+      sol: "SOL:",
+    },
+    wallet: {
+      title: "Wallets",
+      description:
+        "Klicke auf {loadWallets}, um Solana-Wallet-Standard-Browser-Wallets und unterstützte mobile Wallets zu erkennen. Installiere Phantom, Solflare, Backpack oder eine andere Standard-Wallet und stelle sie auf Devnet um.",
+      loadWallets: "Wallets laden",
+      refreshWallets: "Wallets aktualisieren",
+      connect: "Verbinden",
+      disconnect: "Trennen",
+      deselect: "Wallet abwählen",
+      copyAddress: "Adresse kopieren",
+      copyAddressAria: "Wallet-Adresse kopieren",
+      notLoaded: "Die Wallet-Erkennung wurde noch nicht geladen.",
+      noneDetected:
+        "Keine Wallets erkannt. Installiere eine Solana-Wallet-Erweiterung oder nutze eine unterstützte mobile Wallet und aktualisiere anschließend die Wallets.",
+      iconAlt: "{name}-Symbol",
+      labels: {
+        discoveredWallets: "Erkannte Wallets",
+        selectedWallet: "Ausgewählte Wallet",
+        configured: "Wallet konfiguriert",
+        publicKey: "Adresse",
+      },
+      status: {
+        connecting: "wird verbunden",
+        disconnecting: "wird getrennt",
+        connected: "verbunden",
+        notConnected: "nicht verbunden",
+      },
+      toast: {
+        connected: "Wallet verbunden",
+        connectedFallback: "Mit der ausgewählten Wallet verbunden.",
+        connectionFailed: "Wallet-Verbindung fehlgeschlagen",
+        connectionFailedFallback: "Verbindung zur ausgewählten Wallet nicht möglich.",
+        disconnected: "Wallet getrennt",
+        disconnectedFallback: "Von der ausgewählten Wallet getrennt.",
+        disconnectionFailed: "Trennen der Wallet fehlgeschlagen",
+        disconnectionFailedFallback: "Trennen von der ausgewählten Wallet nicht möglich.",
+        copied: "Wallet-Adresse kopiert",
+        copyFailed: "Kopieren fehlgeschlagen",
+        copyFailedFallback: "Wallet-Adresse konnte nicht kopiert werden.",
+      },
+    },
+    mockTransaction: {
+      title: "Generischer Transaktionsstatus",
+      description:
+        "Führt einen Mock-Handler aus, um Lade-, Fehler- und Signaturzustände zu testen.",
+      run: "Mock-Transaktion ausführen",
+      signature: "Signatur:",
+    },
+    messageSigning: {
+      title: "Nachrichtensignierung",
+      description:
+        "Signiert eine beliebige Nachricht mit der verbundenen Wallet. Damit wird der Besitz der Wallet nachgewiesen, ohne eine Transaktion zu senden oder Devnet-Guthaben zu berühren.",
+      walletReady: "Wallet bereit",
+      capability: "Nachrichtensignierung",
+      messageLabel: "Zu signierende Nachricht",
+      messagePlaceholder: "Nachricht eingeben, die die Wallet signieren soll",
+      sign: "Nachricht signieren",
+      signature: "Signatur:",
+      signedMessage: "Signierte Nachricht:",
+      defaultMessage: "Bei Vue Solana auf Devnet anmelden",
+      disabled: {
+        selectWallet: "Wähle zuerst eine erkannte Wallet aus.",
+        connectWallet:
+          "Verbinde die ausgewählte Wallet, um die Nachrichtensignierung zu aktivieren.",
+        unsupported: "Die ausgewählte Wallet unterstützt keine Nachrichtensignierung.",
+        enterMessage: "Gib eine Nachricht zum Signieren ein.",
+      },
+    },
+    tokenAccounts: {
+      title: "SPL-Token-Konten",
+      description:
+        "Lädt die SPL-Token-Konten der verbundenen Wallet und prüft das Guthaben eines bestimmten Tokens anhand der Mint-Adresse. Für die Kontoliste ist eine verbundene Wallet erforderlich.",
+      refresh: "Konten aktualisieren",
+      mintLabel: "Mint-Adresse",
+      mintPlaceholder: "Token-Mint-Adresse eingeben",
+      refreshBalance: "Guthaben prüfen",
+      labels: {
+        accounts: "Token-Konten:",
+        balance: "Guthaben:",
+      },
+    },
+    transfer: {
+      title: "Echte Devnet-Überweisung",
+      description:
+        "Sendet eine echte Überweisung von der verbundenen Wallet und wartet auf die Bestätigung. Nutze Devnet, gib eine Empfängeradresse ein und beginne mit einem kleinen Betrag wie {amount} SOL.",
+      recipient: "Empfängeradresse",
+      recipientPlaceholder: "Empfängeradresse eingeben",
+      amount: "Betrag in SOL",
+      send: "Devnet-Überweisung senden",
+      signature: "Signatur:",
+      explorer: "Explorer:",
+      whenToUse:
+        "Wann verwenden: Wenn der Nutzer zahlt und in seiner Wallet zustimmen muss — persönliche Überweisungen und alle Aktionen, die im Namen eines verbundenen Nutzers ausgeführt werden.",
+      viewTransaction: "Transaktion ansehen",
+      labels: {
+        walletReady: "Wallet bereit",
+        submittedSignature: "Gesendete Signatur",
+        confirmationState: "Bestätigungsstatus",
+      },
+      disabled: {
+        selectWallet: "Wähle zuerst eine erkannte Wallet aus.",
+        connectWallet: "Verbinde die ausgewählte Wallet, um Überweisungen zu aktivieren.",
+        recipient: "Gib eine gültige Solana-Empfängeradresse ein.",
+        amount: "Gib einen Betrag größer als 0 SOL ein.",
+      },
+    },
+    sections: {
+      connection: {
+        eyebrow: "Devnet-RPC",
+        title: "Verbindung & RPC",
+        description: "Plugin-Status, Cluster-Details und ein direkter Kit-Client-Aufruf.",
+      },
+      balances: {
+        eyebrow: "Guthaben",
+        title: "Guthaben & Token",
+        description: "Lamport- und SOL-Guthaben sowie SPL-Token-Konten.",
+      },
+      wallets: {
+        eyebrow: "Wallet-Standard",
+        title: "Wallets",
+        description: "Solana-Wallet-Standard-Wallets erkennen, auswählen, verbinden und verwalten.",
+      },
+      signing: {
+        eyebrow: "Signierung",
+        title: "Signierung & Transaktionen",
+        description:
+          "Nachrichtensignierung, Sign In With Solana, Überweisungen, clientseitig gesendete Transaktionen und generischer Transaktionsstatus.",
+      },
+      live: {
+        eyebrow: "Kit-reaktiv",
+        title: "Live-Daten",
+        description:
+          "Kit-reaktive Composables: einmalige Anfragen, WebSocket-Subscriptions, slot-verfolgte Daten und SWR-Caching.",
+      },
+    },
+    liveData: {
+      trackedAddressEyebrow: "Verfolgtes Konto",
+      trackedAddress: "Verfolgte Adresse",
+      noData: "Noch keine Daten",
+      request: {
+        title: "useSolanaRequest",
+        description:
+          "Einmalige HTTP-RPC-Anfrage, die bei Änderung ihrer Quelle erneut ausgelöst wird, mit Stale-While-Revalidate.",
+      },
+      subscription: {
+        title: "useSolanaSubscription",
+        description: "Live-Slot-Benachrichtigungen über die WebSocket-RPC.",
+      },
+      tracked: {
+        title: "useSolanaTrackedData",
+        description: "Abruf plus Subscription, zwischen beiden Quellen slot-dedupliziert.",
+      },
+      swr: {
+        title: "useSolanaRequestSwr",
+        description:
+          "Cache-key-basierte Anfrage mit Stale-While-Revalidate. Wenn die Karte ausgeblendet und wieder eingeblendet wird, wird sie neu eingebunden: zwischengespeicherte Daten erscheinen sofort, während die Anfrage erneut validiert wird.",
+        toggleHide: "Karte ausblenden",
+        toggleShow: "Karte einblenden",
+        hidden: "Karte ausgeblendet",
+      },
+    },
+    signIn: {
+      title: "Sign In With Solana",
+      description:
+        "Löst die Sign-In-With-Solana-Funktion der Wallet aus. Das Ergebnis muss auf einem Server verifiziert werden, bevor die Identität als vertrauenswürdig gilt.",
+      button: "Mit Wallet anmelden",
+      signingIn: "Anmeldung läuft...",
+      notSignedIn: "Nicht angemeldet",
+      signedInAs: "Angemeldet als {address}",
+    },
+    clientSend: {
+      title: "Über den Client senden",
+      description:
+        "Plant, signiert und übermittelt SPL-Memo-Transaktionen über die Transaktions-Sendefunktion des Clients — ohne Popup und ohne Wallet. Der eigene Payer-Signer des Clients ist der Gebührenzahler, die App signiert und zahlt also selbst.",
+      payer: "Gebührenzahler (Client-Signer)",
+      noPayer: "nicht verfügbar",
+      payerHint:
+        "Der Client-Signer lädt noch. Er startet außerdem mit einem Guthaben von null — nutze die Airdrop-Karte unten, um ihn vor dem Senden aufzuladen.",
+      single: "useSolanaSendTransaction",
+      batch: "useSolanaSendTransactions",
+      sendSingle: "1 über Client senden",
+      sendBatch: "2 über Client senden",
+      noSend: "Noch kein Client-Versand",
+      whenToUse:
+        "Wann verwenden: Wenn deine App die Signaturschlüssel besitzt — Relayer-, Server- oder Backend-Signaturflüsse, bei denen der Client ohne Wallet signiert und zahlt.",
+    },
+    airdrop: {
+      title: "SOL-Airdrop",
+      description:
+        "Fordert einen Devnet-Airdrop an den Payer-Signer des Clients über die Airdrop-Funktion des Clients an. Devnet-Faucets sind ratenbegrenzt, Fehler hier sind daher meist vorübergehend.",
+      request: "1 SOL per Airdrop anfordern",
+      connectHint: "Warte auf den Client-Signer.",
+      signature: "Signatur: {signature}",
+      noSignature: "Noch kein Airdrop",
+    },
+  },
+};
