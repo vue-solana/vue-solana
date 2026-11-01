@@ -1,5 +1,13 @@
 # @vue-solana/vue
 
+## 4.1.1
+
+### Patch Changes
+
+- 5bf0b8d: Improve README spacing in package docs
+- Updated dependencies [5bf0b8d]
+  - @vue-solana/core@4.1.1
+
 ## 4.1.0
 
 ### Minor Changes
