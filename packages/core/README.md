@@ -76,6 +76,8 @@ Full Vue Solana docs:
 | Solana client | `@solana/kit@^8.6.0` (and `@solana/kit-plugin-rpc`)               |
 | Clusters      | `mainnet` (alias `mainnet-beta`), `devnet`, `testnet`, `localnet` |
 
+<br>
+
 Since v3.0.0 this package is ESM only: there is no `require` export condition and no top-level `main`, so `require("@vue-solana/core")` fails with `No "exports" main defined`. Pin to `@vue-solana/core@^2` if you must stay on CommonJS.
 
 This package no longer depends on `@solana/web3-compat`. It depends on `@solana/kit` and `@solana/kit-plugin-rpc`, so apps do not need to install either directly for normal Vue Solana usage.
@@ -150,6 +152,8 @@ const config: SolanaConfig = {
 | `autoConnect`    | `boolean`                                                            | `false`                       | Consumed by Vue/Nuxt integrations to reconnect a previously selected discovered wallet. |
 | `payer`          | `TransactionSigner`                                                  | None                          | Kit client fee payer and signer for client-sent transactions.                           |
 | `payerSecretKey` | `string`                                                             | None                          | Base64 64-byte Ed25519 keypair, secret key first, resolved at client creation.          |
+
+<br>
 
 Supported clusters are `mainnet` (legacy alias `mainnet-beta`), `testnet`, `devnet`, and `localnet`. If `endpoint` is omitted, the package uses the public Solana RPC endpoint for the selected cluster. If `wsEndpoint` is omitted, it is derived from the RPC endpoint.
 
@@ -247,6 +251,8 @@ Direct subpaths:
 | `withSolanaTimeout(promise, timeoutMs, options?)`                                      | Solana-specific timeout wrapper with abort and error-code support.                                                                                                                                                      |
 | `normalizeSolanaError(error)`                                                          | Normalizes an unknown error into a `SolanaError`.                                                                                                                                                                       |
 | `isSolanaActionAborted(error)`                                                         | Detects abort errors from superseded action dispatches.                                                                                                                                                                 |
+
+<br>
 
 The Solana Pay request helpers live in `@vue-solana/core/solana-pay`; `createSolanaPayReference()` and `verifySolanaPayPayment()` live in `@vue-solana/core/solana-pay-confirmation`, and `getSolanaPayPaymentStatus()` lives in `@vue-solana/core/solana-pay-status`.
 

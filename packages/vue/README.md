@@ -78,6 +78,8 @@ New to Solana? Start with the official docs and the project concepts guide:
 | Solana client | Provided through `@vue-solana/core`                               |
 | Clusters      | `mainnet` (alias `mainnet-beta`), `devnet`, `testnet`, `localnet` |
 
+<br>
+
 ## Install
 
 ```sh
@@ -149,6 +151,8 @@ Supported clusters are `mainnet` (legacy alias `mainnet-beta`), `devnet`, `testn
 | `wallet`         | `SolanaWallet`                                                       | Disabled                             | Custom wallet adapter, useful for tests or custom integrations.                               |
 | `mobileWallet`   | `MobileWalletOptions \| false`                                       | Enabled on supported Android clients | Configures or disables Android Mobile Wallet Adapter registration.                            |
 | `iosWallet`      | `iOSWalletOptions \| false`                                          | Enabled on iOS browsers              | Configures or disables iOS browser wallet universal links (Phantom, Solflare, Backpack).      |
+
+<br>
 
 The root export remains supported. For composables, prefer direct subpath imports in new code so bundlers can avoid evaluating unrelated package entry code:
 
@@ -403,6 +407,8 @@ await execute(transaction);
 | `minContextSlot`      | Slot at which any blockhash or nonce in the transaction is known to exist; sending before it can be rejected. |
 | `preflightCommitment` | Commitment used for preflight simulation.                                                                     |
 
+<br>
+
 Return shapes:
 
 - `useSignMessage().execute(bytes)` resolves to `{ signedMessage, signature }`, both `Uint8Array`.
@@ -430,6 +436,8 @@ Configure a direct client with `payer` or `payerSecretKey`. `payerSecretKey` is 
 | Popup                 | None                                                         | Wallet approval popup / mobile handoff    |
 | Input                 | Instructions, instruction plans, transaction messages, plans | Raw transaction bytes (`Uint8Array`)      |
 | Multiple transactions | Yes, as a batch in one call                                  | Yes, one or more wallet requests          |
+
+<br>
 
 Use the client flow for automated or server-backed signing (airdrop faucet, cron jobs, relayer fees paid by your keypair), and the wallet flow when the end user must own and approve each transaction.
 
@@ -681,6 +689,8 @@ Docs: [Vue Solana Agent Skill](https://vue-solana-docs.vercel.app/agent-skill)
 | `usePlanTransactions()`                                                                    | Plans a batch of transaction messages from instruction inputs.                                                                           |
 | `useSendTransaction()`                                                                     | Uses the official client transaction-sending capability to plan, sign, submit, and wait for `confirmed` commitment (no wallet).          |
 | `useSendTransactions()`                                                                    | Sends a batch through the same official capability, waiting for `confirmed` commitment.                                                  |
+
+<br>
 
 Direct composable subpaths:
 
