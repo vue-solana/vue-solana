@@ -64,6 +64,8 @@ New to Solana? Start with the official docs and the project concepts guide:
 | Solana client | Provided through `@vue-solana/core`                               |
 | Clusters      | `mainnet` (alias `mainnet-beta`), `devnet`, `testnet`, `localnet` |
 
+<br>
+
 ## Install
 
 ```sh
@@ -116,6 +118,8 @@ Nuxt module options are stored in public runtime config, so they must be JSON-se
 | `mobileWallet` | JSON-serializable mobile wallet options or `false`                   | Enabled on supported Android clients | Configures or disables Android Mobile Wallet Adapter registration.                            |
 | `iosWallet`    | JSON-serializable iOS wallet options or `false`                      | Enabled on iOS browsers              | Configures or disables iOS browser wallet universal links (Phantom, Solflare, Backpack).      |
 | `clientPlugin` | `boolean`                                                            | `true`                               | Set to `false` to skip the module's runtime plugin and install `createSolanaPlugin` yourself. |
+
+<br>
 
 For development, use `devnet` and request free test SOL from the official faucet:
 
@@ -249,6 +253,8 @@ The module auto-imports these composables from direct `@vue-solana/vue/*` subpat
 | `useSolanaPlanTransactions()`        | Plans a batch of transaction messages from instruction inputs.                                                                               |
 | `useSolanaSendTransaction()`         | Plans, signs, submits, and confirms one transaction through the client.                                                                      |
 | `useSolanaSendTransactions()`        | Sends a batch of transactions (parallel or sequential) through the client.                                                                   |
+
+<br>
 
 The default client built by the module composes `solanaRpc()` followed by `rpcAirdrop()` when no `commitment` is configured (a configured `commitment` builds the same stack explicitly so it reaches the RPC layer); `solanaRpc()` installs `rpcTransactionPlanner()`, `rpcTransactionPlanSigningExecutor()`, and `rpcTransactionPlanSendingExecutor()` itself. The old custom fallback sender is not used. `useSolanaSendTransaction()` and `useSolanaSendTransactions()` therefore use the official client-sending capability, but the module does not configure a payer because `payer` and `payerSecretKey` are omitted from `ModuleOptions`. Their `sent` status is reached after the official executor completes its send-and-confirm operation at `confirmed` commitment.
 

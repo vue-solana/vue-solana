@@ -137,7 +137,7 @@ The code switched from `@solana/web3.js` to `@solana/web3-compat` in v1, then to
 
 Current package dependency:
 
-- `@solana/kit@^8.5.0` (with `@solana/kit-plugin-rpc` in `packages/core`). The `pnpm-workspace.yaml` `overrides` entry must always equal this range; two Kit copies mean two `SolanaError` classes, so `isSolanaError()` from one rejects errors thrown by the other.
+- `@solana/kit@^8.6.0` (with `@solana/kit-plugin-rpc@^0.19.0` in `packages/core`, whose `^8.5.0` peer range accepts 8.6.0). The `pnpm-workspace.yaml` `overrides` entry must always equal this range; two Kit copies mean two `SolanaError` classes, so `isSolanaError()` from one rejects errors thrown by the other.
 
 Kit surface rule: the `kit` subpaths of all three packages are a full `export * from "@solana/kit"` mirror, not a curated list. Consumers must never have to add `@solana/kit` to their own `package.json` (pnpm's strict `node_modules` does not even resolve it from `packages/vue`). The only names resolved by hand are the four listed above, and they are resolved in the root barrels only — never inside the `kit` subpaths, which must stay a faithful mirror.
 
