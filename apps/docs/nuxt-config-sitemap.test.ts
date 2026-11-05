@@ -21,6 +21,7 @@ describe("docs sitemap", () => {
     expect(config.sitemap.urls).toContain("/guides/wallets");
     expect(config.sitemap.urls).toContain("/de/guides/wallets");
     expect(config.sitemap.urls).toContain("/es/guides/wallets");
+    expect(config.sitemap.urls).toContain("/fr/guides/wallets");
     expect(config.sitemap.urls).toContain("/ko/guides/wallets");
     expect(config.sitemap.urls).toContain("/zh/guides/wallets");
   });
@@ -39,7 +40,7 @@ describe("docs sitemap", () => {
   it("keeps the pre-2.4 /concepts/wallets redirects for every locale", () => {
     // Redirects are never in the sitemap (no content file backs them), so this
     // has to be asserted separately or the old inbound URLs 404.
-    for (const locale of ["", "/de", "/es", "/ko", "/zh"]) {
+    for (const locale of ["", "/de", "/es", "/fr", "/ko", "/zh"]) {
       expect(config.routeRules[`${locale}/concepts/wallets`]?.redirect).toBe(
         `${locale}/guides/wallets`,
       );
