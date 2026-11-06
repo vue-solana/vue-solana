@@ -201,6 +201,7 @@ Notes Android :
 - Vue Solana adapte les wallets MWA vers la même interface `SolanaWallet` que les wallets d'extension.
 - Le package mobile wallet gère l'interface de repli pour wallet non installé via son gestionnaire wallet-not-found par défaut.
 - Les navigateurs peuvent afficher une invite Local Network Access unique avant que MWA puisse se connecter à une application wallet installée.
+- L'identité d'application MWA par défaut est nommée d'après `<meta name="application-name">`, puis `og:site_name`, puis l'hôte, jamais d'après le titre de la page : les wallets lient l'autorisation à l'identité, elle doit donc rester identique sur chaque page et dans chaque langue. Définissez `mobileWallet.appIdentity` pour la fixer explicitement.
 - Pour l'envoi de transactions Android MWA, Vue Solana demande au wallet mobile de signer, puis soumet la transaction signée via la connexion RPC de l'application lorsque le wallet prend en charge `signTransaction`. Cela garde la signature retournée sous le contrôle de l'application et évite un cas limite du passage de relais mobile où le wallet envoie correctement mais la page du navigateur ne reçoit pas la réponse du wallet adapter.
 
 Notes iOS :

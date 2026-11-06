@@ -109,6 +109,14 @@ export function unregisterSolanaMobileWallet(): void {
   setSolanaMobileWalletAuthorizationStore(undefined);
 }
 
+/**
+ * The identity MWA sends with every `authorize`, including the re-authorization
+ * that precedes each signing request. Wallets bind the auth token to it, so it
+ * must not change between page loads: `document.title` did (per route, per
+ * locale, and empty on a client-only route at registration time), and a session
+ * restored under one title was then re-authorized under another, which Phantom
+ * answered by opening without a prompt. Pass `appIdentity` to pin it explicitly.
+ */
 export function getDefaultMobileWalletAppIdentity(): SolanaMobileWalletAppIdentity {
   if (typeof window === "undefined") {
     return {
@@ -118,12 +126,29 @@ export function getDefaultMobileWalletAppIdentity(): SolanaMobileWalletAppIdenti
   }
 
   return {
-    name: document.title || "Vue Solana App",
+    name: getDocumentAppName(),
     uri: window.location.origin,
     icon: getDocumentIconPath(),
   };
 }
 
+function getDocumentAppName(): string {
+  const name =
+    getMetaContent('meta[name="application-name"]') ??
+    getMetaContent('meta[property="og:site_name"]') ??
+    window.location.hostname;
+
+  return name || "Vue Solana App";
+}
+
+function getMetaContent(selector: string): string | undefined {
+  return document.querySelector<HTMLMetaElement>(selector)?.content.trim() || undefined;
+}
+
+/**
+ * MWA only accepts an icon as a path relative to `uri` or a `data:` URI, so a
+ * cross-origin icon is left out rather than sent as an absolute URL.
+ */
 function getDocumentIconPath(): string | undefined {
   const icon = document.querySelector<HTMLLinkElement>(
     'link[rel="icon"], link[rel="shortcut icon"], link[rel="apple-touch-icon"]',
@@ -133,9 +158,13 @@ function getDocumentIconPath(): string | undefined {
     return undefined;
   }
 
-  if (icon.href.startsWith(window.location.origin)) {
-    return icon.href.slice(window.location.origin.length).replace(/^\//, "");
+  if (icon.href.startsWith("data:")) {
+    return icon.href;
   }
 
-  return icon.href;
+  if (icon.href.startsWith(`${window.location.origin}/`)) {
+    return icon.href.slice(window.location.origin.length + 1);
+  }
+
+  return undefined;
 }

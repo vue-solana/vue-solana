@@ -201,6 +201,7 @@ Hinweise zu Android:
 - Vue Solana adaptiert MWA-Wallets in dasselbe `SolanaWallet`-Interface wie Erweiterungs-Wallets.
 - Das Mobile-Wallet-Paket übernimmt die Fallback-UI für nicht installierte Wallets über seinen Standard-Handler für nicht gefundene Wallets.
 - Browser können vor der MWA-Verbindung zu einer installierten Wallet-App einen einmaligen Prompt für lokalen Netzwerkzugriff anzeigen.
+- Die Standard-App-Identität für MWA wird aus `<meta name="application-name">`, dann `og:site_name`, dann dem Host benannt, nie aus dem Seitentitel: Wallets binden die Autorisierung an die Identität, daher muss sie auf jeder Seite und in jeder Sprache gleich bleiben. Setze `mobileWallet.appIdentity`, um sie explizit festzulegen.
 - Bei Android-MWA-Transaktionsversänden bittet Vue Solana die mobile Wallet zu signieren und übermittelt die signierte Transaktion dann über die RPC-Verbindung der App, wenn die Wallet `signTransaction` unterstützt. So bleibt die zurückgegebene Signatur unter Kontrolle der App, und ein Edge Case der mobilen Übergabe wird vermieden, bei dem die Wallet erfolgreich sendet, die Browserseite aber keine Antwort des Wallet-Adapters erhält.
 
 Hinweise zu iOS:
