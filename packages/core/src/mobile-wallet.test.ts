@@ -114,13 +114,37 @@ describe("mobile wallet registration", () => {
   });
 
   it("uses document metadata for the default app identity", () => {
-    document.head.innerHTML = '<title>Wallet Test</title><link rel="icon" href="/favicon.ico">';
+    document.head.innerHTML =
+      '<title>Wallet Test</title><meta name="application-name" content="Wallet App"><link rel="icon" href="/favicon.ico">';
 
     expect(getDefaultMobileWalletAppIdentity()).toEqual({
-      name: "Wallet Test",
+      name: "Wallet App",
       uri: "http://localhost:3000",
       icon: "favicon.ico",
     });
+  });
+
+  it("never names the app after the page title, which changes per route", () => {
+    document.head.innerHTML =
+      '<title>Some Page</title><meta property="og:site_name" content="Site">';
+
+    expect(getDefaultMobileWalletAppIdentity().name).toBe("Site");
+
+    document.head.innerHTML = "<title>Some Page</title>";
+
+    expect(getDefaultMobileWalletAppIdentity().name).toBe("localhost");
+  });
+
+  it("leaves out a cross-origin icon, which MWA cannot accept", () => {
+    document.head.innerHTML = '<link rel="icon" href="https://cdn.example.com/icon.png">';
+
+    expect(getDefaultMobileWalletAppIdentity().icon).toBeUndefined();
+  });
+
+  it("keeps a data URI icon", () => {
+    document.head.innerHTML = '<link rel="icon" href="data:image/png;base64,AAAA">';
+
+    expect(getDefaultMobileWalletAppIdentity().icon).toBe("data:image/png;base64,AAAA");
   });
 });
 

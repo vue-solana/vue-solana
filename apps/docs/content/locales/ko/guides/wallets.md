@@ -201,6 +201,7 @@ Android 메모:
 - Vue Solana는 MWA wallet을 extension wallet과 같은 `SolanaWallet` interface로 adapt합니다.
 - Mobile wallet package는 기본 wallet-not-found handler를 통해 installed-wallet fallback UI를 처리합니다.
 - MWA가 설치된 wallet app에 연결되기 전에 browser가 1회 Local Network Access prompt를 표시할 수 있습니다.
+- 기본 MWA app identity 이름은 `<meta name="application-name">`, 그다음 `og:site_name`, 그다음 host에서 정해지며 page title은 사용하지 않습니다. wallet은 authorization을 identity에 묶기 때문에 모든 page와 locale에서 같아야 합니다. 명시적으로 고정하려면 `mobileWallet.appIdentity`를 설정하세요.
 - Android MWA transaction send에서는 wallet이 `signTransaction`을 지원할 때 Vue Solana가 mobile wallet에 서명을 요청한 뒤 앱의 RPC connection으로 signed transaction을 제출합니다. 이렇게 하면 반환 signature를 앱이 제어하고, wallet은 성공적으로 전송했지만 browser page가 wallet adapter response를 받지 못하는 mobile handoff edge case를 피할 수 있습니다.
 
 iOS 메모:

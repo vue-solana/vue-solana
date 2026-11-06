@@ -201,6 +201,7 @@ Android 注意事项：
 - Vue Solana 会把 MWA 钱包适配到与扩展钱包相同的 `SolanaWallet` 接口。
 - 移动端钱包包会通过默认 wallet-not-found 处理器处理已安装钱包的回退 UI。
 - 在 MWA 连接到已安装的钱包应用之前，浏览器可能会显示一次性的 Local Network Access 提示。
+- MWA 默认的应用身份名称依次取自 `<meta name="application-name">`、`og:site_name` 和主机名，绝不使用页面标题：钱包会把授权绑定到该身份，因此它在每个页面和语言下都必须保持一致。设置 `mobileWallet.appIdentity` 可显式固定它。
 - 对于 Android MWA 交易发送，当钱包支持 `signTransaction` 时，Vue Solana 会请求移动端钱包签署，然后通过应用的 RPC 连接提交已签名交易。这样可以让返回的签名由应用掌控，并避免一种移动端切换边界情况：钱包已成功发送，但浏览器页面没有收到 wallet adapter 响应。
 
 iOS 注意事项：

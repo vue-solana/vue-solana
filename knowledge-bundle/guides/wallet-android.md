@@ -52,6 +52,8 @@ createApp(App).use(
 - The registration helper is SSR-safe and returns without registering when `window` is unavailable.
 - The mobile wallet package handles installed-wallet fallback UI through its default wallet-not-found handler.
 - Browsers may show a one-time Local Network Access prompt before MWA can connect to an installed wallet app.
+- The default app identity is named from `<meta name="application-name">`, then `og:site_name`, then the host, never `document.title`. Wallets bind the MWA authorization to the identity and re-send it before every signing request, so a title that changes per page or locale made Phantom open with no prompt. Its icon must be a path relative to `uri` or a `data:` URI; a cross-origin icon is left out.
+- Phantom warns "This app's identity could not be verified" for every web dapp using MWA: it verifies identity through Digital Asset Links against a calling Android app, which a browser page does not have. No app-side setting removes it.
 
 ## Wallet Metadata
 
