@@ -22,6 +22,10 @@ export default defineContentConfig({
           prefix: "/fr",
         },
         {
+          include: "locales/ja/**",
+          prefix: "/ja",
+        },
+        {
           include: "locales/ko/**",
           prefix: "/ko",
         },

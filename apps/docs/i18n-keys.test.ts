@@ -6,10 +6,11 @@ import de from "./i18n/locales/de";
 import en from "./i18n/locales/en";
 import es from "./i18n/locales/es";
 import fr from "./i18n/locales/fr";
+import ja from "./i18n/locales/ja";
 import ko from "./i18n/locales/ko";
 import zh from "./i18n/locales/zh";
 
-const LOCALES = { en, de, es, fr, ko, zh } as const;
+const LOCALES = { en, de, es, fr, ja, ko, zh } as const;
 // `new URL(relative, import.meta.url)` is not usable here: happy-dom's `URL`
 // resolves against `location.href` and ignores the base, so it yields
 // `http://localhost:3000/...` and `fileURLToPath` rejects it.
@@ -104,7 +105,7 @@ describe("docs i18n", () => {
   });
 
   // A key added to `en` but not translated ships the English string (or a raw
-  // path) into three locales, and nothing in the build notices.
+  // path) into every other locale, and nothing in the build notices.
   it("keeps the locales at the same key depth", () => {
     const reference = new Set(flatten(en));
 
