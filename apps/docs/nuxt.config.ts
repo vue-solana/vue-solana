@@ -18,7 +18,7 @@ function contentUrls(dir: string): string[] {
   );
 }
 
-const sitemapUrls = ["", "de", "es", "fr", "ko", "zh"].flatMap((locale) =>
+const sitemapUrls = ["", "de", "es", "fr", "ja", "ko", "zh"].flatMap((locale) =>
   contentUrls(locale ? `locales/${locale}` : "").map((route) =>
     locale ? (route === "/" ? `/${locale}` : `/${locale}${route}`) : route,
   ),
@@ -100,6 +100,7 @@ export default defineNuxtConfig({
       { code: "de", name: "Deutsch", language: "de-DE" },
       { code: "es", name: "Español", language: "es-ES" },
       { code: "fr", name: "Français", language: "fr-FR" },
+      { code: "ja", name: "日本語", language: "ja-JP" },
       { code: "ko", name: "한국어", language: "ko-KR" },
       { code: "zh", name: "中文", language: "zh-CN" },
     ],
@@ -115,6 +116,7 @@ export default defineNuxtConfig({
     "/de/demo": { ssr: false, prerender: false },
     "/es/demo": { ssr: false, prerender: false },
     "/fr/demo": { ssr: false, prerender: false },
+    "/ja/demo": { ssr: false, prerender: false },
     "/ko/demo": { ssr: false, prerender: false },
     "/zh/demo": { ssr: false, prerender: false },
     // Not in the sitemap (they are redirects, so `contentUrls` never derives
@@ -123,6 +125,7 @@ export default defineNuxtConfig({
     "/de/concepts/wallets": { redirect: "/de/guides/wallets" },
     "/es/concepts/wallets": { redirect: "/es/guides/wallets" },
     "/fr/concepts/wallets": { redirect: "/fr/guides/wallets" },
+    "/ja/concepts/wallets": { redirect: "/ja/guides/wallets" },
     "/ko/concepts/wallets": { redirect: "/ko/guides/wallets" },
     "/zh/concepts/wallets": { redirect: "/zh/guides/wallets" },
     "/**": {
