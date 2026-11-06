@@ -1,4 +1,4 @@
-# Release candidate helpers.
+# Release candidate helpers, plus `task size` for the bundle size report.
 #
 # Requires go-task (https://taskfile.dev) on PATH: `brew install go-task`.
 # Every task wraps the Changesets + pnpm commands documented in README.md, so
@@ -170,3 +170,8 @@ tasks:
         git add -A packages .changeset
         echo "staged the reset - review with 'git diff --cached' and commit"
       - task: rc:status
+
+  size:
+    desc: Check lean imports and print minified + gzip bundle sizes per entry (needs built packages)
+    cmds:
+      - pnpm size:packages
