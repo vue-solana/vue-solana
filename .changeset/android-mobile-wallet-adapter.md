@@ -1,6 +1,7 @@
 ---
 "@vue-solana/core": patch
 "@vue-solana/vue": patch
+"@vue-solana/nuxt": patch
 ---
 
 Fix the Android Mobile Wallet Adapter (Phantom and other MWA wallets):
