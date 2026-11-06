@@ -68,6 +68,20 @@ describe("iOS wallet adapter", () => {
     expect(sessionStorage.getItem("vue-solana:ios-wallet:pending")).toContain("phantom");
   });
 
+  it("never launches the wallet for a silent connect", async () => {
+    mockIosNavigator();
+    const assign = vi.spyOn(window.location, "assign").mockImplementation(() => {});
+    const [phantom] = getSolanaIosWallets({ redirectUrl: "https://example.com/callback" });
+    const wallet = adaptSolanaIosWallet(phantom!, {
+      redirectUrl: "https://example.com/callback",
+    });
+
+    await expect(wallet.connect({ silent: true })).resolves.toBeUndefined();
+
+    expect(assign).not.toHaveBeenCalled();
+    expect(wallet.connected).toBe(false);
+  });
+
   it("ignores and removes stored sessions with invalid public keys", () => {
     mockIosNavigator();
     sessionStorage.setItem(

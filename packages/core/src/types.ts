@@ -88,6 +88,17 @@ export interface SolanaSignInInput {
   resources?: readonly string[];
 }
 
+export interface SolanaWalletConnectOptions {
+  /**
+   * Restore an authorization the wallet already granted without prompting the
+   * user. When there is none the wallet stays disconnected and `connect()`
+   * resolves without throwing. Used by auto-connect: a prompt (or, for the
+   * Android Mobile Wallet Adapter, an app launch) needs a user gesture that a
+   * page load does not have.
+   */
+  silent?: boolean;
+}
+
 export interface SolanaWallet {
   publicKey: Address | null;
   connected: boolean;
@@ -95,7 +106,7 @@ export interface SolanaWallet {
   disconnecting?: boolean;
   platform?: SolanaWalletInfo["platform"];
   source?: SolanaWalletInfo["source"];
-  connect: () => Promise<void>;
+  connect: (options?: SolanaWalletConnectOptions) => Promise<void>;
   disconnect: () => Promise<void>;
   /**
    * Releases wallet-event subscriptions captured at adapt time (e.g. the

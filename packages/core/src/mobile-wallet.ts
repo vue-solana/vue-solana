@@ -3,7 +3,10 @@ import {
   createDefaultChainSelector,
   createDefaultWalletNotFoundHandler,
   registerMwa,
+  type Authorization,
+  type AuthorizationCache,
 } from "@solana-mobile/wallet-standard-mobile";
+import { setSolanaMobileWalletAuthorizationStore } from "./mobile-wallet-authorization";
 import { isSolanaMobileWalletSupported } from "./mobile-wallet-support";
 import type { SolanaChain } from "./types";
 
@@ -44,17 +47,52 @@ export function registerSolanaMobileWallet(
     return true;
   }
 
+  const authorizationCache = createChainScopedAuthorizationCache(chains);
+
   registerMwa({
     appIdentity,
-    authorizationCache: createDefaultAuthorizationCache(),
+    authorizationCache,
     chains,
     chainSelector: createDefaultChainSelector(),
     remoteHostAuthority: options.remoteHostAuthority,
     onWalletNotFound: createDefaultWalletNotFoundHandler(),
   });
   registeredMobileWalletKeys.add(registrationKey);
+  // Lets a failed MWA sign-in restore the authorization it had to clear.
+  setSolanaMobileWalletAuthorizationStore({
+    get: () => authorizationCache.get(),
+    set: (authorization) => authorizationCache.set(authorization as Authorization),
+  });
 
   return true;
+}
+
+/**
+ * The default MWA authorization cache is a single localStorage entry shared by
+ * every network, and re-authorization reuses the cached `chain`. An app that
+ * moved from devnet to mainnet would otherwise keep signing against the devnet
+ * authorization, so one for a chain this registration does not serve is
+ * dropped and the next request authorizes afresh.
+ */
+export function createChainScopedAuthorizationCache(
+  chains: readonly SolanaChain[],
+): AuthorizationCache {
+  const cache = createDefaultAuthorizationCache();
+
+  return {
+    clear: () => cache.clear(),
+    set: (authorization) => cache.set(authorization),
+    async get() {
+      const authorization = await cache.get();
+
+      if (authorization && !chains.includes(authorization.chain as SolanaChain)) {
+        await cache.clear();
+        return undefined;
+      }
+
+      return authorization;
+    },
+  };
 }
 
 /**
@@ -68,6 +106,7 @@ export function registerSolanaMobileWallet(
  */
 export function unregisterSolanaMobileWallet(): void {
   registeredMobileWalletKeys.clear();
+  setSolanaMobileWalletAuthorizationStore(undefined);
 }
 
 export function getDefaultMobileWalletAppIdentity(): SolanaMobileWalletAppIdentity {

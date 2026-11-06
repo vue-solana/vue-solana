@@ -7,12 +7,20 @@ import {
 } from "@vue-solana/core/ios-wallet";
 import {
   adaptSolanaStandardWallet,
+  type AdaptSolanaWalletOptions,
   disconnectSolanaStandardWallet,
   getRegisteredSolanaWallets,
   getSolanaChain,
 } from "@vue-solana/core/wallet-standard";
 import { withTimeout } from "@vue-solana/core/timeout";
-import type { SolanaCluster, SolanaWallet, SolanaWalletInfo } from "@vue-solana/core/types";
+import { sendSignedTransaction } from "@vue-solana/core/transaction";
+import type {
+  SolanaCluster,
+  SolanaContext,
+  SolanaWallet,
+  SolanaWalletConnectOptions,
+  SolanaWalletInfo,
+} from "@vue-solana/core/types";
 
 /**
  * A disconnect that never settles (the extension was disabled or uninstalled
@@ -23,9 +31,16 @@ const DISCONNECT_TIMEOUT_MS = 2_000;
 
 interface SolanaWalletRegistryOptions {
   cluster: SolanaCluster;
+  client: SolanaContext["client"];
   iosWallet?: false | GetSolanaIosWalletsOptions;
   getWalletInfos: () => readonly SolanaWalletInfo[];
   onWalletChange: () => void;
+  /**
+   * Called after this app's `connect()` / `disconnect()` on any adapter
+   * settles, with the adapter's resulting `connected` state. Wallet-initiated
+   * changes (a `change` event) do not report here.
+   */
+  onConnectionChange?: (walletInfo: SolanaWalletInfo, connected: boolean) => void;
   onError?: (cause: unknown) => void;
 }
 
@@ -41,6 +56,9 @@ export function createSolanaWalletRegistry(options: SolanaWalletRegistryOptions)
   // `options.getWalletInfos()`. Teardown iterates this set, so every
   // adapter's Wallet Standard `change` subscription is released.
   const trackedAdapters = new Set<SolanaWallet>();
+
+  const sendTransaction: AdaptSolanaWalletSendTransaction = (signedTransaction, sendOptions) =>
+    sendSignedTransaction(options.client, signedTransaction, sendOptions);
 
   function trackAdapter(adapter: SolanaWallet): SolanaWallet {
     trackedAdapters.add(adapter);
@@ -59,7 +77,7 @@ export function createSolanaWalletRegistry(options: SolanaWalletRegistryOptions)
         return cachedIosWallet;
       }
 
-      const iosAdapter = makeConnectExclusive(
+      const iosAdapter = decorateAdapter(
         adaptSolanaIosWallet(walletInfo, {
           chain: getSolanaChain(options.cluster),
           cluster: options.cluster,
@@ -80,10 +98,11 @@ export function createSolanaWalletRegistry(options: SolanaWalletRegistryOptions)
         return cachedPrimitiveWallet;
       }
 
-      const primitiveAdapter = makeConnectExclusive(
+      const primitiveAdapter = decorateAdapter(
         adaptSolanaStandardWallet(walletInfo, {
           chain: getSolanaChain(options.cluster),
           onChange: options.onWalletChange,
+          sendTransaction,
         }),
         walletInfo,
       );
@@ -99,10 +118,11 @@ export function createSolanaWalletRegistry(options: SolanaWalletRegistryOptions)
 
     // `connect` also closes the app's authorization with every other discovered
     // wallet; everything else on the adapter is untouched.
-    const cachedAdapter = makeConnectExclusive(
+    const cachedAdapter = decorateAdapter(
       adaptSolanaStandardWallet(walletInfo, {
         chain: getSolanaChain(options.cluster),
         onChange: options.onWalletChange,
+        sendTransaction,
       }),
       walletInfo,
     );
@@ -143,6 +163,10 @@ export function createSolanaWalletRegistry(options: SolanaWalletRegistryOptions)
     }
   }
 
+  function decorateAdapter<T extends SolanaWallet>(adapter: T, walletInfo: SolanaWalletInfo): T {
+    return reportConnectionChanges(makeConnectExclusive(adapter, walletInfo), walletInfo);
+  }
+
   /**
    * Makes `connect()` also close the app's authorization with every other
    * discovered wallet.
@@ -163,10 +187,64 @@ export function createSolanaWalletRegistry(options: SolanaWalletRegistryOptions)
   ): T {
     const connect = adapter.connect.bind(adapter);
 
-    adapter.connect = async () => {
-      await connect();
+    adapter.connect = async (connectOptions?: SolanaWalletConnectOptions) => {
+      await connect(connectOptions);
+
+      // A silent connect with nothing to restore authorized nothing, so there
+      // is no new exclusive wallet to protect.
+      if (connectOptions?.silent && !adapter.connected) {
+        return;
+      }
+
       await disconnectOtherWallets(walletInfo, adapter);
     };
+
+    return adapter;
+  }
+
+  /**
+   * Reports the outcome of every app-driven `connect()` / `disconnect()`, so
+   * the plugin can remember whether the selected wallet was left connected. A
+   * failed `disconnect()` reports too (the adapter rolls back to connected); a
+   * failed `connect()` does not, so a transient failure such as a locked wallet
+   * keeps the session for the next load. `signIn()` reports when it changed the connection (an MWA sign-in is an
+   * authorization, and a failed one may end disconnected). Replaced in place
+   * for the same identity reasons as `makeConnectExclusive`.
+   */
+  function reportConnectionChanges<T extends SolanaWallet>(
+    adapter: T,
+    walletInfo: SolanaWalletInfo,
+  ): T {
+    const connect = adapter.connect.bind(adapter);
+    const disconnect = adapter.disconnect.bind(adapter);
+    const signIn = adapter.signIn?.bind(adapter);
+    const report = () => options.onConnectionChange?.(walletInfo, adapter.connected);
+
+    adapter.connect = async (connectOptions?: SolanaWalletConnectOptions) => {
+      await connect(connectOptions);
+      report();
+    };
+    adapter.disconnect = async () => {
+      try {
+        await disconnect();
+      } finally {
+        report();
+      }
+    };
+
+    if (signIn) {
+      adapter.signIn = async (input) => {
+        const wasConnected = adapter.connected;
+
+        try {
+          return await signIn(input);
+        } finally {
+          if (adapter.connected !== wasConnected) {
+            report();
+          }
+        }
+      };
+    }
 
     return adapter;
   }
@@ -231,6 +309,8 @@ export function createSolanaWalletRegistry(options: SolanaWalletRegistryOptions)
     disposeAllAdaptedWallets,
   };
 }
+
+type AdaptSolanaWalletSendTransaction = NonNullable<AdaptSolanaWalletOptions["sendTransaction"]>;
 
 function isObject(value: unknown): value is object {
   return (typeof value === "object" && value !== null) || typeof value === "function";

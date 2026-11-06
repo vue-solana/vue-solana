@@ -7,6 +7,11 @@ export type PersistedSelectedWallet = Pick<SolanaWalletInfo, "name" | "platform"
 
 export interface ReadSelectedWalletResult {
   wallet: PersistedSelectedWallet | null;
+  /**
+   * Whether the wallet was connected when the page was left. A refresh uses it
+   * to restore the session silently even without `autoConnect`.
+   */
+  connected: boolean;
   error: SolanaError | null;
 }
 
@@ -14,32 +19,36 @@ export function readSelectedWallet(): ReadSelectedWalletResult {
   const { storage, error } = getLocalStorage();
 
   if (error || !storage) {
-    return { wallet: null, error };
+    return { wallet: null, connected: false, error };
   }
 
   try {
     const value = storage.getItem(SELECTED_WALLET_STORAGE_KEY);
 
     if (!value) {
-      return { wallet: null, error: null };
+      return { wallet: null, connected: false, error: null };
     }
 
-    const wallet = JSON.parse(value) as Partial<PersistedSelectedWallet>;
+    const wallet = JSON.parse(value) as Partial<PersistedSelectedWallet> & {
+      connected?: unknown;
+    };
+    const hasName = typeof wallet.name === "string";
 
     return {
-      wallet:
-        typeof wallet.name === "string"
-          ? {
-              name: wallet.name,
-              platform: wallet.platform,
-              source: wallet.source,
-            }
-          : null,
+      wallet: hasName
+        ? {
+            name: wallet.name!,
+            platform: wallet.platform,
+            source: wallet.source,
+          }
+        : null,
+      connected: hasName && wallet.connected === true,
       error: null,
     };
   } catch (cause) {
     return {
       wallet: null,
+      connected: false,
       error: createSolanaError("STORAGE_FAILURE", "Unable to read the selected Solana wallet", {
         cause,
       }),
@@ -47,7 +56,10 @@ export function readSelectedWallet(): ReadSelectedWalletResult {
   }
 }
 
-export function writeSelectedWallet(wallet: SolanaWalletInfo | null): SolanaError | null {
+export function writeSelectedWallet(
+  wallet: SolanaWalletInfo | null,
+  connected = false,
+): SolanaError | null {
   const { storage, error } = getLocalStorage();
 
   if (error || !storage) {
@@ -56,7 +68,14 @@ export function writeSelectedWallet(wallet: SolanaWalletInfo | null): SolanaErro
 
   try {
     if (wallet) {
-      storage.setItem(SELECTED_WALLET_STORAGE_KEY, stringifySelectedWallet(wallet));
+      storage.setItem(
+        SELECTED_WALLET_STORAGE_KEY,
+        JSON.stringify(
+          connected
+            ? { ...toPersistedSelectedWallet(wallet), connected: true }
+            : toPersistedSelectedWallet(wallet),
+        ),
+      );
     } else {
       storage.removeItem(SELECTED_WALLET_STORAGE_KEY);
     }
@@ -69,7 +88,12 @@ export function writeSelectedWallet(wallet: SolanaWalletInfo | null): SolanaErro
   }
 }
 
+/** The wallet's identity only: also the key that de-duplicates auto-connect attempts. */
 export function stringifySelectedWallet(wallet: PersistedSelectedWallet): string {
+  return JSON.stringify(toPersistedSelectedWallet(wallet));
+}
+
+function toPersistedSelectedWallet(wallet: PersistedSelectedWallet): PersistedSelectedWallet {
   const value: PersistedSelectedWallet = { name: wallet.name };
 
   if (wallet.platform) {
@@ -80,7 +104,7 @@ export function stringifySelectedWallet(wallet: PersistedSelectedWallet): string
     value.source = wallet.source;
   }
 
-  return JSON.stringify(value);
+  return value;
 }
 
 interface LocalStorageResult {

@@ -1,5 +1,5 @@
 import type { Address } from "../kit";
-import type { SolanaWallet, SolanaWalletInfo } from "../types";
+import type { SolanaWallet, SolanaWalletConnectOptions, SolanaWalletInfo } from "../types";
 import {
   DEFAULT_IOS_WALLET_CHAINS,
   getDefaultIosWalletRedirectUrl,
@@ -77,10 +77,17 @@ export function adaptSolanaIosWallet(
     get disconnecting() {
       return disconnecting;
     },
-    async connect() {
+    async connect(connectOptions?: SolanaWalletConnectOptions) {
       const callback = handleSolanaIosWalletCallback({ clearUrl: true });
 
       if (callback?.walletId === definition.id) {
+        refreshSession();
+        return;
+      }
+
+      // A silent connect may only restore the stored session: launching the
+      // wallet is a deep link, which needs a user gesture a page load lacks.
+      if (connectOptions?.silent) {
         refreshSession();
         return;
       }

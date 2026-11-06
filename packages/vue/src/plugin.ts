@@ -62,9 +62,17 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}): VueSol
       const latestBlockhash = ref<string | null>(null);
       const walletRegistry = createSolanaWalletRegistry({
         cluster: context.cluster,
+        client: context.client,
         iosWallet: options.iosWallet,
         getWalletInfos: () => wallets.value,
         onWalletChange: () => triggerRef(wallet),
+        onConnectionChange: (walletInfo, connected) => {
+          // Only the selected wallet's session is remembered; the exclusive
+          // connect sweep disconnecting other wallets reports here too.
+          if (selectedWallet.value && isSameWallet(walletInfo, selectedWallet.value)) {
+            persistSelectedWallet(selectedWallet.value, connected);
+          }
+        },
         onError: (cause) => {
           error.value = normalizeSolanaError(cause, "WALLET_FAILURE");
           logDevError("Failed to handle Solana iOS wallet callback", cause);
@@ -124,6 +132,7 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}): VueSol
         walletRegistry.handleIosWalletCallback();
         wallets.value = walletRegistry.getDiscoveredWallets();
         let restoredWallet: SolanaWalletInfo | null = null;
+        let restoreConnection = false;
 
         if (selectedWallet.value) {
           selectedWallet.value =
@@ -135,6 +144,7 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}): VueSol
           }
         } else if (!options.wallet) {
           const persistedWallet = readSelectedWallet();
+          restoreConnection = persistedWallet.connected;
           if (persistedWallet.error) {
             error.value = persistedWallet.error;
             logDevError("Failed to read the persisted Solana wallet", persistedWallet.error);
@@ -160,7 +170,7 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}): VueSol
         }
 
         if (restoredWallet) {
-          autoConnectWallet(restoredWallet);
+          autoConnectWallet(restoredWallet, restoreConnection);
         }
       }
 
@@ -195,7 +205,12 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}): VueSol
         wallet.value = nextWallet
           ? walletRegistry.getAdaptedWallet(nextWallet)
           : (options.wallet ?? null);
-        const storageError = writeSelectedWallet(nextWallet);
+        // Re-selecting a wallet that is already connected keeps its session.
+        persistSelectedWallet(nextWallet, Boolean(nextWallet && wallet.value?.connected));
+      }
+
+      function persistSelectedWallet(walletInfo: SolanaWalletInfo | null, connected: boolean) {
+        const storageError = writeSelectedWallet(walletInfo, connected);
 
         if (storageError) {
           error.value = storageError;
@@ -203,8 +218,13 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}): VueSol
         }
       }
 
-      function autoConnectWallet(walletInfo: SolanaWalletInfo) {
-        if (!options.autoConnect) {
+      /**
+       * Reconnects the restored wallet without prompting: always when the user
+       * left it connected (so a refresh does not show a connected wallet as
+       * disconnected), and with `autoConnect` also when it was only selected.
+       */
+      function autoConnectWallet(walletInfo: SolanaWalletInfo, wasConnected: boolean) {
+        if (!options.autoConnect && !wasConnected) {
           return;
         }
 
@@ -221,10 +241,18 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}): VueSol
         }
 
         attemptedAutoConnectWallet = storageValue;
+        // Silent: restoring needs no prompt, and a prompt — or, for the Android
+        // Mobile Wallet Adapter, launching the wallet app — needs a user gesture
+        // a page load does not have.
         void activeWallet
-          .connect()
+          .connect({ silent: true })
           .catch((cause) => {
-            error.value = normalizeSolanaError(cause, "WALLET_FAILURE");
+            // Restoring a remembered session is invisible housekeeping; only an
+            // app that asked for `autoConnect` hears about a failure.
+            if (options.autoConnect) {
+              error.value = normalizeSolanaError(cause, "WALLET_FAILURE");
+            }
+
             logDevError("Failed to auto-connect Solana wallet", cause);
           })
           .finally(() => {

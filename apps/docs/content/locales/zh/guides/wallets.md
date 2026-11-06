@@ -139,7 +139,9 @@ const signed = await wallet.signTransaction(transaction);
 
 `autoConnect` 只会重新连接用户此前选择过、并且在客户端再次被发现的钱包身份。
 
-Vue Solana 只会在 `localStorage["vue-solana:selected-wallet"]` 下存储钱包身份元数据：`name`，以及可用时的 `platform`/`source`。它永远不会存储私钥、会话数据或交易数据。
+用户保持连接状态的钱包，即使关闭了 `autoConnect`，在页面刷新后也会被恢复。恢复是一次静默连接（`connect({ silent: true })`）：遵循 Wallet Standard `silent` 标志的钱包只会返回它已经授予的授权，不会弹出提示，也不会启动钱包应用。`silent` 只是提示而非保证，忽略它的钱包可能会在页面加载时显示连接提示。如果钱包不再授权该站点，它会保持未连接状态。显式调用 `disconnect()` 会清除该会话。
+
+Vue Solana 只会在 `localStorage["vue-solana:selected-wallet"]` 下存储钱包身份元数据：`name`、可用时的 `platform`/`source`，以及钱包保持连接期间的 `connected: true`。它永远不会存储私钥、会话数据或交易数据。
 
 当用户明确清除钱包选择时，调用 `selectWallet(null)`。只有当你的应用拥有自定义钱包对象时，才应从 `useWallet()` 调用 `setWallet(customWallet)`；普通应用 UI 应从 `useWallets()` 选择钱包。
 
