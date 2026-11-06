@@ -3,7 +3,6 @@ import type { Page } from "@playwright/test";
 import {
   expectNoPageErrors,
   isRealRpcRun,
-  mockSolanaRpc,
   mockSolanaSubscriptions,
   waitForRpcConnected,
 } from "./helpers";
@@ -13,9 +12,13 @@ const appNames: Record<string, string> = {
   nuxt: "Nuxt Solana Test App",
 };
 
+// Mock the websocket too: the dashboard's live-data panels subscribe on load,
+// and an unmocked socket reaches real devnet, whose 503s on CI fail
+// `expectNoPageErrors`. Specs that need the harness re-register before
+// `page.goto`, and the most recent `routeWebSocket` handler wins.
 test.beforeEach(async ({ page }) => {
   if (!isRealRpcRun()) {
-    await mockSolanaRpc(page);
+    await mockSolanaSubscriptions(page);
   }
 });
 
