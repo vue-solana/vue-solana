@@ -8,14 +8,16 @@ import {
 } from "@solana/wallet-standard-features";
 import type { SolanaSignInInput, SolanaSignInOutput } from "@solana/wallet-standard-features";
 import { getBase58Decoder } from "@solana/kit";
-import type { Address } from "../kit";
-import { createSolanaError } from "../errors";
+import type { Address, Signature } from "../kit";
+import { createSolanaError, normalizeSolanaError, PartialSignAndSendError } from "../errors";
 import { assertWalletSignature } from "./verify-wallet-signature";
 import type {
+  SendTransactionOptions,
   SolanaChain,
   SolanaSignInResult,
   SolanaTransaction,
   SolanaWallet,
+  SolanaWalletConnectOptions,
   SolanaWalletInfo,
 } from "../types";
 import { SOLANA_CHAINS } from "./chains";
@@ -34,6 +36,16 @@ export interface AdaptSolanaWalletOptions {
   chain?: SolanaChain;
   account?: WalletAccount;
   onChange?: () => void;
+  /**
+   * Submits a signed transaction (typically through the app's RPC). Lets a
+   * Mobile Wallet Adapter batch be signed in one wallet session and sent here,
+   * instead of MWA's own `signAndSendTransaction`, which opens the wallet app
+   * once per transaction.
+   */
+  sendTransaction?: (
+    signedTransaction: SolanaTransaction,
+    options?: SendTransactionOptions,
+  ) => Promise<string>;
 }
 
 /**
@@ -56,6 +68,7 @@ export function adaptSolanaStandardWallet(
   let connecting = false;
   let disconnecting = false;
   let manuallyDisconnected = false;
+  const isMobileWalletAdapter = walletInfo.source === "mobile-wallet-adapter";
 
   const eventsFeature = wallet.features[StandardEvents] as
     | StandardEventsFeature[typeof StandardEvents]
@@ -91,7 +104,7 @@ export function adaptSolanaStandardWallet(
     get disconnecting() {
       return disconnecting;
     },
-    async connect() {
+    async connect(connectOptions?: SolanaWalletConnectOptions) {
       connecting = true;
       manuallyDisconnected = false;
       options.onChange?.();
@@ -100,11 +113,20 @@ export function adaptSolanaStandardWallet(
         const feature = wallet.features[
           StandardConnect
         ] as StandardConnectFeature[typeof StandardConnect];
-        const result = await feature.connect();
+        const result = await (connectOptions?.silent
+          ? feature.connect({ silent: true })
+          : feature.connect());
+        const nextAccount = getSolanaAccount(result.accounts, options.chain);
+
+        // A silent connect with no prior authorization is not a failure: the
+        // wallet just has nothing to restore, so stay disconnected.
+        if (!nextAccount && connectOptions?.silent) {
+          return;
+        }
 
         accounts = result.accounts;
         allowAccountUpdates = true;
-        account = getSolanaAccount(accounts, options.chain);
+        account = nextAccount;
 
         if (!account) {
           throw new Error("Solana wallet did not authorize a Solana account");
@@ -141,24 +163,41 @@ export function adaptSolanaStandardWallet(
     },
     signIn: hasSignIn(wallet)
       ? async (input?: SolanaSignInInput): Promise<SolanaSignInResult> => {
-          const [result] = await wallet.features[SolanaSignIn].signIn(
-            input ?? getDefaultSignInInput(getActiveAccount(account)),
-          );
+          // An omitted input is built from the active account, so the account
+          // the caller is asking about is either `input.address` or the active
+          // one. Verifying only the returned account let a wallet answer with a
+          // *different* account it controls, sign for itself, and pass.
+          const requestedAddress = input?.address ?? account?.address;
+          // MWA has no active session to require: its sign-in *is* the
+          // authorization, so a disconnected app can sign in with the domain alone.
+          const signInInput =
+            input ??
+            getDefaultSignInInput(isMobileWalletAdapter ? account : getActiveAccount(account));
+
+          if (isMobileWalletAdapter) {
+            // MWA's `signIn` answers from its cached authorization whenever one
+            // exists — and every connect writes one — without opening the wallet,
+            // then throws "no sign in result returned by wallet". Clearing it
+            // first (no wallet round trip) makes the sign-in authorize afresh.
+            const disconnectFeature = wallet.features[
+              StandardDisconnect
+            ] as StandardDisconnectFeature[typeof StandardDisconnect];
+            await disconnectFeature.disconnect();
+          }
+
+          const [result] = await wallet.features[SolanaSignIn].signIn(signInInput);
 
           if (!result) {
             throw new Error("Solana wallet did not return a sign-in result");
           }
 
           const signInResult = toSolanaSignInResult(result);
-
-          // An omitted input is built from the active account, so the account
-          // the caller is asking about is either `input.address` or the active
-          // one. Verifying only the returned account let a wallet answer with a
-          // *different* account it controls, sign for itself, and pass.
-          const requestedAddress = input?.address ?? account?.address;
-          const signInAccount = accounts.find(
-            (candidate) => candidate.address === signInResult.account.address,
-          );
+          const isSignInAccount = (candidate: WalletAccount) =>
+            candidate.address === signInResult.account.address;
+          // `accounts` follows the wallet's `change` events; the live list is the
+          // fallback for a wallet that authorized without emitting one first.
+          const signInAccount =
+            accounts.find(isSignInAccount) ?? wallet.accounts.find(isSignInAccount);
 
           if (!signInAccount) {
             throw createSolanaError(
@@ -181,6 +220,16 @@ export function adaptSolanaStandardWallet(
             "sign-in",
           );
 
+          if (isMobileWalletAdapter) {
+            // The MWA sign-in replaced the authorization cleared above, so the
+            // signed-in account is now the connected one.
+            accounts = wallet.accounts;
+            allowAccountUpdates = true;
+            manuallyDisconnected = false;
+            account = signInAccount;
+            options.onChange?.();
+          }
+
           return signInResult;
         }
       : undefined,
@@ -196,14 +245,20 @@ export function adaptSolanaStandardWallet(
             throw new Error("Solana wallet did not return a message signature");
           }
 
+          const signedMessage = getSignedMessageBytes(
+            message,
+            result.signedMessage,
+            result.signature,
+          );
+
           await assertWalletSignature(
             activeAccount.publicKey,
-            result.signedMessage,
+            signedMessage,
             result.signature,
             "message",
           );
 
-          return result;
+          return { ...result, signedMessage };
         }
       : undefined,
     signTransaction: hasSignTransaction(wallet)
@@ -262,6 +317,28 @@ export function adaptSolanaStandardWallet(
     signAndSendTransactions: hasSignAndSendTransaction(wallet)
       ? async (transactions, sendOptions) => {
           const activeAccount = getActiveAccount(account);
+
+          // MWA runs every `signAndSendTransaction` input as its own wallet
+          // session, so a batch launches the wallet app once per transaction —
+          // and from the second launch on there is no user gesture left, so
+          // Chrome blocks the intent and MWA reports "wallet not found". One
+          // `signTransaction` call signs the whole batch in a single session.
+          if (
+            isMobileWalletAdapter &&
+            options.sendTransaction &&
+            transactions.length > 1 &&
+            hasSignTransaction(wallet)
+          ) {
+            const signedTransactions = await signAllThroughFeature(
+              wallet,
+              () => activeAccount,
+              transactions,
+              options.chain,
+            );
+
+            return sendSequentially(signedTransactions, options.sendTransaction, sendOptions);
+          }
+
           const results = await wallet.features[
             SolanaSignAndSendTransaction
           ].signAndSendTransaction(
@@ -324,6 +401,28 @@ export async function disconnectSolanaStandardWallet(
   return true;
 }
 
+/**
+ * Sequential on purpose, like the composable's singular fallback: a failure
+ * reports the signatures that already landed so a retry can skip them.
+ */
+async function sendSequentially(
+  signedTransactions: readonly SolanaTransaction[],
+  sendTransaction: NonNullable<AdaptSolanaWalletOptions["sendTransaction"]>,
+  sendOptions: SendTransactionOptions | undefined,
+): Promise<string[]> {
+  const signatures: Signature[] = [];
+
+  for (const signedTransaction of signedTransactions) {
+    try {
+      signatures.push((await sendTransaction(signedTransaction, sendOptions)) as Signature);
+    } catch (cause) {
+      throw new PartialSignAndSendError(normalizeSolanaError(cause, "RPC_FAILURE"), signatures);
+    }
+  }
+
+  return signatures;
+}
+
 async function signAllThroughFeature(
   wallet: Wallet & { features: SolanaSignTransactionFeature },
   getAccount: () => WalletAccount,
@@ -360,11 +459,44 @@ async function signAllThroughFeature(
  * `origin`) is what the request domain has to be for Backpack not to warn that
  * the domain does not match the requesting one.
  */
-function getDefaultSignInInput(account: WalletAccount): SolanaSignInInput {
-  return {
-    domain: typeof location === "undefined" ? "" : location.host,
-    address: account.address,
-  };
+function getDefaultSignInInput(account: WalletAccount | undefined): SolanaSignInInput {
+  const domain = typeof location === "undefined" ? "" : location.host;
+
+  return account ? { domain, address: account.address } : { domain };
+}
+
+/**
+ * The bytes the wallet actually signed. The Mobile Wallet Adapter returns its
+ * MWA `signed_payloads` entry — the message with the signature appended — as
+ * `signedMessage`, and its trailing 64 bytes as `signature`. Wallet Standard
+ * defines `signedMessage` as the signed bytes, so verifying against MWA's value
+ * could never pass, and a server verifying it would fail the same way. When the
+ * result is exactly that shape (or the bare signature), the signed bytes are
+ * the request's message. Any other shape — a wallet that prefixes the message,
+ * say — is left for signature verification to judge.
+ */
+function getSignedMessageBytes(
+  message: Uint8Array,
+  signedMessage: Uint8Array,
+  signature: Uint8Array,
+): Uint8Array {
+  if (
+    signedMessage.length === message.length + signature.length &&
+    bytesEqual(signedMessage.subarray(0, message.length), message) &&
+    bytesEqual(signedMessage.subarray(message.length), signature)
+  ) {
+    return message;
+  }
+
+  if (bytesEqual(signedMessage, signature) && !bytesEqual(message, signature)) {
+    return message;
+  }
+
+  return signedMessage;
+}
+
+function bytesEqual(a: Uint8Array, b: Uint8Array): boolean {
+  return a.length === b.length && a.every((byte, index) => byte === b[index]);
 }
 
 function toSolanaSignInResult(result: SolanaSignInOutput): SolanaSignInResult {

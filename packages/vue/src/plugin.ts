@@ -62,6 +62,7 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}): VueSol
       const latestBlockhash = ref<string | null>(null);
       const walletRegistry = createSolanaWalletRegistry({
         cluster: context.cluster,
+        client: context.client,
         iosWallet: options.iosWallet,
         getWalletInfos: () => wallets.value,
         onWalletChange: () => triggerRef(wallet),
@@ -221,8 +222,11 @@ export function createSolanaPlugin(options: VueSolanaPluginOptions = {}): VueSol
         }
 
         attemptedAutoConnectWallet = storageValue;
+        // Silent: restoring needs no prompt, and a prompt — or, for the Android
+        // Mobile Wallet Adapter, launching the wallet app — needs a user gesture
+        // a page load does not have.
         void activeWallet
-          .connect()
+          .connect({ silent: true })
           .catch((cause) => {
             error.value = normalizeSolanaError(cause, "WALLET_FAILURE");
             logDevError("Failed to auto-connect Solana wallet", cause);

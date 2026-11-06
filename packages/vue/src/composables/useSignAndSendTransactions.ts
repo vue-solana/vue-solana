@@ -1,6 +1,6 @@
 import type { Signature } from "@vue-solana/core/kit";
 import type { SolanaTransaction } from "@vue-solana/core/types";
-import { normalizeSolanaError, SolanaError } from "@vue-solana/core/errors";
+import { normalizeSolanaError, PartialSignAndSendError } from "@vue-solana/core/errors";
 import { withSolanaTimeout } from "@vue-solana/core/timeout";
 import type { SendTransactionOptions } from "@vue-solana/core/types";
 import {
@@ -15,20 +15,7 @@ const SIGN_AND_SEND_TIMEOUT_MS = 120_000;
 
 export type SignAndSendTransactionsStatus = "idle" | "sending" | "sent" | "error";
 
-/**
- * Thrown when the singular fallback path fails partway through: the earlier
- * transactions in the batch have already been sent, and their signatures are
- * exposed here so callers can avoid resubmitting them.
- */
-export class PartialSignAndSendError extends SolanaError {
-  constructor(
-    cause: SolanaError,
-    public readonly signatures: Signature[],
-  ) {
-    super(cause.code, cause.message, { cause: cause.cause, feature: cause.feature });
-    this.name = "PartialSignAndSendError";
-  }
-}
+export { PartialSignAndSendError };
 
 /**
  * Sign and send multiple serialized transactions in a single wallet request,

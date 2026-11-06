@@ -1,3 +1,5 @@
+import type { Signature } from "@solana/kit";
+
 export type SolanaErrorCode =
   | "NO_WALLET_SELECTED"
   | "WALLET_NOT_CONNECTED"
@@ -45,6 +47,21 @@ export class SolanaError extends Error {
     this.name = "SolanaError";
     this.cause = options.cause;
     this.feature = options.feature;
+  }
+}
+
+/**
+ * Thrown when a multi-transaction send fails partway through: the earlier
+ * transactions in the batch have already been sent, and their signatures are
+ * exposed here so callers can avoid resubmitting them.
+ */
+export class PartialSignAndSendError extends SolanaError {
+  constructor(
+    cause: SolanaError,
+    public readonly signatures: Signature[],
+  ) {
+    super(cause.code, cause.message, { cause: cause.cause, feature: cause.feature });
+    this.name = "PartialSignAndSendError";
   }
 }
 

@@ -65,6 +65,27 @@ describe("createSolanaPlugin exclusive connect", () => {
     expect(wallet?.connected.value).toBe(false);
   });
 
+  it("leaves other wallets alone when a silent connect restores nothing", async () => {
+    const { backpack, phantom, phantomInfo, solana } = mountTwoWallets();
+    getConnectFeature(phantom).connect.mockResolvedValue({ accounts: [] });
+
+    solana?.selectWallet(phantomInfo);
+    await solana?.wallet.value?.connect({ silent: true });
+
+    expect(solana?.wallet.value?.connected).toBe(false);
+    expect(getDisconnectFeature(backpack).disconnect).not.toHaveBeenCalled();
+  });
+
+  it("still sweeps other wallets after a silent connect restores one", async () => {
+    const { backpack, phantomInfo, solana } = mountTwoWallets();
+
+    solana?.selectWallet(phantomInfo);
+    await solana?.wallet.value?.connect({ silent: true });
+
+    expect(solana?.wallet.value?.connected).toBe(true);
+    expect(getDisconnectFeature(backpack).disconnect).toHaveBeenCalledTimes(1);
+  });
+
   it("keeps the connection when another wallet refuses to disconnect", async () => {
     const { backpack, phantomInfo, solana, wallet } = mountTwoWallets();
     getDisconnectFeature(backpack).disconnect.mockRejectedValue(new Error("user rejected"));

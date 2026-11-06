@@ -7,12 +7,20 @@ import {
 } from "@vue-solana/core/ios-wallet";
 import {
   adaptSolanaStandardWallet,
+  type AdaptSolanaWalletOptions,
   disconnectSolanaStandardWallet,
   getRegisteredSolanaWallets,
   getSolanaChain,
 } from "@vue-solana/core/wallet-standard";
 import { withTimeout } from "@vue-solana/core/timeout";
-import type { SolanaCluster, SolanaWallet, SolanaWalletInfo } from "@vue-solana/core/types";
+import { sendSignedTransaction } from "@vue-solana/core/transaction";
+import type {
+  SolanaCluster,
+  SolanaContext,
+  SolanaWallet,
+  SolanaWalletConnectOptions,
+  SolanaWalletInfo,
+} from "@vue-solana/core/types";
 
 /**
  * A disconnect that never settles (the extension was disabled or uninstalled
@@ -23,6 +31,7 @@ const DISCONNECT_TIMEOUT_MS = 2_000;
 
 interface SolanaWalletRegistryOptions {
   cluster: SolanaCluster;
+  client: SolanaContext["client"];
   iosWallet?: false | GetSolanaIosWalletsOptions;
   getWalletInfos: () => readonly SolanaWalletInfo[];
   onWalletChange: () => void;
@@ -41,6 +50,9 @@ export function createSolanaWalletRegistry(options: SolanaWalletRegistryOptions)
   // `options.getWalletInfos()`. Teardown iterates this set, so every
   // adapter's Wallet Standard `change` subscription is released.
   const trackedAdapters = new Set<SolanaWallet>();
+
+  const sendTransaction: AdaptSolanaWalletSendTransaction = (signedTransaction, sendOptions) =>
+    sendSignedTransaction(options.client, signedTransaction, sendOptions);
 
   function trackAdapter(adapter: SolanaWallet): SolanaWallet {
     trackedAdapters.add(adapter);
@@ -84,6 +96,7 @@ export function createSolanaWalletRegistry(options: SolanaWalletRegistryOptions)
         adaptSolanaStandardWallet(walletInfo, {
           chain: getSolanaChain(options.cluster),
           onChange: options.onWalletChange,
+          sendTransaction,
         }),
         walletInfo,
       );
@@ -103,6 +116,7 @@ export function createSolanaWalletRegistry(options: SolanaWalletRegistryOptions)
       adaptSolanaStandardWallet(walletInfo, {
         chain: getSolanaChain(options.cluster),
         onChange: options.onWalletChange,
+        sendTransaction,
       }),
       walletInfo,
     );
@@ -163,8 +177,15 @@ export function createSolanaWalletRegistry(options: SolanaWalletRegistryOptions)
   ): T {
     const connect = adapter.connect.bind(adapter);
 
-    adapter.connect = async () => {
-      await connect();
+    adapter.connect = async (connectOptions?: SolanaWalletConnectOptions) => {
+      await connect(connectOptions);
+
+      // A silent connect with nothing to restore authorized nothing, so there
+      // is no new exclusive wallet to protect.
+      if (connectOptions?.silent && !adapter.connected) {
+        return;
+      }
+
       await disconnectOtherWallets(walletInfo, adapter);
     };
 
@@ -231,6 +252,8 @@ export function createSolanaWalletRegistry(options: SolanaWalletRegistryOptions)
     disposeAllAdaptedWallets,
   };
 }
+
+type AdaptSolanaWalletSendTransaction = NonNullable<AdaptSolanaWalletOptions["sendTransaction"]>;
 
 function isObject(value: unknown): value is object {
   return (typeof value === "object" && value !== null) || typeof value === "function";

@@ -37,6 +37,8 @@ describe("createSolanaPlugin wallet auto-connect", () => {
     });
 
     expect(getConnectFeature(standardWallet).connect).toHaveBeenCalledOnce();
+    // Silent: a page load has no user gesture to prompt (or launch an MWA wallet) with.
+    expect(getConnectFeature(standardWallet).connect).toHaveBeenCalledWith({ silent: true });
     expect(wallet?.publicKey.value).toBe(account.address);
   });
 

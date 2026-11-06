@@ -40,11 +40,26 @@ export async function signAndSendTransaction(
     assertWalletCanSign(wallet);
 
     const signedTransaction = await wallet.signTransaction(transaction);
-    const base64Transaction = toBase64WireTransaction(signedTransaction);
-    const { maxRetries, minContextSlot, preflightCommitment, skipPreflight } = options ?? {};
 
+    return await sendSignedTransaction(client, signedTransaction, options);
+  } catch (cause) {
+    throw normalizeSolanaError(cause, "RPC_FAILURE");
+  }
+}
+
+/**
+ * Submit an already-signed transaction through the client RPC.
+ */
+export async function sendSignedTransaction(
+  client: SolanaClient,
+  signedTransaction: SolanaTransaction,
+  options?: SendTransactionOptions,
+): Promise<Signature> {
+  const { maxRetries, minContextSlot, preflightCommitment, skipPreflight } = options ?? {};
+
+  try {
     return await client.rpc
-      .sendTransaction(base64Transaction, {
+      .sendTransaction(toBase64WireTransaction(signedTransaction), {
         encoding: "base64",
         maxRetries,
         minContextSlot,

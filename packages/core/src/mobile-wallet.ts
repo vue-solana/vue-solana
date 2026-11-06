@@ -3,6 +3,7 @@ import {
   createDefaultChainSelector,
   createDefaultWalletNotFoundHandler,
   registerMwa,
+  type AuthorizationCache,
 } from "@solana-mobile/wallet-standard-mobile";
 import { isSolanaMobileWalletSupported } from "./mobile-wallet-support";
 import type { SolanaChain } from "./types";
@@ -46,7 +47,7 @@ export function registerSolanaMobileWallet(
 
   registerMwa({
     appIdentity,
-    authorizationCache: createDefaultAuthorizationCache(),
+    authorizationCache: createChainScopedAuthorizationCache(chains),
     chains,
     chainSelector: createDefaultChainSelector(),
     remoteHostAuthority: options.remoteHostAuthority,
@@ -55,6 +56,34 @@ export function registerSolanaMobileWallet(
   registeredMobileWalletKeys.add(registrationKey);
 
   return true;
+}
+
+/**
+ * The default MWA authorization cache is a single localStorage entry shared by
+ * every network, and re-authorization reuses the cached `chain`. An app that
+ * moved from devnet to mainnet would otherwise keep signing against the devnet
+ * authorization, so one for a chain this registration does not serve is
+ * dropped and the next request authorizes afresh.
+ */
+export function createChainScopedAuthorizationCache(
+  chains: readonly SolanaChain[],
+): AuthorizationCache {
+  const cache = createDefaultAuthorizationCache();
+
+  return {
+    clear: () => cache.clear(),
+    set: (authorization) => cache.set(authorization),
+    async get() {
+      const authorization = await cache.get();
+
+      if (authorization && !chains.includes(authorization.chain as SolanaChain)) {
+        await cache.clear();
+        return undefined;
+      }
+
+      return authorization;
+    },
+  };
 }
 
 /**
