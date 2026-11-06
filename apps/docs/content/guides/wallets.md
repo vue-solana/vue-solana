@@ -139,7 +139,9 @@ const signed = await wallet.signTransaction(transaction);
 
 `autoConnect` reconnects only a wallet identity that the user previously selected and that is discovered again on the client.
 
-Vue Solana stores only wallet identity metadata under `localStorage["vue-solana:selected-wallet"]`: `name`, and `platform`/`source` when available. It never stores private keys, session data, or transaction data.
+A wallet the user left connected is restored after a page refresh even when `autoConnect` is off. The restore is a silent connect: the wallet only reports an authorization it already granted, so it never shows a prompt or launches a wallet app. If the wallet no longer authorizes the site, it stays disconnected. An explicit `disconnect()` forgets the session.
+
+Vue Solana stores only wallet identity metadata under `localStorage["vue-solana:selected-wallet"]`: `name`, `platform`/`source` when available, and `connected: true` while the wallet is connected. It never stores private keys, session data, or transaction data.
 
 Call `selectWallet(null)` when users explicitly clear wallet selection. Call `setWallet(customWallet)` from `useWallet()` only when your app owns a custom wallet object; normal app UI should select from `useWallets()`.
 

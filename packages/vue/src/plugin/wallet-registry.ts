@@ -35,6 +35,12 @@ interface SolanaWalletRegistryOptions {
   iosWallet?: false | GetSolanaIosWalletsOptions;
   getWalletInfos: () => readonly SolanaWalletInfo[];
   onWalletChange: () => void;
+  /**
+   * Called after this app's `connect()` / `disconnect()` on any adapter
+   * settles, with the adapter's resulting `connected` state. Wallet-initiated
+   * changes (a `change` event) do not report here.
+   */
+  onConnectionChange?: (walletInfo: SolanaWalletInfo, connected: boolean) => void;
   onError?: (cause: unknown) => void;
 }
 
@@ -71,7 +77,7 @@ export function createSolanaWalletRegistry(options: SolanaWalletRegistryOptions)
         return cachedIosWallet;
       }
 
-      const iosAdapter = makeConnectExclusive(
+      const iosAdapter = decorateAdapter(
         adaptSolanaIosWallet(walletInfo, {
           chain: getSolanaChain(options.cluster),
           cluster: options.cluster,
@@ -92,7 +98,7 @@ export function createSolanaWalletRegistry(options: SolanaWalletRegistryOptions)
         return cachedPrimitiveWallet;
       }
 
-      const primitiveAdapter = makeConnectExclusive(
+      const primitiveAdapter = decorateAdapter(
         adaptSolanaStandardWallet(walletInfo, {
           chain: getSolanaChain(options.cluster),
           onChange: options.onWalletChange,
@@ -112,7 +118,7 @@ export function createSolanaWalletRegistry(options: SolanaWalletRegistryOptions)
 
     // `connect` also closes the app's authorization with every other discovered
     // wallet; everything else on the adapter is untouched.
-    const cachedAdapter = makeConnectExclusive(
+    const cachedAdapter = decorateAdapter(
       adaptSolanaStandardWallet(walletInfo, {
         chain: getSolanaChain(options.cluster),
         onChange: options.onWalletChange,
@@ -157,6 +163,10 @@ export function createSolanaWalletRegistry(options: SolanaWalletRegistryOptions)
     }
   }
 
+  function decorateAdapter<T extends SolanaWallet>(adapter: T, walletInfo: SolanaWalletInfo): T {
+    return reportConnectionChanges(makeConnectExclusive(adapter, walletInfo), walletInfo);
+  }
+
   /**
    * Makes `connect()` also close the app's authorization with every other
    * discovered wallet.
@@ -187,6 +197,30 @@ export function createSolanaWalletRegistry(options: SolanaWalletRegistryOptions)
       }
 
       await disconnectOtherWallets(walletInfo, adapter);
+    };
+
+    return adapter;
+  }
+
+  /**
+   * Reports the outcome of every app-driven `connect()` / `disconnect()`, so
+   * the plugin can remember whether the selected wallet was left connected.
+   * Replaced in place for the same identity reasons as `makeConnectExclusive`.
+   */
+  function reportConnectionChanges<T extends SolanaWallet>(
+    adapter: T,
+    walletInfo: SolanaWalletInfo,
+  ): T {
+    const connect = adapter.connect.bind(adapter);
+    const disconnect = adapter.disconnect.bind(adapter);
+
+    adapter.connect = async (connectOptions?: SolanaWalletConnectOptions) => {
+      await connect(connectOptions);
+      options.onConnectionChange?.(walletInfo, adapter.connected);
+    };
+    adapter.disconnect = async () => {
+      await disconnect();
+      options.onConnectionChange?.(walletInfo, adapter.connected);
     };
 
     return adapter;

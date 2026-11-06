@@ -75,6 +75,35 @@ test("keeps wallet and transfer flows safe without a browser wallet", async ({ p
   await expect(page.getByTestId("wallet-count")).toHaveText("0");
 });
 
+test("restores a wallet left connected after a reload, and forgets it after disconnect", async ({
+  page,
+}) => {
+  await registerMockWallets(page);
+  await page.goto("/");
+
+  await page.getByTestId("load-wallets").click();
+  await page.getByRole("button", { name: /Mock Signer Wallet/ }).click();
+  await page.getByTestId("connect-wallet").click();
+  await expect(page.getByTestId("wallet-public-key")).toHaveText(
+    "11111111111111111111111111111111",
+  );
+
+  // `autoConnect` is off in the example apps: the session the user left
+  // connected is restored silently anyway.
+  await page.reload();
+  await expect(page.getByTestId("selected-wallet")).toHaveText("Mock Signer Wallet");
+  await expect(page.getByTestId("wallet-public-key")).toHaveText(
+    "11111111111111111111111111111111",
+  );
+
+  await page.getByTestId("disconnect-wallet").click();
+  await expect(page.getByTestId("wallet-public-key")).toHaveText("Not connected");
+
+  await page.reload();
+  await expect(page.getByTestId("selected-wallet")).toHaveText("Mock Signer Wallet");
+  await expect(page.getByTestId("wallet-public-key")).toHaveText("Not connected");
+});
+
 test("discovers, selects, connects, signs, and disconnects a mocked Wallet Standard wallet", async ({
   page,
 }) => {

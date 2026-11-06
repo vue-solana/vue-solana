@@ -7720,7 +7720,9 @@ const signed = await wallet.signTransaction(transaction);
 
 `autoConnect` verbindet nur eine Wallet-Identität erneut, die der Nutzer zuvor ausgewählt hat und die auf dem Client wieder erkannt wird.
 
-Vue Solana speichert unter `localStorage["vue-solana:selected-wallet"]` nur Identitäts-Metadaten der Wallet: `name` sowie `platform`/`source`, wenn verfügbar. Private Schlüssel, Sitzungsdaten oder Transaktionsdaten werden nie gespeichert.
+Eine Wallet, die der Nutzer verbunden gelassen hat, wird nach einem Neuladen der Seite auch ohne `autoConnect` wiederhergestellt. Die Wiederherstellung ist ein stiller Connect: Die Wallet meldet nur eine bereits erteilte Autorisierung, zeigt also nie eine Abfrage an und startet keine Wallet-App. Autorisiert die Wallet die Seite nicht mehr, bleibt sie getrennt. Ein explizites `disconnect()` vergisst die Sitzung.
+
+Vue Solana speichert unter `localStorage["vue-solana:selected-wallet"]` nur Identitäts-Metadaten der Wallet: `name`, `platform`/`source`, wenn verfügbar, sowie `connected: true`, solange die Wallet verbunden ist. Private Schlüssel, Sitzungsdaten oder Transaktionsdaten werden nie gespeichert.
 
 Rufe `selectWallet(null)` auf, wenn Nutzer die Wallet-Auswahl ausdrücklich zurücksetzen. Rufe `setWallet(customWallet)` aus `useWallet()` nur auf, wenn deine App ein eigenes Wallet-Objekt besitzt; normale App-UI sollte aus `useWallets()` auswählen.
 
@@ -7990,7 +7992,9 @@ const signed = await wallet.signTransaction(transaction);
 
 `autoConnect` reconecta solo una identidad de wallet que el usuario seleccionó previamente y que se descubre de nuevo en el cliente.
 
-Vue Solana almacena solo metadata de identidad de wallet en `localStorage["vue-solana:selected-wallet"]`: `name`, y `platform`/`source` cuando están disponibles. Nunca almacena claves privadas, datos de sesión ni datos de transacción.
+Una wallet que el usuario dejó conectada se restaura tras recargar la página aunque `autoConnect` esté desactivado. La restauración es una conexión silenciosa: la wallet solo informa una autorización que ya concedió, así que nunca muestra un aviso ni abre una app de wallet. Si la wallet ya no autoriza el sitio, queda desconectada. Un `disconnect()` explícito olvida la sesión.
+
+Vue Solana almacena solo metadata de identidad de wallet en `localStorage["vue-solana:selected-wallet"]`: `name`, `platform`/`source` cuando están disponibles, y `connected: true` mientras la wallet está conectada. Nunca almacena claves privadas, datos de sesión ni datos de transacción.
 
 Llama `selectWallet(null)` cuando los usuarios limpien explícitamente la selección de wallet. Llama `setWallet(customWallet)` desde `useWallet()` solo cuando tu app posee un objeto wallet personalizado; la UI normal de la app debe seleccionar desde `useWallets()`.
 
@@ -8260,7 +8264,9 @@ const signed = await wallet.signTransaction(transaction);
 
 `autoConnect` reconnecte uniquement une identité de wallet que l'utilisateur a sélectionnée auparavant et qui est à nouveau découverte sur le client.
 
-Vue Solana stocke uniquement les métadonnées d'identité du wallet sous `localStorage["vue-solana:selected-wallet"]` : `name`, ainsi que `platform`/`source` lorsqu'ils sont disponibles. Il ne stocke jamais de clés privées, de données de session ni de données de transaction.
+Un wallet que l'utilisateur a laissé connecté est restauré après un rechargement de la page, même lorsque `autoConnect` est désactivé. La restauration est une connexion silencieuse : le wallet ne fait que signaler une autorisation déjà accordée, il n'affiche donc jamais de demande et ne lance aucune application de wallet. Si le wallet n'autorise plus le site, il reste déconnecté. Un appel explicite à `disconnect()` oublie la session.
+
+Vue Solana stocke uniquement les métadonnées d'identité du wallet sous `localStorage["vue-solana:selected-wallet"]` : `name`, `platform`/`source` lorsqu'ils sont disponibles, ainsi que `connected: true` tant que le wallet est connecté. Il ne stocke jamais de clés privées, de données de session ni de données de transaction.
 
 Appelez `selectWallet(null)` lorsque les utilisateurs effacent explicitement la sélection de wallet. Appelez `setWallet(customWallet)` depuis `useWallet()` uniquement lorsque votre application possède un objet wallet personnalisé ; l'interface normale de l'application doit sélectionner via `useWallets()`.
 
@@ -8530,7 +8536,9 @@ const signed = await wallet.signTransaction(transaction);
 
 `autoConnect` reconnects only a wallet identity that the user previously selected and that is discovered again on the client.
 
-Vue Solana stores only wallet identity metadata under `localStorage["vue-solana:selected-wallet"]`: `name`, and `platform`/`source` when available. It never stores private keys, session data, or transaction data.
+A wallet the user left connected is restored after a page refresh even when `autoConnect` is off. The restore is a silent connect: the wallet only reports an authorization it already granted, so it never shows a prompt or launches a wallet app. If the wallet no longer authorizes the site, it stays disconnected. An explicit `disconnect()` forgets the session.
+
+Vue Solana stores only wallet identity metadata under `localStorage["vue-solana:selected-wallet"]`: `name`, `platform`/`source` when available, and `connected: true` while the wallet is connected. It never stores private keys, session data, or transaction data.
 
 Call `selectWallet(null)` when users explicitly clear wallet selection. Call `setWallet(customWallet)` from `useWallet()` only when your app owns a custom wallet object; normal app UI should select from `useWallets()`.
 
@@ -8800,7 +8808,9 @@ const signed = await wallet.signTransaction(transaction);
 
 `autoConnect` は、ユーザーが以前に選択し、クライアント上で再び検出されたウォレットの識別情報だけを再接続します。
 
-Vue Solana が `localStorage["vue-solana:selected-wallet"]` に保存するのはウォレットの識別メタデータのみです: `name`、および利用可能な場合は `platform`/`source`。秘密鍵、セッションデータ、トランザクションデータは決して保存しません。
+ユーザーが接続したままにしたウォレットは、`autoConnect` が無効でもページの再読み込み後に復元されます。復元はサイレント接続です。ウォレットはすでに付与した認可を返すだけなので、確認ダイアログを表示したりウォレットアプリを起動したりすることはありません。ウォレットがサイトを認可していない場合は未接続のままです。明示的に `disconnect()` を呼ぶとセッションは破棄されます。
+
+Vue Solana が `localStorage["vue-solana:selected-wallet"]` に保存するのはウォレットの識別メタデータのみです: `name`、利用可能な場合は `platform`/`source`、そしてウォレットが接続中の間は `connected: true`。秘密鍵、セッションデータ、トランザクションデータは決して保存しません。
 
 ユーザーが明示的にウォレット選択をクリアしたときは `selectWallet(null)` を呼び出してください。アプリがカスタムウォレットオブジェクトを所有している場合に限り、`useWallet()` の `setWallet(customWallet)` を呼び出してください。通常のアプリ UI では `useWallets()` から選択するべきです。
 
@@ -9070,7 +9080,9 @@ const signed = await wallet.signTransaction(transaction);
 
 `autoConnect`는 사용자가 이전에 선택했고 client에서 다시 discovery된 wallet identity만 reconnect합니다.
 
-Vue Solana는 `localStorage["vue-solana:selected-wallet"]`에 wallet identity metadata만 저장합니다. 저장되는 값은 `name`, 그리고 가능한 경우 `platform`/`source`입니다. private key, session data, transaction data는 절대 저장하지 않습니다.
+사용자가 연결된 상태로 둔 wallet은 `autoConnect`가 꺼져 있어도 page refresh 후 복원됩니다. 복원은 silent connect입니다. wallet은 이미 부여한 authorization만 알려 주므로 prompt를 띄우거나 wallet app을 실행하지 않습니다. wallet이 더 이상 site를 authorize하지 않으면 disconnected 상태로 남습니다. 명시적인 `disconnect()`는 session을 잊습니다.
+
+Vue Solana는 `localStorage["vue-solana:selected-wallet"]`에 wallet identity metadata만 저장합니다. 저장되는 값은 `name`, 가능한 경우 `platform`/`source`, 그리고 wallet이 연결되어 있는 동안의 `connected: true`입니다. private key, session data, transaction data는 절대 저장하지 않습니다.
 
 사용자가 명시적으로 wallet selection을 지우면 `selectWallet(null)`을 호출하세요. 앱이 custom wallet object를 소유할 때만 `useWallet()`의 `setWallet(customWallet)`을 사용합니다. 일반 앱 UI는 `useWallets()`에서 지갑을 선택해야 합니다.
 
@@ -9340,7 +9352,9 @@ const signed = await wallet.signTransaction(transaction);
 
 `autoConnect` 只会重新连接用户此前选择过、并且在客户端再次被发现的钱包身份。
 
-Vue Solana 只会在 `localStorage["vue-solana:selected-wallet"]` 下存储钱包身份元数据：`name`，以及可用时的 `platform`/`source`。它永远不会存储私钥、会话数据或交易数据。
+用户保持连接状态的钱包，即使关闭了 `autoConnect`，在页面刷新后也会被恢复。恢复是一次静默连接：钱包只会返回它已经授予的授权，因此不会弹出提示，也不会启动钱包应用。如果钱包不再授权该站点，它会保持未连接状态。显式调用 `disconnect()` 会清除该会话。
+
+Vue Solana 只会在 `localStorage["vue-solana:selected-wallet"]` 下存储钱包身份元数据：`name`、可用时的 `platform`/`source`，以及钱包保持连接期间的 `connected: true`。它永远不会存储私钥、会话数据或交易数据。
 
 当用户明确清除钱包选择时，调用 `selectWallet(null)`。只有当你的应用拥有自定义钱包对象时，才应从 `useWallet()` 调用 `setWallet(customWallet)`；普通应用 UI 应从 `useWallets()` 选择钱包。
 

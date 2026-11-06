@@ -139,7 +139,9 @@ const signed = await wallet.signTransaction(transaction);
 
 `autoConnect` は、ユーザーが以前に選択し、クライアント上で再び検出されたウォレットの識別情報だけを再接続します。
 
-Vue Solana が `localStorage["vue-solana:selected-wallet"]` に保存するのはウォレットの識別メタデータのみです: `name`、および利用可能な場合は `platform`/`source`。秘密鍵、セッションデータ、トランザクションデータは決して保存しません。
+ユーザーが接続したままにしたウォレットは、`autoConnect` が無効でもページの再読み込み後に復元されます。復元はサイレント接続です。ウォレットはすでに付与した認可を返すだけなので、確認ダイアログを表示したりウォレットアプリを起動したりすることはありません。ウォレットがサイトを認可していない場合は未接続のままです。明示的に `disconnect()` を呼ぶとセッションは破棄されます。
+
+Vue Solana が `localStorage["vue-solana:selected-wallet"]` に保存するのはウォレットの識別メタデータのみです: `name`、利用可能な場合は `platform`/`source`、そしてウォレットが接続中の間は `connected: true`。秘密鍵、セッションデータ、トランザクションデータは決して保存しません。
 
 ユーザーが明示的にウォレット選択をクリアしたときは `selectWallet(null)` を呼び出してください。アプリがカスタムウォレットオブジェクトを所有している場合に限り、`useWallet()` の `setWallet(customWallet)` を呼び出してください。通常のアプリ UI では `useWallets()` から選択するべきです。
 
