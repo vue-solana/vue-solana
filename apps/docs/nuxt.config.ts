@@ -66,9 +66,9 @@ export default defineNuxtConfig({
   solana: {
     cluster: "devnet",
     // MWA wallets bind the authorization to this identity and re-send it before
-    // every signing request. Left to the default, the published 4.1.3 names it
-    // after `document.title`, which differs per page and locale (and is empty
-    // on the client-only `/demo`), so Phantom opened without a sign prompt.
+    // every signing request, so it must be the same on every page and locale.
+    // Pinned rather than defaulted: before 4.1.4 the default was
+    // `document.title`, and Phantom opened without a sign prompt.
     mobileWallet: {
       appIdentity: {
         name: "Vue Solana",
