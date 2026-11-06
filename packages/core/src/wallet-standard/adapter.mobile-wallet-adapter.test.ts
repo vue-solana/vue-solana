@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import type { WalletAccount } from "@wallet-standard/base";
 import {
   SolanaSignAndSendTransaction,
@@ -8,6 +8,7 @@ import {
 } from "@solana/wallet-standard-features";
 import { adaptSolanaStandardWallet } from "./adapter";
 import { PartialSignAndSendError } from "../errors";
+import { setSolanaMobileWalletAuthorizationStore } from "../mobile-wallet-authorization";
 import type { SolanaWalletInfo } from "../types";
 import {
   account,
@@ -159,6 +160,135 @@ describe("Wallet Standard adapter — Mobile Wallet Adapter", () => {
       expect(signIn).toHaveBeenCalledWith({ domain: location.host });
       expect(wallet.connected).toBe(true);
       expect(wallet.publicKey).toBe(signerAccount.address);
+    });
+  });
+
+  describe("failed signIn", () => {
+    afterEach(() => {
+      setSolanaMobileWalletAuthorizationStore(undefined);
+    });
+
+    // A fake that behaves like MWA's authorization: `disconnect` clears the
+    // cache and the in-memory accounts, and a silent `connect` reloads them
+    // from the cache without launching the wallet.
+    async function createAuthorizingWallet() {
+      const original = await createSigningTestAccount();
+      const other = await createSigningTestAccount();
+      const standardWallet = createStandardWallet();
+      let cached: { accounts: readonly WalletAccount[] } | undefined;
+      const store = {
+        get: vi.fn(async () => cached),
+        set: vi.fn(async (authorization: unknown) => {
+          cached = authorization as typeof cached;
+        }),
+      };
+      const authorize = (accounts: readonly WalletAccount[]) => {
+        cached = { accounts };
+        setAccounts(standardWallet, accounts);
+        standardWallet.emitAccountsChange(accounts);
+      };
+      const connect = getConnectFeature(standardWallet).connect;
+      connect.mockImplementation(async (input?: { silent?: boolean }) => {
+        if (!input?.silent) {
+          authorize([original.account]);
+        } else if (cached) {
+          authorize(cached.accounts);
+        }
+
+        return { accounts: standardWallet.accounts };
+      });
+      getDisconnectFeature(standardWallet).disconnect.mockImplementation(async () => {
+        cached = undefined;
+        setAccounts(standardWallet, []);
+        standardWallet.emitAccountsChange([]);
+      });
+      const signIn = vi.fn();
+      setFeature(standardWallet, SolanaSignIn, { signIn });
+      // Every public key the app could have observed, change by change.
+      const observedPublicKeys: (string | null)[] = [];
+      const wallet = adaptSolanaStandardWallet(createMobileWalletInfo(standardWallet), {
+        chain: "solana:devnet",
+        onChange: () => observedPublicKeys.push(wallet.publicKey),
+      });
+
+      return {
+        original,
+        other,
+        standardWallet,
+        store,
+        authorize,
+        connect,
+        signIn,
+        wallet,
+        observedPublicKeys,
+      };
+    }
+
+    it("restores the previous authorization when the user cancels", async () => {
+      const { original, standardWallet, store, connect, signIn, wallet } =
+        await createAuthorizingWallet();
+      setSolanaMobileWalletAuthorizationStore(store);
+      signIn.mockRejectedValue(new Error("User declined"));
+
+      await wallet.connect();
+      await expect(wallet.signIn?.()).rejects.toThrow("User declined");
+
+      expect(wallet.connected).toBe(true);
+      expect(wallet.publicKey).toBe(original.account.address);
+      expect(standardWallet.accounts).toEqual([original.account]);
+      expect(store.set).toHaveBeenCalledWith({ accounts: [original.account] });
+      // Restored from the cache: no second interactive authorization.
+      expect(connect).toHaveBeenLastCalledWith({ silent: true });
+    });
+
+    it("drops another account's authorization instead of switching to it", async () => {
+      const {
+        original,
+        other,
+        standardWallet,
+        store,
+        authorize,
+        signIn,
+        wallet,
+        observedPublicKeys,
+      } = await createAuthorizingWallet();
+      setSolanaMobileWalletAuthorizationStore(store);
+      const signedMessage = new TextEncoder().encode("example.com wants you to sign in");
+      const signature = await other.sign(signedMessage);
+      signIn.mockImplementation(async () => {
+        authorize([other.account]);
+        return [{ account: other.account, signedMessage, signature }];
+      });
+
+      await wallet.connect();
+      await expect(wallet.signIn?.()).rejects.toMatchObject({ code: "INVALID_SIGNATURE" });
+
+      expect(observedPublicKeys).not.toContain(other.account.address);
+      expect(wallet.publicKey).toBe(original.account.address);
+      expect(standardWallet.accounts).toEqual([original.account]);
+    });
+
+    it("reports disconnected when there is no authorization store to restore from", async () => {
+      const { standardWallet, signIn, wallet } = await createAuthorizingWallet();
+      signIn.mockRejectedValue(new Error("User declined"));
+
+      await wallet.connect();
+      await expect(wallet.signIn?.()).rejects.toThrow("User declined");
+
+      expect(standardWallet.accounts).toEqual([]);
+      expect(wallet.connected).toBe(false);
+    });
+
+    it("leaves a disconnected app disconnected", async () => {
+      const { standardWallet, store, connect, signIn, wallet } = await createAuthorizingWallet();
+      setSolanaMobileWalletAuthorizationStore(store);
+      signIn.mockRejectedValue(new Error("User declined"));
+
+      await expect(wallet.signIn?.()).rejects.toThrow("User declined");
+
+      expect(wallet.connected).toBe(false);
+      expect(standardWallet.accounts).toEqual([]);
+      expect(connect).not.toHaveBeenCalled();
     });
   });
 

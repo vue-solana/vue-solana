@@ -139,7 +139,7 @@ const signed = await wallet.signTransaction(transaction);
 
 `autoConnect` reconnecte uniquement une identité de wallet que l'utilisateur a sélectionnée auparavant et qui est à nouveau découverte sur le client.
 
-Un wallet que l'utilisateur a laissé connecté est restauré après un rechargement de la page, même lorsque `autoConnect` est désactivé. La restauration est une connexion silencieuse : le wallet ne fait que signaler une autorisation déjà accordée, il n'affiche donc jamais de demande et ne lance aucune application de wallet. Si le wallet n'autorise plus le site, il reste déconnecté. Un appel explicite à `disconnect()` oublie la session.
+Un wallet que l'utilisateur a laissé connecté est restauré après un rechargement de la page, même lorsque `autoConnect` est désactivé. La restauration est une connexion silencieuse (`connect({ silent: true })`) : un wallet qui respecte l'option `silent` du Wallet Standard ne fait que signaler une autorisation déjà accordée, sans afficher de demande ni lancer d'application de wallet. `silent` est une indication, pas une garantie : un wallet qui l'ignore peut afficher sa demande de connexion au chargement de la page. Si le wallet n'autorise plus le site, il reste déconnecté. Un appel explicite à `disconnect()` oublie la session.
 
 Vue Solana stocke uniquement les métadonnées d'identité du wallet sous `localStorage["vue-solana:selected-wallet"]` : `name`, `platform`/`source` lorsqu'ils sont disponibles, ainsi que `connected: true` tant que le wallet est connecté. Il ne stocke jamais de clés privées, de données de session ni de données de transaction.
 

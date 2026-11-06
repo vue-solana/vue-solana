@@ -1,14 +1,20 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   account,
+  createStandardWallet,
+  createWalletInfo,
   getConnectFeature,
   getDisconnectFeature,
   installPluginTestHooks,
+  mockSolanaContext,
   mockStandardWalletDiscovery,
+  mockWalletDiscovery,
   mountSolanaPlugin,
   mountTwoStandardWallets,
   silenceConsole,
+  type TestWalletAccount,
 } from "./plugin.test-utils";
+import type { SolanaWalletInfo } from "@vue-solana/core/types";
 
 const STORAGE_KEY = "vue-solana:selected-wallet";
 
@@ -132,5 +138,57 @@ describe("createSolanaPlugin wallet session restore", () => {
     await Promise.resolve();
     expect(wallet?.connected.value).toBe(false);
     expect(solana?.error.value).toBeNull();
+  });
+
+  it("keeps the session when a disconnect fails", async () => {
+    silenceConsole();
+    const { standardWallet, walletInfo } = mockStandardWalletDiscovery();
+    getDisconnectFeature(standardWallet).disconnect.mockRejectedValue(new Error("busy"));
+    const { solana, wallet } = mountSolanaPlugin({ mobileWallet: false }, { wallet: true });
+
+    solana?.refreshWallets();
+    solana?.selectWallet(walletInfo);
+    await wallet?.connect();
+    await expect(wallet?.disconnect()).rejects.toThrow("busy");
+
+    expect(wallet?.connected.value).toBe(true);
+    expect(readStoredSelection()).toEqual({ name: "Test Wallet", connected: true });
+  });
+
+  it("forgets the session when a cancelled MWA sign-in leaves the wallet disconnected", async () => {
+    const standardWallet = createStandardWallet();
+    const walletInfo: SolanaWalletInfo = {
+      ...createWalletInfo(standardWallet),
+      source: "mobile-wallet-adapter",
+    };
+    const setAccounts = (accounts: readonly TestWalletAccount[]) => {
+      standardWallet.accounts = accounts;
+    };
+    getConnectFeature(standardWallet).connect.mockImplementation(async () => {
+      setAccounts([account]);
+      return { accounts: [account] };
+    });
+    getDisconnectFeature(standardWallet).disconnect.mockImplementation(async () => {
+      setAccounts([]);
+    });
+    (standardWallet.features as Record<string, unknown>)["solana:signIn"] = {
+      version: "1.0.0",
+      signIn: vi.fn().mockRejectedValue(new Error("User declined")),
+    };
+    mockSolanaContext();
+    mockWalletDiscovery([walletInfo]);
+    const { solana, wallet } = mountSolanaPlugin({ mobileWallet: false }, { wallet: true });
+
+    solana?.refreshWallets();
+    solana?.selectWallet(walletInfo);
+    await wallet?.connect();
+    expect(readStoredSelection()).toMatchObject({ connected: true });
+
+    // No MWA authorization store is registered here, so nothing can be
+    // restored: the wallet really is disconnected, and storage says so.
+    await expect(wallet?.wallet.value?.signIn?.()).rejects.toThrow("User declined");
+
+    expect(wallet?.connected.value).toBe(false);
+    expect(readStoredSelection()).toEqual({ name: "Test Wallet", source: "mobile-wallet-adapter" });
   });
 });

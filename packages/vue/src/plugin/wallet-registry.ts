@@ -204,8 +204,12 @@ export function createSolanaWalletRegistry(options: SolanaWalletRegistryOptions)
 
   /**
    * Reports the outcome of every app-driven `connect()` / `disconnect()`, so
-   * the plugin can remember whether the selected wallet was left connected.
-   * Replaced in place for the same identity reasons as `makeConnectExclusive`.
+   * the plugin can remember whether the selected wallet was left connected. A
+   * failed `disconnect()` reports too (the adapter rolls back to connected); a
+   * failed `connect()` does not, so a transient failure such as a locked wallet
+   * keeps the session for the next load. `signIn()` reports when it changed the connection (an MWA sign-in is an
+   * authorization, and a failed one may end disconnected). Replaced in place
+   * for the same identity reasons as `makeConnectExclusive`.
    */
   function reportConnectionChanges<T extends SolanaWallet>(
     adapter: T,
@@ -213,15 +217,34 @@ export function createSolanaWalletRegistry(options: SolanaWalletRegistryOptions)
   ): T {
     const connect = adapter.connect.bind(adapter);
     const disconnect = adapter.disconnect.bind(adapter);
+    const signIn = adapter.signIn?.bind(adapter);
+    const report = () => options.onConnectionChange?.(walletInfo, adapter.connected);
 
     adapter.connect = async (connectOptions?: SolanaWalletConnectOptions) => {
       await connect(connectOptions);
-      options.onConnectionChange?.(walletInfo, adapter.connected);
+      report();
     };
     adapter.disconnect = async () => {
-      await disconnect();
-      options.onConnectionChange?.(walletInfo, adapter.connected);
+      try {
+        await disconnect();
+      } finally {
+        report();
+      }
     };
+
+    if (signIn) {
+      adapter.signIn = async (input) => {
+        const wasConnected = adapter.connected;
+
+        try {
+          return await signIn(input);
+        } finally {
+          if (adapter.connected !== wasConnected) {
+            report();
+          }
+        }
+      };
+    }
 
     return adapter;
   }

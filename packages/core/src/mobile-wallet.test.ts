@@ -4,7 +4,9 @@ import {
   getDefaultMobileWalletAppIdentity,
   isSolanaMobileWalletSupported,
   registerSolanaMobileWallet,
+  unregisterSolanaMobileWallet,
 } from "./mobile-wallet";
+import { getSolanaMobileWalletAuthorizationStore } from "./mobile-wallet-authorization";
 
 const {
   createDefaultAuthorizationCache,
@@ -169,6 +171,35 @@ describe("chain-scoped MWA authorization cache", () => {
     authorizationCache.clear();
 
     expect(cache.clear).toHaveBeenCalledOnce();
+  });
+
+  it("drops an authorization with no chain (an older cache format)", async () => {
+    const cache = mockDefaultCache(undefined);
+    cache.get.mockResolvedValue({ accounts: [] });
+
+    await expect(createChainScopedAuthorizationCache(["solana:devnet"]).get()).resolves.toBe(
+      undefined,
+    );
+    expect(cache.clear).toHaveBeenCalledOnce();
+  });
+
+  it("exposes the registered cache so a failed sign-in can restore it", async () => {
+    mockUserAgent(
+      "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36",
+    );
+    const cache = mockDefaultCache("solana:mainnet");
+    unregisterSolanaMobileWallet();
+
+    registerSolanaMobileWallet({ chains: ["solana:mainnet"] });
+    const store = getSolanaMobileWalletAuthorizationStore();
+    const authorization = { chain: "solana:mainnet", accounts: [] };
+
+    await expect(store?.get()).resolves.toMatchObject({ chain: "solana:mainnet" });
+    await store?.set(authorization);
+    expect(cache.set).toHaveBeenCalledWith(authorization);
+
+    unregisterSolanaMobileWallet();
+    expect(getSolanaMobileWalletAuthorizationStore()).toBeUndefined();
   });
 });
 

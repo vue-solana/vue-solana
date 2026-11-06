@@ -10,6 +10,10 @@ import type { SolanaSignInInput, SolanaSignInOutput } from "@solana/wallet-stand
 import { getBase58Decoder } from "@solana/kit";
 import type { Address, Signature } from "../kit";
 import { createSolanaError, normalizeSolanaError, PartialSignAndSendError } from "../errors";
+import {
+  getSolanaMobileWalletAuthorizationStore,
+  type SolanaMobileWalletAuthorizationStore,
+} from "../mobile-wallet-authorization";
 import { assertWalletSignature } from "./verify-wallet-signature";
 import type {
   SendTransactionOptions,
@@ -26,6 +30,7 @@ import {
   hasSignIn,
   hasSignMessage,
   hasSignTransaction,
+  type SolanaSignInFeature,
   type SolanaSignTransactionFeature,
   type StandardConnectFeature,
   type StandardDisconnectFeature,
@@ -68,6 +73,9 @@ export function adaptSolanaStandardWallet(
   let connecting = false;
   let disconnecting = false;
   let manuallyDisconnected = false;
+  // While an MWA sign-in swaps the wallet's authorization, `change` events
+  // report that swap, not a user choice: `account` is settled by the sign-in.
+  let signingIn = false;
   const isMobileWalletAdapter = walletInfo.source === "mobile-wallet-adapter";
 
   const eventsFeature = wallet.features[StandardEvents] as
@@ -76,16 +84,160 @@ export function adaptSolanaStandardWallet(
   const unsubscribeChange = eventsFeature?.on("change", (properties) => {
     if (properties.accounts) {
       accounts = properties.accounts;
-      account =
-        allowAccountUpdates && !manuallyDisconnected
-          ? getSolanaAccount(accounts, options.chain)
-          : undefined;
+
+      if (!signingIn) {
+        account =
+          allowAccountUpdates && !manuallyDisconnected
+            ? getSolanaAccount(accounts, options.chain)
+            : undefined;
+      }
+
       options.onChange?.();
     }
   });
 
   function dispose() {
     unsubscribeChange?.();
+  }
+
+  async function verifySignInResult(
+    result: SolanaSignInOutput | undefined,
+    requestedAddress: string | undefined,
+  ): Promise<{ signInResult: SolanaSignInResult; signInAccount: WalletAccount }> {
+    if (!result) {
+      throw new Error("Solana wallet did not return a sign-in result");
+    }
+
+    const signInResult = toSolanaSignInResult(result);
+    const isSignInAccount = (candidate: WalletAccount) =>
+      candidate.address === signInResult.account.address;
+    // `accounts` follows the wallet's `change` events; the live list is the
+    // fallback for a wallet that authorized without emitting one first.
+    const signInAccount = accounts.find(isSignInAccount) ?? wallet.accounts.find(isSignInAccount);
+
+    if (!signInAccount) {
+      throw createSolanaError(
+        "INVALID_SIGNATURE",
+        "The wallet returned a sign-in account it does not expose.",
+      );
+    }
+
+    if (requestedAddress !== undefined && requestedAddress !== signInAccount.address) {
+      throw createSolanaError(
+        "INVALID_SIGNATURE",
+        `The wallet signed in as ${signInResult.account.address} instead of the requested ${requestedAddress}.`,
+      );
+    }
+
+    await assertWalletSignature(
+      signInAccount.publicKey,
+      signInResult.signedMessage,
+      signInResult.signature,
+      "sign-in",
+    );
+
+    return { signInResult, signInAccount };
+  }
+
+  /**
+   * MWA's `signIn` answers from its cached authorization whenever one exists —
+   * and every connect writes one — without opening the wallet, then throws "no
+   * sign in result returned by wallet". The authorization is cleared first (no
+   * wallet round trip) so the sign-in authorizes afresh.
+   *
+   * A sign-in that fails — cancelled, or rejected because the wallet answered
+   * with another account — puts the previous authorization back, so it neither
+   * logs the user out nor leaves the wallet authorized for an account the app
+   * refused.
+   */
+  async function signInThroughMobileWalletAdapter(
+    signInWallet: Wallet & { features: SolanaSignInFeature },
+    signInInput: SolanaSignInInput,
+    requestedAddress: string | undefined,
+  ): Promise<SolanaSignInResult> {
+    const disconnectFeature = wallet.features[
+      StandardDisconnect
+    ] as StandardDisconnectFeature[typeof StandardDisconnect];
+    const authorizationStore = getSolanaMobileWalletAuthorizationStore();
+    const previous = { accounts, account, allowAccountUpdates, manuallyDisconnected };
+    const wasAuthorized = wallet.accounts.length > 0;
+    const previousAuthorization = await authorizationStore?.get().catch(() => undefined);
+
+    signingIn = true;
+
+    try {
+      await disconnectFeature.disconnect();
+
+      const [result] = await signInWallet.features[SolanaSignIn].signIn(signInInput);
+      const { signInResult, signInAccount } = await verifySignInResult(result, requestedAddress);
+
+      // The sign-in replaced the cleared authorization, so the signed-in
+      // account is now the connected one.
+      accounts = wallet.accounts;
+      allowAccountUpdates = true;
+      manuallyDisconnected = false;
+      account = signInAccount;
+
+      return signInResult;
+    } catch (error) {
+      await restoreMobileWalletAuthorization(
+        disconnectFeature,
+        authorizationStore,
+        previousAuthorization,
+        wasAuthorized,
+      );
+
+      accounts = wallet.accounts;
+      allowAccountUpdates = previous.allowAccountUpdates;
+      manuallyDisconnected = previous.manuallyDisconnected;
+      // Only claim the previous account when the wallet really holds it again.
+      account =
+        previous.account &&
+        accounts.some((candidate) => candidate.address === previous.account?.address)
+          ? previous.account
+          : undefined;
+
+      throw error;
+    } finally {
+      signingIn = false;
+      options.onChange?.();
+    }
+  }
+
+  /**
+   * Best effort: drops whatever the failed sign-in authorized, writes the
+   * previous cache entry back, and — when the wallet was authorized before —
+   * reloads it with a silent connect, which reads the cache and never launches
+   * the wallet. Without a store (MWA registered by the app itself) the wallet
+   * just ends up unauthorized, and the adapter reports it disconnected.
+   */
+  async function restoreMobileWalletAuthorization(
+    disconnectFeature: StandardDisconnectFeature[typeof StandardDisconnect],
+    authorizationStore: SolanaMobileWalletAuthorizationStore | undefined,
+    previousAuthorization: unknown,
+    wasAuthorized: boolean,
+  ) {
+    try {
+      if (wallet.accounts.length > 0) {
+        await disconnectFeature.disconnect();
+      }
+
+      if (!authorizationStore || previousAuthorization === undefined) {
+        return;
+      }
+
+      await authorizationStore.set(previousAuthorization);
+
+      if (wasAuthorized) {
+        const connectFeature = wallet.features[
+          StandardConnect
+        ] as StandardConnectFeature[typeof StandardConnect];
+        await connectFeature.connect({ silent: true });
+      }
+    } catch {
+      // The sign-in error is what the caller needs; a failed restore leaves
+      // the wallet unauthorized, which the adapter state then reflects.
+    }
   }
 
   return {
@@ -168,69 +320,22 @@ export function adaptSolanaStandardWallet(
           // one. Verifying only the returned account let a wallet answer with a
           // *different* account it controls, sign for itself, and pass.
           const requestedAddress = input?.address ?? account?.address;
-          // MWA has no active session to require: its sign-in *is* the
-          // authorization, so a disconnected app can sign in with the domain alone.
-          const signInInput =
-            input ??
-            getDefaultSignInInput(isMobileWalletAdapter ? account : getActiveAccount(account));
 
           if (isMobileWalletAdapter) {
-            // MWA's `signIn` answers from its cached authorization whenever one
-            // exists — and every connect writes one — without opening the wallet,
-            // then throws "no sign in result returned by wallet". Clearing it
-            // first (no wallet round trip) makes the sign-in authorize afresh.
-            const disconnectFeature = wallet.features[
-              StandardDisconnect
-            ] as StandardDisconnectFeature[typeof StandardDisconnect];
-            await disconnectFeature.disconnect();
-          }
-
-          const [result] = await wallet.features[SolanaSignIn].signIn(signInInput);
-
-          if (!result) {
-            throw new Error("Solana wallet did not return a sign-in result");
-          }
-
-          const signInResult = toSolanaSignInResult(result);
-          const isSignInAccount = (candidate: WalletAccount) =>
-            candidate.address === signInResult.account.address;
-          // `accounts` follows the wallet's `change` events; the live list is the
-          // fallback for a wallet that authorized without emitting one first.
-          const signInAccount =
-            accounts.find(isSignInAccount) ?? wallet.accounts.find(isSignInAccount);
-
-          if (!signInAccount) {
-            throw createSolanaError(
-              "INVALID_SIGNATURE",
-              "The wallet returned a sign-in account it does not expose.",
+            // MWA has no active session to require: its sign-in *is* the
+            // authorization, so a disconnected app can sign in with the domain alone.
+            return signInThroughMobileWalletAdapter(
+              wallet,
+              input ?? getDefaultSignInInput(account),
+              requestedAddress,
             );
           }
 
-          if (requestedAddress !== undefined && requestedAddress !== signInAccount.address) {
-            throw createSolanaError(
-              "INVALID_SIGNATURE",
-              `The wallet signed in as ${signInResult.account.address} instead of the requested ${requestedAddress}.`,
-            );
-          }
-
-          await assertWalletSignature(
-            signInAccount.publicKey,
-            signInResult.signedMessage,
-            signInResult.signature,
-            "sign-in",
+          const [result] = await wallet.features[SolanaSignIn].signIn(
+            input ?? getDefaultSignInInput(getActiveAccount(account)),
           );
 
-          if (isMobileWalletAdapter) {
-            // The MWA sign-in replaced the authorization cleared above, so the
-            // signed-in account is now the connected one.
-            accounts = wallet.accounts;
-            allowAccountUpdates = true;
-            manuallyDisconnected = false;
-            account = signInAccount;
-            options.onChange?.();
-          }
-
-          return signInResult;
+          return (await verifySignInResult(result, requestedAddress)).signInResult;
         }
       : undefined,
     signMessage: hasSignMessage(wallet)

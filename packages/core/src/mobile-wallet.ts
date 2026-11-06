@@ -3,8 +3,10 @@ import {
   createDefaultChainSelector,
   createDefaultWalletNotFoundHandler,
   registerMwa,
+  type Authorization,
   type AuthorizationCache,
 } from "@solana-mobile/wallet-standard-mobile";
+import { setSolanaMobileWalletAuthorizationStore } from "./mobile-wallet-authorization";
 import { isSolanaMobileWalletSupported } from "./mobile-wallet-support";
 import type { SolanaChain } from "./types";
 
@@ -45,15 +47,22 @@ export function registerSolanaMobileWallet(
     return true;
   }
 
+  const authorizationCache = createChainScopedAuthorizationCache(chains);
+
   registerMwa({
     appIdentity,
-    authorizationCache: createChainScopedAuthorizationCache(chains),
+    authorizationCache,
     chains,
     chainSelector: createDefaultChainSelector(),
     remoteHostAuthority: options.remoteHostAuthority,
     onWalletNotFound: createDefaultWalletNotFoundHandler(),
   });
   registeredMobileWalletKeys.add(registrationKey);
+  // Lets a failed MWA sign-in restore the authorization it had to clear.
+  setSolanaMobileWalletAuthorizationStore({
+    get: () => authorizationCache.get(),
+    set: (authorization) => authorizationCache.set(authorization as Authorization),
+  });
 
   return true;
 }
@@ -97,6 +106,7 @@ export function createChainScopedAuthorizationCache(
  */
 export function unregisterSolanaMobileWallet(): void {
   registeredMobileWalletKeys.clear();
+  setSolanaMobileWalletAuthorizationStore(undefined);
 }
 
 export function getDefaultMobileWalletAppIdentity(): SolanaMobileWalletAppIdentity {

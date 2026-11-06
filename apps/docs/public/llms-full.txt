@@ -7720,7 +7720,7 @@ const signed = await wallet.signTransaction(transaction);
 
 `autoConnect` verbindet nur eine Wallet-Identität erneut, die der Nutzer zuvor ausgewählt hat und die auf dem Client wieder erkannt wird.
 
-Eine Wallet, die der Nutzer verbunden gelassen hat, wird nach einem Neuladen der Seite auch ohne `autoConnect` wiederhergestellt. Die Wiederherstellung ist ein stiller Connect: Die Wallet meldet nur eine bereits erteilte Autorisierung, zeigt also nie eine Abfrage an und startet keine Wallet-App. Autorisiert die Wallet die Seite nicht mehr, bleibt sie getrennt. Ein explizites `disconnect()` vergisst die Sitzung.
+Eine Wallet, die der Nutzer verbunden gelassen hat, wird nach einem Neuladen der Seite auch ohne `autoConnect` wiederhergestellt. Die Wiederherstellung ist ein stiller Connect (`connect({ silent: true })`): Eine Wallet, die das Wallet-Standard-Flag `silent` beachtet, meldet nur eine bereits erteilte Autorisierung, ohne Abfrage und ohne eine Wallet-App zu starten. `silent` ist ein Hinweis, keine Garantie: Eine Wallet, die es ignoriert, kann beim Laden der Seite ihre Verbindungsabfrage anzeigen. Autorisiert die Wallet die Seite nicht mehr, bleibt sie getrennt. Ein explizites `disconnect()` vergisst die Sitzung.
 
 Vue Solana speichert unter `localStorage["vue-solana:selected-wallet"]` nur Identitäts-Metadaten der Wallet: `name`, `platform`/`source`, wenn verfügbar, sowie `connected: true`, solange die Wallet verbunden ist. Private Schlüssel, Sitzungsdaten oder Transaktionsdaten werden nie gespeichert.
 
@@ -7992,7 +7992,7 @@ const signed = await wallet.signTransaction(transaction);
 
 `autoConnect` reconecta solo una identidad de wallet que el usuario seleccionó previamente y que se descubre de nuevo en el cliente.
 
-Una wallet que el usuario dejó conectada se restaura tras recargar la página aunque `autoConnect` esté desactivado. La restauración es una conexión silenciosa: la wallet solo informa una autorización que ya concedió, así que nunca muestra un aviso ni abre una app de wallet. Si la wallet ya no autoriza el sitio, queda desconectada. Un `disconnect()` explícito olvida la sesión.
+Una wallet que el usuario dejó conectada se restaura tras recargar la página aunque `autoConnect` esté desactivado. La restauración es una conexión silenciosa (`connect({ silent: true })`): una wallet que respeta el indicador `silent` de Wallet Standard solo informa una autorización que ya concedió, sin mostrar un aviso ni abrir una app de wallet. `silent` es una sugerencia, no una garantía, así que una wallet que lo ignora puede mostrar su aviso de conexión al cargar la página. Si la wallet ya no autoriza el sitio, queda desconectada. Un `disconnect()` explícito olvida la sesión.
 
 Vue Solana almacena solo metadata de identidad de wallet en `localStorage["vue-solana:selected-wallet"]`: `name`, `platform`/`source` cuando están disponibles, y `connected: true` mientras la wallet está conectada. Nunca almacena claves privadas, datos de sesión ni datos de transacción.
 
@@ -8264,7 +8264,7 @@ const signed = await wallet.signTransaction(transaction);
 
 `autoConnect` reconnecte uniquement une identité de wallet que l'utilisateur a sélectionnée auparavant et qui est à nouveau découverte sur le client.
 
-Un wallet que l'utilisateur a laissé connecté est restauré après un rechargement de la page, même lorsque `autoConnect` est désactivé. La restauration est une connexion silencieuse : le wallet ne fait que signaler une autorisation déjà accordée, il n'affiche donc jamais de demande et ne lance aucune application de wallet. Si le wallet n'autorise plus le site, il reste déconnecté. Un appel explicite à `disconnect()` oublie la session.
+Un wallet que l'utilisateur a laissé connecté est restauré après un rechargement de la page, même lorsque `autoConnect` est désactivé. La restauration est une connexion silencieuse (`connect({ silent: true })`) : un wallet qui respecte l'option `silent` du Wallet Standard ne fait que signaler une autorisation déjà accordée, sans afficher de demande ni lancer d'application de wallet. `silent` est une indication, pas une garantie : un wallet qui l'ignore peut afficher sa demande de connexion au chargement de la page. Si le wallet n'autorise plus le site, il reste déconnecté. Un appel explicite à `disconnect()` oublie la session.
 
 Vue Solana stocke uniquement les métadonnées d'identité du wallet sous `localStorage["vue-solana:selected-wallet"]` : `name`, `platform`/`source` lorsqu'ils sont disponibles, ainsi que `connected: true` tant que le wallet est connecté. Il ne stocke jamais de clés privées, de données de session ni de données de transaction.
 
@@ -8536,7 +8536,7 @@ const signed = await wallet.signTransaction(transaction);
 
 `autoConnect` reconnects only a wallet identity that the user previously selected and that is discovered again on the client.
 
-A wallet the user left connected is restored after a page refresh even when `autoConnect` is off. The restore is a silent connect: the wallet only reports an authorization it already granted, so it never shows a prompt or launches a wallet app. If the wallet no longer authorizes the site, it stays disconnected. An explicit `disconnect()` forgets the session.
+A wallet the user left connected is restored after a page refresh even when `autoConnect` is off. The restore is a silent connect (`connect({ silent: true })`): a wallet that honours the Wallet Standard `silent` flag only reports an authorization it already granted, without a prompt or launching a wallet app. `silent` is a hint, not a guarantee, so a wallet that ignores it can show its connect prompt on page load. If the wallet no longer authorizes the site, it stays disconnected. An explicit `disconnect()` forgets the session.
 
 Vue Solana stores only wallet identity metadata under `localStorage["vue-solana:selected-wallet"]`: `name`, `platform`/`source` when available, and `connected: true` while the wallet is connected. It never stores private keys, session data, or transaction data.
 
@@ -8808,7 +8808,7 @@ const signed = await wallet.signTransaction(transaction);
 
 `autoConnect` は、ユーザーが以前に選択し、クライアント上で再び検出されたウォレットの識別情報だけを再接続します。
 
-ユーザーが接続したままにしたウォレットは、`autoConnect` が無効でもページの再読み込み後に復元されます。復元はサイレント接続です。ウォレットはすでに付与した認可を返すだけなので、確認ダイアログを表示したりウォレットアプリを起動したりすることはありません。ウォレットがサイトを認可していない場合は未接続のままです。明示的に `disconnect()` を呼ぶとセッションは破棄されます。
+ユーザーが接続したままにしたウォレットは、`autoConnect` が無効でもページの再読み込み後に復元されます。復元はサイレント接続（`connect({ silent: true })`）です。Wallet Standard の `silent` フラグに従うウォレットは、すでに付与した認可を返すだけで、確認ダイアログの表示やウォレットアプリの起動は行いません。`silent` はヒントであり保証ではないため、これを無視するウォレットはページ読み込み時に接続ダイアログを表示することがあります。ウォレットがサイトを認可していない場合は未接続のままです。明示的に `disconnect()` を呼ぶとセッションは破棄されます。
 
 Vue Solana が `localStorage["vue-solana:selected-wallet"]` に保存するのはウォレットの識別メタデータのみです: `name`、利用可能な場合は `platform`/`source`、そしてウォレットが接続中の間は `connected: true`。秘密鍵、セッションデータ、トランザクションデータは決して保存しません。
 
@@ -9080,7 +9080,7 @@ const signed = await wallet.signTransaction(transaction);
 
 `autoConnect`는 사용자가 이전에 선택했고 client에서 다시 discovery된 wallet identity만 reconnect합니다.
 
-사용자가 연결된 상태로 둔 wallet은 `autoConnect`가 꺼져 있어도 page refresh 후 복원됩니다. 복원은 silent connect입니다. wallet은 이미 부여한 authorization만 알려 주므로 prompt를 띄우거나 wallet app을 실행하지 않습니다. wallet이 더 이상 site를 authorize하지 않으면 disconnected 상태로 남습니다. 명시적인 `disconnect()`는 session을 잊습니다.
+사용자가 연결된 상태로 둔 wallet은 `autoConnect`가 꺼져 있어도 page refresh 후 복원됩니다. 복원은 silent connect(`connect({ silent: true })`)입니다. Wallet Standard의 `silent` flag를 따르는 wallet은 이미 부여한 authorization만 알려 주며 prompt를 띄우거나 wallet app을 실행하지 않습니다. `silent`는 보장이 아닌 hint이므로, 이를 무시하는 wallet은 page load 시 connect prompt를 표시할 수 있습니다. wallet이 더 이상 site를 authorize하지 않으면 disconnected 상태로 남습니다. 명시적인 `disconnect()`는 session을 잊습니다.
 
 Vue Solana는 `localStorage["vue-solana:selected-wallet"]`에 wallet identity metadata만 저장합니다. 저장되는 값은 `name`, 가능한 경우 `platform`/`source`, 그리고 wallet이 연결되어 있는 동안의 `connected: true`입니다. private key, session data, transaction data는 절대 저장하지 않습니다.
 
@@ -9352,7 +9352,7 @@ const signed = await wallet.signTransaction(transaction);
 
 `autoConnect` 只会重新连接用户此前选择过、并且在客户端再次被发现的钱包身份。
 
-用户保持连接状态的钱包，即使关闭了 `autoConnect`，在页面刷新后也会被恢复。恢复是一次静默连接：钱包只会返回它已经授予的授权，因此不会弹出提示，也不会启动钱包应用。如果钱包不再授权该站点，它会保持未连接状态。显式调用 `disconnect()` 会清除该会话。
+用户保持连接状态的钱包，即使关闭了 `autoConnect`，在页面刷新后也会被恢复。恢复是一次静默连接（`connect({ silent: true })`）：遵循 Wallet Standard `silent` 标志的钱包只会返回它已经授予的授权，不会弹出提示，也不会启动钱包应用。`silent` 只是提示而非保证，忽略它的钱包可能会在页面加载时显示连接提示。如果钱包不再授权该站点，它会保持未连接状态。显式调用 `disconnect()` 会清除该会话。
 
 Vue Solana 只会在 `localStorage["vue-solana:selected-wallet"]` 下存储钱包身份元数据：`name`、可用时的 `platform`/`source`，以及钱包保持连接期间的 `connected: true`。它永远不会存储私钥、会话数据或交易数据。
 
