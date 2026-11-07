@@ -77,6 +77,8 @@ export function adaptSolanaStandardWallet(
   // report that swap, not a user choice: `account` is settled by the sign-in.
   let signingIn = false;
   const isMobileWalletAdapter = walletInfo.source === "mobile-wallet-adapter";
+  // Rejecters of the MWA requests in flight; see `whileMobileWalletAuthorized`.
+  const pendingMobileWalletRequests = new Set<(error: Error) => void>();
 
   const eventsFeature = wallet.features[StandardEvents] as
     | StandardEventsFeature[typeof StandardEvents]
@@ -84,6 +86,10 @@ export function adaptSolanaStandardWallet(
   const unsubscribeChange = eventsFeature?.on("change", (properties) => {
     if (properties.accounts) {
       accounts = properties.accounts;
+
+      if (accounts.length === 0) {
+        rejectPendingMobileWalletRequests();
+      }
 
       if (!signingIn) {
         account =
@@ -98,6 +104,45 @@ export function adaptSolanaStandardWallet(
 
   function dispose() {
     unsubscribeChange?.();
+  }
+
+  /**
+   * MWA re-authorizes with the cached auth token before every signing request.
+   * When the wallet rejects that token (revoked, or issued under another app
+   * identity) MWA drops its authorization — emitting `change` with no accounts —
+   * and then deliberately never settles the request, because its connection
+   * generation moved on. Phantom shows no prompt in that case, so without this
+   * the request would hang forever. It is rejected instead, and the next
+   * `connect()` authorizes afresh because MWA also cleared its cache.
+   */
+  function whileMobileWalletAuthorized<T>(request: () => Promise<T>): Promise<T> {
+    if (!isMobileWalletAdapter) {
+      return request();
+    }
+
+    let reject!: (error: Error) => void;
+    const deauthorized = new Promise<never>((_, rejectRequest) => {
+      reject = rejectRequest;
+    });
+
+    pendingMobileWalletRequests.add(reject);
+
+    return Promise.race([request(), deauthorized]).finally(() => {
+      pendingMobileWalletRequests.delete(reject);
+    });
+  }
+
+  function rejectPendingMobileWalletRequests() {
+    for (const reject of pendingMobileWalletRequests) {
+      reject(
+        createSolanaError(
+          "WALLET_NOT_CONNECTED",
+          "The wallet ended this app's session instead of signing, usually because it no longer accepts the saved authorization. Connect the wallet again and retry.",
+        ),
+      );
+    }
+
+    pendingMobileWalletRequests.clear();
   }
 
   async function verifySignInResult(
@@ -341,10 +386,12 @@ export function adaptSolanaStandardWallet(
     signMessage: hasSignMessage(wallet)
       ? async (message) => {
           const activeAccount = getActiveAccount(account);
-          const [result] = await wallet.features[SolanaSignMessage].signMessage({
-            account: activeAccount,
-            message,
-          });
+          const [result] = await whileMobileWalletAuthorized(() =>
+            wallet.features[SolanaSignMessage].signMessage({
+              account: activeAccount,
+              message,
+            }),
+          );
 
           if (!result) {
             throw new Error("Solana wallet did not return a message signature");
@@ -369,11 +416,13 @@ export function adaptSolanaStandardWallet(
     signTransaction: hasSignTransaction(wallet)
       ? async (transaction) => {
           const activeAccount = getActiveAccount(account);
-          const [result] = await wallet.features[SolanaSignTransaction].signTransaction({
-            account: activeAccount,
-            transaction: new Uint8Array(transaction),
-            chain: options.chain,
-          });
+          const [result] = await whileMobileWalletAuthorized(() =>
+            wallet.features[SolanaSignTransaction].signTransaction({
+              account: activeAccount,
+              transaction: new Uint8Array(transaction),
+              chain: options.chain,
+            }),
+          );
 
           if (!result) {
             throw new Error("Solana wallet did not return a signed transaction");
@@ -384,33 +433,37 @@ export function adaptSolanaStandardWallet(
       : undefined,
     signAllTransactions: hasSignTransaction(wallet)
       ? async (transactions) =>
-          signAllThroughFeature(
-            wallet as Wallet & { features: SolanaSignTransactionFeature },
-            () => getActiveAccount(account),
-            transactions,
-            options.chain,
+          whileMobileWalletAuthorized(() =>
+            signAllThroughFeature(
+              wallet as Wallet & { features: SolanaSignTransactionFeature },
+              () => getActiveAccount(account),
+              transactions,
+              options.chain,
+            ),
           )
       : undefined,
     signTransactions: hasSignTransaction(wallet)
       ? async (transactions) =>
-          signAllThroughFeature(
-            wallet as Wallet & { features: SolanaSignTransactionFeature },
-            () => getActiveAccount(account),
-            transactions,
-            options.chain,
+          whileMobileWalletAuthorized(() =>
+            signAllThroughFeature(
+              wallet as Wallet & { features: SolanaSignTransactionFeature },
+              () => getActiveAccount(account),
+              transactions,
+              options.chain,
+            ),
           )
       : undefined,
     signAndSendTransaction: hasSignAndSendTransaction(wallet)
       ? async (transaction, sendOptions) => {
           const activeAccount = getActiveAccount(account);
-          const [result] = await wallet.features[
-            SolanaSignAndSendTransaction
-          ].signAndSendTransaction({
-            account: activeAccount,
-            transaction: new Uint8Array(transaction),
-            chain: options.chain ?? getSolanaAccountChain(activeAccount),
-            options: sendOptions,
-          });
+          const [result] = await whileMobileWalletAuthorized(() =>
+            wallet.features[SolanaSignAndSendTransaction].signAndSendTransaction({
+              account: activeAccount,
+              transaction: new Uint8Array(transaction),
+              chain: options.chain ?? getSolanaAccountChain(activeAccount),
+              options: sendOptions,
+            }),
+          );
 
           if (!result) {
             throw new Error("Solana wallet did not return a transaction signature");
@@ -434,25 +487,22 @@ export function adaptSolanaStandardWallet(
             transactions.length > 1 &&
             hasSignTransaction(wallet)
           ) {
-            const signedTransactions = await signAllThroughFeature(
-              wallet,
-              () => activeAccount,
-              transactions,
-              options.chain,
+            const signedTransactions = await whileMobileWalletAuthorized(() =>
+              signAllThroughFeature(wallet, () => activeAccount, transactions, options.chain),
             );
 
             return sendSequentially(signedTransactions, options.sendTransaction, sendOptions);
           }
 
-          const results = await wallet.features[
-            SolanaSignAndSendTransaction
-          ].signAndSendTransaction(
-            ...transactions.map((transaction) => ({
-              account: activeAccount,
-              transaction: new Uint8Array(transaction),
-              chain: options.chain ?? getSolanaAccountChain(activeAccount),
-              options: sendOptions,
-            })),
+          const results = await whileMobileWalletAuthorized(() =>
+            wallet.features[SolanaSignAndSendTransaction].signAndSendTransaction(
+              ...transactions.map((transaction) => ({
+                account: activeAccount,
+                transaction: new Uint8Array(transaction),
+                chain: options.chain ?? getSolanaAccountChain(activeAccount),
+                options: sendOptions,
+              })),
+            ),
           );
 
           if (results.length !== transactions.length) {
