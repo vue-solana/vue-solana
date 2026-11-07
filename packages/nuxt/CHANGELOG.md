@@ -1,5 +1,13 @@
 # @vue-solana/nuxt
 
+## 4.1.5
+
+### Patch Changes
+
+- 4413223: Reject an Android Mobile Wallet Adapter signing request when the wallet drops its authorization, instead of leaving it pending forever. When a wallet such as Phantom rejected the saved auth token, MWA cleared its session and never settled the request, so `signMessage` (and the transaction signing calls) spun with no prompt and no error. They now fail with `WALLET_NOT_CONNECTED`, and connecting again authorizes afresh.
+- Updated dependencies [4413223]
+  - @vue-solana/vue@4.1.5
+
 ## 4.1.4
 
 ### Patch Changes
