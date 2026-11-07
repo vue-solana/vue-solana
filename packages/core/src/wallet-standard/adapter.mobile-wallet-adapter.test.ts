@@ -104,6 +104,60 @@ describe("Wallet Standard adapter — Mobile Wallet Adapter", () => {
     });
   });
 
+  describe("rejected re-authorization", () => {
+    // MWA drops its authorization when the wallet rejects the cached auth token,
+    // then never settles the request (its connection generation moved on).
+    function rejectReauthorization(standardWallet: TestStandardWallet) {
+      return vi.fn(() => {
+        standardWallet.emitAccountsChange([]);
+        return new Promise<never>(() => {});
+      });
+    }
+
+    it("rejects signMessage instead of hanging", async () => {
+      const standardWallet = createStandardWallet([account]);
+      setFeature(standardWallet, SolanaSignMessage, {
+        signMessage: rejectReauthorization(standardWallet),
+      });
+      const wallet = adaptSolanaStandardWallet(createMobileWalletInfo(standardWallet), {
+        account,
+      });
+
+      await expect(wallet.signMessage?.(new Uint8Array([1, 2, 3]))).rejects.toMatchObject({
+        code: "WALLET_NOT_CONNECTED",
+      });
+      expect(wallet.connected).toBe(false);
+    });
+
+    it("rejects signTransaction instead of hanging", async () => {
+      const standardWallet = createStandardWallet([account]);
+      setFeature(standardWallet, SolanaSignTransaction, {
+        signTransaction: rejectReauthorization(standardWallet),
+      });
+      const wallet = adaptSolanaStandardWallet(createMobileWalletInfo(standardWallet), {
+        account,
+      });
+
+      await expect(wallet.signTransaction?.(createTestTransaction())).rejects.toMatchObject({
+        code: "WALLET_NOT_CONNECTED",
+      });
+    });
+
+    it("rejects signAndSendTransaction instead of hanging", async () => {
+      const standardWallet = createStandardWallet([account]);
+      setFeature(standardWallet, SolanaSignAndSendTransaction, {
+        signAndSendTransaction: rejectReauthorization(standardWallet),
+      });
+      const wallet = adaptSolanaStandardWallet(createMobileWalletInfo(standardWallet), {
+        account,
+      });
+
+      await expect(wallet.signAndSendTransaction?.(createTestTransaction())).rejects.toMatchObject({
+        code: "WALLET_NOT_CONNECTED",
+      });
+    });
+  });
+
   describe("signIn", () => {
     async function createSignInWallet() {
       const { account: signerAccount, sign } = await createSigningTestAccount();
