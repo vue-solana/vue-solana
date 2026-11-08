@@ -122,6 +122,7 @@
     "check:esm-map": "node ../../scripts/check-exports-map.mjs"
   },
   "dependencies": {
+    "@solana-mobile/mobile-wallet-adapter-protocol": "^2.2.9",
     "@solana-mobile/wallet-standard-mobile": "^0.5.3",
     "@solana/kit": "^8.6.0",
     "@solana/kit-plugin-rpc": "^0.19.0",
