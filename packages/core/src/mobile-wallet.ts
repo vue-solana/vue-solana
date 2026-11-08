@@ -7,6 +7,7 @@ import {
   type AuthorizationCache,
 } from "@solana-mobile/wallet-standard-mobile";
 import { setSolanaMobileWalletAuthorizationStore } from "./mobile-wallet-authorization";
+import { signMobileWalletMessages } from "./mobile-wallet/sign-messages";
 import { isSolanaMobileWalletSupported } from "./mobile-wallet-support";
 import type { SolanaChain } from "./types";
 
@@ -58,10 +59,13 @@ export function registerSolanaMobileWallet(
     onWalletNotFound: createDefaultWalletNotFoundHandler(),
   });
   registeredMobileWalletKeys.add(registrationKey);
-  // Lets a failed MWA sign-in restore the authorization it had to clear.
+  // Lets a failed MWA sign-in restore the authorization it had to clear, and
+  // message signing recover from a rejected auth token.
   setSolanaMobileWalletAuthorizationStore({
     get: () => authorizationCache.get(),
     set: (authorization) => authorizationCache.set(authorization as Authorization),
+    signMessages: (publicKey, messages) =>
+      signMobileWalletMessages({ appIdentity, authorizationCache, publicKey, messages }),
   });
 
   return true;

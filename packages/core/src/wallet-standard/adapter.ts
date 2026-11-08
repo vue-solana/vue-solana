@@ -62,6 +62,8 @@ export interface AdaptedSolanaWallet extends SolanaWallet {
   dispose(): void;
 }
 
+const SIGNATURE_LENGTH = 64;
+
 export function adaptSolanaStandardWallet(
   walletInfo: SolanaWalletInfo,
   options: AdaptSolanaWalletOptions = {},
@@ -130,6 +132,29 @@ export function adaptSolanaStandardWallet(
     return Promise.race([request(), deauthorized]).finally(() => {
       pendingMobileWalletRequests.delete(reject);
     });
+  }
+
+  /**
+   * MWA's own `signMessage` cannot recover when the wallet rejects the cached
+   * auth token (Phantom rejects even a fresh one), so a message is signed in a
+   * session `registerSolanaMobileWallet()` runs instead. `undefined` when MWA
+   * was registered by the app itself and no such session exists.
+   */
+  function signMessageThroughMobileWalletSession(
+    activeAccount: WalletAccount,
+    message: Uint8Array,
+  ): Promise<{ signedMessage: Uint8Array; signature: Uint8Array }[]> | undefined {
+    const signMessages = isMobileWalletAdapter
+      ? getSolanaMobileWalletAuthorizationStore()?.signMessages
+      : undefined;
+
+    return signMessages?.(Uint8Array.from(activeAccount.publicKey), [message]).then(
+      (signedPayloads) =>
+        signedPayloads.map((signedMessage) => ({
+          signedMessage,
+          signature: signedMessage.slice(-SIGNATURE_LENGTH),
+        })),
+    );
   }
 
   function rejectPendingMobileWalletRequests() {
@@ -386,11 +411,13 @@ export function adaptSolanaStandardWallet(
     signMessage: hasSignMessage(wallet)
       ? async (message) => {
           const activeAccount = getActiveAccount(account);
-          const [result] = await whileMobileWalletAuthorized(() =>
-            wallet.features[SolanaSignMessage].signMessage({
-              account: activeAccount,
-              message,
-            }),
+          const [result] = await whileMobileWalletAuthorized(
+            () =>
+              signMessageThroughMobileWalletSession(activeAccount, message) ??
+              wallet.features[SolanaSignMessage].signMessage({
+                account: activeAccount,
+                message,
+              }),
           );
 
           if (!result) {

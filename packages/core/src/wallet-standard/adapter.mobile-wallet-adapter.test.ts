@@ -102,6 +102,59 @@ describe("Wallet Standard adapter — Mobile Wallet Adapter", () => {
         code: "INVALID_SIGNATURE",
       });
     });
+
+    describe("through the registered MWA session", () => {
+      afterEach(() => {
+        setSolanaMobileWalletAuthorizationStore(undefined);
+      });
+
+      it("signs through the store instead of MWA's signMessage", async () => {
+        const { account: signerAccount, sign } = await createSigningTestAccount();
+        const standardWallet = createStandardWallet();
+        const message = new Uint8Array([1, 2, 3]);
+        const signature = await sign(message);
+        const featureSignMessage = vi.fn();
+        const signMessages = vi
+          .fn()
+          .mockResolvedValue([new Uint8Array([...message, ...signature])]);
+        setFeature(standardWallet, SolanaSignMessage, { signMessage: featureSignMessage });
+        setSolanaMobileWalletAuthorizationStore({ get: vi.fn(), set: vi.fn(), signMessages });
+        const wallet = adaptSolanaStandardWallet(createMobileWalletInfo(standardWallet), {
+          account: signerAccount,
+        });
+
+        await expect(wallet.signMessage?.(message)).resolves.toEqual({
+          signedMessage: message,
+          signature,
+        });
+        expect(signMessages).toHaveBeenCalledWith(Uint8Array.from(signerAccount.publicKey), [
+          message,
+        ]);
+        expect(featureSignMessage).not.toHaveBeenCalled();
+      });
+
+      it("leaves a non-MWA wallet on its own signMessage", async () => {
+        const { account: signerAccount, sign } = await createSigningTestAccount();
+        const standardWallet = createStandardWallet();
+        const message = new Uint8Array([1, 2, 3]);
+        const signature = await sign(message);
+        const signMessages = vi.fn();
+        setFeature(standardWallet, SolanaSignMessage, {
+          signMessage: vi.fn().mockResolvedValue([{ signedMessage: message, signature }]),
+        });
+        setSolanaMobileWalletAuthorizationStore({ get: vi.fn(), set: vi.fn(), signMessages });
+        const wallet = adaptSolanaStandardWallet(
+          { ...createMobileWalletInfo(standardWallet), source: "wallet-standard" },
+          { account: signerAccount },
+        );
+
+        await expect(wallet.signMessage?.(message)).resolves.toEqual({
+          signedMessage: message,
+          signature,
+        });
+        expect(signMessages).not.toHaveBeenCalled();
+      });
+    });
   });
 
   describe("rejected re-authorization", () => {

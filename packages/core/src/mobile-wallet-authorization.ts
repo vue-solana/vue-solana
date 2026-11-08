@@ -14,6 +14,12 @@
 export interface SolanaMobileWalletAuthorizationStore {
   get(): Promise<unknown>;
   set(authorization: unknown): Promise<void>;
+  /**
+   * Signs messages for the account with `publicKey` in a session that recovers
+   * from a rejected auth token (see `signMobileWalletMessages`), returning MWA's
+   * signed payloads.
+   */
+  signMessages?(publicKey: Uint8Array, messages: readonly Uint8Array[]): Promise<Uint8Array[]>;
 }
 
 const STORE_KEY = Symbol.for("vue-solana:mobile-wallet-authorization-store");
