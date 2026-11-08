@@ -135,7 +135,7 @@ async function beginScan() {
 </template>
 ```
 
-`start()` se rechaza cuando falta `navigator.mediaDevices`. Cuando el navegador no tiene `BarcodeDetector`, la cámara se abre igualmente pero no se detecta nada, así que ofrece un campo para pegar la URL que llame a `scanFromText(text)`. Tanto `start()` como `scanFromText()` dejan `parsed` con el resultado de `parseURL()` y mantienen `error` cuando el parseo falla; el bucle de escaneo ignora los errores de parseo y sigue escaneando.
+`start()` se rechaza cuando falta `navigator.mediaDevices` y también cuando el navegador no puede detectar códigos QR: iOS y Firefox no tienen `BarcodeDetector`, y algunas versiones de Android incluyen uno sin soporte para QR. En ese caso la cámara no llega a abrirse, así que ofrece siempre un campo para pegar la URL que llame a `scanFromText(text)`. La cámara se cierra en cuanto lee una URL de Solana Pay válida, y `parsed` contiene el resultado de `parseURL()`. Un código QR que no es una URL de Solana Pay establece `error` y el escaneo continúa; `scanFromText()` establece `error` de la misma forma cuando el parseo falla.
 
 Trata los datos escaneados como entrada hostil. Muestra el destinatario, el importe, el mint del token, la etiqueta y el memo, y deja que el usuario confirme antes de cualquier petición a la wallet. Vue Solana no tiene ninguna ruta de envío automático, y no deberías añadir una.
 

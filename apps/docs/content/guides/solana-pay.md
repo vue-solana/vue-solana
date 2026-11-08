@@ -135,7 +135,7 @@ async function beginScan() {
 </template>
 ```
 
-`start()` rejects when `navigator.mediaDevices` is missing. When the browser has no `BarcodeDetector`, the camera still opens but nothing is detected, so offer a paste field that calls `scanFromText(text)`. Both `start()` and `scanFromText()` set `parsed` to the `parseURL()` result and leave `error` set when parsing fails; the scan loop ignores parse errors and keeps scanning.
+`start()` rejects when `navigator.mediaDevices` is missing, and also when the browser cannot detect QR codes: iOS and Firefox have no `BarcodeDetector`, and some Android builds ship one without QR support. In that case the camera never opens, so always offer a paste field that calls `scanFromText(text)`. The camera closes once a valid Solana Pay URL is read, and `parsed` holds the `parseURL()` result. A QR code that is not a Solana Pay URL sets `error` and scanning continues; `scanFromText()` sets `error` the same way when parsing fails.
 
 Treat scanned data as hostile input. Show the recipient, amount, token mint, label, and memo, and let the user confirm before any wallet prompt. There is no auto-send path in Vue Solana, and you should not add one.
 

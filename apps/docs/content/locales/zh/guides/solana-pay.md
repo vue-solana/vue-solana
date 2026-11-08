@@ -135,7 +135,7 @@ async function beginScan() {
 </template>
 ```
 
-当缺少 `navigator.mediaDevices` 时 `start()` 会失败。浏览器没有 `BarcodeDetector` 时，摄像头仍会打开但不会检测到内容，因此请提供一个粘贴输入框并调用 `scanFromText(text)`。`start()` 和 `scanFromText()` 都会把 `parseURL()` 的结果写入 `parsed`，解析失败时保留 `error`；扫描循环会忽略解析错误并继续扫描。
+当缺少 `navigator.mediaDevices`，或浏览器无法识别二维码时，`start()` 都会失败：iOS 和 Firefox 没有 `BarcodeDetector`，部分 Android 版本自带的 `BarcodeDetector` 不支持二维码。这种情况下摄像头根本不会打开，因此请始终提供一个粘贴输入框并调用 `scanFromText(text)`。读到有效的 Solana Pay URL 后摄像头会关闭，`parsed` 中保存 `parseURL()` 的结果。不是 Solana Pay URL 的二维码会设置 `error`，扫描继续进行；`scanFromText()` 解析失败时同样会设置 `error`。
 
 把扫描到的数据当作敌意输入。展示收款方、金额、代币 mint、标签和备注，并让用户确认后再发起任何钱包请求。Vue Solana 不提供任何自动发送路径，你也不应自行添加。
 

@@ -135,7 +135,7 @@ async function beginScan() {
 </template>
 ```
 
-`start()` wird abgelehnt, wenn `navigator.mediaDevices` fehlt. Hat der Browser keinen `BarcodeDetector`, öffnet sich die Kamera zwar, es wird aber nichts erkannt — biete deshalb ein Einfügefeld an, das `scanFromText(text)` aufruft. Sowohl `start()` als auch `scanFromText()` setzen `parsed` auf das Ergebnis von `parseURL()` und lassen `error` gesetzt, wenn das Parsen fehlschlägt; die Scan-Schleife ignoriert Parse-Fehler und scannt weiter.
+`start()` wird abgelehnt, wenn `navigator.mediaDevices` fehlt, und ebenso, wenn der Browser keine QR-Codes erkennen kann: iOS und Firefox haben keinen `BarcodeDetector`, und manche Android-Builds liefern einen ohne QR-Unterstützung. Die Kamera öffnet sich dann gar nicht, biete deshalb immer ein Einfügefeld an, das `scanFromText(text)` aufruft. Sobald eine gültige Solana-Pay-URL gelesen wurde, schließt sich die Kamera, und `parsed` enthält das Ergebnis von `parseURL()`. Ein QR-Code, der keine Solana-Pay-URL ist, setzt `error`, und das Scannen läuft weiter; `scanFromText()` setzt `error` genauso, wenn das Parsen fehlschlägt.
 
 Behandle gescannte Daten als feindliche Eingabe. Zeige Empfänger, Betrag, Token-Mint, Label und Memo an und lass die Nutzerin oder den Nutzer bestätigen, bevor irgendein Wallet-Prompt erscheint. In Vue Solana gibt es keinen Auto-Send-Pfad, und du solltest auch keinen hinzufügen.
 

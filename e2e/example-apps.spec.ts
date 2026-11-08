@@ -459,8 +459,7 @@ test("scans a mocked QR code through the camera path", async ({ page }) => {
   );
   await expect(page.getByTestId("scanner-amount")).toHaveText("0.0005 SOL");
   await expect(page.getByTestId("scanner-label")).toHaveText("Coffee");
-
-  await page.getByTestId("stop-scanner").click();
+  // The camera closes once a payment URL is read.
   await expect(page.getByTestId("scanner-status")).toHaveText("idle");
 });
 
