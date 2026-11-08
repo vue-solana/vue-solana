@@ -135,7 +135,7 @@ async function beginScan() {
 </template>
 ```
 
-`start()` rejette lorsque `navigator.mediaDevices` est absent. Quand le navigateur ne dispose pas de `BarcodeDetector`, la caméra s'ouvre quand même mais rien n'est détecté ; proposez donc un champ de collage qui appelle `scanFromText(text)`. `start()` comme `scanFromText()` définissent `parsed` avec le résultat de `parseURL()` et laissent `error` défini en cas d'échec d'analyse ; la boucle de scan ignore les erreurs d'analyse et continue de scanner.
+`start()` rejette lorsque `navigator.mediaDevices` est absent, et aussi lorsque le navigateur ne sait pas détecter les QR codes : iOS et Firefox n'ont pas de `BarcodeDetector`, et certaines versions d'Android en fournissent un sans prise en charge des QR codes. La caméra ne s'ouvre alors pas du tout ; proposez donc toujours un champ de collage qui appelle `scanFromText(text)`. La caméra se ferme dès qu'une URL Solana Pay valide est lue, et `parsed` contient le résultat de `parseURL()`. Un QR code qui n'est pas une URL Solana Pay définit `error` et le scan continue ; `scanFromText()` définit `error` de la même façon en cas d'échec d'analyse.
 
 Traitez les données scannées comme une entrée hostile. Affichez le destinataire, le montant, le mint du token, le label et le memo, et laissez l'utilisateur confirmer avant toute invite du wallet. Il n'existe aucune voie d'envoi automatique dans Vue Solana, et vous ne devriez pas en ajouter.
 

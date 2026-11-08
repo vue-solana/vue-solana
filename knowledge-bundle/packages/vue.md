@@ -595,7 +595,7 @@ Solana Pay URL and QR primitives come from `@vue-solana/core/solana-pay` (implem
 - `useSolanaPay()`: `createTransferRequest`, `parseRequest`, `createReference`, `confirmTransfer`, and `reset`. State is exposed as `requestUrl`, `parsedRequest`, `reference`, `status`, `loading`, and `error`. Amounts are `bigint` lamports.
 - `useSolanaPayConfirmation()`: `check(rpc, reference)`, `startPolling(rpc, reference, interval?)`, and `stopPolling()` over `getSolanaPayPaymentStatus()`.
 - `useSolanaQrCode()`: `generate(url, options?)` returns SVG text through `createQR()`.
-- `useSolanaQrScanner()`: `start({ video?, scanIntervalMs? })`, `stop()`, `reset()`, and `scanFromText(text)`. Requires a browser with `navigator.mediaDevices` and optionally `BarcodeDetector`; never call it during SSR.
+- `useSolanaQrScanner()`: `start({ video?, scanIntervalMs? })`, `stop()`, `reset()`, and `scanFromText(text)`. Requires a browser with `navigator.mediaDevices` and a `BarcodeDetector` that supports `qr_code`; `start()` rejects without opening the camera otherwise (iOS, Firefox), so pair it with a paste field. The camera closes after the first valid Solana Pay URL; a non-payment QR code sets `error` and scanning continues. Never call it during SSR.
 
 Scanned input is untrusted: parse it, show recipient/amount/token/memo to the user, and only then use the normal wallet signing flow. There is no auto-send path.
 

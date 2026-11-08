@@ -13029,7 +13029,7 @@ async function beginScan() {
 </template>
 ```
 
-`start()` wird abgelehnt, wenn `navigator.mediaDevices` fehlt. Hat der Browser keinen `BarcodeDetector`, öffnet sich die Kamera zwar, es wird aber nichts erkannt — biete deshalb ein Einfügefeld an, das `scanFromText(text)` aufruft. Sowohl `start()` als auch `scanFromText()` setzen `parsed` auf das Ergebnis von `parseURL()` und lassen `error` gesetzt, wenn das Parsen fehlschlägt; die Scan-Schleife ignoriert Parse-Fehler und scannt weiter.
+`start()` wird abgelehnt, wenn `navigator.mediaDevices` fehlt, und ebenso, wenn der Browser keine QR-Codes erkennen kann: iOS und Firefox haben keinen `BarcodeDetector`, und manche Android-Builds liefern einen ohne QR-Unterstützung. Die Kamera öffnet sich dann gar nicht, biete deshalb immer ein Einfügefeld an, das `scanFromText(text)` aufruft. Sobald eine gültige Solana-Pay-URL gelesen wurde, schließt sich die Kamera, und `parsed` enthält das Ergebnis von `parseURL()`. Ein QR-Code, der keine Solana-Pay-URL ist, setzt `error`, und das Scannen läuft weiter; `scanFromText()` setzt `error` genauso, wenn das Parsen fehlschlägt.
 
 Behandle gescannte Daten als feindliche Eingabe. Zeige Empfänger, Betrag, Token-Mint, Label und Memo an und lass die Nutzerin oder den Nutzer bestätigen, bevor irgendein Wallet-Prompt erscheint. In Vue Solana gibt es keinen Auto-Send-Pfad, und du solltest auch keinen hinzufügen.
 
@@ -13241,7 +13241,7 @@ async function beginScan() {
 </template>
 ```
 
-`start()` se rechaza cuando falta `navigator.mediaDevices`. Cuando el navegador no tiene `BarcodeDetector`, la cámara se abre igualmente pero no se detecta nada, así que ofrece un campo para pegar la URL que llame a `scanFromText(text)`. Tanto `start()` como `scanFromText()` dejan `parsed` con el resultado de `parseURL()` y mantienen `error` cuando el parseo falla; el bucle de escaneo ignora los errores de parseo y sigue escaneando.
+`start()` se rechaza cuando falta `navigator.mediaDevices` y también cuando el navegador no puede detectar códigos QR: iOS y Firefox no tienen `BarcodeDetector`, y algunas versiones de Android incluyen uno sin soporte para QR. En ese caso la cámara no llega a abrirse, así que ofrece siempre un campo para pegar la URL que llame a `scanFromText(text)`. La cámara se cierra en cuanto lee una URL de Solana Pay válida, y `parsed` contiene el resultado de `parseURL()`. Un código QR que no es una URL de Solana Pay establece `error` y el escaneo continúa; `scanFromText()` establece `error` de la misma forma cuando el parseo falla.
 
 Trata los datos escaneados como entrada hostil. Muestra el destinatario, el importe, el mint del token, la etiqueta y el memo, y deja que el usuario confirme antes de cualquier petición a la wallet. Vue Solana no tiene ninguna ruta de envío automático, y no deberías añadir una.
 
@@ -13453,7 +13453,7 @@ async function beginScan() {
 </template>
 ```
 
-`start()` rejette lorsque `navigator.mediaDevices` est absent. Quand le navigateur ne dispose pas de `BarcodeDetector`, la caméra s'ouvre quand même mais rien n'est détecté ; proposez donc un champ de collage qui appelle `scanFromText(text)`. `start()` comme `scanFromText()` définissent `parsed` avec le résultat de `parseURL()` et laissent `error` défini en cas d'échec d'analyse ; la boucle de scan ignore les erreurs d'analyse et continue de scanner.
+`start()` rejette lorsque `navigator.mediaDevices` est absent, et aussi lorsque le navigateur ne sait pas détecter les QR codes : iOS et Firefox n'ont pas de `BarcodeDetector`, et certaines versions d'Android en fournissent un sans prise en charge des QR codes. La caméra ne s'ouvre alors pas du tout ; proposez donc toujours un champ de collage qui appelle `scanFromText(text)`. La caméra se ferme dès qu'une URL Solana Pay valide est lue, et `parsed` contient le résultat de `parseURL()`. Un QR code qui n'est pas une URL Solana Pay définit `error` et le scan continue ; `scanFromText()` définit `error` de la même façon en cas d'échec d'analyse.
 
 Traitez les données scannées comme une entrée hostile. Affichez le destinataire, le montant, le mint du token, le label et le memo, et laissez l'utilisateur confirmer avant toute invite du wallet. Il n'existe aucune voie d'envoi automatique dans Vue Solana, et vous ne devriez pas en ajouter.
 
@@ -13665,7 +13665,7 @@ async function beginScan() {
 </template>
 ```
 
-`start()` rejects when `navigator.mediaDevices` is missing. When the browser has no `BarcodeDetector`, the camera still opens but nothing is detected, so offer a paste field that calls `scanFromText(text)`. Both `start()` and `scanFromText()` set `parsed` to the `parseURL()` result and leave `error` set when parsing fails; the scan loop ignores parse errors and keeps scanning.
+`start()` rejects when `navigator.mediaDevices` is missing, and also when the browser cannot detect QR codes: iOS and Firefox have no `BarcodeDetector`, and some Android builds ship one without QR support. In that case the camera never opens, so always offer a paste field that calls `scanFromText(text)`. The camera closes once a valid Solana Pay URL is read, and `parsed` holds the `parseURL()` result. A QR code that is not a Solana Pay URL sets `error` and scanning continues; `scanFromText()` sets `error` the same way when parsing fails.
 
 Treat scanned data as hostile input. Show the recipient, amount, token mint, label, and memo, and let the user confirm before any wallet prompt. There is no auto-send path in Vue Solana, and you should not add one.
 
@@ -13877,7 +13877,7 @@ async function beginScan() {
 </template>
 ```
 
-`start()` は `navigator.mediaDevices` が存在しない場合に reject します。ブラウザに `BarcodeDetector` がない場合、カメラは開きますが何も検出されないため、`scanFromText(text)` を呼び出す貼り付け用フィールドを用意してください。`start()` と `scanFromText()` はどちらも `parsed` に `parseURL()` の結果を設定し、解析に失敗した場合は `error` を設定したままにします。スキャンループは解析エラーを無視してスキャンを続けます。
+`start()` は `navigator.mediaDevices` が存在しない場合に加え、ブラウザが QR コードを検出できない場合にも reject します。iOS と Firefox には `BarcodeDetector` がなく、一部の Android ビルドには QR に対応していないものが搭載されています。その場合カメラは開かないため、`scanFromText(text)` を呼び出す貼り付け用フィールドを常に用意してください。有効な Solana Pay URL を読み取るとカメラは閉じ、`parsed` に `parseURL()` の結果が入ります。Solana Pay URL ではない QR コードは `error` を設定し、スキャンは続行します。`scanFromText()` も解析に失敗した場合は同じように `error` を設定します。
 
 スキャンしたデータは敵対的な入力として扱ってください。受取人、金額、トークン mint、ラベル、メモを表示し、ウォレットのプロンプトを出す前にユーザーへ確認してもらいます。Vue Solana には自動送信の経路はなく、追加すべきでもありません。
 
@@ -14089,7 +14089,7 @@ async function beginScan() {
 </template>
 ```
 
-`start()`는 `navigator.mediaDevices`가 없으면 거부됩니다. 브라우저에 `BarcodeDetector`가 없으면 카메라는 열리지만 아무것도 감지되지 않으므로, `scanFromText(text)`를 호출하는 붙여넣기 필드를 제공하세요. `start()`와 `scanFromText()` 모두 `parsed`에 `parseURL()` 결과를 넣고 파싱에 실패하면 `error`를 남깁니다. 스캔 루프는 파싱 오류를 무시하고 계속 스캔합니다.
+`start()`는 `navigator.mediaDevices`가 없을 때뿐 아니라 브라우저가 QR 코드를 감지할 수 없을 때도 거부됩니다. iOS와 Firefox에는 `BarcodeDetector`가 없고, 일부 Android 빌드에는 QR을 지원하지 않는 detector가 들어 있습니다. 이 경우 카메라가 아예 열리지 않으므로 `scanFromText(text)`를 호출하는 붙여넣기 필드를 항상 제공하세요. 유효한 Solana Pay URL을 읽으면 카메라가 닫히고 `parsed`에 `parseURL()` 결과가 들어갑니다. Solana Pay URL이 아닌 QR 코드는 `error`를 설정하고 스캔은 계속됩니다. `scanFromText()`도 파싱에 실패하면 같은 방식으로 `error`를 설정합니다.
 
 스캔한 데이터는 적대적인 입력으로 취급하세요. recipient, amount, token mint, label, memo를 보여 주고 사용자가 확인한 뒤에만 지갑 프롬프트를 띄우세요. Vue Solana에는 자동 전송 경로가 없으며, 추가해서도 안 됩니다.
 
@@ -14301,7 +14301,7 @@ async function beginScan() {
 </template>
 ```
 
-当缺少 `navigator.mediaDevices` 时 `start()` 会失败。浏览器没有 `BarcodeDetector` 时，摄像头仍会打开但不会检测到内容，因此请提供一个粘贴输入框并调用 `scanFromText(text)`。`start()` 和 `scanFromText()` 都会把 `parseURL()` 的结果写入 `parsed`，解析失败时保留 `error`；扫描循环会忽略解析错误并继续扫描。
+当缺少 `navigator.mediaDevices`，或浏览器无法识别二维码时，`start()` 都会失败：iOS 和 Firefox 没有 `BarcodeDetector`，部分 Android 版本自带的 `BarcodeDetector` 不支持二维码。这种情况下摄像头根本不会打开，因此请始终提供一个粘贴输入框并调用 `scanFromText(text)`。读到有效的 Solana Pay URL 后摄像头会关闭，`parsed` 中保存 `parseURL()` 的结果。不是 Solana Pay URL 的二维码会设置 `error`，扫描继续进行；`scanFromText()` 解析失败时同样会设置 `error`。
 
 把扫描到的数据当作敌意输入。展示收款方、金额、代币 mint、标签和备注，并让用户确认后再发起任何钱包请求。Vue Solana 不提供任何自动发送路径，你也不应自行添加。
 
