@@ -30,6 +30,7 @@ import {
   hasSignIn,
   hasSignMessage,
   hasSignTransaction,
+  type SolanaSignAndSendTransactionFeature,
   type SolanaSignInFeature,
   type SolanaSignTransactionFeature,
   type StandardConnectFeature,
@@ -135,26 +136,79 @@ export function adaptSolanaStandardWallet(
   }
 
   /**
-   * MWA's own `signMessage` cannot recover when the wallet rejects the cached
-   * auth token (Phantom rejects even a fresh one), so a message is signed in a
-   * session `registerSolanaMobileWallet()` runs instead. `undefined` when MWA
-   * was registered by the app itself and no such session exists.
+   * MWA's own signing features cannot recover when the wallet rejects the
+   * cached auth token (Phantom rejects even a fresh one), so MWA requests run
+   * in the session `registerSolanaMobileWallet()` provides instead. `undefined`
+   * when MWA was registered by the app itself and no such session exists; the
+   * callers then fall back to the wallet's own feature.
    */
-  function signMessageThroughMobileWalletSession(
-    activeAccount: WalletAccount,
-    message: Uint8Array,
-  ): Promise<{ signedMessage: Uint8Array; signature: Uint8Array }[]> | undefined {
-    const signMessages = isMobileWalletAdapter
-      ? getSolanaMobileWalletAuthorizationStore()?.signMessages
-      : undefined;
+  function getMobileWalletSession() {
+    return isMobileWalletAdapter ? getSolanaMobileWalletAuthorizationStore() : undefined;
+  }
 
-    return signMessages?.(Uint8Array.from(activeAccount.publicKey), [message]).then(
-      (signedPayloads) =>
-        signedPayloads.map((signedMessage) => ({
-          signedMessage,
-          signature: signedMessage.slice(-SIGNATURE_LENGTH),
-        })),
-    );
+  function signTransactionsThroughWallet(
+    activeAccount: WalletAccount,
+    transactions: readonly SolanaTransaction[],
+  ): Promise<SolanaTransaction[]> {
+    const signTransactions = getMobileWalletSession()?.signTransactions;
+
+    return whileMobileWalletAuthorized(async () => {
+      if (!signTransactions) {
+        return signAllThroughFeature(
+          wallet as Wallet & { features: SolanaSignTransactionFeature },
+          activeAccount,
+          transactions,
+          options.chain,
+        );
+      }
+
+      const signedTransactions = await signTransactions(
+        Uint8Array.from(activeAccount.publicKey),
+        transactions.map((transaction) => new Uint8Array(transaction)),
+      );
+
+      assertResultCount(signedTransactions, transactions, "signed transactions");
+      return signedTransactions;
+    });
+  }
+
+  /** Resolves the raw signature bytes, one per transaction. */
+  function signAndSendTransactionsThroughWallet(
+    activeAccount: WalletAccount,
+    transactions: readonly SolanaTransaction[],
+    sendOptions: SendTransactionOptions | undefined,
+  ): Promise<Uint8Array[]> {
+    const signAndSendTransactions = getMobileWalletSession()?.signAndSendTransactions;
+
+    return whileMobileWalletAuthorized(async () => {
+      const signatures = signAndSendTransactions
+        ? await signAndSendTransactions(
+            Uint8Array.from(activeAccount.publicKey),
+            transactions.map((transaction) => new Uint8Array(transaction)),
+            sendOptions,
+          )
+        : (
+            await (wallet as Wallet & { features: SolanaSignAndSendTransactionFeature }).features[
+              SolanaSignAndSendTransaction
+            ].signAndSendTransaction(
+              ...transactions.map((transaction) => ({
+                account: activeAccount,
+                transaction: new Uint8Array(transaction),
+                chain: options.chain ?? getSolanaAccountChain(activeAccount),
+                options: sendOptions,
+              })),
+            )
+          ).map((result) => {
+            if (!result) {
+              throw new Error("Solana wallet did not return a transaction signature");
+            }
+
+            return result.signature;
+          });
+
+      assertResultCount(signatures, transactions, "signatures");
+      return signatures;
+    });
   }
 
   function rejectPendingMobileWalletRequests() {
@@ -411,13 +465,19 @@ export function adaptSolanaStandardWallet(
     signMessage: hasSignMessage(wallet)
       ? async (message) => {
           const activeAccount = getActiveAccount(account);
-          const [result] = await whileMobileWalletAuthorized(
-            () =>
-              signMessageThroughMobileWalletSession(activeAccount, message) ??
-              wallet.features[SolanaSignMessage].signMessage({
-                account: activeAccount,
-                message,
-              }),
+          const signMessages = getMobileWalletSession()?.signMessages;
+          const [result] = await whileMobileWalletAuthorized(async () =>
+            signMessages
+              ? (await signMessages(Uint8Array.from(activeAccount.publicKey), [message])).map(
+                  (signedMessage) => ({
+                    signedMessage,
+                    signature: signedMessage.slice(-SIGNATURE_LENGTH),
+                  }),
+                )
+              : wallet.features[SolanaSignMessage].signMessage({
+                  account: activeAccount,
+                  message,
+                }),
           );
 
           if (!result) {
@@ -442,61 +502,39 @@ export function adaptSolanaStandardWallet(
       : undefined,
     signTransaction: hasSignTransaction(wallet)
       ? async (transaction) => {
-          const activeAccount = getActiveAccount(account);
-          const [result] = await whileMobileWalletAuthorized(() =>
-            wallet.features[SolanaSignTransaction].signTransaction({
-              account: activeAccount,
-              transaction: new Uint8Array(transaction),
-              chain: options.chain,
-            }),
+          const [signedTransaction] = await signTransactionsThroughWallet(
+            getActiveAccount(account),
+            [transaction],
           );
 
-          if (!result) {
+          if (!signedTransaction) {
             throw new Error("Solana wallet did not return a signed transaction");
           }
 
-          return result.signedTransaction;
+          return signedTransaction;
         }
       : undefined,
     signAllTransactions: hasSignTransaction(wallet)
       ? async (transactions) =>
-          whileMobileWalletAuthorized(() =>
-            signAllThroughFeature(
-              wallet as Wallet & { features: SolanaSignTransactionFeature },
-              () => getActiveAccount(account),
-              transactions,
-              options.chain,
-            ),
-          )
+          signTransactionsThroughWallet(getActiveAccount(account), transactions)
       : undefined,
     signTransactions: hasSignTransaction(wallet)
       ? async (transactions) =>
-          whileMobileWalletAuthorized(() =>
-            signAllThroughFeature(
-              wallet as Wallet & { features: SolanaSignTransactionFeature },
-              () => getActiveAccount(account),
-              transactions,
-              options.chain,
-            ),
-          )
+          signTransactionsThroughWallet(getActiveAccount(account), transactions)
       : undefined,
     signAndSendTransaction: hasSignAndSendTransaction(wallet)
       ? async (transaction, sendOptions) => {
-          const activeAccount = getActiveAccount(account);
-          const [result] = await whileMobileWalletAuthorized(() =>
-            wallet.features[SolanaSignAndSendTransaction].signAndSendTransaction({
-              account: activeAccount,
-              transaction: new Uint8Array(transaction),
-              chain: options.chain ?? getSolanaAccountChain(activeAccount),
-              options: sendOptions,
-            }),
+          const [signature] = await signAndSendTransactionsThroughWallet(
+            getActiveAccount(account),
+            [transaction],
+            sendOptions,
           );
 
-          if (!result) {
+          if (!signature) {
             throw new Error("Solana wallet did not return a transaction signature");
           }
 
-          return { signature: getBase58Decoder().decode(result.signature) };
+          return { signature: getBase58Decoder().decode(signature) };
         }
       : undefined,
     signAndSendTransactions: hasSignAndSendTransaction(wallet)
@@ -514,37 +552,21 @@ export function adaptSolanaStandardWallet(
             transactions.length > 1 &&
             hasSignTransaction(wallet)
           ) {
-            const signedTransactions = await whileMobileWalletAuthorized(() =>
-              signAllThroughFeature(wallet, () => activeAccount, transactions, options.chain),
+            const signedTransactions = await signTransactionsThroughWallet(
+              activeAccount,
+              transactions,
             );
 
             return sendSequentially(signedTransactions, options.sendTransaction, sendOptions);
           }
 
-          const results = await whileMobileWalletAuthorized(() =>
-            wallet.features[SolanaSignAndSendTransaction].signAndSendTransaction(
-              ...transactions.map((transaction) => ({
-                account: activeAccount,
-                transaction: new Uint8Array(transaction),
-                chain: options.chain ?? getSolanaAccountChain(activeAccount),
-                options: sendOptions,
-              })),
-            ),
+          const signatures = await signAndSendTransactionsThroughWallet(
+            activeAccount,
+            transactions,
+            sendOptions,
           );
 
-          if (results.length !== transactions.length) {
-            throw new Error(
-              `Solana wallet returned ${results.length} signatures for ${transactions.length} requested transactions`,
-            );
-          }
-
-          return results.map((result) => {
-            if (!result) {
-              throw new Error("Solana wallet did not return a transaction signature");
-            }
-
-            return getBase58Decoder().decode(result.signature);
-          });
+          return signatures.map((signature) => getBase58Decoder().decode(signature));
         }
       : undefined,
   };
@@ -607,11 +629,10 @@ async function sendSequentially(
 
 async function signAllThroughFeature(
   wallet: Wallet & { features: SolanaSignTransactionFeature },
-  getAccount: () => WalletAccount,
+  activeAccount: WalletAccount,
   transactions: readonly SolanaTransaction[],
   chain: SolanaChain | undefined,
 ): Promise<SolanaTransaction[]> {
-  const activeAccount = getAccount();
   const results = await wallet.features[SolanaSignTransaction].signTransaction(
     ...transactions.map((transaction) => ({
       account: activeAccount,
@@ -620,11 +641,7 @@ async function signAllThroughFeature(
     })),
   );
 
-  if (results.length !== transactions.length) {
-    throw new Error(
-      `Solana wallet returned ${results.length} signed transactions for ${transactions.length} requested transactions`,
-    );
-  }
+  assertResultCount(results, transactions, "signed transactions");
 
   return results.map((result) => {
     if (!result) {
@@ -633,6 +650,18 @@ async function signAllThroughFeature(
 
     return result.signedTransaction;
   });
+}
+
+function assertResultCount(
+  results: readonly unknown[],
+  transactions: readonly SolanaTransaction[],
+  label: string,
+) {
+  if (results.length !== transactions.length) {
+    throw new Error(
+      `Solana wallet returned ${results.length} ${label} for ${transactions.length} requested transactions`,
+    );
+  }
 }
 
 /**

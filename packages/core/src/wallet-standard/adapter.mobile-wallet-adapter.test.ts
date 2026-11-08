@@ -157,6 +157,100 @@ describe("Wallet Standard adapter — Mobile Wallet Adapter", () => {
     });
   });
 
+  describe("transactions through the registered MWA session", () => {
+    const signedTransaction = new Uint8Array([9, 9]);
+    const signature = new Uint8Array(64).fill(5);
+
+    function createSessionWallet(sendTransaction?: (transaction: unknown) => Promise<string>) {
+      const standardWallet = createStandardWallet([account]);
+      const featureSignTransaction = vi.fn();
+      const featureSignAndSend = vi.fn();
+      setFeature(standardWallet, SolanaSignTransaction, {
+        signTransaction: featureSignTransaction,
+      });
+      setFeature(standardWallet, SolanaSignAndSendTransaction, {
+        signAndSendTransaction: featureSignAndSend,
+      });
+      const store = {
+        get: vi.fn(),
+        set: vi.fn(),
+        signTransactions: vi.fn(async (_publicKey: Uint8Array, transactions: readonly unknown[]) =>
+          transactions.map(() => signedTransaction),
+        ),
+        signAndSendTransactions: vi.fn(
+          async (_publicKey: Uint8Array, transactions: readonly unknown[]) =>
+            transactions.map(() => signature),
+        ),
+      };
+      setSolanaMobileWalletAuthorizationStore(store);
+      const wallet = adaptSolanaStandardWallet(createMobileWalletInfo(standardWallet), {
+        account,
+        sendTransaction,
+      });
+
+      return { wallet, store, featureSignTransaction, featureSignAndSend };
+    }
+
+    afterEach(() => {
+      setSolanaMobileWalletAuthorizationStore(undefined);
+    });
+
+    it("signs a transaction through the session", async () => {
+      const { wallet, store, featureSignTransaction } = createSessionWallet();
+      const transaction = createTestTransaction();
+
+      await expect(wallet.signTransaction?.(transaction)).resolves.toEqual(signedTransaction);
+      expect(store.signTransactions).toHaveBeenCalledWith(Uint8Array.from(account.publicKey), [
+        new Uint8Array(transaction),
+      ]);
+      expect(featureSignTransaction).not.toHaveBeenCalled();
+    });
+
+    it("signs a batch in one session call", async () => {
+      const { wallet, store } = createSessionWallet();
+
+      await expect(
+        wallet.signTransactions?.([createTestTransaction(), createTestTransaction()]),
+      ).resolves.toEqual([signedTransaction, signedTransaction]);
+      expect(store.signTransactions).toHaveBeenCalledTimes(1);
+    });
+
+    it("signs and sends through the session, returning base58 signatures", async () => {
+      const { wallet, store, featureSignAndSend } = createSessionWallet();
+      const sendOptions = { skipPreflight: true };
+
+      const result = await wallet.signAndSendTransaction?.(createTestTransaction(), sendOptions);
+
+      expect(result?.signature).toEqual(expect.any(String));
+      expect(store.signAndSendTransactions).toHaveBeenCalledWith(
+        Uint8Array.from(account.publicKey),
+        [expect.any(Uint8Array)],
+        sendOptions,
+      );
+      expect(featureSignAndSend).not.toHaveBeenCalled();
+    });
+
+    it("signs a batch in one session and sends it through the app RPC", async () => {
+      const sendTransaction = vi.fn().mockResolvedValueOnce("sig-1").mockResolvedValueOnce("sig-2");
+      const { wallet, store } = createSessionWallet(sendTransaction);
+
+      await expect(
+        wallet.signAndSendTransactions?.([createTestTransaction(), createTestTransaction()]),
+      ).resolves.toEqual(["sig-1", "sig-2"]);
+      expect(store.signTransactions).toHaveBeenCalledTimes(1);
+      expect(store.signAndSendTransactions).not.toHaveBeenCalled();
+    });
+
+    it("rejects a session that returns the wrong number of results", async () => {
+      const { wallet, store } = createSessionWallet();
+      store.signTransactions.mockResolvedValueOnce([]);
+
+      await expect(wallet.signTransactions?.([createTestTransaction()])).rejects.toThrow(
+        "Solana wallet returned 0 signed transactions for 1 requested transactions",
+      );
+    });
+  });
+
   describe("rejected re-authorization", () => {
     // MWA drops its authorization when the wallet rejects the cached auth token,
     // then never settles the request (its connection generation moved on).

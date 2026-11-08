@@ -202,6 +202,7 @@ Notas de Android:
 - El paquete mobile wallet maneja UI de fallback para wallet no instalada mediante su handler predeterminado wallet-not-found.
 - Los navegadores pueden mostrar un prompt de Local Network Access una sola vez antes de que MWA pueda conectar con una app wallet instalada.
 - La identidad de app predeterminada de MWA toma su nombre de `<meta name="application-name">`, luego de `og:site_name` y luego del host, nunca del título de la página: las wallets vinculan la autorización a la identidad, así que debe ser la misma en cada página e idioma. Define `mobileWallet.appIdentity` para fijarla explícitamente.
+- Phantom en Chrome para Android rechaza la autorización MWA guardada en cada solicitud de firma, incluso justo después de conectar. Vue Solana pide entonces una autorización nueva en la misma visita a la wallet, así que Phantom muestra una pantalla para aprobar la app antes de cada solicitud de mensaje o transacción. Es el comportamiento esperado; las wallets que aceptan la autorización guardada van directamente a la solicitud.
 - Para envíos de transacciones Android MWA, Vue Solana pide a la wallet móvil que firme y luego envía la transacción firmada a través de la conexión RPC de la app cuando la wallet admite `signTransaction`. Esto mantiene la firma devuelta bajo control de la app y evita un caso límite de traspaso móvil donde la wallet envía correctamente pero la página del navegador no recibe la respuesta del wallet adapter.
 
 Notas de iOS:

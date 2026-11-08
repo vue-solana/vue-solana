@@ -1,3 +1,5 @@
+import type { SendTransactionOptions } from "./types";
+
 /**
  * The authorization cache of the Mobile Wallet Adapter registered by
  * `registerSolanaMobileWallet()`, reachable from the Wallet Standard adapter.
@@ -15,11 +17,22 @@ export interface SolanaMobileWalletAuthorizationStore {
   get(): Promise<unknown>;
   set(authorization: unknown): Promise<void>;
   /**
-   * Signs messages for the account with `publicKey` in a session that recovers
-   * from a rejected auth token (see `signMobileWalletMessages`), returning MWA's
-   * signed payloads.
+   * The signing requests below run for the account with `publicKey` in a
+   * session that recovers from a rejected auth token (see
+   * `mobile-wallet/session.ts`), each in a single wallet visit.
+   * `signMessages` returns MWA's signed payloads (message + signature).
    */
   signMessages?(publicKey: Uint8Array, messages: readonly Uint8Array[]): Promise<Uint8Array[]>;
+  signTransactions?(
+    publicKey: Uint8Array,
+    transactions: readonly Uint8Array[],
+  ): Promise<Uint8Array[]>;
+  /** Returns the raw signature bytes. */
+  signAndSendTransactions?(
+    publicKey: Uint8Array,
+    transactions: readonly Uint8Array[],
+    options?: SendTransactionOptions,
+  ): Promise<Uint8Array[]>;
 }
 
 const STORE_KEY = Symbol.for("vue-solana:mobile-wallet-authorization-store");
