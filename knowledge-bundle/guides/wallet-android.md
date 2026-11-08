@@ -53,6 +53,7 @@ createApp(App).use(
 - The mobile wallet package handles installed-wallet fallback UI through its default wallet-not-found handler.
 - Browsers may show a one-time Local Network Access prompt before MWA can connect to an installed wallet app.
 - The default app identity is named from `<meta name="application-name">`, then `og:site_name`, then the host, never `document.title`. Wallets bind the MWA authorization to the identity and re-send it before every signing request, so a title that changes per page or locale made Phantom open with no prompt. Its icon must be a path relative to `uri` or a `data:` URI; a cross-origin icon is left out.
+- Phantom on Android Chrome rejects the re-authorization MWA sends with the saved auth token before every signing request, even for a token issued seconds earlier. MWA's own features then clear the session and never settle. `registerSolanaMobileWallet()` therefore runs message signing, transaction signing, and sign-and-send in its own session (`packages/core/src/mobile-wallet/session.ts`) that falls back to a fresh `authorize` in the same wallet visit, so Phantom shows an "approve this app" screen before every signing prompt. That screen is expected, not a bug.
 - Phantom warns "This app's identity could not be verified" for every web dapp using MWA: it verifies identity through Digital Asset Links against a calling Android app, which a browser page does not have. No app-side setting removes it.
 
 ## Wallet Metadata

@@ -202,6 +202,7 @@ Android 注意事项：
 - 移动端钱包包会通过默认 wallet-not-found 处理器处理已安装钱包的回退 UI。
 - 在 MWA 连接到已安装的钱包应用之前，浏览器可能会显示一次性的 Local Network Access 提示。
 - MWA 默认的应用身份名称依次取自 `<meta name="application-name">`、`og:site_name` 和主机名，绝不使用页面标题：钱包会把授权绑定到该身份，因此它在每个页面和语言下都必须保持一致。设置 `mobileWallet.appIdentity` 可显式固定它。
+- Android Chrome 上的 Phantom 在每次签名请求时都会拒绝已保存的 MWA 授权，即使刚刚连接也是如此。此时 Vue Solana 会在同一次钱包访问中请求新的授权，因此 Phantom 会在每次消息或交易确认之前先显示“批准此应用”界面。这是预期行为；接受已保存授权的钱包会直接进入确认界面。
 - 对于 Android MWA 交易发送，当钱包支持 `signTransaction` 时，Vue Solana 会请求移动端钱包签署，然后通过应用的 RPC 连接提交已签名交易。这样可以让返回的签名由应用掌控，并避免一种移动端切换边界情况：钱包已成功发送，但浏览器页面没有收到 wallet adapter 响应。
 
 iOS 注意事项：
