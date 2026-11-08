@@ -1,6 +1,6 @@
 {
   "name": "@vue-solana/vue",
-  "version": "4.1.7",
+  "version": "4.1.8",
   "description": "Vue plugin and composables for Solana applications.",
   "license": "MIT",
   "keywords": [
