@@ -379,7 +379,7 @@ export default {
       scanner: {
         title: "결제 스캔 및 미리보기",
         description:
-          "지불자 측: 판매자의 QR 코드를 스캔하거나 URL을 붙여 넣고, 지갑이 정확히 무엇을 지불하라는 요청을 받는지 확인합니다. 스캔한 데이터는 신뢰할 수 없는 입력이므로 여기서는 서명하거나 트랜잭션을 전송하지 않습니다.",
+          "결제자 쪽: 가맹점 QR 코드를 스캔하거나 URL을 붙여넣고, wallet이 결제할 내용을 정확히 확인한 뒤 연결된 wallet으로 결제합니다. 스캔한 데이터는 신뢰할 수 없는 입력이므로 결제 버튼을 누르기 전에는 아무것도 전송되지 않으며, wallet도 승인을 요청합니다.",
         start: "카메라 시작",
         stop: "카메라 중지",
         reset: "초기화",
@@ -392,6 +392,15 @@ export default {
         validate: "URL 검증",
         openInWallet: "지갑에서 결제 요청 열기",
         pasteFirst: "먼저 Solana Pay URL을 붙여 넣으세요.",
+        pay: "연결된 wallet으로 결제",
+        paid: "결제가 확인되었습니다.",
+        viewPayment: "트랜잭션 보기",
+        payDisabled: {
+          connectWallet: "이 요청을 결제하려면 wallet을 연결하세요.",
+          transactionRequest: "트랜잭션 요청은 가맹점 서버가 만듭니다. 대신 wallet에서 여세요.",
+          splToken: "이 데모는 SOL 결제만 지원합니다. 토큰 결제는 wallet에서 여세요.",
+          amount: "이 요청에는 금액이 없어 데모에서 결제할 수 없습니다.",
+        },
         labels: {
           scanResult: "스캔 결과",
           kind: "종류",

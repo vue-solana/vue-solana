@@ -1,6 +1,18 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useSolanaQrScanner } from "./useSolanaQrScanner";
 
+const decoder = vi.hoisted(() => ({
+  available: true,
+  value: null as string | null,
+  jsQR: vi.fn(),
+}));
+
+vi.mock("jsqr", () => ({
+  get default() {
+    return decoder.available ? decoder.jsQR : undefined;
+  },
+}));
+
 vi.mock("@vue-solana/core/solana-pay", () => ({
   parseURL: vi.fn((s: string) => {
     if (s.includes("invalid")) throw new Error("invalid");
@@ -43,7 +55,14 @@ describe("useSolanaQrScanner", () => {
 describe("useSolanaQrScanner camera path", () => {
   const track = { stop: vi.fn() };
   const getUserMedia = vi.fn();
-  const video = { readyState: 4, srcObject: null as unknown, play: vi.fn() };
+  const video = {
+    readyState: 4,
+    videoWidth: 1280,
+    videoHeight: 720,
+    srcObject: null as unknown,
+    play: vi.fn(),
+  };
+  const drawImage = vi.fn();
   let detected: Array<{ rawValue: string }>;
   let supportedFormats: string[];
 
@@ -52,7 +71,23 @@ describe("useSolanaQrScanner camera path", () => {
     vi.clearAllMocks();
     detected = [];
     supportedFormats = ["qr_code"];
+    decoder.available = true;
+    decoder.value = null;
+    decoder.jsQR.mockImplementation(() => (decoder.value ? { data: decoder.value } : null));
     getUserMedia.mockResolvedValue({ getTracks: () => [track] });
+    const createElement = document.createElement.bind(document);
+    vi.spyOn(document, "createElement").mockImplementation((tag: string) =>
+      tag === "canvas"
+        ? ({
+            getContext: () => ({
+              drawImage,
+              getImageData: (_x: number, _y: number, width: number, height: number) => ({
+                data: new Uint8ClampedArray(width * height * 4),
+              }),
+            }),
+          } as unknown as HTMLCanvasElement)
+        : createElement(tag),
+    );
     video.play.mockResolvedValue(undefined);
     vi.stubGlobal("navigator", { mediaDevices: { getUserMedia } });
     vi.stubGlobal(
@@ -67,6 +102,7 @@ describe("useSolanaQrScanner camera path", () => {
   afterEach(() => {
     vi.useRealTimers();
     vi.unstubAllGlobals();
+    vi.restoreAllMocks();
   });
 
   function startScanner() {
@@ -116,11 +152,39 @@ describe("useSolanaQrScanner camera path", () => {
     });
   });
 
+  it("decodes the frame itself when the browser detector finds nothing", async () => {
+    const { scanner, started } = startScanner();
+    await started;
+
+    decoder.value = "solana:addr";
+    await vi.advanceTimersByTimeAsync(500);
+
+    expect(scanner.parsed.value).toEqual({ recipient: "addr" });
+    expect(scanner.scanning.value).toBe(false);
+    // The centre square of the 1280x720 frame, at most 720 px a side.
+    expect(drawImage).toHaveBeenCalledWith(video, 280, 0, 720, 720, 0, 0, 720, 720);
+    expect(decoder.jsQR).toHaveBeenCalledWith(expect.any(Uint8ClampedArray), 720, 720, {
+      inversionAttempts: "dontInvert",
+    });
+  });
+
   it.each([
     ["has no BarcodeDetector", () => vi.stubGlobal("BarcodeDetector", undefined)],
     ["cannot detect QR codes", () => (supportedFormats = ["ean_13"])],
-  ])("rejects without opening the camera when the browser %s", async (_, setup) => {
+  ])("scans with the JavaScript decoder when the browser %s", async (_, setup) => {
     setup();
+    const { scanner, started } = startScanner();
+    await started;
+
+    decoder.value = "solana:addr";
+    await vi.advanceTimersByTimeAsync(500);
+
+    expect(scanner.parsed.value).toEqual({ recipient: "addr" });
+  });
+
+  it("rejects without opening the camera when no detector or decoder is available", async () => {
+    vi.stubGlobal("BarcodeDetector", undefined);
+    decoder.available = false;
     const { scanner, started } = startScanner();
 
     await expect(started).rejects.toThrow(/cannot detect QR codes/);

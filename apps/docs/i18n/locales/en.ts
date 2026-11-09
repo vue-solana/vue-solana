@@ -378,7 +378,7 @@ export default {
       scanner: {
         title: "Scan And Preview A Payment",
         description:
-          "Payer side: scan a merchant QR code or paste the URL, then inspect exactly what the wallet will be asked to pay. Scanned data is untrusted input, so nothing here signs or sends a transaction.",
+          "Payer side: scan a merchant QR code or paste the URL, check exactly what the wallet will be asked to pay, then pay it from the connected wallet. Scanned data is untrusted input, so nothing is sent until you press Pay, and the wallet still asks you to approve.",
         start: "Start camera",
         stop: "Stop camera",
         reset: "Reset",
@@ -391,6 +391,16 @@ export default {
         validate: "Validate URL",
         openInWallet: "Open payment request in a wallet",
         pasteFirst: "Paste a Solana Pay URL first.",
+        pay: "Pay with connected wallet",
+        paid: "Payment confirmed.",
+        viewPayment: "View transaction",
+        payDisabled: {
+          connectWallet: "Connect a wallet to pay this request.",
+          transactionRequest:
+            "Transaction requests are built by the merchant's server; open them in a wallet instead.",
+          splToken: "This demo pays SOL only; open token payments in a wallet instead.",
+          amount: "This request has no amount, so the demo cannot pay it.",
+        },
         labels: {
           scanResult: "Scan result",
           kind: "Kind",

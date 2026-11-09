@@ -64,12 +64,14 @@ const PACKAGE_DIRS = {
 
 // Never statically reachable from any Vue entry. Each one is either ~100 KB of
 // Android-only code (kept behind a dynamic import in `src/plugin.ts`), a Node
-// polyfill that must stay subpath-only, or an optional QR dependency.
+// polyfill that must stay subpath-only, or an optional QR dependency (the QR
+// encoder, or the decoder the scanner loads only once the camera is open).
 const FORBIDDEN_STATIC = [
   "@vue-solana/core/mobile-wallet",
   "@vue-solana/core/buffer-polyfill",
   "@solana-mobile/",
   "qrcode",
+  "jsqr",
   "buffer",
   "buffer/",
 ];

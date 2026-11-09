@@ -201,7 +201,8 @@
     "check:esm-map": "node ../../scripts/check-exports-map.mjs"
   },
   "dependencies": {
-    "@vue-solana/core": "workspace:*"
+    "@vue-solana/core": "workspace:*",
+    "jsqr": "^1.4.0"
   },
   "peerDependencies": {
     "vue": "^3.5.0"
