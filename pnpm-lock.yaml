@@ -99,8 +99,8 @@ importers:
         specifier: ^2.0.1
         version: 2.0.1(44caa86776c2401a00d903b0b4a150ae)
       '@vue-solana/nuxt':
-        specifier: 4.1.8
-        version: 4.1.8(8dfcefab1c7f0f22fa84d155334ecd3c)
+        specifier: 4.1.9
+        version: 4.1.9(8dfcefab1c7f0f22fa84d155334ecd3c)
       minimark:
         specifier: ^0.2.0
         version: 0.2.0
@@ -3968,21 +3968,21 @@ packages:
       vue:
         optional: true
 
-  '@vue-solana/core@4.1.8':
-    resolution: {integrity: sha512-n55MOnULNihLtD/icpWg25JUv8SN0U3YDpvMVaNbQ/DSEwX8LXysW4xjkkrwT0NgfyVRxuLaxSTlfmCTglyKXg==}
+  '@vue-solana/core@4.1.9':
+    resolution: {integrity: sha512-RUAW6H9UdG6YhRWXyYHastO1gv7nrAwgXIOxKzFmFzOeogW86RQozjj+kS0shLgpe83ft+VvNnpmFxLtYV/vPg==}
     peerDependencies:
       buffer: ^6.0.3
     peerDependenciesMeta:
       buffer:
         optional: true
 
-  '@vue-solana/nuxt@4.1.8':
-    resolution: {integrity: sha512-IEKTTVqvgoV7mMAiRDJKtT86KQ5jgpSAvwNf1wyO8/nexMuWCtgxWxmMFJPtPPYtvlTy91bv75HqtJaOvVgXCw==}
+  '@vue-solana/nuxt@4.1.9':
+    resolution: {integrity: sha512-0rdiRXnLtkcij/Z32iz9f48TRTO27qVh11AkHpqGbEQbVd0/KM8xaPNNLdwGRjALzLD+h2gZjXXEU841VD8h4w==}
     peerDependencies:
       nuxt: ^3.0.0 || ^4.0.0
 
-  '@vue-solana/vue@4.1.8':
-    resolution: {integrity: sha512-vUCT1DXo+bj9Uln2d+f73yciLNkQmClP+db49mNJAFn1ZgQcxAEs6M8zfg8cBDnRR8Q+edOTjg0EPu1g4fuzAA==}
+  '@vue-solana/vue@4.1.9':
+    resolution: {integrity: sha512-tpNDC+9O0hFMLAmhJqksH4jExTVAEQmKLVyGaJBE3eQTo3K/I0vKHLtxfgLXZ1ThZN0UBsWM1HcIA/F37uLpHQ==}
     peerDependencies:
       vue: ^3.5.0
 
@@ -14164,7 +14164,7 @@ snapshots:
     optionalDependencies:
       vue: 3.5.44(typescript@5.9.3)
 
-  '@vue-solana/core@4.1.8(buffer@6.0.3)(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(react-native@0.85.3(@babel/core@7.29.7)(bufferutil@4.1.0)(react@19.2.7)(utf-8-validate@6.0.6))(typescript@5.9.3)(utf-8-validate@6.0.6)':
+  '@vue-solana/core@4.1.9(buffer@6.0.3)(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(react-native@0.85.3(@babel/core@7.29.7)(bufferutil@4.1.0)(react@19.2.7)(utf-8-validate@6.0.6))(typescript@5.9.3)(utf-8-validate@6.0.6)':
     dependencies:
       '@solana-mobile/mobile-wallet-adapter-protocol': 2.2.9(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(react-native@0.85.3(@babel/core@7.29.7)(bufferutil@4.1.0)(react@19.2.7)(utf-8-validate@6.0.6))(typescript@5.9.3)(utf-8-validate@6.0.6)
       '@solana-mobile/wallet-standard-mobile': 0.5.3(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(react-native@0.85.3(@babel/core@7.29.7)(bufferutil@4.1.0)(react@19.2.7)(utf-8-validate@6.0.6))(typescript@5.9.3)(utf-8-validate@6.0.6)
@@ -14185,9 +14185,9 @@ snapshots:
       - typescript
       - utf-8-validate
 
-  '@vue-solana/nuxt@4.1.8(8dfcefab1c7f0f22fa84d155334ecd3c)':
+  '@vue-solana/nuxt@4.1.9(8dfcefab1c7f0f22fa84d155334ecd3c)':
     dependencies:
-      '@vue-solana/vue': 4.1.8(buffer@6.0.3)(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(react-native@0.85.3(@babel/core@7.29.7)(bufferutil@4.1.0)(react@19.2.7)(utf-8-validate@6.0.6))(typescript@5.9.3)(utf-8-validate@6.0.6)(vue@3.5.44(typescript@5.9.3))
+      '@vue-solana/vue': 4.1.9(buffer@6.0.3)(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(react-native@0.85.3(@babel/core@7.29.7)(bufferutil@4.1.0)(react@19.2.7)(utf-8-validate@6.0.6))(typescript@5.9.3)(utf-8-validate@6.0.6)(vue@3.5.44(typescript@5.9.3))
       nuxt: 4.6.2(@babel/plugin-proposal-decorators@7.29.7(@babel/core@7.29.7))(@babel/plugin-syntax-jsx@7.29.7(@babel/core@7.29.7))(@babel/plugin-syntax-typescript@7.29.7(@babel/core@7.29.7))(@oxc-project/types@0.155.0)(@parcel/watcher@2.5.6)(@types/node@24.12.4)(@vue/compiler-sfc@3.5.44)(acorn@8.16.0)(better-sqlite3@12.10.0)(bufferutil@4.1.0)(confbox@0.3.1)(db0@0.3.4(better-sqlite3@12.10.0))(dotenv@17.4.2)(esbuild@0.28.0)(eslint@10.4.1(jiti@2.7.0))(giget@3.2.0)(ioredis@5.11.0)(lightningcss@1.33.0)(mlly@1.8.2)(optionator@0.9.4)(oxc-parser@0.138.0)(rolldown@1.2.15)(rollup-plugin-visualizer@7.0.1(rolldown@1.2.15)(rollup@4.61.0))(rollup@4.61.0)(srvx@1.0.6)(terser@5.48.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(vite@8.3.5(@types/node@24.12.4)(esbuild@0.28.0)(jiti@2.7.0)(terser@5.48.0)(yaml@2.9.0))(vue-tsc@3.3.3(typescript@5.9.3))(yaml@2.9.0)
     transitivePeerDependencies:
       - buffer
@@ -14198,9 +14198,10 @@ snapshots:
       - utf-8-validate
       - vue
 
-  '@vue-solana/vue@4.1.8(buffer@6.0.3)(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(react-native@0.85.3(@babel/core@7.29.7)(bufferutil@4.1.0)(react@19.2.7)(utf-8-validate@6.0.6))(typescript@5.9.3)(utf-8-validate@6.0.6)(vue@3.5.44(typescript@5.9.3))':
+  '@vue-solana/vue@4.1.9(buffer@6.0.3)(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(react-native@0.85.3(@babel/core@7.29.7)(bufferutil@4.1.0)(react@19.2.7)(utf-8-validate@6.0.6))(typescript@5.9.3)(utf-8-validate@6.0.6)(vue@3.5.44(typescript@5.9.3))':
     dependencies:
-      '@vue-solana/core': 4.1.8(buffer@6.0.3)(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(react-native@0.85.3(@babel/core@7.29.7)(bufferutil@4.1.0)(react@19.2.7)(utf-8-validate@6.0.6))(typescript@5.9.3)(utf-8-validate@6.0.6)
+      '@vue-solana/core': 4.1.9(buffer@6.0.3)(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(react-native@0.85.3(@babel/core@7.29.7)(bufferutil@4.1.0)(react@19.2.7)(utf-8-validate@6.0.6))(typescript@5.9.3)(utf-8-validate@6.0.6)
+      jsqr: 1.4.0
       vue: 3.5.44(typescript@5.9.3)
     transitivePeerDependencies:
       - buffer
