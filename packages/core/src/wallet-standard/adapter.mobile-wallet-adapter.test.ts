@@ -215,7 +215,33 @@ describe("Wallet Standard adapter — Mobile Wallet Adapter", () => {
       expect(store.signTransactions).toHaveBeenCalledTimes(1);
     });
 
-    it("signs and sends through the session, returning base58 signatures", async () => {
+    // Phantom on Android never answers MWA's `sign_and_send_transactions`.
+    it("signs a single transaction in the session and sends it through the app RPC", async () => {
+      const sendTransaction = vi.fn().mockResolvedValue("sig-1");
+      const { wallet, store, featureSignAndSend } = createSessionWallet(sendTransaction);
+      const sendOptions = { skipPreflight: true };
+
+      await expect(
+        wallet.signAndSendTransaction?.(createTestTransaction(), sendOptions),
+      ).resolves.toEqual({ signature: "sig-1" });
+      expect(store.signTransactions).toHaveBeenCalledTimes(1);
+      expect(sendTransaction).toHaveBeenCalledWith(signedTransaction, sendOptions);
+      expect(store.signAndSendTransactions).not.toHaveBeenCalled();
+      expect(featureSignAndSend).not.toHaveBeenCalled();
+    });
+
+    it("signs and sends a one-transaction batch the same way", async () => {
+      const sendTransaction = vi.fn().mockResolvedValue("sig-1");
+      const { wallet, store } = createSessionWallet(sendTransaction);
+
+      await expect(wallet.signAndSendTransactions?.([createTestTransaction()])).resolves.toEqual([
+        "sig-1",
+      ]);
+      expect(store.signTransactions).toHaveBeenCalledTimes(1);
+      expect(store.signAndSendTransactions).not.toHaveBeenCalled();
+    });
+
+    it("signs and sends through the session without an app RPC, returning base58 signatures", async () => {
       const { wallet, store, featureSignAndSend } = createSessionWallet();
       const sendOptions = { skipPreflight: true };
 

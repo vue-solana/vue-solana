@@ -203,6 +203,7 @@ Android notes:
 - Browsers may show a one-time Local Network Access prompt before MWA can connect to an installed wallet app.
 - The default MWA app identity is named from `<meta name="application-name">`, then `og:site_name`, then the host, never the page title: wallets bind the authorization to the identity, so it must stay the same on every page and locale. Set `mobileWallet.appIdentity` to pin it explicitly.
 - Phantom on Android Chrome rejects the saved MWA authorization on every signing request, even right after connecting. Vue Solana then asks for a fresh authorization in the same wallet visit, so Phantom shows an "approve this app" screen before each message or transaction prompt. This is expected; wallets that accept the saved authorization go straight to the prompt.
+- Sign-and-send through Android MWA is signed by the wallet and submitted through your app's RPC, not the wallet's. Phantom never answers MWA's sign-and-send request, so the payment prompt never appeared. Send options such as `skipPreflight` apply to your RPC.
 - For Android MWA transaction sends, Vue Solana asks the mobile wallet to sign and then submits the signed transaction through the app's RPC connection when the wallet supports `signTransaction`. This keeps the returned signature under app control and avoids a mobile handoff edge case where the wallet sends successfully but the browser page does not receive the wallet adapter response.
 
 iOS notes:
