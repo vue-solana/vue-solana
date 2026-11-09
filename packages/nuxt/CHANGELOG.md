@@ -1,5 +1,13 @@
 # @vue-solana/nuxt
 
+## 4.1.10
+
+### Patch Changes
+
+- f9b92a2: Fix payments through Android Mobile Wallet Adapter never reaching Phantom's approval prompt. Sign-and-send now has the wallet sign the transaction in this package's own MWA session and submits it through the app's RPC, instead of MWA's `sign_and_send_transactions` request, which Phantom never answered.
+- Updated dependencies [f9b92a2]
+  - @vue-solana/vue@4.1.10
+
 ## 4.1.9
 
 ### Patch Changes
