@@ -172,6 +172,26 @@ export function adaptSolanaStandardWallet(
     });
   }
 
+  /**
+   * Whether an MWA sign-and-send should be signed by the wallet and sent
+   * through the app's RPC (`options.sendTransaction`) instead.
+   *
+   * MWA runs every `signAndSendTransaction` input as its own wallet session,
+   * so a batch launches the wallet app once per transaction — and from the
+   * second launch on there is no user gesture left, so Chrome blocks the
+   * intent and MWA reports "wallet not found". In this package's own session
+   * even a single transaction is signed and sent here: Phantom on Android
+   * answers `authorize` and `sign_messages` there but never answers
+   * `sign_and_send_transactions`, so the payment prompt never appeared.
+   */
+  function shouldSignThenSend(transactionCount: number) {
+    if (!isMobileWalletAdapter || !options.sendTransaction || !hasSignTransaction(wallet)) {
+      return false;
+    }
+
+    return transactionCount > 1 || Boolean(getMobileWalletSession()?.signTransactions);
+  }
+
   /** Resolves the raw signature bytes, one per transaction. */
   function signAndSendTransactionsThroughWallet(
     activeAccount: WalletAccount,
@@ -524,6 +544,20 @@ export function adaptSolanaStandardWallet(
       : undefined,
     signAndSendTransaction: hasSignAndSendTransaction(wallet)
       ? async (transaction, sendOptions) => {
+          if (options.sendTransaction && shouldSignThenSend(1)) {
+            const [signedTransaction] = await signTransactionsThroughWallet(
+              getActiveAccount(account),
+              [transaction],
+            );
+
+            return {
+              signature: await options.sendTransaction(
+                signedTransaction as SolanaTransaction,
+                sendOptions,
+              ),
+            };
+          }
+
           const [signature] = await signAndSendTransactionsThroughWallet(
             getActiveAccount(account),
             [transaction],
@@ -541,17 +575,7 @@ export function adaptSolanaStandardWallet(
       ? async (transactions, sendOptions) => {
           const activeAccount = getActiveAccount(account);
 
-          // MWA runs every `signAndSendTransaction` input as its own wallet
-          // session, so a batch launches the wallet app once per transaction —
-          // and from the second launch on there is no user gesture left, so
-          // Chrome blocks the intent and MWA reports "wallet not found". One
-          // `signTransaction` call signs the whole batch in a single session.
-          if (
-            isMobileWalletAdapter &&
-            options.sendTransaction &&
-            transactions.length > 1 &&
-            hasSignTransaction(wallet)
-          ) {
+          if (options.sendTransaction && shouldSignThenSend(transactions.length)) {
             const signedTransactions = await signTransactionsThroughWallet(
               activeAccount,
               transactions,
