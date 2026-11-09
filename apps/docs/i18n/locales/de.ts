@@ -381,7 +381,7 @@ export default {
       scanner: {
         title: "Zahlung scannen und prüfen",
         description:
-          "Zahlerseite: Scanne den QR-Code eines Händlers oder füge die URL ein und prüfe genau, was die Wallet bezahlen soll. Gescannte Daten sind nicht vertrauenswürdig, daher wird hier nichts signiert oder gesendet.",
+          "Zahlerseite: Scanne einen Händler-QR-Code oder füge die URL ein, prüfe genau, was die Wallet zahlen soll, und zahle dann mit der verbundenen Wallet. Gescannte Daten sind nicht vertrauenswürdig, daher wird nichts gesendet, bevor du auf Bezahlen drückst, und die Wallet fragt trotzdem nach deiner Bestätigung.",
         start: "Kamera starten",
         stop: "Kamera stoppen",
         reset: "Zurücksetzen",
@@ -394,6 +394,16 @@ export default {
         validate: "URL prüfen",
         openInWallet: "Zahlungsanfrage in einer Wallet öffnen",
         pasteFirst: "Füge zuerst eine Solana-Pay-URL ein.",
+        pay: "Mit verbundener Wallet bezahlen",
+        paid: "Zahlung bestätigt.",
+        viewPayment: "Transaktion ansehen",
+        payDisabled: {
+          connectWallet: "Verbinde eine Wallet, um diese Anfrage zu bezahlen.",
+          transactionRequest:
+            "Transaktionsanfragen erstellt der Server des Händlers; öffne sie stattdessen in einer Wallet.",
+          splToken: "Diese Demo zahlt nur SOL; öffne Token-Zahlungen stattdessen in einer Wallet.",
+          amount: "Diese Anfrage hat keinen Betrag, daher kann die Demo sie nicht bezahlen.",
+        },
         labels: {
           scanResult: "Scan-Ergebnis",
           kind: "Art",

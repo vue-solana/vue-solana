@@ -135,7 +135,7 @@ async function beginScan() {
 </template>
 ```
 
-`start()` は `navigator.mediaDevices` が存在しない場合に加え、ブラウザが QR コードを検出できない場合にも reject します。iOS と Firefox には `BarcodeDetector` がなく、一部の Android ビルドには QR に対応していないものが搭載されています。その場合カメラは開かないため、`scanFromText(text)` を呼び出す貼り付け用フィールドを常に用意してください。有効な Solana Pay URL を読み取るとカメラは閉じ、`parsed` に `parseURL()` の結果が入ります。Solana Pay URL ではない QR コードは `error` を設定し、スキャンは続行します。`scanFromText()` も解析に失敗した場合は同じように `error` を設定します。
+`start()` は `navigator.mediaDevices` が存在しない場合に reject します。各フレームは、ブラウザの `BarcodeDetector` が `qr_code` に対応していればまずそれに渡され、何も見つからなければ同梱の JavaScript デコーダー（`jsqr`）に渡されます。このデコーダーは `BarcodeDetector` のない iOS と Firefox、そして detector がコードを見つけられない Android 端末をカバーします。最初の `start()` で読み込まれるため、カメラを開かないアプリが読み込むことはありません。デコーダーはフレーム中央の正方形を読み取るので、正方形に切り抜いたプレビューにはスキャン対象がそのまま表示されます。有効な Solana Pay URL を読み取るとカメラは閉じ、`parsed` に `parseURL()` の結果が入ります。Solana Pay URL ではない QR コードは `error` を設定し、スキャンは続行します。`scanFromText()` も解析に失敗した場合は同じように `error` を設定します。カメラのない端末向けに、`scanFromText(text)` を呼び出す貼り付け用フィールドを残してください。
 
 スキャンしたデータは敵対的な入力として扱ってください。受取人、金額、トークン mint、ラベル、メモを表示し、ウォレットのプロンプトを出す前にユーザーへ確認してもらいます。Vue Solana には自動送信の経路はなく、追加すべきでもありません。
 

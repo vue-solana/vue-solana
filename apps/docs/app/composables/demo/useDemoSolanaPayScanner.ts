@@ -1,5 +1,15 @@
 import { computed, ref, shallowRef } from "vue";
+import {
+  address,
+  appendTransactionMessageInstructions,
+  compileTransaction,
+  createTransactionMessage,
+  getTransactionEncoder,
+  setTransactionMessageFeePayer,
+  setTransactionMessageLifetimeUsingBlockhash,
+} from "@vue-solana/nuxt/kit";
 import { formatError } from "./errors";
+import { createSolanaPayTransferInstructions } from "./transferInstruction";
 
 /** The subset of a parsed Solana Pay request this demo previews. */
 export interface ParsedPaymentRequest {
@@ -16,14 +26,22 @@ export interface ParsedPaymentRequest {
 const SOL_DECIMALS = 9;
 const LAMPORTS_PER_SOL = 10n ** BigInt(SOL_DECIMALS);
 
+export type PayDisabledReason = "connectWallet" | "transactionRequest" | "splToken" | "amount";
+
 /**
- * Payer-side Solana Pay demo: scan a merchant QR code or paste the URL and
- * preview what the wallet will be asked to pay. Scanned data is untrusted, so
- * this never signs or sends — the preview is the whole feature.
+ * Payer-side Solana Pay demo: scan a merchant QR code or paste the URL, preview
+ * what the wallet will be asked to pay, and pay it from the connected wallet.
+ * Scanned data is untrusted, so nothing is sent until the user presses Pay
+ * after reading the preview, and the wallet still asks for approval.
  */
 export function useDemoSolanaPayScanner() {
   const { t } = useI18n();
+  const { client } = useSolana();
+  const rpc = useSolanaRpc();
+  const wallet = useSolanaWallet();
   const scanner = useSolanaQrScanner();
+  const payment = useSolanaSignAndSendTransaction();
+  const payError = shallowRef<unknown>(null);
 
   const pastedUrl = ref("");
   const pasteError = shallowRef<unknown>(null);
@@ -70,8 +88,84 @@ export function useDemoSolanaPayScanner() {
   });
   const scannerError = computed(() => formatError(pasteError.value ?? scanner.error.value));
 
+  // Only SOL transfer requests with an amount are paid here: SPL token
+  // transfers need the mint's token accounts, and a transaction request is
+  // built by the merchant's server.
+  const payDisabledReason = computed<PayDisabledReason | null>(() => {
+    if (!wallet.connected.value) {
+      return "connectWallet";
+    }
+
+    if (isTransactionRequest.value) {
+      return "transactionRequest";
+    }
+
+    if (parsedRequest.value?.splToken) {
+      return "splToken";
+    }
+
+    if (!parsedRequest.value?.amount) {
+      return "amount";
+    }
+
+    return null;
+  });
+  const payReady = computed(
+    () =>
+      Boolean(parsedRequest.value) && payDisabledReason.value === null && !payment.loading.value,
+  );
+  const paymentSignature = computed(() => payment.signature.value ?? null);
+  const paymentExplorerUrl = computed(() =>
+    paymentSignature.value
+      ? `https://explorer.solana.com/tx/${paymentSignature.value}?cluster=${rpc.cluster.value}`
+      : null,
+  );
+  const paymentError = computed(() => formatError(payError.value ?? payment.error.value));
+
+  async function payScannedRequest() {
+    const request = parsedRequest.value;
+    const payer = wallet.publicKey.value;
+
+    if (!request?.recipient || !request.amount || !payer || !payReady.value) {
+      return;
+    }
+
+    payError.value = null;
+
+    try {
+      const { value: latestBlockhash } = await client.rpc.getLatestBlockhash().send();
+      const transactionMessage = appendTransactionMessageInstructions(
+        createSolanaPayTransferInstructions({
+          payer,
+          recipient: address(request.recipient),
+          lamports: request.amount,
+          references: references.value.map((reference) => address(reference)),
+          memo: request.memo,
+        }),
+        setTransactionMessageLifetimeUsingBlockhash(
+          latestBlockhash,
+          setTransactionMessageFeePayer(payer, createTransactionMessage({ version: 0 })),
+        ),
+      );
+      const transaction = new Uint8Array(
+        getTransactionEncoder().encode(compileTransaction(transactionMessage)),
+      );
+
+      await payment.execute(transaction, {
+        confirm: true,
+        confirmation: { commitment: "confirmed" },
+        skipPreflight: false,
+      });
+    } catch (error) {
+      payError.value = error;
+    }
+  }
+
   function resetScan() {
     pasteError.value = null;
+    payError.value = null;
+    payment.signature.value = null;
+    payment.error.value = null;
     scanner.reset();
   }
 
@@ -110,6 +204,13 @@ export function useDemoSolanaPayScanner() {
     isTransactionRequest,
     parsedRequest,
     pasteError,
+    payDisabledReason,
+    payLoading: payment.loading,
+    payReady,
+    payScannedRequest,
+    paymentError,
+    paymentExplorerUrl,
+    paymentSignature,
     pastedUrl,
     references,
     resetScan,

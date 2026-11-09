@@ -372,7 +372,7 @@ export default {
       scanner: {
         title: "扫描并预览支付",
         description:
-          "付款方侧：扫描商户 QR 码或粘贴 URL，然后仔细查看钱包将被要求支付什么。扫描数据属于不可信输入，因此这里不会签名或发送任何交易。",
+          "付款方：扫描商家二维码或粘贴 URL，确认钱包将被要求支付的内容，然后用已连接的钱包付款。扫描到的数据不可信，因此在你点击付款之前不会发送任何内容，钱包也仍会请你确认。",
         start: "启动摄像头",
         stop: "停止摄像头",
         reset: "重置",
@@ -384,6 +384,15 @@ export default {
         validate: "验证 URL",
         openInWallet: "在钱包中打开支付请求",
         pasteFirst: "请先粘贴 Solana Pay URL。",
+        pay: "用已连接的钱包付款",
+        paid: "付款已确认。",
+        viewPayment: "查看交易",
+        payDisabled: {
+          connectWallet: "请连接钱包以支付此请求。",
+          transactionRequest: "交易请求由商家服务器构建，请改在钱包中打开。",
+          splToken: "此演示仅支持 SOL 付款，代币付款请在钱包中打开。",
+          amount: "此请求没有金额，演示无法支付。",
+        },
         labels: {
           scanResult: "扫描结果",
           kind: "类型",

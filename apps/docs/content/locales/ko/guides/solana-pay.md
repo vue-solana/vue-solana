@@ -135,7 +135,7 @@ async function beginScan() {
 </template>
 ```
 
-`start()`는 `navigator.mediaDevices`가 없을 때뿐 아니라 브라우저가 QR 코드를 감지할 수 없을 때도 거부됩니다. iOS와 Firefox에는 `BarcodeDetector`가 없고, 일부 Android 빌드에는 QR을 지원하지 않는 detector가 들어 있습니다. 이 경우 카메라가 아예 열리지 않으므로 `scanFromText(text)`를 호출하는 붙여넣기 필드를 항상 제공하세요. 유효한 Solana Pay URL을 읽으면 카메라가 닫히고 `parsed`에 `parseURL()` 결과가 들어갑니다. Solana Pay URL이 아닌 QR 코드는 `error`를 설정하고 스캔은 계속됩니다. `scanFromText()`도 파싱에 실패하면 같은 방식으로 `error`를 설정합니다.
+`start()`는 `navigator.mediaDevices`가 없으면 거부됩니다. 각 프레임은 브라우저의 `BarcodeDetector`가 `qr_code`를 지원하면 먼저 그쪽으로, 아무것도 찾지 못하면 번들된 JavaScript 디코더(`jsqr`)로 전달됩니다. 이 디코더는 `BarcodeDetector`가 없는 iOS와 Firefox, 그리고 detector가 코드를 찾지 못하는 Android 기기를 지원합니다. 첫 `start()` 때 다운로드되므로 카메라를 열지 않는 앱은 이를 로드하지 않습니다. 디코더는 프레임 가운데 정사각형을 읽으므로, 정사각형으로 잘라낸 미리보기는 스캔되는 영역을 그대로 보여 줍니다. 유효한 Solana Pay URL을 읽으면 카메라가 닫히고 `parsed`에 `parseURL()` 결과가 들어갑니다. Solana Pay URL이 아닌 QR 코드는 `error`를 설정하고 스캔은 계속됩니다. `scanFromText()`도 파싱에 실패하면 같은 방식으로 `error`를 설정합니다. 카메라가 없는 기기를 위해 `scanFromText(text)`를 호출하는 붙여넣기 필드를 유지하세요.
 
 스캔한 데이터는 적대적인 입력으로 취급하세요. recipient, amount, token mint, label, memo를 보여 주고 사용자가 확인한 뒤에만 지갑 프롬프트를 띄우세요. Vue Solana에는 자동 전송 경로가 없으며, 추가해서도 안 됩니다.
 

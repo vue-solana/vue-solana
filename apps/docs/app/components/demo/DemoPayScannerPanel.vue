@@ -9,6 +9,13 @@ const {
   isTransactionRequest,
   parsedRequest,
   pastedUrl,
+  payDisabledReason,
+  payLoading,
+  payReady,
+  payScannedRequest,
+  paymentError,
+  paymentExplorerUrl,
+  paymentSignature,
   references,
   resetScan,
   scanResult,
@@ -142,13 +149,16 @@ function startScan() {
       </UButton>
     </div>
 
-    <video
+    <div
       v-show="scanning"
-      ref="video"
-      class="mt-4 w-full max-w-sm rounded-2xl border border-slate-200 bg-slate-950 dark:border-slate-700"
-      playsinline
-      muted
-    />
+      class="relative mt-4 aspect-square w-full max-w-sm overflow-hidden rounded-2xl border border-slate-200 bg-slate-950 dark:border-slate-700"
+      data-testid="scanner-viewport"
+    >
+      <video ref="video" class="absolute inset-0 size-full object-cover" playsinline muted />
+      <div class="scanner-frame" aria-hidden="true">
+        <span class="scanner-line" />
+      </div>
+    </div>
 
     <UAlert
       v-if="!cameraSupported"
@@ -196,6 +206,46 @@ function startScan() {
       data-testid="scanner-preview"
     />
 
+    <div v-if="parsedRequest" class="mt-4" data-testid="scanner-pay">
+      <UButton
+        type="button"
+        color="primary"
+        :disabled="!payReady"
+        :loading="payLoading"
+        data-testid="scanner-pay-button"
+        @click="payScannedRequest()"
+      >
+        {{ $t("demo.solanaPay.scanner.pay") }}
+      </UButton>
+      <p
+        v-if="payDisabledReason"
+        class="mt-2 text-sm text-slate-600 dark:text-slate-300"
+        data-testid="scanner-pay-disabled"
+      >
+        {{ $t(`demo.solanaPay.scanner.payDisabled.${payDisabledReason}`) }}
+      </p>
+      <p v-if="paymentSignature" class="mt-2 text-sm" data-testid="scanner-pay-signature">
+        {{ $t("demo.solanaPay.scanner.paid") }}
+        <a
+          v-if="paymentExplorerUrl"
+          :href="paymentExplorerUrl"
+          class="font-bold text-violet-700 hover:underline dark:text-violet-300"
+          target="_blank"
+          rel="noreferrer"
+        >
+          {{ $t("demo.solanaPay.scanner.viewPayment") }}
+        </a>
+      </p>
+      <UAlert
+        v-if="paymentError"
+        class="mt-3"
+        color="error"
+        variant="subtle"
+        :title="paymentError"
+        data-testid="scanner-pay-error"
+      />
+    </div>
+
     <p v-if="scanResult" class="mt-3">
       <a
         :href="scanResult"
@@ -221,3 +271,49 @@ function startScan() {
     />
   </DemoPanel>
 </template>
+
+<style scoped>
+/* Corner brackets around the area the decoder reads, plus a sweeping line. */
+.scanner-frame {
+  position: absolute;
+  inset: 12%;
+  background:
+    linear-gradient(white, white) top left / 28px 3px,
+    linear-gradient(white, white) top left / 3px 28px,
+    linear-gradient(white, white) top right / 28px 3px,
+    linear-gradient(white, white) top right / 3px 28px,
+    linear-gradient(white, white) bottom left / 28px 3px,
+    linear-gradient(white, white) bottom left / 3px 28px,
+    linear-gradient(white, white) bottom right / 28px 3px,
+    linear-gradient(white, white) bottom right / 3px 28px;
+  background-repeat: no-repeat;
+  filter: drop-shadow(0 0 2px rgb(0 0 0 / 0.6));
+}
+
+.scanner-line {
+  position: absolute;
+  inset-inline: 4%;
+  top: 0;
+  height: 2px;
+  border-radius: 9999px;
+  background: rgb(167 139 250);
+  box-shadow: 0 0 12px 2px rgb(139 92 246 / 0.8);
+  animation: scanner-sweep 2.2s ease-in-out infinite alternate;
+}
+
+@keyframes scanner-sweep {
+  from {
+    top: 2%;
+  }
+  to {
+    top: 98%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scanner-line {
+    animation: none;
+    top: 50%;
+  }
+}
+</style>

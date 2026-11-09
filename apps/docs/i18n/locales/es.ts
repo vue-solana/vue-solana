@@ -381,7 +381,7 @@ export default {
       scanner: {
         title: "Escanear y previsualizar un pago",
         description:
-          "Lado del pagador: escanea el código QR de un comercio o pega la URL y revisa exactamente qué se le pedirá pagar a la wallet. Los datos escaneados no son de confianza, así que aquí no se firma ni se envía ninguna transacción.",
+          "Lado del pagador: escanea el código QR de un comercio o pega la URL, revisa exactamente qué se le pedirá pagar a la wallet y págalo con la wallet conectada. Los datos escaneados no son de confianza, así que no se envía nada hasta que pulses Pagar, y la wallet sigue pidiendo tu aprobación.",
         start: "Iniciar cámara",
         stop: "Detener cámara",
         reset: "Restablecer",
@@ -394,6 +394,16 @@ export default {
         validate: "Validar URL",
         openInWallet: "Abrir la solicitud de pago en una wallet",
         pasteFirst: "Primero pega una URL de Solana Pay.",
+        pay: "Pagar con la wallet conectada",
+        paid: "Pago confirmado.",
+        viewPayment: "Ver transacción",
+        payDisabled: {
+          connectWallet: "Conecta una wallet para pagar esta solicitud.",
+          transactionRequest:
+            "Las solicitudes de transacción las crea el servidor del comercio; ábrelas en una wallet.",
+          splToken: "Esta demo solo paga en SOL; abre los pagos con tokens en una wallet.",
+          amount: "Esta solicitud no tiene importe, así que la demo no puede pagarla.",
+        },
         labels: {
           scanResult: "Resultado del escaneo",
           kind: "Tipo",
