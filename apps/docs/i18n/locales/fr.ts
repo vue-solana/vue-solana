@@ -405,6 +405,14 @@ export default {
           splToken: "Cette démo ne paie qu'en SOL ; ouvrez les paiements en tokens dans un wallet.",
           amount: "Cette demande n'a pas de montant, la démo ne peut donc pas la payer.",
         },
+        payFailed: {
+          accountNotFound:
+            "Votre compte de wallet n'a pas de SOL sur {cluster}. Approvisionnez-le (par exemple avec un airdrop devnet) et payez à nouveau.",
+          insufficientFundsForFee:
+            "Votre wallet n'a pas assez de SOL sur {cluster} pour payer les frais de réseau.",
+          blockhashNotFound:
+            "La transaction a expiré avant d'atteindre le réseau. Payez à nouveau.",
+        },
         labels: {
           scanResult: "Résultat du scan",
           kind: "Type",

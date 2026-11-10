@@ -5,6 +5,10 @@ import {
   compileTransaction,
   createTransactionMessage,
   getTransactionEncoder,
+  isSolanaError,
+  SOLANA_ERROR__TRANSACTION_ERROR__ACCOUNT_NOT_FOUND,
+  SOLANA_ERROR__TRANSACTION_ERROR__BLOCKHASH_NOT_FOUND,
+  SOLANA_ERROR__TRANSACTION_ERROR__INSUFFICIENT_FUNDS_FOR_FEE,
   setTransactionMessageFeePayer,
   setTransactionMessageLifetimeUsingBlockhash,
 } from "@vue-solana/nuxt/kit";
@@ -25,6 +29,41 @@ export interface ParsedPaymentRequest {
 
 const SOL_DECIMALS = 9;
 const LAMPORTS_PER_SOL = 10n ** BigInt(SOL_DECIMALS);
+
+const PAY_FAILURE_KEYS = new Map<number, string>([
+  [SOLANA_ERROR__TRANSACTION_ERROR__ACCOUNT_NOT_FOUND, "accountNotFound"],
+  [SOLANA_ERROR__TRANSACTION_ERROR__INSUFFICIENT_FUNDS_FOR_FEE, "insufficientFundsForFee"],
+  [SOLANA_ERROR__TRANSACTION_ERROR__BLOCKHASH_NOT_FOUND, "blockhashNotFound"],
+]);
+
+/**
+ * A failed preflight surfaces as "Transaction simulation failed" (in a
+ * production build only "Solana error #-32002"), wrapped by the composable's
+ * own error. The reason a payer can act on is the transaction error at the
+ * end of the `cause` chain.
+ */
+function getErrorChain(error: unknown): unknown[] {
+  const chain: unknown[] = [];
+
+  for (let current = error; current && chain.length < 5; ) {
+    chain.push(current);
+    current = (current as { cause?: unknown }).cause;
+  }
+
+  return chain;
+}
+
+function findPayFailureKey(chain: unknown[]): string | null {
+  for (const error of chain) {
+    const key = isSolanaError(error) ? PAY_FAILURE_KEYS.get(error.context.__code) : undefined;
+
+    if (key) {
+      return key;
+    }
+  }
+
+  return null;
+}
 
 export type PayDisabledReason = "connectWallet" | "transactionRequest" | "splToken" | "amount";
 
@@ -120,7 +159,16 @@ export function useDemoSolanaPayScanner() {
       ? `https://explorer.solana.com/tx/${paymentSignature.value}?cluster=${rpc.cluster.value}`
       : null,
   );
-  const paymentError = computed(() => formatError(payError.value ?? payment.error.value));
+  const paymentError = computed(() => {
+    const chain = getErrorChain(payError.value ?? payment.error.value);
+    const failureKey = findPayFailureKey(chain);
+
+    // Otherwise show the innermost error: its message (or, in a production
+    // build, its decodable code) names the actual failure.
+    return failureKey
+      ? t(`demo.solanaPay.scanner.payFailed.${failureKey}`, { cluster: rpc.cluster.value })
+      : formatError(chain.at(-1));
+  });
 
   async function payScannedRequest() {
     const request = parsedRequest.value;
@@ -191,7 +239,7 @@ export function useDemoSolanaPayScanner() {
     pasteError.value = null;
 
     try {
-      await scanner.start({ video: video ?? undefined, scanIntervalMs: 500 });
+      await scanner.start({ video: video ?? undefined, scanIntervalMs: 200 });
     } catch (error) {
       pasteError.value = error;
     }

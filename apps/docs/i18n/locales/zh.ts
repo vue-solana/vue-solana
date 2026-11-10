@@ -393,6 +393,12 @@ export default {
           splToken: "此演示仅支持 SOL 付款，代币付款请在钱包中打开。",
           amount: "此请求没有金额，演示无法支付。",
         },
+        payFailed: {
+          accountNotFound:
+            "你的钱包账户在 {cluster} 上没有 SOL。请先充值（例如使用 devnet 空投），然后重新支付。",
+          insufficientFundsForFee: "你的钱包在 {cluster} 上没有足够的 SOL 支付网络手续费。",
+          blockhashNotFound: "交易在到达网络之前已过期。请重新支付。",
+        },
         labels: {
           scanResult: "扫描结果",
           kind: "类型",

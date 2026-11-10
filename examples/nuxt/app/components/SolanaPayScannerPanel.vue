@@ -84,7 +84,7 @@ async function startScanner() {
   pasteError.value = null;
 
   try {
-    await scanner.start({ video: video.value ?? undefined, scanIntervalMs: 500 });
+    await scanner.start({ video: video.value ?? undefined, scanIntervalMs: 200 });
   } catch (error) {
     pasteError.value = error;
   }

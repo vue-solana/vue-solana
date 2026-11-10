@@ -152,6 +152,41 @@ describe("useSolanaQrScanner camera path", () => {
     });
   });
 
+  it("asks for continuous autofocus when the camera supports it", async () => {
+    const applyConstraints = vi.fn().mockResolvedValue(undefined);
+    const videoTrack = {
+      stop: vi.fn(),
+      getCapabilities: () => ({ focusMode: ["manual", "single-shot", "continuous"] }),
+      applyConstraints,
+    };
+    getUserMedia.mockResolvedValue({
+      getTracks: () => [videoTrack],
+      getVideoTracks: () => [videoTrack],
+    });
+
+    await startScanner().started;
+
+    expect(applyConstraints).toHaveBeenCalledWith({ advanced: [{ focusMode: "continuous" }] });
+  });
+
+  it("keeps scanning when the camera rejects the focus constraint", async () => {
+    const videoTrack = {
+      stop: vi.fn(),
+      getCapabilities: () => ({ focusMode: ["continuous"] }),
+      applyConstraints: vi.fn().mockRejectedValue(new Error("OverconstrainedError")),
+    };
+    getUserMedia.mockResolvedValue({
+      getTracks: () => [videoTrack],
+      getVideoTracks: () => [videoTrack],
+    });
+
+    const { scanner, started } = startScanner();
+    await started;
+
+    expect(scanner.error.value).toBeNull();
+    expect(scanner.scanning.value).toBe(true);
+  });
+
   it("decodes the frame itself when the browser detector finds nothing", async () => {
     const { scanner, started } = startScanner();
     await started;
@@ -161,11 +196,24 @@ describe("useSolanaQrScanner camera path", () => {
 
     expect(scanner.parsed.value).toEqual({ recipient: "addr" });
     expect(scanner.scanning.value).toBe(false);
-    // The centre square of the 1280x720 frame, at most 720 px a side.
-    expect(drawImage).toHaveBeenCalledWith(video, 280, 0, 720, 720, 0, 0, 720, 720);
-    expect(decoder.jsQR).toHaveBeenCalledWith(expect.any(Uint8ClampedArray), 720, 720, {
+    // The centre square of the 1280x720 frame, scaled down to 360 px a side.
+    expect(drawImage).toHaveBeenCalledWith(video, 280, 0, 720, 720, 0, 0, 360, 360);
+    expect(decoder.jsQR).toHaveBeenCalledWith(expect.any(Uint8ClampedArray), 360, 360, {
       inversionAttempts: "dontInvert",
     });
+  });
+
+  it("retries the frame at a larger size before waiting for the next one", async () => {
+    const { scanner, started } = startScanner();
+    await started;
+
+    decoder.jsQR.mockImplementation((_data: Uint8ClampedArray, width: number) =>
+      width === 480 ? { data: "solana:addr" } : null,
+    );
+    await vi.advanceTimersByTimeAsync(500);
+
+    expect(decoder.jsQR.mock.calls.map(([, width]) => width)).toEqual([360, 480]);
+    expect(scanner.parsed.value).toEqual({ recipient: "addr" });
   });
 
   it.each([
