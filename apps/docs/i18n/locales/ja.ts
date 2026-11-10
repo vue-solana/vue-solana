@@ -404,6 +404,14 @@ export default {
             "このデモは SOL での支払いのみ対応しています。トークンでの支払いはウォレットで開いてください。",
           amount: "このリクエストには金額がないため、デモでは支払えません。",
         },
+        payFailed: {
+          accountNotFound:
+            "ウォレットのアカウントに {cluster} の SOL がありません。devnet のエアドロップなどで入金してから、もう一度支払ってください。",
+          insufficientFundsForFee:
+            "ウォレットに {cluster} のネットワーク手数料を支払うだけの SOL がありません。",
+          blockhashNotFound:
+            "トランザクションがネットワークに届く前に期限切れになりました。もう一度支払ってください。",
+        },
         labels: {
           scanResult: "スキャン結果",
           kind: "種類",

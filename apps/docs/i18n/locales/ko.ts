@@ -401,6 +401,12 @@ export default {
           splToken: "이 데모는 SOL 결제만 지원합니다. 토큰 결제는 wallet에서 여세요.",
           amount: "이 요청에는 금액이 없어 데모에서 결제할 수 없습니다.",
         },
+        payFailed: {
+          accountNotFound:
+            "지갑 계정에 {cluster} SOL이 없습니다. devnet airdrop 등으로 충전한 뒤 다시 결제하세요.",
+          insufficientFundsForFee: "지갑에 {cluster} 네트워크 수수료를 낼 SOL이 부족합니다.",
+          blockhashNotFound: "트랜잭션이 네트워크에 도달하기 전에 만료되었습니다. 다시 결제하세요.",
+        },
         labels: {
           scanResult: "스캔 결과",
           kind: "종류",

@@ -404,6 +404,13 @@ export default {
           splToken: "Esta demo solo paga en SOL; abre los pagos con tokens en una wallet.",
           amount: "Esta solicitud no tiene importe, así que la demo no puede pagarla.",
         },
+        payFailed: {
+          accountNotFound:
+            "Tu cuenta de wallet no tiene SOL en {cluster}. Añade fondos (por ejemplo, con un airdrop de devnet) y vuelve a pagar.",
+          insufficientFundsForFee:
+            "Tu wallet no tiene suficiente SOL en {cluster} para pagar la comisión de red.",
+          blockhashNotFound: "La transacción caducó antes de llegar a la red. Vuelve a pagar.",
+        },
         labels: {
           scanResult: "Resultado del escaneo",
           kind: "Tipo",

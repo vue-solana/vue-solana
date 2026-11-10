@@ -401,6 +401,13 @@ export default {
           splToken: "This demo pays SOL only; open token payments in a wallet instead.",
           amount: "This request has no amount, so the demo cannot pay it.",
         },
+        payFailed: {
+          accountNotFound:
+            "Your wallet account has no SOL on {cluster}. Fund it (for example with a devnet airdrop) and pay again.",
+          insufficientFundsForFee:
+            "Your wallet does not have enough SOL on {cluster} to pay the network fee.",
+          blockhashNotFound: "The transaction expired before it reached the network. Pay again.",
+        },
         labels: {
           scanResult: "Scan result",
           kind: "Kind",
