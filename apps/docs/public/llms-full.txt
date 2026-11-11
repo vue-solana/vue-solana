@@ -32750,7 +32750,7 @@ Payvand verwandelt jedes Telefon in eine Solana-Kasse. Verkäufer erstellen eine
 
 ## Deine App einreichen
 
-Hast du eine App mit `@vue-solana/core`, `@vue-solana/vue` oder `@vue-solana/nuxt` gebaut? Schicke eine E-Mail an [mohsenpk1370@gmail.com](mailto:mohsenpk1370@gmail.com) mit dem App-Namen, einem Link, einer kurzen Beschreibung und einem quadratischen Logo, dann wird sie auf dieser Seite ergänzt.
+Hast du eine App mit `@vue-solana/core`, `@vue-solana/vue` oder `@vue-solana/nuxt` gebaut? [Öffne ein Issue in unserem GitHub-Repo](https://github.com/vue-solana/vue-solana/issues/new?template=showcase-app.yml) mit dem App-Namen, einem Link, einer kurzen Beschreibung und einem quadratischen Logo, dann wird sie auf dieser Seite ergänzt.
 
 ---
 
@@ -32769,7 +32769,7 @@ Payvand convierte cualquier teléfono en un punto de venta de Solana. Los vended
 
 ## Consigue que tu app aparezca aquí
 
-¿Has construido una app con `@vue-solana/core`, `@vue-solana/vue` o `@vue-solana/nuxt`? Envía un correo a [mohsenpk1370@gmail.com](mailto:mohsenpk1370@gmail.com) con el nombre de la app, un enlace, una descripción breve y un logotipo cuadrado, y se añadirá a esta página.
+¿Has construido una app con `@vue-solana/core`, `@vue-solana/vue` o `@vue-solana/nuxt`? [Abre un issue en nuestro repositorio de GitHub](https://github.com/vue-solana/vue-solana/issues/new?template=showcase-app.yml) con el nombre de la app, un enlace, una descripción breve y un logotipo cuadrado, y se añadirá a esta página.
 
 ---
 
@@ -32788,7 +32788,7 @@ Payvand transforme n'importe quel téléphone en point de vente Solana. Les vend
 
 ## Faire figurer votre application
 
-Vous avez construit une application avec `@vue-solana/core`, `@vue-solana/vue` ou `@vue-solana/nuxt` ? Envoyez un e-mail à [mohsenpk1370@gmail.com](mailto:mohsenpk1370@gmail.com) avec le nom de l'application, un lien, une courte description et un logo carré, et elle sera ajoutée à cette page.
+Vous avez construit une application avec `@vue-solana/core`, `@vue-solana/vue` ou `@vue-solana/nuxt` ? [Ouvrez une issue sur notre dépôt GitHub](https://github.com/vue-solana/vue-solana/issues/new?template=showcase-app.yml) avec le nom de l'application, un lien, une courte description et un logo carré, et elle sera ajoutée à cette page.
 
 ---
 
@@ -32807,7 +32807,7 @@ Payvand は、どんなスマートフォンでも Solana の販売端末に変�
 
 ## あなたのアプリを掲載する
 
-`@vue-solana/core`、`@vue-solana/vue`、`@vue-solana/nuxt` でアプリを構築しましたか？アプリ名、リンク、簡単な説明、正方形のロゴを添えて [mohsenpk1370@gmail.com](mailto:mohsenpk1370@gmail.com) までメールでお知らせください。このページに追加されます。
+`@vue-solana/core`、`@vue-solana/vue`、`@vue-solana/nuxt` でアプリを構築しましたか？アプリ名、リンク、簡単な説明、正方形のロゴを添えて、[GitHub リポジトリで issue を開いて](https://github.com/vue-solana/vue-solana/issues/new?template=showcase-app.yml)ください。このページに追加されます。
 
 ---
 
@@ -32826,7 +32826,7 @@ Payvand는 어떤 휴대폰이든 Solana 판매 단말기로 바꿔줍니다. �
 
 ## 내 앱 등록하기
 
-`@vue-solana/core`, `@vue-solana/vue`, `@vue-solana/nuxt`로 앱을 구축했나요? 앱 이름, 링크, 간단한 설명, 정사각형 로고와 함께 [mohsenpk1370@gmail.com](mailto:mohsenpk1370@gmail.com) 로 이메일을 보내주시면 이 페이지에 추가됩니다.
+`@vue-solana/core`, `@vue-solana/vue`, `@vue-solana/nuxt`로 앱을 구축했나요? 앱 이름, 링크, 간단한 설명, 정사각형 로고와 함께 [GitHub 저장소에 이슈를 열어](https://github.com/vue-solana/vue-solana/issues/new?template=showcase-app.yml) 주시면 이 페이지에 추가됩니다.
 
 ---
 
@@ -32845,7 +32845,7 @@ Payvand turns any phone into a Solana point of sale. Sellers create a QR payment
 
 ## Get Your App Listed
 
-Built an app with `@vue-solana/core`, `@vue-solana/vue`, or `@vue-solana/nuxt`? Email [mohsenpk1370@gmail.com](mailto:mohsenpk1370@gmail.com) with the app name, a link, a short description, and a square logo, and it will be added to this page.
+Built an app with `@vue-solana/core`, `@vue-solana/vue`, or `@vue-solana/nuxt`? [Open an issue on our GitHub repo](https://github.com/vue-solana/vue-solana/issues/new?template=showcase-app.yml) with the app name, a link, a short description, and a square logo, and it will be added to this page.
 
 ---
 
@@ -32864,7 +32864,7 @@ Payvand 可以把任何一部手机变成 Solana 销售终端。卖家创建一�
 
 ## 让你的应用出现在这里
 
-用 `@vue-solana/core`、`@vue-solana/vue` 或 `@vue-solana/nuxt` 构建了应用？发送邮件到 [mohsenpk1370@gmail.com](mailto:mohsenpk1370@gmail.com)，附上应用名称、链接、简短说明和一张正方形 logo，我们会把它添加到这个页面。
+用 `@vue-solana/core`、`@vue-solana/vue` 或 `@vue-solana/nuxt` 构建了应用？[在我们的 GitHub 仓库提交一个 issue](https://github.com/vue-solana/vue-solana/issues/new?template=showcase-app.yml)，附上应用名称、链接、简短说明和一张正方形 logo，我们会把它添加到这个页面。
 
 ---
 

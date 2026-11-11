@@ -15,4 +15,4 @@ Payvand는 어떤 휴대폰이든 Solana 판매 단말기로 바꿔줍니다. �
 
 ## 내 앱 등록하기
 
-`@vue-solana/core`, `@vue-solana/vue`, `@vue-solana/nuxt`로 앱을 구축했나요? 앱 이름, 링크, 간단한 설명, 정사각형 로고와 함께 [mohsenpk1370@gmail.com](mailto:mohsenpk1370@gmail.com) 로 이메일을 보내주시면 이 페이지에 추가됩니다.
+`@vue-solana/core`, `@vue-solana/vue`, `@vue-solana/nuxt`로 앱을 구축했나요? 앱 이름, 링크, 간단한 설명, 정사각형 로고와 함께 [GitHub 저장소에 이슈를 열어](https://github.com/vue-solana/vue-solana/issues/new?template=showcase-app.yml) 주시면 이 페이지에 추가됩니다.

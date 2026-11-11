@@ -15,4 +15,4 @@ Payvand turns any phone into a Solana point of sale. Sellers create a QR payment
 
 ## Get Your App Listed
 
-Built an app with `@vue-solana/core`, `@vue-solana/vue`, or `@vue-solana/nuxt`? Email [mohsenpk1370@gmail.com](mailto:mohsenpk1370@gmail.com) with the app name, a link, a short description, and a square logo, and it will be added to this page.
+Built an app with `@vue-solana/core`, `@vue-solana/vue`, or `@vue-solana/nuxt`? [Open an issue on our GitHub repo](https://github.com/vue-solana/vue-solana/issues/new?template=showcase-app.yml) with the app name, a link, a short description, and a square logo, and it will be added to this page.

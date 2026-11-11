@@ -15,4 +15,4 @@ Payvand verwandelt jedes Telefon in eine Solana-Kasse. Verkäufer erstellen eine
 
 ## Deine App einreichen
 
-Hast du eine App mit `@vue-solana/core`, `@vue-solana/vue` oder `@vue-solana/nuxt` gebaut? Schicke eine E-Mail an [mohsenpk1370@gmail.com](mailto:mohsenpk1370@gmail.com) mit dem App-Namen, einem Link, einer kurzen Beschreibung und einem quadratischen Logo, dann wird sie auf dieser Seite ergänzt.
+Hast du eine App mit `@vue-solana/core`, `@vue-solana/vue` oder `@vue-solana/nuxt` gebaut? [Öffne ein Issue in unserem GitHub-Repo](https://github.com/vue-solana/vue-solana/issues/new?template=showcase-app.yml) mit dem App-Namen, einem Link, einer kurzen Beschreibung und einem quadratischen Logo, dann wird sie auf dieser Seite ergänzt.

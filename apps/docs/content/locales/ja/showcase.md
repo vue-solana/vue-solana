@@ -15,4 +15,4 @@ Payvand は、どんなスマートフォンでも Solana の販売端末に変�
 
 ## あなたのアプリを掲載する
 
-`@vue-solana/core`、`@vue-solana/vue`、`@vue-solana/nuxt` でアプリを構築しましたか？アプリ名、リンク、簡単な説明、正方形のロゴを添えて [mohsenpk1370@gmail.com](mailto:mohsenpk1370@gmail.com) までメールでお知らせください。このページに追加されます。
+`@vue-solana/core`、`@vue-solana/vue`、`@vue-solana/nuxt` でアプリを構築しましたか？アプリ名、リンク、簡単な説明、正方形のロゴを添えて、[GitHub リポジトリで issue を開いて](https://github.com/vue-solana/vue-solana/issues/new?template=showcase-app.yml)ください。このページに追加されます。

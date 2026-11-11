@@ -15,4 +15,4 @@ Payvand transforme n'importe quel téléphone en point de vente Solana. Les vend
 
 ## Faire figurer votre application
 
-Vous avez construit une application avec `@vue-solana/core`, `@vue-solana/vue` ou `@vue-solana/nuxt` ? Envoyez un e-mail à [mohsenpk1370@gmail.com](mailto:mohsenpk1370@gmail.com) avec le nom de l'application, un lien, une courte description et un logo carré, et elle sera ajoutée à cette page.
+Vous avez construit une application avec `@vue-solana/core`, `@vue-solana/vue` ou `@vue-solana/nuxt` ? [Ouvrez une issue sur notre dépôt GitHub](https://github.com/vue-solana/vue-solana/issues/new?template=showcase-app.yml) avec le nom de l'application, un lien, une courte description et un logo carré, et elle sera ajoutée à cette page.

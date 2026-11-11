@@ -15,4 +15,4 @@ Payvand 可以把任何一部手机变成 Solana 销售终端。卖家创建一�
 
 ## 让你的应用出现在这里
 
-用 `@vue-solana/core`、`@vue-solana/vue` 或 `@vue-solana/nuxt` 构建了应用？发送邮件到 [mohsenpk1370@gmail.com](mailto:mohsenpk1370@gmail.com)，附上应用名称、链接、简短说明和一张正方形 logo，我们会把它添加到这个页面。
+用 `@vue-solana/core`、`@vue-solana/vue` 或 `@vue-solana/nuxt` 构建了应用？[在我们的 GitHub 仓库提交一个 issue](https://github.com/vue-solana/vue-solana/issues/new?template=showcase-app.yml)，附上应用名称、链接、简短说明和一张正方形 logo，我们会把它添加到这个页面。
