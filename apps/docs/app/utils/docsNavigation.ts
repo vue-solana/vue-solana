@@ -83,6 +83,7 @@ export const docsNavSections: DocsNavSection[] = [
       { labelKey: "navigation.sidebar.liveDemo", to: "/demo" },
       { labelKey: "navigation.sidebar.vueVite", to: "/examples/vue-vite" },
       { labelKey: "navigation.sidebar.nuxt", to: "/examples/nuxt" },
+      { labelKey: "navigation.sidebar.showcase", to: "/showcase" },
     ],
   },
   {

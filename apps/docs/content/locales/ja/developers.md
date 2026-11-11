@@ -2,7 +2,7 @@
 title: 開発者ポータル
 description: Vue Solana を使って開発するためのクイックスタート、機械可読エンドポイント、連携の慣習をまとめています。
 ogSection: プロジェクト
-surroundOrder: 25
+surroundOrder: 26
 ---
 
 このポータルは、Vue Solana を統合する開発者や AI エージェントの入口です。対象は Vue/Nuxt ライブラリ自体と、このドキュメントサイトの機械可読なサーフェスの両方です。

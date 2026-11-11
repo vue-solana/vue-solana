@@ -2,7 +2,7 @@
 title: Roadmap
 description: Geplante Funktionen und Verbesserungen für Vue Solana.
 ogSection: Roadmap
-surroundOrder: 21
+surroundOrder: 22
 ---
 
 Die Pakete sind stabil für den Produktiveinsatz mit RPC-Lesevorgängen, Wallet-Erkennung und -Verbindung, Guthabenabfragen, Transaktionen, Kontolesevorgängen, Nachrichtensignierung, normalisierter Fehlerbehandlung, Sign In With Solana, Batch-Signierung und -Versand von Transaktionen, Transaktionsplanung, SWR-Cache-Adaptern und SPL-Token-Helfern. Diese Roadmap beschreibt, was als Nächstes kommt, geordnet nach Wirkung statt an ein bestimmtes Release gebunden.

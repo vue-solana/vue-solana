@@ -2,7 +2,7 @@
 title: Kontakt
 description: Wie du das Vue-Solana-Team für Support, Sicherheitsmeldungen und Presse erreichst.
 ogSection: Projekt
-surroundOrder: 23
+surroundOrder: 24
 ---
 
 Es gibt keinen kostenpflichtigen Support-Desk und keine Telefonleitung: Vue Solana ist ein Open-Source-Projekt, und jeder unten genannte Kanal ist öffentlich oder kostenlos nutzbar. Wähle den Kanal, der zu deinem Anliegen passt.

@@ -34,6 +34,7 @@ export default {
       liveDemo: "라이브 데모",
       vueVite: "Vue Vite",
       nuxt: "Nuxt",
+      showcase: "쇼케이스",
       roadmap: "로드맵",
       roadmapPage: "로드맵",
       developers: "개발자",
@@ -62,6 +63,10 @@ export default {
   footer: {
     releasedUnder: "다음 라이선스로 배포됩니다:",
     mitLicense: "MIT License.",
+  },
+  showcase: {
+    visitSite: "사이트 방문",
+    logoAlt: "{name} 로고",
   },
   demo: {
     seo: {

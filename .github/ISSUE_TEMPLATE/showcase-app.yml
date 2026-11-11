@@ -1,0 +1,64 @@
+name: Showcase app submission
+description: Submit an app built with the Vue Solana packages to be listed on the showcase page.
+title: "Showcase: <app name>"
+labels: ["showcase"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for building with Vue Solana! Fill in this form and we will add your app to the
+        [showcase page](https://vue-solana-docs.vercel.app/showcase).
+  - type: input
+    id: app-name
+    attributes:
+      label: App name
+      description: The name shown on the showcase card.
+      placeholder: e.g. Payvand
+    validations:
+      required: true
+  - type: input
+    id: app-url
+    attributes:
+      label: App URL
+      description: The link the card's "visit site" button opens.
+      placeholder: https://example.com
+    validations:
+      required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Short description
+      description: One or two sentences about what the app does and which Vue Solana features it uses.
+      placeholder: >
+        What the app does, which packages/composables it leans on, and anything worth calling out
+        (wallet flows, Solana Pay, live data, ...).
+    validations:
+      required: true
+  - type: input
+    id: logo
+    attributes:
+      label: Square logo
+      description: A link to a square logo (PNG or SVG). You can also attach the file to this issue.
+      placeholder: https://example.com/logo.png
+    validations:
+      required: true
+  - type: dropdown
+    id: packages
+    attributes:
+      label: Vue Solana packages used
+      description: Which packages does the app use?
+      multiple: true
+      options:
+        - "@vue-solana/core"
+        - "@vue-solana/vue"
+        - "@vue-solana/nuxt"
+    validations:
+      required: true
+  - type: input
+    id: tag
+    attributes:
+      label: Card tag (optional)
+      description: A short badge shown on the card, such as "Solana Pay".
+      placeholder: e.g. Solana Pay
+    validations:
+      required: false

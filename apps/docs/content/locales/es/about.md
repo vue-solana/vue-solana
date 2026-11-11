@@ -2,7 +2,7 @@
 title: Acerca de
 description: Que es Vue Solana, quien lo mantiene y como se gestiona el proyecto.
 ogSection: Proyecto
-surroundOrder: 22
+surroundOrder: 23
 ---
 
 Vue Solana es un proyecto de código abierto que publica librerias Vue y Nuxt para construir aplicaciones Solana. Envuelve el SDK oficial de JavaScript de Solana (Solana Kit) en composables tipados y reactivos para que los desarrolladores de Vue 3 y Nuxt puedan leer balances, descubrir wallets, firmar mensajes y enviar transacciones sin construir la infraestructura RPC a mano.
@@ -21,7 +21,7 @@ El desarrollo ocurre de forma abierta en GitHub: los issues rastrean bugs y peti
 
 ## Hoja De Ruta Y Gobernanza
 
-Las funcionalidades planificadas se rastrean publicamente en la página de [Hoja de ruta](/es/roadmap). Los cambios que rompen compatibilidad en los paquetes siguen semver, y las superficies legibles por máquina de este sitio (llms.txt, openapi.json) están documentadas en la [especificación OpenAPI](/es/openapi.json) con una politica de versionado explicita.
+Las funcionalidades planificadas se rastrean publicamente en la página de [Hoja de ruta](/es/roadmap). Los cambios que rompen compatibilidad en los paquetes siguen semver, y las superficies legibles por máquina de este sitio (llms.txt, openapi.json) están documentadas en la [especificación OpenAPI](/openapi.json) con una politica de versionado explicita.
 
 ## Contacto
 

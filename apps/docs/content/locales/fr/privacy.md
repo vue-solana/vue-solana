@@ -2,7 +2,7 @@
 title: Confidentialité
 description: Ce que ce site de documentation collecte, ce qu'il ne collecte pas et comment les analytics sont gérés.
 ogSection: Projet
-surroundOrder: 24
+surroundOrder: 25
 ---
 
 Ce site est un site de documentation. Il n'a ni comptes, ni connexion, ni base de données de visiteurs, et il ne demande ni ne traite directement de données personnelles.

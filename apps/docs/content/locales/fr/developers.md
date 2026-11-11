@@ -2,7 +2,7 @@
 title: Portail développeurs
 description: Démarrage rapide, endpoints lisibles par les machines et conventions d'intégration pour construire avec Vue Solana.
 ogSection: Projet
-surroundOrder: 25
+surroundOrder: 26
 ---
 
 Ce portail est le point d'entrée pour les développeurs et les agents IA qui intègrent Vue Solana — à la fois les bibliothèques Vue/Nuxt elles-mêmes et la surface lisible par les machines de ce site de documentation.

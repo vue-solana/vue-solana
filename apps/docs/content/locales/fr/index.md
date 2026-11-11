@@ -40,6 +40,7 @@ Vue Solana fournit la configuration RPC, des lectures réactives de comptes, la 
 - [Démo en direct](/fr/demo)
 - [Exemple Vue Vite](/fr/examples/vue-vite)
 - [Exemple Nuxt](/fr/examples/nuxt)
+- [Vitrine](/fr/showcase)
 
 ## Pour les utilisateurs des packages
 

@@ -40,6 +40,7 @@ Vue Solana は、Vue と Nuxt のコンポーザブルを通じて、RPC のセ�
 - [ライブデモ](/ja/demo)
 - [Vue Vite サンプル](/ja/examples/vue-vite)
 - [Nuxt サンプル](/ja/examples/nuxt)
+- [ショーケース](/ja/showcase)
 
 ## パッケージ利用者の方へ
 

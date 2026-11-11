@@ -2,7 +2,7 @@
 title: Portal De Desarrolladores
 description: Quickstart, endpoints legibles por máquina y convenciones de integración para construir sobre Vue Solana.
 ogSection: Proyecto
-surroundOrder: 25
+surroundOrder: 26
 ---
 
 Este portal es el punto de entrada para desarrolladores y agentes de IA que integren con Vue Solana, tanto con las librerias Vue/Nuxt como con la superficie legible por máquina de este sitio de documentación.

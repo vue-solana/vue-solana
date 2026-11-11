@@ -2,7 +2,7 @@
 title: Feuille de route
 description: Fonctionnalités et améliorations prévues pour Vue Solana.
 ogSection: Feuille de route
-surroundOrder: 21
+surroundOrder: 22
 ---
 
 Les packages sont stables pour une utilisation en production avec les lectures RPC, la découverte et la connexion des wallets, la lecture des soldes, les transactions, la lecture de comptes, la signature de messages, la gestion normalisée des erreurs, Sign In With Solana, la signature et l'envoi de transactions par lot, la planification de transactions, les adaptateurs de cache SWR et les helpers de token SPL. Cette feuille de route décrit la suite, classée par impact plutôt que rattachée à une version spécifique.

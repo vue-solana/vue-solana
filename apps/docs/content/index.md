@@ -40,6 +40,7 @@ Vue Solana provides RPC setup, reactive account reads, balance reads, browser ex
 - [Live Demo](/demo)
 - [Vue Vite example](/examples/vue-vite)
 - [Nuxt example](/examples/nuxt)
+- [Showcase](/showcase)
 
 ## For Package Users
 
