@@ -123,6 +123,19 @@ export default defineNuxtConfig({
         "cache-control": "public, max-age=3600",
       },
     },
+    // `@nuxt/ui`'s ULink localizes every internal markdown link on locale
+    // pages (via i18n's `$localePath`), so the OpenAPI link on a locale
+    // about page resolves to `/de/openapi.json` and so on — but the spec is
+    // a single unlocalized server route. Redirect the localized spellings to
+    // the canonical URL instead of 404ing; `nuxt generate`'s link crawler
+    // follows those hrefs and accepts 3xx responses, so this also keeps the
+    // prerender green.
+    "/de/openapi.json": { redirect: "/openapi.json" },
+    "/es/openapi.json": { redirect: "/openapi.json" },
+    "/fr/openapi.json": { redirect: "/openapi.json" },
+    "/ja/openapi.json": { redirect: "/openapi.json" },
+    "/ko/openapi.json": { redirect: "/openapi.json" },
+    "/zh/openapi.json": { redirect: "/openapi.json" },
     "/demo": { ssr: false, prerender: false },
     "/de/demo": { ssr: false, prerender: false },
     "/es/demo": { ssr: false, prerender: false },

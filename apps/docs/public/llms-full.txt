@@ -45,6 +45,7 @@ Vue Solana provides RPC setup, reactive account reads, balance reads, browser ex
 
 - [Vue Vite example](/examples/vue-vite)
 - [Nuxt example](/examples/nuxt)
+- [Showcase](/showcase)
 
 ## For Package Users
 
@@ -98,6 +99,7 @@ Vue Solana bietet RPC-Einrichtung, reaktive Kontolesevorgänge, Guthabenabfragen
 - [Live-Demo](/de/demo)
 - [Vue-Vite-Beispiel](/de/examples/vue-vite)
 - [Nuxt-Beispiel](/de/examples/nuxt)
+- [Showcase](/de/showcase)
 
 ## Für Nutzer der Pakete
 
@@ -151,6 +153,7 @@ Vue Solana ofrece configuración RPC, lecturas reactivas de cuentas, lecturas de
 
 - [Ejemplo Vue Vite](/examples/vue-vite)
 - [Ejemplo Nuxt](/examples/nuxt)
+- [Galería](/es/showcase)
 
 ## Para usuarios de los paquetes
 
@@ -204,6 +207,7 @@ Vue Solana fournit la configuration RPC, des lectures réactives de comptes, la 
 - [Démo en direct](/fr/demo)
 - [Exemple Vue Vite](/fr/examples/vue-vite)
 - [Exemple Nuxt](/fr/examples/nuxt)
+- [Vitrine](/fr/showcase)
 
 ## Pour les utilisateurs des packages
 
@@ -258,6 +262,7 @@ Vue Solana は、Vue と Nuxt のコンポーザブルを通じて、RPC のセ�
 - [ライブデモ](/ja/demo)
 - [Vue Vite サンプル](/ja/examples/vue-vite)
 - [Nuxt サンプル](/ja/examples/nuxt)
+- [ショーケース](/ja/showcase)
 
 ## パッケージ利用者の方へ
 
@@ -311,6 +316,7 @@ Vue Solana는 Vue와 Nuxt 컴포저블을 통해 RPC 설정, 반응형 계정 �
 
 - [Vue Vite 예제](/examples/vue-vite)
 - [Nuxt 예제](/examples/nuxt)
+- [쇼케이스](/ko/showcase)
 
 ## 패키지 사용자에게
 
@@ -364,6 +370,7 @@ Vue Solana 通过 Vue 和 Nuxt composable 提供 RPC 设置、响应式账户读
 - [实时演示](/zh/demo)
 - [Vue Vite 示例](/zh/examples/vue-vite)
 - [Nuxt 示例](/zh/examples/nuxt)
+- [应用案例](/zh/showcase)
 
 ## 面向包用户
 
@@ -7784,6 +7791,7 @@ Hinweise zu Android:
 - Browser können vor der MWA-Verbindung zu einer installierten Wallet-App einen einmaligen Prompt für lokalen Netzwerkzugriff anzeigen.
 - Die Standard-App-Identität für MWA wird aus `<meta name="application-name">`, dann `og:site_name`, dann dem Host benannt, nie aus dem Seitentitel: Wallets binden die Autorisierung an die Identität, daher muss sie auf jeder Seite und in jeder Sprache gleich bleiben. Setze `mobileWallet.appIdentity`, um sie explizit festzulegen.
 - Phantom unter Android Chrome lehnt die gespeicherte MWA-Autorisierung bei jeder Signaturanfrage ab, selbst direkt nach dem Verbinden. Vue Solana fordert dann im selben Wallet-Besuch eine neue Autorisierung an, sodass Phantom vor jeder Nachrichten- oder Transaktionsanfrage einen Bildschirm „App genehmigen“ zeigt. Das ist erwartetes Verhalten; Wallets, die die gespeicherte Autorisierung akzeptieren, gehen direkt zur Anfrage.
+- Signieren und Senden über Android MWA lässt die Wallet signieren und reicht die Transaktion über den RPC deiner App ein, nicht über den der Wallet. Phantom beantwortet die Signieren-und-Senden-Anfrage von MWA nie, daher erschien die Zahlungsanfrage nicht. Sendeoptionen wie `skipPreflight` gelten für deinen RPC.
 - Bei Android-MWA-Transaktionsversänden bittet Vue Solana die mobile Wallet zu signieren und übermittelt die signierte Transaktion dann über die RPC-Verbindung der App, wenn die Wallet `signTransaction` unterstützt. So bleibt die zurückgegebene Signatur unter Kontrolle der App, und ein Edge Case der mobilen Übergabe wird vermieden, bei dem die Wallet erfolgreich sendet, die Browserseite aber keine Antwort des Wallet-Adapters erhält.
 
 Hinweise zu iOS:
@@ -8058,6 +8066,7 @@ Notas de Android:
 - Los navegadores pueden mostrar un prompt de Local Network Access una sola vez antes de que MWA pueda conectar con una app wallet instalada.
 - La identidad de app predeterminada de MWA toma su nombre de `<meta name="application-name">`, luego de `og:site_name` y luego del host, nunca del título de la página: las wallets vinculan la autorización a la identidad, así que debe ser la misma en cada página e idioma. Define `mobileWallet.appIdentity` para fijarla explícitamente.
 - Phantom en Chrome para Android rechaza la autorización MWA guardada en cada solicitud de firma, incluso justo después de conectar. Vue Solana pide entonces una autorización nueva en la misma visita a la wallet, así que Phantom muestra una pantalla para aprobar la app antes de cada solicitud de mensaje o transacción. Es el comportamiento esperado; las wallets que aceptan la autorización guardada van directamente a la solicitud.
+- Firmar y enviar con MWA en Android hace que la wallet firme y que la transacción se envíe por el RPC de tu app, no por el de la wallet. Phantom nunca responde a la solicitud de firmar y enviar de MWA, por eso no aparecía la solicitud de pago. Las opciones de envío como `skipPreflight` se aplican a tu RPC.
 - Para envíos de transacciones Android MWA, Vue Solana pide a la wallet móvil que firme y luego envía la transacción firmada a través de la conexión RPC de la app cuando la wallet admite `signTransaction`. Esto mantiene la firma devuelta bajo control de la app y evita un caso límite de traspaso móvil donde la wallet envía correctamente pero la página del navegador no recibe la respuesta del wallet adapter.
 
 Notas de iOS:
@@ -8332,6 +8341,7 @@ Notes Android :
 - Les navigateurs peuvent afficher une invite Local Network Access unique avant que MWA puisse se connecter à une application wallet installée.
 - L'identité d'application MWA par défaut est nommée d'après `<meta name="application-name">`, puis `og:site_name`, puis l'hôte, jamais d'après le titre de la page : les wallets lient l'autorisation à l'identité, elle doit donc rester identique sur chaque page et dans chaque langue. Définissez `mobileWallet.appIdentity` pour la fixer explicitement.
 - Phantom sur Chrome Android rejette l'autorisation MWA enregistrée à chaque demande de signature, même juste après la connexion. Vue Solana demande alors une nouvelle autorisation pendant la même visite du wallet : Phantom affiche donc un écran d'approbation de l'application avant chaque demande de message ou de transaction. C'est le comportement attendu ; les wallets qui acceptent l'autorisation enregistrée passent directement à la demande.
+- Signer et envoyer via MWA sur Android fait signer le wallet puis soumet la transaction par le RPC de votre application, pas par celui du wallet. Phantom ne répond jamais à la requête de signature et d'envoi de MWA, c'est pourquoi la demande de paiement n'apparaissait pas. Les options d'envoi comme `skipPreflight` s'appliquent à votre RPC.
 - Pour l'envoi de transactions Android MWA, Vue Solana demande au wallet mobile de signer, puis soumet la transaction signée via la connexion RPC de l'application lorsque le wallet prend en charge `signTransaction`. Cela garde la signature retournée sous le contrôle de l'application et évite un cas limite du passage de relais mobile où le wallet envoie correctement mais la page du navigateur ne reçoit pas la réponse du wallet adapter.
 
 Notes iOS :
@@ -8606,6 +8616,7 @@ Android notes:
 - Browsers may show a one-time Local Network Access prompt before MWA can connect to an installed wallet app.
 - The default MWA app identity is named from `<meta name="application-name">`, then `og:site_name`, then the host, never the page title: wallets bind the authorization to the identity, so it must stay the same on every page and locale. Set `mobileWallet.appIdentity` to pin it explicitly.
 - Phantom on Android Chrome rejects the saved MWA authorization on every signing request, even right after connecting. Vue Solana then asks for a fresh authorization in the same wallet visit, so Phantom shows an "approve this app" screen before each message or transaction prompt. This is expected; wallets that accept the saved authorization go straight to the prompt.
+- Sign-and-send through Android MWA is signed by the wallet and submitted through your app's RPC, not the wallet's. Phantom never answers MWA's sign-and-send request, so the payment prompt never appeared. Send options such as `skipPreflight` apply to your RPC.
 - For Android MWA transaction sends, Vue Solana asks the mobile wallet to sign and then submits the signed transaction through the app's RPC connection when the wallet supports `signTransaction`. This keeps the returned signature under app control and avoids a mobile handoff edge case where the wallet sends successfully but the browser page does not receive the wallet adapter response.
 
 iOS notes:
@@ -8880,6 +8891,7 @@ Android の注意点:
 - MWA がインストール済みのウォレットアプリに接続する前に、ブラウザが 1 回限りの Local Network Access プロンプトを表示することがあります。
 - MWA の既定のアプリ ID の名前は `<meta name="application-name">`、次に `og:site_name`、最後にホストから決まり、ページタイトルは使いません。ウォレットは認可をこの ID に結び付けるため、すべてのページとロケールで同じである必要があります。明示的に固定するには `mobileWallet.appIdentity` を設定してください。
 - Android Chrome の Phantom は、接続直後であっても署名リクエストのたびに保存済みの MWA 認可を拒否します。その場合 Vue Solana は同じウォレット訪問の中で新しい認可を要求するため、Phantom はメッセージやトランザクションの確認の前に毎回「アプリを承認」画面を表示します。これは想定どおりの動作です。保存済みの認可を受け入れるウォレットでは、そのまま確認画面に進みます。
+- Android MWA での署名と送信では、ウォレットが署名し、トランザクションはウォレットではなくアプリの RPC から送信されます。Phantom は MWA の署名と送信のリクエストに応答しないため、支払いの確認画面が表示されませんでした。`skipPreflight` などの送信オプションはアプリの RPC に適用されます。
 - Android MWA でのトランザクション送信では、ウォレットが `signTransaction` をサポートしている場合、Vue Solana はモバイルウォレットに署名を依頼し、署名済みトランザクションをアプリの RPC 接続経由で送信します。これにより返される署名がアプリの制御下に保たれ、ウォレットは送信に成功したのにブラウザページがウォレットアダプターの応答を受け取らないというモバイルハンドオフのエッジケースを回避できます。
 
 iOS の注意点:
@@ -9154,6 +9166,7 @@ Android 메모:
 - MWA가 설치된 wallet app에 연결되기 전에 browser가 1회 Local Network Access prompt를 표시할 수 있습니다.
 - 기본 MWA app identity 이름은 `<meta name="application-name">`, 그다음 `og:site_name`, 그다음 host에서 정해지며 page title은 사용하지 않습니다. wallet은 authorization을 identity에 묶기 때문에 모든 page와 locale에서 같아야 합니다. 명시적으로 고정하려면 `mobileWallet.appIdentity`를 설정하세요.
 - Android Chrome의 Phantom은 연결 직후에도 서명 요청마다 저장된 MWA authorization을 거부합니다. 그러면 Vue Solana가 같은 wallet 방문 안에서 새 authorization을 요청하므로, Phantom은 메시지나 트랜잭션 prompt 전에 매번 앱 승인 화면을 보여 줍니다. 이는 예상된 동작입니다. 저장된 authorization을 받아들이는 wallet은 바로 prompt로 넘어갑니다.
+- Android MWA에서 sign-and-send는 wallet이 서명하고, 트랜잭션은 wallet이 아니라 앱의 RPC로 전송됩니다. Phantom은 MWA의 sign-and-send 요청에 응답하지 않아 결제 prompt가 나타나지 않았습니다. `skipPreflight` 같은 send 옵션은 앱의 RPC에 적용됩니다.
 - Android MWA transaction send에서는 wallet이 `signTransaction`을 지원할 때 Vue Solana가 mobile wallet에 서명을 요청한 뒤 앱의 RPC connection으로 signed transaction을 제출합니다. 이렇게 하면 반환 signature를 앱이 제어하고, wallet은 성공적으로 전송했지만 browser page가 wallet adapter response를 받지 못하는 mobile handoff edge case를 피할 수 있습니다.
 
 iOS 메모:
@@ -9428,6 +9441,7 @@ Android 注意事项：
 - 在 MWA 连接到已安装的钱包应用之前，浏览器可能会显示一次性的 Local Network Access 提示。
 - MWA 默认的应用身份名称依次取自 `<meta name="application-name">`、`og:site_name` 和主机名，绝不使用页面标题：钱包会把授权绑定到该身份，因此它在每个页面和语言下都必须保持一致。设置 `mobileWallet.appIdentity` 可显式固定它。
 - Android Chrome 上的 Phantom 在每次签名请求时都会拒绝已保存的 MWA 授权，即使刚刚连接也是如此。此时 Vue Solana 会在同一次钱包访问中请求新的授权，因此 Phantom 会在每次消息或交易确认之前先显示“批准此应用”界面。这是预期行为；接受已保存授权的钱包会直接进入确认界面。
+- 通过 Android MWA 签名并发送时，由钱包签名，再通过应用自己的 RPC（而不是钱包的）提交交易。Phantom 从不响应 MWA 的签名并发送请求，因此之前不会出现付款确认。`skipPreflight` 等发送选项作用于你的 RPC。
 - 对于 Android MWA 交易发送，当钱包支持 `signTransaction` 时，Vue Solana 会请求移动端钱包签署，然后通过应用的 RPC 连接提交已签名交易。这样可以让返回的签名由应用掌控，并避免一种移动端切换边界情况：钱包已成功发送，但浏览器页面没有收到 wallet adapter 响应。
 
 iOS 注意事项：
@@ -32721,6 +32735,139 @@ https://faucet.solana.com
 
 ---
 
+# Showcase
+
+Source: https://vue-solana-docs.vercel.app/de/showcase
+Description: Apps, die mit Vue Solana gebaut wurden, und wie du deine App hier gelistet bekommst.
+
+Vue Solana ist für echte Apps gebaut, nicht nur für Demos. Diese Seite sammelt Apps, die auf den Vue-Solana-Paketen aufbauen, damit du siehst, wie die Composables in Produktion von Ende zu Ende funktionieren.
+
+## Mit Vue Solana gebaute Apps
+
+::ShowcaseApp{name="Payvand" url="https://payvand-app.vercel.app/" logo="/payvand-logo.png" tag="Solana Pay"}
+Payvand verwandelt jedes Telefon in eine Solana-Kasse. Verkäufer erstellen eine QR-Zahlungsanfrage, Kunden scannen sie und zahlen direkt aus ihrem Wallet — ohne Kartenleser und ohne Kontoerstellung für den Kunden. Die App basiert auf Nuxt mit den Vue-Solana-Paketen und nutzt die Solana-Pay-Composables, um Transferanfragen zu erstellen, anzuzeigen, zu scannen und zu verifizieren.
+::
+
+## Deine App einreichen
+
+Hast du eine App mit `@vue-solana/core`, `@vue-solana/vue` oder `@vue-solana/nuxt` gebaut? Schicke eine E-Mail an [mohsenpk1370@gmail.com](mailto:mohsenpk1370@gmail.com) mit dem App-Namen, einem Link, einer kurzen Beschreibung und einem quadratischen Logo, dann wird sie auf dieser Seite ergänzt.
+
+---
+
+# Galería
+
+Source: https://vue-solana-docs.vercel.app/es/showcase
+Description: Apps construidas con Vue Solana y cómo conseguir que la tuya aparezca en esta página.
+
+Vue Solana está pensado para apps reales, no solo para demos. Esta página reúne apps construidas con los paquetes de Vue Solana, para que veas los composables funcionando de principio a fin en producción.
+
+## Apps construidas con Vue Solana
+
+::ShowcaseApp{name="Payvand" url="https://payvand-app.vercel.app/" logo="/payvand-logo.png" tag="Solana Pay"}
+Payvand convierte cualquier teléfono en un punto de venta de Solana. Los vendedores crean una solicitud de pago con código QR, los clientes la escanean y pagan directamente desde su wallet — sin lector de tarjetas y sin creación de cuentas para el cliente. Está construida sobre Nuxt con los paquetes de Vue Solana y usa los composables de Solana Pay para crear, mostrar, escanear y verificar solicitudes de transferencia.
+::
+
+## Consigue que tu app aparezca aquí
+
+¿Has construido una app con `@vue-solana/core`, `@vue-solana/vue` o `@vue-solana/nuxt`? Envía un correo a [mohsenpk1370@gmail.com](mailto:mohsenpk1370@gmail.com) con el nombre de la app, un enlace, una descripción breve y un logotipo cuadrado, y se añadirá a esta página.
+
+---
+
+# Vitrine
+
+Source: https://vue-solana-docs.vercel.app/fr/showcase
+Description: Applications construites avec Vue Solana, et comment faire figurer la vôtre sur cette page.
+
+Vue Solana est conçu pour de vraies applications, pas seulement des démos. Cette page rassemble des applications construites avec les packages Vue Solana, pour voir les composables fonctionner de bout en bout en production.
+
+## Applications construites avec Vue Solana
+
+::ShowcaseApp{name="Payvand" url="https://payvand-app.vercel.app/" logo="/payvand-logo.png" tag="Solana Pay"}
+Payvand transforme n'importe quel téléphone en point de vente Solana. Les vendeurs créent une requête de paiement QR, les clients la scannent et paient directement depuis leur wallet — pas de terminal de paiement ni de création de compte pour le client. L'application est construite sur Nuxt avec les packages Vue Solana et utilise les composables Solana Pay pour créer, afficher, scanner et vérifier des requêtes de transfert.
+::
+
+## Faire figurer votre application
+
+Vous avez construit une application avec `@vue-solana/core`, `@vue-solana/vue` ou `@vue-solana/nuxt` ? Envoyez un e-mail à [mohsenpk1370@gmail.com](mailto:mohsenpk1370@gmail.com) avec le nom de l'application, un lien, une courte description et un logo carré, et elle sera ajoutée à cette page.
+
+---
+
+# ショーケース
+
+Source: https://vue-solana-docs.vercel.app/ja/showcase
+Description: Vue Solana で構築されたアプリと、あなたのアプリをこのページに掲載する方法。
+
+Vue Solana はデモだけでなく、実際のアプリのために作られています。このページでは、Vue Solana のパッケージで構築されたアプリを集めており、コンポーザブルが本番環境でどのように動くかを確認できます。
+
+## Vue Solana で構築されたアプリ
+
+::ShowcaseApp{name="Payvand" url="https://payvand-app.vercel.app/" logo="/payvand-logo.png" tag="Solana Pay"}
+Payvand は、どんなスマートフォンでも Solana の販売端末に変えます。販売者は QR 決済リクエストを作成し、顧客はそれをスキャンしてウォレットから直接支払います。カードリーダーも、顧客側のアカウント作成も不要です。Nuxt 上に Vue Solana のパッケージを使って構築されており、Solana Pay のコンポーザブルで転送リクエストの作成、表示、スキャン、検証を行っています。
+::
+
+## あなたのアプリを掲載する
+
+`@vue-solana/core`、`@vue-solana/vue`、`@vue-solana/nuxt` でアプリを構築しましたか？アプリ名、リンク、簡単な説明、正方形のロゴを添えて [mohsenpk1370@gmail.com](mailto:mohsenpk1370@gmail.com) までメールでお知らせください。このページに追加されます。
+
+---
+
+# 쇼케이스
+
+Source: https://vue-solana-docs.vercel.app/ko/showcase
+Description: Vue Solana로 구축된 앱과 내 앱을 이 페이지에 등록하는 방법.
+
+Vue Solana는 데모가 아니라 실제 앱을 위해 만들어졌습니다. 이 페이지는 Vue Solana 패키지로 구축된 앱을 모아, 컴포저블이 프로덕션에서 어떻게 작동하는지 보여줍니다.
+
+## Vue Solana로 구축된 앱
+
+::ShowcaseApp{name="Payvand" url="https://payvand-app.vercel.app/" logo="/payvand-logo.png" tag="Solana Pay"}
+Payvand는 어떤 휴대폰이든 Solana 판매 단말기로 바꿔줍니다. 판매자는 QR 결제 요청을 만들고, 고객은 이를 스캔해 지갑에서 바로 결제합니다. 카드 리더기도, 고객의 계정 생성도 필요 없습니다. Nuxt 위에 Vue Solana 패키지로 구축되었으며, Solana Pay 컴포저블을 사용해 송금 요청을 생성, 표시, 스캔, 검증합니다.
+::
+
+## 내 앱 등록하기
+
+`@vue-solana/core`, `@vue-solana/vue`, `@vue-solana/nuxt`로 앱을 구축했나요? 앱 이름, 링크, 간단한 설명, 정사각형 로고와 함께 [mohsenpk1370@gmail.com](mailto:mohsenpk1370@gmail.com) 로 이메일을 보내주시면 이 페이지에 추가됩니다.
+
+---
+
+# Showcase
+
+Source: https://vue-solana-docs.vercel.app/showcase
+Description: Apps built with Vue Solana, and how to get your app listed on this page.
+
+Vue Solana is built for real apps, not just demos. This page collects apps that ship on the Vue Solana packages, so you can see the composables working end to end in production.
+
+## Apps Built With Vue Solana
+
+::ShowcaseApp{name="Payvand" url="https://payvand-app.vercel.app/" logo="/payvand-logo.png" tag="Solana Pay"}
+Payvand turns any phone into a Solana point of sale. Sellers create a QR payment request, customers scan it and pay straight from their wallet — no card reader, no account setup for the customer. It is built on Nuxt with the Vue Solana packages, using the Solana Pay composables to build, render, scan, and verify transfer requests.
+::
+
+## Get Your App Listed
+
+Built an app with `@vue-solana/core`, `@vue-solana/vue`, or `@vue-solana/nuxt`? Email [mohsenpk1370@gmail.com](mailto:mohsenpk1370@gmail.com) with the app name, a link, a short description, and a square logo, and it will be added to this page.
+
+---
+
+# 应用案例
+
+Source: https://vue-solana-docs.vercel.app/zh/showcase
+Description: 使用 Vue Solana 构建的应用，以及如何让你的应用出现在这个页面。
+
+Vue Solana 不仅为示例而生，更为真实的应用而生。本页汇集了基于 Vue Solana 包构建的应用，让你看到这些 composable 在生产环境中端到端地运行。
+
+## 使用 Vue Solana 构建的应用
+
+::ShowcaseApp{name="Payvand" url="https://payvand-app.vercel.app/" logo="/payvand-logo.png" tag="Solana Pay"}
+Payvand 可以把任何一部手机变成 Solana 销售终端。卖家创建一个二维码支付请求，顾客扫码后直接从钱包付款——无需刷卡机，顾客也无需注册账户。它基于 Nuxt 和 Vue Solana 包构建，使用 Solana Pay composable 来创建、展示、扫描并验证转账请求。
+::
+
+## 让你的应用出现在这里
+
+用 `@vue-solana/core`、`@vue-solana/vue` 或 `@vue-solana/nuxt` 构建了应用？发送邮件到 [mohsenpk1370@gmail.com](mailto:mohsenpk1370@gmail.com)，附上应用名称、链接、简短说明和一张正方形 logo，我们会把它添加到这个页面。
+
+---
+
 # Roadmap
 
 Source: https://vue-solana-docs.vercel.app/de/roadmap
@@ -33128,7 +33275,7 @@ Die Entwicklung findet offen auf GitHub statt: Issues verfolgen Fehler und Featu
 
 ## Roadmap und Governance
 
-Geplante Funktionen werden öffentlich auf der Seite [Roadmap](/de/roadmap) verfolgt. Breaking Changes an den Paketen folgen semver, und die maschinenlesbaren Oberflächen dieser Seite (llms.txt, openapi.json) sind in der [OpenAPI-Spezifikation](/de/openapi.json) mit einer expliziten Versionierungsrichtlinie dokumentiert.
+Geplante Funktionen werden öffentlich auf der Seite [Roadmap](/de/roadmap) verfolgt. Breaking Changes an den Paketen folgen semver, und die maschinenlesbaren Oberflächen dieser Seite (llms.txt, openapi.json) sind in der [OpenAPI-Spezifikation](/openapi.json) mit einer expliziten Versionierungsrichtlinie dokumentiert.
 
 ## Kontakt
 
@@ -33157,7 +33304,7 @@ El desarrollo ocurre de forma abierta en GitHub: los issues rastrean bugs y peti
 
 ## Hoja De Ruta Y Gobernanza
 
-Las funcionalidades planificadas se rastrean publicamente en la página de [Hoja de ruta](/es/roadmap). Los cambios que rompen compatibilidad en los paquetes siguen semver, y las superficies legibles por máquina de este sitio (llms.txt, openapi.json) están documentadas en la [especificación OpenAPI](/es/openapi.json) con una politica de versionado explicita.
+Las funcionalidades planificadas se rastrean publicamente en la página de [Hoja de ruta](/es/roadmap). Los cambios que rompen compatibilidad en los paquetes siguen semver, y las superficies legibles por máquina de este sitio (llms.txt, openapi.json) están documentadas en la [especificación OpenAPI](/openapi.json) con una politica de versionado explicita.
 
 ## Contacto
 
@@ -33186,7 +33333,7 @@ Le développement se fait ouvertement sur GitHub : les issues suivent les bugs e
 
 ## Feuille de route et gouvernance
 
-Les fonctionnalités prévues sont suivies publiquement sur la page [Feuille de route](/fr/roadmap). Les changements incompatibles des packages suivent semver, et les surfaces lisibles par les machines de ce site (llms.txt, openapi.json) sont documentées dans la [spécification OpenAPI](/fr/openapi.json) avec une politique de versionnage explicite.
+Les fonctionnalités prévues sont suivies publiquement sur la page [Feuille de route](/fr/roadmap). Les changements incompatibles des packages suivent semver, et les surfaces lisibles par les machines de ce site (llms.txt, openapi.json) sont documentées dans la [spécification OpenAPI](/openapi.json) avec une politique de versionnage explicite.
 
 ## Contact
 
@@ -33215,7 +33362,7 @@ Vue Solana は、Solana アプリケーションを構築するための Vue お
 
 ## ロードマップとガバナンス
 
-予定されている機能は [ロードマップ](/ja/roadmap) ページで公開管理しています。パッケージの破壊的変更はセマンティックバージョニングに従い、このサイトの機械可読なサーフェス（llms.txt、openapi.json）は明示的なバージョニングポリシーとともに [OpenAPI 仕様](/ja/openapi.json) で文書化されています。
+予定されている機能は [ロードマップ](/ja/roadmap) ページで公開管理しています。パッケージの破壊的変更はセマンティックバージョニングに従い、このサイトの機械可読なサーフェス（llms.txt、openapi.json）は明示的なバージョニングポリシーとともに [OpenAPI 仕様](/openapi.json) で文書化されています。
 
 ## お問い合わせ
 
@@ -33244,7 +33391,7 @@ Vue Solana는 Solana 애플리케이션 구축을 위한 Vue 및 Nuxt 라이브�
 
 ## 로드맵과 거버넌스
 
-계획된 기능은 [로드맵](/ko/roadmap) 페이지에서 공개적으로 추적됩니다. 패키지의 호환성을 깨는 변경은 semver를 따르며, 이 사이트의 기계 판독 가능 표면(llms.txt, openapi.json)은 명시적인 버저닝 정책과 함께 [OpenAPI 스펙](/ko/openapi.json)에 문서화되어 있습니다.
+계획된 기능은 [로드맵](/ko/roadmap) 페이지에서 공개적으로 추적됩니다. 패키지의 호환성을 깨는 변경은 semver를 따르며, 이 사이트의 기계 판독 가능 표면(llms.txt, openapi.json)은 명시적인 버저닝 정책과 함께 [OpenAPI 스펙](/openapi.json)에 문서화되어 있습니다.
 
 ## 연락처
 
@@ -33273,7 +33420,7 @@ Vue Solana 是一个开源项目，发布用于构建 Solana 应用的 Vue 和 N
 
 ## 路线图与治理
 
-计划中的功能在[路线图](/zh/roadmap)页面公开跟踪。包的破坏性变更遵循 semver，本站的机器可读表面（llms.txt、openapi.json）在 [OpenAPI 规范](/zh/openapi.json)中以明确的版本策略进行了文档化。
+计划中的功能在[路线图](/zh/roadmap)页面公开跟踪。包的破坏性变更遵循 semver，本站的机器可读表面（llms.txt、openapi.json）在 [OpenAPI 规范](/openapi.json)中以明确的版本策略进行了文档化。
 
 ## 联系方式
 
@@ -33546,7 +33693,7 @@ Las paginas de documentación incluyen ejemplos de código pero no cargan public
 
 ## Agentes Automaticos
 
-Los agentes y crawlers automaticos son bienvenidos dentro de las convenciones de rate limit documentadas en `/es/openapi.json`. El trafico de agentes se trata igual que cualquier otro metadato de petición: puede aparecer en analiticas agregadas y no se correlaciona con ningun individuo.
+Los agentes y crawlers automaticos son bienvenidos dentro de las convenciones de rate limit documentadas en `/openapi.json`. El trafico de agentes se trata igual que cualquier otro metadato de petición: puede aparecer en analiticas agregadas y no se correlaciona con ningun individuo.
 
 ## Cambios
 
@@ -33654,7 +33801,7 @@ Description: 이 문서 사이트가 수집하는 것, 수집하지 않는 것, 
 
 ## 기계 에이전트
 
-자동화된 에이전트와 크롤러는 `/ko/openapi.json`에 문서화된 rate limit 규약 범위 내에서 환영받습니다. 에이전트 트래픽은 다른 모든 요청 메타데이터와 동일하게 취급됩니다: 집계 애널리틱스에는 나타날 수 있지만 개인과 연관되지는 않습니다.
+자동화된 에이전트와 크롤러는 `/openapi.json`에 문서화된 rate limit 규약 범위 내에서 환영받습니다. 에이전트 트래픽은 다른 모든 요청 메타데이터와 동일하게 취급됩니다: 집계 애널리틱스에는 나타날 수 있지만 개인과 연관되지는 않습니다.
 
 ## 변경 사항
 
@@ -33726,7 +33873,7 @@ Web 服务器基础设施（Vercel 及其 CDN）会处理 IP 地址、用户代�
 
 ## 机器代理
 
-欢迎自动化代理和爬虫在 `/zh/openapi.json` 中记载的速率限制约定范围内访问。代理流量与其他请求元数据一视同仁：可能出现在聚合分析中，但不会与任何个人相关联。
+欢迎自动化代理和爬虫在 `/openapi.json` 中记载的速率限制约定范围内访问。代理流量与其他请求元数据一视同仁：可能出现在聚合分析中，但不会与任何个人相关联。
 
 ## 变更
 

@@ -2,7 +2,7 @@
 title: Entwicklerportal
 description: Quickstart, maschinenlesbare Endpoints und Integrationskonventionen für die Arbeit mit Vue Solana.
 ogSection: Projekt
-surroundOrder: 25
+surroundOrder: 26
 ---
 
 Dieses Portal ist der Einstiegspunkt für Entwickler und KI-Agenten, die mit Vue Solana arbeiten — sowohl mit den Vue-/Nuxt-Bibliotheken selbst als auch mit der maschinenlesbaren Oberfläche dieser Dokumentationsseite.

@@ -40,6 +40,7 @@ Vue Solana 通过 Vue 和 Nuxt composable 提供 RPC 设置、响应式账户读
 - [实时演示](/zh/demo)
 - [Vue Vite 示例](/zh/examples/vue-vite)
 - [Nuxt 示例](/zh/examples/nuxt)
+- [应用案例](/zh/showcase)
 
 ## 面向包用户
 

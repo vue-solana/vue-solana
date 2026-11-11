@@ -40,6 +40,7 @@ Vue Solana bietet RPC-Einrichtung, reaktive Kontolesevorgänge, Guthabenabfragen
 - [Live-Demo](/de/demo)
 - [Vue-Vite-Beispiel](/de/examples/vue-vite)
 - [Nuxt-Beispiel](/de/examples/nuxt)
+- [Showcase](/de/showcase)
 
 ## Für Nutzer der Pakete
 

@@ -2,7 +2,7 @@
 title: Datenschutz
 description: Was diese Dokumentationsseite erfasst, was nicht, und wie Analytics gehandhabt werden.
 ogSection: Projekt
-surroundOrder: 24
+surroundOrder: 25
 ---
 
 Diese Seite ist eine Dokumentationswebsite. Sie hat keine Konten, kein Login, keine Besucherdatenbank und fragt keine personenbezogenen Daten ab oder verarbeitet sie direkt.

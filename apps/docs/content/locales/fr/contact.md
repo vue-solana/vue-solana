@@ -2,7 +2,7 @@
 title: Contact
 description: Comment joindre l'équipe Vue Solana pour le support, les rapports de sécurité et la presse.
 ogSection: Projet
-surroundOrder: 23
+surroundOrder: 24
 ---
 
 Il n'existe pas de service de support payant ni de ligne téléphonique : Vue Solana est un projet open source, et chaque canal ci-dessous est public ou gratuit. Choisissez le canal qui correspond à votre besoin.

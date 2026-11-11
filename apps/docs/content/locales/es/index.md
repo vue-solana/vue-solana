@@ -40,6 +40,7 @@ Vue Solana ofrece configuración RPC, lecturas reactivas de cuentas, lecturas de
 - [Demo en vivo](/demo)
 - [Ejemplo Vue Vite](/examples/vue-vite)
 - [Ejemplo Nuxt](/examples/nuxt)
+- [Galería](/es/showcase)
 
 ## Para usuarios de los paquetes
 

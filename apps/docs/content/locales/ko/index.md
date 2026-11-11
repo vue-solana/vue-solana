@@ -40,6 +40,7 @@ Vue Solana는 Vue와 Nuxt 컴포저블을 통해 RPC 설정, 반응형 계정 �
 - [라이브 데모](/demo)
 - [Vue Vite 예제](/examples/vue-vite)
 - [Nuxt 예제](/examples/nuxt)
+- [쇼케이스](/ko/showcase)
 
 ## 패키지 사용자에게
 

@@ -34,6 +34,7 @@ export default {
       liveDemo: "实时演示",
       vueVite: "Vue Vite",
       nuxt: "Nuxt",
+      showcase: "应用案例",
       roadmap: "路线图",
       roadmapPage: "路线图",
       developers: "开发者",
@@ -62,6 +63,10 @@ export default {
   footer: {
     releasedUnder: "发布协议：",
     mitLicense: "MIT 许可证。",
+  },
+  showcase: {
+    visitSite: "访问网站",
+    logoAlt: "{name} 标志",
   },
   demo: {
     seo: {

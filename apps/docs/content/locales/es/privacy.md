@@ -2,7 +2,7 @@
 title: Privacidad
 description: Que recoge este sitio de documentación, que no recoge, y como se gestionan las analiticas.
 ogSection: Proyecto
-surroundOrder: 24
+surroundOrder: 25
 ---
 
 Este sitio es una web de documentación. No tiene cuentas, ni inicio de sesión, ni base de datos de visitantes, y no solicita ni procesa datos personales directamente.
@@ -26,7 +26,7 @@ Las paginas de documentación incluyen ejemplos de código pero no cargan public
 
 ## Agentes Automaticos
 
-Los agentes y crawlers automaticos son bienvenidos dentro de las convenciones de rate limit documentadas en `/es/openapi.json`. El trafico de agentes se trata igual que cualquier otro metadato de petición: puede aparecer en analiticas agregadas y no se correlaciona con ningun individuo.
+Los agentes y crawlers automaticos son bienvenidos dentro de las convenciones de rate limit documentadas en `/openapi.json`. El trafico de agentes se trata igual que cualquier otro metadato de petición: puede aparecer en analiticas agregadas y no se correlaciona con ningun individuo.
 
 ## Cambios
 

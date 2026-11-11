@@ -34,6 +34,7 @@ export default {
       liveDemo: "Démo en direct",
       vueVite: "Vue Vite",
       nuxt: "Nuxt",
+      showcase: "Vitrine",
       roadmap: "Feuille de route",
       roadmapPage: "Feuille de route",
       developers: "Développeurs",
@@ -62,6 +63,10 @@ export default {
   footer: {
     releasedUnder: "Publié sous la",
     mitLicense: "licence MIT.",
+  },
+  showcase: {
+    visitSite: "Visiter le site",
+    logoAlt: "Logo de {name}",
   },
   demo: {
     seo: {

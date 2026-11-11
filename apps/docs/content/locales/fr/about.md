@@ -2,7 +2,7 @@
 title: À propos
 description: Ce qu'est Vue Solana, qui le maintient et comment le projet est géré.
 ogSection: Projet
-surroundOrder: 22
+surroundOrder: 23
 ---
 
 Vue Solana est un projet open source qui publie des bibliothèques Vue et Nuxt pour construire des applications Solana. Il encapsule le SDK JavaScript officiel de Solana (Solana Kit) dans des composables typés et réactifs, afin que les développeurs Vue 3 et Nuxt puissent lire des soldes, découvrir des wallets, signer des messages et envoyer des transactions sans écrire eux-mêmes la plomberie RPC.
@@ -21,7 +21,7 @@ Le développement se fait ouvertement sur GitHub : les issues suivent les bugs e
 
 ## Feuille de route et gouvernance
 
-Les fonctionnalités prévues sont suivies publiquement sur la page [Feuille de route](/fr/roadmap). Les changements incompatibles des packages suivent semver, et les surfaces lisibles par les machines de ce site (llms.txt, openapi.json) sont documentées dans la [spécification OpenAPI](/fr/openapi.json) avec une politique de versionnage explicite.
+Les fonctionnalités prévues sont suivies publiquement sur la page [Feuille de route](/fr/roadmap). Les changements incompatibles des packages suivent semver, et les surfaces lisibles par les machines de ce site (llms.txt, openapi.json) sont documentées dans la [spécification OpenAPI](/openapi.json) avec une politique de versionnage explicite.
 
 ## Contact
 

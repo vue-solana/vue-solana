@@ -182,6 +182,13 @@ How an agent should use this site:
 - [Nuxt サンプル](https://vue-solana-docs.vercel.app/ja/examples/nuxt): 実行可能な @vue-solana/nuxt の Nuxt サンプルアプリです。
 - [Nuxt 예제](https://vue-solana-docs.vercel.app/ko/examples/nuxt): @vue-solana/nuxt를 위한 실행 가능한 Nuxt 예제 앱입니다.
 - [Nuxt 示例](https://vue-solana-docs.vercel.app/zh/examples/nuxt): 面向 @vue-solana/nuxt 的可运行 Nuxt 示例应用。
+- [Showcase](https://vue-solana-docs.vercel.app/de/showcase): Apps, die mit Vue Solana gebaut wurden, und wie du deine App hier gelistet bekommst.
+- [Galería](https://vue-solana-docs.vercel.app/es/showcase): Apps construidas con Vue Solana y cómo conseguir que la tuya aparezca en esta página.
+- [Vitrine](https://vue-solana-docs.vercel.app/fr/showcase): Applications construites avec Vue Solana, et comment faire figurer la vôtre sur cette page.
+- [ショーケース](https://vue-solana-docs.vercel.app/ja/showcase): Vue Solana で構築されたアプリと、あなたのアプリをこのページに掲載する方法。
+- [쇼케이스](https://vue-solana-docs.vercel.app/ko/showcase): Vue Solana로 구축된 앱과 내 앱을 이 페이지에 등록하는 방법.
+- [Showcase](https://vue-solana-docs.vercel.app/showcase): Apps built with Vue Solana, and how to get your app listed on this page.
+- [应用案例](https://vue-solana-docs.vercel.app/zh/showcase): 使用 Vue Solana 构建的应用，以及如何让你的应用出现在这个页面。
 - [Roadmap](https://vue-solana-docs.vercel.app/de/roadmap): Geplante Funktionen und Verbesserungen für Vue Solana.
 - [Roadmap](https://vue-solana-docs.vercel.app/es/roadmap): Funcionalidades y mejoras planificadas para Vue Solana.
 - [Feuille de route](https://vue-solana-docs.vercel.app/fr/roadmap): Fonctionnalités et améliorations prévues pour Vue Solana.
