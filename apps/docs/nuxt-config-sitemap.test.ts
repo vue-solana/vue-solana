@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, it, vi } from "vitest";
 
 interface DocsNuxtConfig {
-  routeRules: Record<string, { redirect?: string }>;
+  routeRules: Record<string, { redirect?: string | { to: string; statusCode?: number } }>;
   sitemap: { urls: string[] };
 }
 
@@ -45,6 +45,19 @@ describe("docs sitemap", () => {
       expect(config.routeRules[`${locale}/concepts/wallets`]?.redirect).toBe(
         `${locale}/guides/wallets`,
       );
+    }
+  });
+
+  it("redirects the examples section root and the App.vue code filename for every locale", () => {
+    for (const locale of ["", "/de", "/es", "/fr", "/ja", "/ko", "/zh"]) {
+      expect(config.routeRules[`${locale}/examples`]?.redirect).toEqual({
+        to: `${locale}/showcase`,
+        statusCode: 301,
+      });
+      expect(config.routeRules[`${locale}/App.vue`]?.redirect).toEqual({
+        to: `${locale}/demo`,
+        statusCode: 301,
+      });
     }
   });
 });

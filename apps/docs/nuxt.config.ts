@@ -152,6 +152,27 @@ export default defineNuxtConfig({
     "/ja/concepts/wallets": { redirect: "/ja/guides/wallets" },
     "/ko/concepts/wallets": { redirect: "/ko/guides/wallets" },
     "/zh/concepts/wallets": { redirect: "/zh/guides/wallets" },
+    // `/examples` is a section root, not a content page (only
+    // `/examples/vue-vite` and `/examples/nuxt` exist). Search Console finds it
+    // through the breadcrumb JSON-LD, which emits every path segment. Send the
+    // section root to the showcase page instead of 404ing.
+    "/examples": { redirect: { to: "/showcase", statusCode: 301 } },
+    "/de/examples": { redirect: { to: "/de/showcase", statusCode: 301 } },
+    "/es/examples": { redirect: { to: "/es/showcase", statusCode: 301 } },
+    "/fr/examples": { redirect: { to: "/fr/showcase", statusCode: 301 } },
+    "/ja/examples": { redirect: { to: "/ja/showcase", statusCode: 301 } },
+    "/ko/examples": { redirect: { to: "/ko/showcase", statusCode: 301 } },
+    "/zh/examples": { redirect: { to: "/zh/showcase", statusCode: 301 } },
+    // `App.vue` is a filename inside the setup code samples, not a route. Agents
+    // and crawlers that resolve the relative `./App.vue` import against the page
+    // URL otherwise land on a 404. Send them to the runnable demo instead.
+    "/App.vue": { redirect: { to: "/demo", statusCode: 301 } },
+    "/de/App.vue": { redirect: { to: "/de/demo", statusCode: 301 } },
+    "/es/App.vue": { redirect: { to: "/es/demo", statusCode: 301 } },
+    "/fr/App.vue": { redirect: { to: "/fr/demo", statusCode: 301 } },
+    "/ja/App.vue": { redirect: { to: "/ja/demo", statusCode: 301 } },
+    "/ko/App.vue": { redirect: { to: "/ko/demo", statusCode: 301 } },
+    "/zh/App.vue": { redirect: { to: "/zh/demo", statusCode: 301 } },
     "/**": {
       prerender: true,
       headers: {
