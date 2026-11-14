@@ -130,7 +130,7 @@ Consulta [Data Fetching Composables](/packages/vue#data-fetching-composables) pa
 Estos son aliases Nuxt para los composables de Vue.
 
 - `useSolanaClientCapability()`: falla rápido cuando al cliente Kit instalado le falta una capacidad requerida.
-- `tryUseSolana()`: accessor seguro y no lanzador del contexto Solana inyectado.
+- `tryUseSolana()`: accessor seguro que no lanza excepciones del contexto Solana inyectado.
 - `clearSwrCache()`: vacía la caché SWR de nivel de módulo (ver [Data Fetching Composables](/packages/vue#data-fetching-composables)).
 - `deleteSwrKey()`: desaloja una entrada SWR cacheada por su clave completa, incluido el prefijo del adaptador (ver [Data Fetching Composables](/packages/vue#data-fetching-composables)).
 

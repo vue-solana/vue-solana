@@ -48,11 +48,11 @@ export interface UseExecution<TStatus extends string> {
  */
 export function useExecution<TStatus extends string>(
   busy: TStatus,
-  statuses: { error?: TStatus; idle?: TStatus; failureCode?: SolanaErrorCode } = {},
+  options: { error?: TStatus; idle?: TStatus; failureCode?: SolanaErrorCode } = {},
 ): UseExecution<TStatus> {
-  const errorStatus = statuses.error ?? ("error" as TStatus);
-  const idleStatus = statuses.idle ?? ("idle" as TStatus);
-  const failureCode = statuses.failureCode ?? "RPC_FAILURE";
+  const errorStatus = options.error ?? ("error" as TStatus);
+  const idleStatus = options.idle ?? ("idle" as TStatus);
+  const failureCode = options.failureCode ?? "RPC_FAILURE";
   const status: ShallowRef<TStatus> = shallowRef(idleStatus);
   const error = shallowRef<SolanaError | null>(null);
   let id = 0;

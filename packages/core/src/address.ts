@@ -13,12 +13,6 @@ export type MaybeAddressInput =
   | (() => MaybeAddressInput);
 
 /**
- * Parse a Solana address from a Kit `Address`, string, ref, or getter.
- *
- * Valid strings are returned as `Address`; invalid input throws a
- * `SolanaError` with code `INVALID_ADDRESS`.
- */
-/**
  * Nesting budget for ref/getter unwrapping. A cyclic input (`const a = () => a`)
  * would otherwise recurse until the stack overflows, which surfaces as a
  * `RangeError` no app can catch meaningfully. Deeply nested *legitimate* inputs
@@ -26,6 +20,12 @@ export type MaybeAddressInput =
  */
 const MAX_ADDRESS_INPUT_DEPTH = 32;
 
+/**
+ * Parse a Solana address from a Kit `Address`, string, ref, or getter.
+ *
+ * Valid strings are returned as `Address`; invalid input throws a
+ * `SolanaError` with code `INVALID_ADDRESS`.
+ */
 export function parseAddress(value: MaybeAddressInput): Address | null {
   const input = toAddressInput(value, 0);
 

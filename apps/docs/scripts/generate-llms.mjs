@@ -1,11 +1,14 @@
-import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { dirname, join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+
+import manifest from "../app/utils/llms-manifest.json" with { type: "json" };
+
+const { locales: LOCALES, sections: DOC_SECTIONS, siteUrl } = manifest;
 
 const rootDir = dirname(dirname(fileURLToPath(import.meta.url)));
 const contentDir = join(rootDir, "content");
 const publicDir = join(rootDir, "public");
-const siteUrl = "https://vue-solana-docs.vercel.app";
 
 /**
  * Generates the agent-facing surface described by llmstxt.org v2:
@@ -21,80 +24,12 @@ const siteUrl = "https://vue-solana-docs.vercel.app";
  * convenience and the index states its scope and approximate token count.
  */
 
-const LOCALES = [
-  {
-    code: "de",
-    name: "Deutsch",
-    heading: "Dokumentation",
-    intro: "Deutsche Übersetzung der Vue-Solana-Dokumentation.",
-    summary: "German translation of the Vue Solana documentation.",
-  },
-  {
-    code: "es",
-    name: "Español",
-    heading: "Documentación",
-    intro: "Traducción al español de la documentación de Vue Solana.",
-    summary: "Spanish translation of the Vue Solana documentation.",
-  },
-  {
-    code: "fr",
-    name: "Français",
-    heading: "Documentation",
-    intro: "Traduction française de la documentation Vue Solana.",
-    summary: "French translation of the Vue Solana documentation.",
-  },
-  {
-    code: "ja",
-    name: "日本語",
-    heading: "ドキュメント",
-    intro: "Vue Solana ドキュメントの日本語訳です。",
-    summary: "Japanese translation of the Vue Solana documentation.",
-  },
-  {
-    code: "ko",
-    name: "한국어",
-    heading: "문서",
-    intro: "Vue Solana 문서의 한국어 번역입니다.",
-    summary: "Korean translation of the Vue Solana documentation.",
-  },
-  {
-    code: "zh",
-    name: "中文",
-    heading: "文档",
-    intro: "Vue Solana 文档的中文翻译。",
-    summary: "Chinese translation of the Vue Solana documentation.",
-  },
-];
-
 /**
  * Root pages that are about the project rather than about using the library.
  * Everything else at the content root lands in "Start Here", so a new root
  * page cannot silently disappear from the index.
  */
 const PROJECT_ROUTES = new Set(["/showcase", "/roadmap", "/about", "/contact", "/privacy"]);
-
-const DOC_SECTIONS = [
-  {
-    key: "guides",
-    title: "Guides",
-    summary: "Task-focused guides for RPC, wallets, transactions, and testing.",
-  },
-  {
-    key: "packages",
-    title: "Package Reference",
-    summary: "API reference for the three published packages.",
-  },
-  {
-    key: "concepts",
-    title: "Concepts",
-    summary: "Solana concepts that matter when writing Vue and Nuxt code.",
-  },
-  {
-    key: "examples",
-    title: "Examples",
-    summary: "Runnable example applications wired to the workspace packages.",
-  },
-];
 
 async function collectMarkdownFiles(dir) {
   const entries = await readdir(dir, { withFileTypes: true });
@@ -366,10 +301,13 @@ function removeDemoLinks(body) {
     .trim();
 }
 
+const writtenIndexes = new Set();
+
 async function writePublic(relativePath, content) {
   const filePath = join(publicDir, relativePath);
   await mkdir(dirname(filePath), { recursive: true });
   await writeFile(filePath, content, "utf8");
+  writtenIndexes.add(relativePath);
 }
 
 const files = await collectMarkdownFiles(contentDir);
@@ -413,3 +351,25 @@ for (const locale of LOCALES) {
     await writePublic(`${locale.code}/llms.txt`, makeLocaleLlmsTxt(locale, localePages));
   }
 }
+
+/**
+ * Removing a locale or a section from the manifest must also remove its
+ * committed index. Without this sweep a stale `/section/llms.txt` or
+ * `/locale/llms.txt` survives in `public/` and still serves to agents.
+ */
+async function removeStaleIndexes() {
+  const candidates = [
+    ...DOC_SECTIONS.map((section) => `${section.key}/llms.txt`),
+    ...LOCALES.map((locale) => `${locale.code}/llms.txt`),
+  ];
+
+  for (const candidate of candidates) {
+    if (writtenIndexes.has(candidate)) {
+      continue;
+    }
+
+    await rm(join(publicDir, candidate), { force: true });
+  }
+}
+
+await removeStaleIndexes();

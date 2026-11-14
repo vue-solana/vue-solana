@@ -86,6 +86,13 @@ const apiVersionResponseHeader = {
   example: API_VERSION,
 } as const;
 
+const linkResponseHeader = {
+  description:
+    'llmstxt.org v2 discovery links: the most specific llms.txt index for the page (`rel="describedby"`) and the page\'s markdown URL (`rel="alternate"; type="text/markdown"`). Sent on every content-negotiated page response, including markdown 404 recovery responses.',
+  schema: { type: "string" },
+  example: `<${SITE_URL}/guides/llms.txt>; rel="describedby", <${SITE_URL}/getting-started.md>; rel="alternate"; type="text/markdown"`,
+} as const;
+
 const standard200Headers = {
   "X-Api-Version": apiVersionResponseHeader,
   ...rateLimitHeaders,
@@ -99,6 +106,7 @@ const errorResponses = {
     headers: {
       ...standard200Headers,
       "Retry-After": { description: "Only sent with 429.", schema: { type: "integer" } },
+      Link: linkResponseHeader,
     },
     content: {
       [PROBLEM_JSON_MEDIA_TYPE]: { schema: problemSchema },
@@ -133,8 +141,8 @@ const spec = {
       "Agents should read llms.txt for the English page index, the section indexes " +
       "(/guides/llms.txt, /packages/llms.txt, /concepts/llms.txt, /examples/llms.txt) or a " +
       "locale index (/de/llms.txt … /zh/llms.txt) for a narrower view, and llms-full.txt for the " +
-      "English-only corpus. Every negotiated markdown response carries a Link header pointing at " +
-      "the most specific llms.txt index and at the page's .md URL; sitemap.xml lists every URL.",
+      "English-only corpus. Every content-negotiated page response carries a Link header pointing " +
+      "at the most specific llms.txt index and at the page's .md URL; sitemap.xml lists every URL.",
     contact: {
       name: "Vue Solana",
       url: "https://github.com/vue-solana/vue-solana",
@@ -330,6 +338,7 @@ const spec = {
             headers: {
               ...standard200Headers,
               Vary: { description: "accept, accept-encoding", schema: { type: "string" } },
+              Link: linkResponseHeader,
             },
             content: {
               "text/html": {

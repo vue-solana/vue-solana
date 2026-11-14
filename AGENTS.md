@@ -210,7 +210,7 @@ The manual testing guide explains:
 
 ## Verification Status
 
-All CI gates pass as of the v2.3.0 packages:
+All CI gates pass on the current release line:
 
 ```sh
 pnpm format
@@ -331,8 +331,9 @@ Plans live in the top-level `plans/` directory, separate from the knowledge bund
 
 ## Suggested Next Tasks
 
-- `apps/docs` is pinned to `3.0.0` and `3.0.1` is already live, so the pin is one release behind (read the real value from `apps/docs/package.json`, not from here). Per the Post-Publish Release Checklist the catch-up is steps 1-2 only: bump the exact pin and commit `pnpm-lock.yaml`. The old "`payerSecretKey` fix missing from the pin" item is closed — commit `1456821` is an ancestor of `@vue-solana/core@3.0.0`, so the current pin already has it.
-- A `major` changeset (`.changeset/bundle-size-trim.md`) is pending and will publish 4.0.0: the core root barrel dropped `Buffer`/`installSolanaBufferPolyfill` (breaking; use the `@vue-solana/core/buffer-polyfill` subpath) and core, vue, and nuxt tarballs exclude `.d.mts`. `@vue-solana/nuxt` takes the major only through dependency propagation.
+- `apps/docs` is pinned to the latest published release. Read the current value from `apps/docs/package.json`; never trust a version number written in this file. Keep it current per the Post-Publish Release Checklist.
+- The 4.0.0 bundle-size trim has shipped: the core root barrel no longer re-exports `Buffer`/`installSolanaBufferPolyfill` (use the `@vue-solana/core/buffer-polyfill` subpath) and the tarballs exclude `.d.mts`. The invariants in "Bundle and Tarball Size Invariants" still govern any barrel, `exports` map, or `files` change.
+- Work through `plans/error-codes-agent-surface-followups.md` for the review follow-ups on error codes and the docs agent surface.
 - Follow `apps/docs/content/roadmap.md` for upcoming features (core composables, wallet features, Ecosystem integrations, etc.).
 - `plans/native-wallet-plan.md` is complete except for one open item, "Future iOS Wallet Support" (line 19). Mobile native wallets, Android MWA, iOS browser wallets, and desktop native wallets all shipped through the unified `useWallets()` flow.
 - Re-check the `@solana/kit` and `@solana/kit-plugin-rpc` peer versions on every new release.

@@ -4,6 +4,12 @@ import { dirname, join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
+import manifest from "./app/utils/llms-manifest.json";
+
+const SITE_URL = manifest.siteUrl;
+const LOCALES = manifest.locales.map((locale) => locale.code);
+const SECTIONS = manifest.sections.map((section) => section.key);
+
 /**
  * The generated agent surface is committed, so it can silently drift from the
  * content tree or grow back into a file no context window can hold (the
@@ -17,10 +23,6 @@ import { describe, expect, it } from "vitest";
 const DOCS_ROOT = dirname(fileURLToPath(import.meta.url));
 const CONTENT_DIR = join(DOCS_ROOT, "content");
 const PUBLIC_DIR = join(DOCS_ROOT, "public");
-const SITE_URL = "https://vue-solana-docs.vercel.app";
-
-const LOCALES = ["de", "es", "fr", "ja", "ko", "zh"];
-const SECTIONS = ["guides", "packages", "concepts", "examples"];
 
 const MAX_INDEX_BYTES = 12_000;
 const MAX_SECTION_BYTES = 8_000;
@@ -82,6 +84,36 @@ const ENGLISH_ROUTES = ROUTES.filter((route) => !localeFromRoute(route));
 const LOCALE_ROUTES = Object.fromEntries(
   LOCALES.map((locale) => [locale, ROUTES.filter((route) => localeFromRoute(route) === locale)]),
 ) as Record<string, string[]>;
+
+describe("generated index set", () => {
+  it("contains no stale llms.txt indexes", () => {
+    const expected = new Set<string>(["llms.txt", "llms-full.txt"]);
+
+    for (const section of SECTIONS) {
+      if (ENGLISH_ROUTES.some((route) => sectionFromPath(pagePath(route)) === section)) {
+        expected.add(`${section}/llms.txt`);
+      }
+    }
+
+    for (const locale of LOCALES) {
+      if (LOCALE_ROUTES[locale]!.length > 0) {
+        expected.add(`${locale}/llms.txt`);
+      }
+    }
+
+    const actual = new Set<string>();
+
+    for (const entry of readdirSync(PUBLIC_DIR, { withFileTypes: true })) {
+      if (entry.isFile() && entry.name.startsWith("llms") && entry.name.endsWith(".txt")) {
+        actual.add(entry.name);
+      } else if (entry.isDirectory() && existsSync(join(PUBLIC_DIR, entry.name, "llms.txt"))) {
+        actual.add(`${entry.name}/llms.txt`);
+      }
+    }
+
+    expect([...actual].sort()).toEqual([...expected].sort());
+  });
+});
 
 describe("llms.txt root index", () => {
   const index = readPublic("llms.txt");

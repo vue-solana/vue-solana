@@ -81,4 +81,27 @@ describe("parseAddress", () => {
 
     expect(parseAddress(nested)).toBe(ADDRESS);
   });
+
+  it("accepts exactly the depth limit and rejects one level past it", () => {
+    const nest = (levels: number): MaybeAddressInput => {
+      let nested: MaybeAddressInput = ADDRESS;
+
+      for (let index = 0; index < levels; index += 1) {
+        nested = { value: nested };
+      }
+
+      return nested;
+    };
+
+    expect(parseAddress(nest(32))).toBe(ADDRESS);
+
+    try {
+      parseAddress(nest(33));
+      throw new Error("Expected parseAddress to throw past the depth limit.");
+    } catch (error) {
+      expect(error).toBeInstanceOf(SolanaError);
+      expect((error as SolanaError).code).toBe("INVALID_ADDRESS");
+      expect((error as SolanaError).message).toContain("possible cycle");
+    }
+  });
 });

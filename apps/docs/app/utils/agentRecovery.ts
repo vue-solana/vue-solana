@@ -1,4 +1,9 @@
-export const SITE_URL = "https://vue-solana-docs.vercel.app";
+import manifest from "./llms-manifest.json";
+
+export const SITE_URL = manifest.siteUrl;
+
+const LOCALE_CODES = manifest.locales.map((locale) => locale.code);
+const INDEXED_SECTIONS = manifest.sections.map((section) => section.key);
 
 /**
  * Current API version of the machine-readable surface, mirrored in the
@@ -107,9 +112,6 @@ export function isMachineReadablePath(path: string): boolean {
  * use the most specific one, so a guide page points at `/guides/llms.txt`
  * and a translated page at `/de/llms.txt` instead of the root index.
  */
-const LOCALE_CODES = ["de", "es", "fr", "ja", "ko", "zh"];
-const INDEXED_SECTIONS = ["guides", "packages", "concepts", "examples"];
-
 export function llmsIndexForPath(path: string): string {
   const segments = path.split("/").filter(Boolean);
 
