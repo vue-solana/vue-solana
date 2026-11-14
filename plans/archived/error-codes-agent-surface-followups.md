@@ -1,4 +1,6 @@
-# Error Codes & Agent Surface — Review Follow-Ups
+# Error Codes & Agent Surface — Review Follow-Ups (archived)
+
+> **Archived.** All 13 items are complete and shipped in `8254fd7` on `fix/error-codes-and-agent-surface`. Kept as the record; no items remain open.
 
 Tracks the findings from reviewing branch `fix/error-codes-and-agent-surface` (single commit `85da5d1`) against `main`.
 
