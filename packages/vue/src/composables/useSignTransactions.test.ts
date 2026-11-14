@@ -100,6 +100,18 @@ describe("useSignTransactions", () => {
     expect(result.error.value?.cause).toBe(rejection);
     expect(result.signedTransactions.value).toBeNull();
   });
+
+  it("normalizes a generic signing failure as WALLET_FAILURE, not an RPC failure", async () => {
+    const cause = new Error("wallet transport failed");
+    const signTransactions = vi.fn(async () => {
+      throw cause;
+    });
+    const result = mountWithWallet(useSignTransactions, connectedWallet({ signTransactions }));
+
+    await expect(result.execute(transactions)).rejects.toMatchObject({ code: "WALLET_FAILURE" });
+    expect(result.error.value?.code).toBe("WALLET_FAILURE");
+    expect(result.error.value?.cause).toBe(cause);
+  });
 });
 
 describe("useSignAndSendTransactions", () => {

@@ -206,6 +206,7 @@ type SolanaChain = "solana:mainnet" | "solana:testnet" | "solana:devnet" | "sola
 - `getSolanaIosWallets(options?)`：在 iOS 浏览器上返回 Phantom、Solflare 和 Backpack iOS 浏览器钱包条目。
 - `adaptSolanaIosWallet(walletInfo, options?)`：把 iOS deep-link 钱包条目适配为 `SolanaWallet`。
 - `handleSolanaIosWalletCallback(options?)`：验证并解密 iOS 钱包重定向回调。
+- `waitForRedirect(options?)`：结束对 iOS 钱包重定向的等待。它有意不会在页面内 resolve（重定向会重新加载页面，由启动流程处理回调）；超过 `timeoutMs`（默认 10 分钟）后以 `REDIRECT_TIMEOUT` 拒绝，`signal` 被中止时以该 signal 的原因为拒绝原因，因此自定义 deep link 流程可以重置 `connecting` 状态，而不是一直挂起。
 - `isSolanaIosBrowserWalletSupported()`：返回当前运行时是否应暴露 iOS 浏览器钱包链接。
 
 这些 helper 都是 SSR 安全的。当 `window` 不可用、页面不处于安全上下文，或浏览器不是 Android 时，Android 注册会直接返回且不注册。浏览器不是 iOS 浏览器运行时时，iOS 钱包发现返回空列表。
@@ -432,6 +433,7 @@ try {
 - `TRANSACTION_FAILED`
 - `REDIRECT_TIMEOUT`
 - `DECRYPTION_FAILED`
+- `MISSING_CLIENT_CAPABILITY`
 - `RPC_FAILURE`
 - `STORAGE_FAILURE`
 

@@ -1,11 +1,35 @@
-import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import { dirname, join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
+
+import manifest from "../app/utils/llms-manifest.json" with { type: "json" };
+
+const { locales: LOCALES, sections: DOC_SECTIONS, siteUrl } = manifest;
 
 const rootDir = dirname(dirname(fileURLToPath(import.meta.url)));
 const contentDir = join(rootDir, "content");
 const publicDir = join(rootDir, "public");
-const siteUrl = "https://vue-solana-docs.vercel.app";
+
+/**
+ * Generates the agent-facing surface described by llmstxt.org v2:
+ *
+ * - `/llms.txt`: small English index, grouped by section.
+ * - `/<section>/llms.txt`: index for the pages under that path, so an agent
+ *   that only needs the guides does not read the package reference first.
+ * - `/<locale>/llms.txt`: index of the translated docs for that locale.
+ * - `/llms-full.txt`: English-only one-shot corpus. It is deliberately not
+ *   generated per locale (that produced a 1.86 MB, ~465k-token file).
+ *
+ * The spec has no `llms-full.txt`; it is kept as an explicitly optional
+ * convenience and the index states its scope and approximate token count.
+ */
+
+/**
+ * Root pages that are about the project rather than about using the library.
+ * Everything else at the content root lands in "Start Here", so a new root
+ * page cannot silently disappear from the index.
+ */
+const PROJECT_ROUTES = new Set(["/showcase", "/roadmap", "/about", "/contact", "/privacy"]);
 
 async function collectMarkdownFiles(dir) {
   const entries = await readdir(dir, { withFileTypes: true });
@@ -66,6 +90,27 @@ function routeFromFile(filePath) {
   return `/${path.replace(/\/index$/, "")}`;
 }
 
+function localeFromRoute(route) {
+  const segment = route.split("/")[1];
+  return LOCALES.some((locale) => locale.code === segment) ? segment : undefined;
+}
+
+/**
+ * `route` keeps the locale prefix (`/de/getting-started`); `path` is the
+ * locale-independent page path (`/getting-started`), which is what section
+ * grouping and per-locale lookups use.
+ */
+function pathFromRoute(route) {
+  const locale = localeFromRoute(route);
+  return locale ? route.slice(locale.length + 1) || "/" : route;
+}
+
+function sectionFromPath(path) {
+  const segments = path.split("/").filter(Boolean);
+
+  return segments.length > 1 ? segments[0] : "root";
+}
+
 function fullUrl(route) {
   return route === "/" ? `${siteUrl}/` : `${siteUrl}${route}`;
 }
@@ -78,22 +123,174 @@ function sortPages(a, b) {
   return a.route.localeCompare(b.route);
 }
 
-function makeLlmsTxt(pages) {
-  const pageLinks = pages
-    .map((page) => `- [${page.title}](${fullUrl(page.route)}): ${page.description}`)
-    .join("\n");
-
-  return `# Vue Solana\n\n> Vue and Nuxt libraries that help developers use Solana from Vue applications.\n\nOfficial docs: ${siteUrl}\nRepository: https://github.com/vue-solana/vue-solana\n\n## Packages\n\n- @vue-solana/core: Framework-agnostic Solana config, endpoint helpers, wallet types, and transaction helpers.\n- @vue-solana/vue: Vue plugin and composables for RPC, wallets, balances, messages, signatures, and transactions.\n- @vue-solana/nuxt: Nuxt module that installs the Vue plugin and auto-imports composables.\n\n## Install\n\n\`\`\`sh\npnpm add @vue-solana/nuxt\npnpm add @vue-solana/vue\npnpm add @vue-solana/core\n\`\`\`\n\nInstall only the package needed by your app. Nuxt apps normally install @vue-solana/nuxt. Vue apps normally install @vue-solana/vue.\n\n## When To Use\n\nUse Vue Solana when you are building, reviewing, or testing a Vue 3 or Nuxt application that talks to Solana:\n\n- Setting up a Solana RPC connection with reactive state (useSolanaClient, useConnection, useRpc).\n- Reading balances, account info, or SPL token accounts in components (useBalance, useAccountInfo, useTokenAccounts, useTokenBalance).\n- Discovering and connecting wallets: browser extensions, Android Mobile Wallet Adapter, and iOS wallet links (useWallets, useWallet).\n- Signing messages, sending transfers, and tracking confirmation with normalized errors (useSignMessage, useSignAndSendTransaction, useSignatureStatus, useTransactionConfirmation).\n- Migrating a Vue or Nuxt codebase from @solana/web3.js to Solana Kit (see the Kit Migration guide).\n\nDo not reach for Vue Solana when the project has no Vue/Nuxt layer: React, Svelte, Node scripts, or server-only services should use @solana/kit directly. Vue Solana is a thin, typed layer over Solana Kit, not a replacement for it.\n\nHow an agent should use this site:\n\n1. Use this file (llms.txt) for orientation and the Docs list below for page-level links.\n2. Fetch any page as markdown with an Accept: text/markdown header, or by appending .md to the page URL.\n3. For the full corpus in a single request, fetch /llms-full.txt.\n4. For the machine-readable endpoint surface, fetch /openapi.json.\n\n## Docs\n\n${pageLinks}\n\n## Crawling Notes\n\n- /demo is an interactive demo route and is intentionally excluded from robots.txt and sitemap.xml.\n- For full plain-text documentation, read ${siteUrl}/llms-full.txt.\n- Machine-readable API surface: ${siteUrl}/openapi.json (OpenAPI 3.1).\n- Content negotiation: any documentation page returns markdown when requested with Accept: text/markdown, or by appending .md to the page URL (for example ${siteUrl}/getting-started.md).\n- Responses to negotiated pages always carry Vary: Accept, Accept-Encoding.\n- Unmatched paths return a real HTTP 404; with Accept: text/markdown the 404 body is markdown listing recovery links.\n`;
+function linkLine(page) {
+  return `- [${page.title}](${fullUrl(page.route)}): ${page.description}`;
 }
 
-function makeLlmsFullTxt(pages) {
-  const sections = pages
+function formatTokenEstimate(text) {
+  const tokens = Math.round(text.length / 4);
+  return tokens >= 1000 ? `~${Math.round(tokens / 1000)}k tokens` : `~${tokens} tokens`;
+}
+
+function makeSectionLinks(pages) {
+  return pages.map(linkLine).join("\n");
+}
+
+function groupEnglishPages(englishPages) {
+  const root = englishPages.filter((page) => sectionFromPath(page.path) === "root");
+  const startHere = root.filter((page) => !PROJECT_ROUTES.has(page.path));
+  const project = root.filter((page) => PROJECT_ROUTES.has(page.path));
+  const groups = [
+    { title: "Start Here", pages: startHere },
+    ...DOC_SECTIONS.map((section) => ({
+      title: section.title,
+      pages: englishPages.filter((page) => sectionFromPath(page.path) === section.key),
+    })),
+    { title: "Project", pages: project },
+  ];
+
+  return groups.filter((group) => group.pages.length > 0);
+}
+
+function makeLlmsTxt(englishPages, corpus) {
+  const groups = groupEnglishPages(englishPages);
+  const sections = groups
+    .map((group) => `## ${group.title}\n\n${makeSectionLinks(group.pages)}`)
+    .join("\n\n");
+  const translations = LOCALES.map(
+    (locale) => `- [${locale.name}](${siteUrl}/${locale.code}/llms.txt): ${locale.summary}`,
+  ).join("\n");
+  const sectionIndexes = DOC_SECTIONS.filter((section) =>
+    englishPages.some((page) => sectionFromPath(page.path) === section.key),
+  )
+    .map(
+      (section) => `- [${section.title}](${siteUrl}/${section.key}/llms.txt): ${section.summary}`,
+    )
+    .join("\n");
+
+  return `# Vue Solana
+
+> Vue and Nuxt libraries that help developers use Solana from Vue applications.
+
+Official docs: ${siteUrl}
+Repository: https://github.com/vue-solana/vue-solana
+
+## Packages
+
+- @vue-solana/core: Framework-agnostic Solana config, endpoint helpers, wallet types, and transaction helpers.
+- @vue-solana/vue: Vue plugin and composables for RPC, wallets, balances, messages, signatures, and transactions.
+- @vue-solana/nuxt: Nuxt module that installs the Vue plugin and auto-imports composables.
+
+## Install
+
+\`\`\`sh
+pnpm add @vue-solana/nuxt
+pnpm add @vue-solana/vue
+pnpm add @vue-solana/core
+\`\`\`
+
+Install only the package needed by your app. Nuxt apps normally install @vue-solana/nuxt. Vue apps normally install @vue-solana/vue.
+
+## When To Use
+
+Use Vue Solana when you are building, reviewing, or testing a Vue 3 or Nuxt application that talks to Solana:
+
+- Setting up a Solana RPC connection with reactive state (useSolanaClient, useConnection, useRpc).
+- Reading balances, account info, or SPL token accounts in components (useBalance, useAccountInfo, useTokenAccounts, useTokenBalance).
+- Discovering and connecting wallets: browser extensions, Android Mobile Wallet Adapter, and iOS wallet links (useWallets, useWallet).
+- Signing messages, sending transfers, and tracking confirmation with normalized errors (useSignMessage, useSignAndSendTransaction, useSignatureStatus, useTransactionConfirmation).
+- Migrating a Vue or Nuxt codebase from @solana/web3.js to Solana Kit (see the Kit Migration guide).
+
+Do not reach for Vue Solana when the project has no Vue/Nuxt layer: React, Svelte, Node scripts, or server-only services should use @solana/kit directly. Vue Solana is a thin, typed layer over Solana Kit, not a replacement for it.
+
+How an agent should use this site:
+
+1. Use this file for orientation and the sections below for page-level links.
+2. Fetch only the pages you need as markdown with an Accept: text/markdown header, or by appending .md to the page URL.
+3. Prefer the smallest index that covers the task: /guides/llms.txt, /packages/llms.txt, /concepts/llms.txt, or /examples/llms.txt.
+4. Translated docs have their own index under /<locale>/llms.txt.
+5. Use /llms-full.txt only when one request for the whole English corpus is cheaper than several page fetches.
+6. For the machine-readable endpoint surface, fetch /openapi.json.
+
+${sections}
+
+## Section Indexes
+
+${sectionIndexes}
+
+## Translations
+
+${translations}
+
+## Optional
+
+- [Full documentation corpus](${siteUrl}/llms-full.txt): English-only single-file corpus (${formatTokenEstimate(corpus)}). Fetch only when a whole-corpus read is cheaper than page-level fetches.
+- [OpenAPI spec](${siteUrl}/openapi.json): OpenAPI 3.1 description of the machine-readable surface, error model, and versioning.
+- [Sitemap](${siteUrl}/sitemap.xml): Complete URL list for crawlers.
+
+## Crawling Notes
+
+- /demo is an interactive demo route and is intentionally excluded from robots.txt and sitemap.xml.
+- Every documentation page returns markdown when requested with Accept: text/markdown, or by appending .md to the page URL (for example ${siteUrl}/getting-started.md).
+- Responses to negotiated pages always carry Vary: Accept, Accept-Encoding.
+- Unmatched paths return a real HTTP 404; with Accept: text/markdown the 404 body is markdown listing recovery links.
+- /llms-full.txt is English-only and intentionally larger than this index; translated pages are listed in their locale index instead.
+`;
+}
+
+function makeSectionLlmsTxt(section, pages) {
+  return `# Vue Solana — ${section.title}
+
+> ${section.summary}
+
+Official docs: ${siteUrl}
+Parent index: ${siteUrl}/llms.txt
+
+## ${section.title}
+
+${makeSectionLinks(pages)}
+`;
+}
+
+function makeLocaleLlmsTxt(locale, pages) {
+  return `# Vue Solana — ${locale.name}
+
+> ${locale.intro}
+
+Official docs: ${siteUrl}/${locale.code}
+Parent index: ${siteUrl}/llms.txt
+English docs: ${siteUrl}/llms.txt
+
+## ${locale.heading}
+
+${makeSectionLinks(pages)}
+`;
+}
+
+function makeLlmsFullTxt(englishPages) {
+  const sections = englishPages
     .map((page) => {
       return `# ${page.title}\n\nSource: ${fullUrl(page.route)}\nDescription: ${page.description}\n\n${removeDemoLinks(page.body)}`;
     })
     .join("\n\n---\n\n");
+  const translatedIndexes = LOCALES.map((locale) => `${siteUrl}/${locale.code}/llms.txt`).join(
+    ", ",
+  );
 
-  return `# Vue Solana Full Documentation\n\nOfficial docs: ${siteUrl}\nGenerated from apps/docs/content Markdown files.\nThe /demo route is intentionally excluded because it is an interactive, non-canonical demo page.\n\n---\n\n${sections}\n`;
+  return `# Vue Solana Full Documentation
+
+> Vue and Nuxt libraries that help developers use Solana from Vue applications.
+
+Official docs: ${siteUrl}
+Repository: https://github.com/vue-solana/vue-solana
+Scope: English documentation only (${englishPages.length} pages). Translated docs have their own indexes: ${translatedIndexes}.
+Generated from apps/docs/content Markdown files.
+The /demo route is intentionally excluded because it is an interactive, non-canonical demo page.
+
+---
+
+${sections}
+`;
 }
 
 function removeDemoLinks(body) {
@@ -104,15 +301,28 @@ function removeDemoLinks(body) {
     .trim();
 }
 
+const writtenIndexes = new Set();
+
+async function writePublic(relativePath, content) {
+  const filePath = join(publicDir, relativePath);
+  await mkdir(dirname(filePath), { recursive: true });
+  await writeFile(filePath, content, "utf8");
+  writtenIndexes.add(relativePath);
+}
+
 const files = await collectMarkdownFiles(contentDir);
 const pages = await Promise.all(
   files.map(async (filePath) => {
     const parsed = parseMarkdown(await readFile(filePath, "utf8"));
+    const route = routeFromFile(filePath);
+    const path = pathFromRoute(route);
 
     return {
       ...parsed,
-      route: routeFromFile(filePath),
-      title: parsed.title ?? routeFromFile(filePath),
+      route,
+      path,
+      locale: localeFromRoute(route),
+      title: parsed.title ?? route,
       description: parsed.description ?? "Vue Solana documentation page.",
     };
   }),
@@ -120,6 +330,46 @@ const pages = await Promise.all(
 
 pages.sort(sortPages);
 
-await mkdir(publicDir, { recursive: true });
-await writeFile(join(publicDir, "llms.txt"), makeLlmsTxt(pages), "utf8");
-await writeFile(join(publicDir, "llms-full.txt"), makeLlmsFullTxt(pages), "utf8");
+const englishPages = pages.filter((page) => !page.locale);
+const corpus = makeLlmsFullTxt(englishPages);
+
+await writePublic("llms.txt", makeLlmsTxt(englishPages, corpus));
+await writePublic("llms-full.txt", corpus);
+
+for (const section of DOC_SECTIONS) {
+  const sectionPages = englishPages.filter((page) => sectionFromPath(page.path) === section.key);
+
+  if (sectionPages.length > 0) {
+    await writePublic(`${section.key}/llms.txt`, makeSectionLlmsTxt(section, sectionPages));
+  }
+}
+
+for (const locale of LOCALES) {
+  const localePages = pages.filter((page) => page.locale === locale.code);
+
+  if (localePages.length > 0) {
+    await writePublic(`${locale.code}/llms.txt`, makeLocaleLlmsTxt(locale, localePages));
+  }
+}
+
+/**
+ * Removing a locale or a section from the manifest must also remove its
+ * committed index. Without this sweep a stale `/section/llms.txt` or
+ * `/locale/llms.txt` survives in `public/` and still serves to agents.
+ */
+async function removeStaleIndexes() {
+  const candidates = [
+    ...DOC_SECTIONS.map((section) => `${section.key}/llms.txt`),
+    ...LOCALES.map((locale) => `${locale.code}/llms.txt`),
+  ];
+
+  for (const candidate of candidates) {
+    if (writtenIndexes.has(candidate)) {
+      continue;
+    }
+
+    await rm(join(publicDir, candidate), { force: true });
+  }
+}
+
+await removeStaleIndexes();

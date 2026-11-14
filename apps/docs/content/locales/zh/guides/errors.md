@@ -39,6 +39,7 @@ const error = new SolanaError("RPC_FAILURE", "Unable to reach RPC");
 - `TRANSACTION_FAILED`：已提交的交易在达到请求的确认级别之前失败。
 - `REDIRECT_TIMEOUT`：iOS 钱包未能及时重定向回应用。
 - `DECRYPTION_FAILED`：无法解密或解码 iOS 钱包回调。
+- `MISSING_CLIENT_CAPABILITY`：Kit 客户端缺少组合式函数所需的能力（例如 `planTransaction`、`sendTransaction` 或 `payer`）。通常是手动构建客户端时跳过了 `createSolanaClient()` 或相应的 Kit 插件。
 - `RPC_FAILURE`：RPC 发送、读取或确认失败。
 - `STORAGE_FAILURE`：无法读取或写入浏览器存储。
 

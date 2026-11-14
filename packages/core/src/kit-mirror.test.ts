@@ -31,9 +31,11 @@ describe("@vue-solana/core root", () => {
   });
 
   // The root also carries this package's own `errors` and `types` barrels. Kit
-  // uses four of their names, and two `export *` providing the same name is
-  // ambiguous — the name would vanish from the barrel rather than clash. These
-  // explicit re-exports are the only thing keeping them there.
+  // uses five of their names (`SolanaError`, `isSolanaError`,
+  // `SolanaErrorCode`, `TransactionStatus`, `isAbortError`), and two
+  // `export *` providing the same name is ambiguous — the name would vanish
+  // from the barrel rather than clash. These explicit re-exports are the only
+  // thing keeping them there.
   it("resolves the names kit shares with this package in favour of our own", () => {
     expect(core.SolanaError).toBe(SolanaError);
     expect(core.isSolanaError(new SolanaError("RPC_FAILURE", "boom"))).toBe(true);

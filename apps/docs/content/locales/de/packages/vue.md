@@ -684,6 +684,8 @@ Details zum Cache-Verhalten:
 - Eine `null`/`undefined`-Quelle deaktiviert das Composable und **leert** den Cache-Eintrag für diesen Key — auch wenn eine Komponente mit bereits deaktivierter Quelle mountet.
 - `useTrackedDataSwr` cached die vollständige `SolanaRpcResponse`-Hülle, erneut gemountete Komponenten stellen also sowohl den Wert als auch seinen Slot-Kontext wieder her.
 - Der Cache ist eine `Map` auf Modulebene. Namespace die Keys auf dem Server pro Anfrage oder rufe `clearSwrCache()` zwischen Anfragen auf, um ein Durchsickern zwischen Anfragen zu vermeiden.
+- `deleteSwrKey(key)` entfernt genau einen Eintrag über seinen **vollständigen** Cache-Key inklusive Adapter-Präfix (`deleteSwrKey("request:balance")`, nicht `"balance"`). Nutze es, wenn nur ein einzelner veralteter Wert verschwinden soll; `clearSwrCache()` leert weiterhin alles.
+- Der Cache hält höchstens 1024 Einträge und entfernt zuerst den ältesten Schreibvorgang. Ein erneutes Schreiben eines vorhandenen Keys (ein Remount oder ein revalidiertes Ergebnis) frischt seine Position auf, damit aktiv genutzte Keys nicht verdrängt werden, während ungenutzte verschwinden.
 
 Eine lauffähige Demonstration aller fünf Composables (inklusive SWR-Remount-Verhalten) gegen Devnet findest du in den Live-Data-Panels im [Vue-Vite-Beispiel](/de/examples/vue-vite).
 
@@ -815,7 +817,7 @@ const { transactionMessage, execute } = usePlanTransaction();
 const message = await execute(instructions);
 ```
 
-`useClientCapability("payer")` stellt sicher, dass eine Fähigkeit im Client installiert ist, und wirft beim Setup einen aussagekräftigen Fehler (mit Hook-Namen und Installationshinweis), wenn sie fehlt. Der Standard-Vue-Client erhält Planner sowie Plan-Signing- und Plan-Sending-Executor bereits von `solanaRpc()`; eigene Clients müssen `rpcTransactionPlanner()` und `rpcTransactionPlanSendingExecutor()` selbst installieren.
+`useClientCapability("payer")` stellt sicher, dass eine Fähigkeit im Client installiert ist, und wirft beim Setup einen aussagekräftigen Fehler (mit Hook-Namen und Installationshinweis), wenn sie fehlt. Der Fehler ist ein `MissingClientCapabilityError` — eine `SolanaError`-Unterklasse mit dem `code` `MISSING_CLIENT_CAPABILITY` —, sodass `isSolanaError()` ihn wie jeden anderen Paketfehler eingrenzt. Der Standard-Vue-Client erhält Planner sowie Plan-Signing- und Plan-Sending-Executor bereits von `solanaRpc()`; ein selbst gebauter Client (zum Beispiel mit `createClient()` und nur `rpcTransactionPlanner()`) muss `rpcTransactionPlanSendingExecutor()` und ein Signer-Plugin selbst installieren. Derselbe Code erscheint aus `usePlanTransaction()` / `useSendTransaction()`, wenn die Fähigkeit nach dem Setup verschwindet.
 
 ## Eine bestehende Signatur bestätigen
 
@@ -848,7 +850,7 @@ const { status, loading, error, refresh, stopPolling } = useSignatureStatus(
 
 Es gibt keine `commitment`-Option pro Aufruf: `getSignatureStatuses()` akzeptiert keine, Lesevorgänge verwenden also das Commitment, das im Endpoint hinterlegt ist. Setze es am Endpoint oder in `createSolanaPlugin()`. Für ein Commitment pro Aufruf nutze `useTransactionConfirmation()`.
 
-Das Polling nutzt `getSignatureStatuses()` in einem verketteten `setTimeout`, eine langsame RPC verzögert also den nächsten Tick, überlappt sich aber nie. Ein Aufruf von `stopPolling()` löscht den aktuellen Timer und verhindert weitere automatische Ticks — bis sich die beobachtete Signatur ändert, was das Polling für die neue Signatur neu startet. Ungültige Signaturen leeren veraltete `status`, setzen `error` und rufen weder RPC auf noch starten sie das Polling. Ungültige `pollIntervalMs`-Werte kleiner oder gleich `0` setzen einen `RPC_FAILURE`-`SolanaError` und starten kein Polling.
+Das Polling nutzt `getSignatureStatuses()` in einem verketteten `setTimeout`, eine langsame RPC verzögert also den nächsten Tick, überlappt sich aber nie. Ein Aufruf von `stopPolling()` löscht den aktuellen Timer und verhindert weitere automatische Ticks — bis sich die beobachtete Signatur ändert, was das Polling für die neue Signatur neu startet. Ungültige Signaturen leeren veraltete `status`, setzen `error` und rufen weder RPC auf noch starten sie das Polling. Ungültige `pollIntervalMs`-Werte kleiner oder gleich `0` setzen einen `INVALID_INPUT`-`SolanaError` (denselben Code, den core für fehlerhafte Optionen nutzt) und starten kein Polling.
 
 ## Beispiel-App
 

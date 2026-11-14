@@ -1,0 +1,36 @@
+# Vue Solana — 한국어
+
+> Vue Solana 문서의 한국어 번역입니다.
+
+Official docs: https://vue-solana-docs.vercel.app/ko
+Parent index: https://vue-solana-docs.vercel.app/llms.txt
+English docs: https://vue-solana-docs.vercel.app/llms.txt
+
+## 문서
+
+- [Vue Solana 문서](https://vue-solana-docs.vercel.app/ko): 개발자가 Vue와 Nuxt에서 Solana를 사용할 수 있게 돕는 라이브러리 문서입니다.
+- [시작하기](https://vue-solana-docs.vercel.app/ko/getting-started): Vue Solana 패키지를 설치하고 Vue 또는 Nuxt를 설정한 뒤 devnet에서 RPC 읽기를 테스트합니다.
+- [Agent Skill](https://vue-solana-docs.vercel.app/ko/agent-skill): AI 코딩 에이전트를 위한 Vue Solana Agent Skill 설치 방법입니다.
+- [문제 해결](https://vue-solana-docs.vercel.app/ko/troubleshooting): 일반적인 설정, TypeScript, 지갑, RPC, Nuxt 문제입니다.
+- [Vue 개발자를 위한 Solana](https://vue-solana-docs.vercel.app/ko/concepts/solana-for-vue-developers): Vue와 Nuxt 개발자를 위한 실용적인 Solana 개념입니다.
+- [클러스터](https://vue-solana-docs.vercel.app/ko/concepts/clusters): Solana 클러스터 이름, RPC 엔드포인트, faucet 안내입니다.
+- [RPC와 클러스터](https://vue-solana-docs.vercel.app/ko/guides/rpc-and-clusters): Solana 클러스터, RPC 엔드포인트, WebSocket 엔드포인트, client helper를 설정합니다.
+- [지갑](https://vue-solana-docs.vercel.app/ko/guides/wallets): 지갑을 검색하고, 활성 지갑을 선택하고, 연결/해제하고, capability를 확인합니다.
+- [계정 읽기](https://vue-solana-docs.vercel.app/ko/guides/account-reads): Vue 또는 Nuxt에서 잔액, 계정 데이터, 프로그램 계정, 서명 상태를 안전하게 읽습니다.
+- [트랜잭션](https://vue-solana-docs.vercel.app/ko/guides/transactions): Vue Solana로 트랜잭션에 서명하고, 전송하고, 확인하고, 상태를 처리합니다.
+- [Solana Pay](https://vue-solana-docs.vercel.app/ko/guides/solana-pay): Solana Pay 전송 요청을 만들고, QR 코드를 렌더링하고 스캔하며, reference로 정산을 확인합니다.
+- [메시지 서명](https://vue-solana-docs.vercel.app/ko/guides/message-signing): 온체인 트랜잭션을 만들지 않고 인증 또는 소유권 메시지에 서명합니다.
+- [오류](https://vue-solana-docs.vercel.app/ko/guides/errors): core helper와 Vue/Nuxt 컴포저블에서 정규화된 Solana 오류를 처리합니다.
+- [마이그레이션 가이드](https://vue-solana-docs.vercel.app/ko/guides/migration): Vue Solana 버전 간 마이그레이션 가이드입니다. v3에서 v4로 업그레이드, v2에서 v3으로 업그레이드, v1.x에서 v2로 마이그레이션을 다룹니다.
+- [E2E 테스팅](https://vue-solana-docs.vercel.app/ko/guides/e2e-testing): Playwright e2e 스위트를 실행하고 UI 테스트를 위해 Solana RPC, RPC 구독, 지갑을 모킹합니다.
+- [@vue-solana/core](https://vue-solana-docs.vercel.app/ko/packages/core): 프레임워크 독립 Solana 설정, RPC, 지갑 타입, 트랜잭션 helper입니다.
+- [@vue-solana/vue](https://vue-solana-docs.vercel.app/ko/packages/vue): Solana 앱을 위한 Vue 플러그인과 컴포저블입니다.
+- [@vue-solana/nuxt](https://vue-solana-docs.vercel.app/ko/packages/nuxt): Solana 앱을 위한 Nuxt 모듈입니다.
+- [Vue Vite 예제](https://vue-solana-docs.vercel.app/ko/examples/vue-vite): @vue-solana/vue를 위한 실행 가능한 Vue 3 및 Vite 예제 앱입니다.
+- [Nuxt 예제](https://vue-solana-docs.vercel.app/ko/examples/nuxt): @vue-solana/nuxt를 위한 실행 가능한 Nuxt 예제 앱입니다.
+- [쇼케이스](https://vue-solana-docs.vercel.app/ko/showcase): Vue Solana로 구축된 앱과 내 앱을 이 페이지에 등록하는 방법.
+- [로드맵](https://vue-solana-docs.vercel.app/ko/roadmap): Vue Solana의 계획된 기능과 개선 사항.
+- [소개](https://vue-solana-docs.vercel.app/ko/about): Vue Solana가 무엇인지, 누가 유지보수하는지, 프로젝트가 어떻게 운영되는지 설명합니다.
+- [문의](https://vue-solana-docs.vercel.app/ko/contact): 지원, 보안 보고, 언론 문의를 위해 Vue Solana 팀에 연락하는 방법.
+- [개인정보](https://vue-solana-docs.vercel.app/ko/privacy): 이 문서 사이트가 수집하는 것, 수집하지 않는 것, 애널리틱스 처리 방식.
+- [개발자 포털](https://vue-solana-docs.vercel.app/ko/developers): Vue Solana로 빌드하기 위한 퀵스타트, 기계 판독 가능 엔드포인트, 통합 규약.

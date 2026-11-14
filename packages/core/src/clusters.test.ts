@@ -31,7 +31,7 @@ describe("clusters", () => {
     expect(getWebSocketEndpoint("http://127.0.0.1:8899")).toBe("ws://127.0.0.1:8899/");
   });
 
-  it("throws INVALID_ADDRESS for malformed endpoints instead of a raw TypeError", () => {
+  it("throws INVALID_INPUT for malformed endpoints instead of a raw TypeError", () => {
     expect(() => getWebSocketEndpoint("not-a-url")).toThrowError(SolanaError);
 
     try {

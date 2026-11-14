@@ -21,11 +21,15 @@ Solana RPC 没有 API 密钥：composables 直接与公开的 devnet/mainnet 端
 
 本文档网站公开一个已文档化的机器表面，无需注册或密钥：
 
-- `/llms.txt` — 面向代理的全部文档页面索引。
-- `/llms-full.txt` — 作为单一 Markdown 文档的完整文档语料库。
+- `/llms.txt` — 按章节分组的英文小索引，包含指向各语言索引的链接。
+- `/guides/llms.txt`、`/packages/llms.txt`、`/concepts/llms.txt`、`/examples/llms.txt` — 只覆盖单个章节的更窄索引。
+- `/de/llms.txt` … `/zh/llms.txt` — 各语言的翻译文档索引。
+- `/llms-full.txt` — 作为单一 Markdown 文档的英文文档（可选；逐页 `.md` URL 更小）。
 - `/openapi.json` — 覆盖所有端点、RFC 9457 错误模型、版本策略和速率限制约定的 OpenAPI 3.1 规范。
 - 每个文档页面均支持 `Accept: text/markdown` 内容协商（或在 URL 后附加 `.md`）。
 - `/sitemap.xml` — 完整 URL 列表。
+
+Markdown 响应带有 `Link` 头，指向最具体的 `llms.txt` 索引和该页面的 `.md` URL。
 
 错误遵循 RFC 9457（`application/problem+json`），并带有 `recovery` 扩展对象；未知路径的 404 在以 `Accept: text/markdown` 请求时返回 Markdown 恢复正文。
 

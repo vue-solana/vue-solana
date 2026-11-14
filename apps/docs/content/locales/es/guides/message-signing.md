@@ -124,6 +124,8 @@ const message = computed(() => {
       return "Esta wallet no admite firma de mensajes.";
     case "USER_REJECTED":
       return "La firma del mensaje fue rechazada.";
+    case "WALLET_FAILURE":
+      return "La wallet no pudo firmar el mensaje.";
     case "INVALID_SIGNATURE":
       return "La wallet devolvió una firma inválida.";
     default:

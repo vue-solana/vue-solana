@@ -39,6 +39,7 @@ const error = new SolanaError("RPC_FAILURE", "Unable to reach RPC");
 - `TRANSACTION_FAILED`: 送信したトランザクションが、要求された commitment に到達する前にエラーになりました。
 - `REDIRECT_TIMEOUT`: iOS ウォレットが時間内にアプリへリダイレクトしませんでした。
 - `DECRYPTION_FAILED`: iOS ウォレットのコールバックを復号またはデコードできませんでした。
+- `MISSING_CLIENT_CAPABILITY`: コンポーザブルが必要とする capability（たとえば `planTransaction`、`sendTransaction`、`payer`）が Kit クライアントにありません。多くの場合、`createSolanaClient()` や対応する Kit プラグインを省いて手作業で組み立てたクライアントが原因です。
 - `RPC_FAILURE`: RPC の送信、読み取り、または確認が失敗しました。
 - `STORAGE_FAILURE`: ブラウザストレージの読み取りまたは書き込みができませんでした。
 

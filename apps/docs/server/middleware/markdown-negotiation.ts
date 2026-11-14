@@ -2,11 +2,10 @@ import { stringify } from "minimark/stringify";
 
 import {
   API_VERSION,
-  acceptsHtml,
+  agentLinkHeader,
   createAgent404Markdown,
   createProblemDetails,
-  isMachineReadablePath,
-  isWildcardishAccept,
+  isNegotiablePageRequest,
   markdownNegotiationVary,
   negotiateFormat,
   rateLimitHeaders,
@@ -55,20 +54,16 @@ export default defineEventHandler(async (event) => {
 
   const acceptHeader = getRequestHeader(event, "accept");
   const hasMdSuffix = path.endsWith(".md");
-  const acceptsMarkdown = negotiateFormat(acceptHeader) === "markdown";
-  const wantsHtmlError = acceptsHtml(acceptHeader) && !isWildcardishAccept(acceptHeader);
+
+  if (!isNegotiablePageRequest(path, acceptHeader)) {
+    return;
+  }
 
   if (hasMdSuffix) {
     path = path.slice(0, -3) || "/";
   }
 
-  if (
-    isMachineReadablePath(path) ||
-    isWildcardishAccept(acceptHeader) ||
-    (!hasMdSuffix && !acceptsMarkdown && wantsHtmlError)
-  ) {
-    return;
-  }
+  const acceptsMarkdown = negotiateFormat(acceptHeader) === "markdown";
 
   // `getResponseHeader` hands back whatever Node stored, so an array Vary arrives
   // as a string only after coercion; a multi-value Vary joins with "," as it wants.
@@ -77,6 +72,11 @@ export default defineEventHandler(async (event) => {
     "Vary",
     markdownNegotiationVary(String(getResponseHeader(event, "Vary") ?? "")),
   );
+
+  // llmstxt.org v2: pair every negotiated page with the most specific
+  // llms.txt index and with its markdown URL, so an agent that lands on a
+  // page can discover both without guessing.
+  setResponseHeader(event, "Link", agentLinkHeader(path));
 
   const page = await queryCollection(event, "content").path(path).first();
 

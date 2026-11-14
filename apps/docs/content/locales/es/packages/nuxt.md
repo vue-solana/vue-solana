@@ -106,12 +106,16 @@ El módulo autoimporta estos composables desde subpaths directos `@vue-solana/vu
 - `useSolanaQrCode()`: renderiza una URL de Solana Pay como código QR SVG.
 - `useSolanaQrScanner()`: escanea códigos QR de Solana Pay con la cámara y `BarcodeDetector`.
 
-Para cache keying entre montajes, los adaptadores SWR no se autoimportan. Importalos explícitamente desde el subpath del paquete Vue:
+Para cache keying entre montajes, los adaptadores SWR y sus helpers de caché se autoimportan junto a los composables que envuelven: `useSolanaRequestSwr()`, `useSolanaSubscriptionSwr()`, `useSolanaTrackedDataSwr()`, `clearSwrCache()` y `deleteSwrKey()`. Son alias de los exports de `@vue-solana/vue/swr`:
+
+```ts
+const balance = useSolanaRequestSwr(`balance:${someAddress}`, rpc.getBalance(someAddress));
+```
+
+También puedes importarlos explícitamente desde el subpath del paquete Vue:
 
 ```ts
 import { useRequestSwr } from "@vue-solana/vue/swr";
-
-const balance = useRequestSwr(`balance:${someAddress}`, rpc.getBalance(someAddress));
 ```
 
 Consulta [Data Fetching Composables](/packages/vue#data-fetching-composables) para la semántica completa de los composables de request, subscription, tracked-data y SWR-cache.
@@ -124,6 +128,11 @@ Consulta [Data Fetching Composables](/packages/vue#data-fetching-composables) pa
 - `useSolanaSendTransaction()` / `useSolanaSendTransactions()`: usa el planner y el executor oficial instalados por el cliente por defecto; planifica, firma, envia y espera `confirmed` sin popup de wallet. Configura un `payer` en un plugin Vue solo de cliente; usa `useSolanaSignAndSendTransaction(s)` cuando la wallet conectada deba aprobar cada transacción.
 
 Estos son aliases Nuxt para los composables de Vue.
+
+- `useSolanaClientCapability()`: falla rápido cuando al cliente Kit instalado le falta una capacidad requerida.
+- `tryUseSolana()`: accessor seguro que no lanza excepciones del contexto Solana inyectado.
+- `clearSwrCache()`: vacía la caché SWR de nivel de módulo (ver [Data Fetching Composables](/packages/vue#data-fetching-composables)).
+- `deleteSwrKey()`: desaloja una entrada SWR cacheada por su clave completa, incluido el prefijo del adaptador (ver [Data Fetching Composables](/packages/vue#data-fetching-composables)).
 
 El cliente por defecto creado por el módulo compone los plugins oficiales `solanaRpc()` y `rpcAirdrop()` cuando no hay `commitment` configurado (un `commitment` configurado construye el mismo stack explícitamente para que llegue a la capa RPC); `solanaRpc()` instala por si mismo el planner de transacciones y los ejecutores de firma y envio de planes. El fallback custom anterior no se usa. `useSolanaSendTransaction()` y `useSolanaSendTransactions()` exponen la capacidad de envio oficial, pero el módulo no configura un payer porque `payer` y `payerSecretKey` se omiten de `ModuleOptions`. Su estado `sent` se alcanza cuando el executor oficial completa la operación de envio y confirmación en `confirmed`.
 

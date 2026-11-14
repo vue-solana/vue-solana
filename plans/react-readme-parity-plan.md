@@ -1,6 +1,6 @@
 # React README Parity Plan
 
-Tracks closing the remaining gaps against `@solana/react` (version 8.3.0): the feature gaps from `plans/react-parity-plan.md` plus documentation depth our package READMEs do not cover. The TanStack Query adapter is out of scope; the parity plan already records it as not implemented.
+Tracks closing the remaining gaps against `@solana/react` (version 8.3.0): the feature gaps from `plans/archived/react-parity-plan.md` plus documentation depth our package READMEs do not cover. The TanStack Query adapter is out of scope; the parity plan already records it as not implemented.
 
 When a plan item is implemented, strike it through. When every item under a feature is implemented, remove the plan items and leave only the checked feature title.
 

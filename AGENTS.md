@@ -36,12 +36,12 @@ Implemented files:
 
 - `src/types.ts`: shared `SolanaConfig`, `SolanaContext`, `SolanaWallet`, and transaction types.
 - `src/clusters.ts`: cluster names and endpoint resolution (`mainnet` with a `mainnet-beta` alias).
-- `src/kit.ts`: `createSolanaClient()` — the official Kit stack (`solanaRpc`, `rpcAirdrop`) plus `payer` / `payerSecretKey` resolution. The `kit` subpath is a full `export * from "@solana/kit"` mirror (values + types); the root barrel resolves the only clashing names (`SolanaError`, `SolanaErrorCode`, `isSolanaError`, `TransactionStatus`) to this package's own.
+- `src/kit.ts`: `createSolanaClient()` — the official Kit stack (`solanaRpc`, `rpcAirdrop`) plus `payer` / `payerSecretKey` resolution. The `kit` subpath is a full `export * from "@solana/kit"` mirror (values + types); the root barrel resolves the only clashing names (`SolanaError`, `SolanaErrorCode`, `isSolanaError`, `TransactionStatus`, `isAbortError`) to this package's own.
 - `src/rpc.ts`: `createSolanaContext()`.
 - `src/wallet.ts`: wallet connection assertions.
 - `src/transaction.ts`: `signAndSendTransaction()` and `confirmTransactionSignature()` helpers.
 - `src/action.ts`: reactive async action store shared by the Vue composables.
-- `src/address.ts`: address input parsing helpers.
+- `src/address.ts`: address input parsing helpers (ref/getter unwrapping is depth-capped at 32 levels, so a cyclic input throws `INVALID_ADDRESS` instead of overflowing the stack).
 - `src/errors.ts`: `SolanaError` codes shared by the packages.
 - `src/timeout.ts`: `withTimeout()` helper.
 - `src/token-accounts.ts`: token account info types.
@@ -97,6 +97,8 @@ Implemented files:
 - `src/index.ts`: package exports.
 
 Every composable in `src/composables/` also has a top-level subpath re-export in `src/` (for example `src/useSendTransactions.ts`) so Nuxt can auto-import it by name.
+
+Error-code policy for the action composables: `useExecution()` (the shared supersede-and-report state machine) normalizes any failure that is not already a `SolanaError` to `RPC_FAILURE` by default, because most callers do network work. It takes a `failureCode` option for the exceptions: `useSignMessage()`, `useSignIn()`, and `useSignTransactions()` pass `WALLET_FAILURE`, since they only talk to the wallet and a transport failure there is not a network error. The sign-and-send pair keeps the RPC default because it does reach the network. Specific codes thrown before the wallet or RPC call (`NO_WALLET_SELECTED`, `WALLET_NOT_CONNECTED`, `WALLET_FEATURE_UNSUPPORTED`, `USER_REJECTED`, `INVALID_SIGNATURE`) pass through unchanged. Malformed _options_ are `INVALID_INPUT`, not a transport code — `useSignatureStatus()` reports `pollIntervalMs <= 0` that way.
 
 Kit 8 reactive-store note: the stores from `@solana/subscribable` call Node's `setMaxListeners` on `AbortSignal`, so tests exercising them (or composables built on them) must run under the `node` vitest environment — tag those files with `// @vitest-environment node`.
 
@@ -191,6 +193,7 @@ Known remaining weight, deliberately not fixed: the iOS wallet path is ~38.9 KB 
 - `examples/vue-vite/README.md` and `examples/nuxt/README.md`: runnable example app walkthroughs.
 - `apps/docs/content/guides/`: the docs site guides, each mirrored in `apps/docs/content/locales/{de,es,fr,ja,ko,zh}/guides/`. Solana Pay lives in `solana-pay.md` (transfer request + QR, scan/validate, settlement by reference); the example apps' `SolanaPayPanel` / `SolanaPayScannerPanel` panels and the matching e2e specs are the runnable counterpart.
 - `apps/docs/content/showcase.md`: the "apps built with Vue Solana" page (`/showcase`, one file per locale like every other doc). App cards are MDC blocks: `::ShowcaseApp{name="..." url="..." logo="/..." tag="..."} … ::` resolves to `apps/docs/app/components/content/ShowcaseApp.vue` — `@nuxt/content` v3 registers everything in `app/components/content/` with `pathPrefix: false`, so the file name is the MDC tag name. The block's slot text is the per-locale description; the component's own labels come from the `showcase.*` i18n branch. Adding an app = one more MDC block in each of the seven `showcase.md` files, with the logo dropped into `apps/docs/public/`. Submissions arrive through the `.github/ISSUE_TEMPLATE/showcase-app.yml` issue form (labels `showcase`, a repo label created via `gh label create` — form submission fails on labels that do not exist); the page's "Get Your App Listed" CTA links to `https://github.com/vue-solana/vue-solana/issues/new?template=showcase-app.yml`, an absolute external URL so `ULink`'s locale rewriting skips it (unlike the `/openapi.json` case).
+- `apps/docs/scripts/generate-llms.mjs`: writes the llmstxt.org v2 agent surface into `apps/docs/public/` — a small English `llms.txt` grouped by section, `{guides,packages,concepts,examples}/llms.txt` for narrower reads, `{de,es,fr,ja,ko,zh}/llms.txt` per locale, and an English-only `llms-full.txt` (optional one-shot corpus; the pre-v2 all-locale file was 1.86 MB / ~465k tokens). `server/middleware/markdown-negotiation.ts` adds `Link: rel="describedby"` / `rel="alternate"; type="text/markdown"` to markdown responses via `agentLinkHeader()`. `apps/docs/llms-output.test.ts` guards completeness and size budgets, so never make `llms-full.txt` multilingual again.
 
 The manual testing guide explains:
 
@@ -207,7 +210,7 @@ The manual testing guide explains:
 
 ## Verification Status
 
-All CI gates pass as of the v2.3.0 packages:
+All CI gates pass on the current release line:
 
 ```sh
 pnpm format
@@ -275,7 +278,7 @@ Repeat per release rather than filing a one-time task. Two things to check by re
 
 A branch can ship a prerelease to npm without touching `main`, using Changesets pre-release mode. `pnpm changeset pre enter rc` writes `.changeset/pre.json` (`{ mode: "pre", tag: "rc" }`), `pnpm version-packages` then bumps core/vue/nuxt to the pending prerelease (`4.0.0-rc.0`) and writes CHANGELOG entries, and `pnpm changeset publish` publishes under the `rc` dist-tag. `latest` keeps pointing at the last stable release.
 
-`Taskfile.yml` (go-task, `brew install go-task`) wraps this flow: `task rc:status`, `rc:enter`, `rc:bump`, `rc:verify`, `rc:publish`, `rc:dispatch`, `rc:exit`, `rc:finalize`, `rc:reset`. The tasks only wrap the commands below — the Taskfile is not a second source of truth. The dist-tag is per-run configurable (`task rc:enter RC_TAG=next`). `rc:bump` writes a throwaway changeset (`.changeset/rc-bump.md`, gitignored) because Changesets refuses to bump a candidate number without a pending changeset. `rc:reset` restores the pre-candidate state by checking out the package.json/CHANGELOG files from the commit that created `pre.json`.
+`Taskfile.yml` (go-task, `brew install go-task`) wraps this flow: `task rc:status`, `rc:enter`, `rc:bump`, `rc:verify`, `rc:publish`, `rc:dispatch`, `rc:exit`, `rc:finalize`, `rc:reset`. The tasks only wrap the commands below — the Taskfile is not a second source of truth. The dist-tag is per-run configurable (`task rc:enter RC_TAG=next`). `rc:bump` writes a throwaway changeset (`.changeset/rc-bump.md`, gitignored) because Changesets refuses to bump a candidate number without a pending changeset. `rc:reset` restores the pre-candidate state by checking out the package.json/CHANGELOG files from the commit that created `pre.json`. `rc:finalize` is destructive (it exits pre mode and consumes the pending changeset), so it has two preconditions: `CONFIRM=1` must be passed, and at least one pending changeset must exist. Both fail before any file is touched, which is why it refuses silently-looking invocations with "precondition not met" instead of bumping.
 
 Rules that are easy to get wrong:
 
@@ -308,7 +311,7 @@ Rules that are easy to get wrong:
 - Never introduce a second copy of `@solana/kit` (peer/hoisting) — this is the highest-value guard.
 - Periodically audit whether `bs58`, `buffer`, and `tweetnacl` remain necessary as direct deps after refactors (tweetnacl is currently required for iOS ECDH in `packages/core/src/ios-wallet/crypto.ts`).
 
-Not needed on a version bump alone: `llms.txt` / `llms-full.txt` (both are generated by the `build` and `generate` scripts via `pnpm llms`, and they are tracked, so commit the regenerated files only when the English docs content actually changed), `skills-lock.json` (an orphaned agent-tooling lockfile; nothing in the repo reads it), and `pnpm test:e2e` (Playwright only serves `examples/vue-vite` and `examples/nuxt`).
+Not needed on a version bump alone: the generated llms surface (`llms.txt`, `llms-full.txt`, `<section>/llms.txt`, and `<locale>/llms.txt` — all written by `pnpm llms`, which `build`/`generate` run first, and all tracked, so commit the regenerated files only when the English docs content actually changed), `skills-lock.json` (an orphaned agent-tooling lockfile; nothing in the repo reads it), and `pnpm test:e2e` (Playwright only serves `examples/vue-vite` and `examples/nuxt`).
 
 The `tweetnacl` entries in `apps/docs/nuxt.config.ts` `optimizeDeps` / `needsInterop` are **not** dead and must not be deleted. `tweetnacl` left the kit surface in 2.6.0 but is still a real runtime dependency: `packages/core/src/ios-wallet/crypto.ts` uses `nacl.box.before/after/open` for ECDH, and `packages/vue/src/plugin/wallet-registry.ts` statically imports that module, so tweetnacl's implementation is inlined in the docs client bundle. The Nuxt module already merges the same entries into `vite.optimizeDeps` from `VITE_OPTIMIZE_DEPS` / `VITE_NEEDS_INTEROP` (deduped through a `Set`), so the app-level copies are redundant but harmless.
 
@@ -328,8 +331,9 @@ Plans live in the top-level `plans/` directory, separate from the knowledge bund
 
 ## Suggested Next Tasks
 
-- `apps/docs` is pinned to `3.0.0` and `3.0.1` is already live, so the pin is one release behind (read the real value from `apps/docs/package.json`, not from here). Per the Post-Publish Release Checklist the catch-up is steps 1-2 only: bump the exact pin and commit `pnpm-lock.yaml`. The old "`payerSecretKey` fix missing from the pin" item is closed — commit `1456821` is an ancestor of `@vue-solana/core@3.0.0`, so the current pin already has it.
-- A `major` changeset (`.changeset/bundle-size-trim.md`) is pending and will publish 4.0.0: the core root barrel dropped `Buffer`/`installSolanaBufferPolyfill` (breaking; use the `@vue-solana/core/buffer-polyfill` subpath) and core, vue, and nuxt tarballs exclude `.d.mts`. `@vue-solana/nuxt` takes the major only through dependency propagation.
+- `apps/docs` is pinned to the latest published release. Read the current value from `apps/docs/package.json`; never trust a version number written in this file. Keep it current per the Post-Publish Release Checklist.
+- The 4.0.0 bundle-size trim has shipped: the core root barrel no longer re-exports `Buffer`/`installSolanaBufferPolyfill` (use the `@vue-solana/core/buffer-polyfill` subpath) and the tarballs exclude `.d.mts`. The invariants in "Bundle and Tarball Size Invariants" still govern any barrel, `exports` map, or `files` change.
+- The error-code and docs-agent-surface review follow-ups are closed; the record lives in `plans/archived/error-codes-agent-surface-followups.md`. Do not re-open it for a new review — start a new plan file.
 - Follow `apps/docs/content/roadmap.md` for upcoming features (core composables, wallet features, Ecosystem integrations, etc.).
 - `plans/native-wallet-plan.md` is complete except for one open item, "Future iOS Wallet Support" (line 19). Mobile native wallets, Android MWA, iOS browser wallets, and desktop native wallets all shipped through the unified `useWallets()` flow.
 - Re-check the `@solana/kit` and `@solana/kit-plugin-rpc` peer versions on every new release.
