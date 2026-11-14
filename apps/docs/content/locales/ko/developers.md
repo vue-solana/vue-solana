@@ -21,11 +21,15 @@ Solana RPC에는 API 키가 없습니다: 컴포저블은 공개 devnet/mainnet 
 
 이 문서 사이트는 가입이나 키 없이 문서화된 기계 표면을 노출합니다:
 
-- `/llms.txt` — 에이전트를 위한 모든 문서 페이지의 인덱스.
-- `/llms-full.txt` — 전체 문서 코퍼스를 하나의 마크다운 문서로.
+- `/llms.txt` — 섹션별로 묶인 작은 영어 인덱스이며, 언어별 인덱스 링크를 포함합니다.
+- `/guides/llms.txt`, `/packages/llms.txt`, `/concepts/llms.txt`, `/examples/llms.txt` — 한 섹션만 다루는 더 좁은 인덱스입니다.
+- `/de/llms.txt` … `/zh/llms.txt` — 언어별 번역 문서 인덱스입니다.
+- `/llms-full.txt` — 영어 문서를 하나의 마크다운 문서로 합친 것입니다(선택 사항. 페이지별 `.md` URL이 더 작습니다).
 - `/openapi.json` — 모든 엔드포인트, RFC 9457 오류 모델, 버저닝 정책, rate limit 규약을 다루는 OpenAPI 3.1 스펙.
 - 모든 문서 페이지에서 `Accept: text/markdown` 협상 (또는 URL에 `.md` 추가).
 - `/sitemap.xml` — 전체 URL 목록.
+
+마크다운 응답에는 가장 구체적인 `llms.txt` 인덱스와 페이지의 `.md` URL을 가리키는 `Link` 헤더가 포함됩니다.
 
 오류는 `recovery` 확장 객체와 함께 RFC 9457(`application/problem+json`)을 따릅니다; 알 수 없는 경로의 404는 `Accept: text/markdown`으로 요청하면 마크다운 복구 본문을 반환합니다.
 

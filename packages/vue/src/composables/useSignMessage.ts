@@ -10,7 +10,9 @@ export function useSignMessage() {
   const { wallet } = useWallet();
   const signedMessage = ref<Uint8Array | null>(null);
   const signature = ref<Uint8Array | null>(null);
-  const { status, loading, error, execute } = useExecution<SignMessageStatus>("signing");
+  const { status, loading, error, execute } = useExecution<SignMessageStatus>("signing", {
+    failureCode: "WALLET_FAILURE",
+  });
 
   function sign(message: Uint8Array): Promise<SolanaSignMessageResult> {
     signedMessage.value = null;

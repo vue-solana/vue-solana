@@ -683,6 +683,8 @@ const balance = useRequestSwr(`balance:${someAddress}`, rpc.getBalance(someAddre
 - `null`/`undefined` 소스는 컴포저블을 비활성화하고 해당 키의 캐시 항목을 **지웁니다**. 컴포넌트가 이미 비활성화된 소스로 마운트되는 경우에도 마찬가지입니다.
 - `useTrackedDataSwr`는 전체 `SolanaRpcResponse` 봉투를 캐시하므로, 리마운트된 컴포넌트는 값과 slot context를 모두 복원합니다.
 - 캐시는 모듈 수준 `Map`입니다. 서버에서는 요청별로 키에 네임스페이스를 지정하거나 요청 사이에 `clearSwrCache()`를 호출하여 요청 간 누수를 방지하세요.
+- `deleteSwrKey(key)`는 adapter prefix를 포함한 **전체** cache key로 항목 하나를 제거합니다(`deleteSwrKey("request:balance")`이며 `"balance"`가 아닙니다). 오래된 값을 하나만 지워야 할 때 사용하고, `clearSwrCache()`는 여전히 전부 비웁니다.
+- 캐시는 최대 1024개 항목을 보관하며 가장 오래된 write부터 제거합니다. 기존 key를 다시 write하면(remount 또는 재검증된 결과) 위치가 최신으로 갱신되므로, 활발히 사용되는 key는 남고 유휴 key가 제거됩니다.
 
 devnet에 대한 5개 컴포저블 모두의 실행 가능한 데모(SWR 리마운트 동작 포함)는 [Vue Vite 예제](/ko/examples/vue-vite)의 Live Data Panels를 참고하세요.
 
@@ -814,7 +816,7 @@ const { transactionMessage, execute } = usePlanTransaction();
 const message = await execute(instructions);
 ```
 
-`useClientCapability("payer")`는 클라이언트에 capability가 설치되어 있는지 확인하고, 없으면 setup 중에 설명적인 오류(훅 이름과 설치 방법 명시)를 throw합니다. default Vue client는 official planner와 transaction-sending executor를 이미 설치합니다. custom client는 `rpcTransactionPlanner()`와 `rpcTransactionPlanSendingExecutor()`를 직접 설치해야 합니다.
+`useClientCapability("payer")`는 클라이언트에 capability가 설치되어 있는지 확인하고, 없으면 setup 중에 설명적인 오류(훅 이름과 설치 방법 명시)를 throw합니다. 이 오류는 `code`가 `MISSING_CLIENT_CAPABILITY`인 `SolanaError` 하위 클래스 `MissingClientCapabilityError`이므로, `isSolanaError()`로 다른 패키지 오류처럼 좁힐 수 있습니다. default Vue client는 `solanaRpc()`에서 planner와 plan-signing·plan-sending executor를 이미 받습니다. 직접 만든 client(예: `createClient()`와 `rpcTransactionPlanner()`만 사용)는 `rpcTransactionPlanSendingExecutor()`와 signer plugin을 직접 설치해야 합니다. setup 이후 capability가 사라지면 `usePlanTransaction()` / `useSendTransaction()`에서도 같은 코드가 나타납니다.
 
 ## 기존 Signature Confirm
 
@@ -847,7 +849,7 @@ const { status, loading, error, refresh, stopPolling } = useSignatureStatus(
 
 호출당 `commitment` 옵션은 없습니다. `getSignatureStatuses()`가 이를 받지 않으므로 읽기는 endpoint에 설정된 commitment를 사용합니다. endpoint 또는 `createSolanaPlugin()`에서 설정하세요. 호출당 commitment가 필요하면 `useTransactionConfirmation()`을 사용하세요.
 
-Polling은 체인된 `setTimeout`으로 `getSignatureStatuses()`를 사용하므로, 느린 RPC는 다음 tick을 지연시킬 뿐 절대 겹치지 않습니다. `stopPolling()`은 현재 타이머를 clear하고 이후 자동 tick을 막습니다 — 단 감시 중인 signature가 바뀌면 새 signature에 대한 polling이 다시 시작됩니다. 잘못된 signature는 stale `status`를 clear하고 `error`를 설정하며 RPC를 호출하거나 polling을 시작하지 않습니다. `0` 이하의 잘못된 `pollIntervalMs` 값은 코드가 `RPC_FAILURE`인 `SolanaError`를 설정하고 polling을 시작하지 않습니다.
+Polling은 체인된 `setTimeout`으로 `getSignatureStatuses()`를 사용하므로, 느린 RPC는 다음 tick을 지연시킬 뿐 절대 겹치지 않습니다. `stopPolling()`은 현재 타이머를 clear하고 이후 자동 tick을 막습니다 — 단 감시 중인 signature가 바뀌면 새 signature에 대한 polling이 다시 시작됩니다. 잘못된 signature는 stale `status`를 clear하고 `error`를 설정하며 RPC를 호출하거나 polling을 시작하지 않습니다. `0` 이하의 잘못된 `pollIntervalMs` 값은 코드가 `INVALID_INPUT`인 `SolanaError`(core가 잘못된 옵션에 사용하는 것과 같은 코드)를 설정하고 polling을 시작하지 않습니다.
 
 ## 예제 앱
 

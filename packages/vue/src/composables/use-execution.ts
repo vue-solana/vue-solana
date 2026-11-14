@@ -1,4 +1,8 @@
-import { normalizeSolanaError, type SolanaError } from "@vue-solana/core/errors";
+import {
+  normalizeSolanaError,
+  type SolanaError,
+  type SolanaErrorCode,
+} from "@vue-solana/core/errors";
 import {
   computed,
   onScopeDispose,
@@ -33,13 +37,22 @@ export interface UseExecution<TStatus extends string> {
 /**
  * `idle` and `error` are the only statuses every caller shares, so they default
  * here and only a hook with a different vocabulary passes them (`useClientAction`).
+ *
+ * `failureCode` is the code for a failure that is not already a `SolanaError`.
+ * It defaults to `RPC_FAILURE` because most callers do network work; composables
+ * whose only failure mode is wallet work (`useSignMessage`, `useSignIn`,
+ * `useSignTransactions`) pass `WALLET_FAILURE` so an app does not render a
+ * network error for a wallet that never reached the network. Composables that
+ * mix both (the sign-and-send pair) keep the RPC default and rely on the
+ * specific codes thrown before the RPC call.
  */
 export function useExecution<TStatus extends string>(
   busy: TStatus,
-  statuses: { error?: TStatus; idle?: TStatus } = {},
+  statuses: { error?: TStatus; idle?: TStatus; failureCode?: SolanaErrorCode } = {},
 ): UseExecution<TStatus> {
   const errorStatus = statuses.error ?? ("error" as TStatus);
   const idleStatus = statuses.idle ?? ("idle" as TStatus);
+  const failureCode = statuses.failureCode ?? "RPC_FAILURE";
   const status: ShallowRef<TStatus> = shallowRef(idleStatus);
   const error = shallowRef<SolanaError | null>(null);
   let id = 0;
@@ -62,7 +75,7 @@ export function useExecution<TStatus extends string>(
 
       return result;
     } catch (cause) {
-      const normalizedError = normalizeSolanaError(cause, "RPC_FAILURE");
+      const normalizedError = normalizeSolanaError(cause, failureCode);
 
       if (currentId === id) {
         error.value = normalizedError;

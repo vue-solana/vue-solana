@@ -124,6 +124,8 @@ const message = computed(() => {
       return "This wallet does not support message signing.";
     case "USER_REJECTED":
       return "The message signature was rejected.";
+    case "WALLET_FAILURE":
+      return "The wallet could not sign the message.";
     case "INVALID_SIGNATURE":
       return "The wallet returned an invalid signature.";
     default:

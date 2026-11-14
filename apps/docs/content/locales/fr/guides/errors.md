@@ -39,6 +39,7 @@ const error = new SolanaError("RPC_FAILURE", "Unable to reach RPC");
 - `TRANSACTION_FAILED` : une transaction soumise a échoué avant d'atteindre le commitment demandé.
 - `REDIRECT_TIMEOUT` : un wallet iOS n'a pas redirigé vers l'app à temps.
 - `DECRYPTION_FAILED` : un callback de wallet iOS n'a pas pu être déchiffré ou décodé.
+- `MISSING_CLIENT_CAPABILITY` : le client Kit n'a pas une capacité requise par un composable (par exemple `planTransaction`, `sendTransaction` ou `payer`). Il s'agit généralement d'un client construit à la main qui a omis `createSolanaClient()` ou le plugin Kit correspondant.
 - `RPC_FAILURE` : un envoi, une lecture ou une confirmation RPC a échoué.
 - `STORAGE_FAILURE` : le stockage du navigateur n'a pas pu être lu ou écrit.
 

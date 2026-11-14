@@ -683,6 +683,8 @@ Detalles del comportamiento de caché:
 - Una fuente `null`/`undefined` desactiva el composable y **limpia** la entrada en caché de esa clave, incluso cuando un componente se monta con la fuente ya desactivada.
 - `useTrackedDataSwr` guarda en caché el sobre `SolanaRpcResponse` completo, así que los componentes remontados restauran tanto el valor como su contexto de slot.
 - La caché es un `Map` a nivel de módulo. En el servidor, dale namespace a las claves por petición o llama a `clearSwrCache()` entre peticiones para evitar fugas entre peticiones.
+- `deleteSwrKey(key)` desaloja una entrada por su clave de caché **completa**, incluido el prefijo del adaptador (`deleteSwrKey("request:balance")`, no `"balance"`). Úsalo cuando deba desaparecer un único valor obsoleto; `clearSwrCache()` sigue vaciándolo todo.
+- La caché guarda como máximo 1024 entradas y desaloja primero la escritura más antigua. Reescribir una clave existente (un remontaje o un resultado revalidado) refresca su posición, así que las claves en uso activo no se desalojan mientras las inactivas sí.
 
 Para una demostración ejecutable de los cinco composables (incluido el comportamiento SWR en remontajes) contra devnet, consulta los Live Data Panels del [Vue Vite example](/examples/vue-vite).
 
@@ -814,7 +816,7 @@ const { transactionMessage, execute } = usePlanTransaction();
 const message = await execute(instructions);
 ```
 
-`useClientCapability("payer")` comprueba que una capacidad está instalada en el cliente y lanza un error descriptivo (indicando el hook y cómo instalarla) durante el setup cuando falta. El cliente Vue por defecto ya instala el planner y el executor de envio oficiales; los clientes custom deben instalar `rpcTransactionPlanner()` y `rpcTransactionPlanSendingExecutor()`.
+`useClientCapability("payer")` comprueba que una capacidad está instalada en el cliente y lanza un error descriptivo (indicando el hook y cómo instalarla) durante el setup cuando falta. El error es un `MissingClientCapabilityError` — una subclase de `SolanaError` cuyo `code` es `MISSING_CLIENT_CAPABILITY` —, así que `isSolanaError()` lo estrecha como cualquier otro error del paquete. El cliente Vue por defecto ya recibe el planner y los ejecutores de firma y envío de planes de `solanaRpc()`; un cliente construido a mano (por ejemplo con `createClient()` y solo `rpcTransactionPlanner()`) debe instalar `rpcTransactionPlanSendingExecutor()` y un plugin de signer por su cuenta. El mismo código aparece desde `usePlanTransaction()` / `useSendTransaction()` cuando la capacidad desaparece después del setup.
 
 ## Confirmar una firma existente
 
@@ -847,7 +849,7 @@ const { status, loading, error, refresh, stopPolling } = useSignatureStatus(
 
 No existe una opción `commitment` por llamada: `getSignatureStatuses()` no acepta ninguna, así que las lecturas usan el commitment incluido en el endpoint. Configúralo en el endpoint o en `createSolanaPlugin()`. Para un commitment por llamada usa `useTransactionConfirmation()`.
 
-El sondeo usa `getSignatureStatuses()` con un `setTimeout` encadenado, así que un RPC lento retrasa el siguiente tick pero nunca se solapa consigo mismo. Llamar a `stopPolling()` limpia el temporizador actual e impide más ticks automáticos — hasta que la firma observada cambia, lo que reinicia el sondeo para la nueva firma. Las firmas inválidas limpian `status` obsoleto, establecen `error` y no llaman a RPC ni inician sondeo. Los valores inválidos de `pollIntervalMs` menores o iguales a `0` establecen un `SolanaError` con código `RPC_FAILURE` y no inician sondeo.
+El sondeo usa `getSignatureStatuses()` con un `setTimeout` encadenado, así que un RPC lento retrasa el siguiente tick pero nunca se solapa consigo mismo. Llamar a `stopPolling()` limpia el temporizador actual e impide más ticks automáticos — hasta que la firma observada cambia, lo que reinicia el sondeo para la nueva firma. Las firmas inválidas limpian `status` obsoleto, establecen `error` y no llaman a RPC ni inician sondeo. Los valores inválidos de `pollIntervalMs` menores o iguales a `0` establecen un `SolanaError` con código `INVALID_INPUT` (el mismo código que core usa para opciones malformadas) y no inician sondeo.
 
 ## App de ejemplo
 

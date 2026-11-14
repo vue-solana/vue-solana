@@ -130,8 +130,11 @@ const spec = {
     description:
       "Vue Solana documents Vue and Nuxt libraries that help developers use Solana. " +
       "This site is documentation, not a REST API: every documented path serves content. " +
-      "Agents should read llms.txt for the page index, llms-full.txt for the full corpus, " +
-      "sitemap.xml for the complete URL list, and request text/markdown via Accept negotiation.",
+      "Agents should read llms.txt for the English page index, the section indexes " +
+      "(/guides/llms.txt, /packages/llms.txt, /concepts/llms.txt, /examples/llms.txt) or a " +
+      "locale index (/de/llms.txt … /zh/llms.txt) for a narrower view, and llms-full.txt for the " +
+      "English-only corpus. Every negotiated markdown response carries a Link header pointing at " +
+      "the most specific llms.txt index and at the page's .md URL; sitemap.xml lists every URL.",
     contact: {
       name: "Vue Solana",
       url: "https://github.com/vue-solana/vue-solana",
@@ -195,7 +198,9 @@ const spec = {
       get: {
         operationId: "getLlmsIndex",
         summary: "llms.txt index of documentation pages for agents",
-        description: "Markdown link index of every documentation page, plus package overview.",
+        description:
+          "Small English index grouped by section, plus package overview and a Translations " +
+          "section linking the per-locale indexes. When a section index applies, prefer it.",
         tags: ["Agent"],
         parameters: [apiVersionHeaderParam],
         responses: {
@@ -206,7 +211,7 @@ const spec = {
               "text/markdown": {
                 schema: { type: "string" },
                 example:
-                  "# Vue Solana\n\n> Vue and Nuxt libraries that help developers use Solana.\n\n## When To Use\n\n- ...",
+                  "# Vue Solana\n\n> Vue and Nuxt libraries that help developers use Solana.\n\n## Start Here\n\n- ...",
               },
             },
           },
@@ -216,8 +221,10 @@ const spec = {
     "/llms-full.txt": {
       get: {
         operationId: "getLlmsFull",
-        summary: "Complete documentation as one markdown document",
-        description: "Full corpus of every documentation page concatenated in reading order.",
+        summary: "English documentation as one markdown document",
+        description:
+          "English-only corpus concatenated in reading order. It is optional: per-page .md " +
+          "requests and the section indexes are smaller and more precise.",
         tags: ["Agent"],
         parameters: [apiVersionHeaderParam],
         responses: {
@@ -228,6 +235,30 @@ const spec = {
               "text/markdown": {
                 schema: { type: "string" },
                 example: "# Vue Solana Full Documentation\n\n# Getting Started\n\n...",
+              },
+            },
+          },
+        },
+      },
+    },
+    "/guides/llms.txt": {
+      get: {
+        operationId: "getSectionLlmsIndex",
+        summary: "Per-section llms.txt index",
+        description:
+          "Index of the English pages under one section. /packages/llms.txt, " +
+          "/concepts/llms.txt, and /examples/llms.txt have the same shape, and " +
+          "/de/llms.txt … /zh/llms.txt index the translated docs for a locale.",
+        tags: ["Agent"],
+        parameters: [apiVersionHeaderParam],
+        responses: {
+          "200": {
+            description: "Markdown section index",
+            headers: standard200Headers,
+            content: {
+              "text/markdown": {
+                schema: { type: "string" },
+                example: "# Vue Solana — Guides\n\n> Task-focused guides...\n\n## Guides\n\n- ...",
               },
             },
           },

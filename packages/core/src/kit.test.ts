@@ -92,6 +92,40 @@ describe("createSolanaClient", () => {
     expect((client as { rpcSubscriptions?: unknown }).rpcSubscriptions).toBeDefined();
   });
 
+  it("sends the configured commitment on the wire", async () => {
+    const bodies: string[] = [];
+    const fetchMock = vi.fn(async (_input: unknown, init?: { body?: unknown }) => {
+      bodies.push(String(init?.body));
+
+      return new Response(
+        JSON.stringify({
+          jsonrpc: "2.0",
+          id: "1",
+          result: {
+            context: { slot: 1 },
+            value: { blockhash: "11111111111111111111111111111111", lastValidBlockHeight: 1 },
+          },
+        }),
+        { headers: { "content-type": "application/json" } },
+      );
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    try {
+      const client = createSolanaClient({ commitment: "processed" });
+
+      await client.rpc.getLatestBlockhash().send();
+
+      expect(fetchMock).toHaveBeenCalledOnce();
+      // The regression this guards: the stock `solanaRpc()` connection pins
+      // `DEFAULT_RPC_CONFIG`, so a configured commitment silently never reaches
+      // the request. Assert the serialized body, not just the client shape.
+      expect(bodies[0]).toContain('"commitment":"processed"');
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
   it("forwards explicit HTTP and WebSocket endpoints", () => {
     createSolanaClient({
       endpoint: "https://rpc.example.com/path",

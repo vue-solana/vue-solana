@@ -210,6 +210,7 @@ type SolanaChain = "solana:mainnet" | "solana:testnet" | "solana:devnet" | "sola
 - `getSolanaIosWallets(options?)`: iOS ブラウザ上で Phantom、Solflare、Backpack の iOS ブラウザウォレットエントリを返します。
 - `adaptSolanaIosWallet(walletInfo, options?)`: iOS のディープリンクウォレットエントリを `SolanaWallet` に適合します。
 - `handleSolanaIosWalletCallback(options?)`: iOS ウォレットのリダイレクトコールバックを検証して復号します。
+- `waitForRedirect(options?)`: iOS ウォレットのリダイレクト待ちを決着させます。ページ内では意図的に解決しません（リダイレクトでページが再読み込みされ、ブートストラップがコールバックを処理します）。`timeoutMs`（既定は 10 分）を過ぎると `REDIRECT_TIMEOUT` で、`signal` が中断した場合はその理由で reject するので、独自の deep link フローでも `connecting` 状態を放置せずリセットできます。
 - `isSolanaIosBrowserWalletSupported()`: 現在のランタイムが iOS ブラウザウォレットのリンクを公開すべきかを返します。
 
 これらのヘルパーは SSR セーフです。Android の登録は、`window` が利用できない場合、ページがセキュアコンテキストにない場合、またはブラウザが Android でない場合は、何も登録せずに戻ります。iOS ウォレットの検出は、ブラウザが iOS ブラウザのランタイムでない場合は空のリストを返します。
@@ -438,6 +439,7 @@ try {
 - `TRANSACTION_FAILED`
 - `REDIRECT_TIMEOUT`
 - `DECRYPTION_FAILED`
+- `MISSING_CLIENT_CAPABILITY`
 - `RPC_FAILURE`
 - `STORAGE_FAILURE`
 

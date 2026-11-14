@@ -8,7 +8,9 @@ export {
   getDefaultIosWalletRedirectUrl,
   isIosBrowser,
   isSolanaIosBrowserWalletSupported,
+  waitForRedirect,
 } from "./ios-wallet/browser";
+export type { WaitForRedirectOptions } from "./ios-wallet/browser";
 export { handleSolanaIosWalletCallback } from "./ios-wallet/callback";
 export type {
   AdaptSolanaIosWalletOptions,

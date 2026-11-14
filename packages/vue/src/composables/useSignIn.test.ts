@@ -109,6 +109,20 @@ describe("useSignIn", () => {
     expect(error.value?.cause).toBe(rejection);
   });
 
+  it("normalizes a generic wallet sign-in failure as WALLET_FAILURE, not an RPC failure", async () => {
+    const cause = new Error("wallet transport failed");
+    const signIn = vi.fn(async () => {
+      throw cause;
+    });
+    const { signIn: execute, error } = mountUseSignIn(
+      createMockSolanaContext({ wallet: shallowRef(connectedWallet({ signIn })) }),
+    );
+
+    await expect(execute()).rejects.toMatchObject({ code: "WALLET_FAILURE" });
+    expect(error.value?.code).toBe("WALLET_FAILURE");
+    expect(error.value?.cause).toBe(cause);
+  });
+
   it("ignores stale sign-ins that resolve after a newer attempt starts", async () => {
     let resolveFirst: (result: SolanaSignInResult) => void = () => undefined;
     const signIn = vi

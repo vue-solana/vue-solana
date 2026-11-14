@@ -107,12 +107,16 @@ export default defineNuxtConfig({
 - `useSolanaQrCode()`: Solana Pay URL を SVG の QR コードとして描画します。
 - `useSolanaQrScanner()`: カメラと `BarcodeDetector` を通じて Solana Pay の QR コードをスキャンします。
 
-マウントをまたいだキャッシュキーには、SWR アダプタは自動 import されません。Vue パッケージのサブパスから明示的に import してください:
+マウントをまたいだキャッシュキーには、SWR アダプタとそのキャッシュヘルパーが、ラップするコンポーザブルと一緒に自動 import されます: `useSolanaRequestSwr()`、`useSolanaSubscriptionSwr()`、`useSolanaTrackedDataSwr()`、`clearSwrCache()`、`deleteSwrKey()`。これらは `@vue-solana/vue/swr` の export のエイリアスです:
+
+```ts
+const balance = useSolanaRequestSwr(`balance:${someAddress}`, rpc.getBalance(someAddress));
+```
+
+Vue パッケージのサブパスから明示的に import することもできます:
 
 ```ts
 import { useRequestSwr } from "@vue-solana/vue/swr";
-
-const balance = useRequestSwr(`balance:${someAddress}`, rpc.getBalance(someAddress));
 ```
 
 リクエスト、購読、追跡データ、SWR キャッシュの各コンポーザブルの完全なセマンティクスについては、[データ取得コンポーザブル](/ja/packages/vue#データ取得コンポーザブル) を参照してください。
@@ -129,6 +133,7 @@ const balance = useRequestSwr(`balance:${someAddress}`, rpc.getBalance(someAddre
 - `useSolanaClientCapability()`: インストールされた Kit クライアントに必要なケイパビリティがない場合に即座に失敗します。
 - `tryUseSolana()`: 注入された Solana コンテキストへの、例外を投げない安全なアクセサです。
 - `clearSwrCache()`: モジュールレベルの SWR キャッシュをクリアします（[データ取得コンポーザブル](/ja/packages/vue#データ取得コンポーザブル) を参照）。
+- `deleteSwrKey()`: アダプターのプレフィックスを含む完全なキーで、キャッシュされた SWR エントリを 1 件削除します（[データ取得コンポーザブル](/ja/packages/vue#データ取得コンポーザブル) を参照）。
 
 Nuxt モジュールが作成するデフォルトクライアントは、`commitment` が設定されていない場合に公式の `solanaRpc()` と `rpcAirdrop()` プラグインを組み合わせます（`commitment` を設定した場合は同じスタックを明示的に構築するため、RPC レイヤーまで確実に届きます）。`solanaRpc()` はトランザクションプランナーと、プラン署名・プラン送信のエグゼキュータを自身でインストールします。以前のカスタムフォールバック送信者は使用されません。そのため `useSolanaSendTransaction()` と `useSolanaSendTransactions()` は公式のクライアント送信ケイパビリティを公開しますが、`payer` と `payerSecretKey` が意図的に `ModuleOptions` から省略されているため、モジュールは payer を設定しません。したがって、クライアントから送信するトランザクションには [モジュールのセットアップ](#モジュールのセットアップ) で説明しているように、`clientPlugin: false` を設定したクライアント専用プラグインでインストールした `payer` が必要です。`sent` ステータスは、公式エグゼキュータが `confirmed` コミットメントで送信と確認の処理を完了した後に到達します。
 

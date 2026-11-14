@@ -39,6 +39,7 @@ const error = new SolanaError("RPC_FAILURE", "Unable to reach RPC");
 - `TRANSACTION_FAILED`: 제출된 트랜잭션이 요청한 commitment에 도달하기 전에 실패했습니다.
 - `REDIRECT_TIMEOUT`: iOS 지갑이 제시간에 앱으로 redirect되지 않았습니다.
 - `DECRYPTION_FAILED`: iOS 지갑 callback을 복호화하거나 디코딩할 수 없습니다.
+- `MISSING_CLIENT_CAPABILITY`: composable이 필요로 하는 capability(예: `planTransaction`, `sendTransaction`, `payer`)가 Kit client에 없습니다. 대개 `createSolanaClient()`나 해당 Kit plugin을 건너뛰고 직접 만든 client가 원인입니다.
 - `RPC_FAILURE`: RPC send, read, confirmation이 실패했습니다.
 - `STORAGE_FAILURE`: 브라우저 storage를 읽거나 쓸 수 없습니다.
 

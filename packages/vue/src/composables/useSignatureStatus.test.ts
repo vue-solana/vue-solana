@@ -126,7 +126,7 @@ describe("useSignatureStatus", () => {
     await vi.advanceTimersByTimeAsync(5);
 
     expect(result.error.value).toBeInstanceOf(Error);
-    expect((result.error.value as SolanaError | null)?.code).toBe("RPC_FAILURE");
+    expect((result.error.value as SolanaError | null)?.code).toBe("INVALID_INPUT");
     expect(getSignatureStatuses).toHaveBeenCalledTimes(1);
   });
 

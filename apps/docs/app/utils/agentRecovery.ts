@@ -102,6 +102,76 @@ export function isMachineReadablePath(path: string): boolean {
 }
 
 /**
+ * llms.txt indexes exist per locale and per documentation section. The
+ * llmstxt.org spec says that when more than one file applies, agents should
+ * use the most specific one, so a guide page points at `/guides/llms.txt`
+ * and a translated page at `/de/llms.txt` instead of the root index.
+ */
+const LOCALE_CODES = ["de", "es", "fr", "ja", "ko", "zh"];
+const INDEXED_SECTIONS = ["guides", "packages", "concepts", "examples"];
+
+export function llmsIndexForPath(path: string): string {
+  const segments = path.split("/").filter(Boolean);
+
+  if (LOCALE_CODES.includes(segments[0] ?? "")) {
+    return `${SITE_URL}/${segments[0]}/llms.txt`;
+  }
+
+  if (segments.length > 1 && INDEXED_SECTIONS.includes(segments[0] ?? "")) {
+    return `${SITE_URL}/${segments[0]}/llms.txt`;
+  }
+
+  return `${SITE_URL}/llms.txt`;
+}
+
+/**
+ * `Link` header pairing a markdown response with the most specific llms.txt
+ * index (`rel="describedby"`) and with its `.md` URL (`rel="alternate"`),
+ * as requested by the llmstxt.org v2 contract.
+ *
+ * `/.md` is the markdown form of the homepage: the middleware strips the
+ * suffix and resolves `/`, so it is a real, fetchable URL.
+ */
+export function agentLinkHeader(path: string): string {
+  const markdownPath = path === "/" ? "/.md" : `${path}.md`;
+
+  return `<${llmsIndexForPath(path)}>; rel="describedby", <${SITE_URL}${markdownPath}>; rel="alternate"; type="text/markdown"`;
+}
+
+/**
+ * Whether the request asks for a documentation page representation the
+ * middleware should resolve. Explicit `.md` suffix requests always resolve,
+ * including with a wildcard `Accept` (curl's default) — otherwise the
+ * `rel="alternate"` `.md` URL advertised in the `Link` header would 404 for
+ * exactly the clients that follow it.
+ *
+ * Browser navigations and wildcard clients without a suffix keep the
+ * framework's HTML rendering, and machine-readable paths are never
+ * content-negotiated.
+ */
+export function isNegotiablePageRequest(
+  path: string,
+  acceptHeader: string | undefined | null,
+): boolean {
+  const hasMdSuffix = path.endsWith(".md");
+  const pagePath = hasMdSuffix ? path.slice(0, -3) || "/" : path;
+
+  if (isMachineReadablePath(pagePath)) {
+    return false;
+  }
+
+  if (hasMdSuffix) {
+    return true;
+  }
+
+  if (isWildcardishAccept(acceptHeader)) {
+    return false;
+  }
+
+  return negotiateFormat(acceptHeader) === "markdown" || !acceptsHtml(acceptHeader);
+}
+
+/**
  * Response headers required by the acceptmarkdown.com contract: caches must
  * key on the negotiated format, so `Accept` has to be listed in `Vary`.
  */
@@ -133,8 +203,10 @@ The path \`${path}\` does not exist on Vue Solana Docs.
 ## Where To Look Next
 
 - [Site map](https://vue-solana-docs.vercel.app/sitemap.xml): every indexed documentation page.
-- [Agent guide](https://vue-solana-docs.vercel.app/llms.txt): llms.txt index of all documentation pages.
-- [Full documentation](https://vue-solana-docs.vercel.app/llms-full.txt): complete site content as one markdown document.
+- [Agent guide](https://vue-solana-docs.vercel.app/llms.txt): small English index of all documentation pages.
+- [Section indexes](https://vue-solana-docs.vercel.app/guides/llms.txt): narrower indexes at /guides/llms.txt, /packages/llms.txt, /concepts/llms.txt, and /examples/llms.txt.
+- [Translations](https://vue-solana-docs.vercel.app/de/llms.txt): per-locale indexes at /de/llms.txt through /zh/llms.txt.
+- [Full documentation](https://vue-solana-docs.vercel.app/llms-full.txt): the English documentation as one markdown document.
 - [OpenAPI spec](https://vue-solana-docs.vercel.app/openapi.json): machine-readable API surface, error model, and versioning policy.
 - [Developer portal](https://vue-solana-docs.vercel.app/developers): quickstart and machine-readable endpoint reference.
 - [About](https://vue-solana-docs.vercel.app/about): what this project is and who maintains it.

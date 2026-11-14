@@ -99,7 +99,7 @@ tasks:
           case "$version" in
             *-"{{.RC_TAG}}".*) ;;
             *)
-              echo "::error::$name@$version does not match the ${{.RC_TAG}} tag"
+              echo "::error::$name@$version does not match the {{.RC_TAG}} tag"
               exit 1
               ;;
           esac
@@ -108,7 +108,7 @@ tasks:
             exit 1
           fi
         done
-        echo "publishing ${{.RC_TAG}}: $(node -p "require('./packages/core/package.json').version")"
+        echo "publishing {{.RC_TAG}}: $(node -p "require('./packages/core/package.json').version")"
       - pnpm build:packages
       - pnpm --filter './packages/*' -r publish --no-git-checks --tag "{{.RC_TAG}}"
 
@@ -138,7 +138,12 @@ tasks:
       - pnpm changeset pre exit
 
   rc:finalize:
-    desc: Leave pre-release mode and cut the final version (consumes the changeset)
+    desc: Leave pre-release mode and cut the final version (consumes the changeset; needs CONFIRM=1)
+    preconditions:
+      - sh: test "${CONFIRM:-}" = "1"
+        msg: "rc:finalize cuts the final version and consumes the pending changeset - rerun with CONFIRM=1 (on main, after the last candidate is published)"
+      - sh: find .changeset -maxdepth 1 -name '*.md' ! -name 'README.md' | grep -q .
+        msg: "No pending changesets - there is nothing to version"
     cmds:
       - |
         set -e

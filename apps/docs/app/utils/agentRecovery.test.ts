@@ -2,11 +2,14 @@ import { describe, expect, it } from "vitest";
 
 import {
   acceptsHtml,
+  agentLinkHeader,
   API_VERSION,
   createAgent404Markdown,
   createProblemDetails,
   isMachineReadablePath,
+  isNegotiablePageRequest,
   isWildcardishAccept,
+  llmsIndexForPath,
   markdownNegotiationVary,
   negotiateFormat,
   PROBLEM_JSON_MEDIA_TYPE,
@@ -90,6 +93,73 @@ describe("isMachineReadablePath", () => {
     ]) {
       expect(isMachineReadablePath(path)).toBe(false);
     }
+  });
+});
+
+describe("llmsIndexForPath", () => {
+  it("uses the section index for pages under an indexed section", () => {
+    expect(llmsIndexForPath("/guides/wallets")).toBe(`${SITE_URL}/guides/llms.txt`);
+    expect(llmsIndexForPath("/packages/core")).toBe(`${SITE_URL}/packages/llms.txt`);
+    expect(llmsIndexForPath("/concepts/clusters")).toBe(`${SITE_URL}/concepts/llms.txt`);
+    expect(llmsIndexForPath("/examples/nuxt")).toBe(`${SITE_URL}/examples/llms.txt`);
+  });
+
+  it("uses the locale index for translated pages", () => {
+    expect(llmsIndexForPath("/de")).toBe(`${SITE_URL}/de/llms.txt`);
+    expect(llmsIndexForPath("/de/guides/wallets")).toBe(`${SITE_URL}/de/llms.txt`);
+    expect(llmsIndexForPath("/zh/packages/core")).toBe(`${SITE_URL}/zh/llms.txt`);
+  });
+
+  it("falls back to the root index for pages outside a section", () => {
+    expect(llmsIndexForPath("/")).toBe(`${SITE_URL}/llms.txt`);
+    expect(llmsIndexForPath("/getting-started")).toBe(`${SITE_URL}/llms.txt`);
+    expect(llmsIndexForPath("/showcase")).toBe(`${SITE_URL}/llms.txt`);
+  });
+});
+
+describe("agentLinkHeader", () => {
+  it("links the most specific index and the markdown representation", () => {
+    expect(agentLinkHeader("/guides/wallets")).toBe(
+      `<${SITE_URL}/guides/llms.txt>; rel="describedby", ` +
+        `<${SITE_URL}/guides/wallets.md>; rel="alternate"; type="text/markdown"`,
+    );
+  });
+
+  it("keeps the locale prefix on both links", () => {
+    expect(agentLinkHeader("/de/getting-started")).toBe(
+      `<${SITE_URL}/de/llms.txt>; rel="describedby", ` +
+        `<${SITE_URL}/de/getting-started.md>; rel="alternate"; type="text/markdown"`,
+    );
+  });
+
+  it("uses the fetchable markdown form of the homepage", () => {
+    expect(agentLinkHeader("/")).toContain(`<${SITE_URL}/.md>`);
+  });
+});
+
+describe("isNegotiablePageRequest", () => {
+  it("resolves explicit .md suffix requests regardless of Accept", () => {
+    expect(isNegotiablePageRequest("/getting-started.md", "*/*")).toBe(true);
+    expect(isNegotiablePageRequest("/getting-started.md", undefined)).toBe(true);
+    expect(isNegotiablePageRequest("/getting-started.md", "text/html")).toBe(true);
+    expect(isNegotiablePageRequest("/de/guides/wallets.md", "*/*")).toBe(true);
+  });
+
+  it("never negotiates machine-readable paths, even with a .md suffix", () => {
+    expect(isNegotiablePageRequest("/robots.txt.md", "*/*")).toBe(false);
+    expect(isNegotiablePageRequest("/__nuxt_content/x.md", "*/*")).toBe(false);
+    expect(isNegotiablePageRequest("/api/x.md", "*/*")).toBe(false);
+  });
+
+  it("keeps browser and wildcard navigations on the HTML path", () => {
+    expect(isNegotiablePageRequest("/getting-started", "*/*")).toBe(false);
+    expect(isNegotiablePageRequest("/getting-started", undefined)).toBe(false);
+    expect(isNegotiablePageRequest("/getting-started", "text/html")).toBe(false);
+  });
+
+  it("resolves markdown and non-HTML API accepts so they get the right error body", () => {
+    expect(isNegotiablePageRequest("/getting-started", "text/markdown")).toBe(true);
+    expect(isNegotiablePageRequest("/getting-started", "application/json")).toBe(true);
   });
 });
 
