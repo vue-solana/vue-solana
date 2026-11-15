@@ -21,11 +21,15 @@ There are no API keys for the Solana RPC: composables talk to public devnet/main
 
 This documentation site exposes a documented machine surface, no signup or keys required:
 
-- `/llms.txt` — index of every documentation page for agents.
-- `/llms-full.txt` — the complete documentation corpus as one markdown document.
+- `/llms.txt` — small English index grouped by section, with links to the per-locale indexes.
+- `/guides/llms.txt`, `/packages/llms.txt`, `/concepts/llms.txt`, `/examples/llms.txt` — narrower indexes for one section.
+- `/de/llms.txt` … `/zh/llms.txt` — indexes of the translated documentation for each locale.
+- `/llms-full.txt` — the English documentation as one markdown document (optional; per-page `.md` URLs are smaller).
 - `/openapi.json` — OpenAPI 3.1 spec covering all endpoints, the RFC 9457 error model, the versioning policy, and rate-limit conventions.
 - `Accept: text/markdown` negotiation on every documentation page (or append `.md` to the URL).
 - `/sitemap.xml` — full URL list.
+
+Markdown responses carry a `Link` header pointing at the most specific `llms.txt` index and at the page's `.md` URL.
 
 Errors follow RFC 9457 (`application/problem+json`) with a `recovery` extension object; 404s for unknown paths return a markdown recovery body when requested with `Accept: text/markdown`.
 

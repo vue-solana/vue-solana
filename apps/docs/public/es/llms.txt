@@ -1,0 +1,36 @@
+# Vue Solana — Español
+
+> Traducción al español de la documentación de Vue Solana.
+
+Official docs: https://vue-solana-docs.vercel.app/es
+Parent index: https://vue-solana-docs.vercel.app/llms.txt
+English docs: https://vue-solana-docs.vercel.app/llms.txt
+
+## Documentación
+
+- [Documentación de Vue Solana](https://vue-solana-docs.vercel.app/es): Documentación para bibliotecas Vue y Nuxt que ayudan a desarrolladores a usar Solana.
+- [Primeros pasos](https://vue-solana-docs.vercel.app/es/getting-started): Instala los paquetes de Vue Solana, configura Vue o Nuxt y prueba lecturas RPC en devnet.
+- [Skill de agente](https://vue-solana-docs.vercel.app/es/agent-skill): Instala el Agent Skill de Vue Solana para agentes de codificación con IA.
+- [Solución de problemas](https://vue-solana-docs.vercel.app/es/troubleshooting): Problemas comunes de setup, TypeScript, wallet, RPC y Nuxt.
+- [Solana para desarrolladores Vue](https://vue-solana-docs.vercel.app/es/concepts/solana-for-vue-developers): Conceptos prácticos de Solana para desarrolladores Vue y Nuxt.
+- [Clusters](https://vue-solana-docs.vercel.app/es/concepts/clusters): Nombres de clusters de Solana, endpoints RPC e instrucciones para faucet.
+- [RPC Y Clusters](https://vue-solana-docs.vercel.app/es/guides/rpc-and-clusters): Configura clusters de Solana, endpoints RPC, endpoints WebSocket y helpers de cliente.
+- [Wallets](https://vue-solana-docs.vercel.app/es/guides/wallets): Descubre wallets, selecciona una wallet activa, conecta, desconecta y comprueba capacidades.
+- [Lecturas de cuentas](https://vue-solana-docs.vercel.app/es/guides/account-reads): Lee balances, datos de cuenta, cuentas de programa y estado de firmas de forma segura desde Vue o Nuxt.
+- [Transacciones](https://vue-solana-docs.vercel.app/es/guides/transactions): Firma, envía, confirma y maneja estado de transacciones con Vue Solana.
+- [Solana Pay](https://vue-solana-docs.vercel.app/es/guides/solana-pay): Crea solicitudes de transferencia de Solana Pay, renderiza y escanea códigos QR y confirma la liquidación por referencia.
+- [Firma De Mensajes](https://vue-solana-docs.vercel.app/es/guides/message-signing): Firma mensajes de autenticación o propiedad sin crear transacciones on-chain.
+- [Errores](https://vue-solana-docs.vercel.app/es/guides/errors): Maneja errores Solana normalizados desde helpers core y composables Vue/Nuxt.
+- [Guía de Migración](https://vue-solana-docs.vercel.app/es/guides/migration): Cómo migrar entre versiones de Vue Solana. Cubre la actualización de v3 a v4, v2 a v3 y la migración de v1.x a v2.
+- [Pruebas E2E](https://vue-solana-docs.vercel.app/es/guides/e2e-testing): Ejecuta la suite e2e de Playwright y simula RPC de Solana, suscripciones RPC y wallets para pruebas de UI.
+- [@vue-solana/core](https://vue-solana-docs.vercel.app/es/packages/core): Configuración Solana independiente del framework, RPC, tipos de wallet y helpers de transacción.
+- [@vue-solana/vue](https://vue-solana-docs.vercel.app/es/packages/vue): Plugin de Vue y composables para aplicaciones Solana.
+- [@vue-solana/nuxt](https://vue-solana-docs.vercel.app/es/packages/nuxt): Módulo Nuxt para aplicaciones Solana.
+- [Ejemplo Vue Vite](https://vue-solana-docs.vercel.app/es/examples/vue-vite): App de ejemplo ejecutable con Vue 3 y Vite para @vue-solana/vue.
+- [Ejemplo Nuxt](https://vue-solana-docs.vercel.app/es/examples/nuxt): App de ejemplo Nuxt ejecutable para @vue-solana/nuxt.
+- [Galería](https://vue-solana-docs.vercel.app/es/showcase): Apps construidas con Vue Solana y cómo conseguir que la tuya aparezca en esta página.
+- [Roadmap](https://vue-solana-docs.vercel.app/es/roadmap): Funcionalidades y mejoras planificadas para Vue Solana.
+- [Acerca de](https://vue-solana-docs.vercel.app/es/about): Que es Vue Solana, quien lo mantiene y como se gestiona el proyecto.
+- [Contacto](https://vue-solana-docs.vercel.app/es/contact): Como contactar al equipo de Vue Solana para soporte, reportes de seguridad y prensa.
+- [Privacidad](https://vue-solana-docs.vercel.app/es/privacy): Que recoge este sitio de documentación, que no recoge, y como se gestionan las analiticas.
+- [Portal De Desarrolladores](https://vue-solana-docs.vercel.app/es/developers): Quickstart, endpoints legibles por máquina y convenciones de integración para construir sobre Vue Solana.

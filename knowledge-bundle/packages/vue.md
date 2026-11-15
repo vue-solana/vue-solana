@@ -399,7 +399,7 @@ Returns:
 - `refresh()`
 - `stopPolling()`
 
-Null input clears state without calling RPC. Invalid signatures are rejected before RPC: the signature must be base58-encoded and decode to exactly 64 bytes. Invalid `pollIntervalMs` values less than or equal to `0` set an `RPC_FAILURE` `SolanaError` and do not start polling. Calling `stopPolling()` clears the current timer and prevents further automatic ticks — until the watched signature changes, which restarts polling for the new signature.
+Null input clears state without calling RPC. Invalid signatures are rejected before RPC: the signature must be base58-encoded and decode to exactly 64 bytes. Invalid `pollIntervalMs` values less than or equal to `0` set an `INVALID_INPUT` `SolanaError` and do not start polling. Calling `stopPolling()` clears the current timer and prevents further automatic ticks — until the watched signature changes, which restarts polling for the new signature.
 
 ## `useAction(action, options?)`
 

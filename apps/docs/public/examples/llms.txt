@@ -1,0 +1,11 @@
+# Vue Solana — Examples
+
+> Runnable example applications wired to the workspace packages.
+
+Official docs: https://vue-solana-docs.vercel.app
+Parent index: https://vue-solana-docs.vercel.app/llms.txt
+
+## Examples
+
+- [Vue Vite Example](https://vue-solana-docs.vercel.app/examples/vue-vite): Runnable Vue 3 and Vite example app for @vue-solana/vue.
+- [Nuxt Example](https://vue-solana-docs.vercel.app/examples/nuxt): Runnable Nuxt example app for @vue-solana/nuxt.

@@ -35,8 +35,11 @@ This directory contains OKF-formatted knowledge files for AI agents working with
 Plans live in the top-level [`plans/`](../plans/) directory:
 
 - [Roadmap](../apps/docs/content/roadmap.md)
-- [React Parity Plan](../plans/react-parity-plan.md)
+- [React README Parity Plan](../plans/react-readme-parity-plan.md)
 - [Native Wallet Plan](../plans/native-wallet-plan.md)
-- [Solana Pay QR Plan](../plans/solana-pay-qr-plan.md)
-- [Archived Plans](../plans/archived/) (completed: Kit migration, SPL tokens, standalone installs, v1 roadmap)
+- [Archived Plans](../plans/archived/) (completed: Kit migration, SPL tokens, standalone installs, v1 roadmap, Solana Pay QR, package-improvement phases 1–9, error codes & agent surface)
 - [Standalone Package Install Plan](../plans/archived/stand-alone-package-install-plan.md)
+- [Solana Pay QR Plan](../plans/archived/solana-pay-qr-plan.md)
+- [Package Improvements Phases 1–8](../plans/archived/package-improvements-phases-1-8.md)
+- [Package Improvements Phase 9](../plans/archived/package-improvements-phase-9.md)
+- [Error Codes & Agent Surface Follow-Ups](../plans/archived/error-codes-agent-surface-followups.md)

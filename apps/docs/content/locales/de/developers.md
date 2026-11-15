@@ -21,11 +21,15 @@ Für die Solana-RPC gibt es keine API-Schlüssel: Die Composables sprechen mit �
 
 Diese Dokumentationsseite stellt eine dokumentierte maschinelle Oberfläche bereit, ohne Registrierung oder Schlüssel:
 
-- `/llms.txt` — Index aller Dokumentationsseiten für Agenten.
-- `/llms-full.txt` — der vollständige Dokumentationsbestand als ein Markdown-Dokument.
+- `/llms.txt` — kleiner englischer Index, nach Abschnitten gruppiert, mit Links zu den Indexdateien pro Sprache.
+- `/guides/llms.txt`, `/packages/llms.txt`, `/concepts/llms.txt`, `/examples/llms.txt` — schmalere Indizes für einen einzelnen Abschnitt.
+- `/de/llms.txt` … `/zh/llms.txt` — Indizes der übersetzten Dokumentation je Sprache.
+- `/llms-full.txt` — die englische Dokumentation als ein Markdown-Dokument (optional; einzelne `.md`-URLs sind kleiner).
 - `/openapi.json` — OpenAPI-3.1-Spezifikation mit allen Endpoints, dem RFC-9457-Fehlermodell, der Versionierungsrichtlinie und den Rate-Limit-Konventionen.
 - `Accept: text/markdown`-Aushandlung auf jeder Dokumentationsseite (oder `.md` an die URL anhängen).
 - `/sitemap.xml` — vollständige URL-Liste.
+
+Markdown-Antworten enthalten einen `Link`-Header, der auf den spezifischsten `llms.txt`-Index und auf die `.md`-URL der Seite verweist.
 
 Fehler folgen RFC 9457 (`application/problem+json`) mit einem `recovery`-Erweiterungsobjekt; 404-Antworten für unbekannte Pfade liefern einen Markdown-Recovery-Body, wenn sie mit `Accept: text/markdown` angefordert werden.
 

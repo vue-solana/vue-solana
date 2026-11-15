@@ -124,6 +124,8 @@ const message = computed(() => {
       return "此钱包不支持消息签名。";
     case "USER_REJECTED":
       return "消息签名已被拒绝。";
+    case "WALLET_FAILURE":
+      return "钱包无法签名该消息。";
     case "INVALID_SIGNATURE":
       return "钱包返回了无效的签名。";
     default:

@@ -33,6 +33,7 @@
     "prepare": "husky",
     "release": "pnpm build:packages && changeset publish",
     "smoke:standalone-installs": "node scripts/smoke-standalone-installs.mjs",
+    "smoke:docs-surface": "node apps/docs/scripts/check-agent-surface.mjs",
     "size:packages": "node scripts/check-lean-imports.mjs && node scripts/report-bundle-sizes.mjs",
     "pack:size": "node scripts/check-pack-size.mjs",
     "check:entries": "node --experimental-strip-types scripts/check-export-map.ts",

@@ -106,12 +106,16 @@ export default defineNuxtConfig({
 - `useSolanaQrCode()`: Solana Pay URL을 SVG QR 코드로 렌더링합니다.
 - `useSolanaQrScanner()`: 카메라와 `BarcodeDetector`로 Solana Pay QR 코드를 스캔합니다.
 
-mount 간 cache keying을 위해 SWR adapter는 auto-import되지 않습니다. Vue package subpath에서 명시적으로 import하세요.
+mount 간 cache keying을 위해 SWR adapter와 그 cache helper는 감싸는 composable과 함께 auto-import됩니다: `useSolanaRequestSwr()`, `useSolanaSubscriptionSwr()`, `useSolanaTrackedDataSwr()`, `clearSwrCache()`, `deleteSwrKey()`. 이들은 `@vue-solana/vue/swr` export의 alias입니다.
+
+```ts
+const balance = useSolanaRequestSwr(`balance:${someAddress}`, rpc.getBalance(someAddress));
+```
+
+Vue package subpath에서 명시적으로 import할 수도 있습니다.
 
 ```ts
 import { useRequestSwr } from "@vue-solana/vue/swr";
-
-const balance = useRequestSwr(`balance:${someAddress}`, rpc.getBalance(someAddress));
 ```
 
 request, subscription, tracked-data, SWR-cache composable의 전체 semantics는 [Data Fetching Composables](/packages/vue#data-fetching-composables)를 참고하세요.
@@ -124,6 +128,11 @@ request, subscription, tracked-data, SWR-cache composable의 전체 semantics는
 - `useSolanaSendTransaction()` / `useSolanaSendTransactions()`: default client의 official planner와 executor를 사용해 plan, sign, submit 후 `confirmed`를 기다리며 wallet popup이 없습니다. client-only Vue plugin에서 `payer`를 설정하세요. connected wallet이 각 트랜잭션을 승인해야 할 때는 `useSolanaSignAndSendTransaction(s)`를 사용하세요.
 
 이들은 Vue composable의 Nuxt alias입니다.
+
+- `useSolanaClientCapability()`: 설치된 Kit client에 필요한 capability가 없으면 즉시 실패합니다.
+- `tryUseSolana()`: 주입된 Solana context에 안전하게 접근하는 non-throwing accessor입니다.
+- `clearSwrCache()`: 모듈 수준 SWR cache를 비웁니다([Data Fetching Composables](/packages/vue#data-fetching-composables) 참고).
+- `deleteSwrKey()`: adapter prefix를 포함한 전체 key로 캐시된 SWR 항목 하나를 제거합니다([Data Fetching Composables](/packages/vue#data-fetching-composables) 참고).
 
 module이 만드는 default client는 `commitment`가 설정되지 않았을 때 official `solanaRpc()`와 `rpcAirdrop()` plugin을 compose하며(`commitment`가 설정되면 RPC 레이어에 전달되도록 같은 스택을 명시적으로 빌드합니다), `solanaRpc()`가 transaction planner와 plan-signing/plan-sending executor를 직접 설치합니다. 기존 custom fallback sender는 사용하지 않습니다. `useSolanaSendTransaction()`과 `useSolanaSendTransactions()`는 official client-sending capability를 사용하지만, `ModuleOptions`에서 `payer`와 `payerSecretKey`를 제외하므로 module이 payer를 설정하지는 않습니다. `sent` 상태는 official executor가 `confirmed` commitment에서 send-and-confirm을 완료한 뒤에 도달합니다.
 

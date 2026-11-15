@@ -1,5 +1,7 @@
 # Solana Pay QR Implementation Plan
 
+**Archived:** all nine phases shipped (Solana Pay transfer URLs, reference-based settlement verification, `useSolanaPay`, `useSolanaQrCode`, `useSolanaQrScanner`, examples, docs, Nuxt auto-imports). Kept for reference; see `apps/docs/content/guides/solana-pay.md` for the user-facing guide.
+
 This document tracks the implementation plan for QR code scanning and Solana Pay support. It is separate from the roadmap because Solana Pay can ship independently of the stabilization work.
 
 The goal is to support Solana Pay payment QR flows in `@vue-solana/core`, `@vue-solana/vue`, and `@vue-solana/nuxt` without splitting the existing wallet API. Payment sending should continue to use the unified `useWallets()`, `useWallet()`, and `useSignAndSendTransaction()` flow.
@@ -82,7 +84,7 @@ Acceptance criteria:
 
 ## Phase 3: Vue Payment Composable (completed)
 
-Status: planned.
+Status: done.
 
 Tasks:
 
@@ -102,7 +104,7 @@ Acceptance criteria:
 
 ## Phase 4: QR Code Generation (completed)
 
-Status: planned.
+Status: done.
 
 Tasks:
 
@@ -122,7 +124,7 @@ Acceptance criteria:
 
 ## Phase 5: QR Code Scanning
 
-Status: planned.
+Status: done.
 
 Tasks:
 
@@ -143,7 +145,7 @@ Acceptance criteria:
 
 ## Phase 6: Payment Sending UX Integration (completed)
 
-Status: planned.
+Status: done.
 
 Tasks:
 
@@ -162,7 +164,7 @@ Acceptance criteria:
 
 ## Phase 7: Nuxt Integration (completed)
 
-Status: planned.
+Status: done.
 
 Tasks:
 
@@ -180,7 +182,7 @@ Acceptance criteria:
 
 ## Phase 8: Examples And Documentation
 
-Status: complete.
+Status: done.
 
 Tasks:
 
@@ -201,7 +203,7 @@ Acceptance criteria:
 
 ## Phase 9: Verification And Release Readiness (completed)
 
-Status: planned.
+Status: done.
 
 Tasks:
 

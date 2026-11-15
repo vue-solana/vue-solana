@@ -683,6 +683,8 @@ const balance = useRequestSwr(`balance:${someAddress}`, rpc.getBalance(someAddre
 - `null`/`undefined` 源会禁用 composable 并**清除**该键的缓存条目——即使组件以已禁用的源挂载也是如此。
 - `useTrackedDataSwr` 缓存完整的 `SolanaRpcResponse` 封套，因此重挂载的组件同时恢复值和 slot context。
 - 缓存是模块级 `Map`。在服务器端，按请求为键命名空间化，或在请求之间调用 `clearSwrCache()` 以避免跨请求泄漏。
+- `deleteSwrKey(key)` 按**完整**缓存键（含适配器前缀）移除单个条目（`deleteSwrKey("request:balance")`，而非 `"balance"`）。只让一个过期值消失时使用它；`clearSwrCache()` 仍然清空全部。
+- 缓存最多保留 1024 个条目，并优先移除最早的写入。重写已有键（重挂载或重新校验的结果）会刷新其位置，因此活跃使用的键不会被移除，而闲置的键会。
 
 针对 devnet 的全部五个 composable 的可运行演示（包括 SWR 重挂载行为），请参阅 [Vue Vite 示例](/zh/examples/vue-vite)中的 Live Data Panels。
 
@@ -814,7 +816,7 @@ const { transactionMessage, execute } = usePlanTransaction();
 const message = await execute(instructions);
 ```
 
-`useClientCapability("payer")` 会断言某项能力已安装在客户端上，缺失时在 setup 阶段抛出描述性错误（指出钩子名称及安装方式）。默认 Vue client 已安装官方 planner 和 transaction-sending executor；custom client 必须自行安装 `rpcTransactionPlanner()` 和 `rpcTransactionPlanSendingExecutor()`。
+`useClientCapability("payer")` 会断言某项能力已安装在客户端上，缺失时在 setup 阶段抛出描述性错误（指出钩子名称及安装方式）。该错误是 `MissingClientCapabilityError`——`code` 为 `MISSING_CLIENT_CAPABILITY` 的 `SolanaError` 子类——因此 `isSolanaError()` 可以像其他包错误一样收窄它。默认 Vue client 已从 `solanaRpc()` 获得 planner 以及 plan-signing 和 plan-sending executor；手动构建的客户端（例如只用 `createClient()` 加 `rpcTransactionPlanner()`）必须自行安装 `rpcTransactionPlanSendingExecutor()` 和 signer 插件。能力在 setup 之后消失时，`usePlanTransaction()` / `useSendTransaction()` 也会返回同样的代码。
 
 ## 确认现有签名
 
@@ -847,7 +849,7 @@ const { status, loading, error, refresh, stopPolling } = useSignatureStatus(
 
 没有按次调用的 `commitment` 选项：`getSignatureStatuses()` 不接受该参数，因此读取使用的是 endpoint 自带的 commitment。请在 endpoint 或 `createSolanaPlugin()` 上设置。如果需要按次指定 commitment，请使用 `useTransactionConfirmation()`。
 
-轮询使用链式 `setTimeout` 调用 `getSignatureStatuses()`，因此慢速 RPC 只会延迟下一次 tick，而不会与自身重叠。调用 `stopPolling()` 会清除当前计时器并阻止后续自动 tick——直到被观察的签名发生变化，此时会为新签名重新启动轮询。无效签名会清除过期 `status`、设置 `error`，且不调用 RPC 或启动轮询。小于或等于 `0` 的无效 `pollIntervalMs` 会设置代码为 `RPC_FAILURE` 的 `SolanaError`，且不启动轮询。
+轮询使用链式 `setTimeout` 调用 `getSignatureStatuses()`，因此慢速 RPC 只会延迟下一次 tick，而不会与自身重叠。调用 `stopPolling()` 会清除当前计时器并阻止后续自动 tick——直到被观察的签名发生变化，此时会为新签名重新启动轮询。无效签名会清除过期 `status`、设置 `error`，且不调用 RPC 或启动轮询。小于或等于 `0` 的无效 `pollIntervalMs` 会设置代码为 `INVALID_INPUT` 的 `SolanaError`（与 core 用于格式错误选项的代码相同），且不启动轮询。
 
 ## 示例应用
 

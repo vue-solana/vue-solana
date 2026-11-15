@@ -29,7 +29,7 @@ const error = new SolanaError("RPC_FAILURE", "Unable to reach RPC");
 - `NO_WALLET_SELECTED`: アクティブなウォレットが選択されていません。
 - `WALLET_NOT_CONNECTED`: アクティブなウォレットが接続されていないか、公開鍵がありません。
 - `WALLET_FEATURE_UNSUPPORTED`: アクティブなウォレットが要求された機能をサポートしていません。
-- `WALLET_FAILURE`: より具体的なコードなしでウォレット側の操作が失敗しました — 接続/切断、保存済みウォレットの自動接続、モバイルウォレットの登録、iOS コールバックの処理など。
+- `WALLET_FAILURE`: より具体的なコードなしでウォレット側の操作が失敗しました — 接続/切断、保存済みウォレットの自動接続、モバイルウォレットの登録、iOS コールバックの処理、メッセージ署名、サインイン、複数トランザクションの署名など。
 - `USER_REJECTED`: ユーザーがウォレットの要求を拒否しました。
 - `INVALID_SIGNATURE`: ウォレットが、そのアカウントの鍵と一致しないメッセージ署名またはサインイン署名を返しました。
 - `INVALID_ADDRESS`: アドレス文字列を Solana アドレスとして解析できませんでした。
@@ -39,6 +39,7 @@ const error = new SolanaError("RPC_FAILURE", "Unable to reach RPC");
 - `TRANSACTION_FAILED`: 送信したトランザクションが、要求された commitment に到達する前にエラーになりました。
 - `REDIRECT_TIMEOUT`: iOS ウォレットが時間内にアプリへリダイレクトしませんでした。
 - `DECRYPTION_FAILED`: iOS ウォレットのコールバックを復号またはデコードできませんでした。
+- `MISSING_CLIENT_CAPABILITY`: コンポーザブルが必要とする capability（たとえば `planTransaction`、`sendTransaction`、`payer`）が Kit クライアントにありません。多くの場合、`createSolanaClient()` や対応する Kit プラグインを省いて手作業で組み立てたクライアントが原因です。
 - `RPC_FAILURE`: RPC の送信、読み取り、または確認が失敗しました。
 - `STORAGE_FAILURE`: ブラウザストレージの読み取りまたは書き込みができませんでした。
 

@@ -1,0 +1,36 @@
+# Vue Solana — Deutsch
+
+> Deutsche Übersetzung der Vue-Solana-Dokumentation.
+
+Official docs: https://vue-solana-docs.vercel.app/de
+Parent index: https://vue-solana-docs.vercel.app/llms.txt
+English docs: https://vue-solana-docs.vercel.app/llms.txt
+
+## Dokumentation
+
+- [Vue-Solana-Dokumentation](https://vue-solana-docs.vercel.app/de): Dokumentation für Vue- und Nuxt-Bibliotheken, die Entwicklern helfen, Solana zu nutzen.
+- [Erste Schritte](https://vue-solana-docs.vercel.app/de/getting-started): Installiere die Vue-Solana-Pakete, konfiguriere Vue oder Nuxt und teste RPC-Lesevorgänge auf devnet.
+- [Agent-Skill](https://vue-solana-docs.vercel.app/de/agent-skill): Installiere den Vue-Solana-Agent Skill für KI-Coding-Agenten.
+- [Fehlerbehebung](https://vue-solana-docs.vercel.app/de/troubleshooting): Häufige Probleme mit Einrichtung, TypeScript, Wallet, RPC und Nuxt.
+- [Solana für Vue-Entwickler](https://vue-solana-docs.vercel.app/de/concepts/solana-for-vue-developers): Praktische Solana-Konzepte für Vue- und Nuxt-Entwickler.
+- [Cluster](https://vue-solana-docs.vercel.app/de/concepts/clusters): Solana-Cluster-Namen, RPC-Endpoints und Faucet-Anweisungen.
+- [RPC und Cluster](https://vue-solana-docs.vercel.app/de/guides/rpc-and-clusters): Konfiguriere Solana-Cluster, RPC-Endpoints, WebSocket-Endpoints und Client-Helfer.
+- [Wallets](https://vue-solana-docs.vercel.app/de/guides/wallets): Entdecke Wallets, wähle eine aktive Wallet aus, verbinde und trenne sie und prüfe Fähigkeiten.
+- [Kontolesevorgänge](https://vue-solana-docs.vercel.app/de/guides/account-reads): Lies Guthaben, Kontodaten, Programm-Konten und Signaturstatus sicher aus Vue oder Nuxt.
+- [Transaktionen](https://vue-solana-docs.vercel.app/de/guides/transactions): Signiere, sende und bestätige Transaktionen und verwalte ihren Zustand mit Vue Solana.
+- [Solana Pay](https://vue-solana-docs.vercel.app/de/guides/solana-pay): Erstelle Solana-Pay-Transfer-Requests, rendere und scanne QR-Codes und bestätige die Abwicklung anhand einer Reference.
+- [Nachrichtensignierung](https://vue-solana-docs.vercel.app/de/guides/message-signing): Signiere Authentifizierungs- oder Eigentumsnachrichten, ohne On-Chain-Transaktionen zu erstellen.
+- [Fehler](https://vue-solana-docs.vercel.app/de/guides/errors): Behandle normalisierte Solana-Fehler aus Core-Helfern und Vue-/Nuxt-Composables.
+- [Migrationsleitfaden](https://vue-solana-docs.vercel.app/de/guides/migration): So migrierst du zwischen Vue-Solana-Versionen. Behandelt das Upgrade von v3 auf v4, von v2 auf v3 und die Migration von v1.x auf v2.
+- [E2E-Tests](https://vue-solana-docs.vercel.app/de/guides/e2e-testing): Führe die Playwright-E2E-Suite aus und mocke Solana-RPC, RPC-Subscriptions und Wallets für UI-Tests.
+- [@vue-solana/core](https://vue-solana-docs.vercel.app/de/packages/core): Framework-agnostische Solana-Konfiguration, RPC, Wallet-Typen und Transaktions-Helfer.
+- [@vue-solana/vue](https://vue-solana-docs.vercel.app/de/packages/vue): Vue-Plugin und Composables für Solana-Anwendungen.
+- [@vue-solana/nuxt](https://vue-solana-docs.vercel.app/de/packages/nuxt): Nuxt-Modul für Solana-Anwendungen.
+- [Vue-Vite-Beispiel](https://vue-solana-docs.vercel.app/de/examples/vue-vite): Lauffähige Beispiel-App mit Vue 3 und Vite für @vue-solana/vue.
+- [Nuxt-Beispiel](https://vue-solana-docs.vercel.app/de/examples/nuxt): Lauffähige Nuxt-Beispiel-App für @vue-solana/nuxt.
+- [Showcase](https://vue-solana-docs.vercel.app/de/showcase): Apps, die mit Vue Solana gebaut wurden, und wie du deine App hier gelistet bekommst.
+- [Roadmap](https://vue-solana-docs.vercel.app/de/roadmap): Geplante Funktionen und Verbesserungen für Vue Solana.
+- [Über](https://vue-solana-docs.vercel.app/de/about): Was Vue Solana ist, wer es pflegt und wie das Projekt organisiert ist.
+- [Kontakt](https://vue-solana-docs.vercel.app/de/contact): Wie du das Vue-Solana-Team für Support, Sicherheitsmeldungen und Presse erreichst.
+- [Datenschutz](https://vue-solana-docs.vercel.app/de/privacy): Was diese Dokumentationsseite erfasst, was nicht, und wie Analytics gehandhabt werden.
+- [Entwicklerportal](https://vue-solana-docs.vercel.app/de/developers): Quickstart, maschinenlesbare Endpoints und Integrationskonventionen für die Arbeit mit Vue Solana.

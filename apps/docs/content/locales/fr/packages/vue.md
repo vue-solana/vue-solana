@@ -684,6 +684,8 @@ Détails du comportement du cache :
 - Une source `null`/`undefined` désactive le composable et **efface** l'entrée en cache de cette clé — y compris lorsqu'un composant est monté avec sa source déjà désactivée.
 - `useTrackedDataSwr` met en cache l'enveloppe `SolanaRpcResponse` complète, afin que les composants remontés restaurent à la fois la valeur et son contexte de slot.
 - Le cache est une `Map` au niveau du module. Sur le serveur, préfixez les clés par requête ou appelez `clearSwrCache()` entre les requêtes pour éviter toute fuite entre requêtes.
+- `deleteSwrKey(key)` évince une entrée via sa clé de cache **complète**, préfixe d'adaptateur inclus (`deleteSwrKey("request:balance")`, pas `"balance"`). Utilisez-la lorsqu'une seule valeur obsolète doit disparaître ; `clearSwrCache()` vide toujours tout.
+- Le cache contient au maximum 1024 entrées et évince d'abord l'écriture la plus ancienne. Réécrire une clé existante (un remontage ou un résultat revalidé) rafraîchit sa position, afin que les clés activement utilisées ne soient pas évincées alors que les clés inactives le sont.
 
 Pour une démonstration exécutable des cinq composables (y compris le comportement de remontage SWR) contre devnet, voir les Live Data Panels dans l'[exemple Vue Vite](/fr/examples/vue-vite).
 
@@ -815,7 +817,7 @@ const { transactionMessage, execute } = usePlanTransaction();
 const message = await execute(instructions);
 ```
 
-`useClientCapability("payer")` vérifie qu'une capacité est installée sur le client et lève une erreur descriptive (nommant le hook et la façon de l'installer) pendant le setup lorsqu'elle manque. Le client Vue par défaut reçoit déjà le planner et les exécuteurs de signature et d'envoi de plan depuis `solanaRpc()` ; les clients personnalisés doivent installer `rpcTransactionPlanner()` et `rpcTransactionPlanSendingExecutor()` eux-mêmes.
+`useClientCapability("payer")` vérifie qu'une capacité est installée sur le client et lève une erreur descriptive (nommant le hook et la façon de l'installer) pendant le setup lorsqu'elle manque. L'erreur est une `MissingClientCapabilityError` — une sous-classe de `SolanaError` dont le `code` est `MISSING_CLIENT_CAPABILITY` —, donc `isSolanaError()` la restreint comme n'importe quelle autre erreur du paquet. Le client Vue par défaut reçoit déjà le planner et les exécuteurs de signature et d'envoi de plan depuis `solanaRpc()` ; un client construit à la main (par exemple avec `createClient()` et seulement `rpcTransactionPlanner()`) doit installer `rpcTransactionPlanSendingExecutor()` et un plugin de signer lui-même. Le même code remonte de `usePlanTransaction()` / `useSendTransaction()` lorsque la capacité disparaît après le setup.
 
 ## Confirmer une signature existante
 
@@ -848,7 +850,7 @@ const { status, loading, error, refresh, stopPolling } = useSignatureStatus(
 
 Il n'y a pas d'option `commitment` par appel : `getSignatureStatuses()` n'en accepte aucune, donc les lectures utilisent le commitment intégré à l'endpoint. Définissez-le sur l'endpoint ou sur `createSolanaPlugin()`. Pour un commitment par appel, utilisez `useTransactionConfirmation()`.
 
-L'interrogation utilise `getSignatureStatuses()` sur un `setTimeout` chaîné, donc un RPC lent retarde le tick suivant mais ne se chevauche jamais. Appeler `stopPolling()` efface le minuteur actuel et empêche les ticks automatiques suivants — jusqu'à ce que la signature surveillée change, ce qui redémarre l'interrogation pour la nouvelle signature. Les signatures invalides effacent le `status` obsolète, définissent `error` et n'appellent ni RPC ni interrogation. Les valeurs `pollIntervalMs` invalides inférieures ou égales à `0` définissent une `SolanaError` `RPC_FAILURE` et ne démarrent pas l'interrogation.
+L'interrogation utilise `getSignatureStatuses()` sur un `setTimeout` chaîné, donc un RPC lent retarde le tick suivant mais ne se chevauche jamais. Appeler `stopPolling()` efface le minuteur actuel et empêche les ticks automatiques suivants — jusqu'à ce que la signature surveillée change, ce qui redémarre l'interrogation pour la nouvelle signature. Les signatures invalides effacent le `status` obsolète, définissent `error` et n'appellent ni RPC ni interrogation. Les valeurs `pollIntervalMs` invalides inférieures ou égales à `0` définissent une `SolanaError` `INVALID_INPUT` (le même code que celui utilisé par core pour des options malformées) et ne démarrent pas l'interrogation.
 
 ## Application d'exemple
 

@@ -1,6 +1,6 @@
 # Bundle Performance Follow-Ups
 
-Tracks Phase 4 items intentionally left out of `package-improvements-plan.md`, grouped so they are revisited when bundle evidence or a prerequisite change justifies the risk.
+Tracks Phase 4 items intentionally left out of the 2026-10-06 audit plan (now archived at [`plans/archived/package-improvements-phases-1-8.md`](./archived/package-improvements-phases-1-8.md)), grouped so they are revisited when bundle evidence or a prerequisite change justifies the risk.
 
 ## Deferred items
 

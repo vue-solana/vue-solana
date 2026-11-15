@@ -1,4 +1,9 @@
-export const SITE_URL = "https://vue-solana-docs.vercel.app";
+import manifest from "./llms-manifest.json";
+
+export const SITE_URL = manifest.siteUrl;
+
+const LOCALE_CODES = manifest.locales.map((locale) => locale.code);
+const INDEXED_SECTIONS = manifest.sections.map((section) => section.key);
 
 /**
  * Current API version of the machine-readable surface, mirrored in the
@@ -102,6 +107,84 @@ export function isMachineReadablePath(path: string): boolean {
 }
 
 /**
+ * llms.txt indexes exist per locale and per documentation section. The
+ * llmstxt.org spec says that when more than one file applies, agents should
+ * use the most specific one, so a guide page points at `/guides/llms.txt`
+ * and a translated page at `/de/llms.txt` instead of the root index.
+ */
+export function llmsIndexForPath(path: string): string {
+  const segments = path.split("/").filter(Boolean);
+
+  if (LOCALE_CODES.includes(segments[0] ?? "")) {
+    return `${SITE_URL}/${segments[0]}/llms.txt`;
+  }
+
+  // The section root itself (`/guides`, `/examples`) is a section request even
+  // though it has no page, so it points at the section index rather than the
+  // root one.
+  if (INDEXED_SECTIONS.includes(segments[0] ?? "")) {
+    return `${SITE_URL}/${segments[0]}/llms.txt`;
+  }
+
+  return `${SITE_URL}/llms.txt`;
+}
+
+/**
+ * `Link` header pairing a markdown response with the most specific llms.txt
+ * index (`rel="describedby"`) and with its `.md` URL (`rel="alternate"`),
+ * as requested by the llmstxt.org v2 contract.
+ *
+ * `/.md` is the markdown form of the homepage: the middleware strips the
+ * suffix and resolves `/`, so it is a real, fetchable URL.
+ *
+ * The alternate is advisory on a 404: the middleware sets this header before
+ * resolving the page, so a recovery response for a missing path advertises the
+ * `.md` form of that path, which is itself a 404.
+ */
+export function agentLinkHeader(path: string): string {
+  const markdownPath = path === "/" ? "/.md" : `${path}.md`;
+
+  return `<${llmsIndexForPath(path)}>; rel="describedby", <${SITE_URL}${markdownPath}>; rel="alternate"; type="text/markdown"`;
+}
+
+/**
+ * Whether the request asks for a documentation page representation the
+ * middleware should resolve. Explicit `.md` suffix requests always resolve,
+ * including with a wildcard `Accept` (curl's default) — otherwise the
+ * `rel="alternate"` `.md` URL advertised in the `Link` header would 404 for
+ * exactly the clients that follow it.
+ *
+ * Browser navigations and wildcard clients without a suffix keep the
+ * framework's HTML rendering, and machine-readable paths are never
+ * content-negotiated.
+ */
+export function isNegotiablePageRequest(
+  path: string,
+  acceptHeader: string | undefined | null,
+): boolean {
+  const hasMdSuffix = path.endsWith(".md");
+  const pagePath = hasMdSuffix ? path.slice(0, -3) || "/" : path;
+
+  if (isMachineReadablePath(pagePath)) {
+    return false;
+  }
+
+  if (hasMdSuffix) {
+    return true;
+  }
+
+  // A wildcard `Accept` normally means "no preference", so the framework's
+  // default rendering wins. It is only "no preference" when markdown is not the
+  // preferred type: `text/markdown, */*` (common from generated clients and
+  // HTTP libraries that append a wildcard) does ask for markdown.
+  if (isWildcardishAccept(acceptHeader) && negotiateFormat(acceptHeader) !== "markdown") {
+    return false;
+  }
+
+  return negotiateFormat(acceptHeader) === "markdown" || !acceptsHtml(acceptHeader);
+}
+
+/**
  * Response headers required by the acceptmarkdown.com contract: caches must
  * key on the negotiated format, so `Accept` has to be listed in `Vary`.
  */
@@ -132,17 +215,19 @@ The path \`${path}\` does not exist on Vue Solana Docs.
 
 ## Where To Look Next
 
-- [Site map](https://vue-solana-docs.vercel.app/sitemap.xml): every indexed documentation page.
-- [Agent guide](https://vue-solana-docs.vercel.app/llms.txt): llms.txt index of all documentation pages.
-- [Full documentation](https://vue-solana-docs.vercel.app/llms-full.txt): complete site content as one markdown document.
-- [OpenAPI spec](https://vue-solana-docs.vercel.app/openapi.json): machine-readable API surface, error model, and versioning policy.
-- [Developer portal](https://vue-solana-docs.vercel.app/developers): quickstart and machine-readable endpoint reference.
-- [About](https://vue-solana-docs.vercel.app/about): what this project is and who maintains it.
-- [Contact](https://vue-solana-docs.vercel.app/contact): support, security reports, and press channels.
-- [Overview](https://vue-solana-docs.vercel.app/): documentation home page.
-- [Getting Started](https://vue-solana-docs.vercel.app/getting-started): install and configure the Vue Solana packages.
-- [Agent Skill](https://vue-solana-docs.vercel.app/agent-skill): installable skill for AI coding agents.
-- [Troubleshooting](https://vue-solana-docs.vercel.app/troubleshooting): common setup and wallet issues.
+- [Site map](${SITE_URL}/sitemap.xml): every indexed documentation page.
+- [Agent guide](${SITE_URL}/llms.txt): small English index of all documentation pages.
+- [Section indexes](${SITE_URL}/guides/llms.txt): narrower indexes at /guides/llms.txt, /packages/llms.txt, /concepts/llms.txt, and /examples/llms.txt.
+- [Translations](${SITE_URL}/de/llms.txt): per-locale indexes at /de/llms.txt through /zh/llms.txt.
+- [Full documentation](${SITE_URL}/llms-full.txt): the English documentation as one markdown document.
+- [OpenAPI spec](${SITE_URL}/openapi.json): machine-readable API surface, error model, and versioning policy.
+- [Developer portal](${SITE_URL}/developers): quickstart and machine-readable endpoint reference.
+- [About](${SITE_URL}/about): what this project is and who maintains it.
+- [Contact](${SITE_URL}/contact): support, security reports, and press channels.
+- [Overview](${SITE_URL}/): documentation home page.
+- [Getting Started](${SITE_URL}/getting-started): install and configure the Vue Solana packages.
+- [Agent Skill](${SITE_URL}/agent-skill): installable skill for AI coding agents.
+- [Troubleshooting](${SITE_URL}/troubleshooting): common setup and wallet issues.
 
 Re-sending this request with an \`Accept: text/markdown\` header returns any
 documentation page as markdown instead of HTML.

@@ -206,6 +206,7 @@ type SolanaChain = "solana:mainnet" | "solana:testnet" | "solana:devnet" | "sola
 - `getSolanaIosWallets(options?)`: devuelve entradas de wallet de navegador iOS para Phantom, Solflare y Backpack en navegadores iOS.
 - `adaptSolanaIosWallet(walletInfo, options?)`: adapta una entrada de wallet iOS con deep link a `SolanaWallet`.
 - `handleSolanaIosWalletCallback(options?)`: valida y descifra callbacks de redirección de wallet iOS.
+- `waitForRedirect(options?)`: resuelve la espera de una redirección de wallet iOS. Deliberadamente nunca se resuelve dentro de la página (la redirección recarga la página y el arranque gestiona el callback); rechaza con `REDIRECT_TIMEOUT` tras `timeoutMs` (10 minutos por defecto) o con el motivo de la señal cuando `signal` se aborta, para que un flujo de deep link propio pueda restablecer el estado `connecting` en lugar de quedarse colgado.
 - `isSolanaIosBrowserWalletSupported()`: devuelve si el runtime actual debería exponer enlaces de wallet de navegador iOS.
 
 Estos helpers son seguros para SSR. El registro de Android devuelve sin registrar cuando `window` no está disponible, cuando la página no está en un contexto seguro o cuando el navegador no es Android. El descubrimiento de wallets iOS devuelve una lista vacía cuando el navegador no es un runtime de navegador iOS.
@@ -433,6 +434,7 @@ Los códigos de error estables son:
 - `TRANSACTION_FAILED`
 - `REDIRECT_TIMEOUT`
 - `DECRYPTION_FAILED`
+- `MISSING_CLIENT_CAPABILITY`
 - `RPC_FAILURE`
 - `STORAGE_FAILURE`
 

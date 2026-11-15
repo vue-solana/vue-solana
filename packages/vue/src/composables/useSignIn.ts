@@ -17,7 +17,9 @@ export type SignInStatus = "idle" | "signing-in" | "signed-in" | "error";
 export function useSignIn() {
   const { wallet } = useWallet();
   const signInResult = shallowRef<SolanaSignInResult | null>(null);
-  const { status, loading, error, execute } = useExecution<SignInStatus>("signing-in");
+  const { status, loading, error, execute } = useExecution<SignInStatus>("signing-in", {
+    failureCode: "WALLET_FAILURE",
+  });
 
   function signIn(input?: SolanaSignInInput): Promise<SolanaSignInResult> {
     signInResult.value = null;

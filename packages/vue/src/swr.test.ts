@@ -266,3 +266,73 @@ describe("deleteSwrKey", () => {
     second.scope.stop();
   });
 });
+
+describe("SWR cache size cap", () => {
+  // The cap (1024 entries, oldest-first) is only observable through mounts:
+  // `swrCache` is module-private, so each case seeds it with real keys and then
+  // probes whether a key still seeds. The seeding mounts in one batch and waits
+  // once, so the cases stay well under the default 5 s test timeout.
+  const MAX_ENTRIES = 1024;
+
+  async function mountAll(keys: string[]) {
+    const mounted = keys.map((key) =>
+      runInScope(() => useRequestSwr<string>(key, async () => `value-${key}`)),
+    );
+
+    await vi.waitFor(() => {
+      const last = mounted.at(-1);
+
+      // Assert the composable's own status, not `data`: a key that already has
+      // a cached seed reports data immediately, so waiting on data would return
+      // before this mount's write-back (the thing under test) happens.
+      expect(last?.result.status.value).toBe("success");
+      expect(last?.result.data.value).toBe(`value-${keys.at(-1)}`);
+    });
+
+    return mounted;
+  }
+
+  function mountPending(key: string) {
+    return runInScope(() => useRequestSwr<string>(key, () => new Promise<string>(() => undefined)));
+  }
+
+  it("evicts the oldest entry once the cache exceeds its size cap", async () => {
+    clearSwrCache();
+
+    const keys = Array.from({ length: MAX_ENTRIES + 1 }, (_, index) => `capped-${index}`);
+    const mounted = await mountAll(keys);
+    mounted.forEach((entry) => entry.scope.stop());
+
+    // `capped-0` was the oldest write, so the 1025th insert evicted it.
+    const evicted = mountPending("capped-0");
+    expect(evicted.result.data.value).toBeUndefined();
+    evicted.scope.stop();
+
+    // The newest write is still cached.
+    const cached = mountPending(`capped-${MAX_ENTRIES}`);
+    expect(cached.result.data.value).toBe(`value-capped-${MAX_ENTRIES}`);
+    cached.scope.stop();
+  });
+
+  it("keeps a rewritten key alive by refreshing its insertion order", async () => {
+    clearSwrCache();
+
+    const keys = Array.from({ length: MAX_ENTRIES }, (_, index) => `ordered-${index}`);
+    (await mountAll(keys)).forEach((entry) => entry.scope.stop());
+
+    // Re-writing an existing key must move it to the newest position.
+    (await mountAll(["ordered-0"])).forEach((entry) => entry.scope.stop());
+
+    // One more key overflows the cap and evicts the oldest *remaining* entry,
+    // which is `ordered-1` only if the rewrite moved `ordered-0`.
+    (await mountAll([`ordered-${MAX_ENTRIES}`])).forEach((entry) => entry.scope.stop());
+
+    const rewritten = mountPending("ordered-0");
+    expect(rewritten.result.data.value).toBe("value-ordered-0");
+    rewritten.scope.stop();
+
+    const evicted = mountPending("ordered-1");
+    expect(evicted.result.data.value).toBeUndefined();
+    evicted.scope.stop();
+  });
+});

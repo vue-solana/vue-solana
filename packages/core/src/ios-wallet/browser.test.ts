@@ -91,6 +91,17 @@ describe("waitForRedirect", () => {
     await rejection;
   });
 
+  it("rejects, rather than throwing, when the signal is already aborted", async () => {
+    const controller = new AbortController();
+    controller.abort();
+
+    // `.catch()` must see every abort path: a synchronous throw here would
+    // escape an app's promise chain.
+    await expect(waitForRedirect({ signal: controller.signal })).rejects.toMatchObject({
+      name: "AbortError",
+    });
+  });
+
   it("throws INVALID_INPUT for invalid timeouts", () => {
     expect(() => waitForRedirect({ timeoutMs: Number.NaN })).toThrowError(SolanaError);
 

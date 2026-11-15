@@ -684,6 +684,8 @@ const balance = useRequestSwr(`balance:${someAddress}`, rpc.getBalance(someAddre
 - ソースが `null`/`undefined` の場合はコンポーザブルが無効になり、そのキーのキャッシュエントリが**クリア**されます。コンポーネントがソースを無効にした状態でマウントされた場合も同様です。
 - `useTrackedDataSwr` は `SolanaRpcResponse` エンベロープ全体をキャッシュするため、再マウントしたコンポーネントは値とそのスロットコンテキストの両方を復元できます。
 - キャッシュはモジュールレベルの `Map` です。サーバー上では、リクエストをまたぐ漏えいを避けるため、リクエストごとにキーを名前空間化するか、リクエスト間に `clearSwrCache()` を呼び出してください。
+- `deleteSwrKey(key)` はアダプターのプレフィックスを含む**完全な**キャッシュキーで 1 件だけ削除します（`deleteSwrKey("request:balance")` であり `"balance"` ではありません）。古い値を 1 つだけ消したいときに使い、`clearSwrCache()` は引き続きすべてを空にします。
+- キャッシュは最大 1024 エントリを保持し、最も古い書き込みから削除します。既存キーの再書き込み（再マウントや再検証された結果）はその位置を最新にするため、使われ続けているキーは残り、使われていないキーが削除されます。
 
 5 つのコンポーザブルすべて（SWR の再マウント挙動を含む）を devnet に対して実行できるデモについては、[Vue Vite のサンプル](/ja/examples/vue-vite) の Live Data Panels を参照してください。
 
@@ -815,7 +817,7 @@ const { transactionMessage, execute } = usePlanTransaction();
 const message = await execute(instructions);
 ```
 
-`useClientCapability("payer")` はクライアントにケイパビリティがインストールされていることを検証し、不足している場合はセットアップ中に説明的なエラー（フック名とインストール方法を示す）を投げます。デフォルトの Vue クライアントは `solanaRpc()` からプランナーとプラン署名・プラン送信エグゼキューターをすでに取得しています。カスタムクライアントは `rpcTransactionPlanner()` と `rpcTransactionPlanSendingExecutor()` を自分でインストールする必要があります。
+`useClientCapability("payer")` はクライアントにケイパビリティがインストールされていることを検証し、不足している場合はセットアップ中に説明的なエラー（フック名とインストール方法を示す）を投げます。このエラーは `MissingClientCapabilityError`（`code` が `MISSING_CLIENT_CAPABILITY` の `SolanaError` サブクラス）なので、`isSolanaError()` で他のパッケージエラーと同様に絞り込めます。デフォルトの Vue クライアントは `solanaRpc()` からプランナーとプラン署名・プラン送信エグゼキューターをすでに取得しています。手作業で組み立てたクライアント（たとえば `createClient()` と `rpcTransactionPlanner()` だけを使う場合）は `rpcTransactionPlanSendingExecutor()` と signer プラグインを自分でインストールする必要があります。セットアップ後にケイパビリティが消えた場合も、`usePlanTransaction()` / `useSendTransaction()` から同じコードが返ります。
 
 ## 既存の署名を確認する
 
@@ -848,7 +850,7 @@ const { status, loading, error, refresh, stopPolling } = useSignatureStatus(
 
 呼び出しごとの `commitment` オプションはありません。`getSignatureStatuses()` はそれを受け付けないため、読み取りにはエンドポイントに埋め込まれたコミットメントが使われます。エンドポイントまたは `createSolanaPlugin()` で設定してください。呼び出しごとのコミットメントが必要な場合は `useTransactionConfirmation()` を使用します。
 
-ポーリングは連鎖した `setTimeout` で `getSignatureStatuses()` を使用するため、RPC が遅いと次のティックが遅れるだけで、重なることはありません。`stopPolling()` を呼び出すと現在のタイマーがクリアされ、以降の自動ティックが停止します。ただし、監視対象の署名が変わると、新しい署名に対してポーリングが再開されます。不正な署名は古い `status` をクリアし、`error` を設定し、RPC の呼び出しやポーリングの開始を行いません。`0` 以下の `pollIntervalMs` は `RPC_FAILURE` の `SolanaError` を設定し、ポーリングを開始しません。
+ポーリングは連鎖した `setTimeout` で `getSignatureStatuses()` を使用するため、RPC が遅いと次のティックが遅れるだけで、重なることはありません。`stopPolling()` を呼び出すと現在のタイマーがクリアされ、以降の自動ティックが停止します。ただし、監視対象の署名が変わると、新しい署名に対してポーリングが再開されます。不正な署名は古い `status` をクリアし、`error` を設定し、RPC の呼び出しやポーリングの開始を行いません。`0` 以下の `pollIntervalMs` は `INVALID_INPUT` の `SolanaError`（core が不正なオプションに使うのと同じコード）を設定し、ポーリングを開始しません。
 
 ## サンプルアプリ
 

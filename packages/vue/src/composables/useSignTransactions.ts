@@ -21,7 +21,9 @@ export type SignTransactionsStatus = "idle" | "signing" | "signed" | "error";
 export function useSignTransactions() {
   const { wallet } = useWallet();
   const signedTransactions = shallowRef<SolanaTransaction[] | null>(null);
-  const { status, loading, error, execute } = useExecution<SignTransactionsStatus>("signing");
+  const { status, loading, error, execute } = useExecution<SignTransactionsStatus>("signing", {
+    failureCode: "WALLET_FAILURE",
+  });
 
   function sign(transactions: SolanaTransaction[]): Promise<SolanaTransaction[]> {
     signedTransactions.value = null;

@@ -1,0 +1,36 @@
+# Vue Solana — 中文
+
+> Vue Solana 文档的中文翻译。
+
+Official docs: https://vue-solana-docs.vercel.app/zh
+Parent index: https://vue-solana-docs.vercel.app/llms.txt
+English docs: https://vue-solana-docs.vercel.app/llms.txt
+
+## 文档
+
+- [Vue Solana 文档](https://vue-solana-docs.vercel.app/zh): 帮助开发者在 Vue 和 Nuxt 中使用 Solana 的库文档。
+- [开始使用](https://vue-solana-docs.vercel.app/zh/getting-started): 安装 Vue Solana 包、配置 Vue 或 Nuxt，并在 devnet 上测试 RPC 读取。
+- [Agent Skill](https://vue-solana-docs.vercel.app/zh/agent-skill): 为 AI 编码代理安装 Vue Solana Agent Skill。
+- [故障排查](https://vue-solana-docs.vercel.app/zh/troubleshooting): 常见的安装、TypeScript、钱包、RPC 和 Nuxt 问题。
+- [面向 Vue 开发者的 Solana](https://vue-solana-docs.vercel.app/zh/concepts/solana-for-vue-developers): 面向 Vue 和 Nuxt 开发者的实用 Solana 概念。
+- [集群](https://vue-solana-docs.vercel.app/zh/concepts/clusters): Solana 集群名称、RPC 端点和水龙头使用说明。
+- [RPC 和集群](https://vue-solana-docs.vercel.app/zh/guides/rpc-and-clusters): 配置 Solana 集群、RPC 端点、WebSocket 端点和客户端辅助函数。
+- [钱包](https://vue-solana-docs.vercel.app/zh/guides/wallets): 发现钱包、选择活跃钱包、连接、断开连接并检查能力。
+- [账户读取](https://vue-solana-docs.vercel.app/zh/guides/account-reads): 在 Vue 或 Nuxt 中安全读取余额、账户数据、程序账户和签名状态。
+- [交易](https://vue-solana-docs.vercel.app/zh/guides/transactions): 使用 Vue Solana 签署、发送、确认并处理交易状态。
+- [Solana Pay](https://vue-solana-docs.vercel.app/zh/guides/solana-pay): 创建 Solana Pay 转账请求，渲染和扫描二维码，并按引用确认结算。
+- [消息签名](https://vue-solana-docs.vercel.app/zh/guides/message-signing): 签署认证或所有权消息，而不创建链上交易。
+- [错误](https://vue-solana-docs.vercel.app/zh/guides/errors): 处理来自核心辅助函数和 Vue/Nuxt 组合式函数的标准化 Solana 错误。
+- [迁移指南](https://vue-solana-docs.vercel.app/zh/guides/migration): Vue Solana 版本迁移指南。涵盖 v3 到 v4 的升级、v2 到 v3 的升级，以及 v1.x 到 v2 的迁移。
+- [E2E 测试](https://vue-solana-docs.vercel.app/zh/guides/e2e-testing): 运行 Playwright e2e 测试套件，并在 UI 测试中模拟 Solana RPC、RPC 订阅和钱包。
+- [@vue-solana/core](https://vue-solana-docs.vercel.app/zh/packages/core): 框架无关的 Solana 配置、RPC、钱包类型和交易 helper。
+- [@vue-solana/vue](https://vue-solana-docs.vercel.app/zh/packages/vue): 用于 Solana 应用的 Vue 插件和 composable。
+- [@vue-solana/nuxt](https://vue-solana-docs.vercel.app/zh/packages/nuxt): 用于 Solana 应用的 Nuxt 模块。
+- [Vue Vite 示例](https://vue-solana-docs.vercel.app/zh/examples/vue-vite): 面向 @vue-solana/vue 的可运行 Vue 3 和 Vite 示例应用。
+- [Nuxt 示例](https://vue-solana-docs.vercel.app/zh/examples/nuxt): 面向 @vue-solana/nuxt 的可运行 Nuxt 示例应用。
+- [应用案例](https://vue-solana-docs.vercel.app/zh/showcase): 使用 Vue Solana 构建的应用，以及如何让你的应用出现在这个页面。
+- [路线图](https://vue-solana-docs.vercel.app/zh/roadmap): Vue Solana 规划中的功能与改进。
+- [关于](https://vue-solana-docs.vercel.app/zh/about): Vue Solana 是什么、由谁维护，以及项目的运作方式。
+- [联系](https://vue-solana-docs.vercel.app/zh/contact): 如何就支持、安全报告和媒体事务联系 Vue Solana 团队。
+- [隐私](https://vue-solana-docs.vercel.app/zh/privacy): 本文档网站收集什么、不收集什么，以及分析数据的处理方式。
+- [开发者门户](https://vue-solana-docs.vercel.app/zh/developers): 构建 Vue Solana 集成的快速上手、机器可读端点与集成约定。

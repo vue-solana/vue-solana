@@ -1,0 +1,18 @@
+# Vue Solana — Guides
+
+> Task-focused guides for RPC, wallets, transactions, and testing.
+
+Official docs: https://vue-solana-docs.vercel.app
+Parent index: https://vue-solana-docs.vercel.app/llms.txt
+
+## Guides
+
+- [RPC and Clusters](https://vue-solana-docs.vercel.app/guides/rpc-and-clusters): Configure Solana clusters, RPC endpoints, WebSocket endpoints, and client helpers.
+- [Wallets](https://vue-solana-docs.vercel.app/guides/wallets): Discover wallets, select an active wallet, connect, disconnect, and check capabilities.
+- [Account Reads](https://vue-solana-docs.vercel.app/guides/account-reads): Read balances, account data, program accounts, and signature status safely from Vue or Nuxt.
+- [Transactions](https://vue-solana-docs.vercel.app/guides/transactions): Sign, send, confirm, and handle transaction state with Vue Solana.
+- [Solana Pay](https://vue-solana-docs.vercel.app/guides/solana-pay): Create Solana Pay transfer requests, render and scan QR codes, and confirm settlement by reference.
+- [Message Signing](https://vue-solana-docs.vercel.app/guides/message-signing): Sign authentication or ownership messages without creating on-chain transactions.
+- [Errors](https://vue-solana-docs.vercel.app/guides/errors): Handle normalized Solana errors from core helpers and Vue/Nuxt composables.
+- [Migration Guide](https://vue-solana-docs.vercel.app/guides/migration): How to migrate between Vue Solana versions. Covers upgrading from v3 to v4, v2 to v3, and migrating from v1.x to v2.
+- [E2E Testing](https://vue-solana-docs.vercel.app/guides/e2e-testing): Run the Playwright e2e suite and mock Solana RPC, RPC subscriptions, and wallets for UI tests.

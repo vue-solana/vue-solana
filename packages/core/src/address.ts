@@ -13,13 +13,21 @@ export type MaybeAddressInput =
   | (() => MaybeAddressInput);
 
 /**
+ * Nesting budget for ref/getter unwrapping. A cyclic input (`const a = () => a`)
+ * would otherwise recurse until the stack overflows, which surfaces as a
+ * `RangeError` no app can catch meaningfully. Deeply nested *legitimate* inputs
+ * are unrealistic; 32 is generous and keeps the failure deterministic.
+ */
+const MAX_ADDRESS_INPUT_DEPTH = 32;
+
+/**
  * Parse a Solana address from a Kit `Address`, string, ref, or getter.
  *
  * Valid strings are returned as `Address`; invalid input throws a
  * `SolanaError` with code `INVALID_ADDRESS`.
  */
 export function parseAddress(value: MaybeAddressInput): Address | null {
-  const input = toAddressInput(value);
+  const input = toAddressInput(value, 0);
 
   if (!input) {
     return null;
@@ -36,13 +44,20 @@ export function parseAddress(value: MaybeAddressInput): Address | null {
   }
 }
 
-function toAddressInput(value: MaybeAddressInput): AddressInput {
+function toAddressInput(value: MaybeAddressInput, depth: number): AddressInput {
   if (!value) {
     return null;
   }
 
+  if (depth > MAX_ADDRESS_INPUT_DEPTH) {
+    throw createSolanaError(
+      "INVALID_ADDRESS",
+      `Invalid Solana address: input nests more than ${MAX_ADDRESS_INPUT_DEPTH} levels (possible cycle)`,
+    );
+  }
+
   if (typeof value === "function") {
-    return toAddressInput(value() as MaybeAddressInput);
+    return toAddressInput(value() as MaybeAddressInput, depth + 1);
   }
 
   if (typeof value === "string") {
@@ -54,7 +69,7 @@ function toAddressInput(value: MaybeAddressInput): AddressInput {
   // programmer error (number, object, boolean) — throwing `INVALID_ADDRESS`
   // beats silently returning `null` and skipping the read.
   if (typeof value === "object" && value !== null && "value" in value) {
-    return toAddressInput((value as { value: MaybeAddressInput }).value);
+    return toAddressInput((value as { value: MaybeAddressInput }).value, depth + 1);
   }
 
   throw createSolanaError(

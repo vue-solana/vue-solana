@@ -223,6 +223,7 @@ type SolanaErrorCode =
   | "TRANSACTION_FAILED"
   | "REDIRECT_TIMEOUT"
   | "DECRYPTION_FAILED"
+  | "MISSING_CLIENT_CAPABILITY"
   | "RPC_FAILURE"
   | "STORAGE_FAILURE";
 
@@ -289,6 +290,7 @@ interface TransactionConfirmation {
 - `getSolanaIosWallets(options?)`: returns Phantom, Solflare, and Backpack iOS browser wallet entries on iOS browsers.
 - `adaptSolanaIosWallet(walletInfo, options?)`: adapts an iOS deep-link wallet entry into `SolanaWallet`.
 - `handleSolanaIosWalletCallback(options?)`: validates and decrypts iOS wallet redirect callbacks.
+- `waitForRedirect(options?)`: never resolves in-page (the redirect reloads the page); rejects with `REDIRECT_TIMEOUT` after `timeoutMs` (default 10 minutes) or with the signal's reason on abort, so custom deep-link flows can reset `connecting`.
 - `isSolanaIosBrowserWalletSupported()`: returns whether the current runtime should expose iOS browser wallet links.
 
 ## SPL Token Reads (`@vue-solana/core/token-accounts`)

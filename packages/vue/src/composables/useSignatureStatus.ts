@@ -144,7 +144,7 @@ export function useSignatureStatus(
     }
 
     if (options.pollIntervalMs <= 0) {
-      error.value = createSolanaError("RPC_FAILURE", "pollIntervalMs must be greater than 0");
+      error.value = createSolanaError("INVALID_INPUT", "pollIntervalMs must be greater than 0");
       return;
     }
 

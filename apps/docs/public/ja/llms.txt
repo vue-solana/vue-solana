@@ -1,0 +1,36 @@
+# Vue Solana — 日本語
+
+> Vue Solana ドキュメントの日本語訳です。
+
+Official docs: https://vue-solana-docs.vercel.app/ja
+Parent index: https://vue-solana-docs.vercel.app/llms.txt
+English docs: https://vue-solana-docs.vercel.app/llms.txt
+
+## ドキュメント
+
+- [Vue Solana ドキュメント](https://vue-solana-docs.vercel.app/ja): Vue と Nuxt で Solana を使うためのライブラリのドキュメントです。
+- [はじめに](https://vue-solana-docs.vercel.app/ja/getting-started): Vue Solana パッケージをインストールし、Vue または Nuxt を設定して、devnet で RPC の読み取りをテストします。
+- [Agent Skill](https://vue-solana-docs.vercel.app/ja/agent-skill): AI コーディングエージェント向けの Vue Solana Agent Skill をインストールします。
+- [トラブルシューティング](https://vue-solana-docs.vercel.app/ja/troubleshooting): よくあるセットアップ、TypeScript、ウォレット、RPC、Nuxt の問題。
+- [Vue 開発者のための Solana](https://vue-solana-docs.vercel.app/ja/concepts/solana-for-vue-developers): Vue と Nuxt の開発者に向けた、実践的な Solana の概念。
+- [クラスター](https://vue-solana-docs.vercel.app/ja/concepts/clusters): Solana のクラスター名、RPC エンドポイント、フォーセットの手順。
+- [RPC とクラスター](https://vue-solana-docs.vercel.app/ja/guides/rpc-and-clusters): Solana のクラスター、RPC エンドポイント、WebSocket エンドポイント、クライアントヘルパーを設定します。
+- [ウォレット](https://vue-solana-docs.vercel.app/ja/guides/wallets): ウォレットを検出し、アクティブなウォレットを選択し、接続・切断し、機能を確認します。
+- [アカウント読み取り](https://vue-solana-docs.vercel.app/ja/guides/account-reads): Vue または Nuxt から、残高、アカウントデータ、プログラムアカウント、署名ステータスを安全に読み取ります。
+- [トランザクション](https://vue-solana-docs.vercel.app/ja/guides/transactions): Vue Solana でトランザクションに署名、送信、確認し、状態を処理します。
+- [Solana Pay](https://vue-solana-docs.vercel.app/ja/guides/solana-pay): Solana Pay の転送リクエストを作成し、QR コードを表示・スキャンし、reference による決済確認を行います。
+- [メッセージ署名](https://vue-solana-docs.vercel.app/ja/guides/message-signing): オンチェーントランザクションを作成せずに、認証や所有権を示すメッセージに署名します。
+- [エラー](https://vue-solana-docs.vercel.app/ja/guides/errors): core のヘルパーと Vue/Nuxt のコンポーザブルから返される、正規化された Solana エラーを処理します。
+- [移行ガイド](https://vue-solana-docs.vercel.app/ja/guides/migration): Vue Solana のバージョン間の移行方法。v3 から v4、v2 から v3 へのアップグレード、および v1.x から v2 への移行について説明します。
+- [E2E テスト](https://vue-solana-docs.vercel.app/ja/guides/e2e-testing): Playwright の e2e スイートを実行し、UI テスト用に Solana RPC、RPC サブスクリプション、ウォレットをモックします。
+- [@vue-solana/core](https://vue-solana-docs.vercel.app/ja/packages/core): フレームワークに依存しない Solana の設定、RPC、ウォレットの型、トランザクションヘルパー。
+- [@vue-solana/vue](https://vue-solana-docs.vercel.app/ja/packages/vue): Solana アプリケーション向けの Vue プラグインとコンポーザブルです。
+- [@vue-solana/nuxt](https://vue-solana-docs.vercel.app/ja/packages/nuxt): Solana アプリケーションのための Nuxt モジュールです。
+- [Vue Vite サンプル](https://vue-solana-docs.vercel.app/ja/examples/vue-vite): 実行可能な @vue-solana/vue の Vue 3 + Vite サンプルアプリです。
+- [Nuxt サンプル](https://vue-solana-docs.vercel.app/ja/examples/nuxt): 実行可能な @vue-solana/nuxt の Nuxt サンプルアプリです。
+- [ショーケース](https://vue-solana-docs.vercel.app/ja/showcase): Vue Solana で構築されたアプリと、あなたのアプリをこのページに掲載する方法。
+- [ロードマップ](https://vue-solana-docs.vercel.app/ja/roadmap): Vue Solana で予定されている機能と改善点です。
+- [このプロジェクトについて](https://vue-solana-docs.vercel.app/ja/about): Vue Solana とは何か、誰がメンテナンスしているか、プロジェクトがどのように運営されているかを説明します。
+- [お問い合わせ](https://vue-solana-docs.vercel.app/ja/contact): サポート、セキュリティ報告、プレス対応について Vue Solana チームへの連絡方法を説明します。
+- [プライバシー](https://vue-solana-docs.vercel.app/ja/privacy): このドキュメントサイトが収集するもの、収集しないもの、アナリティクスの扱いについて説明します。
+- [開発者ポータル](https://vue-solana-docs.vercel.app/ja/developers): Vue Solana を使って開発するためのクイックスタート、機械可読エンドポイント、連携の慣習をまとめています。

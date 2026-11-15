@@ -38,6 +38,7 @@ export * from "./solana-pay-status";
 // dropped from this barrel entirely, so resolve it explicitly: an explicit
 // export wins over every star export. These are this package's own types —
 // the Kit originals are reachable through `@vue-solana/core/kit`.
+// (`isAbortError` is the fifth shared name and is resolved separately below.)
 export { SolanaError, isSolanaError } from "./errors";
 export type { SolanaErrorCode } from "./errors";
 export type { TransactionStatus } from "./types";

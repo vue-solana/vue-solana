@@ -106,12 +106,16 @@ export default defineNuxtConfig({
 - `useSolanaQrCode()`：将 Solana Pay URL 渲染为 SVG 二维码。
 - `useSolanaQrScanner()`：通过摄像头和 `BarcodeDetector` 扫描 Solana Pay 二维码。
 
-为了在多次挂载之间进行 cache keying，SWR adapter 不会自动导入。请从 Vue 包 subpath 显式导入：
+为了在多次挂载之间进行 cache keying，SWR adapter 及其 cache helper 会与它们包裹的 composable 一起自动导入：`useSolanaRequestSwr()`、`useSolanaSubscriptionSwr()`、`useSolanaTrackedDataSwr()`、`clearSwrCache()` 和 `deleteSwrKey()`。它们是 `@vue-solana/vue/swr` 导出的 alias：
+
+```ts
+const balance = useSolanaRequestSwr(`balance:${someAddress}`, rpc.getBalance(someAddress));
+```
+
+也可以从 Vue 包 subpath 显式导入：
 
 ```ts
 import { useRequestSwr } from "@vue-solana/vue/swr";
-
-const balance = useRequestSwr(`balance:${someAddress}`, rpc.getBalance(someAddress));
 ```
 
 request、subscription、tracked-data 和 SWR-cache composable 的完整语义请参阅 [Data Fetching Composables](/packages/vue#data-fetching-composables)。
@@ -124,6 +128,11 @@ request、subscription、tracked-data 和 SWR-cache composable 的完整语义�
 - `useSolanaSendTransaction()` / `useSolanaSendTransactions()`：使用默认 client 安装的官方 planner 和 executor，进行 plan、sign、submit 并等待 `confirmed`，不显示 wallet popup。请在 client-only Vue plugin 中配置 `payer`；当 connected wallet 必须批准每笔交易时，使用 `useSolanaSignAndSendTransaction(s)`。
 
 这些是 Vue composable 的 Nuxt alias。
+
+- `useSolanaClientCapability()`：当已安装的 Kit client 缺少所需 capability 时快速失败。
+- `tryUseSolana()`：安全、不抛错的已注入 Solana context 访问器。
+- `clearSwrCache()`：清空模块级 SWR 缓存（参见 [Data Fetching Composables](/packages/vue#data-fetching-composables)）。
+- `deleteSwrKey()`：按完整 key（含适配器前缀）移除单个缓存的 SWR 条目（参见 [Data Fetching Composables](/packages/vue#data-fetching-composables)）。
 
 模块创建的默认 client 在未配置 `commitment` 时会组合官方 `solanaRpc()` 和 `rpcAirdrop()` plugin（配置了 `commitment` 会显式构建相同 stack 使其到达 RPC 层）；`solanaRpc()` 会自行安装 transaction planner 以及 plan-signing 和 plan-sending executor。旧的 custom fallback sender 不再使用。`useSolanaSendTransaction()` 和 `useSolanaSendTransactions()` 暴露官方 client-sending capability，但由于 `ModuleOptions` 省略了 `payer` 和 `payerSecretKey`，模块不会配置 payer。只有官方 executor 在 `confirmed` commitment 完成 send-and-confirm 后，状态才会变为 `sent`。
 

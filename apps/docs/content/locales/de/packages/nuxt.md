@@ -107,12 +107,16 @@ Das Modul importiert diese Composables aus direkten `@vue-solana/vue/*`-Subpfade
 - `useSolanaQrCode()`: rendert eine Solana-Pay-URL als SVG-QR-Code.
 - `useSolanaQrScanner()`: scannt Solana-Pay-QR-Codes über die Kamera und `BarcodeDetector`.
 
-Für Cache-Keying über mehrere Mounts hinweg werden die SWR-Adapter nicht automatisch importiert. Importiere sie ausdrücklich aus dem Subpfad des Vue-Pakets:
+Für Cache-Keying über mehrere Mounts hinweg werden die SWR-Adapter und ihre Cache-Helfer zusammen mit den Composables, die sie umhüllen, automatisch importiert: `useSolanaRequestSwr()`, `useSolanaSubscriptionSwr()`, `useSolanaTrackedDataSwr()`, `clearSwrCache()` und `deleteSwrKey()`. Sie sind Aliase der Exporte aus `@vue-solana/vue/swr`:
+
+```ts
+const balance = useSolanaRequestSwr(`balance:${someAddress}`, rpc.getBalance(someAddress));
+```
+
+Du kannst sie auch ausdrücklich aus dem Subpfad des Vue-Pakets importieren:
 
 ```ts
 import { useRequestSwr } from "@vue-solana/vue/swr";
-
-const balance = useRequestSwr(`balance:${someAddress}`, rpc.getBalance(someAddress));
 ```
 
 Die vollständige Semantik der Composables für Anfragen, Subscriptions, verfolgte Daten und SWR-Cache findest du unter [Data-Fetching-Composables](/de/packages/vue#data-fetching-composables).
@@ -129,6 +133,7 @@ Das sind Nuxt-Aliase für die Vue-Composables.
 - `useSolanaClientCapability()`: schlägt sofort fehl, wenn dem installierten Kit-Client eine erforderliche Fähigkeit fehlt.
 - `tryUseSolana()`: sicherer, nicht werfender Zugriff auf den injizierten Solana-Kontext.
 - `clearSwrCache()`: leert den SWR-Cache auf Modulebene (siehe [Data-Fetching-Composables](/de/packages/vue#data-fetching-composables)).
+- `deleteSwrKey()`: entfernt einen gecachten SWR-Eintrag über seinen vollständigen Key inklusive Adapter-Präfix (siehe [Data-Fetching-Composables](/de/packages/vue#data-fetching-composables)).
 
 Der Standardclient, den das Nuxt-Modul erstellt, setzt die offiziellen Plugins `solanaRpc()` und `rpcAirdrop()` zusammen, wenn kein `commitment` konfiguriert ist (ein konfiguriertes `commitment` baut denselben Stack explizit, damit es die RPC-Schicht erreicht); `solanaRpc()` installiert den Transaktions-Planner sowie die Plan-Signing- und Plan-Sending-Executors selbst. Der alte, eigene Fallback-Sender wird nicht verwendet. `useSolanaSendTransaction()` und `useSolanaSendTransactions()` stellen damit die offizielle clientseitige Sendefähigkeit bereit, das Modul konfiguriert aber keinen Payer, weil `payer` und `payerSecretKey` bewusst aus `ModuleOptions` ausgelassen werden — eine clientseitig gesendete Transaktion braucht also einen in einem clientseitigen Plugin installierten `payer` mit `clientPlugin: false`, wie unter [Modul-Setup](#modul-setup) beschrieben. Ihr Status `sent` wird erreicht, nachdem der offizielle Executor seinen Sende-und-Bestätige-Vorgang bei `confirmed`-Commitment abgeschlossen hat.
 

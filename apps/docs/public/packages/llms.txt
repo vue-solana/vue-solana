@@ -1,0 +1,12 @@
+# Vue Solana — Package Reference
+
+> API reference for the three published packages.
+
+Official docs: https://vue-solana-docs.vercel.app
+Parent index: https://vue-solana-docs.vercel.app/llms.txt
+
+## Package Reference
+
+- [@vue-solana/core](https://vue-solana-docs.vercel.app/packages/core): Framework-agnostic Solana configuration, RPC, wallet types, and transaction helpers.
+- [@vue-solana/vue](https://vue-solana-docs.vercel.app/packages/vue): Vue plugin and composables for Solana applications.
+- [@vue-solana/nuxt](https://vue-solana-docs.vercel.app/packages/nuxt): Nuxt module for Solana applications.

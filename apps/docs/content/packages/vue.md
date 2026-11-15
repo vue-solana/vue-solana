@@ -684,6 +684,8 @@ Cache behavior details:
 - A `null`/`undefined` source disables the composable and **clears** the cached entry for that key — including when a component mounts with its source already disabled.
 - `useTrackedDataSwr` caches the full `SolanaRpcResponse` envelope, so remounting components restore both the value and its slot context.
 - The cache is a module-level `Map`. On the server, namespace keys per request or call `clearSwrCache()` between requests to avoid cross-request leakage.
+- `deleteSwrKey(key)` evicts one entry by its **full** cache key, including the adapter prefix (`deleteSwrKey("request:balance")`, not `"balance"`). Use it when a single stale value must go; `clearSwrCache()` still empties everything.
+- The cache holds at most 1024 entries and evicts the oldest write first. Re-writing an existing key (a remount or a revalidated result) refreshes its position, so actively used keys are not evicted while idle ones are.
 
 For a runnable demonstration of all five composables (including SWR remount behavior) against devnet, see the Live Data Panels in the [Vue Vite example](/examples/vue-vite).
 
@@ -815,7 +817,7 @@ const { transactionMessage, execute } = usePlanTransaction();
 const message = await execute(instructions);
 ```
 
-`useClientCapability("payer")` asserts a capability is installed on the client and throws a descriptive error (naming the hook and how to install it) during setup when it is missing. The default Vue client already gets the planner and the plan-signing and plan-sending executors from `solanaRpc()`; custom clients must install `rpcTransactionPlanner()` and `rpcTransactionPlanSendingExecutor()` themselves.
+`useClientCapability("payer")` asserts a capability is installed on the client and throws a descriptive error (naming the hook and how to install it) during setup when it is missing. The error is a `MissingClientCapabilityError` — a `SolanaError` subclass whose `code` is `MISSING_CLIENT_CAPABILITY` — so `isSolanaError()` narrows it like any other package error. The default Vue client already gets the planner and the plan-signing and plan-sending executors from `solanaRpc()`; a client built by hand (for example with `createClient()` plus only `rpcTransactionPlanner()`) must install `rpcTransactionPlanSendingExecutor()` and a signer plugin itself. The same code surfaces from `usePlanTransaction()` / `useSendTransaction()` when the capability disappears after setup.
 
 ## Confirm an Existing Signature
 
@@ -848,7 +850,7 @@ const { status, loading, error, refresh, stopPolling } = useSignatureStatus(
 
 There is no per-call `commitment` option: `getSignatureStatuses()` accepts none, so reads use the commitment baked into the endpoint. Set it on the endpoint or on `createSolanaPlugin()`. For a per-call commitment use `useTransactionConfirmation()`.
 
-Polling uses `getSignatureStatuses()` on a chained `setTimeout`, so a slow RPC delays the next tick but never overlaps itself. Calling `stopPolling()` clears the current timer and prevents further automatic ticks — until the watched signature changes, which restarts polling for the new signature. Invalid signatures clear stale `status`, set `error`, and do not call RPC or start polling. Invalid `pollIntervalMs` values less than or equal to `0` set an `RPC_FAILURE` `SolanaError` and do not start polling.
+Polling uses `getSignatureStatuses()` on a chained `setTimeout`, so a slow RPC delays the next tick but never overlaps itself. Calling `stopPolling()` clears the current timer and prevents further automatic ticks — until the watched signature changes, which restarts polling for the new signature. Invalid signatures clear stale `status`, set `error`, and do not call RPC or start polling. Invalid `pollIntervalMs` values less than or equal to `0` set an `INVALID_INPUT` `SolanaError` (the same code core uses for malformed options) and do not start polling.
 
 ## Example App
 

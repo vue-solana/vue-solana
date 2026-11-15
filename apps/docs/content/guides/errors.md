@@ -29,7 +29,7 @@ const error = new SolanaError("RPC_FAILURE", "Unable to reach RPC");
 - `NO_WALLET_SELECTED`: no active wallet is selected.
 - `WALLET_NOT_CONNECTED`: the active wallet is not connected or has no public key.
 - `WALLET_FEATURE_UNSUPPORTED`: the active wallet does not support the requested feature.
-- `WALLET_FAILURE`: a wallet-side operation failed without a more specific code — connect/disconnect, persisted-wallet auto-connect, mobile-wallet registration, or iOS callback handling.
+- `WALLET_FAILURE`: a wallet-side operation failed without a more specific code — connect/disconnect, persisted-wallet auto-connect, mobile-wallet registration, iOS callback handling, message signing, sign-in, or batch signing.
 - `USER_REJECTED`: the user rejected a wallet request.
 - `INVALID_SIGNATURE`: a wallet returned a message or sign-in signature that does not match its account key.
 - `INVALID_ADDRESS`: an address string could not be parsed as a Solana address.
@@ -39,6 +39,7 @@ const error = new SolanaError("RPC_FAILURE", "Unable to reach RPC");
 - `TRANSACTION_FAILED`: a submitted transaction errored before reaching the requested commitment.
 - `REDIRECT_TIMEOUT`: an iOS wallet did not redirect back to the app in time.
 - `DECRYPTION_FAILED`: an iOS wallet callback could not be decrypted or decoded.
+- `MISSING_CLIENT_CAPABILITY`: the Kit client lacks a capability a composable requires (for example `planTransaction`, `sendTransaction`, or `payer`). Usually a hand-built client that skipped `createSolanaClient()` or the matching Kit plugin.
 - `RPC_FAILURE`: an RPC send, read, or confirmation failed.
 - `STORAGE_FAILURE`: browser storage could not be read or written.
 

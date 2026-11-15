@@ -87,7 +87,8 @@ export interface WaitForRedirectOptions {
   /**
    * Rejects without further waiting when the caller's own `AbortSignal`
    * fires. An aborted wait rejects with the signal's reason (an
-   * `AbortError` by default) rather than a timeout error.
+   * `AbortError` by default) rather than a timeout error — including when the
+   * signal is already aborted at call time.
    */
   signal?: AbortSignal;
 }
@@ -99,6 +100,11 @@ export interface WaitForRedirectOptions {
  * session/pending request, so this promise intentionally never resolves
  * in-page: it only rejects on `timeoutMs` / `signal` so callers can reset
  * `connecting` state instead of hanging forever.
+ *
+ * Invalid options (`timeoutMs`) throw synchronously with `INVALID_INPUT`. An
+ * aborted `signal` always *rejects* — a pre-aborted signal does not throw
+ * before the promise exists, so `.catch()` handles every abort path the same
+ * way.
  */
 export function waitForRedirect<T = never>(options: WaitForRedirectOptions = {}): Promise<T> {
   const { timeoutMs = 10 * 60 * 1000, signal } = options;
@@ -110,9 +116,15 @@ export function waitForRedirect<T = never>(options: WaitForRedirectOptions = {})
     );
   }
 
-  signal?.throwIfAborted();
-
   return new Promise<T>((_, reject) => {
+    // Checked inside the executor: an already-aborted signal never fires
+    // `addEventListener("abort", …)`, so without this the wait would hang
+    // until `timeoutMs` instead of rejecting with the abort reason.
+    if (signal?.aborted) {
+      reject(signal.reason);
+      return;
+    }
+
     const timeoutId = setTimeout(() => {
       signal?.removeEventListener("abort", onAbort);
       reject(

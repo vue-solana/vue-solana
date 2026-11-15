@@ -1,0 +1,36 @@
+# Vue Solana — Français
+
+> Traduction française de la documentation Vue Solana.
+
+Official docs: https://vue-solana-docs.vercel.app/fr
+Parent index: https://vue-solana-docs.vercel.app/llms.txt
+English docs: https://vue-solana-docs.vercel.app/llms.txt
+
+## Documentation
+
+- [Documentation Vue Solana](https://vue-solana-docs.vercel.app/fr): Documentation des bibliothèques Vue et Nuxt qui aident les développeurs à utiliser Solana.
+- [Premiers pas](https://vue-solana-docs.vercel.app/fr/getting-started): Installez les packages Vue Solana, configurez Vue ou Nuxt et testez les lectures RPC sur devnet.
+- [Agent Skill](https://vue-solana-docs.vercel.app/fr/agent-skill): Installez l'Agent Skill Vue Solana pour les agents de codage IA.
+- [Dépannage](https://vue-solana-docs.vercel.app/fr/troubleshooting): Problèmes courants de configuration, TypeScript, wallet, RPC et Nuxt.
+- [Solana pour les développeurs Vue](https://vue-solana-docs.vercel.app/fr/concepts/solana-for-vue-developers): Concepts Solana pratiques pour les développeurs Vue et Nuxt.
+- [Clusters](https://vue-solana-docs.vercel.app/fr/concepts/clusters): Noms de clusters Solana, endpoints RPC et instructions pour le faucet.
+- [RPC et clusters](https://vue-solana-docs.vercel.app/fr/guides/rpc-and-clusters): Configurez les clusters Solana, les endpoints RPC, les endpoints WebSocket et les helpers de client.
+- [Wallets](https://vue-solana-docs.vercel.app/fr/guides/wallets): Découvrez les wallets, sélectionnez un wallet actif, connectez, déconnectez et vérifiez les capacités.
+- [Lecture de comptes](https://vue-solana-docs.vercel.app/fr/guides/account-reads): Lisez les soldes, les données de compte, les comptes de programme et le statut de signature en toute sécurité depuis Vue ou Nuxt.
+- [Transactions](https://vue-solana-docs.vercel.app/fr/guides/transactions): Signez, envoyez, confirmez et gérez l'état des transactions avec Vue Solana.
+- [Solana Pay](https://vue-solana-docs.vercel.app/fr/guides/solana-pay): Créez des demandes de paiement Solana Pay, affichez et scannez des QR codes, et confirmez le règlement par référence.
+- [Signature de messages](https://vue-solana-docs.vercel.app/fr/guides/message-signing): Signez des messages d'authentification ou de propriété sans créer de transactions on-chain.
+- [Erreurs](https://vue-solana-docs.vercel.app/fr/guides/errors): Gérez les erreurs Solana normalisées provenant des helpers core et des composables Vue/Nuxt.
+- [Guide de migration](https://vue-solana-docs.vercel.app/fr/guides/migration): Comment migrer entre les versions de Vue Solana. Couvre la mise à niveau de v3 vers v4, de v2 vers v3, et la migration de v1.x vers v2.
+- [Tests E2E](https://vue-solana-docs.vercel.app/fr/guides/e2e-testing): Exécutez la suite e2e Playwright et mockez le RPC Solana, les abonnements RPC et les wallets pour les tests d'interface.
+- [@vue-solana/core](https://vue-solana-docs.vercel.app/fr/packages/core): Configuration Solana indépendante du framework, RPC, types de wallet et helpers de transaction.
+- [@vue-solana/vue](https://vue-solana-docs.vercel.app/fr/packages/vue): Plugin Vue et composables pour les applications Solana.
+- [@vue-solana/nuxt](https://vue-solana-docs.vercel.app/fr/packages/nuxt): Module Nuxt pour les applications Solana.
+- [Exemple Vue Vite](https://vue-solana-docs.vercel.app/fr/examples/vue-vite): Application d'exemple Vue 3 et Vite exécutable pour @vue-solana/vue.
+- [Exemple Nuxt](https://vue-solana-docs.vercel.app/fr/examples/nuxt): Application d'exemple Nuxt exécutable pour @vue-solana/nuxt.
+- [Vitrine](https://vue-solana-docs.vercel.app/fr/showcase): Applications construites avec Vue Solana, et comment faire figurer la vôtre sur cette page.
+- [Feuille de route](https://vue-solana-docs.vercel.app/fr/roadmap): Fonctionnalités et améliorations prévues pour Vue Solana.
+- [À propos](https://vue-solana-docs.vercel.app/fr/about): Ce qu'est Vue Solana, qui le maintient et comment le projet est géré.
+- [Contact](https://vue-solana-docs.vercel.app/fr/contact): Comment joindre l'équipe Vue Solana pour le support, les rapports de sécurité et la presse.
+- [Confidentialité](https://vue-solana-docs.vercel.app/fr/privacy): Ce que ce site de documentation collecte, ce qu'il ne collecte pas et comment les analytics sont gérés.
+- [Portail développeurs](https://vue-solana-docs.vercel.app/fr/developers): Démarrage rapide, endpoints lisibles par les machines et conventions d'intégration pour construire avec Vue Solana.

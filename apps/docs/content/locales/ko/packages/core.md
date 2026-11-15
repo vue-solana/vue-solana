@@ -206,6 +206,7 @@ type SolanaChain = "solana:mainnet" | "solana:testnet" | "solana:devnet" | "sola
 - `getSolanaIosWallets(options?)`: iOS browser에서 Phantom, Solflare, Backpack iOS browser wallet entry를 반환합니다.
 - `adaptSolanaIosWallet(walletInfo, options?)`: iOS deep-link wallet entry를 `SolanaWallet`으로 adapt합니다.
 - `handleSolanaIosWalletCallback(options?)`: iOS wallet redirect callback을 validate 및 decrypt합니다.
+- `waitForRedirect(options?)`: iOS wallet redirect 대기를 settle합니다. 페이지 안에서는 의도적으로 resolve되지 않습니다(redirect가 페이지를 새로고침하고 bootstrap이 callback을 처리합니다). `timeoutMs`(기본 10분)가 지나면 `REDIRECT_TIMEOUT`으로, `signal`이 abort되면 해당 reason으로 reject하므로 직접 만든 deep link 흐름에서도 `connecting` 상태를 멈춘 채 두지 않고 초기화할 수 있습니다.
 - `isSolanaIosBrowserWalletSupported()`: 현재 runtime에서 iOS browser wallet link를 노출해야 하는지 반환합니다.
 
 이 helper들은 SSR-safe입니다. Android registration은 `window`가 없거나 page가 secure context가 아니거나 browser가 Android가 아니면 등록하지 않고 반환합니다. iOS wallet discovery는 browser가 iOS browser runtime이 아니면 빈 list를 반환합니다.
@@ -432,6 +433,7 @@ try {
 - `TRANSACTION_FAILED`
 - `REDIRECT_TIMEOUT`
 - `DECRYPTION_FAILED`
+- `MISSING_CLIENT_CAPABILITY`
 - `RPC_FAILURE`
 - `STORAGE_FAILURE`
 
