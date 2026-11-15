@@ -82,6 +82,29 @@ describe("markdown-negotiation middleware", () => {
     expect(event.responseHeaders.Vary).toContain("accept-encoding");
   });
 
+  it("serves markdown when an explicit preference also allows a wildcard", async () => {
+    currentPage = { body: "hello markdown" };
+    const event = createEvent("/getting-started", "text/markdown, */*");
+
+    await expect(handler(event)).resolves.toBe("hello markdown");
+
+    expect(event.responseHeaders["Content-Type"]).toBe("text/markdown; charset=utf-8");
+    expect(event.responseHeaders.Link).toBe(agentLinkHeader("/getting-started"));
+  });
+
+  it("serves the homepage markdown for /.md and links the root index", async () => {
+    currentPage = { body: "hello homepage" };
+    const event = createEvent("/.md");
+
+    await expect(handler(event)).resolves.toBe("hello homepage");
+
+    expect(event.status).toBe(200);
+    expect(event.responseHeaders["Content-Type"]).toBe("text/markdown; charset=utf-8");
+    expect(event.responseHeaders.Link).toBe(agentLinkHeader("/"));
+    expect(event.responseHeaders.Link).toContain("/.md>");
+    expect(event.responseHeaders.Link).toContain("/llms.txt>");
+  });
+
   it("passes browser navigations through without negotiating", async () => {
     currentPage = { body: "hello markdown" };
     const event = createEvent("/getting-started", "text/html,application/xhtml+xml");

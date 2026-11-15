@@ -88,10 +88,24 @@ const apiVersionResponseHeader = {
 
 const linkResponseHeader = {
   description:
-    'llmstxt.org v2 discovery links: the most specific llms.txt index for the page (`rel="describedby"`) and the page\'s markdown URL (`rel="alternate"; type="text/markdown"`). Sent on every content-negotiated page response, including markdown 404 recovery responses.',
+    'llmstxt.org v2 discovery links: the most specific llms.txt index for the page (`rel="describedby"`) and the page\'s markdown URL (`rel="alternate"; type="text/markdown"`). ' +
+    "Sent on content-negotiated page responses — markdown bodies and markdown/problem+json 404 recovery responses — and not on browser HTML navigations, which bypass the negotiation middleware. " +
+    'The `rel="alternate"` link is advisory on a 404: the header is set before the page is resolved, so the advertised `.md` URL may itself be missing.',
   schema: { type: "string" },
   example: `<${SITE_URL}/guides/llms.txt>; rel="describedby", <${SITE_URL}/getting-started.md>; rel="alternate"; type="text/markdown"`,
 } as const;
+
+/**
+ * llms.txt files are written into `apps/docs/public/` by the generator, so the
+ * CDN's static layer serves them before the Nitro middleware in
+ * `server/middleware/markdown-negotiation.ts` can run. Nothing in this app can
+ * attach `X-Api-Version` or `RateLimit-*` to them, and the static layer reports
+ * `text/plain` (llmstxt.org allows `text/plain` or `text/markdown`). The spec
+ * therefore documents what is actually served rather than what the negotiated
+ * page routes serve — which is also why these entries carry no `headers`.
+ */
+const staticLlmsDescription =
+  "Generated at build time into the site's public directory, so it is served as a CDN-cached static asset with `Content-Type: text/plain; charset=utf-8` and without the `X-Api-Version` / `RateLimit-*` headers the Nitro routes return.";
 
 const standard200Headers = {
   "X-Api-Version": apiVersionResponseHeader,
@@ -208,15 +222,15 @@ const spec = {
         summary: "llms.txt index of documentation pages for agents",
         description:
           "Small English index grouped by section, plus package overview and a Translations " +
-          "section linking the per-locale indexes. When a section index applies, prefer it.",
+          "section linking the per-locale indexes. When a section index applies, prefer it. " +
+          staticLlmsDescription,
         tags: ["Agent"],
         parameters: [apiVersionHeaderParam],
         responses: {
           "200": {
-            description: "Markdown index",
-            headers: standard200Headers,
+            description: "Plain-text markdown index",
             content: {
-              "text/markdown": {
+              "text/plain": {
                 schema: { type: "string" },
                 example:
                   "# Vue Solana\n\n> Vue and Nuxt libraries that help developers use Solana.\n\n## Start Here\n\n- ...",
@@ -232,15 +246,15 @@ const spec = {
         summary: "English documentation as one markdown document",
         description:
           "English-only corpus concatenated in reading order. It is optional: per-page .md " +
-          "requests and the section indexes are smaller and more precise.",
+          "requests and the section indexes are smaller and more precise. " +
+          staticLlmsDescription,
         tags: ["Agent"],
         parameters: [apiVersionHeaderParam],
         responses: {
           "200": {
-            description: "Markdown corpus",
-            headers: standard200Headers,
+            description: "Plain-text markdown corpus",
             content: {
-              "text/markdown": {
+              "text/plain": {
                 schema: { type: "string" },
                 example: "# Vue Solana Full Documentation\n\n# Getting Started\n\n...",
               },
@@ -256,15 +270,15 @@ const spec = {
         description:
           "Index of the English pages under one section. /packages/llms.txt, " +
           "/concepts/llms.txt, and /examples/llms.txt have the same shape, and " +
-          "/de/llms.txt … /zh/llms.txt index the translated docs for a locale.",
+          "/de/llms.txt … /zh/llms.txt index the translated docs for a locale. " +
+          staticLlmsDescription,
         tags: ["Agent"],
         parameters: [apiVersionHeaderParam],
         responses: {
           "200": {
-            description: "Markdown section index",
-            headers: standard200Headers,
+            description: "Plain-text markdown section index",
             content: {
-              "text/markdown": {
+              "text/plain": {
                 schema: { type: "string" },
                 example: "# Vue Solana — Guides\n\n> Task-focused guides...\n\n## Guides\n\n- ...",
               },
@@ -327,7 +341,9 @@ const spec = {
         description:
           "Content negotiation: Accept: text/markdown (or a .md URL suffix) returns the page " +
           "as markdown; anything else returns the server-rendered HTML page. Responses always " +
-          "carry Vary: Accept, Accept-Encoding. Unmatched paths return HTTP 404 with a markdown " +
+          "carry Vary: Accept, Accept-Encoding. The Link discovery header is added to negotiated " +
+          "responses only (markdown bodies and 404 recovery bodies), not to HTML navigations. " +
+          "Unmatched paths return HTTP 404 with a markdown " +
           "recovery body when markdown is requested, a problem+json body for explicit " +
           "non-HTML/non-markdown Accept headers, or the default JSON error body otherwise.",
         tags: ["Docs"],

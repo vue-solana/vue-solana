@@ -29,7 +29,7 @@ const error = new SolanaError("RPC_FAILURE", "Unable to reach RPC");
 - `NO_WALLET_SELECTED`: アクティブなウォレットが選択されていません。
 - `WALLET_NOT_CONNECTED`: アクティブなウォレットが接続されていないか、公開鍵がありません。
 - `WALLET_FEATURE_UNSUPPORTED`: アクティブなウォレットが要求された機能をサポートしていません。
-- `WALLET_FAILURE`: より具体的なコードなしでウォレット側の操作が失敗しました — 接続/切断、保存済みウォレットの自動接続、モバイルウォレットの登録、iOS コールバックの処理など。
+- `WALLET_FAILURE`: より具体的なコードなしでウォレット側の操作が失敗しました — 接続/切断、保存済みウォレットの自動接続、モバイルウォレットの登録、iOS コールバックの処理、メッセージ署名、サインイン、複数トランザクションの署名など。
 - `USER_REJECTED`: ユーザーがウォレットの要求を拒否しました。
 - `INVALID_SIGNATURE`: ウォレットが、そのアカウントの鍵と一致しないメッセージ署名またはサインイン署名を返しました。
 - `INVALID_ADDRESS`: アドレス文字列を Solana アドレスとして解析できませんでした。

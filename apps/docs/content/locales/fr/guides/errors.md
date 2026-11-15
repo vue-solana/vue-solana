@@ -29,7 +29,7 @@ const error = new SolanaError("RPC_FAILURE", "Unable to reach RPC");
 - `NO_WALLET_SELECTED` : aucun wallet actif n'est sélectionné.
 - `WALLET_NOT_CONNECTED` : le wallet actif n'est pas connecté ou n'a pas de clé publique.
 - `WALLET_FEATURE_UNSUPPORTED` : le wallet actif ne prend pas en charge la fonctionnalité demandée.
-- `WALLET_FAILURE` : une opération côté wallet a échoué sans code plus spécifique — connexion/déconnexion, reconnexion automatique d'un wallet persisté, enregistrement d'un wallet mobile ou traitement du callback iOS.
+- `WALLET_FAILURE` : une opération côté wallet a échoué sans code plus spécifique — connexion/déconnexion, reconnexion automatique d'un wallet persisté, enregistrement d'un wallet mobile, traitement du callback iOS, signature de message, connexion ou signature de plusieurs transactions.
 - `USER_REJECTED` : l'utilisateur a rejeté une demande du wallet.
 - `INVALID_SIGNATURE` : un wallet a renvoyé une signature de message ou de connexion qui ne correspond pas à la clé de son compte.
 - `INVALID_ADDRESS` : une chaîne d'adresse n'a pas pu être analysée comme adresse Solana.

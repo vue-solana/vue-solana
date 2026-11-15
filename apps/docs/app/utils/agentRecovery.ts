@@ -119,7 +119,10 @@ export function llmsIndexForPath(path: string): string {
     return `${SITE_URL}/${segments[0]}/llms.txt`;
   }
 
-  if (segments.length > 1 && INDEXED_SECTIONS.includes(segments[0] ?? "")) {
+  // The section root itself (`/guides`, `/examples`) is a section request even
+  // though it has no page, so it points at the section index rather than the
+  // root one.
+  if (INDEXED_SECTIONS.includes(segments[0] ?? "")) {
     return `${SITE_URL}/${segments[0]}/llms.txt`;
   }
 
@@ -133,6 +136,10 @@ export function llmsIndexForPath(path: string): string {
  *
  * `/.md` is the markdown form of the homepage: the middleware strips the
  * suffix and resolves `/`, so it is a real, fetchable URL.
+ *
+ * The alternate is advisory on a 404: the middleware sets this header before
+ * resolving the page, so a recovery response for a missing path advertises the
+ * `.md` form of that path, which is itself a 404.
  */
 export function agentLinkHeader(path: string): string {
   const markdownPath = path === "/" ? "/.md" : `${path}.md`;
@@ -166,7 +173,11 @@ export function isNegotiablePageRequest(
     return true;
   }
 
-  if (isWildcardishAccept(acceptHeader)) {
+  // A wildcard `Accept` normally means "no preference", so the framework's
+  // default rendering wins. It is only "no preference" when markdown is not the
+  // preferred type: `text/markdown, */*` (common from generated clients and
+  // HTTP libraries that append a wildcard) does ask for markdown.
+  if (isWildcardishAccept(acceptHeader) && negotiateFormat(acceptHeader) !== "markdown") {
     return false;
   }
 
@@ -204,19 +215,19 @@ The path \`${path}\` does not exist on Vue Solana Docs.
 
 ## Where To Look Next
 
-- [Site map](https://vue-solana-docs.vercel.app/sitemap.xml): every indexed documentation page.
-- [Agent guide](https://vue-solana-docs.vercel.app/llms.txt): small English index of all documentation pages.
-- [Section indexes](https://vue-solana-docs.vercel.app/guides/llms.txt): narrower indexes at /guides/llms.txt, /packages/llms.txt, /concepts/llms.txt, and /examples/llms.txt.
-- [Translations](https://vue-solana-docs.vercel.app/de/llms.txt): per-locale indexes at /de/llms.txt through /zh/llms.txt.
-- [Full documentation](https://vue-solana-docs.vercel.app/llms-full.txt): the English documentation as one markdown document.
-- [OpenAPI spec](https://vue-solana-docs.vercel.app/openapi.json): machine-readable API surface, error model, and versioning policy.
-- [Developer portal](https://vue-solana-docs.vercel.app/developers): quickstart and machine-readable endpoint reference.
-- [About](https://vue-solana-docs.vercel.app/about): what this project is and who maintains it.
-- [Contact](https://vue-solana-docs.vercel.app/contact): support, security reports, and press channels.
-- [Overview](https://vue-solana-docs.vercel.app/): documentation home page.
-- [Getting Started](https://vue-solana-docs.vercel.app/getting-started): install and configure the Vue Solana packages.
-- [Agent Skill](https://vue-solana-docs.vercel.app/agent-skill): installable skill for AI coding agents.
-- [Troubleshooting](https://vue-solana-docs.vercel.app/troubleshooting): common setup and wallet issues.
+- [Site map](${SITE_URL}/sitemap.xml): every indexed documentation page.
+- [Agent guide](${SITE_URL}/llms.txt): small English index of all documentation pages.
+- [Section indexes](${SITE_URL}/guides/llms.txt): narrower indexes at /guides/llms.txt, /packages/llms.txt, /concepts/llms.txt, and /examples/llms.txt.
+- [Translations](${SITE_URL}/de/llms.txt): per-locale indexes at /de/llms.txt through /zh/llms.txt.
+- [Full documentation](${SITE_URL}/llms-full.txt): the English documentation as one markdown document.
+- [OpenAPI spec](${SITE_URL}/openapi.json): machine-readable API surface, error model, and versioning policy.
+- [Developer portal](${SITE_URL}/developers): quickstart and machine-readable endpoint reference.
+- [About](${SITE_URL}/about): what this project is and who maintains it.
+- [Contact](${SITE_URL}/contact): support, security reports, and press channels.
+- [Overview](${SITE_URL}/): documentation home page.
+- [Getting Started](${SITE_URL}/getting-started): install and configure the Vue Solana packages.
+- [Agent Skill](${SITE_URL}/agent-skill): installable skill for AI coding agents.
+- [Troubleshooting](${SITE_URL}/troubleshooting): common setup and wallet issues.
 
 Re-sending this request with an \`Accept: text/markdown\` header returns any
 documentation page as markdown instead of HTML.

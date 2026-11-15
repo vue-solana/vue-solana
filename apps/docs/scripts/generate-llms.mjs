@@ -1,8 +1,9 @@
-import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, readdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 import manifest from "../app/utils/llms-manifest.json" with { type: "json" };
+import { pruneStaleIndexes } from "./llms-indexes.mjs";
 
 const { locales: LOCALES, sections: DOC_SECTIONS, siteUrl } = manifest;
 
@@ -109,6 +110,42 @@ function sectionFromPath(path) {
   const segments = path.split("/").filter(Boolean);
 
   return segments.length > 1 ? segments[0] : "root";
+}
+
+/**
+ * A page under a top-level directory that is not a manifest section belongs to
+ * no index group: `sectionFromPath()` returns the directory name, which is
+ * neither `"root"` nor a section key, so the page silently disappears from
+ * `llms.txt` and gets no `/<section>/llms.txt`. `llms-output.test.ts` catches
+ * the end state, but only after the wrong file was generated — fail here so the
+ * error names the directory that needs a manifest entry.
+ */
+function assertKnownSections(pages) {
+  const sectionKeys = new Set(DOC_SECTIONS.map((section) => section.key));
+  const unknown = new Set();
+
+  for (const page of pages) {
+    const section = sectionFromPath(page.path);
+
+    if (section !== "root" && !sectionKeys.has(section)) {
+      unknown.add(section);
+    }
+  }
+
+  if (unknown.size === 0) {
+    return;
+  }
+
+  const names = [...unknown]
+    .sort()
+    .map((section) => `"${section}"`)
+    .join(", ");
+
+  throw new Error(
+    `Unknown top-level content director${unknown.size === 1 ? "y" : "ies"} ${names}. ` +
+      "Add an entry for each to the `sections` list in apps/docs/app/utils/llms-manifest.json " +
+      "so its pages appear in llms.txt, or move the pages under an indexed section.",
+  );
 }
 
 function fullUrl(route) {
@@ -329,6 +366,7 @@ const pages = await Promise.all(
 );
 
 pages.sort(sortPages);
+assertKnownSections(pages);
 
 const englishPages = pages.filter((page) => !page.locale);
 const corpus = makeLlmsFullTxt(englishPages);
@@ -354,22 +392,13 @@ for (const locale of LOCALES) {
 
 /**
  * Removing a locale or a section from the manifest must also remove its
- * committed index. Without this sweep a stale `/section/llms.txt` or
- * `/locale/llms.txt` survives in `public/` and still serves to agents.
+ * committed index. The sweep is directory-driven on purpose: a manifest-driven
+ * candidate list cannot see a name that is no longer listed, which is exactly
+ * the case that leaves a stale `/section/llms.txt` or `/locale/llms.txt` behind
+ * in `public/` to serve to agents.
  */
-async function removeStaleIndexes() {
-  const candidates = [
-    ...DOC_SECTIONS.map((section) => `${section.key}/llms.txt`),
-    ...LOCALES.map((locale) => `${locale.code}/llms.txt`),
-  ];
+const removedIndexes = await pruneStaleIndexes({ publicDir, keep: writtenIndexes });
 
-  for (const candidate of candidates) {
-    if (writtenIndexes.has(candidate)) {
-      continue;
-    }
-
-    await rm(join(publicDir, candidate), { force: true });
-  }
+if (removedIndexes.length > 0) {
+  console.log(`removed ${removedIndexes.length} stale index(es): ${removedIndexes.join(", ")}`);
 }
-
-await removeStaleIndexes();

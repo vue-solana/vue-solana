@@ -120,7 +120,7 @@ Auto-imported Nuxt composables (source of truth: `packages/nuxt/src/imports.ts`)
 - `useSolanaTokenAccounts()`, `useSolanaTokenBalance()`, `useSolanaSignatureStatus()`, `useSolanaTransactionConfirmation()`
 - `useSolanaWallet()`, `useSolanaWallets()`, `useSolanaSignMessage()`, `useSolanaSignIn()`
 - `useSolanaAirdrop()`, `useSolanaAction()`, `useSolanaClientCapability()`, `useSolanaRequest()`, `useSolanaSubscription()`, `useSolanaTrackedData()`
-- `tryUseSolana()`, `clearSwrCache()`
+- `tryUseSolana()`, `clearSwrCache()`, `deleteSwrKey()`
 - `useSolanaTransaction()`, `useSolanaRequestSwr()`, `useSolanaSubscriptionSwr()`, `useSolanaTrackedDataSwr()`
 - `useSolanaSelectedWalletAccount()`
 - `useSolanaSignTransactions()`, `useSolanaSignAndSendTransaction()`, `useSolanaSignAndSendTransactions()`
@@ -333,7 +333,7 @@ Plans live in the top-level `plans/` directory, separate from the knowledge bund
 
 - `apps/docs` is pinned to the latest published release. Read the current value from `apps/docs/package.json`; never trust a version number written in this file. Keep it current per the Post-Publish Release Checklist.
 - The 4.0.0 bundle-size trim has shipped: the core root barrel no longer re-exports `Buffer`/`installSolanaBufferPolyfill` (use the `@vue-solana/core/buffer-polyfill` subpath) and the tarballs exclude `.d.mts`. The invariants in "Bundle and Tarball Size Invariants" still govern any barrel, `exports` map, or `files` change.
-- The error-code and docs-agent-surface review follow-ups are closed; the record lives in `plans/archived/error-codes-agent-surface-followups.md`. Do not re-open it for a new review — start a new plan file.
+- The error-code and docs-agent-surface review follow-ups are closed; the record lives in `plans/archived/error-codes-agent-surface-followups.md`. The follow-up review of that branch's docs agent surface is closed too: `plans/archived/agent-surface-review-followups.md`. Do not re-open either for a new review — start a new plan file.
 - Follow `apps/docs/content/roadmap.md` for upcoming features (core composables, wallet features, Ecosystem integrations, etc.).
 - `plans/native-wallet-plan.md` is complete except for one open item, "Future iOS Wallet Support" (line 19). Mobile native wallets, Android MWA, iOS browser wallets, and desktop native wallets all shipped through the unified `useWallets()` flow.
 - Re-check the `@solana/kit` and `@solana/kit-plugin-rpc` peer versions on every new release.
