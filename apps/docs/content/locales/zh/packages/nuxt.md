@@ -95,6 +95,9 @@ export default defineNuxtConfig({
 - `useSolanaTransactionConfirmation(options?)`：确认现有交易签名。
 - `useSolanaSignatureStatus(signature, options?)`：读取、轮询或订阅签名状态。
 - `useSolanaSignMessage()`：签署链下认证或所有权 challenge 消息。
+- `useSolanaWalletAccountMessageSigner()`：返回钱包账户的 Kit `MessageModifyingSigner`。
+- `useSolanaWalletAccountTransactionSigner()`：返回钱包账户的 Kit `TransactionModifyingSigner`。
+- `useSolanaWalletAccountTransactionSendingSigner()`：返回通过钱包签名并发送的 Kit `TransactionSendingSigner`。
 - `useSolanaSignAndSendTransaction()`：签名、发送并可选确认交易。
 - `useSolanaAction(handler)`：支持 abort-on-redispatch 的通用异步 action 状态机。
 - `useSolanaRequest(source, options?)`：source 变化时重新触发的一次性 request，带 stale-while-revalidate。

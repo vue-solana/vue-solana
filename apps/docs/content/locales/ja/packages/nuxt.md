@@ -96,6 +96,9 @@ export default defineNuxtConfig({
 - `useSolanaTransactionConfirmation(options?)`: 既存のトランザクション署名を確認します。
 - `useSolanaSignatureStatus(signature, options?)`: 署名ステータスを読み取り、ポーリング、または購読します。
 - `useSolanaSignMessage()`: オフチェーンの認証や所有権チャレンジのメッセージに署名します。
+- `useSolanaWalletAccountMessageSigner()`: ウォレットアカウント用の Kit `MessageModifyingSigner` を返します。
+- `useSolanaWalletAccountTransactionSigner()`: ウォレットアカウント用の Kit `TransactionModifyingSigner` を返します。
+- `useSolanaWalletAccountTransactionSendingSigner()`: ウォレット経由で署名と送信を行う Kit `TransactionSendingSigner` を返します。
 - `useSolanaSignAndSendTransaction()`: トランザクションに署名し、送信し、任意で確認します。
 - `useSolanaAction(handler)`: 再ディスパッチ時に中断する汎用的な非同期アクションのステートマシンです。
 - `useSolanaRequest(source, options?)`: ソースが変わると再実行されるワンショットリクエストで、stale-while-revalidate を備えています。

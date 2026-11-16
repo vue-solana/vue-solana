@@ -519,10 +519,11 @@ const sendingSigner = useWalletAccountTransactionSendingSigner(selectedAccount, 
 
 - `useWalletAccountMessageSigner(account)` returns a Kit `MessageModifyingSigner` (`modifyAndSignMessages`).
 - `useWalletAccountTransactionSigner(account, chain)` returns a Kit `TransactionModifyingSigner` (`modifyAndSignTransactions`). It signs one wire transaction per request, preserves the lifetime constraint the caller attached, and derives a fresh one from the signed message when the wallet rewrites the message bytes.
-- `useWalletAccountTransactionSendingSigner(account, chain)` returns a Kit `TransactionSendingSigner`: the wallet signs and submits, and the signer resolves signature bytes. It prefers the wallet's batch request, falls back to singular requests in sequence, and throws `PartialSignAndSendError` with the signatures that already landed when the fallback fails.
+- `useWalletAccountTransactionSendingSigner(account, chain)` returns a Kit `TransactionSendingSigner`: the wallet signs and submits, and the signer resolves signature bytes. For one transaction it prefers the singular `signAndSendTransaction` request when available; otherwise it uses the batch request, or falls back to one singular request per transaction in sequence. A fallback that fails partway throws `PartialSignAndSendError` with the signatures that already landed. Each send request times out after 120 seconds with `TRANSACTION_TIMEOUT`.
 - The modifying interfaces are deliberate: a wallet may rewrite a message or transaction before signing. Batches are rejected with `WALLET_FEATURE_UNSUPPORTED` rather than opening one wallet prompt per item.
 - Signing uses the connected wallet: no wallet throws `NO_WALLET_SELECTED`, a disconnected wallet throws `WALLET_NOT_CONNECTED`, and a different connected account throws `INVALID_INPUT`.
-- `chain` must start with `solana:` (`solana:devnet`, `solana:mainnet`, …). It is validated at creation and not forwarded with the request.
+- `chain` must start with `solana:` (`solana:devnet`, `solana:mainnet`, …). It is validated at creation and not forwarded with the request. When the account is passed as an object that declares `chains`, the signer also rejects a chain the account does not support.
+- The transaction-modifying signer keeps the lifetime constraint the caller attached, or derives a fresh one from the signed message when the wallet rewrote the message bytes.
 
 ## `useSelectedWalletAccount()`
 

@@ -47,6 +47,35 @@ export function resolveWalletAccountAddress(account: WalletAccountSource): Addre
 }
 
 /**
+ * When the account source is a wallet account object that declares supported
+ * chains, reject a requested chain the account does not support. Address-only
+ * sources carry no chain metadata, so the check is skipped for them.
+ */
+export function assertWalletAccountSupportsChain(
+  account: WalletAccountSource,
+  chain: string,
+): void {
+  const value = toValue(account);
+
+  if (typeof value !== "object" || value === null || !("chains" in value)) {
+    return;
+  }
+
+  const chains = (value as { chains?: readonly string[] }).chains;
+
+  if (!Array.isArray(chains) || chains.length === 0) {
+    return;
+  }
+
+  if (!chains.includes(chain)) {
+    throw createSolanaError(
+      "INVALID_INPUT",
+      `Wallet account ${resolveWalletAccountAddress(account)} does not support ${chain}. Supported chains: ${chains.join(", ")}.`,
+    );
+  }
+}
+
+/**
  * A wallet account signer can only sign through the connected wallet account,
  * because a wallet adapter always signs for the account it authorized. Reject
  * up front when the app built a signer for another account: letting the

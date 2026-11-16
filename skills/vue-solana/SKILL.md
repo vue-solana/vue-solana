@@ -98,6 +98,7 @@ Nuxt auto-imports these composables (source of truth: `packages/nuxt/src/imports
 - `useSolanaAccountInfo()`, `useSolanaBalance()`, `useSolanaProgramAccounts()`, `useSolanaSignatureStatus()`, `useSolanaTransactionConfirmation()`, `useSolanaTokenAccounts()`, `useSolanaTokenBalance()`
 - `useSolanaRequest()`, `useSolanaSubscription()`, `useSolanaTrackedData()`, `useSolanaAction()`, `useSolanaAirdrop()`
 - `useSolanaSignMessage()`, `useSolanaSignIn()`
+- `useSolanaWalletAccountMessageSigner()`, `useSolanaWalletAccountTransactionSigner()`, `useSolanaWalletAccountTransactionSendingSigner()`
 - `useSolanaSignAndSendTransaction()`, `useSolanaSignTransactions()`, `useSolanaSignAndSendTransactions()`, `useSolanaTransaction()`
 - `useSolanaPayer()`, `useSolanaIdentity()`, `useSolanaPlanTransaction()`, `useSolanaPlanTransactions()`, `useSolanaSendTransaction()`, `useSolanaSendTransactions()`
 - `useSolanaPay()`, `useSolanaPayConfirmation()`, `useSolanaQrCode()`, `useSolanaQrScanner()`

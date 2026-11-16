@@ -169,6 +169,9 @@ import { useWallet } from "@vue-solana/vue/useWallet";
 - `useAccountInfo(address, options?)`：加载规范化账户数据（executable、lamports、owner、space、data 字节）。
 - `useProgramAccounts(programId, options?)`：使用可选过滤器和数据切片加载 program id 拥有的账户。
 - `useWallet()`：返回活跃钱包 ref、计算出的连接状态和钱包操作。
+- `useWalletAccountMessageSigner(account)`：返回钱包账户的 Kit `MessageModifyingSigner`。
+- `useWalletAccountTransactionSigner(account, chain)`：返回钱包账户的 Kit `TransactionModifyingSigner`。
+- `useWalletAccountTransactionSendingSigner(account, chain)`：返回通过钱包签名并发送的 Kit `TransactionSendingSigner`。
 - `useWallets()`：返回已发现的浏览器扩展钱包、Android Mobile Wallet Adapter 钱包、受支持的 iOS 浏览器钱包条目和钱包选择操作。
 - `useBalance(address, commitment?)`：加载地址字符串的 lamport 余额。
 - `useAirdrop()`：在测试网络和本地验证器上将 SOL 空投到账户。
@@ -800,6 +803,31 @@ const [selectedAccount, setSelectedAccount, filteredWallets] = useSelectedWallet
 ```
 
 选择默认以 `${walletName}:${accountAddress}` 形式持久化在 `localStorage` 中（传入 `stateSync` 可自定义，传入 `null` 可禁用），当钱包与账户可用时会在下次访问时恢复。`filterWallet` 限制提供哪些钱包账户。在 Nuxt 中，模块的 runtime 插件会自动安装此 context。
+
+## 钱包账户签名器
+
+将钱包账户暴露为 Kit 的 signer 接口，这样你就可以在 Kit 期望 signer 的任何地方直接传入它，而无需手写钱包包装器。这三个 composable 接受 `useWallets()` / `useSelectedWalletAccount()` 返回的账户对象或其地址，也可以放在 ref 或 getter 中，因此在 `setup()` 中创建的单个 signer 可以跟随当前选中的账户：
+
+```ts
+import { useSelectedWalletAccount } from "@vue-solana/vue/useSelectedWalletAccount";
+import { useWalletAccountMessageSigner } from "@vue-solana/vue/useWalletAccountMessageSigner";
+import { useWalletAccountTransactionSigner } from "@vue-solana/vue/useWalletAccountTransactionSigner";
+import { useWalletAccountTransactionSendingSigner } from "@vue-solana/vue/useWalletAccountTransactionSendingSigner";
+
+const [selectedAccount] = useSelectedWalletAccount();
+
+const messageSigner = useWalletAccountMessageSigner(selectedAccount);
+const transactionSigner = useWalletAccountTransactionSigner(selectedAccount, "solana:devnet");
+const sendingSigner = useWalletAccountTransactionSendingSigner(selectedAccount, "solana:devnet");
+```
+
+- `useWalletAccountMessageSigner(account)` 返回 Kit 的 `MessageModifyingSigner`（`modifyAndSignMessages`）。之所以采用 modifying 接口，是因为钱包可能在签名前重写消息（例如添加自己的认证封装）。
+- `useWalletAccountTransactionSigner(account, chain)` 返回 Kit 的 `TransactionModifyingSigner`（`modifyAndSignTransactions`），适用于由应用通过自己的 RPC 提交已签名字节的场景。它每次请求签名一个线事务，并保留调用方附加的生命周期约束；如果钱包重写了消息字节，则从已签名消息中重新派生新的约束。
+- `useWalletAccountTransactionSendingSigner(account, chain)` 返回 Kit 的 `TransactionSendingSigner`（`signAndSendTransactions`），适用于由钱包自行签名并提交交易、signer 解析签名字节的流程。对于单笔交易，它会在可用时优先使用单次 `signAndSendTransaction` 请求；否则使用批量请求，或按顺序退回到每笔交易一次的单独请求。如果回退过程中途失败，会抛出携带已落地签名的 `PartialSignAndSendError`，并且每次发送请求在 120 秒后以 `TRANSACTION_TIMEOUT` 超时。
+
+账户在调用时解析。签名通过已连接的钱包进行，因此未选择钱包会抛出 `NO_WALLET_SELECTED`，钱包未连接会抛出 `WALLET_NOT_CONNECTED`，连接的账户不同则会抛出 `INVALID_INPUT`。空 ref（尚未选择）也会让 `address` 和签名抛出 `INVALID_INPUT`。消息与交易 modifying signer 会以 `WALLET_FEATURE_UNSUPPORTED` 拒绝批量请求，而不是为每一项逐个弹出钱包提示。
+
+`chain` 必须是 Solana 链标识符（`solana:mainnet`、`solana:devnet` 等）。它在创建时校验，不会随请求转发，因为适配钱包时适配器已经选择了链。当账户以声明了 `chains` 的对象形式传入时，signer 还会拒绝该账户不支持的链。
 
 ## 客户端能力与规划
 

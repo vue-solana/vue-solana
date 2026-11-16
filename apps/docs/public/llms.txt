@@ -104,7 +104,7 @@ How an agent should use this site:
 
 ## Optional
 
-- [Full documentation corpus](https://vue-solana-docs.vercel.app/llms-full.txt): English-only single-file corpus (~60k tokens). Fetch only when a whole-corpus read is cheaper than page-level fetches.
+- [Full documentation corpus](https://vue-solana-docs.vercel.app/llms-full.txt): English-only single-file corpus (~61k tokens). Fetch only when a whole-corpus read is cheaper than page-level fetches.
 - [OpenAPI spec](https://vue-solana-docs.vercel.app/openapi.json): OpenAPI 3.1 description of the machine-readable surface, error model, and versioning.
 - [Sitemap](https://vue-solana-docs.vercel.app/sitemap.xml): Complete URL list for crawlers.
 

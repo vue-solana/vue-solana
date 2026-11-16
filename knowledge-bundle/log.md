@@ -2,6 +2,13 @@
 
 All notable changes to the knowledge bundle are documented here.
 
+## 2026-11-16
+
+### Added
+
+- Documented wallet account signer adapters in `packages/vue.md`: `useWalletAccountMessageSigner`, `useWalletAccountTransactionSigner`, and `useWalletAccountTransactionSendingSigner` expose a wallet account as Kit signer interfaces, with reactive account resolution, `solana:` chain validation, modifying-interface semantics, and wallet-backed sign/send behavior (including singular-first single-transaction sends, batch/fallback sequencing, a 120 s timeout, and `PartialSignAndSendError` on partial fallback failure).
+- Added the matching Nuxt auto-imports (`useSolanaWalletAccountMessageSigner`, `useSolanaWalletAccountTransactionSigner`, `useSolanaWalletAccountTransactionSendingSigner`) to `packages/nuxt.md`.
+
 ## 2026-09-26
 
 ### Updated

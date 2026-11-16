@@ -64,6 +64,9 @@ The Nuxt module installs the runtime plugin on the client only and auto-imports 
 - `useSolanaQrScanner()`
 - `useSolanaSignMessage()`
 - `useSolanaSignTransactions()`
+- `useSolanaWalletAccountMessageSigner()`
+- `useSolanaWalletAccountTransactionSendingSigner()`
+- `useSolanaWalletAccountTransactionSigner()`
 - `useSolanaSignatureStatus()`
 - `useSolanaSubscription()`
 - `useSolanaSubscriptionSwr()`

@@ -96,6 +96,9 @@ Le module auto-importe ces composables depuis les sous-chemins directs `@vue-sol
 - `useSolanaTransactionConfirmation(options?)`: confirme la signature d'une transaction existante.
 - `useSolanaSignatureStatus(signature, options?)`: lit, interroge périodiquement ou suit par abonnement le statut d'une signature.
 - `useSolanaSignMessage()`: signe des messages d'authentification hors chaîne ou de preuve de propriété.
+- `useSolanaWalletAccountMessageSigner()` : renvoie un `MessageModifyingSigner` Kit pour un compte de wallet.
+- `useSolanaWalletAccountTransactionSigner()` : renvoie un `TransactionModifyingSigner` Kit pour un compte de wallet.
+- `useSolanaWalletAccountTransactionSendingSigner()` : renvoie un `TransactionSendingSigner` Kit qui signe et envoie via le wallet.
 - `useSolanaSignAndSendTransaction()`: signe, envoie et confirme éventuellement des transactions.
 - `useSolanaAction(handler)`: machine à états générique pour actions asynchrones, avec abandon lors d'un nouvel envoi (abort-on-redispatch).
 - `useSolanaRequest(source, options?)`: requête unique qui se relance lorsque sa source change, avec stale-while-revalidate.

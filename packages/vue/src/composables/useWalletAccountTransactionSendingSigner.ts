@@ -1,4 +1,8 @@
-import { normalizeSolanaError, PartialSignAndSendError } from "@vue-solana/core/errors";
+import {
+  createSolanaError,
+  normalizeSolanaError,
+  PartialSignAndSendError,
+} from "@vue-solana/core/errors";
 import {
   getBase58Encoder,
   getTransactionEncoder,
@@ -16,6 +20,7 @@ import { assertWalletCanSignAndSendTransactions } from "@vue-solana/core/wallet"
 import { useWallet } from "./useWallet";
 import {
   assertSolanaChain,
+  assertWalletAccountSupportsChain,
   getAccountSigningWallet,
   resolveWalletAccountAddress,
   type WalletAccountSource,
@@ -24,6 +29,27 @@ import {
 const SEND_TIMEOUT_MS = 120_000;
 const SEND_TIMEOUT_MESSAGE =
   "Wallet transaction did not return a result. Check your wallet or explorer for the final status.";
+
+function toSignatureBytes(signature: Signature): SignatureBytes {
+  let bytes: Uint8Array;
+
+  try {
+    bytes = new Uint8Array(getBase58Encoder().encode(signature) as Uint8Array);
+  } catch (cause) {
+    throw createSolanaError("WALLET_FAILURE", "Wallet returned an invalid transaction signature", {
+      cause,
+    });
+  }
+
+  if (bytes.length !== 64) {
+    throw createSolanaError(
+      "WALLET_FAILURE",
+      `Wallet returned a transaction signature with an unexpected length (${bytes.length})`,
+    );
+  }
+
+  return bytes as unknown as SignatureBytes;
+}
 
 /**
  * A Kit {@link TransactionSendingSigner} backed by a wallet account: the
@@ -36,11 +62,20 @@ const SEND_TIMEOUT_MESSAGE =
  * signed bytes through its own RPC.
  *
  * The wallet must expose a sign-and-send capability; a wallet that only signs
- * fails with `WALLET_FEATURE_UNSUPPORTED`. The account is resolved at call
- * time, so a ref or getter follows the current selection. `chain` must be a
+ * fails with `WALLET_FEATURE_UNSUPPORTED`. For one transaction it prefers the
+ * singular `signAndSendTransaction` request when available, otherwise it uses
+ * the batch request, or falls back to one singular request per transaction in
+ * sequence. A fallback that fails partway rejects with
+ * `PartialSignAndSendError` carrying the signatures that already landed, and the
+ * request times out after 120 seconds with `TRANSACTION_TIMEOUT`.
+ *
+ * The account is resolved at call time, so a ref or getter follows the current
+ * selection. `chain` must be a
  * Solana chain identifier (`solana:mainnet`, `solana:devnet`, …); the adapter
  * already selected a chain when the wallet was adapted, so it is validated
- * rather than forwarded with the request.
+ * rather than forwarded with the request. When the account is passed as an
+ * object that declares `chains`, the signer also rejects a chain the account
+ * does not support.
  *
  * ```ts
  * import { useWalletAccountTransactionSendingSigner } from "@vue-solana/vue/useWalletAccountTransactionSendingSigner";
@@ -65,6 +100,7 @@ export function useWalletAccountTransactionSendingSigner(
     async signAndSendTransactions(transactions, config) {
       config?.abortSignal?.throwIfAborted();
 
+      assertWalletAccountSupportsChain(account, chain);
       const address = resolveWalletAccountAddress(account);
 
       if (transactions.length === 0) {
@@ -91,19 +127,23 @@ export function useWalletAccountTransactionSendingSigner(
         },
       );
 
-      return Object.freeze(
-        signatures.map(
-          (signature) => Uint8Array.from(getBase58Encoder().encode(signature)) as SignatureBytes,
-        ),
-      );
+      if (signatures.length !== wireTransactions.length) {
+        throw createSolanaError(
+          "WALLET_FAILURE",
+          `Wallet returned ${signatures.length} signature(s) for ${wireTransactions.length} transaction(s)`,
+        );
+      }
+
+      return Object.freeze(signatures.map(toSignatureBytes));
     },
   };
 }
 
 /**
- * Prefers the wallet's batch request and falls back to one singular request
- * per transaction. The fallback is sequential on purpose: a parallel batch
- * would strand in-flight siblings on the first failure and lose the
+ * Prefers the singular request for one transaction when available, otherwise
+ * uses the batch request, or falls back to one singular request per
+ * transaction in sequence. The fallback is sequential on purpose: a parallel
+ * batch would strand in-flight siblings on the first failure and lose the
  * signatures that already landed.
  */
 async function sendTransactions(

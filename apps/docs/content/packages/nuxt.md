@@ -96,6 +96,9 @@ The module auto-imports these composables from direct `@vue-solana/vue/*` subpat
 - `useSolanaTransactionConfirmation(options?)`: confirms an existing transaction signature.
 - `useSolanaSignatureStatus(signature, options?)`: reads, polls, or subscribes to signature status.
 - `useSolanaSignMessage()`: signs off-chain authentication or ownership challenge messages.
+- `useSolanaWalletAccountMessageSigner()`: returns a Kit `MessageModifyingSigner` for a wallet account.
+- `useSolanaWalletAccountTransactionSigner()`: returns a Kit `TransactionModifyingSigner` for a wallet account.
+- `useSolanaWalletAccountTransactionSendingSigner()`: returns a Kit `TransactionSendingSigner` that signs and submits through the wallet.
 - `useSolanaSignAndSendTransaction()`: signs, sends, and optionally confirms transactions.
 - `useSolanaAction(handler)`: generic async action state machine with abort-on-redispatch.
 - `useSolanaRequest(source, options?)`: one-shot request that re-fires when its source changes, with stale-while-revalidate.
