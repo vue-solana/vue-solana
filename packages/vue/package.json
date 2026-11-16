@@ -149,6 +149,18 @@
       "types": "./dist/useWallet.d.ts",
       "import": "./dist/useWallet.mjs"
     },
+    "./useWalletAccountMessageSigner": {
+      "types": "./dist/useWalletAccountMessageSigner.d.ts",
+      "import": "./dist/useWalletAccountMessageSigner.mjs"
+    },
+    "./useWalletAccountTransactionSendingSigner": {
+      "types": "./dist/useWalletAccountTransactionSendingSigner.d.ts",
+      "import": "./dist/useWalletAccountTransactionSendingSigner.mjs"
+    },
+    "./useWalletAccountTransactionSigner": {
+      "types": "./dist/useWalletAccountTransactionSigner.d.ts",
+      "import": "./dist/useWalletAccountTransactionSigner.mjs"
+    },
     "./useWallets": {
       "types": "./dist/useWallets.d.ts",
       "import": "./dist/useWallets.mjs"

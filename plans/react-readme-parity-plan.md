@@ -32,15 +32,7 @@ Small, self-contained devnet "fund this account" action built on the existing `u
 - [x] ~~Add API table rows and snippets in the `packages/vue` README; document the transaction-planning prerequisite and the flexible input forms.~~
 - [x] ~~Tests: instruction input, plan input, batch send, capability-missing fail-fast (via `useClientCapability`).~~
 
-### [ ] Wallet Account Signer Adapters — P2
-
-Expose a wallet account as `@solana/signers` interfaces for message/transaction modification and sending.
-
-- [ ] Add `useWalletAccountMessageSigner(account)` returning a message signer (conservatively `MessageModifyingSigner`).
-- [ ] Add `useWalletAccountTransactionSigner(account, chain)` returning a transaction signer (conservatively `TransactionModifyingSigner`).
-- [ ] Add `useWalletAccountTransactionSendingSigner(account, chain)` returning `TransactionSendingSigner`.
-- [ ] Add Nuxt auto-imports and API table rows and snippets for all three.
-- [ ] Tests: signer object shapes, address mapping, chain guard (must begin with `solana:`).
+### [x] ~~Wallet Account Signer Adapters — P2~~
 
 ## Deeper Concept Documentation
 
@@ -63,22 +55,9 @@ Same spread as `@solana/react`:
 - [x] ~~`dispatch` returns `Promise<TResult>`; awaiters that read the resolved value filter superseded calls (abort-error check) so a stale result is ignored.~~
 - [x] ~~Calling `dispatch` again aborts the prior in-flight call.~~
 
-### [ ] SWR adapter depth — P2
+### [x] ~~SWR adapter depth — P2~~
 
-For the `swr` adapters in `packages/vue` README:
-
-- [ ] Function sources are held in a ref (inline closure fine, no `useCallback`); SWR keys the cache off `key`, not fetcher identity.
-- [ ] `getAbortSignal` runs on every SWR attempt (initial fire, focus/reconnect/poll revalidation, `mutate()`); `mutate()` has no per-attempt override.
-- [ ] Without `getAbortSignal` the signal is a fresh never-aborting `AbortSignal`; SWR discards stale results rather than cancelling.
-- [ ] "Why no action SWR?" rationale: `useSWRMutation` already covers it.
-- [ ] Swap sources/specs by bumping the `key`; a stable key keeps the original connection/cache entry.
-
-### [ ] Selected wallet account context depth — P2
-
-For `useSelectedWalletAccount` / `SelectedWalletAccountProvider` in `packages/vue` README:
-
-- [ ] Document the `filterWallet` prop (filter supported wallets, e.g. mainnet-capable) and `stateSync` prop (store/get/delete the persisted selection).
-- [ ] Document the persistence identifier contract (`${walletName}:${accountAddress}` style storage key).
+### [x] ~~Selected wallet account context depth — P2~~
 
 ### [x] ~~Plugin setup depth — P1~~
 

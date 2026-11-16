@@ -88,6 +88,10 @@ Implemented files:
 - `src/composables/useSolanaQrScanner.ts`: camera + `BarcodeDetector` scanning with `parseURL()` validation, browser-only.
 - `src/composables/useSelectedWalletAccount.ts`: app-wide selected wallet account context (persistence via `src/plugin/selected-wallet-account-storage.ts`, component in `src/components/SelectedWalletAccountProvider.ts`).
 - `src/composables/useSignTransactions.ts` / `useSignAndSendTransactions.ts`: batch wallet requests with singular fallbacks.
+- `src/composables/wallet-account-signer.ts`: shared wallet-account signer helpers (account/address resolution, `getAccountSigningWallet()` guard, `solana:` chain validation).
+- `src/composables/useWalletAccountMessageSigner.ts`: Kit `MessageModifyingSigner` backed by a wallet account.
+- `src/composables/useWalletAccountTransactionSigner.ts`: Kit `TransactionModifyingSigner` backed by a wallet account, preserving or re-deriving the lifetime constraint.
+- `src/composables/useWalletAccountTransactionSendingSigner.ts`: Kit `TransactionSendingSigner` that signs and submits through the wallet, with a singular sequential fallback.
 - `src/composables/useClientCapability.ts`: fail-fast client capability assertions.
 - `src/composables/usePayer.ts`: `usePayer()` / `useIdentity()` reactive Kit client signers.
 - `src/composables/usePlanTransaction.ts`: `usePlanTransaction()` / `usePlanTransactions()` over the client planning capability.
@@ -124,6 +128,7 @@ Auto-imported Nuxt composables (source of truth: `packages/nuxt/src/imports.ts`)
 - `useSolanaTransaction()`, `useSolanaRequestSwr()`, `useSolanaSubscriptionSwr()`, `useSolanaTrackedDataSwr()`
 - `useSolanaSelectedWalletAccount()`
 - `useSolanaSignTransactions()`, `useSolanaSignAndSendTransaction()`, `useSolanaSignAndSendTransactions()`
+- `useSolanaWalletAccountMessageSigner()`, `useSolanaWalletAccountTransactionSigner()`, `useSolanaWalletAccountTransactionSendingSigner()`
 - `useSolanaPayer()`, `useSolanaIdentity()`
 - `useSolanaPlanTransaction()`, `useSolanaPlanTransactions()`
 - `useSolanaSendTransaction()`, `useSolanaSendTransactions()`

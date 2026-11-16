@@ -153,6 +153,12 @@ The module auto-imports these composables from direct `@vue-solana/vue/*` subpat
 
 - `useSolanaWallet()`
 
+- `useSolanaWalletAccountMessageSigner()`
+
+- `useSolanaWalletAccountTransactionSendingSigner()`
+
+- `useSolanaWalletAccountTransactionSigner()`
+
 - `useSolanaWallets()`
 
 - `useSolanaSignMessage()`
@@ -207,52 +213,55 @@ The module auto-imports these composables from direct `@vue-solana/vue/*` subpat
 
 - `useSolanaSendTransactions()`
 
-| Composable                           | Purpose                                                                                                                                      |
-| ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| `useSolana()`                        | Full Solana context.                                                                                                                         |
-| `useSolanaClient()`                  | Reactive Kit RPC client and its compositions.                                                                                                |
-| `useSolanaRpc()`                     | Cluster, endpoint, connection status, latest blockhash, and `checkConnection()`.                                                             |
-| `useSolanaConnection()`              | Deprecated alias for the Kit client returned by `useSolanaClient()`.                                                                         |
-| `useSolanaAccountInfo()`             | Account info reads and optional subscriptions.                                                                                               |
-| `useSolanaAirdrop()`                 | Airdrops SOL into an account on test networks and local validators.                                                                          |
-| `useSolanaBalance()`                 | Lamport balance reads.                                                                                                                       |
-| `useSolanaProgramAccounts()`         | Program account scans with filters and `dataSlice`.                                                                                          |
-| `useSolanaTokenAccounts()`           | SPL token account reads for an owner.                                                                                                        |
-| `useSolanaTokenBalance()`            | SPL token balance reads for a mint/owner pair.                                                                                               |
-| `useSolanaWallet()`                  | Active wallet state and connect/disconnect actions.                                                                                          |
-| `useSolanaWallets()`                 | Wallet discovery, selected wallet state, and selection actions.                                                                              |
-| `useSolanaSignMessage()`             | Wallet message signing.                                                                                                                      |
-| `useSolanaSignIn()`                  | Sign In With Solana (SIWS) trigger returning a server-verifiable result.                                                                     |
-| `useSolanaPay()`                     | Builds/parses Solana Pay transfer request URLs, generates a reference, and verifies settlement against it.                                   |
-| `useSolanaPayConfirmation()`         | Polls payment status for a Solana Pay reference.                                                                                             |
-| `useSolanaQrCode()`                  | Renders a Solana Pay URL as an SVG QR code.                                                                                                  |
-| `useSolanaQrScanner()`               | Scans Solana Pay QR codes through the camera and `BarcodeDetector`.                                                                          |
-| `useSolanaSignAndSendTransaction()`  | Wallet transaction signing, sending, and optional confirmation.                                                                              |
-| `useSolanaSignTransactions()`        | Batch transaction signing (falls back to `signAllTransactions`).                                                                             |
-| `useSolanaSignAndSendTransactions()` | Batch sign-and-send returning one signature per transaction.                                                                                 |
-| `useSolanaTransactionConfirmation()` | Confirmation state for an already submitted signature.                                                                                       |
-| `useSolanaSignatureStatus()`         | Signature status reads with optional polling.                                                                                                |
-| `useSolanaClientCapability()`        | Fails fast when the installed client is missing a required capability.                                                                       |
-| `tryUseSolana()`                     | Returns the injected Solana context or `null` when no plugin context is available.                                                           |
-| `useSolanaTransaction()`             | Generic async transaction state helper with optional timeout settings.                                                                       |
-| `useSolanaAction()`                  | Generic async action state machine; each dispatch aborts the prior attempt.                                                                  |
-| `useSolanaRequest()`                 | One-shot Kit request with stale-while-revalidate as its source changes.                                                                      |
-| `useSolanaSubscription()`            | Live data over a Kit reactive stream store (e.g. RPC subscriptions).                                                                         |
-| `useSolanaTrackedData()`             | Slot-deduplicated fetch plus subscription over Kit's slot-tracking store.                                                                    |
-| `useSolanaRequestSwr()`              | Cache-keyed SWR adapter for one-shot Kit requests.                                                                                           |
-| `useSolanaSubscriptionSwr()`         | Cache-keyed SWR adapter for Kit reactive stream stores.                                                                                      |
-| `useSolanaTrackedDataSwr()`          | Cache-keyed SWR adapter for slot-tracked data.                                                                                               |
-| `clearSwrCache()`                    | Clears every cached SWR entry.                                                                                                               |
-| `deleteSwrKey()`                     | Removes a single cached SWR entry by full cache key.                                                                                         |
-| `useSolanaClientCapability()`        | Fails fast when the installed client is missing a required capability.                                                                       |
-| `tryUseSolana()`                     | Returns the injected Solana context or `null` when no plugin context is available.                                                           |
-| `useSolanaSelectedWalletAccount()`   | App-wide selected wallet account context provided by the runtime plugin.                                                                     |
-| `useSolanaPayer()`                   | Reactive Kit client `payer` signer ref. Nuxt config intentionally does not provide one; use a client-only plugin with `clientPlugin: false`. |
-| `useSolanaIdentity()`                | Reactive Kit client `identity` signer ref.                                                                                                   |
-| `useSolanaPlanTransaction()`         | Plans a single transaction message from instruction inputs without signing.                                                                  |
-| `useSolanaPlanTransactions()`        | Plans a batch of transaction messages from instruction inputs.                                                                               |
-| `useSolanaSendTransaction()`         | Plans, signs, submits, and confirms one transaction through the client.                                                                      |
-| `useSolanaSendTransactions()`        | Sends a batch of transactions (parallel or sequential) through the client.                                                                   |
+| Composable                                         | Purpose                                                                                                                                      |
+| -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| `useSolana()`                                      | Full Solana context.                                                                                                                         |
+| `useSolanaClient()`                                | Reactive Kit RPC client and its compositions.                                                                                                |
+| `useSolanaRpc()`                                   | Cluster, endpoint, connection status, latest blockhash, and `checkConnection()`.                                                             |
+| `useSolanaConnection()`                            | Deprecated alias for the Kit client returned by `useSolanaClient()`.                                                                         |
+| `useSolanaAccountInfo()`                           | Account info reads and optional subscriptions.                                                                                               |
+| `useSolanaAirdrop()`                               | Airdrops SOL into an account on test networks and local validators.                                                                          |
+| `useSolanaBalance()`                               | Lamport balance reads.                                                                                                                       |
+| `useSolanaProgramAccounts()`                       | Program account scans with filters and `dataSlice`.                                                                                          |
+| `useSolanaTokenAccounts()`                         | SPL token account reads for an owner.                                                                                                        |
+| `useSolanaTokenBalance()`                          | SPL token balance reads for a mint/owner pair.                                                                                               |
+| `useSolanaWallet()`                                | Active wallet state and connect/disconnect actions.                                                                                          |
+| `useSolanaWalletAccountMessageSigner()`            | Kit message signer (`MessageModifyingSigner`) backed by a wallet account.                                                                    |
+| `useSolanaWalletAccountTransactionSendingSigner()` | Kit sending signer (`TransactionSendingSigner`): the wallet signs and submits.                                                               |
+| `useSolanaWalletAccountTransactionSigner()`        | Kit transaction signer (`TransactionModifyingSigner`) backed by a wallet account.                                                            |
+| `useSolanaWallets()`                               | Wallet discovery, selected wallet state, and selection actions.                                                                              |
+| `useSolanaSignMessage()`                           | Wallet message signing.                                                                                                                      |
+| `useSolanaSignIn()`                                | Sign In With Solana (SIWS) trigger returning a server-verifiable result.                                                                     |
+| `useSolanaPay()`                                   | Builds/parses Solana Pay transfer request URLs, generates a reference, and verifies settlement against it.                                   |
+| `useSolanaPayConfirmation()`                       | Polls payment status for a Solana Pay reference.                                                                                             |
+| `useSolanaQrCode()`                                | Renders a Solana Pay URL as an SVG QR code.                                                                                                  |
+| `useSolanaQrScanner()`                             | Scans Solana Pay QR codes through the camera and `BarcodeDetector`.                                                                          |
+| `useSolanaSignAndSendTransaction()`                | Wallet transaction signing, sending, and optional confirmation.                                                                              |
+| `useSolanaSignTransactions()`                      | Batch transaction signing (falls back to `signAllTransactions`).                                                                             |
+| `useSolanaSignAndSendTransactions()`               | Batch sign-and-send returning one signature per transaction.                                                                                 |
+| `useSolanaTransactionConfirmation()`               | Confirmation state for an already submitted signature.                                                                                       |
+| `useSolanaSignatureStatus()`                       | Signature status reads with optional polling.                                                                                                |
+| `useSolanaClientCapability()`                      | Fails fast when the installed client is missing a required capability.                                                                       |
+| `tryUseSolana()`                                   | Returns the injected Solana context or `null` when no plugin context is available.                                                           |
+| `useSolanaTransaction()`                           | Generic async transaction state helper with optional timeout settings.                                                                       |
+| `useSolanaAction()`                                | Generic async action state machine; each dispatch aborts the prior attempt.                                                                  |
+| `useSolanaRequest()`                               | One-shot Kit request with stale-while-revalidate as its source changes.                                                                      |
+| `useSolanaSubscription()`                          | Live data over a Kit reactive stream store (e.g. RPC subscriptions).                                                                         |
+| `useSolanaTrackedData()`                           | Slot-deduplicated fetch plus subscription over Kit's slot-tracking store.                                                                    |
+| `useSolanaRequestSwr()`                            | Cache-keyed SWR adapter for one-shot Kit requests.                                                                                           |
+| `useSolanaSubscriptionSwr()`                       | Cache-keyed SWR adapter for Kit reactive stream stores.                                                                                      |
+| `useSolanaTrackedDataSwr()`                        | Cache-keyed SWR adapter for slot-tracked data.                                                                                               |
+| `clearSwrCache()`                                  | Clears every cached SWR entry.                                                                                                               |
+| `deleteSwrKey()`                                   | Removes a single cached SWR entry by full cache key.                                                                                         |
+| `useSolanaClientCapability()`                      | Fails fast when the installed client is missing a required capability.                                                                       |
+| `tryUseSolana()`                                   | Returns the injected Solana context or `null` when no plugin context is available.                                                           |
+| `useSolanaSelectedWalletAccount()`                 | App-wide selected wallet account context provided by the runtime plugin.                                                                     |
+| `useSolanaPayer()`                                 | Reactive Kit client `payer` signer ref. Nuxt config intentionally does not provide one; use a client-only plugin with `clientPlugin: false`. |
+| `useSolanaIdentity()`                              | Reactive Kit client `identity` signer ref.                                                                                                   |
+| `useSolanaPlanTransaction()`                       | Plans a single transaction message from instruction inputs without signing.                                                                  |
+| `useSolanaPlanTransactions()`                      | Plans a batch of transaction messages from instruction inputs.                                                                               |
+| `useSolanaSendTransaction()`                       | Plans, signs, submits, and confirms one transaction through the client.                                                                      |
+| `useSolanaSendTransactions()`                      | Sends a batch of transactions (parallel or sequential) through the client.                                                                   |
 
 <br>
 

@@ -36,6 +36,9 @@ const SOLANA_COMPOSABLE_IMPORTS = [
   ["useTransaction", "useSolanaTransaction"],
   ["useTransactionConfirmation", "useSolanaTransactionConfirmation"],
   ["useWallet", "useSolanaWallet"],
+  ["useWalletAccountMessageSigner", "useSolanaWalletAccountMessageSigner"],
+  ["useWalletAccountTransactionSendingSigner", "useSolanaWalletAccountTransactionSendingSigner"],
+  ["useWalletAccountTransactionSigner", "useSolanaWalletAccountTransactionSigner"],
   ["useWallets", "useSolanaWallets"],
 ] as const;
 

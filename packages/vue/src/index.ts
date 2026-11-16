@@ -30,6 +30,13 @@ export * from "./composables/useTrackedData";
 export * from "./composables/useTransaction";
 export * from "./composables/useTransactionConfirmation";
 export * from "./composables/useWallet";
+export * from "./composables/useWalletAccountMessageSigner";
+export * from "./composables/useWalletAccountTransactionSendingSigner";
+export * from "./composables/useWalletAccountTransactionSigner";
+export type {
+  WalletAccountReference,
+  WalletAccountSource,
+} from "./composables/wallet-account-signer";
 export * from "./composables/useWallets";
 export * from "./components/SelectedWalletAccountProvider";
 export * from "./injection";

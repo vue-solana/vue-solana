@@ -540,6 +540,12 @@ const balance = useRequestSwr(["balance", address], () => client.rpc.getBalance(
 
 The SWR cache is module-level and shared across the whole app, including across SSR requests. Namespace cache keys per request (for example by including a request or session id) or call `clearSwrCache()` at the start of each server request to avoid leaking one request's cached data into another. On the client the cache is intentionally shared for stale-while-revalidate seeding. It is capped at 1024 entries with oldest-first eviction. Use `deleteSwrKey(key)` to evict a single entry by its full cache key (including the adapter prefix like `request:`).
 
+The cache is keyed off `key`, not off the fetcher's identity. A function source is unwrapped from its ref/computed (or used as-is when it is bare), so an inline closure is fine and there is no `useCallback`-style memoization to maintain. To swap the source or the spec — a different account, mint, or filter — change the `key` with it: a new key starts a new cache entry, while keeping the old key reuses the stale seed even though the function now does something else.
+
+Cancellation flows through unchanged. `getAbortSignal` is read on every attempt, including the initial fire, any revalidation the underlying hook performs, and a manual `refresh()` / `reconnect()`. Those methods also forward their per-call `{ abortSignal }` override, which replaces the factory for that attempt only — the next attempt goes back to `getAbortSignal`, so there is no persistent mutation-time override. Without `getAbortSignal` the attempt still gets a fresh internal signal that is never aborted by a timeout; when a newer attempt supersedes it the composable aborts the attempt, and the cache keeps the last-known value because a superseded result never writes back.
+
+There is deliberately no action SWR adapter. React's `useSWRMutation` exists because SWR owns the mutation half of its cache; here actions are already imperative (`useAction`, `useSendTransaction`, `useSignAndSendTransaction`), so an adapter would add a layer without a cache entry to revalidate. Call the action, then `refresh()` the affected SWR key if the mutation changes a cached read.
+
 ### Cancellation & Timeouts
 
 `useRequest()`, `useSubscription()`, and `useTrackedData()` accept a `getAbortSignal` option — a factory called once per attempt (request) or connection (subscription/tracked data). It is the natural place for a timeout:
@@ -605,6 +611,13 @@ const [selectedAccount, setSelectedAccount] = useSelectedWalletAccount();
 </template>
 ```
 
+The provider accepts two options:
+
+- `filterWallet(walletName, account)` restricts `filteredWallets` and the accounts that can be selected. Return `false` for accounts the app cannot use (for example, a wallet whose `chains` do not include the cluster you target); a wallet whose accounts are all filtered out disappears from the list. Selection is not cleared when the current account becomes filtered — call `setSelectedAccount(null)` yourself if that combination matters.
+- `stateSync` persists the selection through `{ storeSelectedWallet, getSelectedWallet, deleteSelectedWallet }`. The default writes to `localStorage` under `vue-solana:selected-wallet-account`; pass `null` to disable persistence. The persisted value is `${walletName}:${account.address}`, and a wallet name that itself contains `:` is safe because the key is split on the last separator. Restoring is best-effort: wallets and their accounts are discovered asynchronously, so a key that cannot be resolved on the first read stays pending and is retried on every wallet change. On the client, a `storage` event from another tab applies that tab's selection here.
+
+Both options are read once during setup; changing them after mount requires remounting the provider.
+
 ### Batch Transactions
 
 `useSignTransactions()` and `useSignAndSendTransactions()` batch wallet requests and fall back to singular calls when the wallet only supports one at a time:
@@ -617,6 +630,29 @@ await execute([transactionOne, transactionTwo]); // signatures: string[]
 ```
 
 When a wallet falls back to sequential signing and a later send fails, `useSignAndSendTransactions()` throws a `PartialSignAndSendError` whose `signatures` field lists the sends that already landed.
+
+### Wallet Account Signers
+
+Three composables expose a wallet account as a Kit signer, so it can be passed anywhere `@solana/kit` expects a `MessageModifyingSigner`, `TransactionModifyingSigner`, or `TransactionSendingSigner`:
+
+```ts
+import { useSelectedWalletAccount } from "@vue-solana/vue/useSelectedWalletAccount";
+import { useWalletAccountMessageSigner } from "@vue-solana/vue/useWalletAccountMessageSigner";
+import { useWalletAccountTransactionSendingSigner } from "@vue-solana/vue/useWalletAccountTransactionSendingSigner";
+import { useWalletAccountTransactionSigner } from "@vue-solana/vue/useWalletAccountTransactionSigner";
+
+const [selectedAccount] = useSelectedWalletAccount();
+const messageSigner = useWalletAccountMessageSigner(selectedAccount);
+const transactionSigner = useWalletAccountTransactionSigner(selectedAccount, "solana:devnet");
+const sendingSigner = useWalletAccountTransactionSendingSigner(selectedAccount, "solana:devnet");
+```
+
+- The account is either the account object from `useWallets()` / `useSelectedWalletAccount()` (`{ address, publicKey, chains, … }`) or its address, optionally inside a ref or getter. The signer's `address` is reactive, so passing the selected-account ref lets one signer follow an account switch. An empty ref (nothing selected yet) makes both `address` and signing throw `INVALID_INPUT`.
+- The message and transaction signers deliberately promise the _modifying_ interfaces (`modifyAndSignMessages` / `modifyAndSignTransactions`), because a wallet may rewrite the message before signing (fee payer, priority fee, or its own authentication envelope). They sign one message or transaction per request; a batch rejects with `WALLET_FEATURE_UNSUPPORTED` instead of silently opening one wallet prompt per item.
+- The sending signer submits through the wallet and resolves signature bytes. It uses the wallet's batch request when available, falls back to one singular request per transaction, and throws `PartialSignAndSendError` listing the signatures that already landed when a fallback send fails.
+- Signing goes through the connected wallet, so the account must be the connected one: no wallet throws `NO_WALLET_SELECTED`, a disconnected wallet throws `WALLET_NOT_CONNECTED`, and a different connected account throws `INVALID_INPUT`.
+- `chain` must be a Solana chain identifier (`solana:mainnet`, `solana:devnet`, …). It is validated at creation and not forwarded with the request, because the adapter already selected a chain when the wallet was adapted.
+- The transaction signers keep the lifetime constraint the caller attached, or derive a fresh one from the signed message when the wallet rewrote the message bytes.
 
 ## Example App
 
@@ -653,6 +689,9 @@ Docs: [Vue Solana Agent Skill](https://vue-solana-docs.vercel.app/agent-skill)
 | `useSolanaClient()`                                                                        | Returns the injected Kit client as `{ client, rpc }`. The recommended RPC path.                                                                                    |
 | `useConnection()`                                                                          | Returns the Kit `client`. Deprecated in favor of `useSolanaClient()`.                                                                                              |
 | `useWallet()`                                                                              | Returns wallet refs, computed connection state, and wallet actions.                                                                                                |
+| `useWalletAccountMessageSigner(account)`                                                   | Kit `MessageModifyingSigner` for a wallet account, with a reactive `address` and wallet-backed `modifyAndSignMessages()`.                                          |
+| `useWalletAccountTransactionSigner(account, chain)`                                        | Kit `TransactionModifyingSigner` that signs one wire transaction per request and keeps or re-derives its lifetime constraint.                                      |
+| `useWalletAccountTransactionSendingSigner(account, chain)`                                 | Kit `TransactionSendingSigner`: the wallet signs and submits, resolving signature bytes.                                                                           |
 | `useWallets()`                                                                             | Returns discovered browser extension wallets, Android MWA wallets, iOS browser wallet links, and wallet selection actions.                                         |
 | `useSignMessage()`                                                                         | Signs arbitrary message bytes through the connected wallet when message signing is supported.                                                                      |
 | `useBalance(address, commitment?)`                                                         | Loads lamport balance for an address string.                                                                                                                       |
@@ -711,6 +750,12 @@ Direct composable subpaths:
 - `@vue-solana/vue/useProgramAccounts`
 
 - `@vue-solana/vue/useWallet`
+
+- `@vue-solana/vue/useWalletAccountMessageSigner`
+
+- `@vue-solana/vue/useWalletAccountTransactionSendingSigner`
+
+- `@vue-solana/vue/useWalletAccountTransactionSigner`
 
 - `@vue-solana/vue/useWallets`
 

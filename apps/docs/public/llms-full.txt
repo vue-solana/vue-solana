@@ -3318,6 +3318,9 @@ Direct package subpaths:
 - `@vue-solana/vue/useBalance`
 - `@vue-solana/vue/useProgramAccounts`
 - `@vue-solana/vue/useWallet`
+- `@vue-solana/vue/useWalletAccountMessageSigner`
+- `@vue-solana/vue/useWalletAccountTransactionSendingSigner`
+- `@vue-solana/vue/useWalletAccountTransactionSigner`
 - `@vue-solana/vue/useWallets`
 - `@vue-solana/vue/useTransaction`
 - `@vue-solana/vue/useTransactionConfirmation`
@@ -3337,6 +3340,9 @@ Use `@vue-solana/vue/buffer-polyfill` for browser transaction code that needs th
 - `useAccountInfo(address, options?)`: loads normalized account data (executable, lamports, owner, space, data bytes).
 - `useProgramAccounts(programId, options?)`: loads accounts owned by a program id with optional filters and data slicing.
 - `useWallet()`: returns active wallet refs, computed connection state, and wallet actions.
+- `useWalletAccountMessageSigner(account)`: returns a Kit `MessageModifyingSigner` for a wallet account.
+- `useWalletAccountTransactionSigner(account, chain)`: returns a Kit `TransactionModifyingSigner` for a wallet account.
+- `useWalletAccountTransactionSendingSigner(account, chain)`: returns a Kit `TransactionSendingSigner` that signs and submits through the wallet.
 - `useWallets()`: returns discovered browser extension wallets, Android Mobile Wallet Adapter wallets, supported iOS browser wallet entries, and wallet selection actions.
 - `useBalance(address, commitment?)`: loads lamport balance for an address string.
 - `useAirdrop()`: airdrops SOL into an account on test networks and local validators.
