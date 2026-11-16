@@ -23,6 +23,10 @@ test.beforeEach(async ({ page }) => {
 });
 
 test("loads the example dashboard and RPC state", async ({ page }, testInfo) => {
+  if (isRealRpcRun()) {
+    test.setTimeout(60_000);
+  }
+
   await expectNoPageErrors(page, async () => {
     await page.goto("/");
     await expect(page.getByTestId("hero")).toContainText(appNames[testInfo.project.name]);
@@ -415,16 +419,17 @@ test("creates a Solana Pay request, renders a QR code, and verifies settlement",
   await expect(page.getByTestId("pay-qr").locator("svg")).toBeVisible();
 
   // No payment exists for a freshly generated reference, so the verifying read
-  // has to report an expiry rather than a confirmation. Against real devnet a
-  // transient 429/rate-limit can surface as rpc_failure before the lookup
-  // settles, so retry the explicit verify action a few times in that mode.
+  // has to report an expiry rather than a confirmation. Public devnet can be
+  // rate-limited in CI, so allow a few retries in real-network runs.
   const verification = page.getByTestId("pay-verification");
   if (isRealRpcRun()) {
+    test.setTimeout(90_000);
+
     let settled = false;
 
-    for (let attempt = 0; attempt < 5; attempt += 1) {
+    for (let attempt = 0; attempt < 12; attempt += 1) {
       await page.getByTestId("verify-payment").click();
-      await expect(verification).toBeVisible();
+      await expect(verification).toBeVisible({ timeout: 15_000 });
 
       const text = (await verification.textContent()) ?? "";
       if (text.includes("expired")) {
@@ -436,7 +441,7 @@ test("creates a Solana Pay request, renders a QR code, and verifies settlement",
         break;
       }
 
-      await page.waitForTimeout(2_000);
+      await page.waitForTimeout(1_500);
     }
 
     expect(settled).toBe(true);

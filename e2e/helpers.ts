@@ -19,8 +19,10 @@ export function isRealRpcRun() {
 export async function waitForRpcConnected(page: Page) {
   const status = page.getByTestId("rpc-status");
   const checkRpcButton = page.getByTestId("check-rpc");
+  const maxAttempts = isRealRpcRun() ? 8 : 3;
+  const attemptTimeout = isRealRpcRun() ? 5_000 : 8_000;
 
-  for (let attempt = 0; attempt < 3; attempt += 1) {
+  for (let attempt = 0; attempt < maxAttempts; attempt += 1) {
     if ((await status.textContent()) === "connected") {
       return;
     }
@@ -28,14 +30,14 @@ export async function waitForRpcConnected(page: Page) {
     await checkRpcButton.click();
 
     try {
-      await expect(status).toHaveText("connected", { timeout: 8_000 });
+      await expect(status).toHaveText("connected", { timeout: attemptTimeout });
       return;
     } catch {
       // Transient failure; the re-check below absorbs it.
     }
   }
 
-  await expect(status).toHaveText("connected");
+  await expect(status).toHaveText("connected", { timeout: 15_000 });
 }
 
 interface RpcMockHarness {
