@@ -1,5 +1,13 @@
 # @vue-solana/vue
 
+## 4.2.1
+
+### Patch Changes
+
+- ba36765: Harden wallet account signer adapters: validate that an account object supports the requested chain, enforce signature count/length and normalize decode failures for wallet transaction-sending signers, and correct signer docs/auto-import references.
+- Updated dependencies [ba36765]
+  - @vue-solana/core@4.2.1
+
 ## 4.2.0
 
 ### Minor Changes
