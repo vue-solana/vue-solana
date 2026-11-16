@@ -225,14 +225,30 @@ export async function expectNoPageErrors(page: Page, run: () => Promise<void>) {
       return;
     }
 
-    // On real-network runs a transient devnet failure logs a connection
-    // error before `waitForRpcConnected` retries to success; just re-running
-    // the check proves connectivity, so those logs are ignored.
-    if (isRealRpcRun() && message.text().includes("[Vue Solana] Connection failed")) {
-      return;
+    const text = message.text();
+
+    if (isRealRpcRun()) {
+      // On real-network runs a transient devnet failure logs a connection
+      // error before `waitForRpcConnected` retries to success; just re-running
+      // the check proves connectivity, so those logs are ignored.
+      if (text.includes("[Vue Solana] Connection failed")) {
+        return;
+      }
+
+      // Public devnet rate-limits CI runners (429) and drops websocket
+      // handshakes; the app's own retry logic absorbs these, so treat them as
+      // environmental noise rather than application errors.
+      if (
+        text.includes("429") ||
+        text.includes("ERR_ABORTED") ||
+        (text.includes("Failed to load resource") && text.includes("api.devnet.solana.com")) ||
+        text.includes("WebSocket connection to 'wss://api.devnet.solana.com/")
+      ) {
+        return;
+      }
     }
 
-    consoleErrors.push(message.text());
+    consoleErrors.push(text);
   });
 
   await run();

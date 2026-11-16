@@ -415,10 +415,36 @@ test("creates a Solana Pay request, renders a QR code, and verifies settlement",
   await expect(page.getByTestId("pay-qr").locator("svg")).toBeVisible();
 
   // No payment exists for a freshly generated reference, so the verifying read
-  // has to report an expiry rather than a confirmation.
-  await page.getByTestId("verify-payment").click();
-  await expect(page.getByTestId("pay-verification")).toContainText("expired");
-  await expect(page.getByTestId("pay-verification")).toContainText("no");
+  // has to report an expiry rather than a confirmation. Against real devnet a
+  // transient 429/rate-limit can surface as rpc_failure before the lookup
+  // settles, so retry the explicit verify action a few times in that mode.
+  const verification = page.getByTestId("pay-verification");
+  if (isRealRpcRun()) {
+    let settled = false;
+
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      await page.getByTestId("verify-payment").click();
+      await expect(verification).toBeVisible();
+
+      const text = (await verification.textContent()) ?? "";
+      if (text.includes("expired")) {
+        settled = true;
+        break;
+      }
+
+      if (!text.includes("rpc_failure")) {
+        break;
+      }
+
+      await page.waitForTimeout(2_000);
+    }
+
+    expect(settled).toBe(true);
+  } else {
+    await page.getByTestId("verify-payment").click();
+  }
+  await expect(verification).toContainText("expired");
+  await expect(verification).toContainText("no");
 
   // The non-verifying status read only reports pending/found/error.
   await page.getByTestId("toggle-payment-watch").click();
