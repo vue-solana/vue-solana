@@ -15,6 +15,7 @@ import { assertWalletCanSign } from "@vue-solana/core/wallet";
 import { useWallet } from "./useWallet";
 import {
   assertSolanaChain,
+  assertWalletAccountSupportsChain,
   getAccountSigningWallet,
   resolveWalletAccountAddress,
   type WalletAccountSource,
@@ -37,7 +38,9 @@ type SignedTransactions = readonly SignedTransaction[];
  * differs from the one the signer was created for. `chain` must be a Solana
  * chain identifier (`solana:mainnet`, `solana:devnet`, …); the adapter already
  * selected a chain when the wallet was adapted, so it is validated rather
- * than forwarded with the request.
+ * than forwarded with the request. When the account is passed as an object
+ * that declares `chains`, the signer also rejects a chain the account does
+ * not support.
  *
  * ```ts
  * import { useWalletAccountTransactionSigner } from "@vue-solana/vue/useWalletAccountTransactionSigner";
@@ -62,6 +65,7 @@ export function useWalletAccountTransactionSigner(
     async modifyAndSignTransactions(transactions, config) {
       config?.abortSignal?.throwIfAborted();
 
+      assertWalletAccountSupportsChain(account, chain);
       const address = resolveWalletAccountAddress(account);
 
       if (transactions.length === 0) {

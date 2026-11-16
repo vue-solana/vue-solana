@@ -169,6 +169,9 @@ Buffer polyfill이 필요한 브라우저 트랜잭션 코드에는 `@vue-solana
 - `useAccountInfo(address, options?)`: 정규화된 account data(executable, lamports, owner, space, data bytes)를 로드합니다.
 - `useProgramAccounts(programId, options?)`: optional filters와 data slicing으로 program id가 소유한 accounts를 로드합니다.
 - `useWallet()`: active wallet ref, computed connection state, wallet action을 반환합니다.
+- `useWalletAccountMessageSigner(account)`: wallet account용 Kit `MessageModifyingSigner`를 반환합니다.
+- `useWalletAccountTransactionSigner(account, chain)`: wallet account용 Kit `TransactionModifyingSigner`를 반환합니다.
+- `useWalletAccountTransactionSendingSigner(account, chain)`: wallet을 통해 서명하고 전송하는 Kit `TransactionSendingSigner`를 반환합니다.
 - `useWallets()`: 발견된 browser extension wallet, Android Mobile Wallet Adapter wallet, 지원되는 iOS browser wallet entry, wallet 선택 action을 반환합니다.
 - `useBalance(address, commitment?)`: address string의 lamport balance를 로드합니다.
 - `useAirdrop()`: 테스트 네트워크와 로컬 validator에서 계정에 SOL을 에어드랍합니다.
@@ -800,6 +803,31 @@ const [selectedAccount, setSelectedAccount, filteredWallets] = useSelectedWallet
 ```
 
 선택 항목은 기본적으로 `localStorage`에 `${walletName}:${accountAddress}`로 저장되고(`stateSync`로 커스터마이즈하거나 `null`로 비활성화) 지갑과 account가 사용 가능할 때 다음 방문 시 복원됩니다. `filterWallet`은 어떤 지갑 account가 제공되는지 제한합니다. Nuxt에서는 모듈의 runtime plugin이 이 context를 자동으로 설치합니다.
+
+## Wallet Account Signer
+
+wallet account를 Kit signer interface로 노출해, wallet wrapper를 직접 만들지 않고 Kit이 signer를 기대하는 곳에 그대로 전달할 수 있습니다. 세 composable은 `useWallets()` / `useSelectedWalletAccount()`의 account 객체 또는 해당 address를 받으며, ref나 getter로 전달하면 `setup()`에서 만든 signer 하나가 선택된 account를 따라갈 수 있습니다.
+
+```ts
+import { useSelectedWalletAccount } from "@vue-solana/vue/useSelectedWalletAccount";
+import { useWalletAccountMessageSigner } from "@vue-solana/vue/useWalletAccountMessageSigner";
+import { useWalletAccountTransactionSigner } from "@vue-solana/vue/useWalletAccountTransactionSigner";
+import { useWalletAccountTransactionSendingSigner } from "@vue-solana/vue/useWalletAccountTransactionSendingSigner";
+
+const [selectedAccount] = useSelectedWalletAccount();
+
+const messageSigner = useWalletAccountMessageSigner(selectedAccount);
+const transactionSigner = useWalletAccountTransactionSigner(selectedAccount, "solana:devnet");
+const sendingSigner = useWalletAccountTransactionSendingSigner(selectedAccount, "solana:devnet");
+```
+
+- `useWalletAccountMessageSigner(account)`는 Kit `MessageModifyingSigner`(`modifyAndSignMessages`)를 반환합니다. wallet이 서명 전에 메시지를 다시 쓸 수 있으므로(예: 자체 인증 envelope 추가) modifying interface를 의도적으로 사용합니다.
+- `useWalletAccountTransactionSigner(account, chain)`는 Kit `TransactionModifyingSigner`(`modifyAndSignTransactions`)를 반환하며, 앱이 서명된 바이트를 자체 RPC로 제출하는 경우에 사용합니다. 요청마다 wire transaction 하나에 서명하고, 호출자가 붙인 lifetime constraint를 유지하거나 wallet이 메시지 바이트를 다시 쓴 경우 서명된 메시지에서 새 constraint를 도출합니다.
+- `useWalletAccountTransactionSendingSigner(account, chain)`는 Kit `TransactionSendingSigner`(`signAndSendTransactions`)를 반환하며, wallet이 transaction을 직접 서명·제출하고 signer가 signature bytes를 resolve하는 흐름에 사용합니다. transaction이 하나면 가능한 경우 단일 `signAndSendTransaction` 요청을 우선 사용하고, 그렇지 않으면 batch 요청을 사용하거나 transaction마다 단일 요청으로 순차 fallback합니다. fallback 도중 실패하면 이미 전송된 signature를 담은 `PartialSignAndSendError`로 reject되며, 각 send 요청은 120초 후 `TRANSACTION_TIMEOUT`으로 시간 초과됩니다.
+
+account는 호출 시점에 resolve됩니다. 서명은 연결된 wallet을 통해 이루어지므로 wallet이 없으면 `NO_WALLET_SELECTED`, 연결되지 않았으면 `WALLET_NOT_CONNECTED`, 연결된 account가 다르면 `INVALID_INPUT`이 발생합니다. 비어 있는 ref(아직 선택 없음)도 `address`와 서명에서 `INVALID_INPUT`을 발생시킵니다. message 및 transaction-modifying signer는 항목마다 wallet prompt를 여는 대신 batch를 `WALLET_FEATURE_UNSUPPORTED`로 거부합니다.
+
+`chain`은 Solana chain identifier(`solana:mainnet`, `solana:devnet`, …)여야 합니다. wallet을 adapt할 때 adapter가 이미 chain을 선택했으므로 생성 시 검증되며 요청과 함께 전달되지 않습니다. account를 `chains`를 선언한 객체로 전달하면 signer는 해당 account가 지원하지 않는 chain도 거부합니다.
 
 ## 클라이언트 Capability와 계획
 

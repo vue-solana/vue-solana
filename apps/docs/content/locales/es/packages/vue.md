@@ -169,6 +169,9 @@ Usa `@vue-solana/vue/buffer-polyfill` para código de transacciones en navegador
 - `useAccountInfo(address, options?)`: carga datos normalizados de cuenta (executable, lamports, owner, space, bytes de datos).
 - `useProgramAccounts(programId, options?)`: carga cuentas propiedad de un program id con filtros opcionales y recorte de datos.
 - `useWallet()`: devuelve refs de wallet activa, estado de conexión computado y acciones de wallet.
+- `useWalletAccountMessageSigner(account)`: devuelve un Kit `MessageModifyingSigner` para una cuenta de wallet.
+- `useWalletAccountTransactionSigner(account, chain)`: devuelve un Kit `TransactionModifyingSigner` para una cuenta de wallet.
+- `useWalletAccountTransactionSendingSigner(account, chain)`: devuelve un Kit `TransactionSendingSigner` que firma y envía a través de la wallet.
 - `useWallets()`: devuelve wallets de extensión de navegador descubiertas, wallets Android Mobile Wallet Adapter, entradas soportadas de wallet de navegador iOS y acciones de selección de wallet.
 - `useBalance(address, commitment?)`: carga el balance en lamports para un string de dirección.
 - `useAirdrop()`: airdrops SOL en una cuenta en redes de prueba y validadores locales.
@@ -800,6 +803,31 @@ const [selectedAccount, setSelectedAccount, filteredWallets] = useSelectedWallet
 ```
 
 La selección persiste como `${walletName}:${accountAddress}` en `localStorage` por defecto (pasa `stateSync` para personalizarla o `null` para desactivarla) y se restaura en la siguiente visita cuando la wallet y la cuenta están disponibles. `filterWallet` restringe qué cuentas de wallet se ofrecen. En Nuxt, el plugin runtime del módulo instala este contexto automáticamente.
+
+## Signers de cuenta de wallet
+
+Expón una cuenta de wallet como las interfaces de signer de Kit para poder pasarla donde Kit espera un signer, en lugar de implementar manualmente un wrapper de wallet. Los tres composables aceptan el objeto de cuenta de `useWallets()` / `useSelectedWalletAccount()` o su dirección, opcionalmente dentro de una ref o getter, de modo que un signer creado en `setup()` pueda seguir la cuenta seleccionada:
+
+```ts
+import { useSelectedWalletAccount } from "@vue-solana/vue/useSelectedWalletAccount";
+import { useWalletAccountMessageSigner } from "@vue-solana/vue/useWalletAccountMessageSigner";
+import { useWalletAccountTransactionSigner } from "@vue-solana/vue/useWalletAccountTransactionSigner";
+import { useWalletAccountTransactionSendingSigner } from "@vue-solana/vue/useWalletAccountTransactionSendingSigner";
+
+const [selectedAccount] = useSelectedWalletAccount();
+
+const messageSigner = useWalletAccountMessageSigner(selectedAccount);
+const transactionSigner = useWalletAccountTransactionSigner(selectedAccount, "solana:devnet");
+const sendingSigner = useWalletAccountTransactionSendingSigner(selectedAccount, "solana:devnet");
+```
+
+- `useWalletAccountMessageSigner(account)` devuelve un `MessageModifyingSigner` de Kit (`modifyAndSignMessages`). La interfaz modificadora es deliberada porque una wallet puede reescribir el mensaje antes de firmarlo (por ejemplo, para añadir su propio sobre de autenticación).
+- `useWalletAccountTransactionSigner(account, chain)` devuelve un `TransactionModifyingSigner` de Kit (`modifyAndSignTransactions`) para los casos en que tu app envía los bytes firmados a través de su propio RPC. Firma una transacción por solicitud y mantiene la restricción de vida útil que adjuntó el llamador, o deriva una nueva a partir del mensaje firmado cuando la wallet reescribió los bytes del mensaje.
+- `useWalletAccountTransactionSendingSigner(account, chain)` devuelve un `TransactionSendingSigner` de Kit (`signAndSendTransactions`) para los flujos en los que la wallet firma y envía la transacción por sí misma y el signer resuelve bytes de firma. Para una sola transacción prefiere la solicitud singular `signAndSendTransaction` cuando está disponible; de lo contrario usa la solicitud por lotes, o recurre a una solicitud singular por transacción en secuencia. Si el fallback falla a mitad de camino, rechaza con `PartialSignAndSendError` con las firmas que ya se enviaron, y cada solicitud de envío expira después de 120 segundos con `TRANSACTION_TIMEOUT`.
+
+La cuenta se resuelve en el momento de la llamada. La firma pasa por la wallet conectada, así que sin wallet lanza `NO_WALLET_SELECTED`, una wallet desconectada lanza `WALLET_NOT_CONNECTED` y una cuenta conectada diferente lanza `INVALID_INPUT`. Una ref vacía (aún sin selección) también hace que `address` y la firma lancen `INVALID_INPUT`. Los signers modificadores de mensaje y transacción rechazan lotes con `WALLET_FEATURE_UNSUPPORTED` en lugar de abrir un aviso de wallet por elemento.
+
+`chain` debe ser un identificador de cadena de Solana (`solana:mainnet`, `solana:devnet`, …). Se valida en la creación y no se envía con la solicitud, porque el adaptador ya seleccionó una cadena cuando se adaptó la wallet. Cuando la cuenta se pasa como un objeto que declara `chains`, el signer también rechaza una cadena que la cuenta no admita.
 
 ## Capacidades del cliente y planificación
 

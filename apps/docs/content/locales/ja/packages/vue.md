@@ -171,6 +171,9 @@ Buffer ポリフィルを必要とするブラウザ向けトランザクショ�
 - `useAccountInfo(address, options?)`: 正規化されたアカウントデータ（executable、lamports、owner、space、データバイト）を読み込みます。
 - `useProgramAccounts(programId, options?)`: プログラム ID が所有するアカウントを、任意のフィルターとデータスライス付きで読み込みます。
 - `useWallet()`: アクティブなウォレットの ref、算出された接続状態、ウォレットのアクションを返します。
+- `useWalletAccountMessageSigner(account)`: ウォレットアカウント用の Kit `MessageModifyingSigner` を返します。
+- `useWalletAccountTransactionSigner(account, chain)`: ウォレットアカウント用の Kit `TransactionModifyingSigner` を返します。
+- `useWalletAccountTransactionSendingSigner(account, chain)`: ウォレット経由で署名と送信を行う Kit `TransactionSendingSigner` を返します。
 - `useWallets()`: 検出されたブラウザ拡張ウォレット、Android Mobile Wallet Adapter ウォレット、対応している iOS ブラウザウォレットのエントリ、ウォレット選択アクションを返します。
 - `useBalance(address, commitment?)`: アドレス文字列の lamport 残高を読み込みます。
 - `useAirdrop()`: テストネットワークとローカルバリデータのアカウントに SOL をエアドロップします。
@@ -801,6 +804,31 @@ const [selectedAccount, setSelectedAccount, filteredWallets] = useSelectedWallet
 ```
 
 選択内容はデフォルトで `localStorage` に `${walletName}:${accountAddress}` として永続化され（カスタマイズするには `stateSync` を渡し、無効にするには `null` を渡します）、次回の訪問時にウォレットとアカウントが利用可能であれば復元されます。`filterWallet` は提示するウォレットアカウントを制限します。Nuxt では、モジュールのランタイムプラグインがこのコンテキストを自動的にインストールします。
+
+## ウォレットアカウント署名者
+
+ウォレットアカウントを Kit の signer インターフェースとして公開し、ウォレットラッパーを自作せずに Kit が signer を期待する場所へ渡せるようにします。3 つの composable は `useWallets()` / `useSelectedWalletAccount()` のアカウントオブジェクトまたはそのアドレスを受け取り、ref や getter で渡すこともできるため、`setup()` で作成した 1 つの signer が選択中のアカウントに追従できます。
+
+```ts
+import { useSelectedWalletAccount } from "@vue-solana/vue/useSelectedWalletAccount";
+import { useWalletAccountMessageSigner } from "@vue-solana/vue/useWalletAccountMessageSigner";
+import { useWalletAccountTransactionSigner } from "@vue-solana/vue/useWalletAccountTransactionSigner";
+import { useWalletAccountTransactionSendingSigner } from "@vue-solana/vue/useWalletAccountTransactionSendingSigner";
+
+const [selectedAccount] = useSelectedWalletAccount();
+
+const messageSigner = useWalletAccountMessageSigner(selectedAccount);
+const transactionSigner = useWalletAccountTransactionSigner(selectedAccount, "solana:devnet");
+const sendingSigner = useWalletAccountTransactionSendingSigner(selectedAccount, "solana:devnet");
+```
+
+- `useWalletAccountMessageSigner(account)` は Kit の `MessageModifyingSigner`（`modifyAndSignMessages`）を返します。ウォレットが署名前にメッセージを書き換える場合がある（例: 独自の認証エンベロープを追加する）ため、あえて modifying インターフェースを提供しています。
+- `useWalletAccountTransactionSigner(account, chain)` は Kit の `TransactionModifyingSigner`（`modifyAndSignTransactions`）を返し、署名済みバイト列をアプリ側の RPC で送信する場合に使います。リクエストごとに 1 つのワイヤートランザクションへ署名し、呼び出し側が付与したライフタイム制約を保持します。ウォレットがメッセージバイトを書き換えた場合は、署名済みメッセージから新しい制約を導出します。
+- `useWalletAccountTransactionSendingSigner(account, chain)` は Kit の `TransactionSendingSigner`（`signAndSendTransactions`）を返し、ウォレットがトランザクションの署名と送信を行い、signer が署名バイト列を解決するフローに使います。1 件のトランザクションでは、利用可能なら単一の `signAndSendTransaction` リクエストを優先し、そうでなければバッチリクエストを使うか、トランザクションごとに単一リクエストへ順次フォールバックします。フォールバックの途中で失敗した場合は、すでに送信済みの署名を含む `PartialSignAndSendError` で拒否され、各送信リクエストは 120 秒で `TRANSACTION_TIMEOUT` になります。
+
+アカウントは呼び出し時に解決されます。署名は接続済みウォレットを通して行われるため、ウォレットが未選択なら `NO_WALLET_SELECTED`、未接続なら `WALLET_NOT_CONNECTED`、接続中の別アカウントなら `INVALID_INPUT` がスローされます。空の ref（まだ未選択）の場合も、`address` と署名は `INVALID_INPUT` になります。メッセージおよびトランザクションの modifying signer は、項目ごとにウォレットのプロンプトを開かないよう、バッチを `WALLET_FEATURE_UNSUPPORTED` で拒否します。
+
+`chain` は Solana のチェーン識別子（`solana:mainnet`, `solana:devnet`, …）である必要があります。ウォレットをアダプトした時点でアダプターがチェーンを選択済みのため、作成時に検証され、リクエストには転送されません。アカウントを `chains` を持つオブジェクトとして渡した場合、signer はそのアカウントがサポートしないチェーンも拒否します。
 
 ## クライアントのケイパビリティとプランニング
 

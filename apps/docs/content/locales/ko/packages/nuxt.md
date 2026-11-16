@@ -95,6 +95,9 @@ export default defineNuxtConfig({
 - `useSolanaTransactionConfirmation(options?)`: 기존 transaction signature를 confirm합니다.
 - `useSolanaSignatureStatus(signature, options?)`: signature status를 읽거나 polling하거나 subscribe합니다.
 - `useSolanaSignMessage()`: 오프체인 인증 또는 소유권 challenge message에 서명합니다.
+- `useSolanaWalletAccountMessageSigner()`: wallet account용 Kit `MessageModifyingSigner`를 반환합니다.
+- `useSolanaWalletAccountTransactionSigner()`: wallet account용 Kit `TransactionModifyingSigner`를 반환합니다.
+- `useSolanaWalletAccountTransactionSendingSigner()`: wallet을 통해 서명하고 전송하는 Kit `TransactionSendingSigner`를 반환합니다.
 - `useSolanaSignAndSendTransaction()`: transaction에 서명하고 전송하며 선택적으로 confirm합니다.
 - `useSolanaAction(handler)`: abort-on-redispatch를 지원하는 generic async action state machine입니다.
 - `useSolanaRequest(source, options?)`: source가 바뀌면 다시 실행되는 one-shot request이며 stale-while-revalidate를 지원합니다.
