@@ -36,3 +36,7 @@ allowBuilds:
 # the dependency ranges consumers resolve.
 overrides:
   "@solana/kit": ^8.6.0
+minimumReleaseAgeExclude:
+  - "@vue-solana/core"
+  - "@vue-solana/vue"
+  - "@vue-solana/nuxt"
