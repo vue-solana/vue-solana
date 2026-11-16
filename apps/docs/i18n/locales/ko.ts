@@ -107,7 +107,7 @@ export default {
       eyebrow: "라이브 Devnet 데모",
       title: "실제 Nuxt 앱에서 사용하는 Vue Solana",
       description:
-        "이 페이지는 최신 배포된 Vue Solana 패키지로 실행됩니다. RPC 읽기, 잔액 조회, Wallet Standard 검색, 연결/해제, 메시지 서명, 작은 실제 devnet 전송, 클라이언트 전송 트랜잭션, devnet 에어드롭, QR 스캔이 포함된 Solana Pay 요청을 시도해 보세요.",
+        "이 페이지는 최신 배포된 Vue Solana 패키지로 실행됩니다. RPC 읽기, 잔액 조회, Wallet Standard 검색, 연결/해제, 메시지 서명, Kit wallet account signer, 작은 실제 devnet 전송, 클라이언트 전송 트랜잭션, devnet 에어드롭, QR 스캔이 포함된 Solana Pay 요청을 시도해 보세요.",
       versionsLabel: "Vue Solana 패키지 버전",
     },
     rpc: {
@@ -199,6 +199,25 @@ export default {
         selectWallet: "먼저 검색된 지갑을 선택하세요.",
         connectWallet: "메시지 서명을 사용하려면 선택한 지갑을 연결하세요.",
         unsupported: "선택한 지갑은 메시지 서명을 지원하지 않습니다.",
+        enterMessage: "서명할 메시지를 입력하세요.",
+      },
+    },
+    walletAccountSigners: {
+      title: "Wallet Account Signer (Kit)",
+      description:
+        "선택한 wallet account를 Kit signer interface로 노출합니다. MessageModifyingSigner를 통해 메시지에 서명하여 Kit 네이티브 통합 경로를 보여줍니다.",
+      account: "선택된 account",
+      signerAddress: "Signer address",
+      chain: "Chain",
+      messageLabel: "서명할 메시지",
+      messagePlaceholder: "Kit signer로 서명할 메시지를 입력하세요",
+      sign: "Kit signer로 서명",
+      signature: "서명:",
+      signedMessage: "서명된 메시지:",
+      defaultMessage: "Kit signer로 Vue Solana에 로그인",
+      disabled: {
+        selectAccount: "먼저 wallet account를 선택하고 연결하세요.",
+        connectWallet: "wallet account signer를 사용하려면 선택한 지갑을 연결하세요.",
         enterMessage: "서명할 메시지를 입력하세요.",
       },
     },

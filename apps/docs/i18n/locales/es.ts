@@ -107,7 +107,7 @@ export default {
       eyebrow: "Demo en vivo en devnet",
       title: "Vue Solana en una app Nuxt real",
       description:
-        "Esta página usa los paquetes publicados más recientes de Vue Solana. Prueba lecturas RPC, consulta de balance, descubrimiento con Wallet Standard, conexión/desconexión, firma de mensajes, una pequeña transferencia real en devnet, transacciones enviadas por el cliente, airdrops de devnet y solicitudes de Solana Pay con escaneo de QR.",
+        "Esta página usa los paquetes publicados más recientes de Vue Solana. Prueba lecturas RPC, consulta de balance, descubrimiento con Wallet Standard, conexión/desconexión, firma de mensajes, signers de cuenta de wallet de Kit, una pequeña transferencia real en devnet, transacciones enviadas por el cliente, airdrops de devnet y solicitudes de Solana Pay con escaneo de QR.",
       versionsLabel: "Versiones de paquetes Vue Solana",
     },
     rpc: {
@@ -200,6 +200,25 @@ export default {
         selectWallet: "Selecciona primero una wallet descubierta.",
         connectWallet: "Conecta la wallet seleccionada para habilitar la firma de mensajes.",
         unsupported: "La wallet seleccionada no admite firma de mensajes.",
+        enterMessage: "Introduce un mensaje para firmar.",
+      },
+    },
+    walletAccountSigners: {
+      title: "Signers de cuenta de wallet (Kit)",
+      description:
+        "Expone la cuenta de wallet seleccionada como interfaces de signer de Kit. Esto firma un mensaje mediante un MessageModifyingSigner y muestra la ruta de integración nativa de Kit.",
+      account: "Cuenta seleccionada",
+      signerAddress: "Dirección del signer",
+      chain: "Cadena",
+      messageLabel: "Mensaje para firmar",
+      messagePlaceholder: "Introduce un mensaje para que lo firme el signer de Kit",
+      sign: "Firmar con signer de Kit",
+      signature: "Firma:",
+      signedMessage: "Mensaje firmado:",
+      defaultMessage: "Iniciar sesión en Vue Solana con un signer de Kit",
+      disabled: {
+        selectAccount: "Selecciona y conecta primero una cuenta de wallet.",
+        connectWallet: "Conecta la wallet seleccionada para usar signers de cuenta de wallet.",
         enterMessage: "Introduce un mensaje para firmar.",
       },
     },

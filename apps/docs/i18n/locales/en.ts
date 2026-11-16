@@ -107,7 +107,7 @@ export default {
       eyebrow: "Live Devnet Demo",
       title: "Vue Solana in a real Nuxt app",
       description:
-        "This page runs the latest published Vue Solana packages. Try RPC reads, balance lookup, Wallet Standard discovery, connect/disconnect, message signing, a tiny real devnet transfer, client-sent transactions, devnet airdrops, and Solana Pay requests with QR scanning.",
+        "This page runs the latest published Vue Solana packages. Try RPC reads, balance lookup, Wallet Standard discovery, connect/disconnect, message signing, Kit wallet account signers, a tiny real devnet transfer, client-sent transactions, devnet airdrops, and Solana Pay requests with QR scanning.",
       versionsLabel: "Vue Solana package versions",
     },
     rpc: {
@@ -199,6 +199,25 @@ export default {
         selectWallet: "Select a discovered wallet first.",
         connectWallet: "Connect the selected wallet to enable message signing.",
         unsupported: "Selected wallet does not support message signing.",
+        enterMessage: "Enter a message to sign.",
+      },
+    },
+    walletAccountSigners: {
+      title: "Wallet Account Signers (Kit)",
+      description:
+        "Exposes the selected wallet account as Kit signer interfaces. This signs a message through a MessageModifyingSigner, showing the Kit-native integration path.",
+      account: "Selected account",
+      signerAddress: "Signer address",
+      chain: "Chain",
+      messageLabel: "Message to sign",
+      messagePlaceholder: "Enter a message for the Kit signer to sign",
+      sign: "Sign with Kit signer",
+      signature: "Signature:",
+      signedMessage: "Signed message:",
+      defaultMessage: "Sign in to Vue Solana with a Kit signer",
+      disabled: {
+        selectAccount: "Select and connect a wallet account first.",
+        connectWallet: "Connect the selected wallet to use wallet account signers.",
         enterMessage: "Enter a message to sign.",
       },
     },

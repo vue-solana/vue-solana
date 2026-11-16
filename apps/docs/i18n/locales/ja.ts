@@ -107,7 +107,7 @@ export default {
       eyebrow: "ライブ devnet デモ",
       title: "実際の Nuxt アプリで動く Vue Solana",
       description:
-        "このページでは、公開されている最新の Vue Solana パッケージを実行します。RPC 読み取り、残高の取得、Wallet Standard の検出、接続/切断、メッセージ署名、小さな実際の devnet 送金、クライアントから送信するトランザクション、devnet エアドロップ、QR スキャン付きの Solana Pay リクエストを試せます。",
+        "このページでは、公開されている最新の Vue Solana パッケージを実行します。RPC 読み取り、残高の取得、Wallet Standard の検出、接続/切断、メッセージ署名、Kit ウォレットアカウント署名者、小さな実際の devnet 送金、クライアントから送信するトランザクション、devnet エアドロップ、QR スキャン付きの Solana Pay リクエストを試せます。",
       versionsLabel: "Vue Solana パッケージのバージョン",
     },
     rpc: {
@@ -200,6 +200,26 @@ export default {
         selectWallet: "先に検出されたウォレットを選択してください。",
         connectWallet: "選択中のウォレットに接続するとメッセージ署名を有効にできます。",
         unsupported: "選択中のウォレットはメッセージ署名に対応していません。",
+        enterMessage: "署名するメッセージを入力してください。",
+      },
+    },
+    walletAccountSigners: {
+      title: "ウォレットアカウント署名者 (Kit)",
+      description:
+        "選択中のウォレットアカウントを Kit の signer インターフェースとして公開します。MessageModifyingSigner を通じてメッセージに署名し、Kit ネイティブな統合パスを示します。",
+      account: "選択中のアカウント",
+      signerAddress: "署名者アドレス",
+      chain: "チェーン",
+      messageLabel: "署名するメッセージ",
+      messagePlaceholder: "Kit signer に署名させるメッセージを入力",
+      sign: "Kit signer で署名",
+      signature: "署名:",
+      signedMessage: "署名済みメッセージ:",
+      defaultMessage: "Kit signer で Vue Solana にサインイン",
+      disabled: {
+        selectAccount: "先にウォレットアカウントを選択して接続してください。",
+        connectWallet:
+          "ウォレットアカウント署名者を使用するには、選択中のウォレットに接続してください。",
         enterMessage: "署名するメッセージを入力してください。",
       },
     },

@@ -143,6 +143,45 @@ test("discovers, selects, connects, signs, and disconnects a mocked Wallet Stand
   await expect(page.getByTestId("sign-message")).toBeDisabled();
 });
 
+test("derives Kit wallet account signers and signs a message through the adapters", async ({
+  page,
+}) => {
+  await registerMockWallets(page);
+  await page.goto("/");
+
+  await expect(page.getByTestId("kit-signer-address")).toHaveText("Not connected");
+  await expect(page.getByTestId("kit-signer-sign")).toBeDisabled();
+  await expect(page.getByTestId("kit-signer-disabled-reason")).toHaveText(
+    "Select a discovered wallet first.",
+  );
+
+  await page.getByTestId("load-wallets").click();
+  await page.getByRole("button", { name: /Mock Signer Wallet/ }).click();
+  await page.getByTestId("connect-wallet").click();
+
+  await expect(page.getByTestId("kit-signer-address")).toHaveText(
+    "11111111111111111111111111111111",
+  );
+  await expect(page.getByTestId("kit-transaction-signer-address")).toHaveText(
+    "11111111111111111111111111111111",
+  );
+  await expect(page.getByTestId("kit-sending-signer-address")).toHaveText(
+    "11111111111111111111111111111111",
+  );
+  await expect(page.getByTestId("kit-signer-chain")).toHaveText("solana:devnet");
+  await expect(page.getByTestId("kit-signer-sign")).toBeEnabled();
+
+  await page.getByTestId("kit-signer-sign").click();
+
+  // Same client-side verification path as `useSignMessage`: the signature is
+  // 64 real Ed25519 bytes from the mock wallet, base64-encoded.
+  await expect(page.getByTestId("kit-signer-signature")).toContainText(
+    /Signature: [A-Za-z0-9+/]{86}==/,
+  );
+  await expect(page.getByTestId("kit-signer-signature")).not.toContainText("No signature yet");
+  await expect(page.getByTestId("kit-signer-signed-message")).toContainText("Signed message:");
+});
+
 test("renders unsupported message-signing capability for mocked wallets", async ({ page }) => {
   await registerMockWallets(page);
   await page.goto("/");

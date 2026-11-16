@@ -9,6 +9,7 @@ import SolanaPayPanel from "./components/panels/SolanaPayPanel.vue";
 import SolanaPayScannerPanel from "./components/panels/SolanaPayScannerPanel.vue";
 import TransferPanel from "./components/panels/TransferPanel.vue";
 import WalletPanel from "./components/panels/WalletPanel.vue";
+import WalletAccountSignersPanel from "./components/panels/WalletAccountSignersPanel.vue";
 import LiveDataPanels from "./components/LiveDataPanels.vue";
 
 installSolanaBufferPolyfill();
@@ -32,6 +33,7 @@ installSolanaBufferPolyfill();
     <WalletPanel />
     <MockTransactionPanel />
     <MessageSigningPanel />
+    <WalletAccountSignersPanel />
     <TransferPanel />
 
     <SolanaPayPanel />

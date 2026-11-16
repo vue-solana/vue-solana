@@ -9,6 +9,7 @@ import { useDemoWallet } from "./demo/useDemoWallet";
 import { useDemoClientSend } from "./demo/useDemoClientSend";
 import { useDirectBlockhash } from "./demo/useDirectBlockhash";
 import { useMockTransactionDemo } from "./demo/useMockTransactionDemo";
+import { useDemoWalletAccountSigners } from "./demo/useDemoWalletAccountSigners";
 
 export function useDemoPage() {
   const { t } = useI18n();
@@ -19,6 +20,7 @@ export function useDemoPage() {
   const directConnection = useDirectBlockhash();
   const mockTransactionDemo = useMockTransactionDemo();
   const messageSigning = useDemoMessageSigning();
+  const walletAccountSigners = useDemoWalletAccountSigners();
   const transfer = useDemoTransfer();
   const demoWallet = useDemoWallet();
   const tokenAccounts = useDemoTokenAccounts();
@@ -48,6 +50,7 @@ export function useDemoPage() {
     ...directConnection,
     ...liveData,
     ...messageSigning,
+    ...walletAccountSigners,
     ...mockTransactionDemo,
     packageVersions,
     pluginInstalled,

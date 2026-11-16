@@ -107,7 +107,7 @@ export default {
       eyebrow: "Live-Devnet-Demo",
       title: "Vue Solana in einer echten Nuxt-App",
       description:
-        "Diese Seite verwendet die neuesten veröffentlichten Vue-Solana-Pakete. Probiere RPC-Lesevorgänge, Guthabenabfragen, Wallet-Standard-Erkennung, Verbinden/Trennen, Nachrichtensignierung, eine kleine echte Devnet-Überweisung, clientseitig gesendete Transaktionen, Devnet-Airdrops sowie Solana-Pay-Anfragen mit QR-Scan aus.",
+        "Diese Seite verwendet die neuesten veröffentlichten Vue-Solana-Pakete. Probiere RPC-Lesevorgänge, Guthabenabfragen, Wallet-Standard-Erkennung, Verbinden/Trennen, Nachrichtensignierung, Kit-Wallet-Account-Signer, eine kleine echte Devnet-Überweisung, clientseitig gesendete Transaktionen, Devnet-Airdrops sowie Solana-Pay-Anfragen mit QR-Scan aus.",
       versionsLabel: "Versionen der Vue-Solana-Pakete",
     },
     rpc: {
@@ -201,6 +201,25 @@ export default {
         connectWallet:
           "Verbinde die ausgewählte Wallet, um die Nachrichtensignierung zu aktivieren.",
         unsupported: "Die ausgewählte Wallet unterstützt keine Nachrichtensignierung.",
+        enterMessage: "Gib eine Nachricht zum Signieren ein.",
+      },
+    },
+    walletAccountSigners: {
+      title: "Wallet-Account-Signer (Kit)",
+      description:
+        "Stellt das ausgewählte Wallet-Konto als Kit-Signer-Interfaces bereit. Dies signiert eine Nachricht über einen MessageModifyingSigner und zeigt den Kit-nativen Integrationspfad.",
+      account: "Ausgewähltes Konto",
+      signerAddress: "Signer-Adresse",
+      chain: "Chain",
+      messageLabel: "Zu signierende Nachricht",
+      messagePlaceholder: "Nachricht eingeben, die der Kit-Signer signieren soll",
+      sign: "Mit Kit-Signer signieren",
+      signature: "Signatur:",
+      signedMessage: "Signierte Nachricht:",
+      defaultMessage: "Bei Vue Solana mit einem Kit-Signer anmelden",
+      disabled: {
+        selectAccount: "Wähle zuerst ein Wallet-Konto aus und verbinde es.",
+        connectWallet: "Verbinde die ausgewählte Wallet, um Wallet-Account-Signer zu verwenden.",
         enterMessage: "Gib eine Nachricht zum Signieren ein.",
       },
     },

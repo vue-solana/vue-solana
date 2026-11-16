@@ -106,7 +106,7 @@ export default {
       eyebrow: "Devnet 实时演示",
       title: "真实 Nuxt 应用中的 Vue Solana",
       description:
-        "此页面使用最新发布的 Vue Solana 包运行。你可以尝试 RPC 读取、余额查询、Wallet Standard 发现、连接/断开、消息签名、一个很小的真实 devnet 转账、客户端发送的交易、devnet 空投以及支持 QR 扫描的 Solana Pay 请求。",
+        "此页面使用最新发布的 Vue Solana 包运行。你可以尝试 RPC 读取、余额查询、Wallet Standard 发现、连接/断开、消息签名、Kit 钱包账户签名器、一个很小的真实 devnet 转账、客户端发送的交易、devnet 空投以及支持 QR 扫描的 Solana Pay 请求。",
       versionsLabel: "Vue Solana 包版本",
     },
     rpc: {
@@ -197,6 +197,25 @@ export default {
         selectWallet: "请先选择已发现的钱包。",
         connectWallet: "连接所选钱包以启用消息签名。",
         unsupported: "所选钱包不支持消息签名。",
+        enterMessage: "请输入要签名的消息。",
+      },
+    },
+    walletAccountSigners: {
+      title: "钱包账户签名器 (Kit)",
+      description:
+        "将所选钱包账户暴露为 Kit 的 signer 接口。这里通过 MessageModifyingSigner 对消息进行签名，展示 Kit 原生集成路径。",
+      account: "已选账户",
+      signerAddress: "签名器地址",
+      chain: "链",
+      messageLabel: "要签名的消息",
+      messagePlaceholder: "输入要让 Kit 签名器签名的消息",
+      sign: "使用 Kit 签名器签名",
+      signature: "签名：",
+      signedMessage: "已签名消息：",
+      defaultMessage: "使用 Kit 签名器登录 Vue Solana",
+      disabled: {
+        selectAccount: "请先选择并连接一个钱包账户。",
+        connectWallet: "连接所选钱包以使用钱包账户签名器。",
         enterMessage: "请输入要签名的消息。",
       },
     },

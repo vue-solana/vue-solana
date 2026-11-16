@@ -37,6 +37,18 @@ const {
   mockTransaction,
   mockTransactionError,
   canSignMessage,
+  kitSignerAddress,
+  kitSignerChain,
+  kitSignerDisabledReason,
+  kitSignerError,
+  kitSignerMessage,
+  kitSignerReady,
+  kitSignerSignature,
+  kitSignerSignedMessage,
+  kitSignerStatus,
+  kitSignerStatusColor,
+  kitSendingSignerAddress,
+  kitTransactionSignerAddress,
   messageSignatureBase64,
   messageSigningDisabledReason,
   messageSigningError,
@@ -61,6 +73,7 @@ const {
   signMessage,
   signedMessageText,
   signWalletMessage,
+  signWithKitSigner,
   balanceDisplay,
   mintAddress,
   mintReady,
@@ -226,6 +239,23 @@ const sections = computed(() => [
           :disabled-reason="messageSigningDisabledReason"
           :error="messageSigningError"
           @sign="signWalletMessage"
+        />
+
+        <DemoWalletAccountSignersPanel
+          v-model:message="kitSignerMessage"
+          :chain="kitSignerChain"
+          :disabled-reason="kitSignerDisabledReason"
+          :error="kitSignerError"
+          :ready="kitSignerReady"
+          :signing="kitSignerStatus === 'signing'"
+          :signature="kitSignerSignature"
+          :signed-message="kitSignerSignedMessage"
+          :signer-address="kitSignerAddress"
+          :transaction-signer-address="kitTransactionSignerAddress"
+          :sending-signer-address="kitSendingSignerAddress"
+          :status="kitSignerStatus"
+          :status-color="kitSignerStatusColor"
+          @sign="signWithKitSigner"
         />
 
         <DemoSignInCard

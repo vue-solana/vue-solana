@@ -107,7 +107,7 @@ export default {
       eyebrow: "Démo devnet en direct",
       title: "Vue Solana dans une vraie application Nuxt",
       description:
-        "Cette page exécute les dernières versions publiées des packages Vue Solana. Essayez les lectures RPC, la consultation de soldes, la découverte Wallet Standard, la connexion/déconnexion, la signature de messages, un petit transfert réel sur devnet, les transactions envoyées par le client, les airdrops devnet et les demandes Solana Pay avec scan de QR codes.",
+        "Cette page exécute les dernières versions publiées des packages Vue Solana. Essayez les lectures RPC, la consultation de soldes, la découverte Wallet Standard, la connexion/déconnexion, la signature de messages, les signers de compte wallet Kit, un petit transfert réel sur devnet, les transactions envoyées par le client, les airdrops devnet et les demandes Solana Pay avec scan de QR codes.",
       versionsLabel: "Versions des packages Vue Solana",
     },
     rpc: {
@@ -200,6 +200,26 @@ export default {
         selectWallet: "Sélectionnez d'abord un wallet découvert.",
         connectWallet: "Connectez le wallet sélectionné pour activer la signature de messages.",
         unsupported: "Le wallet sélectionné ne prend pas en charge la signature de messages.",
+        enterMessage: "Saisissez un message à signer.",
+      },
+    },
+    walletAccountSigners: {
+      title: "Signers de compte wallet (Kit)",
+      description:
+        "Expose le compte wallet sélectionné sous forme d'interfaces de signer Kit. Cela signe un message via un MessageModifyingSigner et montre le parcours d'intégration natif de Kit.",
+      account: "Compte sélectionné",
+      signerAddress: "Adresse du signer",
+      chain: "Chaîne",
+      messageLabel: "Message à signer",
+      messagePlaceholder: "Saisissez un message à faire signer par le signer Kit",
+      sign: "Signer avec le signer Kit",
+      signature: "Signature :",
+      signedMessage: "Message signé :",
+      defaultMessage: "Connexion à Vue Solana avec un signer Kit",
+      disabled: {
+        selectAccount: "Sélectionnez et connectez d'abord un compte wallet.",
+        connectWallet:
+          "Connectez le wallet sélectionné pour utiliser les signers de compte wallet.",
         enterMessage: "Saisissez un message à signer.",
       },
     },
