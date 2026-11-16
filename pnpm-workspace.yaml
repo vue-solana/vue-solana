@@ -2,9 +2,24 @@ packages:
   - packages/*
   - apps/*
   - examples/*
-onlyBuiltDependencies:
-  - better-sqlite3
-  - vue-demi
+# pnpm 11 removed `onlyBuiltDependencies` (and friends) in favour of
+# `allowBuilds`. Under pnpm 12 `strictDepBuilds` defaults to true, so every
+# dependency with a build script that is not listed here fails the install with
+# ERR_PNPM_IGNORED_BUILDS.
+#
+# `false` is a reviewed denial, not an oversight: these packages ship their
+# native binary as an optional platform dependency, so the install script only
+# verifies it and the package works without it (esbuild, sharp, @parcel/watcher)
+# or is an optional ws accelerator the code falls back from (bufferutil,
+# utf-8-validate). Keeping them denied preserves the pre-pnpm-12 behaviour.
+allowBuilds:
+  better-sqlite3: true
+  vue-demi: true
+  "@parcel/watcher": false
+  bufferutil: false
+  esbuild: false
+  sharp: false
+  utf-8-validate: false
 # `@solana-mobile/wallet-standard-mobile` pulls
 # `@solana-mobile/mobile-wallet-adapter-protocol`, which declares
 # `@solana/kit: ^6.0.0`. Without this the workspace installs the current kit
