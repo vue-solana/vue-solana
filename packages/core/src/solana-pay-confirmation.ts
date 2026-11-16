@@ -52,6 +52,7 @@ export async function verifySolanaPayPayment(
 
   const deadline = Date.now() + timeoutMs;
   let signature: string | undefined;
+  let sawLookupFailure = false;
 
   while (Date.now() < deadline) {
     try {
@@ -61,13 +62,22 @@ export async function verifySolanaPayPayment(
         break;
       }
     } catch {
-      return { status: "error", verified: false, reason: "rpc_failure" };
+      // Public RPC endpoints can rate-limit or fail transiently; keep polling
+      // until the deadline so a brief outage doesn't abort verification.
+      sawLookupFailure = true;
     }
+
+    if (Date.now() >= deadline) {
+      break;
+    }
+
     await sleep(pollIntervalMs);
   }
 
   if (!signature) {
-    return { status: "expired", verified: false, reason: "no_payment_found" };
+    return sawLookupFailure
+      ? { status: "error", verified: false, reason: "rpc_failure" }
+      : { status: "expired", verified: false, reason: "no_payment_found" };
   }
 
   try {
