@@ -173,6 +173,15 @@ export default defineNuxtConfig({
     "/ja/App.vue": { redirect: { to: "/ja/demo", statusCode: 301 } },
     "/ko/App.vue": { redirect: { to: "/ko/demo", statusCode: 301 } },
     "/zh/App.vue": { redirect: { to: "/zh/demo", statusCode: 301 } },
+    // Not in the sitemap (they are redirects, so `contentUrls` never derives
+    // them) but they are still live inbound links from the old docs.
+    "/guides/kit-migration": { redirect: { to: "/guides/migration", statusCode: 301 } },
+    "/de/guides/kit-migration": { redirect: { to: "/de/guides/migration", statusCode: 301 } },
+    "/es/guides/kit-migration": { redirect: { to: "/es/guides/migration", statusCode: 301 } },
+    "/fr/guides/kit-migration": { redirect: { to: "/fr/guides/migration", statusCode: 301 } },
+    "/ja/guides/kit-migration": { redirect: { to: "/ja/guides/migration", statusCode: 301 } },
+    "/ko/guides/kit-migration": { redirect: { to: "/ko/guides/migration", statusCode: 301 } },
+    "/zh/guides/kit-migration": { redirect: { to: "/zh/guides/migration", statusCode: 301 } },
     "/**": {
       prerender: true,
       headers: {
