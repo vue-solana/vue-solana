@@ -1,5 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
+const isRealRpcRun = process.env.E2E_REAL_RPC === "true";
+
 export default defineConfig({
   testDir: "./e2e",
   timeout: 30_000,
@@ -7,6 +9,11 @@ export default defineConfig({
     timeout: 10_000,
   },
   fullyParallel: true,
+  // Real-network runs hit public devnet, which rate-limits CI egress IPs
+  // (429). Serialise the tests and retry transient failures so a throttled
+  // request doesn't fail the whole suite.
+  workers: isRealRpcRun ? 1 : undefined,
+  retries: isRealRpcRun ? 2 : 0,
   reporter: process.env.CI ? [["github"], ["html", { open: "never" }]] : "list",
   use: {
     trace: "retain-on-failure",
