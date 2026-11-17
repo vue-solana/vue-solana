@@ -1,5 +1,13 @@
 # @vue-solana/nuxt
 
+## 4.2.2
+
+### Patch Changes
+
+- 5636a10: Harden Solana Pay verification against transient RPC lookup failures and improve real-network e2e resilience.
+- Updated dependencies [5636a10]
+  - @vue-solana/vue@4.2.2
+
 ## 4.2.1
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @vue-solana/core
 
+## 4.2.2
+
+### Patch Changes
+
+- 5636a10: Harden Solana Pay verification against transient RPC lookup failures and improve real-network e2e resilience.
+
 ## 4.2.1
 
 ### Patch Changes
