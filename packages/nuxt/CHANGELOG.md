@@ -1,5 +1,16 @@
 # @vue-solana/nuxt
 
+## 4.3.0
+
+### Minor Changes
+
+- ae134f3: Add transaction simulation helpers: `simulateTransaction()` in core, `useSimulateTransaction()` in Vue, and the `useSolanaSimulateTransaction()` Nuxt auto-import.
+
+### Patch Changes
+
+- Updated dependencies [ae134f3]
+  - @vue-solana/vue@4.3.0
+
 ## 4.2.2
 
 ### Patch Changes
