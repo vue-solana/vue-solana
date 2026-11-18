@@ -17,6 +17,7 @@ export * from "./composables/useSignTransactions";
 export * from "./composables/useSignAndSendTransactions";
 export * from "./composables/useSignatureStatus";
 export * from "./composables/useSignIn";
+export * from "./composables/useSimulateTransaction";
 export * from "./composables/useSolana";
 export * from "./composables/useSolanaQrScanner";
 export * from "./composables/useSolanaQrCode";

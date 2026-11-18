@@ -156,6 +156,7 @@ import { useWallet } from "@vue-solana/vue/useWallet";
 - `@vue-solana/vue/useTransaction`
 - `@vue-solana/vue/useTransactionConfirmation`
 - `@vue-solana/vue/useSignatureStatus`
+- `@vue-solana/vue/useSimulateTransaction`
 - `@vue-solana/vue/useSignMessage`
 - `@vue-solana/vue/useSignAndSendTransaction`
 - `@vue-solana/vue/useTokenBalance`
@@ -750,6 +751,25 @@ await execute(transaction);
 Vue/core のクライアントでは `payer` または `payerSecretKey` で `payer` を直接設定します。payer のないクライアントはプランニングも送信もできません。本番で資金のある鍵は、サーバーまたはリレイヤーが所有すべきです。Nuxt の public ランタイム設定に生の秘密鍵や `payerSecretKey` を入れず、資金のあるキーペアをエンドユーザーのブラウザに配布しないでください。
 
 ウォレット系コンポーザブルは引き続き別物です。`useSignAndSendTransaction()` は RPC 送信後に戻ることも、`confirm: true` が渡された場合は選択したコミットメントを待機することもできます。クライアント送信トランザクションは常に、公式エグゼキューターの `confirmed` での送信と確認の挙動を使用します。
+
+## トランザクションをシミュレーションする
+
+`useSimulateTransaction()` は、送信せずに `payer` も要求せずに、生のワイヤートランザクションバイトをプレビューします。core の `simulateTransaction()` ヘルパーを呼び出し、正規化された `err`、ログ、手数料、lamport と token の残高変更、loaded addresses、return data を `data` として公開します。null ではない `err` は、データとして返されたシミュレーションの失敗です。拒否されるのは、無効な入力、RPC メソッドの欠落、トランスポートの失敗だけです。
+
+```vue
+<script setup lang="ts">
+import { useSimulateTransaction } from "@vue-solana/vue/useSimulateTransaction";
+
+const { data, status, loading, error, execute, reset } = useSimulateTransaction();
+
+async function preview() {
+  await execute(transaction, { replaceRecentBlockhash: true });
+  console.log(data.value?.err, data.value?.logs, data.value?.balanceChanges);
+}
+</script>
+```
+
+`status` は `idle`、`simulating`、`simulated`、`error` を遷移し、新しいプレビューを開始すると前のプレビューが中止されます。Nuxt で自動 import されるエイリアスは `useSolanaSimulateTransaction()` です。
 
 ## バッチトランザクション
 

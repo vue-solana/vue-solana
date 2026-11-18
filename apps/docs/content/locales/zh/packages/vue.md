@@ -154,6 +154,7 @@ import { useWallet } from "@vue-solana/vue/useWallet";
 - `@vue-solana/vue/useTransaction`
 - `@vue-solana/vue/useTransactionConfirmation`
 - `@vue-solana/vue/useSignatureStatus`
+- `@vue-solana/vue/useSimulateTransaction`
 - `@vue-solana/vue/useSignMessage`
 - `@vue-solana/vue/useSignAndSendTransaction`
 - `@vue-solana/vue/useTokenBalance`
@@ -749,6 +750,25 @@ executor 会获取新的 blockhash，估计或保留 resource limit，除非另�
 在 direct Vue/core client 中使用 `payer` 或 `payerSecretKey` 配置 `payer`。没有 payer 的 client 无法 plan 或 send。生产环境的有资金 key 应保留在 server 或 relayer 中。永远不要把 raw secret 或 `payerSecretKey` 放入 Nuxt public runtime config，也不要把有资金的 keypair 发送到 end-user browser。
 
 钱包 composable 是分开的：`useSignAndSendTransaction()` 默认在 RPC submission 后返回，或在传入 `confirm: true` 时等待所选 commitment。客户端发送交易始终使用官方 executor 的 `confirmed` send-and-confirm 行为。
+
+## 模拟交易
+
+`useSimulateTransaction()` 在不提交交易、也不要求 `payer` 的情况下预览原始 wire 交易字节。它会调用 core 的 `simulateTransaction()` 辅助函数，并将规范化的 `err`、日志、手续费、lamport 与 token 余额变化、loaded addresses 和 return data 作为 `data` 暴露。非 null 的 `err` 是以数据形式返回的模拟失败；只有无效输入、缺少 RPC 方法或传输失败才会 reject。
+
+```vue
+<script setup lang="ts">
+import { useSimulateTransaction } from "@vue-solana/vue/useSimulateTransaction";
+
+const { data, status, loading, error, execute, reset } = useSimulateTransaction();
+
+async function preview() {
+  await execute(transaction, { replaceRecentBlockhash: true });
+  console.log(data.value?.err, data.value?.logs, data.value?.balanceChanges);
+}
+</script>
+```
+
+`status` 会依次经过 `idle`、`simulating`、`simulated` 和 `error`；发起新的预览会中止上一次预览。在 Nuxt 中，自动导入的别名是 `useSolanaSimulateTransaction()`。
 
 ## 批量交易
 

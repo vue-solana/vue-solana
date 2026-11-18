@@ -94,6 +94,7 @@ export default defineNuxtConfig({
 - `useSolanaProgramAccounts(programId, options?)`: filters와 data slicing으로 program-owned accounts를 읽습니다.
 - `useSolanaTransactionConfirmation(options?)`: 기존 transaction signature를 confirm합니다.
 - `useSolanaSignatureStatus(signature, options?)`: signature status를 읽거나 polling하거나 subscribe합니다.
+- `useSolanaSimulateTransaction()`: 제출하지 않고 raw wire transaction byte를 시뮬레이션하고 정규화된 error, logs, balance 변경, loaded addresses를 노출합니다.
 - `useSolanaSignMessage()`: 오프체인 인증 또는 소유권 challenge message에 서명합니다.
 - `useSolanaWalletAccountMessageSigner()`: wallet account용 Kit `MessageModifyingSigner`를 반환합니다.
 - `useSolanaWalletAccountTransactionSigner()`: wallet account용 Kit `TransactionModifyingSigner`를 반환합니다.

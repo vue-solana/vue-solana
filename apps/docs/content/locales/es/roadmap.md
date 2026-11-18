@@ -7,11 +7,26 @@ surroundOrder: 22
 
 Los paquetes son estables para producción con lecturas RPC, descubrimiento y conexión de wallets, consulta de balance, transacciones, lecturas de cuentas, firma de mensajes, manejo de errores normalizado, Sign In With Solana, firma y envío de transacciones en lote, planificación de transacciones, adaptadores de caché SWR y helpers de tokens SPL. Esta hoja de ruta describe lo que viene a continuación, ordenado por impacto y sin vincularse a una versión concreta.
 
+## Auditoría actual y próximos pasos
+
+La auditoría del 18 de noviembre de 2026 confirmó que en ese momento ninguna de las funcionalidades enumeradas aquí se había publicado como una función pública completa, aunque varias ya contaban con una base parcial. La simulación de transacciones se ha publicado desde entonces; trabaja en los elementos restantes en este orden salvo que una solicitud del usuario cambie la prioridad:
+
+| Prioridad | Elemento                                                                                                           | Estado                                                                                                                                               | Próximo paso                                                                                                                                                          |
+| --------- | ------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1         | Helpers de simulación de transacciones                                                                             | Publicado mediante `simulateTransaction()`, `useSimulateTransaction()` y `useSolanaSimulateTransaction()`                                            | Seguir los trabajos posteriores en [`plans/use-simulate-transaction.md`](https://github.com/vue-solana/vue-solana/blob/main/plans/use-simulate-transaction.md).       |
+| 2         | Carga diferida de wallets iOS                                                                                      | Trabajo de rendimiento, no una función ausente; se puede eliminar aproximadamente el 58 % del fragmento cargado de inmediato de `createSolanaPlugin` | Planificar el cambio enfocado en [`plans/bundle-performance-followups.md`](https://github.com/vue-solana/vue-solana/blob/main/plans/bundle-performance-followups.md). |
+| 3         | Utilidades RPC de servidor en Nuxt                                                                                 | Faltan; el core ya se puede usar manualmente en código de servidor                                                                                   | Definir una exportación para Nitro/servidor con reglas estrictas que excluyan secretos.                                                                               |
+| 4         | Documentación versionada                                                                                           | Falta                                                                                                                                                | Crear la documentación archivada en `/v1/` y las redirecciones de URLs antiguas.                                                                                      |
+| Más tarde | Más wallets iOS                                                                                                    | Phantom, Solflare y Backpack ya están implementadas; Trust Wallet sigue pendiente                                                                    | Investigar enlaces y callbacks específicos de cada proveedor y añadirlos detrás de `useWallets()`.                                                                    |
+| Más tarde | Helpers de Anchor, modal/UI de wallet, wallets nativas de escritorio, failover RPC, indexación avanzada de cuentas | Faltan; requieren un compromiso amplio de API o arquitectura                                                                                         | Mantenerlos aquí hasta que cada uno tenga un plan propio.                                                                                                             |
+
+Dos elementos antiguos ya están cubiertos: las suscripciones en tiempo real están implementadas mediante `useSubscription()`, `useTrackedData()` y los adaptadores SWR. El elemento marcado como completado «wallets nativas de escritorio» en `plans/native-wallet-plan.md` registra una decisión pospuesta, no una implementación.
+
 ## Transacciones
 
 ### Helpers de simulación de transacciones
 
-Simule las transacciones antes de enviarlas para previsualizar comisiones, cambios de cuentas y posibles fallos sin gastar SOL.
+Publicado: `simulateTransaction()` en core, `useSimulateTransaction()` en Vue y `useSolanaSimulateTransaction()` en Nuxt simulan transacciones antes de enviarlas para que las apps puedan previsualizar comisiones, cambios de cuentas y posibles fallos sin gastar SOL.
 
 ## Integraciones con el ecosistema
 

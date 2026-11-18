@@ -94,6 +94,7 @@ export default defineNuxtConfig({
 - `useSolanaProgramAccounts(programId, options?)`：使用过滤器和数据切片读取 program-owned accounts。
 - `useSolanaTransactionConfirmation(options?)`：确认现有交易签名。
 - `useSolanaSignatureStatus(signature, options?)`：读取、轮询或订阅签名状态。
+- `useSolanaSimulateTransaction()`：模拟原始 wire 交易字节而不提交，并暴露规范化的错误、日志、余额变化和 loaded addresses。
 - `useSolanaSignMessage()`：签署链下认证或所有权 challenge 消息。
 - `useSolanaWalletAccountMessageSigner()`：返回钱包账户的 Kit `MessageModifyingSigner`。
 - `useSolanaWalletAccountTransactionSigner()`：返回钱包账户的 Kit `TransactionModifyingSigner`。

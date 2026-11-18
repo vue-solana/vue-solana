@@ -4,6 +4,10 @@ import type {
   ReadonlyUint8Array,
   Signature,
   Slot,
+  TokenAmount,
+  TokenBalance,
+  TransactionBlockhashLifetime,
+  TransactionError,
   TransactionSigner,
 } from "@solana/kit";
 import type { SolanaClient } from "./kit";
@@ -206,4 +210,62 @@ export interface TransactionConfirmation {
   signature: Signature;
   commitment: Commitment;
   status: TransactionStatus;
+}
+
+export interface SimulateTransactionOptions {
+  commitment?: Commitment;
+  minContextSlot?: Slot;
+  /**
+   * Verify transaction signatures during simulation. Mutually exclusive with
+   * `replaceRecentBlockhash`; setting both throws `INVALID_INPUT`.
+   */
+  sigVerify?: boolean;
+  /**
+   * Replace the transaction's blockhash with the latest one and return it in
+   * `replacementBlockhash`. Mutually exclusive with `sigVerify`.
+   */
+  replaceRecentBlockhash?: boolean;
+  abortSignal?: AbortSignal;
+}
+
+export interface SimulatedBalanceChange {
+  /** Index of the account in the simulated transaction's account list. */
+  accountIndex: number;
+  before: bigint;
+  after: bigint;
+  change: bigint;
+}
+
+export interface SimulatedTokenBalanceChange {
+  accountIndex: number;
+  mint: Address;
+  owner?: Address;
+  programId?: Address;
+  before: TokenAmount | null;
+  after: TokenAmount | null;
+  /** Delta in the token's smallest units; `null` when either side is missing. */
+  change: bigint | null;
+}
+
+export interface SimulatedLoadedAddresses {
+  readonly: readonly Address[];
+  writable: readonly Address[];
+}
+
+export interface SimulatedTransactionResult {
+  /** Simulation failure reported by the RPC. A non-null value is data, not a thrown error. */
+  err: TransactionError | null;
+  logs: string[] | null;
+  fee: bigint | null;
+  balanceChanges: readonly SimulatedBalanceChange[] | null;
+  preBalances: readonly bigint[] | null;
+  postBalances: readonly bigint[] | null;
+  tokenBalanceChanges: readonly SimulatedTokenBalanceChange[] | null;
+  preTokenBalances: readonly TokenBalance[] | null;
+  postTokenBalances: readonly TokenBalance[] | null;
+  loadedAddresses: SimulatedLoadedAddresses;
+  loadedAccountsDataSize: number | null;
+  returnData: { data: string; programId: Address } | null;
+  replacementBlockhash: TransactionBlockhashLifetime | null;
+  unitsConsumed: bigint | null;
 }

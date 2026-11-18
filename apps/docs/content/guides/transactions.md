@@ -25,6 +25,39 @@ The helper returns the RPC signature string.
 
 For Android Mobile Wallet Adapter wallets, Vue Solana prefers `signTransaction` plus app-side RPC submission through `client.rpc.sendTransaction(...).send()` when available so the app owns submission and can reliably return the RPC signature after the wallet handoff.
 
+## Simulate A Transaction
+
+Use `simulateTransaction()` from `@vue-solana/core/transaction` to preview a raw wire transaction before submitting it. The helper returns normalized `err`, `logs`, `fee`, lamport and token balance changes, loaded addresses, return data, and units consumed. A non-null `err` is a failed simulation returned as data; only invalid input or an RPC/transport failure rejects. Simulation never submits the transaction and is not a guarantee of future inclusion.
+
+```ts
+import { simulateTransaction } from "@vue-solana/core/transaction";
+import { useSimulateTransaction } from "@vue-solana/vue/useSimulateTransaction";
+
+const transaction = await createTransferTransaction({
+  rpc: client.rpc,
+  from,
+  to: recipient,
+  lamports: 1_000,
+});
+
+const preview = await simulateTransaction(client, transaction, {
+  replaceRecentBlockhash: true,
+});
+console.log(
+  preview.err,
+  preview.fee,
+  preview.logs,
+  preview.balanceChanges,
+  preview.loadedAddresses,
+);
+
+// Inside a Vue component setup:
+const { data, status, error, execute } = useSimulateTransaction();
+await execute(transaction, { replaceRecentBlockhash: true });
+```
+
+`useSimulateTransaction()` exposes the same result as `data`, with `status` values `idle`, `simulating`, `simulated`, and `error`. It follows the shared action-state pattern and does not require a `payer`. In Nuxt, call `useSolanaSimulateTransaction()` without an import.
+
 ## Confirm a Signature
 
 Use `confirmTransactionSignature()` when you need to wait until a submitted signature reaches a commitment level.

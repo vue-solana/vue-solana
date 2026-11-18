@@ -177,6 +177,10 @@
       "types": "./dist/useSignatureStatus.d.ts",
       "import": "./dist/useSignatureStatus.mjs"
     },
+    "./useSimulateTransaction": {
+      "types": "./dist/useSimulateTransaction.d.ts",
+      "import": "./dist/useSimulateTransaction.mjs"
+    },
     "./useSignMessage": {
       "types": "./dist/useSignMessage.d.ts",
       "import": "./dist/useSignMessage.mjs"

@@ -159,6 +159,7 @@ Direct package subpaths:
 - `@vue-solana/vue/useTransaction`
 - `@vue-solana/vue/useTransactionConfirmation`
 - `@vue-solana/vue/useSignatureStatus`
+- `@vue-solana/vue/useSimulateTransaction`
 - `@vue-solana/vue/useSignMessage`
 - `@vue-solana/vue/useSignAndSendTransaction`
 - `@vue-solana/vue/useTokenBalance`
@@ -753,6 +754,25 @@ The executor reads a fresh blockhash, estimates or respects resource limits, per
 Configure a `payer` directly in a Vue/core client with `payer` or `payerSecretKey`; a client with no payer cannot plan or send. A server or relayer should own funded production keys. Do not put a raw secret or `payerSecretKey` in Nuxt public runtime config, and do not ship a funded keypair to an end-user browser.
 
 The wallet composables remain separate: `useSignAndSendTransaction()` can return after RPC submission, or wait for a selected commitment when `confirm: true` is passed. Client-sent transactions always use the official executor's `confirmed` send-and-confirm behavior.
+
+## Simulate A Transaction
+
+`useSimulateTransaction()` previews raw wire transaction bytes without submitting them or requiring a `payer`. It calls the core `simulateTransaction()` helper and exposes normalized `err`, logs, fees, lamport and token balance changes, loaded addresses, and return data as `data`. A non-null `err` is a failed simulation returned as data; only invalid input, a missing RPC method, or a transport failure rejects.
+
+```vue
+<script setup lang="ts">
+import { useSimulateTransaction } from "@vue-solana/vue/useSimulateTransaction";
+
+const { data, status, loading, error, execute, reset } = useSimulateTransaction();
+
+async function preview() {
+  await execute(transaction, { replaceRecentBlockhash: true });
+  console.log(data.value?.err, data.value?.logs, data.value?.balanceChanges);
+}
+</script>
+```
+
+`status` moves through `idle`, `simulating`, `simulated`, and `error`; starting a new preview aborts the previous one. In Nuxt the auto-imported alias is `useSolanaSimulateTransaction()`.
 
 ## Batch Transactions
 

@@ -95,6 +95,7 @@ export default defineNuxtConfig({
 - `useSolanaProgramAccounts(programId, options?)`: フィルタとデータスライスを使って、プログラムが所有するアカウントを読み取ります。
 - `useSolanaTransactionConfirmation(options?)`: 既存のトランザクション署名を確認します。
 - `useSolanaSignatureStatus(signature, options?)`: 署名ステータスを読み取り、ポーリング、または購読します。
+- `useSolanaSimulateTransaction()`: 生のワイヤートランザクションバイトを送信せずにシミュレーションし、正規化されたエラー、ログ、残高変更、loaded addresses を公開します。
 - `useSolanaSignMessage()`: オフチェーンの認証や所有権チャレンジのメッセージに署名します。
 - `useSolanaWalletAccountMessageSigner()`: ウォレットアカウント用の Kit `MessageModifyingSigner` を返します。
 - `useSolanaWalletAccountTransactionSigner()`: ウォレットアカウント用の Kit `TransactionModifyingSigner` を返します。

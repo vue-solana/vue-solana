@@ -59,6 +59,7 @@ Available package subpaths:
 - `@vue-solana/vue/useTransaction`
 - `@vue-solana/vue/useTransactionConfirmation`
 - `@vue-solana/vue/useSignatureStatus`
+- `@vue-solana/vue/useSimulateTransaction`
 - `@vue-solana/vue/useSignMessage`
 - `@vue-solana/vue/useSignAndSendTransaction`
 - `@vue-solana/vue/useTokenAccounts`
@@ -333,6 +334,26 @@ Returns:
 - `execute(transaction, options?)`
 
 The submitted signature remains available if confirmation times out or RPC confirmation fails, so apps can still link users to an explorer.
+
+## `useSimulateTransaction()`
+
+Simulates raw wire transaction bytes without submitting them and without requiring a `payer`. The result is the normalized core `SimulatedTransactionResult`; a non-null `err` is simulation data, not a thrown error.
+
+```ts
+const { data, status, loading, error, execute, reset } = useSimulateTransaction();
+await execute(transaction, { replaceRecentBlockhash: true });
+```
+
+Returns:
+
+- `data`: `SimulatedTransactionResult | null`
+- `status`: `idle`, `simulating`, `simulated`, or `error`
+- `loading`
+- `error`
+- `execute(transaction, options?)`
+- `reset()`
+
+A new execution aborts the previous one; the composable also aborts in-flight work when its Vue scope is disposed. Missing `rpc.simulateTransaction` throws `MISSING_CLIENT_CAPABILITY` at setup.
 
 ## `useSignMessage()`
 

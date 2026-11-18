@@ -26,6 +26,7 @@ export default defineBuildConfig({
     "src/useSignIn",
     "src/useSignTransactions",
     "src/useSignatureStatus",
+    "src/useSimulateTransaction",
     "src/useSolana",
     "src/useSolanaClient",
     "src/useSolanaPay",

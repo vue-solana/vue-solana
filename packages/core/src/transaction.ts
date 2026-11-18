@@ -1,4 +1,12 @@
-import type { Commitment, Signature } from "@solana/kit";
+import type {
+  Address,
+  Commitment,
+  Signature,
+  TokenAmount,
+  TokenBalance,
+  TransactionBlockhashLifetime,
+  TransactionError,
+} from "@solana/kit";
 import { getBase64EncodedWireTransaction, getTransactionDecoder } from "@solana/kit";
 import type { SolanaClient } from "./kit";
 import { createSolanaError, normalizeSolanaError } from "./errors";
@@ -6,6 +14,11 @@ import { assertWalletCanSign, assertWalletConnected } from "./wallet";
 import type {
   ConfirmTransactionOptions,
   SendTransactionOptions,
+  SimulateTransactionOptions,
+  SimulatedBalanceChange,
+  SimulatedLoadedAddresses,
+  SimulatedTokenBalanceChange,
+  SimulatedTransactionResult,
   SolanaTransaction,
   SolanaWallet,
   TransactionConfirmation,
@@ -68,6 +81,64 @@ export async function sendSignedTransaction(
       })
       .send();
   } catch (cause) {
+    throw normalizeSolanaError(cause, "RPC_FAILURE");
+  }
+}
+
+/**
+ * Simulate a raw wire transaction without submitting it.
+ *
+ * A non-null `err` in the returned result means the simulation failed; it is
+ * inspectable data rather than a thrown error. Only transport failures and
+ * invalid input reject.
+ */
+export async function simulateTransaction(
+  client: SolanaClient,
+  transaction: SolanaTransaction,
+  options: SimulateTransactionOptions = {},
+): Promise<SimulatedTransactionResult> {
+  const { commitment, minContextSlot, sigVerify, replaceRecentBlockhash, abortSignal } = options;
+
+  if (sigVerify && replaceRecentBlockhash) {
+    throw createSolanaError(
+      "INVALID_INPUT",
+      "simulateTransaction: `sigVerify` and `replaceRecentBlockhash` are mutually exclusive.",
+    );
+  }
+
+  abortSignal?.throwIfAborted();
+
+  let encoded: ReturnType<typeof toBase64WireTransaction>;
+
+  try {
+    encoded = toBase64WireTransaction(transaction);
+  } catch (cause) {
+    throw createSolanaError("INVALID_INPUT", "Invalid transaction bytes for simulation.", {
+      cause,
+    });
+  }
+
+  const rpcConfig = {
+    encoding: "base64",
+    commitment,
+    minContextSlot,
+    ...(sigVerify ? { sigVerify: true as const } : {}),
+    ...(replaceRecentBlockhash ? { replaceRecentBlockhash: true as const } : {}),
+  } as NonNullable<Parameters<SolanaClient["rpc"]["simulateTransaction"]>[1]>;
+
+  try {
+    const response = await client.rpc.simulateTransaction(encoded, rpcConfig).send({ abortSignal });
+
+    return normalizeSimulationResult(response.value as SimulationRpcValue);
+  } catch (cause) {
+    if (abortSignal?.aborted) {
+      throw abortSignal.reason ?? cause;
+    }
+
+    if (isAbortErrorLike(cause)) {
+      throw cause;
+    }
+
     throw normalizeSolanaError(cause, "RPC_FAILURE");
   }
 }
@@ -179,6 +250,136 @@ export async function confirmTransactionSignature(
 
 function toBase64WireTransaction(transaction: SolanaTransaction) {
   return getBase64EncodedWireTransaction(getTransactionDecoder().decode(transaction));
+}
+
+interface SimulationRpcValue {
+  err?: TransactionError | null;
+  fee?: bigint | null;
+  loadedAccountsDataSize?: number;
+  loadedAddresses?: {
+    readonly: readonly Address[];
+    writable: readonly Address[];
+  } | null;
+  logs?: string[] | null;
+  postBalances?: readonly bigint[] | null;
+  postTokenBalances?: readonly TokenBalance[] | null;
+  preBalances?: readonly bigint[] | null;
+  preTokenBalances?: readonly TokenBalance[] | null;
+  replacementBlockhash?: TransactionBlockhashLifetime | null;
+  returnData?: { data: string; programId: Address } | null;
+  unitsConsumed?: bigint;
+}
+
+function normalizeSimulationResult(value: SimulationRpcValue): SimulatedTransactionResult {
+  const preBalances = value.preBalances ? [...value.preBalances] : null;
+  const postBalances = value.postBalances ? [...value.postBalances] : null;
+  const preTokenBalances = value.preTokenBalances ? [...value.preTokenBalances] : null;
+  const postTokenBalances = value.postTokenBalances ? [...value.postTokenBalances] : null;
+  const loadedAddresses: SimulatedLoadedAddresses = {
+    readonly: value.loadedAddresses ? [...value.loadedAddresses.readonly] : [],
+    writable: value.loadedAddresses ? [...value.loadedAddresses.writable] : [],
+  };
+
+  return {
+    err: value.err ?? null,
+    logs: value.logs ? [...value.logs] : null,
+    fee: value.fee ?? null,
+    balanceChanges: normalizeBalanceChanges(preBalances, postBalances),
+    preBalances,
+    postBalances,
+    tokenBalanceChanges: normalizeTokenBalanceChanges(preTokenBalances, postTokenBalances),
+    preTokenBalances,
+    postTokenBalances,
+    loadedAddresses,
+    loadedAccountsDataSize: value.loadedAccountsDataSize ?? null,
+    returnData: value.returnData
+      ? { data: value.returnData.data, programId: value.returnData.programId }
+      : null,
+    replacementBlockhash: value.replacementBlockhash ?? null,
+    unitsConsumed: value.unitsConsumed ?? null,
+  };
+}
+
+function normalizeBalanceChanges(
+  before: readonly bigint[] | null,
+  after: readonly bigint[] | null,
+): readonly SimulatedBalanceChange[] | null {
+  if (!before || !after || before.length !== after.length) {
+    return null;
+  }
+
+  return before.flatMap((value, accountIndex) => {
+    const afterValue = after[accountIndex];
+
+    if (afterValue === undefined) {
+      return [];
+    }
+
+    return [
+      {
+        accountIndex,
+        before: value,
+        after: afterValue,
+        change: afterValue - value,
+      },
+    ];
+  });
+}
+
+function normalizeTokenBalanceChanges(
+  before: readonly TokenBalance[] | null,
+  after: readonly TokenBalance[] | null,
+): readonly SimulatedTokenBalanceChange[] | null {
+  if (!before || !after) {
+    return null;
+  }
+
+  const beforeByKey = new Map(before.map((balance) => [tokenBalanceKey(balance), balance]));
+  const afterByKey = new Map(after.map((balance) => [tokenBalanceKey(balance), balance]));
+  const keys = new Set([...beforeByKey.keys(), ...afterByKey.keys()]);
+
+  return [...keys].flatMap((key) => {
+    const beforeBalance = beforeByKey.get(key);
+    const afterBalance = afterByKey.get(key);
+    const source = afterBalance ?? beforeBalance;
+
+    if (!source) {
+      return [];
+    }
+
+    return [
+      {
+        accountIndex: source.accountIndex,
+        mint: source.mint,
+        ...(source.owner ? { owner: source.owner } : {}),
+        ...(source.programId ? { programId: source.programId } : {}),
+        before: beforeBalance?.uiTokenAmount ?? null,
+        after: afterBalance?.uiTokenAmount ?? null,
+        change: tokenAmountDelta(beforeBalance?.uiTokenAmount, afterBalance?.uiTokenAmount),
+      },
+    ];
+  });
+}
+
+function tokenBalanceKey(balance: TokenBalance): string {
+  return [balance.accountIndex, balance.mint, balance.programId ?? "", balance.owner ?? ""].join(
+    ":",
+  );
+}
+
+function tokenAmountDelta(
+  before: TokenAmount | undefined,
+  after: TokenAmount | undefined,
+): bigint | null {
+  if (!before || !after) {
+    return null;
+  }
+
+  try {
+    return BigInt(after.amount) - BigInt(before.amount);
+  } catch {
+    return null;
+  }
 }
 
 function hasReachedCommitment(

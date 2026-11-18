@@ -154,6 +154,7 @@ Direct package subpath:
 - `@vue-solana/vue/useTransaction`
 - `@vue-solana/vue/useTransactionConfirmation`
 - `@vue-solana/vue/useSignatureStatus`
+- `@vue-solana/vue/useSimulateTransaction`
 - `@vue-solana/vue/useSignMessage`
 - `@vue-solana/vue/useSignAndSendTransaction`
 - `@vue-solana/vue/useTokenBalance`
@@ -749,6 +750,25 @@ executor는 새 blockhash를 가져오고 resource limit을 추정하거나 유�
 direct Vue/core client에서 `payer` 또는 `payerSecretKey`로 payer를 설정하세요. payer가 없으면 plan과 send가 불가능합니다. production funded key는 server 또는 relayer에 두어야 합니다. Nuxt public runtime config에 raw secret이나 `payerSecretKey`를 넣지 말고 end-user browser에 funded keypair를 보내지 마세요.
 
 wallet composable은 별개입니다. `useSignAndSendTransaction()`는 기본적으로 RPC submission 뒤에 반환하거나 `confirm: true`를 전달하면 선택한 commitment까지 기다립니다. client-sent transaction은 항상 official executor의 `confirmed` send-and-confirm 동작을 사용합니다.
+
+## 트랜잭션 시뮬레이션
+
+`useSimulateTransaction()`은 제출하거나 `payer`를 요구하지 않고 raw wire transaction bytes를 미리 봅니다. core의 `simulateTransaction()` helper를 호출하고 정규화된 `err`, logs, fees, lamport 및 token balance 변경, loaded addresses, return data를 `data`로 노출합니다. `err`가 null이 아니면 실패한 시뮬레이션이 데이터로 반환된 것이며, 잘못된 입력, RPC method 누락, transport 실패만 reject됩니다.
+
+```vue
+<script setup lang="ts">
+import { useSimulateTransaction } from "@vue-solana/vue/useSimulateTransaction";
+
+const { data, status, loading, error, execute, reset } = useSimulateTransaction();
+
+async function preview() {
+  await execute(transaction, { replaceRecentBlockhash: true });
+  console.log(data.value?.err, data.value?.logs, data.value?.balanceChanges);
+}
+</script>
+```
+
+`status`는 `idle`, `simulating`, `simulated`, `error`를 거칩니다. 새 preview를 시작하면 이전 preview가 abort됩니다. Nuxt에서 auto-import되는 alias는 `useSolanaSimulateTransaction()`입니다.
 
 ## 배치 트랜잭션
 

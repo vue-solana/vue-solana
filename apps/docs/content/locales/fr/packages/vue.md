@@ -156,6 +156,7 @@ Sous-chemins directs du package :
 - `@vue-solana/vue/useTransaction`
 - `@vue-solana/vue/useTransactionConfirmation`
 - `@vue-solana/vue/useSignatureStatus`
+- `@vue-solana/vue/useSimulateTransaction`
 - `@vue-solana/vue/useSignMessage`
 - `@vue-solana/vue/useSignAndSendTransaction`
 - `@vue-solana/vue/useTokenBalance`
@@ -750,6 +751,25 @@ L'exécuteur lit un blockhash frais, estime ou respecte les limites de ressource
 Configurez un `payer` directement dans un client Vue/core avec `payer` ou `payerSecretKey` ; un client sans payer ne peut ni planifier ni envoyer. Un serveur ou un relayer doit posséder les clés de production approvisionnées. Ne placez pas un secret brut ou `payerSecretKey` dans la configuration runtime publique de Nuxt, et ne livrez pas un keypair approvisionné au navigateur d'un utilisateur final.
 
 Les composables de wallet restent distincts : `useSignAndSendTransaction()` peut revenir après la soumission RPC, ou attendre un commitment choisi lorsque `confirm: true` est passé. Les transactions envoyées par le client utilisent toujours le comportement d'envoi et confirmation `confirmed` de l'exécuteur officiel.
+
+## Simuler une transaction
+
+`useSimulateTransaction()` prévisualise des octets de transaction brute au format wire sans les soumettre ni nécessiter de `payer`. Il appelle le helper core `simulateTransaction()` et expose `err`, les journaux, les frais, les changements de solde en lamports et de tokens, les adresses chargées et les données de retour sous forme normalisée dans `data`. Un `err` non nul est une simulation échouée renvoyée comme donnée ; seules une entrée invalide, une méthode RPC absente ou une erreur de transport provoquent un rejet.
+
+```vue
+<script setup lang="ts">
+import { useSimulateTransaction } from "@vue-solana/vue/useSimulateTransaction";
+
+const { data, status, loading, error, execute, reset } = useSimulateTransaction();
+
+async function preview() {
+  await execute(transaction, { replaceRecentBlockhash: true });
+  console.log(data.value?.err, data.value?.logs, data.value?.balanceChanges);
+}
+</script>
+```
+
+`status` passe par `idle`, `simulating`, `simulated` et `error` ; démarrer une nouvelle prévisualisation interrompt la précédente. Dans Nuxt, l'alias auto-importé est `useSolanaSimulateTransaction()`.
 
 ## Transactions par lot
 

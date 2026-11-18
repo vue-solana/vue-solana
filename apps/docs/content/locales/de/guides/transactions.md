@@ -25,6 +25,39 @@ Der Helfer gibt den RPC-Signatur-String zurück.
 
 Bei Wallets des Android Mobile Wallet Adapter bevorzugt Vue Solana `signTransaction` plus app-seitigen RPC-Versand über `client.rpc.sendTransaction(...).send()`, wenn verfügbar, damit die App den Versand kontrolliert und die RPC-Signatur nach der Wallet-Übergabe zuverlässig zurückgeben kann.
 
+## Eine Transaktion simulieren
+
+Verwende `simulateTransaction()` aus `@vue-solana/core/transaction`, um eine rohe Wire-Transaktion vor dem Absenden zu prüfen. Der Helfer liefert normalisierte `err`-, `logs`-, `fee`-, Lamport- und Token-Guthabenänderungen, geladene Adressen, Rückgabedaten und verbrauchte Units. Ein nicht-null `err` ist eine fehlgeschlagene Simulation, die als Daten zurückgegeben wird; nur ungültige Eingaben oder ein RPC-/Transportfehler werden abgelehnt. Bei der Simulation wird die Transaktion nie übermittelt, und sie ist keine Garantie für eine spätere Aufnahme.
+
+```ts
+import { simulateTransaction } from "@vue-solana/core/transaction";
+import { useSimulateTransaction } from "@vue-solana/vue/useSimulateTransaction";
+
+const transaction = await createTransferTransaction({
+  rpc: client.rpc,
+  from,
+  to: recipient,
+  lamports: 1_000,
+});
+
+const preview = await simulateTransaction(client, transaction, {
+  replaceRecentBlockhash: true,
+});
+console.log(
+  preview.err,
+  preview.fee,
+  preview.logs,
+  preview.balanceChanges,
+  preview.loadedAddresses,
+);
+
+// Inside a Vue component setup:
+const { data, status, error, execute } = useSimulateTransaction();
+await execute(transaction, { replaceRecentBlockhash: true });
+```
+
+`useSimulateTransaction()` liefert dasselbe Ergebnis als `data`, mit den `status`-Werten `idle`, `simulating`, `simulated` und `error`. Es folgt dem gemeinsamen Muster für Aktionszustände und erfordert keinen `payer`. In Nuxt rufe `useSolanaSimulateTransaction()` ohne Import auf.
+
 ## Eine Signatur bestätigen
 
 Verwende `confirmTransactionSignature()`, wenn du warten musst, bis eine übermittelte Signatur eine Commitment-Stufe erreicht.
