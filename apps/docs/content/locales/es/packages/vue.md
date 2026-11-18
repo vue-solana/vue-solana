@@ -154,6 +154,7 @@ Subpaths directos del paquete:
 - `@vue-solana/vue/useTransaction`
 - `@vue-solana/vue/useTransactionConfirmation`
 - `@vue-solana/vue/useSignatureStatus`
+- `@vue-solana/vue/useSimulateTransaction`
 - `@vue-solana/vue/useSignMessage`
 - `@vue-solana/vue/useSignAndSendTransaction`
 - `@vue-solana/vue/useTokenBalance`
@@ -749,6 +750,25 @@ El executor obtiene un blockhash nuevo, estima o respeta los limites de recursos
 Configura un `payer` directamente en un cliente Vue/core con `payer` o `payerSecretKey`; un cliente sin payer no puede planificar ni enviar. Las claves de producción con fondos deben permanecer en un servidor o relayer. No pongas un secreto crudo o `payerSecretKey` en la configuración runtime publica de Nuxt, y no envíes una keypair con fondos al navegador de un usuario final.
 
 Los composables de wallet son separados: `useSignAndSendTransaction()` puede devolver después del envio RPC, o esperar el commitment seleccionado cuando se pasa `confirm: true`. Los envios del cliente siempre usan el comportamiento send-and-confirm del executor oficial en `confirmed`.
+
+## Simular una transacción
+
+`useSimulateTransaction()` previsualiza bytes de transacción en la red (wire) sin enviarlos ni requerir un `payer`. Llama al helper core `simulateTransaction()` y expone como `data` valores normalizados de `err`, logs, comisiones, cambios de balance en lamports y tokens, direcciones cargadas y datos de retorno. Un `err` no nulo es una simulación fallida devuelta como dato; solo una entrada inválida, un método RPC ausente o un fallo de transporte rechaza.
+
+```vue
+<script setup lang="ts">
+import { useSimulateTransaction } from "@vue-solana/vue/useSimulateTransaction";
+
+const { data, status, loading, error, execute, reset } = useSimulateTransaction();
+
+async function preview() {
+  await execute(transaction, { replaceRecentBlockhash: true });
+  console.log(data.value?.err, data.value?.logs, data.value?.balanceChanges);
+}
+</script>
+```
+
+`status` pasa por `idle`, `simulating`, `simulated` y `error`; iniciar una nueva previsualización cancela la anterior. En Nuxt, el alias autoimportado es `useSolanaSimulateTransaction()`.
 
 ## Transacciones en lote
 

@@ -7,11 +7,26 @@ surroundOrder: 22
 
 Die Pakete sind stabil für den Produktiveinsatz mit RPC-Lesevorgängen, Wallet-Erkennung und -Verbindung, Guthabenabfragen, Transaktionen, Kontolesevorgängen, Nachrichtensignierung, normalisierter Fehlerbehandlung, Sign In With Solana, Batch-Signierung und -Versand von Transaktionen, Transaktionsplanung, SWR-Cache-Adaptern und SPL-Token-Helfern. Diese Roadmap beschreibt, was als Nächstes kommt, geordnet nach Wirkung statt an ein bestimmtes Release gebunden.
 
+## Aktueller Audit-Status und nächste Schritte
+
+Der Audit vom 18. November 2026 hat ergeben, dass damals keine der hier aufgeführten Funktionen als vollständige öffentliche Funktion umgesetzt war, auch wenn einige Grundlagen bereits bestanden. Transaktionssimulation ist inzwischen umgesetzt. Arbeite in dieser Reihenfolge, sofern eine Nutzeranfrage die Priorität nicht ändert:
+
+| Priorität | Punkt                                                                                             | Status                                                                                                               | Nächster Schritt                                                                                                                                                                 |
+| --------- | ------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1         | Helfer für die Transaktionssimulation                                                             | Umgesetzt durch `simulateTransaction()`, `useSimulateTransaction()` und `useSolanaSimulateTransaction()`             | Follow-ups in [`plans/use-simulate-transaction.md`](https://github.com/vue-solana/vue-solana/blob/main/plans/use-simulate-transaction.md) verfolgen.                             |
+| 2         | Lazy-Loading für iOS-Wallets                                                                      | Leistungsarbeit, keine fehlende Funktion; etwa 58 % des sofort geladenen `createSolanaPlugin`-Chunks sind entfernbar | Den fokussierten Änderungssatz in [`plans/bundle-performance-followups.md`](https://github.com/vue-solana/vue-solana/blob/main/plans/bundle-performance-followups.md) einplanen. |
+| 3         | Nuxt-Server-RPC-Utilities                                                                         | Fehlt; Core kann bereits manuell in Servercode verwendet werden                                                      | Einen Nitro-/Server-Export mit strengen Regeln zum Ausschluss von Geheimnissen definieren.                                                                                       |
+| 4         | Versionierte Docs                                                                                 | Fehlt                                                                                                                | Die archivierten `/v1/`-Docs und Weiterleitungen alter URLs erstellen.                                                                                                           |
+| Später    | Weitere iOS-Wallets                                                                               | Phantom, Solflare und Backpack sind umgesetzt; Trust Wallet steht noch aus                                           | Providerspezifische Links und Callbacks recherchieren und dann hinter `useWallets()` ergänzen.                                                                                   |
+| Später    | Anchor-Helper, Wallet-Modal/UI, native Desktop-Wallets, RPC-Failover, erweiterte Kontoindizierung | Fehlen; umfangreiche API- oder Architekturarbeit                                                                     | Hier behalten, bis jeweils ein eigener Plan vorliegt.                                                                                                                            |
+
+Zwei ältere Punkte sind bereits abgedeckt: Echtzeit-Subscriptions sind über `useSubscription()`, `useTrackedData()` und die SWR-Adapter implementiert. Der abgehakte Punkt „native Desktop-Wallets“ in `plans/native-wallet-plan.md` hält eine verschobene Entscheidung fest, keine Umsetzung.
+
 ## Transaktionen
 
 ### Helfer für die Transaktionssimulation
 
-Simuliere Transaktionen vor dem Absenden, damit Apps Gebühren, Kontenänderungen und wahrscheinliche Fehler prüfen können, ohne SOL auszugeben.
+Umgesetzt: `simulateTransaction()` in Core, `useSimulateTransaction()` in Vue und `useSolanaSimulateTransaction()` in Nuxt simulieren Transaktionen vor dem Absenden, damit Apps Gebühren, Kontenänderungen und wahrscheinliche Fehler prüfen können, ohne SOL auszugeben.
 
 ## Ökosystem-Integrationen
 

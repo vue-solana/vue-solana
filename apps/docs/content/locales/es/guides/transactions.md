@@ -25,6 +25,39 @@ El helper devuelve la firma RPC como string.
 
 Para wallets Android Mobile Wallet Adapter, Vue Solana prefiere `signTransaction` más envío del lado de la app a través de `client.rpc.sendTransaction(...).send()` cuando está disponible, para que la app sea dueña del envío y pueda devolver de forma fiable la firma RPC después del traspaso a la wallet.
 
+## Simular una transacción
+
+Usa `simulateTransaction()` desde `@vue-solana/core/transaction` para previsualizar una transacción en la red (wire) antes de enviarla. El helper devuelve valores normalizados de `err`, `logs`, `fee`, cambios de balance en lamports y tokens, direcciones cargadas, datos de retorno y unidades consumidas. Un `err` no nulo es una simulación fallida devuelta como dato; solo una entrada inválida o un fallo RPC/de transporte rechaza. La simulación nunca envía la transacción y no garantiza su inclusión futura.
+
+```ts
+import { simulateTransaction } from "@vue-solana/core/transaction";
+import { useSimulateTransaction } from "@vue-solana/vue/useSimulateTransaction";
+
+const transaction = await createTransferTransaction({
+  rpc: client.rpc,
+  from,
+  to: recipient,
+  lamports: 1_000,
+});
+
+const preview = await simulateTransaction(client, transaction, {
+  replaceRecentBlockhash: true,
+});
+console.log(
+  preview.err,
+  preview.fee,
+  preview.logs,
+  preview.balanceChanges,
+  preview.loadedAddresses,
+);
+
+// Inside a Vue component setup:
+const { data, status, error, execute } = useSimulateTransaction();
+await execute(transaction, { replaceRecentBlockhash: true });
+```
+
+`useSimulateTransaction()` expone el mismo resultado como `data`, con valores de `status` `idle`, `simulating`, `simulated` y `error`. Sigue el patrón compartido de estado de acción y no requiere un `payer`. En Nuxt, llama a `useSolanaSimulateTransaction()` sin importarlo.
+
 ## Confirmar Una Firma
 
 Usa `confirmTransactionSignature()` cuando necesites esperar hasta que una firma enviada alcance un nivel de commitment.

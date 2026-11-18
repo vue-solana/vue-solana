@@ -25,6 +25,39 @@ const signature = await signAndSendTransaction(client, wallet, transaction, {
 
 对于 Android Mobile Wallet Adapter 钱包，Vue Solana 会在可用时优先使用 `signTransaction`，并通过 `client.rpc.sendTransaction(...).send()` 在应用侧提交 RPC，这样应用拥有提交过程，并能在钱包切换后可靠返回 RPC 签名。
 
+## 模拟交易
+
+使用 `@vue-solana/core/transaction` 中的 `simulateTransaction()`，可以在提交前预览原始 wire 交易。该辅助函数返回规范化的 `err`、`logs`、`fee`、lamport 与 token 余额变化、loaded addresses、return data 和 units consumed。非 null 的 `err` 是以数据形式返回的模拟失败；只有无效输入或 RPC／传输失败才会 reject。模拟不会提交交易，也不保证将来一定会被打包。
+
+```ts
+import { simulateTransaction } from "@vue-solana/core/transaction";
+import { useSimulateTransaction } from "@vue-solana/vue/useSimulateTransaction";
+
+const transaction = await createTransferTransaction({
+  rpc: client.rpc,
+  from,
+  to: recipient,
+  lamports: 1_000,
+});
+
+const preview = await simulateTransaction(client, transaction, {
+  replaceRecentBlockhash: true,
+});
+console.log(
+  preview.err,
+  preview.fee,
+  preview.logs,
+  preview.balanceChanges,
+  preview.loadedAddresses,
+);
+
+// Inside a Vue component setup:
+const { data, status, error, execute } = useSimulateTransaction();
+await execute(transaction, { replaceRecentBlockhash: true });
+```
+
+`useSimulateTransaction()` 将相同结果作为 `data` 暴露，`status` 的取值为 `idle`、`simulating`、`simulated` 和 `error`。它遵循共享的 action-state 模式，不需要 `payer`。在 Nuxt 中，无需导入即可调用 `useSolanaSimulateTransaction()`。
+
 ## 确认签名
 
 当你需要等待已提交签名达到某个 commitment 级别时，请使用 `confirmTransactionSignature()`。

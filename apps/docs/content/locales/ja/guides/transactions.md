@@ -25,6 +25,39 @@ const signature = await signAndSendTransaction(client, wallet, transaction, {
 
 Android Mobile Wallet Adapter ウォレットの場合、可能であれば `signTransaction` と、アプリ側の `client.rpc.sendTransaction(...).send()` による RPC 送信が優先されます。これによりアプリが送信を所有し、ウォレットハンドオフ後も RPC の署名を確実に返せます。
 
+## トランザクションをシミュレーションする
+
+送信する前に生のワイヤートランザクションをプレビューするには、`@vue-solana/core/transaction` の `simulateTransaction()` を使用してください。このヘルパーは、正規化された `err`、`logs`、`fee`、lamport と token の残高変更、loaded addresses、return data、units consumed を返します。null ではない `err` は、データとして返されたシミュレーションの失敗です。拒否されるのは、無効な入力や RPC／トランスポートの失敗だけです。シミュレーションではトランザクションを送信せず、将来の取り込みを保証するものでもありません。
+
+```ts
+import { simulateTransaction } from "@vue-solana/core/transaction";
+import { useSimulateTransaction } from "@vue-solana/vue/useSimulateTransaction";
+
+const transaction = await createTransferTransaction({
+  rpc: client.rpc,
+  from,
+  to: recipient,
+  lamports: 1_000,
+});
+
+const preview = await simulateTransaction(client, transaction, {
+  replaceRecentBlockhash: true,
+});
+console.log(
+  preview.err,
+  preview.fee,
+  preview.logs,
+  preview.balanceChanges,
+  preview.loadedAddresses,
+);
+
+// Inside a Vue component setup:
+const { data, status, error, execute } = useSimulateTransaction();
+await execute(transaction, { replaceRecentBlockhash: true });
+```
+
+`useSimulateTransaction()` は同じ結果を `data` として公開し、`status` の値は `idle`、`simulating`、`simulated`、`error` です。共通のアクション状態パターンに従い、`payer` は必要ありません。Nuxt では、import せずに `useSolanaSimulateTransaction()` を呼び出してください。
+
 ## 署名を確認する
 
 送信した署名がコミットメントレベルに到達するまで待つ必要がある場合は、`confirmTransactionSignature()` を使用してください。

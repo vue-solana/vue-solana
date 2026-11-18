@@ -25,6 +25,39 @@ Le helper renvoie la chaîne de signature RPC.
 
 Pour les wallets Android Mobile Wallet Adapter, Vue Solana privilégie `signTransaction` suivi d'une soumission RPC côté application via `client.rpc.sendTransaction(...).send()` lorsque c'est disponible, afin que l'application maîtrise la soumission et puisse renvoyer de manière fiable la signature RPC après le passage de relais au wallet.
 
+## Simuler une transaction
+
+Utilisez `simulateTransaction()` de `@vue-solana/core/transaction` pour prévisualiser une transaction brute au format wire avant de la soumettre. Le helper renvoie `err`, `logs`, `fee`, les changements de solde en lamports et de tokens, les adresses chargées, les données de retour et les unités consommées, sous forme normalisée. Un `err` non nul est une simulation échouée renvoyée comme donnée ; seules une entrée invalide ou une erreur RPC/de transport provoquent un rejet. La simulation ne soumet jamais la transaction et ne garantit pas son inclusion future.
+
+```ts
+import { simulateTransaction } from "@vue-solana/core/transaction";
+import { useSimulateTransaction } from "@vue-solana/vue/useSimulateTransaction";
+
+const transaction = await createTransferTransaction({
+  rpc: client.rpc,
+  from,
+  to: recipient,
+  lamports: 1_000,
+});
+
+const preview = await simulateTransaction(client, transaction, {
+  replaceRecentBlockhash: true,
+});
+console.log(
+  preview.err,
+  preview.fee,
+  preview.logs,
+  preview.balanceChanges,
+  preview.loadedAddresses,
+);
+
+// Inside a Vue component setup:
+const { data, status, error, execute } = useSimulateTransaction();
+await execute(transaction, { replaceRecentBlockhash: true });
+```
+
+`useSimulateTransaction()` expose le même résultat dans `data`, avec les valeurs de `status` `idle`, `simulating`, `simulated` et `error`. Il suit le motif partagé d'état d'action et ne nécessite pas de `payer`. Dans Nuxt, appelez `useSolanaSimulateTransaction()` sans import.
+
 ## Confirmer une signature
 
 Utilisez `confirmTransactionSignature()` lorsque vous devez attendre qu'une signature soumise atteigne un niveau de commitment.

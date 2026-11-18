@@ -1575,6 +1575,39 @@ The helper returns the RPC signature string.
 
 For Android Mobile Wallet Adapter wallets, Vue Solana prefers `signTransaction` plus app-side RPC submission through `client.rpc.sendTransaction(...).send()` when available so the app owns submission and can reliably return the RPC signature after the wallet handoff.
 
+## Simulate A Transaction
+
+Use `simulateTransaction()` from `@vue-solana/core/transaction` to preview a raw wire transaction before submitting it. The helper returns normalized `err`, `logs`, `fee`, lamport and token balance changes, loaded addresses, return data, and units consumed. A non-null `err` is a failed simulation returned as data; only invalid input or an RPC/transport failure rejects. Simulation never submits the transaction and is not a guarantee of future inclusion.
+
+```ts
+import { simulateTransaction } from "@vue-solana/core/transaction";
+import { useSimulateTransaction } from "@vue-solana/vue/useSimulateTransaction";
+
+const transaction = await createTransferTransaction({
+  rpc: client.rpc,
+  from,
+  to: recipient,
+  lamports: 1_000,
+});
+
+const preview = await simulateTransaction(client, transaction, {
+  replaceRecentBlockhash: true,
+});
+console.log(
+  preview.err,
+  preview.fee,
+  preview.logs,
+  preview.balanceChanges,
+  preview.loadedAddresses,
+);
+
+// Inside a Vue component setup:
+const { data, status, error, execute } = useSimulateTransaction();
+await execute(transaction, { replaceRecentBlockhash: true });
+```
+
+`useSimulateTransaction()` exposes the same result as `data`, with `status` values `idle`, `simulating`, `simulated`, and `error`. It follows the shared action-state pattern and does not require a `payer`. In Nuxt, call `useSolanaSimulateTransaction()` without an import.
+
 ## Confirm a Signature
 
 Use `confirmTransactionSignature()` when you need to wait until a submitted signature reaches a commitment level.
@@ -2943,7 +2976,7 @@ The root `@vue-solana/core` export re-exports the public helpers below. Use dire
 | `@vue-solana/core/mobile-wallet`   | Android Mobile Wallet Adapter registration helpers.                                                  | You need to register Android MWA before reading Wallet Standard wallets.                                                     |
 | `@vue-solana/core/rpc`             | `createSolanaContext()`.                                                                             | You want a configured Kit client and resolved cluster endpoints without installing the Vue plugin.                           |
 | `@vue-solana/core/timeout`         | Promise timeout helpers that produce Solana timeout errors.                                          | You need timeout behavior consistent with transaction confirmation helpers.                                                  |
-| `@vue-solana/core/transaction`     | Transaction send and confirmation helpers.                                                           | You need a wallet-aware send path or a confirmation result for an existing signature.                                        |
+| `@vue-solana/core/transaction`     | Transaction simulation, send, and confirmation helpers.                                              | You need to preview a transaction, use a wallet-aware send path, or confirm an existing signature.                           |
 | `@vue-solana/core/token-accounts`  | Stateless SPL Token account reads (`getTokenAccountsByOwner`, `getTokenAccount`, `getTokenBalance`). | You need token account or balance reads through the Kit RPC `jsonParsed` API.                                                |
 | `@vue-solana/core/types`           | Shared TypeScript types.                                                                             | You need `SolanaConfig`, `SolanaContext`, `SolanaWallet`, wallet metadata, or transaction option types.                      |
 | `@vue-solana/core/wallet`          | Wallet state assertions and wallet capability errors.                                                | You need to validate that a selected wallet is connected or supports signing before calling wallet methods.                  |
@@ -3041,6 +3074,7 @@ const signedTransaction = await wallet.signTransaction(transaction);
 ### Transactions
 
 - `signAndSendTransaction(client, wallet, transaction, options?)`: signs and sends raw wire transaction bytes using a configured wallet and returns the RPC signature. Wallets that expose `signAndSendTransaction` are delegated to; otherwise the transaction is signed with `wallet.signTransaction` and submitted through `client.rpc.sendTransaction(...).send()`. Android Mobile Wallet Adapter wallets prefer signing plus app-side RPC submission so the app owns submission and reliably returns the RPC signature after the wallet handoff.
+- `simulateTransaction(client, transaction, options?)`: simulates raw wire transaction bytes without submitting them. Returns normalized `err`, `logs`, `fee`, lamport and token balance changes, loaded addresses, return data, replacement blockhash, and units consumed. A non-null `err` is a failed simulation returned as data, not a thrown error. Accepts `commitment`, `minContextSlot`, `sigVerify`, `replaceRecentBlockhash`, and `abortSignal`; `sigVerify` and `replaceRecentBlockhash` are mutually exclusive and throw `INVALID_INPUT` when combined. Malformed bytes also throw `INVALID_INPUT`, while transport failures throw `RPC_FAILURE`.
 - `confirmTransactionSignature(client, signature, options?)`: waits for a submitted signature to reach a requested commitment. Defaults to `confirmed` commitment, a 60 second timeout, a 1500 ms poll interval, and polling `client.rpc.getSignatureStatuses([signature]).send()`. Accepts `pollIntervalMs` (must be greater than `0`), `abortSignal`, and `searchTransactionHistory`. A failed transaction throws `TRANSACTION_FAILED`, a signature that never appears throws `TRANSACTION_NOT_FOUND`, and an exhausted wait throws `TRANSACTION_TIMEOUT`. Pass `searchTransactionHistory: true` when the signature may have left the recent status cache — without it an older signature never appears in results and resolves to `TRANSACTION_NOT_FOUND` after the timeout.
 
 The client-sent flow is separate from this wallet-aware helper. The client exposes `sendTransaction()` and `sendTransactions()` through the official `rpcTransactionPlanSendingExecutor()` that `solanaRpc()` installs inside `createSolanaClient()`; the Vue composables wrap those methods. They plan, sign, submit, and wait for `confirmed` commitment; the `sent` status is set only after that send-and-confirm operation completes. A single result exposes the submitted signature at `data.context.signature`, while a batch result contains the full plan result tree. The official sender does not show a wallet popup.
@@ -3325,6 +3359,7 @@ Direct package subpaths:
 - `@vue-solana/vue/useTransaction`
 - `@vue-solana/vue/useTransactionConfirmation`
 - `@vue-solana/vue/useSignatureStatus`
+- `@vue-solana/vue/useSimulateTransaction`
 - `@vue-solana/vue/useSignMessage`
 - `@vue-solana/vue/useSignAndSendTransaction`
 - `@vue-solana/vue/useTokenBalance`
@@ -3920,6 +3955,25 @@ Configure a `payer` directly in a Vue/core client with `payer` or `payerSecretKe
 
 The wallet composables remain separate: `useSignAndSendTransaction()` can return after RPC submission, or wait for a selected commitment when `confirm: true` is passed. Client-sent transactions always use the official executor's `confirmed` send-and-confirm behavior.
 
+## Simulate A Transaction
+
+`useSimulateTransaction()` previews raw wire transaction bytes without submitting them or requiring a `payer`. It calls the core `simulateTransaction()` helper and exposes normalized `err`, logs, fees, lamport and token balance changes, loaded addresses, and return data as `data`. A non-null `err` is a failed simulation returned as data; only invalid input, a missing RPC method, or a transport failure rejects.
+
+```vue
+<script setup lang="ts">
+import { useSimulateTransaction } from "@vue-solana/vue/useSimulateTransaction";
+
+const { data, status, loading, error, execute, reset } = useSimulateTransaction();
+
+async function preview() {
+  await execute(transaction, { replaceRecentBlockhash: true });
+  console.log(data.value?.err, data.value?.logs, data.value?.balanceChanges);
+}
+</script>
+```
+
+`status` moves through `idle`, `simulating`, `simulated`, and `error`; starting a new preview aborts the previous one. In Nuxt the auto-imported alias is `useSolanaSimulateTransaction()`.
+
 ## Batch Transactions
 
 ```ts
@@ -4150,6 +4204,7 @@ The module auto-imports these composables from direct `@vue-solana/vue/*` subpat
 - `useSolanaProgramAccounts(programId, options?)`: reads program-owned accounts with filters and data slicing.
 - `useSolanaTransactionConfirmation(options?)`: confirms an existing transaction signature.
 - `useSolanaSignatureStatus(signature, options?)`: reads, polls, or subscribes to signature status.
+- `useSolanaSimulateTransaction()`: simulates raw wire transaction bytes without submitting them and exposes normalized errors, logs, balance changes, and loaded addresses.
 - `useSolanaSignMessage()`: signs off-chain authentication or ownership challenge messages.
 - `useSolanaWalletAccountMessageSigner()`: returns a Kit `MessageModifyingSigner` for a wallet account.
 - `useSolanaWalletAccountTransactionSigner()`: returns a Kit `TransactionModifyingSigner` for a wallet account.
@@ -4760,11 +4815,26 @@ Description: Planned features and improvements for Vue Solana.
 
 The packages are stable for production use with RPC reads, wallet discovery and connection, balance lookup, transactions, account reads, message signing, normalized error handling, Sign In With Solana, batch transaction signing and sending, transaction planning, SWR cache adapters, and SPL token helpers. This roadmap describes what comes next, ordered by impact rather than tied to a specific release.
 
+## Current Audit And Next Steps
+
+The 2026-11-18 audit found that none of the features listed here had shipped as a complete public feature, although several had partial foundations. Transaction simulation has since shipped; work on the remaining items in this order unless a user request changes the priority:
+
+| Priority | Item                                                                                     | Status                                                                                                    | Next step                                                                                                                                                               |
+| -------- | ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1        | Transaction simulation helpers                                                           | Shipped through `simulateTransaction()`, `useSimulateTransaction()`, and `useSolanaSimulateTransaction()` | Track follow-ups in [`plans/use-simulate-transaction.md`](https://github.com/vue-solana/vue-solana/blob/main/plans/use-simulate-transaction.md).                        |
+| 2        | iOS wallet lazy-loading                                                                  | Performance work, not a missing feature; about 58% of the eager `createSolanaPlugin` chunk is removable   | Schedule the focused change set in [`plans/bundle-performance-followups.md`](https://github.com/vue-solana/vue-solana/blob/main/plans/bundle-performance-followups.md). |
+| 3        | Nuxt server RPC utilities                                                                | Missing; core can already be used manually in server code                                                 | Define a Nitro/server export with strict no-secret rules.                                                                                                               |
+| 4        | Versioned docs                                                                           | Missing                                                                                                   | Build the archived `/v1/` docs and old-URL redirects.                                                                                                                   |
+| Later    | Additional iOS wallets                                                                   | Phantom, Solflare, and Backpack shipped; Trust Wallet remains open                                        | Research provider-specific links and callbacks, then add behind `useWallets()`.                                                                                         |
+| Later    | Anchor helpers, wallet modal/UI, desktop native wallets, RPC failover, advanced indexing | Missing; large API or architecture commitments                                                            | Keep here until each has a dedicated plan.                                                                                                                              |
+
+Two older items are already covered: real-time subscriptions are implemented through `useSubscription()`, `useTrackedData()`, and the SWR adapters. The checked “desktop native wallets” item in `plans/native-wallet-plan.md` records a deferred decision, not an implementation.
+
 ## Transactions
 
 ### Transaction Simulation Helpers
 
-Simulate transactions before submission so apps can preview fees, account changes, and likely failures without spending SOL.
+Shipped: `simulateTransaction()` in core, `useSimulateTransaction()` in Vue, and `useSolanaSimulateTransaction()` in Nuxt simulate transactions before submission so apps can preview fees, account changes, and likely failures without spending SOL.
 
 ## Ecosystem Integrations
 

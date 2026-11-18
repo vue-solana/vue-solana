@@ -389,6 +389,16 @@ describe("Nuxt module", () => {
     }
   });
 
+  it("registers the transaction-simulation alias with its own Vue subpath", () => {
+    const dist = "/pkg/vue/dist";
+
+    expect(solanaAutoImports(dist)).toContainEqual({
+      name: "useSimulateTransaction",
+      as: "useSolanaSimulateTransaction",
+      from: `${dist}/useSimulateTransaction.mjs`,
+    });
+  });
+
   it("ships the nuxt/schema augmentation with the module entry", () => {
     // `src/runtime/types.d.ts` was removed: it never reached `dist/` (no
     // build entry), so the `declare module "nuxt/schema"` block must live in

@@ -23,6 +23,7 @@ const SOLANA_COMPOSABLE_IMPORTS = [
   ["useSignTransactions", "useSolanaSignTransactions"],
   ["useSignAndSendTransactions", "useSolanaSignAndSendTransactions"],
   ["useSignatureStatus", "useSolanaSignatureStatus"],
+  ["useSimulateTransaction", "useSolanaSimulateTransaction"],
   ["useSolana", "useSolana"],
   ["useSolanaClient", "useSolanaClient"],
   ["useSolanaPay", "useSolanaPay"],
