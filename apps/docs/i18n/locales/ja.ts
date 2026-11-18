@@ -98,6 +98,8 @@ export default {
       scanning: "スキャン中",
       sent: "送信済み",
       sending: "送信中",
+      simulated: "シミュレート済み",
+      simulating: "シミュレート中",
       signed: "署名済み",
       signing: "署名中",
       success: "成功",
@@ -183,6 +185,21 @@ export default {
         "モックの非同期ハンドラーを実行して、読み込み、エラー、署名の各状態をテストします。",
       run: "モックトランザクションを実行",
       signature: "署名:",
+    },
+    simulateTransaction: {
+      title: "トランザクションをシミュレート",
+      description:
+        "デモ用のメモトランザクションを送信せず、SOL を消費せず、ウォレットやクライアントの payer も不要でプレビューします。送信前にプログラムエラー、手数料、ログ、残高の変化を確認できます。",
+      run: "トランザクションをシミュレート",
+      notRun: "まだ実行されていません",
+      lamports: "lamports",
+      labels: {
+        err: "プログラムエラー",
+        fee: "手数料",
+        units: "コンピュートユニット",
+        logs: "ログ",
+        balanceChanges: "残高の変化",
+      },
     },
     messageSigning: {
       title: "メッセージ署名",

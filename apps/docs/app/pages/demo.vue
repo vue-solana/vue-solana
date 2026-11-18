@@ -36,6 +36,12 @@ const {
   loadWallets,
   mockTransaction,
   mockTransactionError,
+  runSimulation,
+  simulation,
+  simulationBalanceChangesCount,
+  simulationErrText,
+  simulationError,
+  simulationLogsCount,
   canSignMessage,
   kitSignerAddress,
   kitSignerChain,
@@ -288,6 +294,17 @@ const sections = computed(() => [
           :signature="mockTransaction.signature.value"
           :error="mockTransactionError"
           @run="runMockTransaction"
+        />
+
+        <DemoSimulateTransactionPanel
+          :balance-changes-count="simulationBalanceChangesCount"
+          :data="simulation.data.value"
+          :err-text="simulationErrText"
+          :error="simulationError"
+          :loading="simulation.loading.value"
+          :logs-count="simulationLogsCount"
+          :status="simulation.status.value"
+          @run="runSimulation"
         />
 
         <DemoClientSendCard

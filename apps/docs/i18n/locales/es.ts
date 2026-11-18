@@ -98,6 +98,8 @@ export default {
       scanning: "escaneando",
       sent: "enviada",
       sending: "enviando",
+      simulated: "simulada",
+      simulating: "simulando",
       signed: "firmado",
       signing: "firmando",
       success: "completado",
@@ -183,6 +185,21 @@ export default {
         "Ejecuta un manejador asíncrono simulado para probar los estados de carga, error y firma.",
       run: "Ejecutar transacción simulada",
       signature: "Firma:",
+    },
+    simulateTransaction: {
+      title: "Simular transacción",
+      description:
+        "Muestra una vista previa de una transacción memo de demostración sin enviarla, gastar SOL ni requerir una wallet o un pagador del cliente. Revisa errores del programa, comisiones, registros y cambios de balance antes de enviar.",
+      run: "Simular transacción",
+      notRun: "Aún no ejecutada",
+      lamports: "lamports",
+      labels: {
+        err: "Error del programa",
+        fee: "Comisión",
+        units: "Unidades de cómputo",
+        logs: "Registros",
+        balanceChanges: "Cambios de balance",
+      },
     },
     messageSigning: {
       title: "Firma de mensajes",

@@ -63,6 +63,7 @@ export default tseslint.config(
         useSolanaSignAndSendTransactions: "readonly",
         useSolanaSignTransactions: "readonly",
         useSolanaSignatureStatus: "readonly",
+        useSolanaSimulateTransaction: "readonly",
         useSolanaSubscription: "readonly",
         useSolanaSubscriptionSwr: "readonly",
         useSolanaPayer: "readonly",

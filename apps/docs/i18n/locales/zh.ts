@@ -97,6 +97,8 @@ export default {
       scanning: "扫描中",
       sent: "已发送",
       sending: "发送中",
+      simulated: "已模拟",
+      simulating: "模拟中",
       signed: "已签名",
       signing: "签名中",
       success: "已完成",
@@ -180,6 +182,21 @@ export default {
       description: "运行一个模拟异步处理器来测试加载、错误和签名状态。",
       run: "运行模拟交易",
       signature: "签名：",
+    },
+    simulateTransaction: {
+      title: "模拟交易",
+      description:
+        "在不提交交易、不花费 SOL、且无需钱包或客户端 payer 的情况下预览一笔演示 memo 交易。发送前检查程序错误、手续费、日志和余额变化。",
+      run: "模拟交易",
+      notRun: "尚未运行",
+      lamports: "lamports",
+      labels: {
+        err: "程序错误",
+        fee: "手续费",
+        units: "计算单元",
+        logs: "日志",
+        balanceChanges: "余额变化",
+      },
     },
     messageSigning: {
       title: "消息签名",

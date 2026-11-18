@@ -98,6 +98,8 @@ export default {
       scanning: "scannt",
       sent: "gesendet",
       sending: "wird gesendet",
+      simulated: "simuliert",
+      simulating: "wird simuliert",
       signed: "signiert",
       signing: "wird signiert",
       success: "Erfolg",
@@ -183,6 +185,21 @@ export default {
         "Führt einen Mock-Handler aus, um Lade-, Fehler- und Signaturzustände zu testen.",
       run: "Mock-Transaktion ausführen",
       signature: "Signatur:",
+    },
+    simulateTransaction: {
+      title: "Transaktion simulieren",
+      description:
+        "Zeigt eine Vorschau einer Demo-Memo-Transaktion, ohne sie zu senden, SOL auszugeben oder eine Wallet bzw. einen Client-Payer zu benötigen. Prüfe vor dem Senden Programmfehler, Gebühren, Logs und Guthabenänderungen.",
+      run: "Transaktion simulieren",
+      notRun: "Noch nicht ausgeführt",
+      lamports: "Lamports",
+      labels: {
+        err: "Programmfehler",
+        fee: "Gebühr",
+        units: "Compute-Einheiten",
+        logs: "Logs",
+        balanceChanges: "Guthabenänderungen",
+      },
     },
     messageSigning: {
       title: "Nachrichtensignierung",

@@ -9,6 +9,7 @@ import { useDemoWallet } from "./demo/useDemoWallet";
 import { useDemoClientSend } from "./demo/useDemoClientSend";
 import { useDirectBlockhash } from "./demo/useDirectBlockhash";
 import { useMockTransactionDemo } from "./demo/useMockTransactionDemo";
+import { useDemoSimulateTransaction } from "./demo/useDemoSimulateTransaction";
 import { useDemoWalletAccountSigners } from "./demo/useDemoWalletAccountSigners";
 
 export function useDemoPage() {
@@ -19,6 +20,7 @@ export function useDemoPage() {
   const balance = useSolanaBalance(balanceAddress);
   const directConnection = useDirectBlockhash();
   const mockTransactionDemo = useMockTransactionDemo();
+  const simulateTransactionDemo = useDemoSimulateTransaction();
   const messageSigning = useDemoMessageSigning();
   const walletAccountSigners = useDemoWalletAccountSigners();
   const transfer = useDemoTransfer();
@@ -52,6 +54,7 @@ export function useDemoPage() {
     ...messageSigning,
     ...walletAccountSigners,
     ...mockTransactionDemo,
+    ...simulateTransactionDemo,
     packageVersions,
     pluginInstalled,
     rpc,

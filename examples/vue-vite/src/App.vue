@@ -5,6 +5,7 @@ import DirectRpcPanel from "./components/panels/DirectRpcPanel.vue";
 import MessageSigningPanel from "./components/panels/MessageSigningPanel.vue";
 import MockTransactionPanel from "./components/panels/MockTransactionPanel.vue";
 import RpcStatusPanel from "./components/panels/RpcStatusPanel.vue";
+import SimulateTransactionPanel from "./components/panels/SimulateTransactionPanel.vue";
 import SolanaPayPanel from "./components/panels/SolanaPayPanel.vue";
 import SolanaPayScannerPanel from "./components/panels/SolanaPayScannerPanel.vue";
 import TransferPanel from "./components/panels/TransferPanel.vue";
@@ -32,6 +33,7 @@ installSolanaBufferPolyfill();
     <BalancePanel />
     <WalletPanel />
     <MockTransactionPanel />
+    <SimulateTransactionPanel />
     <MessageSigningPanel />
     <WalletAccountSignersPanel />
     <TransferPanel />

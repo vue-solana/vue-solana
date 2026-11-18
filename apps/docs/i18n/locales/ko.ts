@@ -98,6 +98,8 @@ export default {
       scanning: "스캔 중",
       sent: "전송됨",
       sending: "전송 중",
+      simulated: "시뮬레이션됨",
+      simulating: "시뮬레이션 중",
       signed: "서명됨",
       signing: "서명 중",
       success: "완료",
@@ -182,6 +184,21 @@ export default {
       description: "목업 비동기 핸들러로 loading, error, signature 상태를 테스트합니다.",
       run: "목업 트랜잭션 실행",
       signature: "서명:",
+    },
+    simulateTransaction: {
+      title: "트랜잭션 시뮬레이션",
+      description:
+        "데모 메모 트랜잭션을 제출하거나 SOL을 소비하지 않고, 지갑이나 클라이언트 payer 없이 미리 확인합니다. 전송 전에 프로그램 오류, 수수료, 로그, 잔액 변경을 점검하세요.",
+      run: "트랜잭션 시뮬레이션",
+      notRun: "아직 실행되지 않음",
+      lamports: "lamports",
+      labels: {
+        err: "프로그램 오류",
+        fee: "수수료",
+        units: "컴퓨트 유닛",
+        logs: "로그",
+        balanceChanges: "잔액 변경",
+      },
     },
     messageSigning: {
       title: "메시지 서명",

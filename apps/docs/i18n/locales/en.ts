@@ -98,6 +98,8 @@ export default {
       scanning: "scanning",
       sent: "sent",
       sending: "sending",
+      simulated: "simulated",
+      simulating: "simulating",
       signed: "signed",
       signing: "signing",
       success: "success",
@@ -182,6 +184,21 @@ export default {
       description: "Runs a mock async handler to test loading, error, and signature state.",
       run: "Run Mock Transaction",
       signature: "Signature:",
+    },
+    simulateTransaction: {
+      title: "Simulate Transaction",
+      description:
+        "Previews a demo memo transaction without submitting it, spending SOL, or requiring a wallet or client payer. Inspect program errors, fees, logs, and balance changes before sending.",
+      run: "Simulate Transaction",
+      notRun: "Not run yet",
+      lamports: "lamports",
+      labels: {
+        err: "Program error",
+        fee: "Fee",
+        units: "Compute units",
+        logs: "Logs",
+        balanceChanges: "Balance changes",
+      },
     },
     messageSigning: {
       title: "Message Signing",

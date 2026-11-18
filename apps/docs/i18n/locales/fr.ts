@@ -98,6 +98,8 @@ export default {
       scanning: "analyse",
       sent: "envoyé",
       sending: "envoi",
+      simulated: "simulé",
+      simulating: "simulation",
       signed: "signé",
       signing: "signature",
       success: "succès",
@@ -183,6 +185,21 @@ export default {
         "Exécute un gestionnaire asynchrone simulé pour tester les états de chargement, d'erreur et de signature.",
       run: "Lancer la transaction simulée",
       signature: "Signature :",
+    },
+    simulateTransaction: {
+      title: "Simuler une transaction",
+      description:
+        "Affiche un aperçu d'une transaction mémo de démonstration sans l'envoyer, sans dépenser de SOL et sans wallet ni payeur client. Inspectez les erreurs du programme, les frais, les journaux et les changements de solde avant l'envoi.",
+      run: "Simuler la transaction",
+      notRun: "Pas encore exécutée",
+      lamports: "lamports",
+      labels: {
+        err: "Erreur du programme",
+        fee: "Frais",
+        units: "Unités de calcul",
+        logs: "Journaux",
+        balanceChanges: "Changements de solde",
+      },
     },
     messageSigning: {
       title: "Signature de messages",

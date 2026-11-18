@@ -385,6 +385,29 @@ test("runs the mock transaction helper", async ({ page }) => {
   );
 });
 
+test("simulates a demo transaction without submitting it", async ({ page }) => {
+  await page.goto("/");
+
+  await waitForRpcConnected(page);
+  await expect(page.getByTestId("simulate-status")).toHaveText("idle");
+  await expect(page.getByTestId("simulate-result")).toHaveText("No simulation yet");
+
+  await page.getByTestId("simulate-button").click();
+
+  await expect(page.getByTestId("simulate-status")).toHaveText("simulated");
+  await expect(page.getByTestId("simulate-err")).toHaveText("none");
+  await expect(page.getByTestId("simulate-result")).toContainText("err: none");
+
+  if (!isRealRpcRun()) {
+    await expect(page.getByTestId("simulate-fee")).toHaveText("5000");
+    await expect(page.getByTestId("simulate-units")).toHaveText("150");
+    await expect(page.getByTestId("simulate-result")).toContainText("1 log(s)");
+  } else {
+    await expect(page.getByTestId("simulate-fee")).not.toHaveText("—");
+    await expect(page.getByTestId("simulate-units")).not.toHaveText("—");
+  }
+});
+
 test("creates a Solana Pay request, renders a QR code, and verifies settlement", async ({
   page,
 }) => {
