@@ -23,7 +23,9 @@ describe("documented package subpaths", () => {
     const expected = getExportedBuildEntries("../../nuxt/package.json", {
       root: "src/module",
       subpathPrefix: "src/runtime/",
-      extraEntries: ["src/runtime/plugin"],
+      // Keep in sync with `scripts/check-export-map.ts`: these runtime plugins
+      // are registered by path string, so they need a build entry but no export.
+      extraEntries: ["src/runtime/plugin", "src/runtime/server-plugin"],
     });
 
     expect([...getBuildEntries("../../nuxt/build.config.ts")].sort()).toEqual([...expected].sort());

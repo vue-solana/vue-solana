@@ -106,6 +106,14 @@ const module: NuxtModule<ModuleOptions> = defineNuxtModule<ModuleOptions>({
       }
     });
 
+    // The server context is needed regardless of `clientPlugin`: apps that
+    // install their own client plugin still need cluster/endpoints during SSR.
+    // It never runs in the browser and never touches wallet discovery.
+    addPlugin({
+      src: resolver.resolve("./runtime/server-plugin"),
+      mode: "server",
+    });
+
     if (options.clientPlugin !== false) {
       addPlugin({
         src: resolver.resolve("./runtime/plugin"),
