@@ -35,6 +35,10 @@
     "./kit": {
       "types": "./dist/runtime/kit.d.ts",
       "import": "./dist/runtime/kit.mjs"
+    },
+    "./server": {
+      "types": "./dist/runtime/server.d.ts",
+      "import": "./dist/runtime/server.mjs"
     }
   },
   "files": [

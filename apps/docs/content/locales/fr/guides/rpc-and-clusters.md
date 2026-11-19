@@ -130,7 +130,59 @@ const { cluster, endpoint, status, checkConnection } = useSolanaRpc();
 </script>
 ```
 
-Le plugin runtime de Nuxt est côté client uniquement. Les composables peuvent être appelés pendant le SSR, mais le travail de wallet et de RPC doit être déclenché depuis des hooks de cycle de vie client ou des actions utilisateur.
+Le plugin runtime navigateur de Nuxt est côté client uniquement, mais un plugin serveur installe pendant le SSR un contexte lié à la requête avec le cluster et les endpoints configurés, afin que `useSolanaRpc()` affiche le cluster configuré au lieu d'un `devnet` codé en dur. L'état du wallet reste inerte jusqu'à l'hydratation ; conservez le travail lié au wallet dans les hooks de cycle de vie client ou les actions utilisateur.
+
+## RPC côté serveur pendant le SSR
+
+Pour les données qui doivent être présentes dans le HTML initial, conservez l'URL RPC et toute clé API dans la configuration runtime **privée** sous `solanaServer` et lisez-les via `useServerSolanaClient()` depuis `@vue-solana/nuxt/server` dans une route serveur Nitro. L'utilitaire accepte uniquement les options de lecture (`cluster`, `endpoint`, `wsEndpoint`, `commitment`) et supprime `wallet`, `payer` et `payerSecretKey` à l'exécution. La configuration privée n'est jamais embarquée dans le navigateur ; ne placez jamais d'identifiants dans `runtimeConfig.public.solana`.
+
+Configurez l'endpoint privé dans `nuxt.config.ts` (ou avec la variable d'environnement `NUXT_SOLANA_SERVER_ENDPOINT`) :
+
+```ts
+export default defineNuxtConfig({
+  modules: ["@vue-solana/nuxt"],
+  solana: {
+    cluster: "mainnet",
+  },
+  runtimeConfig: {
+    solanaServer: {
+      // Private: this value is never bundled into the browser.
+      endpoint: process.env.SOLANA_RPC_URL,
+      commitment: "confirmed",
+    },
+  },
+});
+```
+
+Lisez depuis une route serveur Nitro uniquement les champs dont la page a besoin :
+
+```ts
+// server/api/slot.get.ts
+import { useServerSolanaClient } from "@vue-solana/nuxt/server";
+
+export default defineEventHandler(async () => {
+  const { rpc } = useServerSolanaClient();
+  const slot = await rpc.getSlot().send();
+  return { slot: slot.toString() };
+});
+```
+
+Récupérez-le ensuite pendant le SSR avec `useAsyncData()` :
+
+```vue
+<script setup lang="ts">
+const { data, refresh } = await useAsyncData("solana-slot", () =>
+  $fetch<{ slot: string }>("/api/slot"),
+);
+</script>
+
+<template>
+  <p>Slot: {{ data?.slot ?? "Loading..." }}</p>
+  <button type="button" @click="refresh()">Refresh</button>
+</template>
+```
+
+`useAsyncData()` place le résultat dans la charge utile Nuxt afin que le client ne le récupère pas à nouveau pendant l'hydratation. Convertissez les résultats `bigint` tels que les numéros de slot et les soldes en chaînes dans la route serveur ; seuls les champs que vous renvoyez sont exposés au navigateur. La découverte des wallets, la signature et les prompts doivent rester dans les composants client après l'hydratation.
 
 ## Helpers d'endpoint
 

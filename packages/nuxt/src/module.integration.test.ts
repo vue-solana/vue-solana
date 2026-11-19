@@ -58,6 +58,10 @@ function hasSolanaRuntimePlugin(nuxt: NuxtInstance): boolean {
   return pluginSources(nuxt).some((src) => /(^|\/)runtime\/plugin\.(ts|mjs|js)$/.test(src));
 }
 
+function hasSolanaServerPlugin(nuxt: NuxtInstance): boolean {
+  return pluginSources(nuxt).some((src) => /(^|\/)runtime\/server-plugin\.(ts|mjs|js)$/.test(src));
+}
+
 async function registeredImports(nuxt: NuxtInstance): Promise<string[]> {
   const collected: Array<{ name?: string }> = [];
   await nuxt.callHook("imports:extend", collected as never);
@@ -130,14 +134,10 @@ describe("real defineNuxtModule setup", () => {
     expect(nuxt.options.runtimeConfig.public.solana).toMatchObject({ autoConnect: true });
   });
 
-  it("strips wallet/signer fields from public runtime config", async () => {
-    const nuxt = await loadWithModule({}, { solana: { payerSecretKey: "SECRET", wallet: {} } });
-
-    const solana = nuxt.options.runtimeConfig.public.solana as Record<string, unknown>;
-
-    expect(solana).not.toHaveProperty("payerSecretKey");
-    expect(solana).not.toHaveProperty("wallet");
-    expect(solana).not.toHaveProperty("payer");
+  it("fails fast when public runtime config includes signer or wallet fields", async () => {
+    await expect(
+      loadWithModule({}, { solana: { payerSecretKey: "SECRET", wallet: {} } }),
+    ).rejects.toThrow(/is not allowed in runtimeConfig\.public\.solana/);
   });
 
   it("tolerates a non-object public.solana config", async () => {
@@ -150,13 +150,15 @@ describe("real defineNuxtModule setup", () => {
     const nuxt = await loadWithModule({});
 
     expect(hasSolanaRuntimePlugin(nuxt)).toBe(true);
+    expect(hasSolanaServerPlugin(nuxt)).toBe(true);
     expect(await registeredImports(nuxt)).not.toContain("createSolanaPlugin");
   });
 
-  it("skips the runtime plugin and imports the setup values when clientPlugin is false", async () => {
+  it("skips only the runtime plugin and imports the setup values when clientPlugin is false", async () => {
     const nuxt = await loadWithModule({ clientPlugin: false });
 
     expect(hasSolanaRuntimePlugin(nuxt)).toBe(false);
+    expect(hasSolanaServerPlugin(nuxt)).toBe(true);
 
     const names = await registeredImports(nuxt);
 

@@ -5,19 +5,14 @@ import {
 } from "@vue-solana/vue";
 import type { ModuleOptions } from "../module";
 import { defineNuxtPlugin, useRuntimeConfig } from "#app";
+import { toPublicPluginOptions } from "./plugin-options";
 
 export default defineNuxtPlugin((nuxtApp) => {
   // Missing `public.solana` (deleted or never set) must fall back to defaults,
-  // not throw a raw `TypeError` on `.cluster` access.
-  const rawConfig = (useRuntimeConfig().public.solana ?? {}) as Record<string, unknown>;
-
-  // Allowlist silently dropped future fields: forward everything except the
-  // client-only/build-time keys, which must never reach the client bundle.
-  const pluginOptions = { ...rawConfig };
-  delete pluginOptions.wallet;
-  delete pluginOptions.payer;
-  delete pluginOptions.payerSecretKey;
-  delete pluginOptions.clientPlugin;
+  // not throw a raw `TypeError` on `.cluster` access. The shared helper also
+  // strips the client-only/build-time keys; it forwards future fields so an
+  // allowlist cannot silently drop them.
+  const pluginOptions = toPublicPluginOptions(useRuntimeConfig().public.solana);
 
   const solanaPlugin = createSolanaPlugin(pluginOptions as ModuleOptions);
 

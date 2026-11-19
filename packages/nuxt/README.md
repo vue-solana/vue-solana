@@ -47,7 +47,9 @@ New to Solana? Start with the official docs and the project concepts guide:
 
 - Uses direct Vue package subpaths to avoid pulling unrelated runtime code into Nuxt bundles.
 
-- Client-only runtime plugin with SSR-safe inert composable state before hydration.
+- Client-only runtime plugin with SSR-safe inert composable state before hydration, plus a server plugin that provides the configured cluster during SSR.
+
+- Read-only server RPC client through `@vue-solana/nuxt/server` using private `runtimeConfig.solanaServer`, for pages that need Solana data in the initial HTML.
 
 - Unified wallet discovery for browser extensions, Android Mobile Wallet Adapter, and supported iOS browser wallets.
 
@@ -126,6 +128,48 @@ For development, use `devnet` and request free test SOL from the official faucet
 ```txt
 https://faucet.solana.com
 ```
+
+## Server-Side RPC
+
+During SSR a server plugin provides a request-scoped context with the configured cluster and endpoints, so `useSolanaRpc()` renders the configured cluster instead of a hardcoded `devnet`. Wallet state stays inert until hydration; wallet discovery, signing, and prompts must stay in client components.
+
+For Solana data in the initial HTML, keep the RPC URL and any API key in private runtime config and read them from a Nitro route with `useServerSolanaClient()`:
+
+```ts
+// nuxt.config.ts
+export default defineNuxtConfig({
+  modules: ["@vue-solana/nuxt"],
+  runtimeConfig: {
+    solanaServer: {
+      endpoint: process.env.SOLANA_RPC_URL,
+      commitment: "confirmed",
+    },
+  },
+});
+```
+
+```ts
+// server/api/slot.get.ts
+import { useServerSolanaClient } from "@vue-solana/nuxt/server";
+
+export default defineEventHandler(async () => {
+  const { rpc } = useServerSolanaClient();
+  const slot = await rpc.getSlot().send();
+  return { slot: slot.toString() };
+});
+```
+
+```vue
+<script setup lang="ts">
+const { data } = await useAsyncData("solana-slot", () => $fetch<{ slot: string }>("/api/slot"));
+</script>
+
+<template>
+  <p>Slot: {{ data?.slot ?? "Loading..." }}</p>
+</template>
+```
+
+`useAsyncData()` puts the result in the Nuxt payload so the client does not refetch it during hydration. Convert `bigint` values to strings in the route, and return only the fields the page needs. The utility accepts only read-side options (`cluster`, `endpoint`, `wsEndpoint`, `commitment`) and strips `wallet`, `payer`, and `payerSecretKey` at runtime. Never put a credential or signing key in `runtimeConfig.public.solana`.
 
 ## Auto-Imported Composables
 
@@ -277,6 +321,8 @@ The package also exposes Solana helper subpaths for Nuxt apps that need Kit re-e
 
 - `@vue-solana/nuxt/kit`
 
+- `@vue-solana/nuxt/server`
+
 - `@vue-solana/nuxt/buffer-polyfill`
 
 ## Read RPC State
@@ -424,9 +470,9 @@ Docs: [Vue Solana Agent Skill](https://vue-solana-docs.vercel.app/agent-skill)
 
 ## Caveats
 
-- The runtime plugin is client-only. Auto-imported composables are SSR-safe, but real RPC and wallet work should run after hydration or in user actions.
+- The runtime plugin is client-only. Auto-imported composables are SSR-safe, but client RPC and all wallet work should run after hydration or in user actions. Use `@vue-solana/nuxt/server` and `useAsyncData()` for data that must be rendered on the server.
 
-- The SWR cache (`useSolanaRequestSwr()`, `useSolanaSubscriptionSwr()`, `useSolanaTrackedDataSwr()`) is module-level and shared across SSR requests. Namespace cache keys per request or call `clearSwrCache()` (auto-imported) at the start of each server request to avoid leaking cached data between requests. The cache is capped at 1024 entries with oldest-first eviction; `deleteSwrKey()` (auto-imported) evicts a single key by its full cache key.
+- The SWR cache (`useSolanaRequestSwr()`, `useSolanaSubscriptionSwr()`, `useSolanaTrackedDataSwr()`) is module-level and shared across a server process. The Nuxt server plugin calls `clearSwrCache()` at the start of each request, so SSR renders do not leak entries between requests. In other SSR setups, namespace cache keys per request or call `clearSwrCache()` yourself at the start of each request. The cache is capped at 1024 entries with oldest-first eviction; `deleteSwrKey()` (auto-imported) evicts a single key by its full cache key.
 
 - Nuxt module options are stored in public runtime config, so they must be JSON-serializable.
 

@@ -130,7 +130,59 @@ const { cluster, endpoint, status, checkConnection } = useSolanaRpc();
 </script>
 ```
 
-Nuxt runtime plugin은 client-only입니다. 컴포저블은 SSR 중에도 호출할 수 있지만, 지갑과 RPC 작업은 client lifecycle hook 또는 사용자 액션에서 트리거해야 합니다.
+Nuxt 브라우저 runtime plugin은 client-only이지만, server plugin이 SSR 중에 설정된 cluster와 endpoint를 사용해 요청별 context를 설치하므로 `useSolanaRpc()`는 하드코딩된 `devnet` 대신 설정된 cluster를 렌더링합니다. wallet state는 hydration까지 inert 상태입니다. wallet 작업은 client lifecycle hook이나 사용자 액션에서 처리하세요.
+
+## SSR 중 서버 측 RPC
+
+초기 HTML에 있어야 하는 데이터라면 RPC URL과 API key를 **private** runtime config의 `solanaServer` 아래에 두고 Nitro server route에서 `@vue-solana/nuxt/server`의 `useServerSolanaClient()`로 읽으세요. 이 유틸리티는 read-side 옵션(`cluster`, `endpoint`, `wsEndpoint`, `commitment`)만 받고 런타임에 `wallet`, `payer`, `payerSecretKey`를 제거합니다. private config는 브라우저에 번들되지 않으므로 `runtimeConfig.public.solana`에 자격 증명을 넣지 마세요.
+
+`nuxt.config.ts`에서 private endpoint를 설정하세요(또는 `NUXT_SOLANA_SERVER_ENDPOINT` 환경 변수 사용):
+
+```ts
+export default defineNuxtConfig({
+  modules: ["@vue-solana/nuxt"],
+  solana: {
+    cluster: "mainnet",
+  },
+  runtimeConfig: {
+    solanaServer: {
+      // Private: this value is never bundled into the browser.
+      endpoint: process.env.SOLANA_RPC_URL,
+      commitment: "confirmed",
+    },
+  },
+});
+```
+
+Nitro server route에서 페이지에 필요한 필드만 읽으세요:
+
+```ts
+// server/api/slot.get.ts
+import { useServerSolanaClient } from "@vue-solana/nuxt/server";
+
+export default defineEventHandler(async () => {
+  const { rpc } = useServerSolanaClient();
+  const slot = await rpc.getSlot().send();
+  return { slot: slot.toString() };
+});
+```
+
+그다음 SSR 중에 `useAsyncData()`로 가져오세요:
+
+```vue
+<script setup lang="ts">
+const { data, refresh } = await useAsyncData("solana-slot", () =>
+  $fetch<{ slot: string }>("/api/slot"),
+);
+</script>
+
+<template>
+  <p>Slot: {{ data?.slot ?? "Loading..." }}</p>
+  <button type="button" @click="refresh()">Refresh</button>
+</template>
+```
+
+`useAsyncData()`는 결과를 Nuxt payload에 넣어 client가 hydration 중에 다시 가져오지 않게 합니다. slot 번호나 balance 같은 `bigint` 결과는 server route에서 문자열로 변환하세요. 반환한 필드만 브라우저에 노출됩니다. wallet discovery, signing, prompt는 hydration 이후 client 컴포넌트에 남겨 두세요.
 
 ## 엔드포인트 헬퍼
 

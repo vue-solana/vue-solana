@@ -23,6 +23,7 @@ function aliasFor(packageName: string, sourceDir: string, entryFile: string) {
 
 const alias = {
   "#app": fileURLToPath(new URL("./test/stubs/nuxt-app.ts", import.meta.url)),
+  "#imports": fileURLToPath(new URL("./test/stubs/nuxt-app.ts", import.meta.url)),
   "buffer/": "node:buffer",
   // The docs middleware imports its helpers through Nuxt's `~/` app alias.
   // Map that exact specifier so its tests can load the real handler.

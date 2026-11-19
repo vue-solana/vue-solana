@@ -47,7 +47,7 @@ export default defineNuxtConfig({
 });
 ```
 
-Nuxt 模块会让 Vue Solana 插件仅在客户端运行。自动导入的 composable 可以在 SSR 期间调用，但请避免在服务端直接执行 RPC 或钱包工作。需要真实 Solana 客户端时，请从客户端生命周期钩子或用户操作触发 RPC 读取。
+Nuxt 模块让 Vue Solana 插件在浏览器中仅运行于客户端，并为 SSR context 安装独立的服务器插件，因此 `useSolanaRpc()` 会在服务器上渲染配置的 cluster。自动导入的 composable 可以在 SSR 期间调用，但客户端 RPC 和钱包工作应在 hydration 之后或从用户操作中运行。如果页面需要初始 HTML 中包含 Solana 数据，请把 RPC URL 放入私有的 `runtimeConfig.solanaServer`，在服务器路由中调用 `@vue-solana/nuxt/server` 的 `useServerSolanaClient()`，并通过 `useAsyncData()` 把结果传给页面——参见 [Nuxt 包文档](/packages/nuxt) 中的「SSR 期间的服务器端 RPC」一节。绝不要把带凭据的 RPC URL 放入 `runtimeConfig.public.solana`；public config 会被打包到浏览器中。
 
 ## `No Solana wallet is configured`
 

@@ -47,7 +47,7 @@ export default defineNuxtConfig({
 });
 ```
 
-Das Nuxt-Modul hält das Vue-Solana-Plugin clientseitig. Automatisch importierte Composables können während der SSR aufgerufen werden, aber vermeide direkte RPC- oder Wallet-Arbeit auf dem Server. Löse RPC-Lesevorgänge aus Client-Lifecycle-Hooks oder Nutzeraktionen aus, wenn du den echten Solana-Client brauchst.
+Das Nuxt-Modul hält das Vue-Solana-Plugin im Browser clientseitig und installiert ein separates Server-Plugin für den SSR-Kontext, sodass `useSolanaRpc()` auf dem Server den konfigurierten Cluster rendert. Automatisch importierte Composables können während der SSR aufgerufen werden, aber clientseitiges RPC und Wallet-Arbeit sollten nach der Hydration oder aus Nutzeraktionen laufen. Wenn eine Seite Solana-Daten im initialen HTML braucht, lege die RPC-URL in das private `runtimeConfig.solanaServer`, rufe `useServerSolanaClient()` aus `@vue-solana/nuxt/server` in einer Server-Route auf und übergib das Ergebnis mit `useAsyncData()` an die Seite — siehe den Abschnitt „Serverseitiges RPC während der SSR" in der [Nuxt-Paketdokumentation](/de/packages/nuxt). Lege niemals eine RPC-URL mit Zugangsdaten in `runtimeConfig.public.solana` ab; öffentliche Config wird in den Browser gebündelt.
 
 ## `No Solana wallet is configured`
 

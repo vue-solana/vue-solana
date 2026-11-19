@@ -28,7 +28,9 @@ const targets = [
     packageJson: "packages/nuxt/package.json",
     root: "src/module",
     subpathPrefix: "src/runtime/",
-    extraEntries: ["src/runtime/plugin"],
+    // Runtime plugins are registered by path string, so they need a build
+    // entry but no public export. Keep in sync with export-map-docs.test.ts.
+    extraEntries: ["src/runtime/plugin", "src/runtime/server-plugin"],
   },
 ];
 

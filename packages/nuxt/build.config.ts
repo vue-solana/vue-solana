@@ -1,7 +1,14 @@
 import { defineBuildConfig } from "unbuild";
 
 export default defineBuildConfig({
-  entries: ["src/module", "src/runtime/buffer-polyfill", "src/runtime/kit", "src/runtime/plugin"],
+  entries: [
+    "src/module",
+    "src/runtime/buffer-polyfill",
+    "src/runtime/kit",
+    "src/runtime/plugin",
+    "src/runtime/server",
+    "src/runtime/server-plugin",
+  ],
   declaration: true,
   clean: true,
   rollup: {
@@ -12,6 +19,7 @@ export default defineBuildConfig({
   },
   externals: [
     "#app",
+    "#imports",
     "@nuxt/kit",
     "@nuxt/schema",
     /^@vue-solana\/core(?:\/.*)?$/,

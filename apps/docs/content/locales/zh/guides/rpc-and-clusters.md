@@ -130,7 +130,57 @@ const { cluster, endpoint, status, checkConnection } = useSolanaRpc();
 </script>
 ```
 
-Nuxt 运行时插件仅在客户端运行。组合式函数可以在 SSR 期间调用，但钱包和 RPC 工作应从客户端生命周期钩子或用户操作触发。
+Nuxt 的浏览器运行时插件仅在客户端运行，但服务器插件会在 SSR 期间使用配置的 cluster 和 endpoint 安装请求级 context，因此 `useSolanaRpc()` 渲染的是配置的 cluster，而不是硬编码的 `devnet`。钱包状态在 hydration 之前保持惰性；请把钱包工作放在客户端生命周期钩子或用户操作中。
+
+## SSR 期间的服务器端 RPC
+
+对于必须出现在初始 HTML 中的数据，请把 RPC URL 和任何 API key 保存在 `solanaServer` 下的**私有** runtime config 中，并在 Nitro 服务器路由中通过 `@vue-solana/nuxt/server` 的 `useServerSolanaClient()` 读取它们。该工具只接受读取相关的选项（`cluster`、`endpoint`、`wsEndpoint`、`commitment`），并在运行时剔除 `wallet`、`payer` 和 `payerSecretKey`。私有配置绝不会被打包到浏览器；绝不要把凭据放入 `runtimeConfig.public.solana`。
+
+```ts
+export default defineNuxtConfig({
+  modules: ["@vue-solana/nuxt"],
+  solana: {
+    cluster: "mainnet",
+  },
+  runtimeConfig: {
+    solanaServer: {
+      // Private: this value is never bundled into the browser.
+      endpoint: process.env.SOLANA_RPC_URL,
+      commitment: "confirmed",
+    },
+  },
+});
+```
+
+在 `nuxt.config.ts` 中配置私有 endpoint（或使用 `NUXT_SOLANA_SERVER_ENDPOINT` 环境变量）：
+
+```ts
+// server/api/slot.get.ts
+import { useServerSolanaClient } from "@vue-solana/nuxt/server";
+
+export default defineEventHandler(async () => {
+  const { rpc } = useServerSolanaClient();
+  const slot = await rpc.getSlot().send();
+  return { slot: slot.toString() };
+});
+```
+
+在 Nitro 服务器路由中只读取页面需要的字段：
+
+```vue
+<script setup lang="ts">
+const { data, refresh } = await useAsyncData("solana-slot", () =>
+  $fetch<{ slot: string }>("/api/slot"),
+);
+</script>
+
+<template>
+  <p>Slot: {{ data?.slot ?? "Loading..." }}</p>
+  <button type="button" @click="refresh()">Refresh</button>
+</template>
+```
+
+`useAsyncData()` 会把结果放入 Nuxt payload，因此客户端在 hydration 期间不会重新获取。请在服务器路由中把 slot 编号和余额等 `bigint` 结果转换为字符串；只有你返回的字段才会暴露给浏览器。钱包发现、签名和提示必须留在 hydration 之后的客户端组件中。
 
 ## 端点辅助函数
 

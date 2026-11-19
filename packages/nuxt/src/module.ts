@@ -18,6 +18,13 @@ export type ModuleOptions = Omit<VueSolanaPluginOptions, "wallet" | "payer" | "p
   clientPlugin?: boolean;
 };
 
+export interface SolanaServerConfig {
+  cluster?: VueSolanaPluginOptions["cluster"];
+  endpoint?: string;
+  wsEndpoint?: string;
+  commitment?: VueSolanaPluginOptions["commitment"];
+}
+
 // Shipped with the module entry (`dist/module.d.ts`), so fresh consumers get
 // typed `runtimeConfig.public.solana` with no local shim. A separate
 // `src/runtime/types.d.ts` never reached `dist/` (it was no build entry), so
@@ -26,7 +33,13 @@ declare module "nuxt/schema" {
   interface PublicRuntimeConfig {
     solana?: ModuleOptions;
   }
+
+  interface RuntimeConfig {
+    solanaServer?: SolanaServerConfig;
+  }
 }
+
+const FORBIDDEN_SOLANA_CONFIG_FIELDS = ["payer", "payerSecretKey", "wallet"] as const;
 
 /**
  * Types only, so app code can name the public surface (`SolanaWalletInfo`,
@@ -78,6 +91,9 @@ const module: NuxtModule<ModuleOptions> = defineNuxtModule<ModuleOptions>({
     const resolver = createResolver(import.meta.url);
     const publicConfig = nuxt.options.runtimeConfig.public;
 
+    assertNoForbiddenSolanaFields(options, "solana module options");
+    assertNoForbiddenSolanaFields(publicConfig.solana, "runtimeConfig.public.solana");
+
     // Sanitize after the merge, not before: both inputs are user-controlled and
     // only the module options were being stripped, so a `runtimeConfig.public.solana`
     // carrying a `payerSecretKey` (or a `wallet`) reached the client bundle.
@@ -104,6 +120,14 @@ const module: NuxtModule<ModuleOptions> = defineNuxtModule<ModuleOptions>({
       if (config.environments?.client) {
         mergeViteOptimizeDeps(config.environments.client);
       }
+    });
+
+    // The server context is needed regardless of `clientPlugin`: apps that
+    // install their own client plugin still need cluster/endpoints during SSR.
+    // It never runs in the browser and never touches wallet discovery.
+    addPlugin({
+      src: resolver.resolve("./runtime/server-plugin"),
+      mode: "server",
     });
 
     if (options.clientPlugin !== false) {
@@ -174,6 +198,20 @@ function mergeSolanaSources({
 
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function assertNoForbiddenSolanaFields(value: unknown, source: string): void {
+  if (!isPlainObject(value)) {
+    return;
+  }
+
+  for (const field of FORBIDDEN_SOLANA_CONFIG_FIELDS) {
+    if (field in value) {
+      throw new Error(
+        `@vue-solana/nuxt: \`${field}\` is not allowed in ${source}. Configure wallet, payer, and signer state on the client only; use runtimeConfig.solanaServer for server-only RPC configuration.`,
+      );
+    }
+  }
 }
 
 function toPublicSolanaConfig(options: SolanaConfigSource): VueSolanaPluginOptions {

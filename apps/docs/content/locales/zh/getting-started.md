@@ -142,7 +142,7 @@ export default defineNuxtConfig({
 });
 ```
 
-Nuxt 模块只在客户端安装运行时插件，并从直接的 `@vue-solana/vue/*` 子路径自动导入 composable。Composable 可以在 SSR 期间安全调用，但真实 RPC 和钱包操作应在 hydration 后运行，例如在 `onMounted()` 或用户操作中。Nuxt `solana` 选项位于 public runtime config 中，因此应保持 JSON 可序列化。
+Nuxt 模块只在客户端安装其浏览器运行时插件，并在 SSR 期间安装独立的请求级服务器插件，然后从直接的 `@vue-solana/vue/*` 子路径自动导入 composable。Composable 可以在 SSR 期间安全调用，`useSolanaRpc()` 会渲染配置的 cluster，但客户端 RPC 和所有钱包操作应在 hydration 之后运行，例如在 `onMounted()` 或用户操作中。若要在初始 HTML 中渲染 Solana 数据，请使用私有的 `runtimeConfig.solanaServer` 键，并在服务器路由中调用 `@vue-solana/nuxt/server` 的 `useServerSolanaClient()`，然后通过 `useAsyncData()` 把结果传给页面——参见 [Nuxt 包文档](/packages/nuxt) 中的「SSR 期间的服务器端 RPC」一节。Nuxt `solana` 选项位于 public runtime config 中，因此应保持 JSON 可序列化。
 
 direct Vue/core client 支持用于 client-sent 交易的 `payer` 和 `payerSecretKey`。`payerSecretKey` 是 base64 编码的 64 字节 Ed25519 keypair，因此不要把它放入 Nuxt public runtime config，也不要把有资金的 key 发送到浏览器。Nuxt `ModuleOptions` 省略这两个字段；请在 client-only plugin 中创建 ephemeral `payer` 并 install Vue plugin，同时设置 `clientPlugin: false`，使模块不再安装第二个 plugin。
 

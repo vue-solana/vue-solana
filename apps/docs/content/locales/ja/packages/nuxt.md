@@ -171,10 +171,61 @@ const owner = address("PASTE_A_SOLANA_ADDRESS");
 
 - `@vue-solana/nuxt/buffer-polyfill`
 - `@vue-solana/nuxt/kit`
+- `@vue-solana/nuxt/server`
 
-ランタイムプラグインはクライアント専用です。自動 import されるコンポーザブルは SSR 中にも呼び出せ、ハイドレーションによって実際のクライアントコンテキストが提供されるまでは不活性な状態を返します。RPC とウォレットの処理は、クライアントのライフサイクルフックまたはユーザー操作からトリガーしてください。
+ランタイムプラグインのブラウザ側はクライアント専用です。別のサーバープラグインが SSR 中に、設定済みのクラスターとエンドポイントを使ってリクエストスコープのコンテキストをインストールするため、`useSolanaRpc()` はハードコードされた `devnet` ではなく設定済みのクラスターを描画します。ウォレットの状態は、ハイドレーションによって実際のクライアントコンテキストが提供されるまで不活性なままです。ウォレットの処理はクライアントのライフサイクルフックまたはユーザー操作からトリガーしてください。初期 HTML に含める必要があるデータについては、下の「SSR 中のサーバー側 RPC」を参照してください。
 
 Android Mobile Wallet Adapter の登録もクライアントでのみ実行されます。Android Chrome と Chrome の PWA では、`Mobile Wallet Adapter` がブラウザ拡張ウォレットと同じ `useSolanaWallets()` のリストに表示されることがあります。iOS ブラウザでは、Phantom、Solflare、Backpack がウォレット固有のユニバーサルリンクを通じて同じリストに表示されることがあります。デスクトップのネイティブアプリウォレットアダプタは計画中ですが、まだ実装されていません。
+
+## SSR 中のサーバー側 RPC
+
+Nuxt のページはサーバー上で Solana のデータを読み取り、`useAsyncData()` でコンポーネントに渡せます。RPC の URL と API キーは `solanaServer` の下の**非公開**の runtime config に保管してください。ブラウザにバンドルされる `runtimeConfig.public.solana` には絶対に置かないでください。サーバーユーティリティは読み取り側のオプション（`cluster`、`endpoint`、`wsEndpoint`、`commitment`）のみを受け付け、`wallet`、`payer`、`payerSecretKey` は実行時に除去します。
+
+```ts
+export default defineNuxtConfig({
+  modules: ["@vue-solana/nuxt"],
+  solana: {
+    cluster: "mainnet",
+  },
+  runtimeConfig: {
+    solanaServer: {
+      // Private: this value is never bundled into the browser.
+      endpoint: process.env.SOLANA_RPC_URL,
+      commitment: "confirmed",
+    },
+  },
+});
+```
+
+`nuxt.config.ts`（または環境変数 `NUXT_SOLANA_SERVER_ENDPOINT`）で非公開のエンドポイントを設定します:
+
+```ts
+// server/api/slot.get.ts
+import { useServerSolanaClient } from "@vue-solana/nuxt/server";
+
+export default defineEventHandler(async () => {
+  const { rpc } = useServerSolanaClient();
+  const slot = await rpc.getSlot().send();
+  return { slot: slot.toString() };
+});
+```
+
+Nitro のサーバールートから、ページが必要とするフィールドだけを読み取ります:
+
+```vue
+<script setup lang="ts">
+const { data, refresh } = await useAsyncData("solana-slot", () =>
+  $fetch<{ slot: string }>("/api/slot"),
+);
+</script>
+
+<template>
+  <p>Slot: {{ data?.slot ?? "Loading..." }}</p>
+  <button type="button" @click="refresh()">Refresh</button>
+</template>
+```
+
+`useAsyncData()` は結果を Nuxt のペイロードに格納するため、クライアントはハイドレーション時に再取得しません。スロット番号や残高などの `bigint` の結果は、サーバールートで文字列に変換してください。ブラウザに公開されるのは、返したフィールドだけです。このユーティリティは読み取り専用です。ウォレットの検出、署名、プロンプトは、ハイドレーション後にクライアントコンポーネントに置く必要があります。
 
 ## 関連ガイド
 

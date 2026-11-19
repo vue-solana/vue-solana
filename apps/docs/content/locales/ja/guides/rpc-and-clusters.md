@@ -130,7 +130,57 @@ const { cluster, endpoint, status, checkConnection } = useSolanaRpc();
 </script>
 ```
 
-Nuxt のランタイムプラグインはクライアント専用です。コンポーザブルは SSR 中にも呼び出せますが、ウォレットと RPC の処理はクライアントのライフサイクルフックまたはユーザー操作から開始してください。
+Nuxt のブラウザ用ランタイムプラグインはクライアント専用ですが、サーバープラグインが SSR 中に設定済みのクラスターとエンドポイントを使ってリクエストスコープのコンテキストをインストールするため、`useSolanaRpc()` はハードコードされた `devnet` ではなく設定済みのクラスターを描画します。ウォレットの状態はハイドレーションまで不活性です。ウォレットの処理はクライアントのライフサイクルフックまたはユーザー操作に置いてください。
+
+## SSR 中のサーバー側 RPC
+
+初期 HTML に含める必要があるデータについては、RPC の URL と API キーを `solanaServer` の下の**非公開**の runtime config に保管し、Nitro のサーバールートで `@vue-solana/nuxt/server` の `useServerSolanaClient()` を通じて読み取ります。このユーティリティは読み取り側のオプション（`cluster`、`endpoint`、`wsEndpoint`、`commitment`）のみを受け付け、`wallet`、`payer`、`payerSecretKey` は実行時に除去します。非公開の設定はブラウザにバンドルされません。認証情報を `runtimeConfig.public.solana` に置かないでください。
+
+```ts
+export default defineNuxtConfig({
+  modules: ["@vue-solana/nuxt"],
+  solana: {
+    cluster: "mainnet",
+  },
+  runtimeConfig: {
+    solanaServer: {
+      // Private: this value is never bundled into the browser.
+      endpoint: process.env.SOLANA_RPC_URL,
+      commitment: "confirmed",
+    },
+  },
+});
+```
+
+`nuxt.config.ts`（または環境変数 `NUXT_SOLANA_SERVER_ENDPOINT`）で非公開のエンドポイントを設定します:
+
+```ts
+// server/api/slot.get.ts
+import { useServerSolanaClient } from "@vue-solana/nuxt/server";
+
+export default defineEventHandler(async () => {
+  const { rpc } = useServerSolanaClient();
+  const slot = await rpc.getSlot().send();
+  return { slot: slot.toString() };
+});
+```
+
+Nitro のサーバールートから、ページが必要とするフィールドだけを読み取ります:
+
+```vue
+<script setup lang="ts">
+const { data, refresh } = await useAsyncData("solana-slot", () =>
+  $fetch<{ slot: string }>("/api/slot"),
+);
+</script>
+
+<template>
+  <p>Slot: {{ data?.slot ?? "Loading..." }}</p>
+  <button type="button" @click="refresh()">Refresh</button>
+</template>
+```
+
+`useAsyncData()` は結果を Nuxt のペイロードに格納するため、クライアントはハイドレーション時に再取得しません。スロット番号や残高などの `bigint` の結果は、サーバールートで文字列に変換してください。ブラウザに公開されるのは、返したフィールドだけです。ウォレットの検出、署名、プロンプトは、ハイドレーション後にクライアントコンポーネントに置く必要があります。
 
 ## エンドポイントヘルパー
 

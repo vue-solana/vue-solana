@@ -171,10 +171,63 @@ Direkte Paket-Subpfade:
 
 - `@vue-solana/nuxt/buffer-polyfill`
 - `@vue-solana/nuxt/kit`
+- `@vue-solana/nuxt/server`
 
-Das Runtime-Plugin läuft nur auf dem Client. Automatisch importierte Composables können während der SSR aufgerufen werden und liefern inaktiven Zustand, bis die Hydration den echten Client-Kontext bereitstellt. Löse RPC- und Wallet-Arbeit aus Client-Lifecycle-Hooks oder Nutzeraktionen aus.
+Die Browser-Hälfte des Runtime-Plugins ist clientseitig. Ein separates Server-Plugin installiert während der SSR einen anfragenbezogenen Kontext mit dem konfigurierten Cluster und den konfigurierten Endpoints, sodass `useSolanaRpc()` den konfigurierten Cluster statt eines fest codierten `devnet` rendert. Der Wallet-Zustand bleibt inaktiv, bis die Hydration den echten Client-Kontext bereitstellt. Löse Wallet-Arbeit aus Client-Lifecycle-Hooks oder Nutzeraktionen aus; siehe den Abschnitt „Serverseitiges RPC während der SSR" unten für Daten, die im initialen HTML vorhanden sein müssen.
 
 Auch die Registrierung des Android Mobile Wallet Adapter läuft nur auf dem Client. Auf Android Chrome und in Chrome-PWAs kann `Mobile Wallet Adapter` in derselben `useSolanaWallets()`-Liste erscheinen wie Browser-Erweiterungs-Wallets. Auf iOS-Browsern können Phantom, Solflare und Backpack über wallet-spezifische Universal Links in derselben Liste erscheinen. Native Desktop-App-Wallet-Adapter sind geplant, aber noch nicht implementiert.
+
+## Serverseitiges RPC während der SSR
+
+Eine Nuxt-Seite kann Solana-Daten auf dem Server lesen und sie mit `useAsyncData()` an die Komponente übergeben. Halte die RPC-URL und eventuelle API-Keys in der **privaten** Runtime-Config unter `solanaServer`; lege sie niemals in `runtimeConfig.public.solana` ab, das in den Browser gebündelt wird. Das Server-Utility akzeptiert nur Leseoptionen (`cluster`, `endpoint`, `wsEndpoint`, `commitment`) und entfernt `wallet`, `payer` und `payerSecretKey` zur Laufzeit.
+
+Konfiguriere den privaten Endpoint in `nuxt.config.ts` (oder über die Umgebungsvariable `NUXT_SOLANA_SERVER_ENDPOINT`):
+
+```ts
+export default defineNuxtConfig({
+  modules: ["@vue-solana/nuxt"],
+  solana: {
+    cluster: "mainnet",
+  },
+  runtimeConfig: {
+    solanaServer: {
+      // Private: this value is never bundled into the browser.
+      endpoint: process.env.SOLANA_RPC_URL,
+      commitment: "confirmed",
+    },
+  },
+});
+```
+
+Lies in einer Nitro-Server-Route nur die Felder, die die Seite braucht:
+
+```ts
+// server/api/slot.get.ts
+import { useServerSolanaClient } from "@vue-solana/nuxt/server";
+
+export default defineEventHandler(async () => {
+  const { rpc } = useServerSolanaClient();
+  const slot = await rpc.getSlot().send();
+  return { slot: slot.toString() };
+});
+```
+
+Rufe es dann während der SSR mit `useAsyncData()` ab:
+
+```vue
+<script setup lang="ts">
+const { data, refresh } = await useAsyncData("solana-slot", () =>
+  $fetch<{ slot: string }>("/api/slot"),
+);
+</script>
+
+<template>
+  <p>Slot: {{ data?.slot ?? "Loading..." }}</p>
+  <button type="button" @click="refresh()">Refresh</button>
+</template>
+```
+
+`useAsyncData()` legt das Ergebnis in die Nuxt-Payload, sodass der Client es während der Hydration nicht erneut abruft. Wandle `bigint`-Ergebnisse wie Slotnummern und Guthaben in der Server-Route in Zeichenfolgen um; nur die Felder, die du zurückgibst, sind für den Browser sichtbar. Dieses Utility ist schreibgeschützt: Wallet-Erkennung, Signierung und Prompts müssen nach der Hydration in Client-Komponenten bleiben.
 
 ## Verwandte Anleitungen
 
