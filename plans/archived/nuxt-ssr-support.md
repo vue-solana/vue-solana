@@ -43,12 +43,14 @@ Implemented:
 - `exports["./server"]` and the `src/runtime/server` build entry added; `packages/nuxt/src/module.ts` augments `RuntimeConfig.solanaServer` (shipped in `dist/module.d.ts`) and now fails fast when `wallet`, `payer`, or `payerSecretKey` appear in module options or `runtimeConfig.public.solana` instead of silently stripping them.
 - Unit coverage in `packages/nuxt/src/runtime/server.test.ts` (node env: factory config resolution, runtime field stripping, private-config read, no public-config fallback) and updated module config/integration tests for the fail-fast boundary. Direct subpath lists updated in the English and locale Nuxt package docs for export-map parity.
 
-## [ ] Phase 3 — Docs and adoption pattern
+## [x] Phase 3 — Docs and adoption pattern
 
-- [ ] English docs: add a "Server-side RPC / SSR" section to `apps/docs/content/packages/nuxt.md` and `apps/docs/content/guides/rpc-and-clusters.md`; update `getting-started.md` and `troubleshooting.md` where they currently say only "trigger RPC after hydration." Show the `useAsyncData` + `$fetch('/api/...')` + `useServerSolanaClient()` pattern and state clearly that wallet work stays client-side.
-- [ ] Mirror every heading and code-fence change into `de`, `es`, `fr`, `ja`, `ko`, `zh` in the same change set. `packages/core/src/locale-docs.test.ts` gates heading levels/order; follow the existing locale style rules in `AGENTS.md` (accented Spanish/French, `/fr` and `/ja` link prefixes, no translated identifiers).
-- [ ] Update the Nuxt package README export list and the agent skill's SSR guidance if it names the supported subpaths.
-- [ ] Do not add a runnable `/demo` panel in `apps/docs` yet: that app is pinned to the published package version. Revisit after the next release pin bump.
+Implemented:
+
+- English docs: added a "Server-Side RPC During SSR" section to `apps/docs/content/packages/nuxt.md` and `apps/docs/content/guides/rpc-and-clusters.md`, showing private `runtimeConfig.solanaServer`, `useServerSolanaClient()` from `@vue-solana/nuxt/server`, and the `useAsyncData()` + `$fetch('/api/...')` pattern. `getting-started.md` and `troubleshooting.md` now distinguish SSR data reads from client RPC/wallet work, which stays after hydration.
+- Mirrored every heading and code-fence change into `de`, `es`, `fr`, `ja`, `ko`, and `zh`. `packages/core/src/locale-docs.test.ts` passes with matching heading levels/order and code-fence counts; locale style rules from `AGENTS.md` were followed (accented Spanish/French, `/fr` and `/ja` link prefixes, no translated identifiers).
+- Updated the Nuxt package README export list/SSR caveats and the agent skill's SSR guidance to name `@vue-solana/nuxt/server`. Regenerated the tracked llms surface. No `/demo` panel was added: `apps/docs` is pinned to the published package version.
+- Added a standalone `#imports` type shim in `packages/nuxt/src/runtime/app.d.ts`, uncovered by the Phase 3 verification run, so `pnpm typecheck` passes for `@vue-solana/nuxt/server`.
 
 ## Acceptance Criteria
 

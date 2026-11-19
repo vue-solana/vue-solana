@@ -142,7 +142,7 @@ export default defineNuxtConfig({
 });
 ```
 
-The Nuxt module installs the runtime plugin on the client only and auto-imports composables from direct `@vue-solana/vue/*` subpaths. Composables are safe to call during SSR, but real RPC and wallet operations should run after hydration, such as from `onMounted()` or user actions. Nuxt `solana` options live in public runtime config, so keep them JSON-serializable.
+The Nuxt module installs its browser runtime plugin on the client only and a separate request-scoped server plugin during SSR, then auto-imports composables from direct `@vue-solana/vue/*` subpaths. Composables are safe to call during SSR and `useSolanaRpc()` renders the configured cluster, but client RPC and all wallet operations should run after hydration, such as from `onMounted()` or user actions. To render Solana data in the initial HTML, use the private `runtimeConfig.solanaServer` key and `useServerSolanaClient()` from `@vue-solana/nuxt/server` in a server route, then pass the result to the page with `useAsyncData()` — see the Server-Side RPC During SSR section in the [Nuxt package docs](/packages/nuxt). Nuxt `solana` options live in public runtime config, so keep them JSON-serializable.
 
 Direct Vue and core clients accept `payer` and `payerSecretKey` for client-sent transactions. `payerSecretKey` is a base64 64-byte Ed25519 keypair, so never put it in Nuxt public runtime config or ship a funded key to a browser. Nuxt `ModuleOptions` intentionally omits both fields, so install a client-owned `payer` in a client-only plugin with `clientPlugin: false` so the module does not install a second plugin.
 

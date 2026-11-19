@@ -47,7 +47,7 @@ export default defineNuxtConfig({
 });
 ```
 
-The Nuxt module keeps the Vue Solana plugin client-only. Auto-imported composables can be called during SSR, but avoid doing direct RPC or wallet work on the server. Trigger RPC reads from client lifecycle hooks or user actions when you need the real Solana client.
+The Nuxt module keeps the Vue Solana plugin client-only in the browser and installs a separate server plugin for SSR context, so `useSolanaRpc()` renders the configured cluster on the server. Auto-imported composables can be called during SSR, but client RPC and wallet work should run after hydration or from user actions. If a page needs Solana data in the initial HTML, put the RPC URL in private `runtimeConfig.solanaServer`, call `useServerSolanaClient()` from `@vue-solana/nuxt/server` in a server route, and pass the result to the page with `useAsyncData()` — see the Server-Side RPC During SSR section in the [Nuxt package docs](/packages/nuxt). Never put an RPC URL with credentials in `runtimeConfig.public.solana`; public config is bundled into the browser.
 
 ## `No Solana wallet is configured`
 

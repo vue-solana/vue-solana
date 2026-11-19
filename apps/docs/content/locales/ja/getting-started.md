@@ -142,7 +142,7 @@ export default defineNuxtConfig({
 });
 ```
 
-Nuxt モジュールはクライアント専用でランタイムプラグインをインストールし、`@vue-solana/vue/*` の直接サブパスからコンポーザブルを自動インポートします。コンポーザブルは SSR 中に呼び出しても安全ですが、実際の RPC やウォレットの操作は、`onMounted()` やユーザー操作などハイドレーション後に実行してください。Nuxt の `solana` オプションは public runtime config に置かれるため、JSON シリアライズ可能な状態に保ってください。
+Nuxt モジュールはブラウザ用のランタイムプラグインをクライアントにのみインストールし、SSR 中には別のリクエストスコープのサーバープラグインをインストールします。さらに、`@vue-solana/vue/*` の直接サブパスからコンポーザブルを自動 import します。コンポーザブルは SSR 中に呼び出しても安全で、`useSolanaRpc()` は設定済みのクラスターを描画します。ただし、クライアント側の RPC とすべてのウォレット操作は、`onMounted()` やユーザー操作などハイドレーション後に実行してください。Solana のデータを初期 HTML に描画するには、非公開の `runtimeConfig.solanaServer` キーと、サーバールートでの `@vue-solana/nuxt/server` の `useServerSolanaClient()` を使用し、`useAsyncData()` で結果をページに渡します。詳細は [Nuxt パッケージのドキュメント](/ja/packages/nuxt) の「SSR 中のサーバー側 RPC」を参照してください。Nuxt の `solana` オプションは public runtime config に置かれるため、JSON シリアライズ可能な状態に保ってください。
 
 直接の Vue および core のクライアントは、クライアント側で送信するトランザクション用に `payer` と `payerSecretKey` を受け付けます。`payerSecretKey` は base64 の 64 バイトの Ed25519 キーペアであるため、Nuxt の public runtime config に置いたり、資金のあるキーをブラウザに配布したりしてはいけません。Nuxt の `ModuleOptions` は意図的にこの 2 つのフィールドを省略しているので、モジュールが 2 つ目のプラグインをインストールしないよう `clientPlugin: false` を指定し、クライアント専用プラグインでクライアント所有の `payer` をインストールしてください。
 

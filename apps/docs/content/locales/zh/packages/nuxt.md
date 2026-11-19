@@ -172,9 +172,59 @@ const owner = address("PASTE_A_SOLANA_ADDRESS");
 - `@vue-solana/nuxt/kit`
 - `@vue-solana/nuxt/server`
 
-运行时插件仅在客户端运行。自动导入的 composable 可以在 SSR 期间调用，并在 hydration 提供真实客户端上下文前返回惰性状态。请从客户端生命周期钩子或用户操作触发 RPC 和钱包工作。
+运行时插件的浏览器部分仅在客户端运行。另一个服务器插件会在 SSR 期间使用配置的 cluster 和 endpoint 安装请求级 context，因此 `useSolanaRpc()` 渲染的是配置的 cluster，而不是硬编码的 `devnet`。在 hydration 提供真实的客户端 context 之前，钱包状态保持惰性。请从客户端生命周期钩子或用户操作触发钱包工作；对于必须出现在初始 HTML 中的数据，请参阅下文的「SSR 期间的服务器端 RPC」。
 
 Android Mobile Wallet Adapter 注册也只在客户端运行。在 Android Chrome 和 Chrome PWA 中，`Mobile Wallet Adapter` 可以与浏览器扩展钱包出现在同一个 `useSolanaWallets()` 列表中。在 iOS 浏览器中，Phantom、Solflare 和 Backpack 可以通过钱包专用 universal link 出现在同一个列表中。桌面原生应用钱包 adapter 已计划但尚未实现。
+
+## SSR 期间的服务器端 RPC
+
+Nuxt 页面可以在服务器上读取 Solana 数据，并通过 `useAsyncData()` 交给组件。请把 RPC URL 和任何 API key 保存在 `solanaServer` 下的**私有** runtime config 中；绝不要把它们放入会被打包到浏览器的 `runtimeConfig.public.solana`。该服务器工具只接受读取相关的选项（`cluster`、`endpoint`、`wsEndpoint`、`commitment`），并在运行时剔除 `wallet`、`payer` 和 `payerSecretKey`。
+
+```ts
+export default defineNuxtConfig({
+  modules: ["@vue-solana/nuxt"],
+  solana: {
+    cluster: "mainnet",
+  },
+  runtimeConfig: {
+    solanaServer: {
+      // Private: this value is never bundled into the browser.
+      endpoint: process.env.SOLANA_RPC_URL,
+      commitment: "confirmed",
+    },
+  },
+});
+```
+
+在 `nuxt.config.ts` 中配置私有 endpoint（或使用 `NUXT_SOLANA_SERVER_ENDPOINT` 环境变量）：
+
+```ts
+// server/api/slot.get.ts
+import { useServerSolanaClient } from "@vue-solana/nuxt/server";
+
+export default defineEventHandler(async () => {
+  const { rpc } = useServerSolanaClient();
+  const slot = await rpc.getSlot().send();
+  return { slot: slot.toString() };
+});
+```
+
+在 Nitro 服务器路由中只读取页面需要的字段：
+
+```vue
+<script setup lang="ts">
+const { data, refresh } = await useAsyncData("solana-slot", () =>
+  $fetch<{ slot: string }>("/api/slot"),
+);
+</script>
+
+<template>
+  <p>Slot: {{ data?.slot ?? "Loading..." }}</p>
+  <button type="button" @click="refresh()">Refresh</button>
+</template>
+```
+
+`useAsyncData()` 会把结果放入 Nuxt payload，因此客户端在 hydration 期间不会重新获取。请在服务器路由中把 slot 编号和余额等 `bigint` 结果转换为字符串；只有你返回的字段才会暴露给浏览器。该工具是只读的：钱包发现、签名和提示必须留在 hydration 之后的客户端组件中。
 
 ## 相关指南
 

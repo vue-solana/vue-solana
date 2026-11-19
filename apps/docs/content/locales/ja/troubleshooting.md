@@ -47,7 +47,7 @@ export default defineNuxtConfig({
 });
 ```
 
-Nuxt モジュールは Vue Solana プラグインをクライアント専用に保ちます。自動インポートされるコンポーザブルは SSR 中にも呼び出せますが、サーバー上で直接 RPC やウォレットの操作を行わないでください。実際の Solana クライアントが必要な場合は、クライアントのライフサイクルフックまたはユーザー操作から RPC の読み取りを開始してください。
+Nuxt モジュールはブラウザ内で Vue Solana プラグインをクライアント専用に保ち、SSR のコンテキスト用に別のサーバープラグインをインストールするため、`useSolanaRpc()` はサーバー上で設定済みのクラスターを描画します。自動 import されるコンポーザブルは SSR 中にも呼び出せますが、クライアントの RPC とウォレットの処理は、ハイドレーション後またはユーザー操作から実行してください。ページに初期 HTML の Solana データが必要な場合は、RPC の URL を非公開の `runtimeConfig.solanaServer` に置き、サーバールートで `@vue-solana/nuxt/server` の `useServerSolanaClient()` を呼び出し、`useAsyncData()` で結果をページに渡します。詳細は [Nuxt パッケージのドキュメント](/ja/packages/nuxt) の「SSR 中のサーバー側 RPC」を参照してください。認証情報を含む RPC の URL を `runtimeConfig.public.solana` に絶対に置かないでください。public config はブラウザにバンドルされます。
 
 ## `No Solana wallet is configured`
 

@@ -172,9 +172,61 @@ Direct package subpath:
 - `@vue-solana/nuxt/kit`
 - `@vue-solana/nuxt/server`
 
-Runtime plugin은 client-only입니다. Auto-imported composable은 SSR 중에도 호출할 수 있으며 hydration이 실제 client context를 제공하기 전까지 inert state를 반환합니다. RPC와 wallet 작업은 client lifecycle hook 또는 사용자 액션에서 트리거하세요.
+runtime plugin의 브라우저 부분은 client-only입니다. 별도의 server plugin이 SSR 중에 설정된 cluster와 endpoint로 요청별 context를 설치하므로 `useSolanaRpc()`는 하드코딩된 `devnet` 대신 설정된 cluster를 렌더링합니다. wallet state는 hydration이 실제 client context를 제공할 때까지 inert 상태로 유지됩니다. wallet 작업은 client lifecycle hook이나 사용자 액션에서 트리거하세요. 초기 HTML에 있어야 하는 데이터는 아래의 SSR 중 서버 측 RPC 섹션을 참고하세요.
 
 Android Mobile Wallet Adapter 등록도 client에서만 실행됩니다. Android Chrome과 Chrome PWA에서는 `Mobile Wallet Adapter`가 browser extension wallet과 같은 `useSolanaWallets()` 목록에 나타날 수 있습니다. iOS browser에서는 Phantom, Solflare, Backpack이 wallet-specific universal link를 통해 같은 목록에 나타날 수 있습니다. Desktop native app wallet adapter는 계획되어 있지만 아직 구현되지 않았습니다.
+
+## SSR 중 서버 측 RPC
+
+Nuxt 페이지는 서버에서 Solana 데이터를 읽고 `useAsyncData()`로 컴포넌트에 전달할 수 있습니다. RPC URL과 API key는 **private** runtime config의 `solanaServer` 아래에 두세요. 브라우저에 번들되는 `runtimeConfig.public.solana`에는 절대 넣지 마세요. server 유틸리티는 read-side 옵션(`cluster`, `endpoint`, `wsEndpoint`, `commitment`)만 받고 런타임에 `wallet`, `payer`, `payerSecretKey`를 제거합니다.
+
+`nuxt.config.ts`에서 private endpoint를 설정하세요(또는 `NUXT_SOLANA_SERVER_ENDPOINT` 환경 변수 사용):
+
+```ts
+export default defineNuxtConfig({
+  modules: ["@vue-solana/nuxt"],
+  solana: {
+    cluster: "mainnet",
+  },
+  runtimeConfig: {
+    solanaServer: {
+      // Private: this value is never bundled into the browser.
+      endpoint: process.env.SOLANA_RPC_URL,
+      commitment: "confirmed",
+    },
+  },
+});
+```
+
+Nitro server route에서 페이지에 필요한 필드만 읽으세요:
+
+```ts
+// server/api/slot.get.ts
+import { useServerSolanaClient } from "@vue-solana/nuxt/server";
+
+export default defineEventHandler(async () => {
+  const { rpc } = useServerSolanaClient();
+  const slot = await rpc.getSlot().send();
+  return { slot: slot.toString() };
+});
+```
+
+그다음 SSR 중에 `useAsyncData()`로 가져오세요:
+
+```vue
+<script setup lang="ts">
+const { data, refresh } = await useAsyncData("solana-slot", () =>
+  $fetch<{ slot: string }>("/api/slot"),
+);
+</script>
+
+<template>
+  <p>Slot: {{ data?.slot ?? "Loading..." }}</p>
+  <button type="button" @click="refresh()">Refresh</button>
+</template>
+```
+
+`useAsyncData()`는 결과를 Nuxt payload에 넣어 client가 hydration 중에 다시 가져오지 않게 합니다. slot 번호나 balance 같은 `bigint` 결과는 server route에서 문자열로 변환하세요. 반환한 필드만 브라우저에 노출됩니다. 이 유틸리티는 read-only입니다: wallet discovery, signing, prompt는 hydration 이후 client 컴포넌트에 남겨 두세요.
 
 ## 관련 가이드
 
