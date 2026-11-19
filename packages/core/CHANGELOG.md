@@ -1,5 +1,11 @@
 # @vue-solana/core
 
+## 4.4.0
+
+### Minor Changes
+
+- a2ba851: Add Nuxt SSR server RPC support: a request-scoped server context with the configured cluster, a read-only `@vue-solana/nuxt/server` client backed by private `runtimeConfig.solanaServer`, and docs for the `useAsyncData()` + Nitro route adoption pattern.
+
 ## 4.3.0
 
 ### Minor Changes
