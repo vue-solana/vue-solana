@@ -35,17 +35,13 @@ Implemented:
 
 Build entries: `src/runtime/server-plugin` was added to `packages/nuxt/build.config.ts`, `scripts/check-export-map.ts`, and `packages/core/src/export-map-docs.test.ts` (runtime plugins are registered by path string, so they need a build entry but no `exports` subpath).
 
-## [ ] Phase 2 — `@vue-solana/nuxt/server` RPC utilities
+## [x] Phase 2 — `@vue-solana/nuxt/server` RPC utilities
 
-The actual roadmap feature. Reads only; no wallet, no signing, no payer.
+Implemented:
 
-- [ ] New build entry `src/runtime/server.ts` and `exports["./server"]` in `packages/nuxt/package.json` (`types` → `./dist/runtime/server.d.ts`, `import` → `./dist/runtime/server.mjs`). `scripts/check-export-map.ts` derives the entry from the exports map, so no script change is needed; keep the existing `!dist/**/*.d.mts` tarball exclusion.
-- [ ] Pure factory `createServerSolanaClient(config)` built on core `createSolanaClient()` / `createSolanaContext()`. Accept cluster/endpoint/wsEndpoint/commitment only; omit `payer`, `payerSecretKey`, and `wallet` from the option type and strip them at runtime if a plain object is passed.
-- [ ] Nuxt-aware `useServerSolanaClient()` that reads a **private** `runtimeConfig.solanaServer` key. Declare that augmentation in the shipped module entry (same pattern as `module.ts:25-29`), with `import type {} from "nuxt/schema"` so it reaches `dist/module.d.ts`.
-  - Do not merge `solanaServer` into `public.solana`.
-  - Add a build-time check that fails fast if `payer`, `payerSecretKey`, or `wallet` appear in `runtimeConfig.public.solana` or on the module options, rather than relying on the current silent strip.
-- [ ] Add unit tests for the factory (config resolution, field stripping) and for private/public config separation. Keep the test in `node` vitest environment if it touches Kit client construction.
-- [ ] Do not add a dependency. Reuse `@vue-solana/core` subpaths through the existing `@vue-solana/vue` dependency; never add a granular `@solana/*` package.
+- `packages/nuxt/src/runtime/server.ts` — read-only `createServerSolanaClient(config)` factory (cluster/endpoint/wsEndpoint/commitment only; `wallet`/`payer`/`payerSecretKey` omitted from the type and stripped at runtime) built on `@vue-solana/vue/kit`'s `createSolanaClient()` with no new dependency, plus Nuxt-aware `useServerSolanaClient()` that reads the private `runtimeConfig.solanaServer` key.
+- `exports["./server"]` and the `src/runtime/server` build entry added; `packages/nuxt/src/module.ts` augments `RuntimeConfig.solanaServer` (shipped in `dist/module.d.ts`) and now fails fast when `wallet`, `payer`, or `payerSecretKey` appear in module options or `runtimeConfig.public.solana` instead of silently stripping them.
+- Unit coverage in `packages/nuxt/src/runtime/server.test.ts` (node env: factory config resolution, runtime field stripping, private-config read, no public-config fallback) and updated module config/integration tests for the fail-fast boundary. Direct subpath lists updated in the English and locale Nuxt package docs for export-map parity.
 
 ## [ ] Phase 3 — Docs and adoption pattern
 

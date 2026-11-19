@@ -171,6 +171,7 @@ Sous-chemins directs du package :
 
 - `@vue-solana/nuxt/buffer-polyfill`
 - `@vue-solana/nuxt/kit`
+- `@vue-solana/nuxt/server`
 
 Le plugin runtime est client-only. Les composables auto-importés peuvent être appelés pendant le SSR et renvoient un état inerte jusqu'à ce que l'hydratation fournisse le vrai contexte client. Déclenchez les opérations RPC et wallet depuis les hooks de cycle de vie client ou les actions utilisateur.
 

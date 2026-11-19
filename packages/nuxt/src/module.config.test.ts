@@ -52,47 +52,48 @@ describe("Nuxt module configuration", () => {
     expect(publicConfig.solana).toEqual({ cluster: "testnet", autoConnect: false });
   });
 
-  it("omits non-serializable wallet adapters from public runtime config", async () => {
+  it("fails fast when wallet or signer fields appear in module options", async () => {
     const module = (await import("./module")).default as unknown as ModuleUnderTest;
-    const wallet = { connect: vi.fn() };
-    const publicConfig: Record<string, unknown> = {};
 
-    setupModule(module, { cluster: "devnet", wallet }, { publicConfig });
+    expect(() =>
+      setupModule(module, { cluster: "devnet", wallet: { connect: vi.fn() } } as never, {}),
+    ).toThrow(/`wallet` is not allowed in solana module options/);
 
-    expect(publicConfig.solana).toEqual({
-      cluster: "devnet",
-      autoConnect: false,
-    });
+    expect(() =>
+      setupModule(module, { cluster: "devnet", payer: { address: "signer" } } as never, {}),
+    ).toThrow(/`payer` is not allowed in solana module options/);
+
+    expect(() =>
+      setupModule(module, { cluster: "devnet", payerSecretKey: "secret" } as never, {}),
+    ).toThrow(/`payerSecretKey` is not allowed in solana module options/);
   });
 
-  it("omits client signer options from public runtime config", async () => {
+  it("fails fast when wallet or signer fields appear in runtimeConfig.public.solana", async () => {
     const module = (await import("./module")).default as unknown as ModuleUnderTest;
-    const publicConfig: Record<string, unknown> = {};
 
-    setupModule(
-      module,
-      { cluster: "devnet", payer: { address: "signer" }, payerSecretKey: "secret" },
-      { publicConfig },
-    );
+    expect(() =>
+      setupModule(
+        module,
+        { cluster: "devnet" },
+        { publicConfig: { solana: { payerSecretKey: "secret" } } },
+      ),
+    ).toThrow(/`payerSecretKey` is not allowed in runtimeConfig\.public\.solana/);
 
-    expect(publicConfig.solana).toEqual({ cluster: "devnet", autoConnect: false });
-  });
+    expect(() =>
+      setupModule(
+        module,
+        { cluster: "devnet" },
+        { publicConfig: { solana: { payer: { address: "signer" } } } },
+      ),
+    ).toThrow(/`payer` is not allowed in runtimeConfig\.public\.solana/);
 
-  it("omits client signer options a user wrote into runtimeConfig.public.solana", async () => {
-    const module = (await import("./module")).default as unknown as ModuleUnderTest;
-    const publicConfig: Record<string, unknown> = {
-      // Nuxt resolves a hand-written `runtimeConfig` before module setup, so it
-      // reaches the same merge as the module options and must be sanitized too.
-      solana: {
-        cluster: "devnet",
-        payerSecretKey: "secret",
-        wallet: { connect: vi.fn() },
-      },
-    };
-
-    setupModule(module, { cluster: "devnet" }, { publicConfig });
-
-    expect(publicConfig.solana).toEqual({ cluster: "devnet", autoConnect: false });
+    expect(() =>
+      setupModule(
+        module,
+        { cluster: "devnet" },
+        { publicConfig: { solana: { wallet: { connect: vi.fn() } } } },
+      ),
+    ).toThrow(/`wallet` is not allowed in runtimeConfig\.public\.solana/);
   });
 
   it("serializes reconnect and native wallet options into public runtime config", async () => {

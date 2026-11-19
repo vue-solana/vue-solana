@@ -170,6 +170,7 @@ Direct package subpath:
 
 - `@vue-solana/nuxt/buffer-polyfill`
 - `@vue-solana/nuxt/kit`
+- `@vue-solana/nuxt/server`
 
 Runtime plugin은 client-only입니다. Auto-imported composable은 SSR 중에도 호출할 수 있으며 hydration이 실제 client context를 제공하기 전까지 inert state를 반환합니다. RPC와 wallet 작업은 client lifecycle hook 또는 사용자 액션에서 트리거하세요.
 

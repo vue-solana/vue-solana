@@ -6,6 +6,7 @@ export default defineBuildConfig({
     "src/runtime/buffer-polyfill",
     "src/runtime/kit",
     "src/runtime/plugin",
+    "src/runtime/server",
     "src/runtime/server-plugin",
   ],
   declaration: true,
@@ -18,6 +19,7 @@ export default defineBuildConfig({
   },
   externals: [
     "#app",
+    "#imports",
     "@nuxt/kit",
     "@nuxt/schema",
     /^@vue-solana\/core(?:\/.*)?$/,

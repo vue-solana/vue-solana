@@ -171,6 +171,7 @@ const owner = address("PASTE_A_SOLANA_ADDRESS");
 
 - `@vue-solana/nuxt/buffer-polyfill`
 - `@vue-solana/nuxt/kit`
+- `@vue-solana/nuxt/server`
 
 ランタイムプラグインはクライアント専用です。自動 import されるコンポーザブルは SSR 中にも呼び出せ、ハイドレーションによって実際のクライアントコンテキストが提供されるまでは不活性な状態を返します。RPC とウォレットの処理は、クライアントのライフサイクルフックまたはユーザー操作からトリガーしてください。
 

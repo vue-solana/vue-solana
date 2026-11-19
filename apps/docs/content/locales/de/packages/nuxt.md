@@ -171,6 +171,7 @@ Direkte Paket-Subpfade:
 
 - `@vue-solana/nuxt/buffer-polyfill`
 - `@vue-solana/nuxt/kit`
+- `@vue-solana/nuxt/server`
 
 Das Runtime-Plugin läuft nur auf dem Client. Automatisch importierte Composables können während der SSR aufgerufen werden und liefern inaktiven Zustand, bis die Hydration den echten Client-Kontext bereitstellt. Löse RPC- und Wallet-Arbeit aus Client-Lifecycle-Hooks oder Nutzeraktionen aus.
 

@@ -134,14 +134,10 @@ describe("real defineNuxtModule setup", () => {
     expect(nuxt.options.runtimeConfig.public.solana).toMatchObject({ autoConnect: true });
   });
 
-  it("strips wallet/signer fields from public runtime config", async () => {
-    const nuxt = await loadWithModule({}, { solana: { payerSecretKey: "SECRET", wallet: {} } });
-
-    const solana = nuxt.options.runtimeConfig.public.solana as Record<string, unknown>;
-
-    expect(solana).not.toHaveProperty("payerSecretKey");
-    expect(solana).not.toHaveProperty("wallet");
-    expect(solana).not.toHaveProperty("payer");
+  it("fails fast when public runtime config includes signer or wallet fields", async () => {
+    await expect(
+      loadWithModule({}, { solana: { payerSecretKey: "SECRET", wallet: {} } }),
+    ).rejects.toThrow(/is not allowed in runtimeConfig\.public\.solana/);
   });
 
   it("tolerates a non-object public.solana config", async () => {
