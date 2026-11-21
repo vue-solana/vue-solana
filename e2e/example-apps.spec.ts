@@ -12,6 +12,8 @@ const appNames: Record<string, string> = {
   nuxt: "Nuxt Solana Test App",
 };
 
+const HISTORY_PLACEHOLDER_ADDRESS = "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin";
+
 // Mock the websocket too: the dashboard's live-data panels subscribe on load,
 // and an unmocked socket reaches real devnet, whose 503s on CI fail
 // `expectNoPageErrors`. Specs that need the harness re-register before
@@ -406,6 +408,46 @@ test("simulates a demo transaction without submitting it", async ({ page }) => {
     await expect(page.getByTestId("simulate-fee")).not.toHaveText("—");
     await expect(page.getByTestId("simulate-units")).not.toHaveText("—");
   }
+});
+
+test("lists transaction history and appends older pages", async ({ page }) => {
+  if (isRealRpcRun()) {
+    test.skip(true, "History pagination requires the deterministic RPC mock");
+  }
+
+  await registerMockWallets(page);
+  await page.goto("/");
+  await waitForRpcConnected(page);
+
+  await expect(page.getByTestId("history-panel")).toBeVisible();
+  await expect(page.getByTestId("history-source")).toContainText(HISTORY_PLACEHOLDER_ADDRESS);
+  await expect(page.getByTestId("history-status")).toHaveText("loaded");
+  await expect(page.getByTestId("history-empty")).toHaveText("No transactions yet");
+  await expect(page.getByTestId("history-load-more")).toBeDisabled();
+
+  await page.getByTestId("load-wallets").click();
+  await page.getByRole("button", { name: /Mock Signer Wallet/ }).click();
+  await page.getByTestId("connect-wallet").click();
+
+  await expect(page.getByTestId("history-source")).toHaveText("11111111111111111111111111111111");
+  await expect(page.getByTestId("history-empty")).toHaveText("1 transaction loaded");
+  await expect(page.getByTestId("history-item")).toHaveCount(1);
+  await expect(page.getByTestId("history-item").first()).toContainText("slot 123456");
+  await expect(page.getByTestId("history-item").first()).toContainText("success");
+  await expect(page.getByTestId("history-load-more")).toBeEnabled();
+
+  await page.getByTestId("history-load-more").click();
+
+  await expect(page.getByTestId("history-item")).toHaveCount(2);
+  await expect(page.getByTestId("history-empty")).toHaveText("2 transactions loaded");
+  // The mock returns one item per requested page, so a full page still leaves
+  // `hasMore` true even though the next page is empty.
+  await expect(page.getByTestId("history-load-more")).toBeEnabled();
+
+  await page.getByTestId("history-load-more").click();
+
+  await expect(page.getByTestId("history-item")).toHaveCount(2);
+  await expect(page.getByTestId("history-load-more")).toBeDisabled();
 });
 
 test("creates a Solana Pay request, renders a QR code, and verifies settlement", async ({

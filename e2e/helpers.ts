@@ -3,6 +3,9 @@ import { expect, type Page } from "@playwright/test";
 const MOCK_BLOCKHASH = "5v2p4R5H6J7K8L9M1N2P3Q4R5S6T7U8V9W1X2Y3Z4a5b";
 const MOCK_SIGNATURE =
   "2Ana1pUpv2ZbMVkwF5FXapYeBEjdxDatLn7nvJkhgTSXbs59SyZSx866bXirPgj8QQVB57uxHJBG1YFvkRbFj4T";
+const MOCK_HISTORY_SIGNATURE_2 =
+  "2Ana1pUpv2ZbMVkwF5FXapYeBEjdxDatLn7nvJkhgTSXbs59SyZSx866bXirPgj8QQVB57uxHJBG1YFvkRbFj4U";
+const MOCK_WALLET_ADDRESS = "11111111111111111111111111111111";
 
 export function isRealRpcRun() {
   return process.env.E2E_REAL_RPC === "true";
@@ -358,9 +361,39 @@ function createRpcResponse(id: string | number, method?: string, params?: unknow
   }
 
   if (method === "getSignaturesForAddress") {
-    // Solana Pay settlement checks poll this for the generated reference. An
-    // empty array is "no payment yet", which is what the example panel expects
-    // from the mocks.
+    const [addressArgument, config] = Array.isArray(params)
+      ? [params[0], params[1]]
+      : [
+          (params as { address?: unknown } | undefined)?.address,
+          (params as { config?: Record<string, unknown> } | undefined)?.config,
+        ];
+    const before = (config as { before?: unknown } | undefined)?.before;
+
+    // The activity panel reads the mock wallet address one signature at a
+    // time. Solana Pay polls this method with a generated reference instead;
+    // an empty array remains "no payment yet" for that flow.
+    if (addressArgument === MOCK_WALLET_ADDRESS) {
+      const signature =
+        before === MOCK_SIGNATURE ? MOCK_HISTORY_SIGNATURE_2 : before ? null : MOCK_SIGNATURE;
+
+      if (signature) {
+        return {
+          jsonrpc: "2.0",
+          id,
+          result: [
+            {
+              signature,
+              slot: 123456,
+              blockTime: 1_700_000_000,
+              err: null,
+              memo: "history memo",
+              confirmationStatus: "finalized",
+            },
+          ],
+        };
+      }
+    }
+
     return { jsonrpc: "2.0", id, result: [] };
   }
 

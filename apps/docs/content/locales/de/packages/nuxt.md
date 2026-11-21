@@ -96,6 +96,7 @@ Das Modul importiert diese Composables aus direkten `@vue-solana/vue/*`-Subpfade
 - `useSolanaTransactionConfirmation(options?)`: bestätigt eine bestehende Transaktionssignatur.
 - `useSolanaSignatureStatus(signature, options?)`: liest, pollt oder abonniert den Signaturstatus.
 - `useSolanaSimulateTransaction()`: simuliert rohe Wire-Transaktionsbytes, ohne sie zu übermitteln, und stellt normalisierte Fehler, Logs, Guthabenänderungen und geladene Adressen bereit.
+- `useSolanaTransactionHistory(addressSource, options?)`: listet paginierte Signaturmetadaten für eine Adresse, ohne Transaktionsinhalte abzurufen.
 - `useSolanaSignMessage()`: signiert Off-Chain-Authentifizierungs- oder Besitz-Challenge-Nachrichten.
 - `useSolanaWalletAccountMessageSigner()`: liefert einen Kit-`MessageModifyingSigner` für ein Wallet-Konto.
 - `useSolanaWalletAccountTransactionSigner()`: liefert einen Kit-`TransactionModifyingSigner` für ein Wallet-Konto.

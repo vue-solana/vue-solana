@@ -96,6 +96,7 @@ Le module auto-importe ces composables depuis les sous-chemins directs `@vue-sol
 - `useSolanaTransactionConfirmation(options?)`: confirme la signature d'une transaction existante.
 - `useSolanaSignatureStatus(signature, options?)`: lit, interroge périodiquement ou suit par abonnement le statut d'une signature.
 - `useSolanaSimulateTransaction()`: simule des octets de transaction brute au format wire sans les soumettre et expose des erreurs, journaux, changements de solde et adresses chargés normalisés.
+- `useSolanaTransactionHistory(addressSource, options?)` : liste les métadonnées de signature paginées d'une adresse sans récupérer les corps des transactions.
 - `useSolanaSignMessage()`: signe des messages d'authentification hors chaîne ou de preuve de propriété.
 - `useSolanaWalletAccountMessageSigner()` : renvoie un `MessageModifyingSigner` Kit pour un compte de wallet.
 - `useSolanaWalletAccountTransactionSigner()` : renvoie un `TransactionModifyingSigner` Kit pour un compte de wallet.

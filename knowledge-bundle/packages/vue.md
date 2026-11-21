@@ -60,6 +60,7 @@ Available package subpaths:
 - `@vue-solana/vue/useTransactionConfirmation`
 - `@vue-solana/vue/useSignatureStatus`
 - `@vue-solana/vue/useSimulateTransaction`
+- `@vue-solana/vue/useTransactionHistory`
 - `@vue-solana/vue/useSignMessage`
 - `@vue-solana/vue/useSignAndSendTransaction`
 - `@vue-solana/vue/useTokenAccounts`
@@ -354,6 +355,27 @@ Returns:
 - `reset()`
 
 A new execution aborts the previous one; the composable also aborts in-flight work when its Vue scope is disposed. Missing `rpc.simulateTransaction` throws `MISSING_CLIENT_CAPABILITY` at setup.
+
+## `useTransactionHistory()`
+
+Lists signature metadata for a reactive address source without fetching parsed transaction bodies or requiring a connected wallet or `payer`.
+
+```ts
+const { data, items, hasMore, status, loading, loadingMore, error, refresh, loadMore, reset } =
+  useTransactionHistory(address);
+
+await refresh();
+if (hasMore.value) await loadMore();
+```
+
+Returns:
+
+- `data`: `TransactionHistoryResult | null`; `items` and `hasMore` are computed aliases.
+- `status`: `idle`, `loading`, `loaded`, or `error`
+- `loading`, `loadingMore`, `error`
+- `refresh()`, `loadMore()`, `reset()`
+
+`refresh()` replaces page 1 and supersedes and aborts in-flight work. `loadMore()` appends the next older page using `nextBefore` and is a no-op without a cursor. Address, `limit`, `commitment`, and `until` changes reload page 1; scope disposal aborts pending requests. Missing `rpc.getSignaturesForAddress` throws `MISSING_CLIENT_CAPABILITY` at setup. In Nuxt, use `useSolanaTransactionHistory()`.
 
 ## `useSignMessage()`
 

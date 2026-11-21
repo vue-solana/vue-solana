@@ -155,6 +155,7 @@ import { useWallet } from "@vue-solana/vue/useWallet";
 - `@vue-solana/vue/useWallets`
 - `@vue-solana/vue/useTransaction`
 - `@vue-solana/vue/useTransactionConfirmation`
+- `@vue-solana/vue/useTransactionHistory`
 - `@vue-solana/vue/useSignatureStatus`
 - `@vue-solana/vue/useSimulateTransaction`
 - `@vue-solana/vue/useSignMessage`
@@ -770,6 +771,21 @@ async function preview() {
 ```
 
 `status` は `idle`、`simulating`、`simulated`、`error` を遷移し、新しいプレビューを開始すると前のプレビューが中止されます。Nuxt で自動 import されるエイリアスは `useSolanaSimulateTransaction()` です。
+
+## トランザクション履歴
+
+`useTransactionHistory(addressSource, options?)` は、トランザクション本文を取得せずに、リアクティブなアドレスの署名メタデータを一覧します。`data`、便宜上の別名 `items` と `hasMore`、`status`、`loading`、`loadingMore`、`error`、`refresh()`、`loadMore()`、`reset()` を公開します。`refresh()` は最初のページを置き換えて進行中のリクエストを破棄し、`loadMore()` は `nextBefore` を使って次の古いページを追加します。接続済みウォレットや `payer` は必要ありません。
+
+```vue
+<script setup lang="ts">
+import { useTransactionHistory } from "@vue-solana/vue/useTransactionHistory";
+
+const { data, items, hasMore, loading, loadingMore, error, refresh, loadMore } =
+  useTransactionHistory(walletAddress);
+</script>
+```
+
+`status` は `idle`、`loading`、`loaded`、`error` を遷移します。アドレスソースや実効的な `limit`、`commitment`、`until` の変更は新しい最初のページを開始し、スコープの破棄時に進行中のリクエストを中止します。Nuxt では自動インポートされる別名は `useSolanaTransactionHistory()` です。
 
 ## バッチトランザクション
 

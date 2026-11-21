@@ -146,6 +146,7 @@ import { parseAddress } from "@vue-solana/core/address";
 import { address, lamports, type Address, type Commitment, type Rpc, type SolanaClient, type SolanaRpcApi } from "@vue-solana/core/kit";
 import { extendClient, generateKeyPairSigner, summarizeTransactionPlanResult, type AccountRole, type Instruction, type TransactionPlanResult } from "@vue-solana/core/kit";
 import { getTokenAccount, getTokenAccountsByOwner, getTokenBalance, type TokenAccountInfo } from "@vue-solana/core/token-accounts";
+import { getTransactionHistory, type TransactionHistoryResult } from "@vue-solana/core/transaction-history";
 
 installSolanaBufferPolyfill();
 
@@ -156,6 +157,8 @@ const client: SolanaClient = context.client;
 const rpc: Rpc<SolanaRpcApi> = context.client.rpc;
 const parsed: Address | null = parseAddress("11111111111111111111111111111111");
 const commitment: Commitment = "confirmed";
+const historyReader: typeof getTransactionHistory = getTransactionHistory;
+const historyResult: Promise<TransactionHistoryResult> | undefined = undefined;
 
 `,
   });
@@ -179,6 +182,7 @@ import { installSolanaBufferPolyfill, Buffer } from "@vue-solana/vue/buffer-poly
 import { useSolanaClient } from "@vue-solana/vue/useSolanaClient";
 import { useConnection } from "@vue-solana/vue/useConnection";
 import { useWallet } from "@vue-solana/vue/useWallet";
+import { useTransactionHistory } from "@vue-solana/vue/useTransactionHistory";
 import { createSolanaClient, address, extendClient, generateKeyPairSigner, summarizeTransactionPlanResult, type AccountRole, type Address, type Instruction, type SolanaClient, type TransactionPlanResult } from "@vue-solana/vue/kit";
 
 installSolanaBufferPolyfill();
@@ -192,7 +196,8 @@ export default defineComponent({
     const { client: injectedClient, rpc } = useSolanaClient();
     const connection = useConnection();
     const wallet = useWallet();
-    return { injectedClient, rpc, connection, wallet };
+    const history = useTransactionHistory(publicKey);
+    return { injectedClient, rpc, connection, wallet, history };
   },
 });
 

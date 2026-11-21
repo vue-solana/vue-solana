@@ -155,6 +155,7 @@ Direkte Paket-Subpfade:
 - `@vue-solana/vue/useWallets`
 - `@vue-solana/vue/useTransaction`
 - `@vue-solana/vue/useTransactionConfirmation`
+- `@vue-solana/vue/useTransactionHistory`
 - `@vue-solana/vue/useSignatureStatus`
 - `@vue-solana/vue/useSimulateTransaction`
 - `@vue-solana/vue/useSignMessage`
@@ -770,6 +771,21 @@ async function preview() {
 ```
 
 `status` wandert durch `idle`, `simulating`, `simulated` und `error`; eine neue Prüfung bricht die vorherige ab. In Nuxt lautet der automatisch importierte Alias `useSolanaSimulateTransaction()`.
+
+## Transaktionsverlauf
+
+`useTransactionHistory(addressSource, options?)` listet Signaturmetadaten für eine reaktive Adresse, ohne Transaktionsinhalte abzurufen. Es stellt `data`, die Komfort-Aliase `items` und `hasMore`, `status`, `loading`, `loadingMore`, `error`, `refresh()`, `loadMore()` und `reset()` bereit. `refresh()` ersetzt die erste Seite und bricht laufende Anfragen ab; `loadMore()` hängt die nächste ältere Seite mit `nextBefore` an. Ein verbundenes Wallet oder ein `payer` ist nicht erforderlich.
+
+```vue
+<script setup lang="ts">
+import { useTransactionHistory } from "@vue-solana/vue/useTransactionHistory";
+
+const { data, items, hasMore, loading, loadingMore, error, refresh, loadMore } =
+  useTransactionHistory(walletAddress);
+</script>
+```
+
+`status` durchläuft `idle`, `loading`, `loaded` und `error`. Eine Änderung der Adressquelle oder des wirksamen `limit`, `commitment` oder `until` startet eine neue erste Seite; beim Auflösen des Scopes werden laufende Anfragen abgebrochen. In Nuxt lautet der automatisch importierte Alias `useSolanaTransactionHistory()`.
 
 ## Batch-Transaktionen
 

@@ -39,6 +39,7 @@ export default defineBuildConfig({
     "src/useTrackedData",
     "src/useTransaction",
     "src/useTransactionConfirmation",
+    "src/useTransactionHistory",
     "src/useWallet",
     "src/useWalletAccountMessageSigner",
     "src/useWalletAccountTransactionSendingSigner",

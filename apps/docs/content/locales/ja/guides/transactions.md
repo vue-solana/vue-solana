@@ -58,6 +58,27 @@ await execute(transaction, { replaceRecentBlockhash: true });
 
 `useSimulateTransaction()` は同じ結果を `data` として公開し、`status` の値は `idle`、`simulating`、`simulated`、`error` です。共通のアクション状態パターンに従い、`payer` は必要ありません。Nuxt では、import せずに `useSolanaSimulateTransaction()` を呼び出してください。
 
+## トランザクション履歴
+
+解析済みトランザクションを取得せずにアドレスで何が起きたかを一覧するには、`@vue-solana/core/transaction-history` の `getTransactionHistory()` を使います。各項目は署名メタデータで、`signature`、`slot`、任意の `blockTime`、`err`、任意の `memo`、任意の `confirmationStatus` です。null ではない `err` はデータとして返された失敗したトランザクションです。ページが一杯になると `hasMore` が true になり `nextBefore` が公開されるので、それを `before` として渡すと古いトランザクションを読み込めます。
+
+```ts
+import { getTransactionHistory } from "@vue-solana/core/transaction-history";
+import { useTransactionHistory } from "@vue-solana/vue/useTransactionHistory";
+
+const page = await getTransactionHistory(client, address, { limit: 50 });
+const older = page.nextBefore
+  ? await getTransactionHistory(client, address, { before: page.nextBefore, limit: 50 })
+  : null;
+
+// Inside a Vue component setup:
+const { items, hasMore, loadingMore, refresh, loadMore } = useTransactionHistory(address);
+await refresh();
+if (hasMore.value) await loadMore();
+```
+
+`useTransactionHistory()` は ref または getter のアドレスを監視し、古いリクエストを破棄し、スコープ破棄時に進行中のリクエストを中止します。`status` は `idle`、`loading`、`loaded`、`error` です。Nuxt では import せずに `useSolanaTransactionHistory()` を呼び出してください。
+
 ## 署名を確認する
 
 送信した署名がコミットメントレベルに到達するまで待つ必要がある場合は、`confirmTransactionSignature()` を使用してください。

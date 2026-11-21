@@ -6,6 +6,7 @@ export * from "./kit";
 export * from "./rpc";
 export * from "./token-accounts";
 export * from "./transaction";
+export * from "./transaction-history";
 export * from "./timeout";
 export * from "./types";
 export * from "./wallet";

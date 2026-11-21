@@ -153,6 +153,7 @@ Subpaths directos del paquete:
 - `@vue-solana/vue/useWallets`
 - `@vue-solana/vue/useTransaction`
 - `@vue-solana/vue/useTransactionConfirmation`
+- `@vue-solana/vue/useTransactionHistory`
 - `@vue-solana/vue/useSignatureStatus`
 - `@vue-solana/vue/useSimulateTransaction`
 - `@vue-solana/vue/useSignMessage`
@@ -769,6 +770,21 @@ async function preview() {
 ```
 
 `status` pasa por `idle`, `simulating`, `simulated` y `error`; iniciar una nueva previsualización cancela la anterior. En Nuxt, el alias autoimportado es `useSolanaSimulateTransaction()`.
+
+## Historial de transacciones
+
+`useTransactionHistory(addressSource, options?)` enumera metadatos de firmas de una dirección reactiva sin obtener cuerpos de transacciones. Expone `data`, los alias convenientes `items` y `hasMore`, `status`, `loading`, `loadingMore`, `error`, `refresh()`, `loadMore()` y `reset()`. `refresh()` reemplaza la primera página e invalida las solicitudes en curso; `loadMore()` añade la siguiente página anterior usando `nextBefore`. No requiere una wallet conectada ni un `payer`.
+
+```vue
+<script setup lang="ts">
+import { useTransactionHistory } from "@vue-solana/vue/useTransactionHistory";
+
+const { data, items, hasMore, loading, loadingMore, error, refresh, loadMore } =
+  useTransactionHistory(walletAddress);
+</script>
+```
+
+`status` pasa por `idle`, `loading`, `loaded` y `error`. Cambiar la fuente de la dirección o el `limit`, `commitment` o `until` efectivo inicia una nueva primera página; al destruir el scope se abortan las solicitudes en curso. En Nuxt, el alias autoimportado es `useSolanaTransactionHistory()`.
 
 ## Transacciones en lote
 

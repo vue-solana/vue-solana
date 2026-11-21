@@ -19,6 +19,7 @@ export default defineBuildConfig({
     "src/timeout",
     "src/token-accounts",
     "src/transaction",
+    "src/transaction-history",
     "src/types",
     "src/wallet",
     "src/wallet-standard",

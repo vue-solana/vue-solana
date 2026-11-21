@@ -58,6 +58,27 @@ await execute(transaction, { replaceRecentBlockhash: true });
 
 `useSimulateTransaction()` liefert dasselbe Ergebnis als `data`, mit den `status`-Werten `idle`, `simulating`, `simulated` und `error`. Es folgt dem gemeinsamen Muster für Aktionszustände und erfordert keinen `payer`. In Nuxt rufe `useSolanaSimulateTransaction()` ohne Import auf.
 
+## Transaktionsverlauf
+
+Verwende `getTransactionHistory()` aus `@vue-solana/core/transaction-history`, um zu prüfen, was mit einer Adresse passiert ist, ohne analysierte Transaktionen abzurufen. Jedes Element enthält Signaturmetadaten: `signature`, `slot`, optional `blockTime`, `err`, optional `memo` und optional `confirmationStatus`. Ein nicht-null `err` ist eine fehlgeschlagene Transaktion als Daten. Eine volle Seite setzt `hasMore` und legt `nextBefore` offen; übergib ihn als `before`, um ältere Transaktionen zu laden.
+
+```ts
+import { getTransactionHistory } from "@vue-solana/core/transaction-history";
+import { useTransactionHistory } from "@vue-solana/vue/useTransactionHistory";
+
+const page = await getTransactionHistory(client, address, { limit: 50 });
+const older = page.nextBefore
+  ? await getTransactionHistory(client, address, { before: page.nextBefore, limit: 50 })
+  : null;
+
+// Inside a Vue component setup:
+const { items, hasMore, loadingMore, refresh, loadMore } = useTransactionHistory(address);
+await refresh();
+if (hasMore.value) await loadMore();
+```
+
+`useTransactionHistory()` überwacht eine Ref oder Getter-Adresse, verwirft veraltete Anfragen und bricht laufende Anfragen beim Auflösen des Scopes ab. Seine `status`-Werte sind `idle`, `loading`, `loaded` und `error`. In Nuxt rufe `useSolanaTransactionHistory()` ohne Import auf.
+
 ## Eine Signatur bestätigen
 
 Verwende `confirmTransactionSignature()`, wenn du warten musst, bis eine übermittelte Signatur eine Commitment-Stufe erreicht.

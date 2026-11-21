@@ -83,6 +83,7 @@ export default tseslint.config(
         useSolanaTokenBalance: "readonly",
         useSolanaTransaction: "readonly",
         useSolanaTransactionConfirmation: "readonly",
+        useSolanaTransactionHistory: "readonly",
         useSolanaWallet: "readonly",
         useSolanaWalletAccountMessageSigner: "readonly",
         useSolanaWalletAccountTransactionSendingSigner: "readonly",

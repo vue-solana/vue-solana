@@ -36,6 +36,7 @@ const SOLANA_COMPOSABLE_IMPORTS = [
   ["useTrackedData", "useSolanaTrackedData"],
   ["useTransaction", "useSolanaTransaction"],
   ["useTransactionConfirmation", "useSolanaTransactionConfirmation"],
+  ["useTransactionHistory", "useSolanaTransactionHistory"],
   ["useWallet", "useSolanaWallet"],
   ["useWalletAccountMessageSigner", "useSolanaWalletAccountMessageSigner"],
   ["useWalletAccountTransactionSendingSigner", "useSolanaWalletAccountTransactionSendingSigner"],

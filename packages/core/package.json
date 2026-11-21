@@ -81,6 +81,10 @@
       "types": "./dist/transaction.d.ts",
       "import": "./dist/transaction.mjs"
     },
+    "./transaction-history": {
+      "types": "./dist/transaction-history.d.ts",
+      "import": "./dist/transaction-history.mjs"
+    },
     "./wallet": {
       "types": "./dist/wallet.d.ts",
       "import": "./dist/wallet.mjs"

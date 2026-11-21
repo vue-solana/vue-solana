@@ -9,6 +9,7 @@ import type {
   TransactionBlockhashLifetime,
   TransactionError,
   TransactionSigner,
+  UnixTimestamp,
 } from "@solana/kit";
 import type { SolanaClient } from "./kit";
 
@@ -268,4 +269,39 @@ export interface SimulatedTransactionResult {
   returnData: { data: string; programId: Address } | null;
   replacementBlockhash: TransactionBlockhashLifetime | null;
   unitsConsumed: bigint | null;
+}
+
+/** `processed` is not accepted by `getSignaturesForAddress`. */
+export type TransactionHistoryCommitment = Exclude<Commitment, "processed">;
+
+export interface TransactionHistoryOptions {
+  /** Page start: return signatures strictly older than this one. */
+  before?: Signature;
+  /** Page end: stop at this signature (inclusive). */
+  until?: Signature;
+  /** Signatures per page, 1–1000. Defaults to 50. */
+  limit?: number;
+  commitment?: TransactionHistoryCommitment;
+  abortSignal?: AbortSignal;
+}
+
+export interface TransactionHistoryItem {
+  signature: Signature;
+  slot: Slot;
+  /** Null RPC block times are omitted. */
+  blockTime?: UnixTimestamp;
+  err: TransactionError | null;
+  /** Null RPC memos are omitted. */
+  memo?: string;
+  /** Null RPC confirmation statuses are omitted. */
+  confirmationStatus?: Commitment;
+}
+
+export interface TransactionHistoryResult {
+  /** Newest-first, in RPC order. */
+  items: TransactionHistoryItem[];
+  /** True when a full page was returned, meaning older pages may exist. */
+  hasMore: boolean;
+  /** Last signature of this page; pass it as `before` to load older items. */
+  nextBefore?: Signature;
 }

@@ -153,6 +153,7 @@ Direct package subpath:
 - `@vue-solana/vue/useWallets`
 - `@vue-solana/vue/useTransaction`
 - `@vue-solana/vue/useTransactionConfirmation`
+- `@vue-solana/vue/useTransactionHistory`
 - `@vue-solana/vue/useSignatureStatus`
 - `@vue-solana/vue/useSimulateTransaction`
 - `@vue-solana/vue/useSignMessage`
@@ -769,6 +770,21 @@ async function preview() {
 ```
 
 `status`는 `idle`, `simulating`, `simulated`, `error`를 거칩니다. 새 preview를 시작하면 이전 preview가 abort됩니다. Nuxt에서 auto-import되는 alias는 `useSolanaSimulateTransaction()`입니다.
+
+## 트랜잭션 기록
+
+`useTransactionHistory(addressSource, options?)`는 트랜잭션 본문을 가져오지 않고 reactive 주소의 signature 메타데이터를 나열합니다. `data`와 편의 alias인 `items`, `hasMore`, `status`, `loading`, `loadingMore`, `error`, `refresh()`, `loadMore()`, `reset()`을 노출합니다. `refresh()`는 첫 페이지를 교체하고 진행 중 요청을 중단하며, `loadMore()`는 `nextBefore`로 다음 이전 페이지를 추가합니다. 연결된 지갑이나 `payer`는 필요하지 않습니다.
+
+```vue
+<script setup lang="ts">
+import { useTransactionHistory } from "@vue-solana/vue/useTransactionHistory";
+
+const { data, items, hasMore, loading, loadingMore, error, refresh, loadMore } =
+  useTransactionHistory(walletAddress);
+</script>
+```
+
+`status`는 `idle`, `loading`, `loaded`, `error`를 거칩니다. 주소 source나 실제 `limit`, `commitment`, `until`이 바뀌면 새 첫 페이지를 시작하고, scope가 해제되면 진행 중 요청을 abort합니다. Nuxt에서는 자동 import alias가 `useSolanaTransactionHistory()`입니다.
 
 ## 배치 트랜잭션
 
