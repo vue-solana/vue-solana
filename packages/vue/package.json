@@ -214,7 +214,7 @@
     "access": "public"
   },
   "scripts": {
-    "build": "NODE_OPTIONS=--max-old-space-size=8192 unbuild",
+    "build": "NODE_OPTIONS=--max-old-space-size=2048 unbuild --config build.release.config.ts",
     "dev": "unbuild --stub",
     "typecheck": "tsc --noEmit",
     "clean": "rm -rf dist",
