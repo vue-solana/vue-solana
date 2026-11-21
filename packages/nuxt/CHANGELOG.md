@@ -1,5 +1,13 @@
 # @vue-solana/nuxt
 
+## 4.5.2
+
+### Patch Changes
+
+- Fix: Add @vue-solana/core as explicit dependency to ensure proper resolution in consumer builds.
+
+  The @vue-solana/nuxt package imports from @vue-solana/core (e.g., @vue-solana/core/rpc in server-plugin) but didn't declare it as a dependency. This caused build failures in consumer applications (like the docs app) because pnpm didn't link @vue-solana/core into @vue-solana/nuxt's node_modules, making the import unresolvable at build time.
+
 ## 4.5.1
 
 ### Patch Changes
