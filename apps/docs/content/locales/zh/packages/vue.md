@@ -153,6 +153,7 @@ import { useWallet } from "@vue-solana/vue/useWallet";
 - `@vue-solana/vue/useWallets`
 - `@vue-solana/vue/useTransaction`
 - `@vue-solana/vue/useTransactionConfirmation`
+- `@vue-solana/vue/useTransactionHistory`
 - `@vue-solana/vue/useSignatureStatus`
 - `@vue-solana/vue/useSimulateTransaction`
 - `@vue-solana/vue/useSignMessage`
@@ -769,6 +770,21 @@ async function preview() {
 ```
 
 `status` 会依次经过 `idle`、`simulating`、`simulated` 和 `error`；发起新的预览会中止上一次预览。在 Nuxt 中，自动导入的别名是 `useSolanaSimulateTransaction()`。
+
+## 交易历史
+
+`useTransactionHistory(addressSource, options?)` 在不获取交易正文的情况下列出响应式地址的签名元数据。它暴露 `data`、便捷别名 `items` 和 `hasMore`，以及 `status`、`loading`、`loadingMore`、`error`、`refresh()`、`loadMore()` 和 `reset()`。`refresh()` 替换第一页并中止进行中的请求；`loadMore()` 使用 `nextBefore` 追加下一页更早的记录。无需连接钱包或 `payer`。
+
+```vue
+<script setup lang="ts">
+import { useTransactionHistory } from "@vue-solana/vue/useTransactionHistory";
+
+const { data, items, hasMore, loading, loadingMore, error, refresh, loadMore } =
+  useTransactionHistory(walletAddress);
+</script>
+```
+
+`status` 会依次经过 `idle`、`loading`、`loaded`、`error`。地址来源或实际生效的 `limit`、`commitment`、`until` 变化会重新加载第一页；作用域销毁时会中止进行中的请求。在 Nuxt 中，自动导入的别名是 `useSolanaTransactionHistory()`。
 
 ## 批量交易
 

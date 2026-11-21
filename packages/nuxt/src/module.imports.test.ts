@@ -54,4 +54,14 @@ describe("Nuxt module auto-import mapping", () => {
       from: `${dist}/useSimulateTransaction.mjs`,
     });
   });
+
+  it("registers the transaction-history alias with its own Vue subpath", () => {
+    const dist = "/pkg/vue/dist";
+
+    expect(solanaAutoImports(dist)).toContainEqual({
+      name: "useTransactionHistory",
+      as: "useSolanaTransactionHistory",
+      from: `${dist}/useTransactionHistory.mjs`,
+    });
+  });
 });

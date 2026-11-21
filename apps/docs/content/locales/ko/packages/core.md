@@ -70,6 +70,7 @@ Direct subpath:
 - `@vue-solana/core/rpc`
 - `@vue-solana/core/timeout`
 - `@vue-solana/core/transaction`
+- `@vue-solana/core/transaction-history`
 - `@vue-solana/core/wallet`
 - `@vue-solana/core/wallet-standard`
 - `@vue-solana/core/token-accounts`
@@ -215,21 +216,22 @@ type SolanaChain = "solana:mainnet" | "solana:testnet" | "solana:devnet" | "sola
 
 Root `@vue-solana/core` export는 아래 public helper를 다시 export합니다. 전체 barrel 대신 한 helper의 모듈만 import하려면 direct subpath를 사용하세요:
 
-| Import path                        | 포함 내용                                                                                       | 사용할 때                                                                                                      |
-| ---------------------------------- | ----------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `@vue-solana/core/address`         | `parseAddress()`와 address input type.                                                          | Solana 주소를 string, ref-like object, getter로 받고 검증되고 정규화된 `Address`가 필요할 때.                  |
-| `@vue-solana/core/clusters`        | 기본 cluster 및 endpoint helper.                                                                | `mainnet`, `mainnet-beta`, `testnet`, `devnet`, `localnet`의 built-in RPC 또는 WebSocket endpoint가 필요할 때. |
-| `@vue-solana/core/errors`          | `SolanaError`, error factory, error guard.                                                      | 지갑, RPC, 주소, 트랜잭션, timeout, storage 실패에 대한 안정적인 error code가 필요할 때.                       |
-| `@vue-solana/core/ios-wallet`      | iOS browser wallet discovery, deep-link adapter, callback handling.                             | Vue plugin의 unified wallet flow 없이 iOS wallet link를 직접 wiring할 때.                                      |
-| `@vue-solana/core/kit`             | `createSolanaClient()`와 `@solana/kit` 전체 표면.                                               | 직접 `package.json`에 `@solana/kit`을 설치하지 않고 현대 Kit API를 원할 때.                                    |
-| `@vue-solana/core/mobile-wallet`   | Android Mobile Wallet Adapter registration helper.                                              | Wallet Standard wallet을 읽기 전에 Android MWA를 등록해야 할 때.                                               |
-| `@vue-solana/core/rpc`             | `createSolanaContext()`.                                                                        | Vue plugin 없이 configured Kit client와 resolved cluster endpoint가 필요할 때.                                 |
-| `@vue-solana/core/timeout`         | Solana timeout error를 만드는 Promise timeout helper.                                           | transaction confirmation helper와 일관된 timeout behavior가 필요할 때.                                         |
-| `@vue-solana/core/transaction`     | Transaction simulation, send, confirmation helper.                                              | 트랜잭션을 미리 보거나, wallet-aware send path를 사용하거나, 기존 signature를 confirm해야 할 때.               |
-| `@vue-solana/core/token-accounts`  | 무상태 SPL Token account 읽기(`getTokenAccountsByOwner`, `getTokenAccount`, `getTokenBalance`). | Kit RPC `jsonParsed` API를 통해 token account 또는 balance 읽기가 필요할 때.                                   |
-| `@vue-solana/core/types`           | 공유 TypeScript type.                                                                           | `SolanaConfig`, `SolanaContext`, `SolanaWallet`, wallet metadata, transaction option type이 필요할 때.         |
-| `@vue-solana/core/wallet`          | Wallet state assertion 및 wallet capability error.                                              | 선택된 wallet이 연결되어 있거나 signing을 지원하는지 wallet method 호출 전에 검증해야 할 때.                   |
-| `@vue-solana/core/wallet-standard` | Wallet Standard chain mapping, discovery, subscription, adapter helper.                         | Solana Wallet Standard 위에 자체 wallet discovery layer를 만들 때.                                             |
+| Import path                            | 포함 내용                                                                                       | 사용할 때                                                                                                      |
+| -------------------------------------- | ----------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `@vue-solana/core/address`             | `parseAddress()`와 address input type.                                                          | Solana 주소를 string, ref-like object, getter로 받고 검증되고 정규화된 `Address`가 필요할 때.                  |
+| `@vue-solana/core/clusters`            | 기본 cluster 및 endpoint helper.                                                                | `mainnet`, `mainnet-beta`, `testnet`, `devnet`, `localnet`의 built-in RPC 또는 WebSocket endpoint가 필요할 때. |
+| `@vue-solana/core/errors`              | `SolanaError`, error factory, error guard.                                                      | 지갑, RPC, 주소, 트랜잭션, timeout, storage 실패에 대한 안정적인 error code가 필요할 때.                       |
+| `@vue-solana/core/ios-wallet`          | iOS browser wallet discovery, deep-link adapter, callback handling.                             | Vue plugin의 unified wallet flow 없이 iOS wallet link를 직접 wiring할 때.                                      |
+| `@vue-solana/core/kit`                 | `createSolanaClient()`와 `@solana/kit` 전체 표면.                                               | 직접 `package.json`에 `@solana/kit`을 설치하지 않고 현대 Kit API를 원할 때.                                    |
+| `@vue-solana/core/mobile-wallet`       | Android Mobile Wallet Adapter registration helper.                                              | Wallet Standard wallet을 읽기 전에 Android MWA를 등록해야 할 때.                                               |
+| `@vue-solana/core/rpc`                 | `createSolanaContext()`.                                                                        | Vue plugin 없이 configured Kit client와 resolved cluster endpoint가 필요할 때.                                 |
+| `@vue-solana/core/timeout`             | Solana timeout error를 만드는 Promise timeout helper.                                           | transaction confirmation helper와 일관된 timeout behavior가 필요할 때.                                         |
+| `@vue-solana/core/transaction`         | Transaction simulation, send, confirmation helper.                                              | 트랜잭션을 미리 보거나, wallet-aware send path를 사용하거나, 기존 signature를 confirm해야 할 때.               |
+| `@vue-solana/core/transaction-history` | 트랜잭션 본문 없이 signature 메타데이터를 나열하는 헬퍼(`getTransactionHistory()`).             | 페이지 단위 활동 목록이나 이전 페이지용 `before` 커서가 필요할 때.                                             |
+| `@vue-solana/core/token-accounts`      | 무상태 SPL Token account 읽기(`getTokenAccountsByOwner`, `getTokenAccount`, `getTokenBalance`). | Kit RPC `jsonParsed` API를 통해 token account 또는 balance 읽기가 필요할 때.                                   |
+| `@vue-solana/core/types`               | 공유 TypeScript type.                                                                           | `SolanaConfig`, `SolanaContext`, `SolanaWallet`, wallet metadata, transaction option type이 필요할 때.         |
+| `@vue-solana/core/wallet`              | Wallet state assertion 및 wallet capability error.                                              | 선택된 wallet이 연결되어 있거나 signing을 지원하는지 wallet method 호출 전에 검증해야 할 때.                   |
+| `@vue-solana/core/wallet-standard`     | Wallet Standard chain mapping, discovery, subscription, adapter helper.                         | Solana Wallet Standard 위에 자체 wallet discovery layer를 만들 때.                                             |
 
 ### 클러스터와 RPC
 
@@ -323,6 +325,7 @@ const signedTransaction = await wallet.signTransaction(transaction);
 
 - `signAndSendTransaction(client, wallet, transaction, options?)`: configured wallet로 raw wire transaction byte에 서명하고 전송한 뒤 RPC signature를 반환합니다. `signAndSendTransaction`을 노출하는 wallet은 해당 기능에 위임되고, 그렇지 않으면 트랜잭션은 `wallet.signTransaction`으로 서명된 뒤 `client.rpc.sendTransaction(...).send()`로 제출됩니다. Android Mobile Wallet Adapter wallet은 앱이 제출을 소유하고 wallet handoff 후 RPC signature를 안정적으로 반환할 수 있도록 서명과 app-side RPC 제출을 선호합니다.
 - `simulateTransaction(client, transaction, options?)`: 제출하지 않고 raw wire transaction byte를 시뮬레이션합니다. 정규화된 `err`, `logs`, `fee`, lamport 및 token balance 변경, loaded addresses, return data, replacement blockhash, units consumed를 반환합니다. `err`가 null이 아니면 throw된 오류가 아니라 데이터로 반환된 실패한 시뮬레이션입니다. `commitment`, `minContextSlot`, `sigVerify`, `replaceRecentBlockhash`, `abortSignal`을 받습니다. `sigVerify`와 `replaceRecentBlockhash`는 상호 배타적이며 함께 사용하면 `INVALID_INPUT`을 throw합니다. 잘못된 byte도 `INVALID_INPUT`을 throw하고 transport 실패는 `RPC_FAILURE`를 throw합니다.
+- `getTransactionHistory(client, address, options?)`(`@vue-solana/core/transaction-history`): 트랜잭션 본문을 가져오지 않고 주소의 signature 메타데이터를 나열합니다. 최신순 `items`에 `signature`, `slot`, 선택적 `blockTime`, `err`, 선택적 `memo`, 선택적 `confirmationStatus`와 이전 페이지용 `hasMore`, `nextBefore` 커서를 반환합니다. `before`, `until`, `limit`(1–1000, 기본값 50), `commitment`(`processed`는 허용되지 않음), `abortSignal`을 받습니다. 잘못된 limit은 `INVALID_INPUT`, 누락되거나 잘못된 주소는 `INVALID_ADDRESS`, transport 실패는 `RPC_FAILURE`를 throw합니다.
 - `confirmTransactionSignature(client, signature, options?)`: 제출된 signature가 요청한 commitment에 도달할 때까지 기다립니다. 기본값은 `confirmed` commitment, 60초 timeout, 1500 ms poll interval, `client.rpc.getSignatureStatuses([signature]).send()` 폴링입니다. `pollIntervalMs`(`0`보다 커야 함), `abortSignal`, `searchTransactionHistory`를 받습니다. 실패한 트랜잭션은 `TRANSACTION_FAILED`, 나타나지 않은 서명은 `TRANSACTION_NOT_FOUND`, 소진된 대기는 `TRANSACTION_TIMEOUT`을 throw합니다. 서명이 최근 상태 캐시를 벗어났을 수 있으면 `searchTransactionHistory: true`를 전달하세요 — 없으면 오래된 서명이 결과에 나타나지 않아 timeout 후 `TRANSACTION_NOT_FOUND`가 됩니다.
 
 wallet-aware helper와 client-sent flow는 별개입니다. client는 `createSolanaClient()`가 설치한 official `rpcTransactionPlanSendingExecutor()`를 통해 `sendTransaction()`과 `sendTransactions()`를 노출하고 Vue composable이 이 method들을 감쌉니다. plan, sign, submit 후 `confirmed` commitment을 기다리며, send-and-confirm가 완료된 뒤에만 `sent` 상태가 됩니다. 단일 결과의 `data.context.signature`에서 제출된 signature를 확인할 수 있고, batch 결과에는 전체 plan result tree가 포함됩니다. official sender는 wallet popup을 표시하지 않습니다.

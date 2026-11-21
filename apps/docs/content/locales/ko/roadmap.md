@@ -13,9 +13,9 @@ surroundOrder: 22
 
 | 우선순위 | 항목                                                                               | 상태                                                                                                        | 다음 단계                                                                                                                                                       |
 | -------- | ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1        | 트랜잭션 시뮬레이션 헬퍼                                                           | `simulateTransaction()`, `useSimulateTransaction()`, `useSolanaSimulateTransaction()`로 출시됨              | 후속 작업은 [`plans/use-simulate-transaction.md`](https://github.com/vue-solana/vue-solana/blob/main/plans/use-simulate-transaction.md)에서 추적합니다.         |
+| 1        | 트랜잭션 시뮬레이션 헬퍼                                                           | 4.3.0에서 `simulateTransaction()`, `useSimulateTransaction()`, `useSolanaSimulateTransaction()`로 출시됨    | 기록은 [`plans/archived/use-simulate-transaction.md`](https://github.com/vue-solana/vue-solana/blob/main/plans/archived/use-simulate-transaction.md)에 보관됨.  |
 | 2        | iOS 지갑 지연 로딩                                                                 | 누락된 기능이 아니라 성능 작업입니다. 즉시 로드되는 `createSolanaPlugin` 청크의 약 58%를 제거할 수 있습니다 | [`plans/bundle-performance-followups.md`](https://github.com/vue-solana/vue-solana/blob/main/plans/bundle-performance-followups.md)의 집중 변경으로 예약합니다. |
-| 3        | Nuxt 서버 RPC 유틸리티                                                             | 미구현. core는 서버 코드에서 수동으로 사용할 수 있습니다                                                    | 비밀 값을 엄격히 배제하는 Nitro/서버 export를 정의합니다.                                                                                                       |
+| 3        | Nuxt 서버 RPC 유틸리티                                                             | 4.4.0에서 `@vue-solana/nuxt/server`(`createServerSolanaClient()`, `useServerSolanaClient()`)로 구현됨.      | Nuxt package 문서의 SSR 중 서버 측 RPC 섹션을 참고하세요.                                                                                                       |
 | 4        | 버전 관리된 문서                                                                   | 미구현                                                                                                      | 보관된 `/v1/` 문서와 이전 URL 리다이렉트를 만듭니다.                                                                                                            |
 | 나중     | iOS 지갑 제공자 추가                                                               | Phantom, Solflare, Backpack은 구현됨. Trust Wallet은 남아 있음                                              | 제공자별 링크와 callback을 조사한 뒤 `useWallets()` 뒤에 추가합니다.                                                                                            |
 | 나중     | Anchor 헬퍼, 지갑 모달/UI, 데스크톱 네이티브 지갑, RPC 장애 조치, 고급 계정 인덱싱 | 미구현. API 또는 아키텍처 규모가 큼                                                                         | 각각 전용 계획이 생길 때까지 여기에 둡니다.                                                                                                                     |
@@ -48,7 +48,7 @@ Anchor 프로그램 계정 및 인스트럭션을 위한 Anchor provider와 헬�
 
 ### Nuxt 서버 RPC 유틸리티
 
-서버 측 Solana RPC 읽기를 위한 Nuxt 서버 유틸리티.
+4.4.0 구현: `@vue-solana/nuxt/server`의 `createServerSolanaClient()`와 `useServerSolanaClient()`가 비밀 값을 노출하지 않고 Nitro server route에서 Solana 데이터를 읽습니다.
 
 ### 버전 관리된 문서
 

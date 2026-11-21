@@ -58,6 +58,27 @@ await execute(transaction, { replaceRecentBlockhash: true });
 
 `useSimulateTransaction()` 将相同结果作为 `data` 暴露，`status` 的取值为 `idle`、`simulating`、`simulated` 和 `error`。它遵循共享的 action-state 模式，不需要 `payer`。在 Nuxt 中，无需导入即可调用 `useSolanaSimulateTransaction()`。
 
+## 交易历史
+
+使用 `@vue-solana/core/transaction-history` 中的 `getTransactionHistory()`，可以在不获取解析后交易的情况下列出某个地址发生的事情。每一项都是签名元数据：`signature`、`slot`、可选的 `blockTime`、`err`、可选的 `memo` 和可选的 `confirmationStatus`。非 null 的 `err` 是以数据形式返回的失败交易。满页时 `hasMore` 为 true 并暴露 `nextBefore`；将其作为 `before` 传回即可加载更早的交易。
+
+```ts
+import { getTransactionHistory } from "@vue-solana/core/transaction-history";
+import { useTransactionHistory } from "@vue-solana/vue/useTransactionHistory";
+
+const page = await getTransactionHistory(client, address, { limit: 50 });
+const older = page.nextBefore
+  ? await getTransactionHistory(client, address, { before: page.nextBefore, limit: 50 })
+  : null;
+
+// Inside a Vue component setup:
+const { items, hasMore, loadingMore, refresh, loadMore } = useTransactionHistory(address);
+await refresh();
+if (hasMore.value) await loadMore();
+```
+
+`useTransactionHistory()` 会监听 ref 或 getter 地址，丢弃过期请求，并在作用域销毁时中止进行中的请求。它的 `status` 值为 `idle`、`loading`、`loaded`、`error`。在 Nuxt 中，无需导入即可调用 `useSolanaTransactionHistory()`。
+
 ## 确认签名
 
 当你需要等待已提交签名达到某个 commitment 级别时，请使用 `confirmTransactionSignature()`。

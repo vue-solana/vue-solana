@@ -340,6 +340,7 @@ code {
   color: hsla(160, 100%, 37%, 1);
 }
 
+.status-pill--loaded,
 .status-pill--sent,
 .status-pill--signed,
 .status-pill--confirmed,
@@ -356,6 +357,7 @@ code {
 }
 
 .status-pill--checking,
+.status-pill--loading,
 .status-pill--pending,
 .status-pill--found,
 .status-pill--scanning {

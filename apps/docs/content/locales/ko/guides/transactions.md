@@ -58,6 +58,27 @@ await execute(transaction, { replaceRecentBlockhash: true });
 
 `useSimulateTransaction()`은 같은 결과를 `data`로 노출하며, `status` 값은 `idle`, `simulating`, `simulated`, `error`입니다. 공유 action-state 패턴을 따르고 `payer`가 필요하지 않습니다. Nuxt에서는 import 없이 `useSolanaSimulateTransaction()`를 호출하세요.
 
+## 트랜잭션 기록
+
+구문 분석된 트랜잭션을 가져오지 않고 주소에 발생한 내용을 나열하려면 `@vue-solana/core/transaction-history`의 `getTransactionHistory()`를 사용하세요. 각 항목은 `signature`, `slot`, 선택적 `blockTime`, `err`, 선택적 `memo`, 선택적 `confirmationStatus` 같은 signature 메타데이터입니다. null이 아닌 `err`는 데이터로 반환된 실패한 트랜잭션입니다. 페이지가 가득하면 `hasMore`가 설정되고 `nextBefore`가 노출되며, 이를 `before`로 다시 전달하면 이전 트랜잭션을 불러올 수 있습니다.
+
+```ts
+import { getTransactionHistory } from "@vue-solana/core/transaction-history";
+import { useTransactionHistory } from "@vue-solana/vue/useTransactionHistory";
+
+const page = await getTransactionHistory(client, address, { limit: 50 });
+const older = page.nextBefore
+  ? await getTransactionHistory(client, address, { before: page.nextBefore, limit: 50 })
+  : null;
+
+// Inside a Vue component setup:
+const { items, hasMore, loadingMore, refresh, loadMore } = useTransactionHistory(address);
+await refresh();
+if (hasMore.value) await loadMore();
+```
+
+`useTransactionHistory()`는 ref 또는 getter 주소를 감시하고 오래된 요청을 무효화하며 scope가 해제되면 진행 중 요청을 abort합니다. `status` 값은 `idle`, `loading`, `loaded`, `error`입니다. Nuxt에서는 import 없이 `useSolanaTransactionHistory()`를 호출하세요.
+
 ## 서명 확인
 
 제출된 signature가 특정 commitment level에 도달할 때까지 기다려야 하면 `confirmTransactionSignature()`를 사용하세요.

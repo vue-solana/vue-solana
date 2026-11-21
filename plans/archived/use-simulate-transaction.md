@@ -1,5 +1,7 @@
 # Transaction Simulation Helpers Plan
 
+**Archived:** All phases shipped in `@vue-solana/*@4.3.0` (`simulateTransaction()`, `useSimulateTransaction()`, and `useSolanaSimulateTransaction()`). The demo panels and e2e coverage deferred below landed separately in `07648b8`. Kept for reference; see `apps/docs/content/guides/transactions.md` for the user-facing guide.
+
 Track implementation of the roadmap item “Transaction Simulation Helpers”: let apps preview a transaction’s outcome before submission without spending SOL.
 
 Public surface:

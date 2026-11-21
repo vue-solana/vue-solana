@@ -158,6 +158,7 @@ Direct package subpaths:
 - `@vue-solana/vue/useWallets`
 - `@vue-solana/vue/useTransaction`
 - `@vue-solana/vue/useTransactionConfirmation`
+- `@vue-solana/vue/useTransactionHistory`
 - `@vue-solana/vue/useSignatureStatus`
 - `@vue-solana/vue/useSimulateTransaction`
 - `@vue-solana/vue/useSignMessage`
@@ -773,6 +774,21 @@ async function preview() {
 ```
 
 `status` moves through `idle`, `simulating`, `simulated`, and `error`; starting a new preview aborts the previous one. In Nuxt the auto-imported alias is `useSolanaSimulateTransaction()`.
+
+## Transaction History
+
+`useTransactionHistory(addressSource, options?)` lists signature metadata for a reactive address without fetching transaction bodies. It exposes `data`, convenience aliases `items` and `hasMore`, `status`, `loading`, `loadingMore`, `error`, `refresh()`, `loadMore()`, and `reset()`. `refresh()` replaces the first page and supersedes in-flight work; `loadMore()` appends the next older page using `nextBefore`. No connected wallet or `payer` is required.
+
+```vue
+<script setup lang="ts">
+import { useTransactionHistory } from "@vue-solana/vue/useTransactionHistory";
+
+const { data, items, hasMore, loading, loadingMore, error, refresh, loadMore } =
+  useTransactionHistory(walletAddress);
+</script>
+```
+
+`status` moves through `idle`, `loading`, `loaded`, and `error`. Changing the address source or the effective `limit`, `commitment`, or `until` option starts a fresh first page; scope disposal aborts in-flight requests. In Nuxt the auto-imported alias is `useSolanaTransactionHistory()`.
 
 ## Batch Transactions
 

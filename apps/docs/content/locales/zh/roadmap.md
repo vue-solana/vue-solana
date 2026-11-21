@@ -11,14 +11,14 @@ surroundOrder: 22
 
 2026 年 11 月 18 日的审查发现，当时这里列出的功能都尚未作为完整的公开功能发布，不过其中一些已有部分基础。此后交易模拟已经发布；除非用户请求改变优先级，否则请按以下顺序推进剩余事项：
 
-| 优先级 | 项目                                                                       | 状态                                                                                                | 下一步                                                                                                                                                |
-| ------ | -------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1      | 交易模拟辅助函数                                                           | 已通过 `simulateTransaction()`、`useSimulateTransaction()` 和 `useSolanaSimulateTransaction()` 发布 | 在 [`plans/use-simulate-transaction.md`](https://github.com/vue-solana/vue-solana/blob/main/plans/use-simulate-transaction.md) 中跟踪后续事项。       |
-| 2      | iOS 钱包懒加载                                                             | 这是性能工作，并非缺失功能；可移除即时加载的 `createSolanaPlugin` chunk 中约 58% 的内容             | 按 [`plans/bundle-performance-followups.md`](https://github.com/vue-solana/vue-solana/blob/main/plans/bundle-performance-followups.md) 安排专项变更。 |
-| 3      | Nuxt 服务端 RPC 工具                                                       | 缺失；core 已可在服务端代码中手动使用                                                               | 定义严格的无密钥规则的 Nitro／服务端导出。                                                                                                            |
-| 4      | 版本化文档                                                                 | 缺失                                                                                                | 构建归档的 `/v1/` 文档和旧 URL 重定向。                                                                                                               |
-| 之后   | 更多 iOS 钱包提供方                                                        | Phantom、Solflare 和 Backpack 已实现；Trust Wallet 仍待完成                                         | 调研各提供方专属的链接与回调，再通过 `useWallets()` 添加。                                                                                            |
-| 之后   | Anchor 辅助函数、钱包弹窗／UI 包、桌面原生钱包、RPC 故障转移、高级账户索引 | 缺失；涉及较大的 API 或架构投入                                                                     | 在各自有专项计划前保留在此处。                                                                                                                        |
+| 优先级 | 项目                                                                       | 状态                                                                                                         | 下一步                                                                                                                                                       |
+| ------ | -------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 1      | 交易模拟辅助函数                                                           | 已于 4.3.0 通过 `simulateTransaction()`、`useSimulateTransaction()` 和 `useSolanaSimulateTransaction()` 发布 | 记录已归档至 [`plans/archived/use-simulate-transaction.md`](https://github.com/vue-solana/vue-solana/blob/main/plans/archived/use-simulate-transaction.md)。 |
+| 2      | iOS 钱包懒加载                                                             | 这是性能工作，并非缺失功能；可移除即时加载的 `createSolanaPlugin` chunk 中约 58% 的内容                      | 按 [`plans/bundle-performance-followups.md`](https://github.com/vue-solana/vue-solana/blob/main/plans/bundle-performance-followups.md) 安排专项变更。        |
+| 3      | Nuxt 服务端 RPC 工具                                                       | 4.4.0 起通过 `@vue-solana/nuxt/server`（`createServerSolanaClient()`、`useServerSolanaClient()`）提供。      | 参见 Nuxt 包文档中的「SSR 期间的服务器端 RPC」一节。                                                                                                         |
+| 4      | 版本化文档                                                                 | 缺失                                                                                                         | 构建归档的 `/v1/` 文档和旧 URL 重定向。                                                                                                                      |
+| 之后   | 更多 iOS 钱包提供方                                                        | Phantom、Solflare 和 Backpack 已实现；Trust Wallet 仍待完成                                                  | 调研各提供方专属的链接与回调，再通过 `useWallets()` 添加。                                                                                                   |
+| 之后   | Anchor 辅助函数、钱包弹窗／UI 包、桌面原生钱包、RPC 故障转移、高级账户索引 | 缺失；涉及较大的 API 或架构投入                                                                              | 在各自有专项计划前保留在此处。                                                                                                                               |
 
 较早的两项已覆盖：实时订阅已通过 `useSubscription()`、`useTrackedData()` 和 SWR 适配器实现。`plans/native-wallet-plan.md` 中已勾选的“桌面原生钱包”记录的是延期决定，而不是实现。
 
@@ -48,7 +48,7 @@ surroundOrder: 22
 
 ### Nuxt 服务器 RPC 工具
 
-用于服务端 Solana RPC 读取的 Nuxt 服务器工具。
+4.4.0 已提供：`@vue-solana/nuxt/server` 的 `createServerSolanaClient()` 和 `useServerSolanaClient()` 可在 Nitro 服务器路由中读取 Solana 数据，且不会暴露密钥。
 
 ### 版本化文档
 
