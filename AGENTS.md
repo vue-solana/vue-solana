@@ -102,6 +102,8 @@ Implemented files:
 
 Every composable in `src/composables/` also has a top-level subpath re-export in `src/` (for example `src/useSendTransactions.ts`) so Nuxt can auto-import it by name.
 
+`packages/vue/build.release.config.ts` drives the published `build` script. It batches the declaration rollup because unbuild's single-pass DTS build needs more than 8 GB of heap with the current entry list and OOMs in CI. `build.config.ts` remains the single source of truth for entries (`pnpm check:entries` reads it) and for `dev`/stub builds. Do not fold the batching back into one declaration pass without a new memory measurement.
+
 Error-code policy for the action composables: `useExecution()` (the shared supersede-and-report state machine) normalizes any failure that is not already a `SolanaError` to `RPC_FAILURE` by default, because most callers do network work. It takes a `failureCode` option for the exceptions: `useSignMessage()`, `useSignIn()`, and `useSignTransactions()` pass `WALLET_FAILURE`, since they only talk to the wallet and a transport failure there is not a network error. The sign-and-send pair keeps the RPC default because it does reach the network. Specific codes thrown before the wallet or RPC call (`NO_WALLET_SELECTED`, `WALLET_NOT_CONNECTED`, `WALLET_FEATURE_UNSUPPORTED`, `USER_REJECTED`, `INVALID_SIGNATURE`) pass through unchanged. Malformed _options_ are `INVALID_INPUT`, not a transport code — `useSignatureStatus()` reports `pollIntervalMs <= 0` that way.
 
 Kit 8 reactive-store note: the stores from `@solana/subscribable` call Node's `setMaxListeners` on `AbortSignal`, so tests exercising them (or composables built on them) must run under the `node` vitest environment — tag those files with `// @vitest-environment node`.

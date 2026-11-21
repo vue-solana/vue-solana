@@ -1,5 +1,11 @@
 # @vue-solana/core
 
+## 4.5.0
+
+### Minor Changes
+
+- adc4169: Add read-only transaction history: `getTransactionHistory()` in core, `useTransactionHistory()` in Vue, and the `useSolanaTransactionHistory()` Nuxt auto-import. The API lists paginated signature metadata for an address without fetching parsed transaction bodies, and the composable handles reactive address changes, superseded requests, and scope disposal.
+
 ## 4.4.0
 
 ### Minor Changes
