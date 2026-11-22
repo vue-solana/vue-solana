@@ -1,5 +1,11 @@
 # @vue-solana/core
 
+## 4.5.1
+
+### Patch Changes
+
+- f86fd4b: Add `@vue-solana/core` as an explicit dependency so the SSR server plugin resolves in published consumer installs.
+
 ## 4.5.0
 
 ### Minor Changes
