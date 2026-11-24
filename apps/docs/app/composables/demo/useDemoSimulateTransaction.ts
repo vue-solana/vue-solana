@@ -13,7 +13,11 @@ import {
 import { formatError } from "./errors";
 
 const MEMO_PROGRAM_ADDRESS = address("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr");
-const DEMO_FEE_PAYER: Address = address("11111111111111111111111111111111");
+// Simulation validates the fee payer. The system program (111…111) is not a
+// spendable account and returns InvalidAccountForFee. This funded devnet
+// validator identity is only a fee-payer fixture; `sigVerify: false` means no
+// signature is required and the transaction is never submitted.
+const DEMO_FEE_PAYER: Address = address("dv3qDFk1DTF36Z62bNvrCXe9sKATA6xvVy6A798xxAS");
 
 function buildMemoInstruction(note: string): Instruction {
   return {
