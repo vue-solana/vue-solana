@@ -32,16 +32,19 @@ const translatedStatus = computed(() => t(`demo.status.${props.status}`, props.s
     :status-color="statusColor"
     data-testid="wallet-account-signers-panel"
   >
-    <p class="mb-4 text-sm leading-6 text-slate-600 dark:text-slate-300">
+    <p class="mb-2 text-sm leading-6 text-slate-600 dark:text-slate-300">
       {{ $t("demo.walletAccountSigners.description") }}
+    </p>
+    <p class="mb-4 text-xs leading-5 text-slate-500 dark:text-slate-400">
+      {{ $t("demo.walletAccountSigners.sameAccountNote") }}
     </p>
 
     <dl class="mb-4 grid gap-3 sm:grid-cols-2">
       <div
         class="min-w-0 rounded-2xl border border-slate-200 bg-slate-50/90 p-3 dark:border-slate-700 dark:bg-slate-950/45"
       >
-        <dt class="text-xs font-medium text-slate-500 dark:text-slate-400">
-          {{ $t("demo.walletAccountSigners.signerAddress") }}
+        <dt class="[overflow-wrap:anywhere] text-xs font-medium text-slate-500 dark:text-slate-400">
+          {{ $t("demo.walletAccountSigners.messageSigner") }}
         </dt>
         <dd
           class="mt-1 [overflow-wrap:anywhere] text-sm font-bold text-slate-950 dark:text-white"
@@ -53,7 +56,7 @@ const translatedStatus = computed(() => t(`demo.status.${props.status}`, props.s
       <div
         class="min-w-0 rounded-2xl border border-slate-200 bg-slate-50/90 p-3 dark:border-slate-700 dark:bg-slate-950/45"
       >
-        <dt class="text-xs font-medium text-slate-500 dark:text-slate-400">
+        <dt class="[overflow-wrap:anywhere] text-xs font-medium text-slate-500 dark:text-slate-400">
           {{ $t("demo.walletAccountSigners.chain") }}
         </dt>
         <dd
@@ -64,9 +67,9 @@ const translatedStatus = computed(() => t(`demo.status.${props.status}`, props.s
         </dd>
       </div>
       <div
-        class="min-w-0 rounded-2xl border border-slate-200 bg-slate-50/90 p-3 dark:border-slate-700 dark:bg-slate-950/45"
+        class="min-w-0 rounded-2xl border border-slate-200 bg-slate-50/90 p-3 sm:col-span-2 dark:border-slate-700 dark:bg-slate-950/45"
       >
-        <dt class="text-xs font-medium text-slate-500 dark:text-slate-400">
+        <dt class="[overflow-wrap:anywhere] text-xs font-medium text-slate-500 dark:text-slate-400">
           TransactionModifyingSigner
         </dt>
         <dd
@@ -77,9 +80,9 @@ const translatedStatus = computed(() => t(`demo.status.${props.status}`, props.s
         </dd>
       </div>
       <div
-        class="min-w-0 rounded-2xl border border-slate-200 bg-slate-50/90 p-3 dark:border-slate-700 dark:bg-slate-950/45"
+        class="min-w-0 rounded-2xl border border-slate-200 bg-slate-50/90 p-3 sm:col-span-2 dark:border-slate-700 dark:bg-slate-950/45"
       >
-        <dt class="text-xs font-medium text-slate-500 dark:text-slate-400">
+        <dt class="[overflow-wrap:anywhere] text-xs font-medium text-slate-500 dark:text-slate-400">
           TransactionSendingSigner
         </dt>
         <dd

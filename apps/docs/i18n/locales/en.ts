@@ -224,8 +224,10 @@ export default {
       description:
         "Exposes the selected wallet account as Kit signer interfaces. This signs a message through a MessageModifyingSigner, showing the Kit-native integration path.",
       account: "Selected account",
-      signerAddress: "Signer address",
+      messageSigner: "MessageModifyingSigner",
       chain: "Chain",
+      sameAccountNote:
+        "All three adapters wrap the same connected account, so their addresses are identical.",
       messageLabel: "Message to sign",
       messagePlaceholder: "Enter a message for the Kit signer to sign",
       sign: "Sign with Kit signer",

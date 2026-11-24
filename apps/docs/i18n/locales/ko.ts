@@ -224,8 +224,9 @@ export default {
       description:
         "선택한 wallet account를 Kit signer interface로 노출합니다. MessageModifyingSigner를 통해 메시지에 서명하여 Kit 네이티브 통합 경로를 보여줍니다.",
       account: "선택된 account",
-      signerAddress: "Signer address",
+      messageSigner: "MessageModifyingSigner",
       chain: "Chain",
+      sameAccountNote: "세 어댑터 모두 동일한 연결된 account를 감싸므로 주소가 같습니다.",
       messageLabel: "서명할 메시지",
       messagePlaceholder: "Kit signer로 서명할 메시지를 입력하세요",
       sign: "Kit signer로 서명",

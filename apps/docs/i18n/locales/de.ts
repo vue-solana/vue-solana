@@ -226,8 +226,10 @@ export default {
       description:
         "Stellt das ausgewählte Wallet-Konto als Kit-Signer-Interfaces bereit. Dies signiert eine Nachricht über einen MessageModifyingSigner und zeigt den Kit-nativen Integrationspfad.",
       account: "Ausgewähltes Konto",
-      signerAddress: "Signer-Adresse",
+      messageSigner: "MessageModifyingSigner",
       chain: "Chain",
+      sameAccountNote:
+        "Alle drei Adapter umschließen dasselbe verbundene Konto, daher sind ihre Adressen identisch.",
       messageLabel: "Zu signierende Nachricht",
       messagePlaceholder: "Nachricht eingeben, die der Kit-Signer signieren soll",
       sign: "Mit Kit-Signer signieren",

@@ -222,8 +222,9 @@ export default {
       description:
         "将所选钱包账户暴露为 Kit 的 signer 接口。这里通过 MessageModifyingSigner 对消息进行签名，展示 Kit 原生集成路径。",
       account: "已选账户",
-      signerAddress: "签名器地址",
+      messageSigner: "MessageModifyingSigner",
       chain: "链",
+      sameAccountNote: "三个适配器都封装同一个已连接账户，因此它们的地址相同。",
       messageLabel: "要签名的消息",
       messagePlaceholder: "输入要让 Kit 签名器签名的消息",
       sign: "使用 Kit 签名器签名",
