@@ -1,9 +1,12 @@
 // @vitest-environment node
+import { getCompiledTransactionMessageDecoder, getTransactionDecoder } from "@vue-solana/nuxt/kit";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ref, shallowRef } from "vue";
 import { useDemoSimulateTransaction } from "./useDemoSimulateTransaction";
 
 const MOCK_BLOCKHASH = "5v2p4R5H6J7K8L9M1N2P3Q4R5S6T7U8V9W1X2Y3Z4a5b";
+const SYSTEM_PROGRAM_ADDRESS = "11111111111111111111111111111111";
+const DEMO_FEE_PAYER_ADDRESS = "dv3qDFk1DTF36Z62bNvrCXe9sKATA6xvVy6A798xxAS";
 
 const execute = vi.fn();
 const simulationData = shallowRef<unknown>(null);
@@ -49,6 +52,12 @@ describe("useDemoSimulateTransaction", () => {
     expect(getLatestBlockhashSend).toHaveBeenCalledTimes(1);
     expect(execute).toHaveBeenCalledTimes(1);
     expect(execute).toHaveBeenCalledWith(expect.any(Uint8Array), { sigVerify: false });
+
+    const transactionBytes = execute.mock.calls[0]?.[0] as Uint8Array;
+    const transaction = getTransactionDecoder().decode(transactionBytes);
+    const message = getCompiledTransactionMessageDecoder().decode(transaction.messageBytes);
+    expect(message.staticAccounts[0]).not.toBe(SYSTEM_PROGRAM_ADDRESS);
+    expect(message.staticAccounts[0]).toBe(DEMO_FEE_PAYER_ADDRESS);
   });
 
   it("exposes formatted simulation results", () => {
