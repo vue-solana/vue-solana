@@ -105,23 +105,26 @@ async function signWithKitSigner() {
       Exposes the connected wallet account as Kit signer interfaces. The message below is signed
       through a <code>MessageModifyingSigner</code>.
     </p>
+    <p class="help-text">
+      All three adapters wrap the same connected account, so their addresses are identical.
+    </p>
 
     <dl class="data-grid compact-grid">
       <div>
-        <dt>Signer address</dt>
+        <dt>MessageModifyingSigner</dt>
         <dd data-testid="kit-signer-address">{{ signerAddress ?? "Not connected" }}</dd>
       </div>
       <div>
         <dt>Chain</dt>
         <dd data-testid="kit-signer-chain">{{ chain }}</dd>
       </div>
-      <div>
+      <div class="data-grid__wide">
         <dt>TransactionModifyingSigner</dt>
         <dd data-testid="kit-transaction-signer-address">
           {{ transactionSignerAddress ?? "Not connected" }}
         </dd>
       </div>
-      <div>
+      <div class="data-grid__wide">
         <dt>TransactionSendingSigner</dt>
         <dd data-testid="kit-sending-signer-address">
           {{ sendingSignerAddress ?? "Not connected" }}

@@ -225,8 +225,10 @@ export default {
       description:
         "選択中のウォレットアカウントを Kit の signer インターフェースとして公開します。MessageModifyingSigner を通じてメッセージに署名し、Kit ネイティブな統合パスを示します。",
       account: "選択中のアカウント",
-      signerAddress: "署名者アドレス",
+      messageSigner: "MessageModifyingSigner",
       chain: "チェーン",
+      sameAccountNote:
+        "3 つのアダプターは同じ接続済みアカウントをラップするため、アドレスはすべて同じです。",
       messageLabel: "署名するメッセージ",
       messagePlaceholder: "Kit signer に署名させるメッセージを入力",
       sign: "Kit signer で署名",
