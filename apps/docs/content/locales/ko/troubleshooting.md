@@ -154,6 +154,8 @@ installSolanaBufferPolyfill();
 
 `useRpc()` 또는 `useSolanaRpc()`로 설정된 cluster와 endpoint를 확인하세요.
 
+공유 엔드포인트가 요청을 제한한다면 [Chainstack 또는 Alchemy](/ko/concepts/clusters#호스팅-rpc-제공자)의 무료 키 기반 엔드포인트가 앱에 자체 quota와 dashboard를 제공합니다. devnet에서 시작하고 mainnet으로 넘어가기 전에 메서드 지원 여부를 확인하세요.
+
 ## Nuxt 자동 import가 없음
 
 `@vue-solana/nuxt`가 `modules`에 들어 있는지 확인하고 패키지 설치 후 Nuxt dev server를 재시작하세요.

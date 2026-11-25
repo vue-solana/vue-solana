@@ -64,6 +64,25 @@ import { getWebSocketEndpoint } from "@vue-solana/core/clusters";
 const wsEndpoint = getWebSocketEndpoint("https://api.devnet.solana.com");
 ```
 
+## Configuración de RPC alojado
+
+El endpoint de devnet integrado basta para una primera lectura. Para un ejemplo que piensas conservar, o para una aplicación que usa suscripciones WebSocket, crea un endpoint gratuito con clave en un proveedor como [Chainstack](https://chainstack.com/pricing/) o [Alchemy](https://www.alchemy.com/pricing). Los [conceptos de clusters](/es/concepts/clusters#proveedores-rpc-alojados) comparan los planes gratuitos y sus ventajas y desventajas.
+
+Pasa la URL HTTP del proveedor como `endpoint`:
+
+```ts
+createSolanaPlugin({
+  cluster: "devnet",
+  endpoint: "https://solana-devnet.g.alchemy.com/v2/YOUR_KEY",
+});
+```
+
+`wsEndpoint` es opcional. Vue Solana convierte `https` en `wss` automáticamente, por lo que la URL WebSocket se deriva de la URL HTTP anterior. Pasa `wsEndpoint` explícitamente solo cuando el proveedor use otro host o puerto.
+
+En Nuxt, guarda una clave exclusiva del servidor en la configuración runtime privada y léela con `useServerSolanaClient()`, como se muestra en [RPC del lado del servidor durante SSR](/es/guides/rpc-and-clusters#rpc-del-lado-del-servidor-durante-ssr). Nunca pongas una clave sin procesar en `runtimeConfig.public.solana`; la configuración pública se incluye en el bundle del navegador. En una aplicación puramente cliente, la cadena del endpoint es visible por diseño, así que usa la lista de dominios/IP permitidos del proveedor y mantén la clave fuera del control de versiones.
+
+Los planes gratuitos sirven para aprender y para poco tráfico. Antes de depender de `useProgramAccounts()`, `useTokenAccounts()` o consultas históricas, comprueba qué métodos admite el proveedor: el mismo método puede estar disponible en devnet y restringido en mainnet, o requerir un plan de archivo.
+
 ## Configuración en Vue
 
 Instala el plugin de Vue una vez cerca del arranque de la aplicación.

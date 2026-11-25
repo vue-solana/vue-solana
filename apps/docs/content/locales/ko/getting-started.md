@@ -150,6 +150,8 @@ direct Vue/core client는 client-sent transaction을 위해 `payer`와 `payerSec
 
 RPC 읽기는 브라우저 지갑 없이 동작합니다.
 
+내장 devnet 엔드포인트는 첫 확인에는 충분합니다. 예제를 계속 유지하거나 공유 엔드포인트의 rate limiting으로 읽기가 실패하기 시작하면 [Chainstack 또는 Alchemy](/ko/concepts/clusters#호스팅-rpc-제공자)의 무료 키 기반 엔드포인트로 바꾸고 `endpoint`로 전달하세요.
+
 Vue에서는 `useRpc()`를 사용합니다.
 
 ```vue

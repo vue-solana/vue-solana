@@ -154,6 +154,8 @@ Causas comunes:
 
 Comprueba el cluster y endpoint configurados con `useRpc()` o `useSolanaRpc()`.
 
+Si el endpoint compartido te está limitando, un endpoint gratuito con clave de [Chainstack o Alchemy](/es/concepts/clusters#proveedores-rpc-alojados) da a tu aplicación su propia cuota y un panel. Empieza en devnet y comprueba la disponibilidad de métodos antes de pasar a mainnet.
+
 ## Faltan los auto-imports de Nuxt
 
 Asegurate de que `@vue-solana/nuxt` este listado en `modules` y reinicia el servidor dev de Nuxt después de instalar el paquete.

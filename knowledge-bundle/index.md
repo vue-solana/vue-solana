@@ -5,7 +5,7 @@ This directory contains OKF-formatted knowledge files for AI agents working with
 ## Concepts
 
 - [Solana Concepts For Vue Developers](./concepts/solana-for-vue-developers.md) — practical overview of Solana terms, RPC, transactions, and commitment levels
-- [Solana Clusters](./concepts/clusters.md) — cluster types and how to choose the right one
+- [Solana Clusters](./concepts/clusters.md) — cluster types, RPC endpoints, hosted providers, and how to choose the right one
 - [@solana/web3-compat TypeScript Workaround (v1, archived)](./concepts/web3-compat.md) — historical v1.x shim guidance
 
 ## Guides

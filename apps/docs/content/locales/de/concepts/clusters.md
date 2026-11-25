@@ -35,6 +35,37 @@ RPC-Anfragen laufen über `client.rpc` aus `useSolanaClient()` oder `useSolanaRp
 
 Offizielle Referenz: [Solana-RPC](https://solana.com/docs/rpc)
 
+## Gehostete RPC-Anbieter
+
+Die öffentlichen Solana-Endpoints werden von allen geteilt. Sie sind der schnellste Weg für den ersten Aufruf von `getLatestBlockhash()` oder `getBalance()`, aber keine gute Grundlage für eine App, die andere Menschen nutzen. Bei hoher Last können Anfragen gedrosselt werden, die Latenz ist weniger vorhersehbar, und es gibt kein Nutzungs-Dashboard oder Support-Abkommen. Ein gehosteter RPC-Anbieter gibt dir einen HTTP- und WebSocket-Endpoint mit eigenem Schlüssel, veröffentlichte Quoten, Metriken und einen klaren Weg für mehr Traffic.
+
+Vue Solana hängt nicht an einem bestimmten Anbieter. Jeder RPC-Aufruf läuft über den Kit-Client, der aus deinem `endpoint` (und optional `wsEndpoint`) gebaut wird. Ein Anbieterwechsel ist daher eine Konfigurationsänderung, kein Umschreiben deiner Composables. Den Code findest du unter [Eigene RPC-Endpoints](/de/guides/rpc-and-clusters#eigene-rpc-endpoints).
+
+### Warum einen Anbieter verwenden
+
+- **Vorhersehbare Limits.** Ein öffentlicher Endpoint teilt ein Budget unter allen Nutzer:innen. Bei einem Anbieter hat dein Schlüssel ein eigenes Kontingent und dokumentiertes Verhalten bei Überschreitung.
+- **Subscriptions.** `useSubscription()` und `useTrackedData()` brauchen eine WebSocket-Verbindung. Anbieter stellen eine passende `wss://`-URL bereit und erlauben meist mehr parallele Subscriptions.
+- **Beobachtbarkeit.** Dashboards zeigen Anfragevolumen, Fehler und Latenz, damit du erkennen kannst, ob ein Fehler aus deiner App oder aus der RPC-Schicht kommt.
+- **Ein Weg in die Produktion.** Wenn aus einem Tutorial eine echte App wird, kannst du die Limits erhöhen, ohne Komponenten-Code zu ändern.
+
+### Worauf du vor der Wahl achten solltest
+
+- **Welche Methoden der Tarif unterstützt.** Die Verfügbarkeit unterscheidet sich je nach Cluster und Anbieter. Chainstack listet einige aufwendige Solana-Scan-Methoden auf mainnet als kostenpflichtig und bietet für devnet keine Archive-Nodes.
+- **Wie Nutzung gezählt wird.** Chainstack rechnet in Request Units (1 RU pro Full-Node-Anfrage), Alchemy in Compute Units, die je nach Methode variieren. Der reine Vergleich von „Requests pro Sekunde“ kann irreführend sein.
+- **Ob WebSockets, Webhooks oder gRPC im kostenlosen Tarif enthalten sind.** Deine App braucht davon vielleicht eines, auch wenn einfache HTTP-Reads funktionieren.
+- **Wo der API-Schlüssel liegt.** Eine Endpoint-URL im Browser-Bundle ist für Nutzer:innen sichtbar. Beschränke den Schlüssel im Anbieter-Dashboard oder betreibe ihn hinter einer Server-Route.
+
+### Kostenlose Optionen für den Einstieg
+
+| Anbieter                                      | Kostenloser Tarif                                                                  | Gut für                                                                                                                                       | Details                                                                                                                                                                                                                                                                                                                                                    |
+| --------------------------------------------- | ---------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Chainstack](https://chainstack.com/pricing/) | Developer: 0 $/Monat, 3.000.000 RU/Monat, 25 RPS insgesamt, 1 Projekt, WebSockets. | Vorhersehbare Abrechnung in Request Units und explizite Limits pro Netzwerk. Ein guter Schritt weg von einem geteilten öffentlichen Endpoint. | Die [Durchsatz-Richtlinien](https://docs.chainstack.com/docs/limits) nennen für Developer 25 RPS auf Solana devnet, aber nur 5 RPS auf Solana mainnet. `getProgramAccounts`, `getSupply` und `getTokenAccountsByOwner` sind auf mainnet kostenpflichtig; für devnet gibt es keine Archive-Nodes. Über das Kontingent hinaus kosten weitere 1 Mio. RU 20 $. |
+| [Alchemy](https://www.alchemy.com/pricing)    | Free: 30 Mio. CU/Monat, 15 RPS, 5 Apps, 5 Webhooks, alle Mainnets und Testnets.    | Eine direkt einfügbare devnet-HTTP/WSS-URL, ein Nutzungs-Dashboard und Webhooks zum Lernen und für Demos.                                     | [Solana Devnet RPC](https://www.alchemy.com/rpc/solana-devnet) listet den Endpoint und die APIs, die auf devnet nicht verfügbar sind (Token, NFT, Prices, Debug, Trace und andere). Abrechnung erfolgt in Compute Units, nicht in reinen Anfragen; gRPC ist kostenpflichtig.                                                                               |
+
+Quoten und Preise ändern sich. Die verlinkten Anbieterseiten sind maßgeblich; die Zahlen oben sind ein Einstiegspunkt, kein Versprechen von Vue Solana.
+
+Ein Anbieter gibt dir RPC-Zugriff, kein Test-SOL. Zum Senden von Transaktionen brauchst du weiterhin devnet-SOL aus dem Faucet weiter unten.
+
 ## WebSocket-Endpoints
 
 WebSocket-Endpoints werden für Subscriptions und Echtzeit-Updates verwendet. Vue Solana leitet einen WebSocket-Endpoint aus deinem RPC-Endpoint ab, sofern du nicht `wsEndpoint` explizit übergibst.

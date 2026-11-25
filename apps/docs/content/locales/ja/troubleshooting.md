@@ -154,6 +154,8 @@ installSolanaBufferPolyfill();
 
 `useRpc()` または `useSolanaRpc()` で、設定されたクラスターとエンドポイントを確認してください。
 
+共有エンドポイントがレート制限されている場合は、[Chainstack または Alchemy](/ja/concepts/clusters#ホスト型-rpc-プロバイダー) の無料キー付きエンドポイントを使うと、アプリに専用クォータとダッシュボードを設けられます。まず devnet で始め、mainnet に移る前にメソッドの利用可否を確認してください。
+
 ## Nuxt の自動インポートが見つからない
 
 `@vue-solana/nuxt` が `modules` に含まれていることを確認し、パッケージのインストール後に Nuxt の開発サーバーを再起動してください。

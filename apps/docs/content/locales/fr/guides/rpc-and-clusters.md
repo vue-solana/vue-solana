@@ -64,6 +64,25 @@ import { getWebSocketEndpoint } from "@vue-solana/core/clusters";
 const wsEndpoint = getWebSocketEndpoint("https://api.devnet.solana.com");
 ```
 
+## Configuration d'un RPC hébergé
+
+L'endpoint devnet intégré suffit pour une première lecture. Pour un exemple que vous comptez conserver, ou pour une application qui utilise des souscriptions WebSocket, créez un endpoint gratuit avec clé chez un fournisseur comme [Chainstack](https://chainstack.com/pricing/) ou [Alchemy](https://www.alchemy.com/pricing). Les [concepts des clusters](/fr/concepts/clusters#fournisseurs-rpc-hébergés) comparent les forfaits gratuits et leurs compromis.
+
+Passez l'URL HTTP du fournisseur comme `endpoint` :
+
+```ts
+createSolanaPlugin({
+  cluster: "devnet",
+  endpoint: "https://solana-devnet.g.alchemy.com/v2/YOUR_KEY",
+});
+```
+
+`wsEndpoint` est facultatif. Vue Solana convertit automatiquement `https` en `wss` : l'URL WebSocket est donc dérivée de l'URL HTTP ci-dessus. Ne passez `wsEndpoint` explicitement que si le fournisseur utilise un autre hôte ou port.
+
+Dans Nuxt, conservez une clé réservée au serveur dans la configuration runtime privée et lisez-la avec `useServerSolanaClient()`, comme indiqué dans [RPC côté serveur pendant le SSR](/fr/guides/rpc-and-clusters#rpc-côté-serveur-pendant-le-ssr). Ne mettez jamais une clé brute dans `runtimeConfig.public.solana` : la configuration publique est incluse dans le bundle du navigateur. Dans une application purement cliente, la chaîne de l'endpoint est visible par construction ; utilisez la liste de domaines/IP autorisés du fournisseur et gardez la clé hors du contrôle de version.
+
+Les forfaits gratuits sont prévus pour l'apprentissage et un faible trafic. Avant de dépendre de `useProgramAccounts()`, `useTokenAccounts()` ou de lectures historiques, vérifiez les méthodes prises en charge par le fournisseur : la même méthode peut être disponible sur devnet et restreinte sur mainnet, ou nécessiter un forfait archive.
+
 ## Configuration de Vue
 
 Installez le plugin Vue une seule fois au démarrage de l'app.

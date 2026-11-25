@@ -64,6 +64,25 @@ import { getWebSocketEndpoint } from "@vue-solana/core/clusters";
 const wsEndpoint = getWebSocketEndpoint("https://api.devnet.solana.com");
 ```
 
+## Hosted RPC Setup
+
+The built-in devnet endpoint is fine for a first read. For an example you plan to keep, or for an app that uses WebSocket subscriptions, create a free keyed endpoint with a provider such as [Chainstack](https://chainstack.com/pricing/) or [Alchemy](https://www.alchemy.com/pricing). The [cluster concepts](/concepts/clusters#hosted-rpc-providers) compare their free tiers and trade-offs.
+
+Pass the provider's HTTP URL as `endpoint`:
+
+```ts
+createSolanaPlugin({
+  cluster: "devnet",
+  endpoint: "https://solana-devnet.g.alchemy.com/v2/YOUR_KEY",
+});
+```
+
+`wsEndpoint` is optional. Vue Solana converts `https` to `wss` automatically, so the WebSocket URL is derived from the HTTP URL above. Pass `wsEndpoint` explicitly only when the provider uses a different host or port.
+
+For Nuxt, keep a server-only key in private runtime config and read it with `useServerSolanaClient()` as shown in [Server-Side RPC During SSR](#server-side-rpc-during-ssr). Never put a raw key in `runtimeConfig.public.solana`; public config is bundled into the browser. In a pure client app the endpoint string is visible by design, so use the provider's domain/IP allowlist and keep the key out of source control.
+
+Free tiers are for learning and low traffic. Before relying on `useProgramAccounts()`, `useTokenAccounts()`, or historical lookups, check the provider's method availability: the same method can be included on devnet and restricted on mainnet, or require an archive plan.
+
 ## Vue Setup
 
 Install the Vue plugin once near app startup.

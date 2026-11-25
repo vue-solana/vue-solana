@@ -64,6 +64,25 @@ import { getWebSocketEndpoint } from "@vue-solana/core/clusters";
 const wsEndpoint = getWebSocketEndpoint("https://api.devnet.solana.com");
 ```
 
+## Einrichtung eines gehosteten RPC
+
+Der integrierte devnet-Endpoint reicht für den ersten Lesevorgang aus. Für ein Beispiel, das du behalten möchtest, oder für eine App mit WebSocket-Subscriptions erstelle bei einem Anbieter wie [Chainstack](https://chainstack.com/pricing/) oder [Alchemy](https://www.alchemy.com/pricing) einen kostenlosen Endpoint mit eigenem Schlüssel. Die [Cluster-Konzepte](/de/concepts/clusters#gehostete-rpc-anbieter) vergleichen die kostenlosen Tarife und ihre Vor- und Nachteile.
+
+Übergib die HTTP-URL des Anbieters als `endpoint`:
+
+```ts
+createSolanaPlugin({
+  cluster: "devnet",
+  endpoint: "https://solana-devnet.g.alchemy.com/v2/YOUR_KEY",
+});
+```
+
+`wsEndpoint` ist optional. Vue Solana wandelt `https` automatisch in `wss` um, die WebSocket-URL wird also aus der obigen HTTP-URL abgeleitet. Übergib `wsEndpoint` nur explizit, wenn der Anbieter einen anderen Host oder Port verwendet.
+
+Bei Nuxt bewahre einen nur für den Server gedachten Schlüssel in der privaten Runtime-Konfiguration auf und lies ihn mit `useServerSolanaClient()` aus, wie unter [Serverseitiges RPC während der SSR](/de/guides/rpc-and-clusters#serverseitiges-rpc-während-der-ssr) beschrieben. Setze niemals einen rohen Schlüssel in `runtimeConfig.public.solana`; die öffentliche Konfiguration wird in den Browser gebündelt. In einer reinen Client-App ist die Endpoint-Zeichenfolge grundsätzlich sichtbar. Nutze daher die Domain-/IP-Allowlist des Anbieters und halte den Schlüssel außerhalb der Versionsverwaltung.
+
+Kostenlose Tarife sind für Lernen und geringen Traffic gedacht. Prüfe die unterstützten Methoden des Anbieters, bevor du dich auf `useProgramAccounts()`, `useTokenAccounts()` oder historische Abfragen verlässt: Dieselbe Methode kann auf devnet verfügbar und auf mainnet eingeschränkt sein oder einen Archiv-Tarif erfordern.
+
 ## Vue einrichten
 
 Installiere das Vue-Plugin einmal kurz nach dem Start der App.
