@@ -154,6 +154,8 @@ Häufige Ursachen:
 
 Prüfe den konfigurierten Cluster und Endpoint mit `useRpc()` oder `useSolanaRpc()`.
 
+Wenn der geteilte Endpoint dich drosselt, gibt dir ein kostenloser Endpoint mit eigenem Schlüssel von [Chainstack oder Alchemy](/de/concepts/clusters#gehostete-rpc-anbieter) ein eigenes Kontingent und ein Dashboard. Beginne auf devnet und prüfe die Methodenverfügbarkeit, bevor du zu mainnet wechselst.
+
 ## Nuxt-Auto-Imports fehlen
 
 Stelle sicher, dass `@vue-solana/nuxt` in `modules` aufgeführt ist, und starte den Nuxt-Dev-Server nach der Installation des Pakets neu.

@@ -150,6 +150,8 @@ Direkte Vue- und Core-Clients akzeptieren `payer` und `payerSecretKey` für clie
 
 RPC-Lesevorgänge funktionieren ohne Browser-Wallet.
 
+Der integrierte devnet-Endpoint reicht für diese erste Prüfung aus. Wenn du das Beispiel behalten möchtest oder Lesevorgänge wegen Drosselung des geteilten Endpoints fehlschlagen, wechsle zu einem kostenlosen Endpoint mit eigenem Schlüssel von [Chainstack oder Alchemy](/de/concepts/clusters#gehostete-rpc-anbieter) und übergib ihn als `endpoint`.
+
 Verwende in Vue `useRpc()`:
 
 ```vue

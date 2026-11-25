@@ -2,6 +2,14 @@
 
 All notable changes to the knowledge bundle are documented here.
 
+## 2026-11-25
+
+### Added
+
+- Documented hosted RPC provider options in `concepts/clusters.md`: public-endpoint limitations, what to check before choosing (method availability, RU/CU metering, WebSockets/webhooks/gRPC, key placement), and free-tier figures for Chainstack Developer and Alchemy Free.
+- Added hosted-RPC setup guidance to `guides/getting-started.md` (`endpoint` / optional `wsEndpoint`, Nuxt private runtime config with `useServerSolanaClient()`) and a throttling remedy to `guides/troubleshooting.md`.
+- Updated the clusters frontmatter and `index.md` description so agents can discover the new RPC provider guidance, and linked the generic Solana concepts page to it.
+
 ## 2026-11-16
 
 ### Added

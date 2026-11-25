@@ -1,10 +1,12 @@
 ---
 type: Concept
 title: Solana Clusters
-description: Overview of Solana cluster types (mainnet, devnet, testnet, localnet) and how to choose the right one.
+description: Overview of Solana cluster types, RPC endpoints, hosted RPC providers, and how to choose the right one.
 tags:
   - solana
   - clusters
+  - rpc
+  - rpc-providers
   - devnet
   - mainnet
   - localnet
@@ -49,6 +51,28 @@ export default defineNuxtConfig({
   },
 });
 ```
+
+## Hosted RPC Providers
+
+Solana's public endpoints are shared by everyone. They are fine for a first `getLatestBlockhash()` or `getBalance()` call, but throttling, unpredictable latency, and no usage dashboard make them a poor foundation for an app other people will use. A hosted RPC provider gives you a keyed HTTP and WebSocket endpoint, published quotas, metrics, and a clear upgrade path when traffic grows.
+
+Vue Solana does not depend on a particular provider. Every RPC call goes through the Kit client built from `endpoint` (and optional `wsEndpoint`), so changing providers is a configuration change, not a rewrite of your composables. `wsEndpoint` is optional: Vue Solana converts `https` to `wss` and preserves the path. Pass it explicitly only when the provider uses a different host or port.
+
+Check before choosing:
+
+- **Method availability by tier and cluster.** Chainstack lists some heavy Solana scan methods as paid-only on mainnet and has no archive nodes for devnet.
+- **How usage is metered.** Chainstack uses Request Units (1 RU per full-node request); Alchemy uses Compute Units, which vary by method. Comparing only requests per second is misleading.
+- **Whether WebSockets, webhooks, or gRPC are in the free tier.** Your app may need one even when plain HTTP reads work.
+- **Where the API key will live.** An endpoint string in a browser bundle is visible to users. Restrict the key in the provider dashboard or put it behind a server route.
+
+| Provider                                      | Free tier                                                                 | Good for                                                              | Details                                                                                                                                                                                                                                                                                               |
+| --------------------------------------------- | ------------------------------------------------------------------------- | --------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [Chainstack](https://chainstack.com/pricing/) | Developer: $0/mo, 3,000,000 RU/mo, 25 RPS overall, 1 project, WebSockets. | Predictable request-unit billing and explicit per-network limits.     | [Throughput guidelines](https://docs.chainstack.com/docs/limits) list 25 RPS on Solana devnet but 5 RPS on Solana mainnet for Developer. `getProgramAccounts`, `getSupply`, and `getTokenAccountsByOwner` are paid-only on mainnet; devnet has no archive nodes. Overage is $20 per additional 1M RU. |
+| [Alchemy](https://www.alchemy.com/pricing)    | Free: 30M CU/mo, 15 RPS, 5 apps, 5 webhooks, all mainnets and testnets.   | A ready-to-paste devnet HTTP/WSS URL and a usage dashboard for demos. | [Solana Devnet RPC](https://www.alchemy.com/rpc/solana-devnet) lists the endpoint and APIs unavailable on devnet (Token, NFT, Prices, Debug, Trace, and others). Billing is in Compute Units, not raw requests; gRPC is paid.                                                                         |
+
+Quotas and prices change. Treat the linked provider pages as the source of truth; the numbers above are a starting point, not a promise from Vue Solana. A provider gives you RPC access, not test SOL: you still need devnet SOL from the faucet to send transactions.
+
+In Nuxt, keep a server-only key in private runtime config and read it with `useServerSolanaClient()`. Never put a raw key in `runtimeConfig.public.solana`; public config is bundled into the browser.
 
 ## Related
 

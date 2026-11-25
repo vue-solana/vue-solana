@@ -150,6 +150,8 @@ Direct Vue and core clients accept `payer` and `payerSecretKey` for client-sent 
 
 RPC reads work without a browser wallet.
 
+The built-in devnet endpoint is enough for this first check. If you keep the example around, or if reads start failing because the shared endpoint is throttled, switch to a free keyed endpoint from [Chainstack or Alchemy](/concepts/clusters#hosted-rpc-providers) and pass it as `endpoint`.
+
 In Vue, use `useRpc()`:
 
 ```vue

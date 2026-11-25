@@ -150,6 +150,8 @@ direct Vue/core client 支持用于 client-sent 交易的 `payer` 和 `payerSecr
 
 RPC 读取不需要浏览器钱包。
 
+内置的 devnet 端点足够完成这次检查。如果你打算保留示例，或读取开始因共享端点被限流而失败，请改用 [Chainstack 或 Alchemy](/zh/concepts/clusters#托管-rpc-提供商) 的免费带密钥端点，并作为 `endpoint` 传入。
+
 Vue 中使用 `useRpc()`：
 
 ```vue

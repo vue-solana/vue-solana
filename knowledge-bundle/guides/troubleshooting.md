@@ -112,6 +112,8 @@ Common causes:
 
 Check the configured cluster and endpoint with `useRpc()` or `useSolanaRpc()`.
 
+If the shared endpoint is throttling requests, switch to a free keyed endpoint from [Chainstack or Alchemy](../concepts/clusters.md#hosted-rpc-providers). Start on devnet and check method availability before moving to mainnet: the same method can be included on devnet but paid-only or restricted on mainnet, or require an archive plan.
+
 ## Nuxt Auto-Imports Are Missing
 
 Make sure `@vue-solana/nuxt` is listed in `modules` and restart the Nuxt dev server after installing the package.

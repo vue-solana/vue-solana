@@ -33,7 +33,7 @@ Examples:
 - `https://api.mainnet.solana.com`
 - `http://127.0.0.1:8899`
 
-RPC requests go through `client.rpc` from `useSolanaClient()` / `useSolanaRpc()`, or from `createSolanaClient()` / `createSolanaContext()` in `@vue-solana/core`. The legacy `Connection` class and the `web3` subpaths were removed in v2.0.0. Public endpoints are useful for getting started, but production apps usually use a dedicated RPC provider for reliability and rate limits.
+RPC requests go through `client.rpc` from `useSolanaClient()` / `useSolanaRpc()`, or from `createSolanaClient()` / `createSolanaContext()` in `@vue-solana/core`. The legacy `Connection` class and the `web3` subpaths were removed in v2.0.0. Public endpoints are useful for getting started, but production apps usually use a dedicated RPC provider for reliability and rate limits. See [hosted RPC providers](./clusters.md#hosted-rpc-providers) for free-tier options and trade-offs.
 
 Official reference: [Solana RPC](https://solana.com/docs/rpc)
 

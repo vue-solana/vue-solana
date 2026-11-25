@@ -154,6 +154,8 @@ installSolanaBufferPolyfill();
 
 请使用 `useRpc()` 或 `useSolanaRpc()` 检查配置的 cluster 和 endpoint。
 
+如果共享端点正在限流，使用 [Chainstack 或 Alchemy](/zh/concepts/clusters#托管-rpc-提供商) 的免费带密钥端点可以让应用拥有独立配额和面板。先从 devnet 开始，切换到 mainnet 前请检查方法可用性。
+
 ## Nuxt 自动导入缺失
 
 确保 `@vue-solana/nuxt` 已列在 `modules` 中，并在安装包后重启 Nuxt 开发服务器。

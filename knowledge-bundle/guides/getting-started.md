@@ -139,6 +139,23 @@ The Nuxt module installs the runtime plugin on the client only and auto-imports 
 
 Direct core/Vue clients accept `payer` and `payerSecretKey` for client-sent transactions. Nuxt `ModuleOptions` intentionally omits both, and public runtime config must never contain a raw secret or funded keypair. Install a client-owned `payer` in a client-only plugin with `clientPlugin: false`; a client-sent transaction always needs one. The default client uses the official `solanaRpc()` stack, which installs the transaction planner and the plan-signing and plan-sending executors itself.
 
+## Hosted RPC Endpoints
+
+The built-in devnet endpoint is enough for a first read. For an example you plan to keep, or for an app that uses WebSocket subscriptions, create a free keyed endpoint with [Chainstack or Alchemy](../concepts/clusters.md#hosted-rpc-providers) and pass its HTTP URL as `endpoint`:
+
+```ts
+createSolanaPlugin({
+  cluster: "devnet",
+  endpoint: "https://solana-devnet.g.alchemy.com/v2/YOUR_KEY",
+});
+```
+
+`wsEndpoint` is optional. Vue Solana converts `https` to `wss` automatically, so the WebSocket URL is derived from the HTTP URL above. Pass `wsEndpoint` explicitly only when the provider uses a different host or port.
+
+In Nuxt, keep a server-only key in private runtime config and read it with `useServerSolanaClient()`. Never put a raw key in `runtimeConfig.public.solana`; public config is bundled into the browser. In a pure client app the endpoint string is visible by design, so use the provider's domain/IP allowlist and keep the key out of source control.
+
+Free tiers are for learning and low traffic. Before relying on `useProgramAccounts()`, `useTokenAccounts()`, or historical lookups, check the provider's method availability: the same method can be included on devnet and restricted on mainnet, or require an archive plan.
+
 ## Manual Dev Testing
 
 This guide tests the current libraries against Solana devnet. Devnet uses test SOL with no real value.

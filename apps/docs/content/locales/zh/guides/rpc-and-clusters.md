@@ -64,6 +64,25 @@ import { getWebSocketEndpoint } from "@vue-solana/core/clusters";
 const wsEndpoint = getWebSocketEndpoint("https://api.devnet.solana.com");
 ```
 
+## 托管 RPC 设置
+
+内置的 devnet 端点足够完成第一次读取。对于打算保留的示例，或使用 WebSocket 订阅的应用，请在 [Chainstack](https://chainstack.com/pricing/) 或 [Alchemy](https://www.alchemy.com/pricing) 等提供商处创建免费的带密钥端点。[集群概念](/zh/concepts/clusters#托管-rpc-提供商) 对比了免费套餐及其取舍。
+
+把提供商的 HTTP URL 作为 `endpoint` 传入：
+
+```ts
+createSolanaPlugin({
+  cluster: "devnet",
+  endpoint: "https://solana-devnet.g.alchemy.com/v2/YOUR_KEY",
+});
+```
+
+`wsEndpoint` 可选。Vue Solana 会自动把 `https` 转换为 `wss`，因此 WebSocket URL 由上面的 HTTP URL 推导而来。只有当提供商使用不同的主机或端口时，才需要显式传入 `wsEndpoint`。
+
+在 Nuxt 中，把仅供服务端使用的密钥保存在私有 runtime config 中，并按[SSR 期间的服务器端 RPC](/zh/guides/rpc-and-clusters#ssr-期间的服务器端-rpc) 所述用 `useServerSolanaClient()` 读取。不要把原始密钥放进 `runtimeConfig.public.solana`；public config 会被打包进浏览器。在纯客户端应用中，端点字符串设计上对用户可见，因此请使用提供商的域名 / IP 白名单，并让密钥远离版本控制。
+
+免费套餐适合学习和低流量。在依赖 `useProgramAccounts()`、`useTokenAccounts()` 或历史查询之前，请检查提供商支持的方法：同一个方法可能在 devnet 可用、在 mainnet 受限，或需要归档套餐。
+
 ## Vue 设置
 
 在应用启动附近安装一次 Vue 插件。

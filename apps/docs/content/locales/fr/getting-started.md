@@ -150,6 +150,8 @@ Les clients directs Vue et core acceptent `payer` et `payerSecretKey` pour les t
 
 Les lectures RPC fonctionnent sans wallet de navigateur.
 
+L'endpoint devnet intégré suffit pour cette première vérification. Si vous conservez l'exemple ou si les lectures commencent à échouer parce que l'endpoint partagé est limité, passez à un endpoint gratuit avec clé de [Chainstack ou Alchemy](/fr/concepts/clusters#fournisseurs-rpc-hébergés) et transmettez-le comme `endpoint`.
+
 En Vue, utilisez `useRpc()` :
 
 ```vue

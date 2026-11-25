@@ -64,6 +64,25 @@ import { getWebSocketEndpoint } from "@vue-solana/core/clusters";
 const wsEndpoint = getWebSocketEndpoint("https://api.devnet.solana.com");
 ```
 
+## 호스팅 RPC 설정
+
+내장 devnet 엔드포인트는 첫 읽기에는 충분합니다. 계속 유지할 예제나 WebSocket subscription을 사용하는 앱이라면 [Chainstack](https://chainstack.com/pricing/) 또는 [Alchemy](https://www.alchemy.com/pricing) 같은 제공자에서 무료 키 기반 엔드포인트를 만드세요. [클러스터 개념](/ko/concepts/clusters#호스팅-rpc-제공자)에서 무료 플랜과 장단점을 비교합니다.
+
+제공자의 HTTP URL을 `endpoint`로 전달하세요.
+
+```ts
+createSolanaPlugin({
+  cluster: "devnet",
+  endpoint: "https://solana-devnet.g.alchemy.com/v2/YOUR_KEY",
+});
+```
+
+`wsEndpoint`는 선택 사항입니다. Vue Solana가 `https`를 `wss`로 자동 변환하므로 WebSocket URL은 위 HTTP URL에서 도출됩니다. 제공자가 다른 호스트 또는 포트를 사용할 때만 `wsEndpoint`를 명시하세요.
+
+Nuxt에서는 서버 전용 키를 private runtime config에 보관하고 [SSR 중 서버 측 RPC](/ko/guides/rpc-and-clusters#ssr-중-서버-측-rpc)처럼 `useServerSolanaClient()`로 읽으세요. raw 키를 `runtimeConfig.public.solana`에 넣지 마세요. public config는 브라우저 bundle에 포함됩니다. 순수 client 앱에서는 endpoint 문자열이 설계상 사용자에게 보이므로 제공자의 도메인 / IP allowlist를 사용하고 키를 버전 관리 밖에 두세요.
+
+무료 플랜은 학습과 낮은 트래픽을 위한 것입니다. `useProgramAccounts()`, `useTokenAccounts()`, 기록 조회에 의존하기 전에 제공자의 지원 메서드를 확인하세요. 같은 메서드가 devnet에서는 가능하지만 mainnet에서는 제한되거나 archive 플랜이 필요할 수 있습니다.
+
 ## Vue 설정
 
 앱 시작 지점 근처에서 Vue 플러그인을 한 번 설치하세요.
