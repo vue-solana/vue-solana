@@ -64,4 +64,14 @@ describe("Nuxt module auto-import mapping", () => {
       from: `${dist}/useTransactionHistory.mjs`,
     });
   });
+
+  it("registers the compute-budget alias with its own Vue subpath", () => {
+    const dist = "/pkg/vue/dist";
+
+    expect(solanaAutoImports(dist)).toContainEqual({
+      name: "useComputeBudget",
+      as: "useSolanaComputeBudget",
+      from: `${dist}/useComputeBudget.mjs`,
+    });
+  });
 });

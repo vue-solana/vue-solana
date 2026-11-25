@@ -1,6 +1,6 @@
 # Feature Queue Phases
 
-Status: Phase 0 complete on `plan/feature-queue-phase-0`; Phases 1–6 proposed. Owner: TBD.
+Status: Phases 0–1 complete on `plan/feature-queue-phase-0` and `plan/feature-queue-phase-1`; Phases 2–6 proposed. Owner: TBD.
 
 This plan turns the stronger feature queue from [`reports/Vue Solana UI library.md`](../reports/Vue%20Solana%20UI%20library.md) into shippable slices. It supersedes the priority order currently written in `apps/docs/content/roadmap.md`; Phase 0 updates that roadmap and every locale mirror.
 
@@ -59,18 +59,29 @@ Goal: let an app choose and cap a compute budget without reimplementing Kit sett
 
 Working API names may change during implementation; the boundaries are fixed.
 
-- [ ] Core: add `@vue-solana/core/fee-policy` exporting `resolveFeePolicy()` plus `FeePolicy`, `FeeBudget`, and result types. Inputs: a message, a policy (`mode: "economy" | "standard" | "priority"`, `maxLamports`, `maxMicroLamportsPerComputeUnit`, `computeUnitBufferPercent`), and an optional simulation result from `simulateTransaction()`. Output: a modified message and a report with `computeUnitLimit`, `computeUnitPriceMicroLamports`, `estimatedFeeLamports`, and `capped`.
-- [ ] Keep it pure of signing and sending. Require the caller's client only for optional estimation; throw `MISSING_CLIENT_CAPABILITY` when the estimation method is absent, `INVALID_INPUT` for malformed policy values, and `RPC_FAILURE` for transport failures.
-- [ ] Vue: add `useComputeBudget()` (alias `useFeePolicy()` if both names aid discovery) built on the shared action store. It watches reactive message/policy sources, exposes `budget`, `status`, `error`, `apply()`, and `refresh()`, and supersedes in-flight work on scope dispose.
-- [ ] Add the top-level `src/useComputeBudget.ts` re-export and register `useSolanaComputeBudget()` in `packages/nuxt/src/imports.ts`.
-- [ ] Docs: add a "Fee and compute budget policy" section to the English transactions guide and mirror it into all six locales. State plainly that values are estimates, not guarantees, and that spend caps are enforced locally.
-- [ ] Examples: add a read-only panel in `examples/vue-vite` and `examples/nuxt` that takes simulation output, shows the chosen budget, and applies it to a displayed message. Do not send.
-- [ ] Tests: unit coverage for presets, caps, buffer math, invalid options, missing capability, abort/supersede, and RPC normalization; extend the e2e RPC mock with simulation and message-update assertions.
-- [ ] Add a changeset and update `AGENTS.md`.
+- [x] Core: add `@vue-solana/core/fee-policy` exporting `resolveFeePolicy()` plus `FeePolicy`, `FeeBudget`, and result types. Inputs: a message, a policy (`mode: "economy" | "standard" | "priority"`, `maxLamports`, `maxMicroLamportsPerComputeUnit`, `computeUnitBufferPercent`), and an optional simulation result from `simulateTransaction()`. Output: a modified message and a report with `computeUnitLimit`, `computeUnitPriceMicroLamports`, `estimatedFeeLamports`, and `capped`.
+- [x] Keep it pure of signing and sending. Require the caller's client only for optional estimation; throw `MISSING_CLIENT_CAPABILITY` when the estimation method is absent, `INVALID_INPUT` for malformed policy values, and `RPC_FAILURE` for transport failures.
+- [x] Vue: add `useComputeBudget()` (alias `useFeePolicy()` if both names aid discovery) built on the shared action store. It watches reactive message/policy sources, exposes `budget`, `status`, `error`, `apply()`, and `refresh()`, and supersedes in-flight work on scope dispose.
+- [x] Add the top-level `src/useComputeBudget.ts` re-export and register `useSolanaComputeBudget()` in `packages/nuxt/src/imports.ts`.
+- [x] Docs: add a "Fee and compute budget policy" section to the English transactions guide and mirror it into all six locales. State plainly that values are estimates, not guarantees, and that spend caps are enforced locally.
+- [x] Examples: add a read-only panel in `examples/vue-vite` and `examples/nuxt` that takes simulation output, shows the chosen budget, and applies it to a displayed message. Do not send.
+- [x] Tests: unit coverage for presets, caps, buffer math, invalid options, missing capability, abort/supersede, and RPC normalization; extend the e2e RPC mock with simulation and message-update assertions.
+- [x] Add a changeset and update `AGENTS.md`.
 
 Explicit non-goals: no dynamic fee oracle, no automatic priority-fee injection at send time, no retry/resubmission, no durable nonce, no wallet UI, no fee market prediction.
 
 Exit criteria: all CI gates green, `pnpm size:packages` shows no new static heavy edge, docs/locales/LLM surface consistent, changeset present.
+
+### Phase 1 verification
+
+Measured on `plan/feature-queue-phase-1`; no commit was made.
+
+- `pnpm format`, `pnpm lint`, `pnpm test` (103 files / 1202 tests), `pnpm typecheck`, `pnpm build:packages`, `pnpm build:examples`, `pnpm --filter docs build` (398 prerendered routes, 0 link errors), `pnpm --filter docs typecheck`, `pnpm smoke:standalone-installs`, `pnpm smoke:docs-surface`, `pnpm check:entries`, `pnpm check:esm-map`, `pnpm check:externals`, `pnpm check:buffer-polyfill-declarations`, `pnpm size:packages`, `pnpm pack:size`, and `pnpm test:e2e` (40 tests) all passed.
+- Export-map checks cover 22 core, 46 Vue, and 6 Nuxt entries. The standalone smoke consumers now import `@vue-solana/core/fee-policy` and `@vue-solana/vue/useComputeBudget`; all three packages install and typecheck from packed tarballs.
+- `pnpm size:packages`: root entries are `@vue-solana/core` 279.9 KB minified / 78.9 KB gzip, `@vue-solana/vue` 381.5 KB / 114.5 KB, and `@vue-solana/nuxt` runtime plugin 192.5 KB / 60.1 KB. The Kit mirror remains 247.2 KB / 68.5 KB. The new `@vue-solana/vue/useComputeBudget` report-only entry is 68.3 KB / 21.3 KB, and the lean-import gate reports no new static heavy edge; the only note is the unchanged deferred iOS wallet debt.
+- `pnpm pack:size`: core 29 files / 33,591 bytes, Vue 142 files / 75,606 bytes, Nuxt 16 files / 13,390 bytes, with no `.d.mts` in any tarball.
+- The export, externals, and size checks were rerun sequentially after a parallel run briefly raced the standalone smoke test's package rebuild, matching the workflow note in `AGENTS.md`.
+- The implementation record is archived at [`plans/archived/fee-policy-compute-budget.md`](archived/fee-policy-compute-budget.md).
 
 ## Phase 2 — Transaction diagnostics join
 

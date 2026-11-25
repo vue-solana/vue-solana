@@ -133,6 +133,7 @@ Sous-chemins directs du package :
 - `@vue-solana/vue/useSignTransactions`
 - `@vue-solana/vue/useSignAndSendTransactions`
 - `@vue-solana/vue/useClientCapability`
+- `@vue-solana/vue/useComputeBudget`
 - `@vue-solana/vue/usePayer`
 - `@vue-solana/vue/useIdentity`
 - `@vue-solana/vue/usePlanTransaction`
@@ -771,6 +772,26 @@ async function preview() {
 ```
 
 `status` passe par `idle`, `simulating`, `simulated` et `error` ; démarrer une nouvelle prévisualisation interrompt la précédente. Dans Nuxt, l'alias auto-importé est `useSolanaSimulateTransaction()`.
+
+## Politique des frais et du budget de calcul
+
+`useComputeBudget(messageSource, policySource?, options?)` résout une politique de frais locale contre un message de transaction Kit réactif. Le résultat de simulation est transmis via `options.simulationResult` ; sans lui, le client utilise `rpc.simulateTransaction` pour estimer les limites de ressources de Kit. Le message n'est jamais signé ni envoyé.
+
+```vue
+<script setup lang="ts">
+import { useComputeBudget } from "@vue-solana/vue/useComputeBudget";
+
+const { budget, message, status, loading, error, apply, refresh, reset } = useComputeBudget(
+  messageRef,
+  { mode: "standard", maxLamports: 6_000n },
+  { simulationResult: simulationResultRef },
+);
+
+await apply();
+</script>
+```
+
+`status` passe par `idle`, `computing`, `computed` et `error`. Les changements réactifs du message, de la politique ou de la simulation remplacent le travail en cours, et la destruction de la portée interrompt une estimation active. `budget` contient `computeUnitLimit`, `computeUnitPriceMicroLamports`, `priorityFeeLamports`, `baseFeeLamports`, `estimatedFeeLamports`, `capped` et `cappedBy`. Toutes les valeurs sont des estimations locales, pas des garanties du réseau. `useFeePolicy()` est un alias et, dans Nuxt, l'alias auto-importé est `useSolanaComputeBudget()`.
 
 ## Historique des transactions
 

@@ -73,6 +73,10 @@
       "types": "./dist/useClientCapability.d.ts",
       "import": "./dist/useClientCapability.mjs"
     },
+    "./useComputeBudget": {
+      "types": "./dist/useComputeBudget.d.ts",
+      "import": "./dist/useComputeBudget.mjs"
+    },
     "./usePayer": {
       "types": "./dist/usePayer.d.ts",
       "import": "./dist/usePayer.mjs"

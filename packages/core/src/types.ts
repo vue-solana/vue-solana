@@ -305,3 +305,70 @@ export interface TransactionHistoryResult {
   /** Last signature of this page; pass it as `before` to load older items. */
   nextBefore?: Signature;
 }
+
+/** Priority tiers are fixed estimates; this library does not read a fee market. */
+export type FeePolicyMode = "economy" | "standard" | "priority";
+
+/**
+ * Local policy for a compute budget. Every numeric field is optional because
+ * presets supply defaults; values are estimates, never send-time guarantees.
+ */
+export interface FeePolicy {
+  /** Defaults to `standard`. */
+  mode?: FeePolicyMode;
+  /**
+   * Total fee ceiling in lamports (estimated base fee + priority fee), enforced
+   * locally by reducing the priority fee. The network base fee cannot be capped
+   * away, so a cap below the base fee still reports an over-cap estimate.
+   */
+  maxLamports?: bigint | number;
+  /** Ceiling for the price per compute unit, in micro-lamports. */
+  maxMicroLamportsPerComputeUnit?: bigint | number;
+  /** Extra headroom over the observed/estimated units, from 0 to 100. */
+  computeUnitBufferPercent?: number;
+  /**
+   * Explicit price in micro-lamports per compute unit. Overrides the preset
+   * price and is still subject to the caps above.
+   */
+  microLamportsPerComputeUnit?: bigint | number;
+}
+
+/** The simulation fields needed to derive a fee budget. */
+export type FeePolicySimulation = Pick<SimulatedTransactionResult, "unitsConsumed" | "fee">;
+
+export interface ResolveFeePolicyOptions {
+  /**
+   * Optional simulation result. When supplied, no RPC call is made.
+   */
+  simulationResult?: FeePolicySimulation | null;
+  /**
+   * Used only when no simulation result is supplied. The client needs an
+   * `rpc.simulateTransaction` method for Kit's resource-limit estimator.
+   */
+  client?: SolanaClient | null;
+  abortSignal?: AbortSignal;
+}
+
+export type FeeBudgetCap = "maxLamports" | "maxMicroLamportsPerComputeUnit" | "computeUnitLimit";
+
+/** The locally enforced budget and the estimates behind it. */
+export interface FeeBudget {
+  mode: FeePolicyMode;
+  computeUnitLimit: number;
+  computeUnitPriceMicroLamports: bigint;
+  /** `price * limit / 1_000_000`, rounded up. */
+  priorityFeeLamports: bigint;
+  /** Simulated base fee when available, otherwise a one-signature estimate. */
+  baseFeeLamports: bigint;
+  estimatedFeeLamports: bigint;
+  /** True when any local cap or the chain's compute-unit limit was applied. */
+  capped: boolean;
+  cappedBy: readonly FeeBudgetCap[];
+  unitsConsumed: number | null;
+  source: "simulation" | "estimation" | "default";
+}
+
+export interface ResolveFeePolicyResult<TMessage> {
+  message: TMessage;
+  budget: FeeBudget;
+}

@@ -53,6 +53,10 @@
       "types": "./dist/errors.d.ts",
       "import": "./dist/errors.mjs"
     },
+    "./fee-policy": {
+      "types": "./dist/fee-policy.d.ts",
+      "import": "./dist/fee-policy.mjs"
+    },
     "./ios-wallet": {
       "types": "./dist/ios-wallet.d.ts",
       "import": "./dist/ios-wallet.mjs"

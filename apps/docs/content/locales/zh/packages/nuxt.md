@@ -95,6 +95,7 @@ export default defineNuxtConfig({
 - `useSolanaTransactionConfirmation(options?)`：确认现有交易签名。
 - `useSolanaSignatureStatus(signature, options?)`：读取、轮询或订阅签名状态。
 - `useSolanaSimulateTransaction()`：模拟原始 wire 交易字节而不提交，并暴露规范化的错误、日志、余额变化和 loaded addresses。
+- `useSolanaComputeBudget(messageSource, policySource?, options?)`：根据模拟结果或 RPC 估算解析并本地限制计算预算，不签名或发送。
 - `useSolanaTransactionHistory(addressSource, options?)`：在不获取交易正文的情况下列出地址的分页签名元数据。
 - `useSolanaSignMessage()`：签署链下认证或所有权 challenge 消息。
 - `useSolanaWalletAccountMessageSigner()`：返回钱包账户的 Kit `MessageModifyingSigner`。

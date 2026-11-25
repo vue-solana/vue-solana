@@ -2,6 +2,7 @@ export * from "./action";
 export * from "./clusters";
 export * from "./address";
 export * from "./errors";
+export * from "./fee-policy";
 export * from "./kit";
 export * from "./rpc";
 export * from "./token-accounts";

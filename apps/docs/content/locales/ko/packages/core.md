@@ -63,6 +63,7 @@ Direct subpath:
 - `@vue-solana/core/types`
 - `@vue-solana/core/clusters`
 - `@vue-solana/core/errors`
+- `@vue-solana/core/fee-policy`
 - `@vue-solana/core/ios-wallet`
 - `@vue-solana/core/kit`
 - `@vue-solana/core/mobile-wallet`
@@ -221,6 +222,7 @@ Root `@vue-solana/core` export는 아래 public helper를 다시 export합니다
 | `@vue-solana/core/address`             | `parseAddress()`와 address input type.                                                          | Solana 주소를 string, ref-like object, getter로 받고 검증되고 정규화된 `Address`가 필요할 때.                  |
 | `@vue-solana/core/clusters`            | 기본 cluster 및 endpoint helper.                                                                | `mainnet`, `mainnet-beta`, `testnet`, `devnet`, `localnet`의 built-in RPC 또는 WebSocket endpoint가 필요할 때. |
 | `@vue-solana/core/errors`              | `SolanaError`, error factory, error guard.                                                      | 지갑, RPC, 주소, 트랜잭션, timeout, storage 실패에 대한 안정적인 error code가 필요할 때.                       |
+| `@vue-solana/core/fee-policy`          | `resolveFeePolicy()`와 설명 가능한 컴퓨트 예산 타입.                                            | 트랜잭션에 서명하거나 전송하지 않고 로컬로 제한된 컴퓨트 유닛 및 우선 수수료 추정이 필요할 때.                 |
 | `@vue-solana/core/ios-wallet`          | iOS browser wallet discovery, deep-link adapter, callback handling.                             | Vue plugin의 unified wallet flow 없이 iOS wallet link를 직접 wiring할 때.                                      |
 | `@vue-solana/core/kit`                 | `createSolanaClient()`와 `@solana/kit` 전체 표면.                                               | 직접 `package.json`에 `@solana/kit`을 설치하지 않고 현대 Kit API를 원할 때.                                    |
 | `@vue-solana/core/mobile-wallet`       | Android Mobile Wallet Adapter registration helper.                                              | Wallet Standard wallet을 읽기 전에 Android MWA를 등록해야 할 때.                                               |

@@ -8,6 +8,7 @@ export default defineBuildConfig({
     "src/buffer-polyfill",
     "src/clusters",
     "src/errors",
+    "src/fee-policy",
     "src/ios-wallet",
     "src/kit",
     "src/mobile-wallet",

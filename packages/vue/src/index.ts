@@ -3,6 +3,7 @@ export * from "./composables/useAction";
 export * from "./composables/useAirdrop";
 export * from "./composables/useBalance";
 export * from "./composables/useClientCapability";
+export * from "./composables/useComputeBudget";
 export * from "./composables/useConnection";
 export * from "./composables/usePlanTransaction";
 export * from "./composables/useProgramAccounts";

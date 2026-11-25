@@ -64,6 +64,7 @@ Sous-chemins directs :
 - `@vue-solana/core/types`
 - `@vue-solana/core/clusters`
 - `@vue-solana/core/errors`
+- `@vue-solana/core/fee-policy`
 - `@vue-solana/core/ios-wallet`
 - `@vue-solana/core/kit`
 - `@vue-solana/core/mobile-wallet`
@@ -226,6 +227,7 @@ L'export racine `@vue-solana/core` réexporte les helpers publics ci-dessous. Ut
 | `@vue-solana/core/address`             | `parseAddress()` et les types d'entrée d'adresse.                                                          | Vous acceptez une adresse Solana sous forme de chaîne, d'objet de type ref ou de getter et avez besoin d'une `Address` validée et normalisée.             |
 | `@vue-solana/core/clusters`            | Helpers de cluster et d'endpoint par défaut.                                                               | Vous avez besoin de l'endpoint RPC ou WebSocket intégré au package pour `mainnet`, `mainnet-beta`, `testnet`, `devnet` ou `localnet`.                     |
 | `@vue-solana/core/errors`              | `SolanaError`, fabriques d'erreurs et gardes d'erreurs.                                                    | Vous avez besoin de codes d'erreur stables pour les échecs de wallet, RPC, adresse, transaction, délai d'expiration ou stockage destinés à l'utilisateur. |
+| `@vue-solana/core/fee-policy`          | `resolveFeePolicy()` et types explicables du budget de calcul.                                             | Vous avez besoin d'estimations plafonnées localement des unités de calcul et des frais de priorité sans signer ni envoyer de transaction.                 |
 | `@vue-solana/core/ios-wallet`          | Découverte de wallet de navigateur iOS, adaptateurs deep-link et gestion des callbacks.                    | Vous câblez des liens de wallet iOS sans le flux unifié de wallets du plugin Vue.                                                                         |
 | `@vue-solana/core/kit`                 | `createSolanaClient()` et toute la surface `@solana/kit`.                                                  | Vous voulez l'API Kit moderne sans installer `@solana/kit` dans votre propre `package.json`.                                                              |
 | `@vue-solana/core/mobile-wallet`       | Helpers d'enregistrement Android Mobile Wallet Adapter.                                                    | Vous devez enregistrer Android MWA avant de lire les wallets Wallet Standard.                                                                             |

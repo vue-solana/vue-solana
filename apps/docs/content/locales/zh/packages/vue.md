@@ -137,6 +137,7 @@ import { useWallet } from "@vue-solana/vue/useWallet";
 - `@vue-solana/vue/useSignTransactions`
 - `@vue-solana/vue/useSignAndSendTransactions`
 - `@vue-solana/vue/useClientCapability`
+- `@vue-solana/vue/useComputeBudget`
 - `@vue-solana/vue/usePayer`
 - `@vue-solana/vue/useIdentity`
 - `@vue-solana/vue/usePlanTransaction`
@@ -770,6 +771,26 @@ async function preview() {
 ```
 
 `status` 会依次经过 `idle`、`simulating`、`simulated` 和 `error`；发起新的预览会中止上一次预览。在 Nuxt 中，自动导入的别名是 `useSolanaSimulateTransaction()`。
+
+## 费用与计算预算策略
+
+`useComputeBudget(messageSource, policySource?, options?)` 针对响应式 Kit 交易消息解析本地费用策略。模拟结果通过 `options.simulationResult` 传入；未提供时，客户端会使用 `rpc.simulateTransaction` 估算 Kit 资源限制。它不会对消息签名或发送。
+
+```vue
+<script setup lang="ts">
+import { useComputeBudget } from "@vue-solana/vue/useComputeBudget";
+
+const { budget, message, status, loading, error, apply, refresh, reset } = useComputeBudget(
+  messageRef,
+  { mode: "standard", maxLamports: 6_000n },
+  { simulationResult: simulationResultRef },
+);
+
+await apply();
+</script>
+```
+
+`status` 会依次经过 `idle`、`computing`、`computed` 和 `error`。消息、策略或模拟的响应式变化会取代进行中的工作，作用域销毁会中止活跃的估算。`budget` 包含 `computeUnitLimit`、`computeUnitPriceMicroLamports`、`priorityFeeLamports`、`baseFeeLamports`、`estimatedFeeLamports`、`capped` 和 `cappedBy`。所有值都是本地估算，不是网络保证。`useFeePolicy()` 是别名，Nuxt 中自动导入的别名是 `useSolanaComputeBudget()`。
 
 ## 交易历史
 

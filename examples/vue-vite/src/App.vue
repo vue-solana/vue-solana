@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { installSolanaBufferPolyfill } from "@vue-solana/vue/buffer-polyfill";
 import BalancePanel from "./components/panels/BalancePanel.vue";
+import ComputeBudgetPanel from "./components/panels/ComputeBudgetPanel.vue";
 import DirectRpcPanel from "./components/panels/DirectRpcPanel.vue";
 import MessageSigningPanel from "./components/panels/MessageSigningPanel.vue";
 import MockTransactionPanel from "./components/panels/MockTransactionPanel.vue";
@@ -35,6 +36,7 @@ installSolanaBufferPolyfill();
     <WalletPanel />
     <MockTransactionPanel />
     <SimulateTransactionPanel />
+    <ComputeBudgetPanel />
     <TransactionHistoryPanel />
     <MessageSigningPanel />
     <WalletAccountSignersPanel />

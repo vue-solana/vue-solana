@@ -64,6 +64,7 @@ Direkte Subpfade:
 - `@vue-solana/core/types`
 - `@vue-solana/core/clusters`
 - `@vue-solana/core/errors`
+- `@vue-solana/core/fee-policy`
 - `@vue-solana/core/ios-wallet`
 - `@vue-solana/core/kit`
 - `@vue-solana/core/mobile-wallet`
@@ -226,6 +227,7 @@ Der Root-Export `@vue-solana/core` re-exportiert die folgenden öffentlichen Hel
 | `@vue-solana/core/address`             | `parseAddress()` und Typen für Adresseingaben.                                                               | Du eine Solana-Adresse als String, ref-ähnliches Objekt oder Getter annimmst und eine validierte, normalisierte `Address` brauchst.     |
 | `@vue-solana/core/clusters`            | Helfer für Standard-Cluster und -Endpoints.                                                                  | Du den eingebauten RPC- oder WebSocket-Endpoint des Pakets für `mainnet`, `mainnet-beta`, `testnet`, `devnet` oder `localnet` brauchst. |
 | `@vue-solana/core/errors`              | `SolanaError`, Fehlerfabriken und Fehler-Guards.                                                             | Du stabile Fehlercodes für nutzerseitige Wallet-, RPC-, Adress-, Transaktions-, Timeout- oder Speicherfehler brauchst.                  |
+| `@vue-solana/core/fee-policy`          | `resolveFeePolicy()` und erklärbare Compute-Budget-Typen.                                                    | Du brauchst lokal begrenzte Compute-Unit- und Priority-Fee-Schätzungen, ohne eine Transaktion zu signieren oder zu senden.              |
 | `@vue-solana/core/ios-wallet`          | iOS-Browser-Wallet-Erkennung, Deep-Link-Adapter und Callback-Behandlung.                                     | Du iOS-Wallet-Links ohne den einheitlichen Wallet-Flow des Vue-Plugins verdrahtest.                                                     |
 | `@vue-solana/core/kit`                 | `createSolanaClient()` und die gesamte `@solana/kit`-Oberfläche.                                             | Du die moderne Kit-API willst, ohne `@solana/kit` in deiner eigenen `package.json` zu installieren.                                     |
 | `@vue-solana/core/mobile-wallet`       | Registrierungshelfer für den Android Mobile Wallet Adapter.                                                  | Du den Android-MWA registrieren musst, bevor du Wallet-Standard-Wallets liest.                                                          |

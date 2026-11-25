@@ -133,6 +133,7 @@ Direkte Paket-Subpfade:
 - `@vue-solana/vue/useSignTransactions`
 - `@vue-solana/vue/useSignAndSendTransactions`
 - `@vue-solana/vue/useClientCapability`
+- `@vue-solana/vue/useComputeBudget`
 - `@vue-solana/vue/usePayer`
 - `@vue-solana/vue/useIdentity`
 - `@vue-solana/vue/usePlanTransaction`
@@ -771,6 +772,26 @@ async function preview() {
 ```
 
 `status` wandert durch `idle`, `simulating`, `simulated` und `error`; eine neue Prüfung bricht die vorherige ab. In Nuxt lautet der automatisch importierte Alias `useSolanaSimulateTransaction()`.
+
+## Gebühren- und Compute-Budget-Richtlinie
+
+`useComputeBudget(messageSource, policySource?, options?)` löst eine lokale Gebührenrichtlinie gegen eine reaktive Kit-Transaktionsnachricht auf. Ein Simulationsergebnis wird über `options.simulationResult` übergeben; ohne dieses verwendet der Client `rpc.simulateTransaction` für eine Kit-Ressourcenlimit-Schätzung. Die Nachricht wird weder signiert noch gesendet.
+
+```vue
+<script setup lang="ts">
+import { useComputeBudget } from "@vue-solana/vue/useComputeBudget";
+
+const { budget, message, status, loading, error, apply, refresh, reset } = useComputeBudget(
+  messageRef,
+  { mode: "standard", maxLamports: 6_000n },
+  { simulationResult: simulationResultRef },
+);
+
+await apply();
+</script>
+```
+
+`status` wandert durch `idle`, `computing`, `computed` und `error`. Reaktive Änderungen an Nachricht, Richtlinie oder Simulation ersetzen laufende Berechnungen; die Zerstörung des Scopes bricht eine aktive Schätzung ab. `budget` enthält `computeUnitLimit`, `computeUnitPriceMicroLamports`, `priorityFeeLamports`, `baseFeeLamports`, `estimatedFeeLamports`, `capped` und `cappedBy`. Alle Werte sind lokale Schätzungen, keine Netzwerkgarantien. `useFeePolicy()` ist ein Alias, und in Nuxt lautet der automatisch importierte Alias `useSolanaComputeBudget()`.
 
 ## Transaktionsverlauf
 

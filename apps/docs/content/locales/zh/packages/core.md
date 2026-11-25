@@ -63,6 +63,7 @@ import type { SolanaConfig } from "@vue-solana/core/types";
 - `@vue-solana/core/types`
 - `@vue-solana/core/clusters`
 - `@vue-solana/core/errors`
+- `@vue-solana/core/fee-policy`
 - `@vue-solana/core/ios-wallet`
 - `@vue-solana/core/kit`
 - `@vue-solana/core/mobile-wallet`
@@ -221,6 +222,7 @@ type SolanaChain = "solana:mainnet" | "solana:testnet" | "solana:devnet" | "sola
 | `@vue-solana/core/address`             | `parseAddress()` 和地址输入类型。                                                              | 你以字符串、类似 ref 的对象或 getter 形式接受 Solana 地址，并需要一个经过验证和规范化的 `Address`。  |
 | `@vue-solana/core/clusters`            | 默认 cluster 和 endpoint helper。                                                              | 你需要包内置的 `mainnet`、`mainnet-beta`、`testnet`、`devnet` 或 `localnet` RPC/WebSocket endpoint。 |
 | `@vue-solana/core/errors`              | `SolanaError`、错误工厂和错误 guard。                                                          | 你需要稳定错误 code 来处理面向用户的钱包、RPC、地址、交易、超时或存储失败。                          |
+| `@vue-solana/core/fee-policy`          | `resolveFeePolicy()` 和可解释的计算预算类型。                                                  | 你需要本地限额的计算单元和优先费估算，但不对交易签名或发送。                                         |
 | `@vue-solana/core/ios-wallet`          | iOS 浏览器钱包发现、deep-link adapter 和回调处理。                                             | 你在不使用 Vue 插件统一钱包流程的情况下接入 iOS 钱包链接。                                           |
 | `@vue-solana/core/kit`                 | `createSolanaClient()` 和完整的 `@solana/kit` 表面。                                           | 你想要现代 Kit API，但不想在自己的 `package.json` 中安装 `@solana/kit`。                             |
 | `@vue-solana/core/mobile-wallet`       | Android Mobile Wallet Adapter 注册 helper。                                                    | 你需要在读取 Wallet Standard 钱包前注册 Android MWA。                                                |

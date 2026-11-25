@@ -133,6 +133,7 @@ Direct package subpaths:
 - `@vue-solana/vue/useSignTransactions`
 - `@vue-solana/vue/useSignAndSendTransactions`
 - `@vue-solana/vue/useClientCapability`
+- `@vue-solana/vue/useComputeBudget`
 - `@vue-solana/vue/usePayer`
 - `@vue-solana/vue/useIdentity`
 - `@vue-solana/vue/usePlanTransaction`
@@ -774,6 +775,26 @@ async function preview() {
 ```
 
 `status` moves through `idle`, `simulating`, `simulated`, and `error`; starting a new preview aborts the previous one. In Nuxt the auto-imported alias is `useSolanaSimulateTransaction()`.
+
+## Compute Budget Policy
+
+`useComputeBudget(messageSource, policySource?, options?)` resolves a local fee policy against a reactive Kit transaction message. It accepts simulation output through `options.simulationResult`; without it, the client's `rpc.simulateTransaction` is used for a Kit resource-limit estimate. It never signs or sends.
+
+```vue
+<script setup lang="ts">
+import { useComputeBudget } from "@vue-solana/vue/useComputeBudget";
+
+const { budget, message, status, loading, error, apply, refresh, reset } = useComputeBudget(
+  messageRef,
+  { mode: "standard", maxLamports: 6_000n },
+  { simulationResult: simulationResultRef },
+);
+
+await apply();
+</script>
+```
+
+`status` moves through `idle`, `computing`, `computed`, and `error`. Reactive message, policy, and simulation changes supersede in-flight work, and scope disposal aborts an active estimation. `budget` includes `computeUnitLimit`, `computeUnitPriceMicroLamports`, `priorityFeeLamports`, `baseFeeLamports`, `estimatedFeeLamports`, `capped`, and `cappedBy`. These are local estimates, not network guarantees. `useFeePolicy()` is an alias, and the Nuxt auto-import is `useSolanaComputeBudget()`.
 
 ## Transaction History
 

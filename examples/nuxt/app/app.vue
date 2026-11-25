@@ -20,6 +20,7 @@ installSolanaBufferPolyfill();
     <DirectRpcPanel />
     <MockTransactionPanel />
     <SimulateTransactionPanel />
+    <ComputeBudgetPanel />
     <TransactionHistoryPanel />
     <BalancePanel />
     <WalletPanel />
