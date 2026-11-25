@@ -58,6 +58,42 @@ await execute(transaction, { replaceRecentBlockhash: true });
 
 `useSimulateTransaction()` 将相同结果作为 `data` 暴露，`status` 的取值为 `idle`、`simulating`、`simulated` 和 `error`。它遵循共享的 action-state 模式，不需要 `payer`。在 Nuxt 中，无需导入即可调用 `useSolanaSimulateTransaction()`。
 
+## 费用与计算预算策略
+
+使用 `@vue-solana/core/fee-policy` 中的 `resolveFeePolicy()`，从 Kit 交易消息中选择计算单元上限和价格。该函数返回应用了计算预算指令的新消息，以及解释该预算的报告。如果已有模拟结果，请传入该结果；否则可以使用客户端的 `rpc.simulateTransaction` 来估算 Kit 资源限制。
+
+```ts
+import { resolveFeePolicy } from "@vue-solana/core/fee-policy";
+import { useComputeBudget } from "@vue-solana/vue/useComputeBudget";
+
+const { message: budgetedMessage, budget } = await resolveFeePolicy(
+  message,
+  {
+    mode: "standard",
+    computeUnitBufferPercent: 20,
+    maxLamports: 6_000n,
+  },
+  { simulationResult: preview },
+);
+
+// Inside a Vue component setup:
+const {
+  budget: reactiveBudget,
+  status,
+  error,
+  apply,
+} = useComputeBudget(
+  messageRef,
+  { mode: "priority", maxMicroLamportsPerComputeUnit: 50_000n },
+  { simulationResult: simulationResultRef },
+);
+await apply();
+```
+
+预设模式为 `economy`、`standard` 和 `priority`。`computeUnitBufferPercent` 在观测到的单元数上增加余量，`maxMicroLamportsPerComputeUnit` 限制每个计算单元的价格，`maxLamports` 通过降低优先费用来限制估算的总费用。这些本地限制由该函数执行，并非网络保证。高于 `maxLamports` 的基础费用无法通过限制消除，报告中的 `capped` 和 `cappedBy` 字段说明实际应用了哪些限制。所有费用和单元数值都是估算值，而不是发送时的承诺。
+
+`useComputeBudget()` 暴露 `budget`、`message`、`status`、`error`、`loading`、`apply()`、`refresh()` 和 `reset()`。当响应式来源变化或作用域销毁时，它会取代进行中的工作。在 Nuxt 中，无需导入即可调用 `useSolanaComputeBudget()`。两层都不会对消息签名或发送。
+
 ## 交易历史
 
 使用 `@vue-solana/core/transaction-history` 中的 `getTransactionHistory()`，可以在不获取解析后交易的情况下列出某个地址发生的事情。每一项都是签名元数据：`signature`、`slot`、可选的 `blockTime`、`err`、可选的 `memo` 和可选的 `confirmationStatus`。非 null 的 `err` 是以数据形式返回的失败交易。满页时 `hasMore` 为 true 并暴露 `nextBefore`；将其作为 `before` 传回即可加载更早的交易。

@@ -43,6 +43,7 @@ The Nuxt module installs the runtime plugin on the client only and auto-imports 
 - `useSolanaBalance()`
 - `useSolanaClient()`
 - `useSolanaClientCapability()`
+- `useSolanaComputeBudget()`
 - `useSolanaConnection()`
 - `useSolanaIdentity()`
 - `useSolanaPayer()`

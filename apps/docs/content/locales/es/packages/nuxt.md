@@ -95,6 +95,7 @@ El módulo autoimporta estos composables desde subpaths directos `@vue-solana/vu
 - `useSolanaTransactionConfirmation(options?)`: confirma una firma de transacción existente.
 - `useSolanaSignatureStatus(signature, options?)`: lee, sondea o se suscribe a estado de firma.
 - `useSolanaSimulateTransaction()`: simula bytes de transacción en la red (wire) sin enviarlos y expone errores, logs, cambios de balance y direcciones cargadas normalizados.
+- `useSolanaComputeBudget(messageSource, policySource?, options?)`: resuelve y limita localmente un presupuesto de cómputo a partir de la simulación o de una estimación RPC, sin firmar ni enviar.
 - `useSolanaTransactionHistory(addressSource, options?)`: enumera metadatos de firmas paginados de una dirección sin obtener cuerpos de transacciones.
 - `useSolanaSignMessage()`: firma mensajes de autenticación o desafío de propiedad fuera de cadena.
 - `useSolanaWalletAccountMessageSigner()`: devuelve un Kit `MessageModifyingSigner` para una cuenta de wallet.

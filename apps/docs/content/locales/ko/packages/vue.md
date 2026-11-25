@@ -137,6 +137,7 @@ Direct package subpath:
 - `@vue-solana/vue/useSignTransactions`
 - `@vue-solana/vue/useSignAndSendTransactions`
 - `@vue-solana/vue/useClientCapability`
+- `@vue-solana/vue/useComputeBudget`
 - `@vue-solana/vue/usePayer`
 - `@vue-solana/vue/useIdentity`
 - `@vue-solana/vue/usePlanTransaction`
@@ -770,6 +771,26 @@ async function preview() {
 ```
 
 `status`는 `idle`, `simulating`, `simulated`, `error`를 거칩니다. 새 preview를 시작하면 이전 preview가 abort됩니다. Nuxt에서 auto-import되는 alias는 `useSolanaSimulateTransaction()`입니다.
+
+## 수수료 및 컴퓨트 예산 정책
+
+`useComputeBudget(messageSource, policySource?, options?)`는 reactive Kit transaction message에 대해 로컬 수수료 정책을 해결합니다. simulation 결과는 `options.simulationResult`로 전달하고, 없으면 client의 `rpc.simulateTransaction`으로 Kit resource limit을 추정합니다. message에 서명하거나 전송하지는 않습니다.
+
+```vue
+<script setup lang="ts">
+import { useComputeBudget } from "@vue-solana/vue/useComputeBudget";
+
+const { budget, message, status, loading, error, apply, refresh, reset } = useComputeBudget(
+  messageRef,
+  { mode: "standard", maxLamports: 6_000n },
+  { simulationResult: simulationResultRef },
+);
+
+await apply();
+</script>
+```
+
+`status`는 `idle`, `computing`, `computed`, `error`를 거칩니다. message, 정책, simulation의 reactive 변경은 진행 중 작업을 supersede하며, scope가 dispose되면 활성 추정이 abort됩니다. `budget`에는 `computeUnitLimit`, `computeUnitPriceMicroLamports`, `priorityFeeLamports`, `baseFeeLamports`, `estimatedFeeLamports`, `capped`, `cappedBy`가 포함됩니다. 모든 값은 로컬 추정값이며 network 보장이 아닙니다. `useFeePolicy()`는 alias이고, Nuxt에서 auto-import되는 alias는 `useSolanaComputeBudget()`입니다.
 
 ## 트랜잭션 기록
 

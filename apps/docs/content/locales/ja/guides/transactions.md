@@ -58,6 +58,42 @@ await execute(transaction, { replaceRecentBlockhash: true });
 
 `useSimulateTransaction()` は同じ結果を `data` として公開し、`status` の値は `idle`、`simulating`、`simulated`、`error` です。共通のアクション状態パターンに従い、`payer` は必要ありません。Nuxt では、import せずに `useSolanaSimulateTransaction()` を呼び出してください。
 
+## 手数料とコンピュートバジェットのポリシー
+
+Kit のトランザクションメッセージからコンピュートユニット上限と価格を選ぶには、`@vue-solana/core/fee-policy` の `resolveFeePolicy()` を使用します。この関数は、コンピュートバジェットの命令を適用した新しいメッセージと、バジェットを説明するレポートを返します。シミュレーション結果があれば渡してください。ない場合は、クライアントの `rpc.simulateTransaction` を使って Kit のリソース上限を推定できます。
+
+```ts
+import { resolveFeePolicy } from "@vue-solana/core/fee-policy";
+import { useComputeBudget } from "@vue-solana/vue/useComputeBudget";
+
+const { message: budgetedMessage, budget } = await resolveFeePolicy(
+  message,
+  {
+    mode: "standard",
+    computeUnitBufferPercent: 20,
+    maxLamports: 6_000n,
+  },
+  { simulationResult: preview },
+);
+
+// Inside a Vue component setup:
+const {
+  budget: reactiveBudget,
+  status,
+  error,
+  apply,
+} = useComputeBudget(
+  messageRef,
+  { mode: "priority", maxMicroLamportsPerComputeUnit: 50_000n },
+  { simulationResult: simulationResultRef },
+);
+await apply();
+```
+
+プリセットモードは `economy`、`standard`、`priority` です。`computeUnitBufferPercent` は観測されたユニット余裕を追加し、`maxMicroLamportsPerComputeUnit` はユニットあたりの価格を上限し、`maxLamports` は優先料金を下げて推定される合計手数料を上限します。これらのローカル上限はこの関数が適用するものであり、ネットワークの保証ではありません。`maxLamports` を超える基本料金は上限で取り除けません。何が適用されたかはレポートの `capped` と `cappedBy` で確認できます。すべての手数料とユニットの値は推定値であり、送信時に約束されるものではありません。
+
+`useComputeBudget()` は `budget`、`message`、`status`、`error`、`loading`、`apply()`、`refresh()`、`reset()` を公開します。リアクティブなソースが変化したりスコープが破棄されたりすると、実行中の処理を置き換えます。Nuxt では、import せずに `useSolanaComputeBudget()` を呼び出してください。どちらの層もメッセージの署名や送信は行いません。
+
 ## トランザクション履歴
 
 解析済みトランザクションを取得せずにアドレスで何が起きたかを一覧するには、`@vue-solana/core/transaction-history` の `getTransactionHistory()` を使います。各項目は署名メタデータで、`signature`、`slot`、任意の `blockTime`、`err`、任意の `memo`、任意の `confirmationStatus` です。null ではない `err` はデータとして返された失敗したトランザクションです。ページが一杯になると `hasMore` が true になり `nextBefore` が公開されるので、それを `before` として渡すと古いトランザクションを読み込めます。

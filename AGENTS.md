@@ -43,6 +43,7 @@ Implemented files:
 - `src/action.ts`: reactive async action store shared by the Vue composables.
 - `src/address.ts`: address input parsing helpers (ref/getter unwrapping is depth-capped at 32 levels, so a cyclic input throws `INVALID_ADDRESS` instead of overflowing the stack).
 - `src/errors.ts`: `SolanaError` codes shared by the packages.
+- `src/fee-policy.ts`: `resolveFeePolicy()` — fixed compute-budget presets, local caps, buffer math, and an explainable fee budget over a Kit message.
 - `src/timeout.ts`: `withTimeout()` helper.
 - `src/token-accounts.ts`: token account info types.
 - `src/solana-pay.ts` + `src/solana-pay/*`: Solana Pay URL encode/parse, reference helpers, and QR rendering, implemented directly on Kit with a lazily imported `qrcode`.
@@ -93,6 +94,7 @@ Implemented files:
 - `src/composables/useWalletAccountTransactionSigner.ts`: Kit `TransactionModifyingSigner` backed by a wallet account, preserving or re-deriving the lifetime constraint.
 - `src/composables/useWalletAccountTransactionSendingSigner.ts`: Kit `TransactionSendingSigner` that signs and submits through the wallet, with a singular sequential fallback.
 - `src/composables/useClientCapability.ts`: fail-fast client capability assertions.
+- `src/composables/useComputeBudget.ts`: `useComputeBudget()` / `useFeePolicy()` — reactive, capped compute-budget resolution with abort-on-supersede and scope disposal.
 - `src/composables/usePayer.ts`: `usePayer()` / `useIdentity()` reactive Kit client signers.
 - `src/composables/usePlanTransaction.ts`: `usePlanTransaction()` / `usePlanTransactions()` over the client planning capability.
 - `src/composables/useSendTransaction.ts`: `useSendTransaction()` / `useSendTransactions()` over the official Kit RPC plan-sending executor.
@@ -125,7 +127,7 @@ Auto-imported Nuxt composables (source of truth: `packages/nuxt/src/imports.ts`)
 - `useSolanaBalance()`, `useSolanaAccountInfo()`, `useSolanaProgramAccounts()`
 - `useSolanaTokenAccounts()`, `useSolanaTokenBalance()`, `useSolanaSignatureStatus()`, `useSolanaTransactionConfirmation()`
 - `useSolanaWallet()`, `useSolanaWallets()`, `useSolanaSignMessage()`, `useSolanaSignIn()`
-- `useSolanaAirdrop()`, `useSolanaAction()`, `useSolanaClientCapability()`, `useSolanaRequest()`, `useSolanaSubscription()`, `useSolanaTrackedData()`
+- `useSolanaAirdrop()`, `useSolanaAction()`, `useSolanaClientCapability()`, `useSolanaComputeBudget()`, `useSolanaRequest()`, `useSolanaSubscription()`, `useSolanaTrackedData()`
 - `tryUseSolana()`, `clearSwrCache()`, `deleteSwrKey()`
 - `useSolanaTransaction()`, `useSolanaRequestSwr()`, `useSolanaSubscriptionSwr()`, `useSolanaTrackedDataSwr()`
 - `useSolanaSelectedWalletAccount()`
@@ -239,11 +241,13 @@ The `examples/vue-vite` and `examples/nuxt` directories contain runnable example
 
 Both apps also mount Live Data Panels exercising the Kit-reactive composables (`useRequest`, `useSubscription`, `useTrackedData`, `useSignIn`, and the `swr` cache adapters) against devnet.
 
+Both apps also mount `ComputeBudgetPanel`, which simulates a demo memo transaction, applies a capped budget through `useComputeBudget()` / `useSolanaComputeBudget()`, and displays the updated Kit message. It never signs or sends.
+
 They also mount `SolanaPayPanel` (merchant-side `useSolanaPay` + `useSolanaQrCode`: request URL, reference, QR, `useSolanaPayConfirmation` polling, and `confirmTransfer` verification) and `SolanaPayScannerPanel` (`useSolanaQrScanner`: camera scan, pasted-URL validation, parsed preview, and a `solana:` wallet link with no send path). The Nuxt scanner is wrapped in `<ClientOnly>`.
 
 Both apps mount `WalletAccountSignersPanel`, which signs a message through `useWalletAccountMessageSigner()` and displays the derived `TransactionModifyingSigner` / `TransactionSendingSigner` addresses. It passes `wallet.publicKey` (a ref) as the account source, so the signers follow the connected account; the Vue plugin does not install the selected-wallet-account context, and the Nuxt example sets `clientPlugin: false`. The docs `/demo` page has the equivalent `DemoWalletAccountSignersPanel` driven by `apps/docs/app/composables/demo/useDemoWalletAccountSigners.ts`.
 
-The Playwright e2e suite in `e2e/` covers the example apps. `e2e/helpers.ts` mocks the HTTP RPC (getLatestBlockhash, getBalance, getVersion, getAccountInfo, getSignaturesForAddress, getTransaction), fakes the Kit RPC-subscriptions websocket protocol (subscribe, id-correlated result, then `<method>Notification` frames keyed on `params.subscription`), and registers two mock Wallet Standard wallets including one with `solana:signIn`. The signer spec asserts the disabled state before a wallet is connected, the three signer addresses and chain after connecting, and a real message signature through the Kit message signer (the mock wallet signs with a real Ed25519 key so the adapter's client-side verification passes). The Solana Pay scanner spec stubs `navigator.mediaDevices.getUserMedia` with a canvas `captureStream()` and a fake `BarcodeDetector`, so the camera loop is deterministic without a real device. Run with `pnpm test:e2e` (mocks) or `pnpm test:e2e:integration` (real devnet, `E2E_REAL_RPC=true`). Specs that assert against mock data skip in the integration run.
+The Playwright e2e suite in `e2e/` covers the example apps. `e2e/helpers.ts` mocks the HTTP RPC (getLatestBlockhash, getBalance, getVersion, getAccountInfo, getSignaturesForAddress, getTransaction, simulateTransaction), fakes the Kit RPC-subscriptions websocket protocol (subscribe, id-correlated result, then `<method>Notification` frames keyed on `params.subscription`), and registers two mock Wallet Standard wallets including one with `solana:signIn`. The signer spec asserts the disabled state before a wallet is connected, the three signer addresses and chain after connecting, and a real message signature through the Kit message signer (the mock wallet signs with a real Ed25519 key so the adapter's client-side verification passes). The compute-budget spec asserts the applied compute-unit limit and price on the displayed message and that no `sendTransaction` call was made. The Solana Pay scanner spec stubs `navigator.mediaDevices.getUserMedia` with a canvas `captureStream()` and a fake `BarcodeDetector`, so the camera loop is deterministic without a real device. Run with `pnpm test:e2e` (mocks) or `pnpm test:e2e:integration` (real devnet, `E2E_REAL_RPC=true`). Specs that assert against mock data skip in the integration run.
 
 `@playwright/test` must stay at a release that ships an `ubuntu26.04-x64` entry in its `nativeDeps` (1.64.1+ is the current floor). GitHub's `ubuntu-latest` now resolves to Ubuntu 26.04, and `playwright install --with-deps` aborts with `Playwright does not support chromium on ubuntu26.04-x64` when the lockfile pins an older release — 1.60.0 failed CI this way even though the `^1.60.0` range allowed the fix, because `--frozen-lockfile` never moves. Bump the lock whenever the runner image moves, or pin `runs-on: ubuntu-24.04` if an older Playwright must be kept.
 
@@ -343,7 +347,7 @@ Plans live in the top-level `plans/` directory, separate from the knowledge bund
 - `apps/docs` is pinned to the latest published release. Read the current value from `apps/docs/package.json`; never trust a version number written in this file. Keep it current per the Post-Publish Release Checklist.
 - The 4.0.0 bundle-size trim has shipped: the core root barrel no longer re-exports `Buffer`/`installSolanaBufferPolyfill` (use the `@vue-solana/core/buffer-polyfill` subpath) and the tarballs exclude `.d.mts`. The invariants in "Bundle and Tarball Size Invariants" still govern any barrel, `exports` map, or `files` change.
 - The error-code and docs-agent-surface review follow-ups are closed; the record lives in `plans/archived/error-codes-agent-surface-followups.md`. The follow-up review of that branch's docs agent surface is closed too: `plans/archived/agent-surface-review-followups.md`. Do not re-open either for a new review — start a new plan file.
-- Follow `apps/docs/content/roadmap.md` for upcoming features (core composables, wallet features, Ecosystem integrations, etc.). The active implementation queue is `plans/feature-queue-phases.md`; Phase 0 is complete and Phases 1–6 are proposed.
+- Follow `apps/docs/content/roadmap.md` for upcoming features (core composables, wallet features, Ecosystem integrations, etc.). The active implementation queue is `plans/feature-queue-phases.md`; Phases 0–1 are complete and Phases 2–6 are proposed. The Phase 1 implementation record is `plans/archived/fee-policy-compute-budget.md`.
 - `plans/deferred/native-wallet-plan.md` is complete except for one open item, "Future iOS Wallet Support" (line 19). Mobile native wallets, Android MWA, iOS browser wallets, and desktop native wallets all shipped through the unified `useWallets()` flow.
 - Re-check the `@solana/kit` and `@solana/kit-plugin-rpc` peer versions on every new release.
 

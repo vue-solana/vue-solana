@@ -64,6 +64,7 @@ import type { SolanaConfig } from "@vue-solana/core/types";
 - `@vue-solana/core/types`
 - `@vue-solana/core/clusters`
 - `@vue-solana/core/errors`
+- `@vue-solana/core/fee-policy`
 - `@vue-solana/core/ios-wallet`
 - `@vue-solana/core/kit`
 - `@vue-solana/core/mobile-wallet`
@@ -226,6 +227,7 @@ type SolanaChain = "solana:mainnet" | "solana:testnet" | "solana:devnet" | "sola
 | `@vue-solana/core/address`             | `parseAddress()` とアドレス入力の型。                                                                              | Solana アドレスを文字列、ref ライクなオブジェクト、または getter として受け取り、検証済みで正規化された `Address` が必要なとき。        |
 | `@vue-solana/core/clusters`            | デフォルトのクラスタとエンドポイントのヘルパー。                                                                   | `mainnet`、`mainnet-beta`、`testnet`、`devnet`、`localnet` 向けのパッケージ組み込みの RPC または WebSocket エンドポイントが必要なとき。 |
 | `@vue-solana/core/errors`              | `SolanaError`、エラーファクトリ、エラーガード。                                                                    | ウォレット、RPC、アドレス、トランザクション、タイムアウト、ストレージの失敗に対して、ユーザー向けの安定したエラーコードが必要なとき。   |
+| `@vue-solana/core/fee-policy`          | `resolveFeePolicy()` と説明可能なコンピュートバジェットの型。                                                      | トランザクションに署名・送信せず、ローカルで上限を設けたコンピュートユニットと優先手数料の推定が必要なとき。                            |
 | `@vue-solana/core/ios-wallet`          | iOS ブラウザウォレットの検出、ディープリンクアダプタ、コールバック処理。                                           | Vue プラグインの統合ウォレットフローを使わずに iOS ウォレットリンクを組み込むとき。                                                     |
 | `@vue-solana/core/kit`                 | `createSolanaClient()` と `@solana/kit` のサーフェス全体。                                                         | 自分の `package.json` に `@solana/kit` をインストールせずにモダンな Kit API を使いたいとき。                                            |
 | `@vue-solana/core/mobile-wallet`       | Android Mobile Wallet Adapter の登録ヘルパー。                                                                     | Wallet Standard のウォレットを読み取る前に Android MWA を登録する必要があるとき。                                                       |

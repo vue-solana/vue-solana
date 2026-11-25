@@ -147,6 +147,7 @@ import { address, lamports, type Address, type Commitment, type Rpc, type Solana
 import { extendClient, generateKeyPairSigner, summarizeTransactionPlanResult, type AccountRole, type Instruction, type TransactionPlanResult } from "@vue-solana/core/kit";
 import { getTokenAccount, getTokenAccountsByOwner, getTokenBalance, type TokenAccountInfo } from "@vue-solana/core/token-accounts";
 import { getTransactionHistory, type TransactionHistoryResult } from "@vue-solana/core/transaction-history";
+import { resolveFeePolicy, type FeeBudget, type FeePolicy } from "@vue-solana/core/fee-policy";
 
 installSolanaBufferPolyfill();
 
@@ -159,6 +160,9 @@ const parsed: Address | null = parseAddress("11111111111111111111111111111111");
 const commitment: Commitment = "confirmed";
 const historyReader: typeof getTransactionHistory = getTransactionHistory;
 const historyResult: Promise<TransactionHistoryResult> | undefined = undefined;
+const feeResolver: typeof resolveFeePolicy = resolveFeePolicy;
+const feePolicy: FeePolicy = { mode: "standard", maxLamports: 6_000n };
+const feeBudget: FeeBudget | undefined = undefined;
 
 `,
   });
@@ -183,6 +187,7 @@ import { useSolanaClient } from "@vue-solana/vue/useSolanaClient";
 import { useConnection } from "@vue-solana/vue/useConnection";
 import { useWallet } from "@vue-solana/vue/useWallet";
 import { useTransactionHistory } from "@vue-solana/vue/useTransactionHistory";
+import { useComputeBudget, useFeePolicy } from "@vue-solana/vue/useComputeBudget";
 import { createSolanaClient, address, extendClient, generateKeyPairSigner, summarizeTransactionPlanResult, type AccountRole, type Address, type Instruction, type SolanaClient, type TransactionPlanResult } from "@vue-solana/vue/kit";
 
 installSolanaBufferPolyfill();
@@ -197,7 +202,9 @@ export default defineComponent({
     const connection = useConnection();
     const wallet = useWallet();
     const history = useTransactionHistory(publicKey);
-    return { injectedClient, rpc, connection, wallet, history };
+    const budget = useComputeBudget({} as never);
+    const feePolicy = useFeePolicy;
+    return { injectedClient, rpc, connection, wallet, history, budget, feePolicy };
   },
 });
 

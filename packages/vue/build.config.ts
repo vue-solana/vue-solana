@@ -9,6 +9,7 @@ export default defineBuildConfig({
     "src/useAirdrop",
     "src/useBalance",
     "src/useClientCapability",
+    "src/useComputeBudget",
     "src/useConnection",
     "src/useIdentity",
     "src/usePlanTransaction",

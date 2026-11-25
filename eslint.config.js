@@ -52,6 +52,7 @@ export default tseslint.config(
         useSolanaAirdrop: "readonly",
         useSolanaBalance: "readonly",
         useSolanaClient: "readonly",
+        useSolanaComputeBudget: "readonly",
         useSolanaConnection: "readonly",
         useSolanaProgramAccounts: "readonly",
         useSolanaRpc: "readonly",

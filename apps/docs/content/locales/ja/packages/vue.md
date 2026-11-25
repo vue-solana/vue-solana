@@ -133,6 +133,7 @@ import { useWallet } from "@vue-solana/vue/useWallet";
 - `@vue-solana/vue/useSignTransactions`
 - `@vue-solana/vue/useSignAndSendTransactions`
 - `@vue-solana/vue/useClientCapability`
+- `@vue-solana/vue/useComputeBudget`
 - `@vue-solana/vue/usePayer`
 - `@vue-solana/vue/useIdentity`
 - `@vue-solana/vue/usePlanTransaction`
@@ -771,6 +772,26 @@ async function preview() {
 ```
 
 `status` は `idle`、`simulating`、`simulated`、`error` を遷移し、新しいプレビューを開始すると前のプレビューが中止されます。Nuxt で自動 import されるエイリアスは `useSolanaSimulateTransaction()` です。
+
+## 手数料とコンピュートバジェットのポリシー
+
+`useComputeBudget(messageSource, policySource?, options?)` は、リアクティブな Kit トランザクションメッセージに対してローカルの手数料ポリシーを解決します。シミュレーション結果は `options.simulationResult` で渡します。渡さない場合は、クライアントの `rpc.simulateTransaction` を使って Kit のリソース上限を推定します。メッセージへの署名や送信は行いません。
+
+```vue
+<script setup lang="ts">
+import { useComputeBudget } from "@vue-solana/vue/useComputeBudget";
+
+const { budget, message, status, loading, error, apply, refresh, reset } = useComputeBudget(
+  messageRef,
+  { mode: "standard", maxLamports: 6_000n },
+  { simulationResult: simulationResultRef },
+);
+
+await apply();
+</script>
+```
+
+`status` は `idle`、`computing`、`computed`、`error` を遷移します。メッセージ、ポリシー、シミュレーションのリアクティブな変更は進行中の処理を置き換え、スコープの破棄は進行中の推定を中止します。`budget` には `computeUnitLimit`、`computeUnitPriceMicroLamports`、`priorityFeeLamports`、`baseFeeLamports`、`estimatedFeeLamports`、`capped`、`cappedBy` が含まれます。すべての値はローカルの推定であり、ネットワークの保証ではありません。`useFeePolicy()` はエイリアスで、Nuxt で自動 import されるエイリアスは `useSolanaComputeBudget()` です。
 
 ## トランザクション履歴
 

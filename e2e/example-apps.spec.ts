@@ -410,6 +410,39 @@ test("simulates a demo transaction without submitting it", async ({ page }) => {
   }
 });
 
+test("applies a capped compute budget to a displayed message without sending", async ({ page }) => {
+  if (isRealRpcRun()) {
+    test.skip(true, "Budget assertions require the deterministic RPC mock");
+  }
+
+  const rpc = await mockSolanaSubscriptions(page);
+
+  await page.goto("/");
+  await waitForRpcConnected(page);
+
+  await expect(page.getByTestId("compute-budget-panel")).toBeVisible();
+  await expect(page.getByTestId("compute-budget-status")).toHaveText("idle");
+  await expect(page.getByTestId("compute-budget-result")).toHaveText("No budget yet");
+  await expect(page.getByTestId("compute-budget-message")).toHaveText("No message yet");
+
+  await page.getByTestId("compute-budget-button").click();
+
+  await expect(page.getByTestId("compute-budget-simulation-status")).toHaveText("simulated");
+  await expect(page.getByTestId("compute-budget-status")).toHaveText("computed");
+  await expect(page.getByTestId("compute-budget-result")).toContainText("limit: 180");
+  await expect(page.getByTestId("compute-budget-result")).toContainText("price: 10000");
+  await expect(page.getByTestId("compute-budget-result")).toContainText(
+    "estimated fee: 5002 lamports",
+  );
+  await expect(page.getByTestId("compute-budget-message")).toContainText("version: 0");
+  await expect(page.getByTestId("compute-budget-message")).toContainText("limit: 180");
+  await expect(page.getByTestId("compute-budget-message")).toContainText("price: 10000");
+
+  const calls = rpc.rpcMethodCalls();
+  expect(calls).toContain("simulateTransaction");
+  expect(calls).not.toContain("sendTransaction");
+});
+
 test("lists transaction history and appends older pages", async ({ page }) => {
   if (isRealRpcRun()) {
     test.skip(true, "History pagination requires the deterministic RPC mock");

@@ -58,6 +58,42 @@ await execute(transaction, { replaceRecentBlockhash: true });
 
 `useSimulateTransaction()`은 같은 결과를 `data`로 노출하며, `status` 값은 `idle`, `simulating`, `simulated`, `error`입니다. 공유 action-state 패턴을 따르고 `payer`가 필요하지 않습니다. Nuxt에서는 import 없이 `useSolanaSimulateTransaction()`를 호출하세요.
 
+## 수수료 및 컴퓨트 예산 정책
+
+Kit 트랜잭션 메시지에서 컴퓨트 유닛 한도와 가격을 선택하려면 `@vue-solana/core/fee-policy`의 `resolveFeePolicy()`를 사용하세요. 이 함수는 컴퓨트 예산 명령을 적용한 새 메시지와 예산을 설명하는 보고서를 반환합니다. 시뮬레이션 결과가 있으면 전달하고, 없으면 클라이언트의 `rpc.simulateTransaction`으로 Kit 리소스 한도를 추정할 수 있습니다.
+
+```ts
+import { resolveFeePolicy } from "@vue-solana/core/fee-policy";
+import { useComputeBudget } from "@vue-solana/vue/useComputeBudget";
+
+const { message: budgetedMessage, budget } = await resolveFeePolicy(
+  message,
+  {
+    mode: "standard",
+    computeUnitBufferPercent: 20,
+    maxLamports: 6_000n,
+  },
+  { simulationResult: preview },
+);
+
+// Inside a Vue component setup:
+const {
+  budget: reactiveBudget,
+  status,
+  error,
+  apply,
+} = useComputeBudget(
+  messageRef,
+  { mode: "priority", maxMicroLamportsPerComputeUnit: 50_000n },
+  { simulationResult: simulationResultRef },
+);
+await apply();
+```
+
+프리셋 모드는 `economy`, `standard`, `priority`입니다. `computeUnitBufferPercent`는 관측된 유닛에 여유를 더하고, `maxMicroLamportsPerComputeUnit`는 유닛당 가격을 제한하며, `maxLamports`는 우선 수수료를 낮춰 예상 총 수수료를 제한합니다. 이 로컬 제한은 이 함수가 적용하며 네트워크 보장이 아닙니다. `maxLamports`를 초과하는 기본 수수료는 제한으로 없앨 수 없고, 무엇이 적용되었는지는 보고서의 `capped`와 `cappedBy`로 확인할 수 있습니다. 모든 수수료와 유닛 값은 추정치이며 전송 시점의 약속이 아닙니다.
+
+`useComputeBudget()`는 `budget`, `message`, `status`, `error`, `loading`, `apply()`, `refresh()`, `reset()`을 노출합니다. 반응형 소스가 바뀌거나 스코프가 해제되면 진행 중인 작업을 대체합니다. Nuxt에서는 import 없이 `useSolanaComputeBudget()`를 호출하세요. 두 계층 모두 메시지에 서명하거나 전송하지 않습니다.
+
 ## 트랜잭션 기록
 
 구문 분석된 트랜잭션을 가져오지 않고 주소에 발생한 내용을 나열하려면 `@vue-solana/core/transaction-history`의 `getTransactionHistory()`를 사용하세요. 각 항목은 `signature`, `slot`, 선택적 `blockTime`, `err`, 선택적 `memo`, 선택적 `confirmationStatus` 같은 signature 메타데이터입니다. null이 아닌 `err`는 데이터로 반환된 실패한 트랜잭션입니다. 페이지가 가득하면 `hasMore`가 설정되고 `nextBefore`가 노출되며, 이를 `before`로 다시 전달하면 이전 트랜잭션을 불러올 수 있습니다.

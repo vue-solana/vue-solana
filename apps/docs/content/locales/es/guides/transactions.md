@@ -58,6 +58,42 @@ await execute(transaction, { replaceRecentBlockhash: true });
 
 `useSimulateTransaction()` expone el mismo resultado como `data`, con valores de `status` `idle`, `simulating`, `simulated` y `error`. Sigue el patrón compartido de estado de acción y no requiere un `payer`. En Nuxt, llama a `useSolanaSimulateTransaction()` sin importarlo.
 
+## Política de tarifas y presupuesto de cómputo
+
+Usa `resolveFeePolicy()` de `@vue-solana/core/fee-policy` para elegir un límite de unidades de cómputo y un precio a partir de un mensaje de transacción de Kit. La función devuelve un mensaje nuevo con las instrucciones de presupuesto de cómputo aplicadas y un informe que explica el presupuesto. Pasa un resultado de simulación si ya tienes uno; de lo contrario, la función puede usar el `rpc.simulateTransaction` de un cliente para obtener una estimación de los límites de recursos de Kit.
+
+```ts
+import { resolveFeePolicy } from "@vue-solana/core/fee-policy";
+import { useComputeBudget } from "@vue-solana/vue/useComputeBudget";
+
+const { message: budgetedMessage, budget } = await resolveFeePolicy(
+  message,
+  {
+    mode: "standard",
+    computeUnitBufferPercent: 20,
+    maxLamports: 6_000n,
+  },
+  { simulationResult: preview },
+);
+
+// Inside a Vue component setup:
+const {
+  budget: reactiveBudget,
+  status,
+  error,
+  apply,
+} = useComputeBudget(
+  messageRef,
+  { mode: "priority", maxMicroLamportsPerComputeUnit: 50_000n },
+  { simulationResult: simulationResultRef },
+);
+await apply();
+```
+
+Los modos predefinidos son `economy`, `standard` y `priority`. `computeUnitBufferPercent` añade margen sobre las unidades observadas, `maxMicroLamportsPerComputeUnit` limita el precio por unidad de cómputo y `maxLamports` limita la tarifa total estimada al reducir la tarifa de prioridad. Estos límites locales los aplica esta función; no son una garantía de la red. Una tarifa base superior a `maxLamports` no se puede eliminar con un límite, y los campos `capped` y `cappedBy` del informe explican qué se aplicó. Todos los valores de tarifas y unidades son estimaciones, no promesas sobre el momento del envío.
+
+`useComputeBudget()` expone `budget`, `message`, `status`, `error`, `loading`, `apply()`, `refresh()` y `reset()`. La función sustituye el trabajo en curso cuando cambian las fuentes reactivas o se dispone el ámbito. En Nuxt, llama a `useSolanaComputeBudget()` sin importarlo. Ninguna de las dos capas firma ni envía el mensaje.
+
 ## Historial de transacciones
 
 Usa `getTransactionHistory()` de `@vue-solana/core/transaction-history` para enumerar lo que ocurrió con una dirección sin obtener transacciones analizadas. Cada elemento son metadatos de firma: `signature`, `slot`, `blockTime` opcional, `err`, `memo` opcional y `confirmationStatus` opcional. Un `err` no nulo es una transacción fallida devuelta como dato. Una página completa establece `hasMore` y expone `nextBefore`; pásalo como `before` para cargar transacciones anteriores.

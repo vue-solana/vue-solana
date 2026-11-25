@@ -58,6 +58,42 @@ await execute(transaction, { replaceRecentBlockhash: true });
 
 `useSimulateTransaction()` exposes the same result as `data`, with `status` values `idle`, `simulating`, `simulated`, and `error`. It follows the shared action-state pattern and does not require a `payer`. In Nuxt, call `useSolanaSimulateTransaction()` without an import.
 
+## Fee and compute budget policy
+
+Use `resolveFeePolicy()` from `@vue-solana/core/fee-policy` to choose a compute-unit limit and price from a Kit transaction message. It returns a new message with the compute-budget instructions applied and a report explaining the budget. Pass a simulation result when you already have one; otherwise the helper can use a client's `rpc.simulateTransaction` for a Kit resource-limit estimate.
+
+```ts
+import { resolveFeePolicy } from "@vue-solana/core/fee-policy";
+import { useComputeBudget } from "@vue-solana/vue/useComputeBudget";
+
+const { message: budgetedMessage, budget } = await resolveFeePolicy(
+  message,
+  {
+    mode: "standard",
+    computeUnitBufferPercent: 20,
+    maxLamports: 6_000n,
+  },
+  { simulationResult: preview },
+);
+
+// Inside a Vue component setup:
+const {
+  budget: reactiveBudget,
+  status,
+  error,
+  apply,
+} = useComputeBudget(
+  messageRef,
+  { mode: "priority", maxMicroLamportsPerComputeUnit: 50_000n },
+  { simulationResult: simulationResultRef },
+);
+await apply();
+```
+
+Preset modes are `economy`, `standard`, and `priority`. `computeUnitBufferPercent` adds headroom over observed units, `maxMicroLamportsPerComputeUnit` caps the price per compute unit, and `maxLamports` caps the estimated total fee by lowering the priority fee. Local caps are enforced by this helper; they are not a network guarantee. A base fee above `maxLamports` cannot be capped away, and the report's `capped` and `cappedBy` fields explain what was applied. Every fee and unit value is an estimate, not a send-time promise.
+
+`useComputeBudget()` exposes `budget`, `message`, `status`, `error`, `loading`, `apply()`, `refresh()`, and `reset()`. It supersedes in-flight work when reactive sources change or the scope is disposed. In Nuxt, call `useSolanaComputeBudget()` without an import. Neither layer signs or sends the message.
+
 ## Transaction History
 
 Use `getTransactionHistory()` from `@vue-solana/core/transaction-history` to list what happened to an address without fetching parsed transactions. Each item is signature metadata: `signature`, `slot`, optional `blockTime`, `err`, optional `memo`, and optional `confirmationStatus`. A non-null `err` is a failed transaction returned as data. A full page sets `hasMore` and exposes `nextBefore`; pass it back as `before` to load older transactions.

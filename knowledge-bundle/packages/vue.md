@@ -37,6 +37,7 @@ Available package subpaths:
 - `@vue-solana/vue/useSignTransactions`
 - `@vue-solana/vue/useSignAndSendTransactions`
 - `@vue-solana/vue/useClientCapability`
+- `@vue-solana/vue/useComputeBudget`
 - `@vue-solana/vue/usePayer`
 - `@vue-solana/vue/useIdentity`
 - `@vue-solana/vue/usePlanTransaction`
@@ -355,6 +356,32 @@ Returns:
 - `reset()`
 
 A new execution aborts the previous one; the composable also aborts in-flight work when its Vue scope is disposed. Missing `rpc.simulateTransaction` throws `MISSING_CLIENT_CAPABILITY` at setup.
+
+## `useComputeBudget()`
+
+Resolves a local fee policy against a reactive Kit transaction message without signing or sending it. `useFeePolicy()` is an alias.
+
+```ts
+const { budget, message, status, loading, error, apply, refresh, reset } = useComputeBudget(
+  messageRef,
+  { mode: "standard", maxLamports: 6_000n },
+  { simulationResult: simulationResultRef },
+);
+
+await apply();
+```
+
+Returns:
+
+- `budget`: `FeeBudget | null`, including compute-unit limit, price, priority/base/estimated fees, `capped`, and `cappedBy`
+- `message`: the policy-applied Kit message
+- `status`: `idle`, `computing`, `computed`, or `error`
+- `loading`
+- `error`
+- `apply()` and `refresh()` (the same resolver)
+- `reset()`
+
+Reactive message, policy, and simulation changes supersede in-flight work; scope disposal aborts it. Without a simulation source, setup requires `rpc.simulateTransaction` and throws `MISSING_CLIENT_CAPABILITY` when it is absent. Values are local estimates, not send-time guarantees.
 
 ## `useTransactionHistory()`
 
