@@ -2002,7 +2002,7 @@ Use `useSolanaTransactionConfirmation({ commitment: "confirmed" })` and call `co
 
 ## Error Handling
 
-Transaction helpers normalize failures into `SolanaError`.
+Transaction helpers normalize failures into `SolanaError`. When you already have a failed transaction's data, join it into one explainable object with [Diagnosing a failed transaction](/guides/errors).
 
 ```ts
 import { isSolanaError } from "@vue-solana/core/errors";
@@ -2565,6 +2565,44 @@ function getSolanaErrorMessage(code: string) {
 - Do not retry `INVALID_ADDRESS`; ask the user to correct input.
 - Hide or disable actions that produce `WALLET_FEATURE_UNSUPPORTED`.
 
+## Diagnosing A Failed Transaction
+
+When you already have a failed history item, a simulation result, or a normalized error, `buildDiagnosticReport()` from `@vue-solana/core/diagnostics` joins them into one explainable object. The builder is pure and RPC-free: it does not fetch a transaction, decode instructions, interpret a memo, categorize token transfers, or retry anything.
+
+```ts
+import { buildDiagnosticReport } from "@vue-solana/core/diagnostics";
+
+const report = buildDiagnosticReport({
+  historyItem: failedItem,
+  simulationResult: preview,
+  error,
+  feeBudget,
+  labels: { [programAddress]: "My program" },
+});
+
+console.log(report.summary, report.code, report.suggestions);
+```
+
+`report` always has `summary`, `code`, `outcome`, `signature`, `slot`, `logs`, `balanceChanges`, `unitsConsumed`, `feeBudget`, `programs`, `sources`, and `suggestions`. Known `SolanaError` codes and raw RPC error keys produce stable suggestions; unknown codes pass through unchanged. `programs` comes from `Program <address>` lines in simulation logs and uses only labels your app supplies — the library ships no program registry.
+
+In Vue, `useTransactionDiagnostics()` takes a reactive signature or history item and exposes `report`, `status`, `error`, and `refresh()`:
+
+```vue
+<script setup lang="ts">
+import { useTransactionDiagnostics } from "@vue-solana/vue/useTransactionDiagnostics";
+
+const { report, status, error, refresh } = useTransactionDiagnostics(failedItemRef, {
+  simulationResult: simulationResultRef,
+  error: errorRef,
+  feeBudget: budgetRef,
+  labels: { [programAddress]: "My program" },
+});
+await refresh();
+</script>
+```
+
+In Nuxt, call `useSolanaTransactionDiagnostics()` without an import. Malformed input reports `INVALID_INPUT`; the builder itself never reaches the network. See [Transactions](/guides/transactions) for the history and simulation inputs.
+
 ---
 
 # Migration Guide
@@ -2972,6 +3010,7 @@ Direct subpaths:
 - `@vue-solana/core/buffer-polyfill`
 - `@vue-solana/core/types`
 - `@vue-solana/core/clusters`
+- `@vue-solana/core/diagnostics`
 - `@vue-solana/core/errors`
 - `@vue-solana/core/fee-policy`
 - `@vue-solana/core/ios-wallet`
@@ -3135,6 +3174,7 @@ The root `@vue-solana/core` export re-exports the public helpers below. Use dire
 | `@vue-solana/core/action`              | `createSolanaActionStore()`, `SolanaActionState`, and `isSolanaActionAborted()`.                                                       | You need a framework-agnostic async action state machine with abort-on-redispatch for Solana work.                           |
 | `@vue-solana/core/address`             | `parseAddress()` and address input types.                                                                                              | You accept a Solana address as a string, ref-like object, or getter and need a validated, normalized `Address`.              |
 | `@vue-solana/core/clusters`            | Default cluster and endpoint helpers.                                                                                                  | You need the package's built-in RPC or WebSocket endpoint for `mainnet`, `mainnet-beta`, `testnet`, `devnet`, or `localnet`. |
+| `@vue-solana/core/diagnostics`         | `buildDiagnosticReport()` and its `createTransactionDiagnostics()` alias.                                                              | You need one pure, RPC-free summary of a failed transaction from history, simulation, error, and fee-budget data.            |
 | `@vue-solana/core/errors`              | `SolanaError`, error factories, and error guards.                                                                                      | You need stable error codes for user-facing wallet, RPC, address, transaction, timeout, or storage failures.                 |
 | `@vue-solana/core/fee-policy`          | `resolveFeePolicy()` and explainable compute-budget types.                                                                             | You need locally capped compute-unit and priority-fee estimates without signing or sending a transaction.                    |
 | `@vue-solana/core/ios-wallet`          | iOS browser wallet discovery, deep-link adapters, and callback handling.                                                               | You are wiring iOS wallet links without the Vue plugin's unified wallet flow.                                                |
@@ -3527,6 +3567,7 @@ Direct package subpaths:
 - `@vue-solana/vue/useWallets`
 - `@vue-solana/vue/useTransaction`
 - `@vue-solana/vue/useTransactionConfirmation`
+- `@vue-solana/vue/useTransactionDiagnostics`
 - `@vue-solana/vue/useTransactionHistory`
 - `@vue-solana/vue/useSignatureStatus`
 - `@vue-solana/vue/useSimulateTransaction`
@@ -3555,6 +3596,7 @@ Use `@vue-solana/vue/buffer-polyfill` for browser transaction code that needs th
 - `useTokenBalance(mint, owner)`: loads the SPL token balance and decimals for a mint/owner pair via the associated token account.
 - `useTransaction(handler, options?)`: generic async transaction state helper with optional timeout settings.
 - `useTransactionConfirmation(options?)`: confirms a submitted signature with reactive status and timeout/error state.
+- `useTransactionDiagnostics(source, options?)`: joins reactive history, simulation, error, and fee-budget inputs into one pure diagnostic report without RPC calls.
 - `useSignatureStatus(signature, options?)`: reads, polls, or subscribes to signature status updates.
 - `useSignMessage()`: signs arbitrary authentication messages through the configured wallet when supported.
 - `useSignAndSendTransaction()`: signs and sends a transaction through the configured wallet, with optional confirmation waiting.
@@ -4412,6 +4454,7 @@ The module auto-imports these composables from direct `@vue-solana/vue/*` subpat
 - `useSolanaSimulateTransaction()`: simulates raw wire transaction bytes without submitting them and exposes normalized errors, logs, balance changes, and loaded addresses.
 - `useSolanaComputeBudget(messageSource, policySource?, options?)`: resolves and locally caps an estimated compute budget from simulation output or RPC estimation, without signing or sending.
 - `useSolanaTransactionHistory(addressSource, options?)`: lists paginated signature metadata for an address without fetching transaction bodies.
+- `useSolanaTransactionDiagnostics(source, options?)`: joins reactive history, simulation, error, and fee-budget inputs into one pure diagnostic report without RPC calls.
 - `useSolanaSignMessage()`: signs off-chain authentication or ownership challenge messages.
 - `useSolanaWalletAccountMessageSigner()`: returns a Kit `MessageModifyingSigner` for a wallet account.
 - `useSolanaWalletAccountTransactionSigner()`: returns a Kit `TransactionModifyingSigner` for a wallet account.

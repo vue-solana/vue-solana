@@ -346,7 +346,7 @@ async function submit(transaction: Uint8Array) {
 
 ## 오류 처리
 
-트랜잭션 helper는 실패를 `SolanaError`로 정규화합니다.
+트랜잭션 helper는 실패를 `SolanaError`로 정규화합니다. 실패한 트랜잭션의 데이터가 이미 있다면 [실패한 트랜잭션 진단](/ko/guides/errors)으로 설명 가능한 객체로 합칠 수 있습니다.
 
 ```ts
 import { isSolanaError } from "@vue-solana/core/errors";

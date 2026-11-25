@@ -346,7 +346,7 @@ Utilisez `useSolanaTransactionConfirmation({ commitment: "confirmed" })` et appe
 
 ## Gestion des erreurs
 
-Les helpers de transaction normalisent les échecs en `SolanaError`.
+Les helpers de transaction normalisent les échecs en `SolanaError`. Lorsque vous disposez déjà des données d'une transaction échouée, regroupez-les en un objet explicable avec le [diagnostic d'une transaction échouée](/fr/guides/errors).
 
 ```ts
 import { isSolanaError } from "@vue-solana/core/errors";

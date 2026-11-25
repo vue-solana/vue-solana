@@ -8,6 +8,7 @@ import MockTransactionPanel from "./components/panels/MockTransactionPanel.vue";
 import RpcStatusPanel from "./components/panels/RpcStatusPanel.vue";
 import SimulateTransactionPanel from "./components/panels/SimulateTransactionPanel.vue";
 import TransactionHistoryPanel from "./components/panels/TransactionHistoryPanel.vue";
+import TransactionDiagnosticsPanel from "./components/panels/TransactionDiagnosticsPanel.vue";
 import SolanaPayPanel from "./components/panels/SolanaPayPanel.vue";
 import SolanaPayScannerPanel from "./components/panels/SolanaPayScannerPanel.vue";
 import TransferPanel from "./components/panels/TransferPanel.vue";
@@ -38,6 +39,7 @@ installSolanaBufferPolyfill();
     <SimulateTransactionPanel />
     <ComputeBudgetPanel />
     <TransactionHistoryPanel />
+    <TransactionDiagnosticsPanel />
     <MessageSigningPanel />
     <WalletAccountSignersPanel />
     <TransferPanel />

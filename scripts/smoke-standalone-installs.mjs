@@ -148,6 +148,8 @@ import { extendClient, generateKeyPairSigner, summarizeTransactionPlanResult, ty
 import { getTokenAccount, getTokenAccountsByOwner, getTokenBalance, type TokenAccountInfo } from "@vue-solana/core/token-accounts";
 import { getTransactionHistory, type TransactionHistoryResult } from "@vue-solana/core/transaction-history";
 import { resolveFeePolicy, type FeeBudget, type FeePolicy } from "@vue-solana/core/fee-policy";
+import { buildDiagnosticReport, createTransactionDiagnostics } from "@vue-solana/core/diagnostics";
+import type { TransactionDiagnosticInput, TransactionDiagnosticReport } from "@vue-solana/core/types";
 
 installSolanaBufferPolyfill();
 
@@ -163,6 +165,9 @@ const historyResult: Promise<TransactionHistoryResult> | undefined = undefined;
 const feeResolver: typeof resolveFeePolicy = resolveFeePolicy;
 const feePolicy: FeePolicy = { mode: "standard", maxLamports: 6_000n };
 const feeBudget: FeeBudget | undefined = undefined;
+const diagnosticInput: TransactionDiagnosticInput = { historyItem: undefined, feeBudget };
+const diagnosticReport: TransactionDiagnosticReport = buildDiagnosticReport(diagnosticInput);
+const diagnosticsAlias: typeof buildDiagnosticReport = createTransactionDiagnostics;
 
 `,
   });
@@ -187,6 +192,7 @@ import { useSolanaClient } from "@vue-solana/vue/useSolanaClient";
 import { useConnection } from "@vue-solana/vue/useConnection";
 import { useWallet } from "@vue-solana/vue/useWallet";
 import { useTransactionHistory } from "@vue-solana/vue/useTransactionHistory";
+import { useTransactionDiagnostics } from "@vue-solana/vue/useTransactionDiagnostics";
 import { useComputeBudget, useFeePolicy } from "@vue-solana/vue/useComputeBudget";
 import { createSolanaClient, address, extendClient, generateKeyPairSigner, summarizeTransactionPlanResult, type AccountRole, type Address, type Instruction, type SolanaClient, type TransactionPlanResult } from "@vue-solana/vue/kit";
 
@@ -202,9 +208,10 @@ export default defineComponent({
     const connection = useConnection();
     const wallet = useWallet();
     const history = useTransactionHistory(publicKey);
+    const diagnostics = useTransactionDiagnostics(publicKey);
     const budget = useComputeBudget({} as never);
     const feePolicy = useFeePolicy;
-    return { injectedClient, rpc, connection, wallet, history, budget, feePolicy };
+    return { injectedClient, rpc, connection, wallet, history, diagnostics, budget, feePolicy };
   },
 });
 

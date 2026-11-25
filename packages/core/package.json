@@ -49,6 +49,10 @@
       "types": "./dist/clusters.d.ts",
       "import": "./dist/clusters.mjs"
     },
+    "./diagnostics": {
+      "types": "./dist/diagnostics.d.ts",
+      "import": "./dist/diagnostics.mjs"
+    },
     "./errors": {
       "types": "./dist/errors.d.ts",
       "import": "./dist/errors.mjs"

@@ -62,6 +62,7 @@ import type { SolanaConfig } from "@vue-solana/core/types";
 - `@vue-solana/core/buffer-polyfill`
 - `@vue-solana/core/types`
 - `@vue-solana/core/clusters`
+- `@vue-solana/core/diagnostics`
 - `@vue-solana/core/errors`
 - `@vue-solana/core/fee-policy`
 - `@vue-solana/core/ios-wallet`

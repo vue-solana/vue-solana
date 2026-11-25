@@ -44,6 +44,7 @@ Implemented files:
 - `src/address.ts`: address input parsing helpers (ref/getter unwrapping is depth-capped at 32 levels, so a cyclic input throws `INVALID_ADDRESS` instead of overflowing the stack).
 - `src/errors.ts`: `SolanaError` codes shared by the packages.
 - `src/fee-policy.ts`: `resolveFeePolicy()` — fixed compute-budget presets, local caps, buffer math, and an explainable fee budget over a Kit message.
+- `src/diagnostics.ts`: `buildDiagnosticReport()` / `createTransactionDiagnostics()` — pure, RPC-free join of history, simulation, error, fee-budget, and app-supplied program-label data into an explainable report; no instruction decoding, memo interpretation, token-transfer categorization, or retry.
 - `src/timeout.ts`: `withTimeout()` helper.
 - `src/token-accounts.ts`: token account info types.
 - `src/solana-pay.ts` + `src/solana-pay/*`: Solana Pay URL encode/parse, reference helpers, and QR rendering, implemented directly on Kit with a lazily imported `qrcode`.
@@ -95,6 +96,7 @@ Implemented files:
 - `src/composables/useWalletAccountTransactionSendingSigner.ts`: Kit `TransactionSendingSigner` that signs and submits through the wallet, with a singular sequential fallback.
 - `src/composables/useClientCapability.ts`: fail-fast client capability assertions.
 - `src/composables/useComputeBudget.ts`: `useComputeBudget()` / `useFeePolicy()` — reactive, capped compute-budget resolution with abort-on-supersede and scope disposal.
+- `src/composables/useTransactionDiagnostics.ts`: `useTransactionDiagnostics()` — reactive, RPC-free diagnostic report builder over history/simulation/error/fee-budget/label sources with supersede and scope disposal.
 - `src/composables/usePayer.ts`: `usePayer()` / `useIdentity()` reactive Kit client signers.
 - `src/composables/usePlanTransaction.ts`: `usePlanTransaction()` / `usePlanTransactions()` over the client planning capability.
 - `src/composables/useSendTransaction.ts`: `useSendTransaction()` / `useSendTransactions()` over the official Kit RPC plan-sending executor.
@@ -127,7 +129,7 @@ Auto-imported Nuxt composables (source of truth: `packages/nuxt/src/imports.ts`)
 - `useSolanaBalance()`, `useSolanaAccountInfo()`, `useSolanaProgramAccounts()`
 - `useSolanaTokenAccounts()`, `useSolanaTokenBalance()`, `useSolanaSignatureStatus()`, `useSolanaTransactionConfirmation()`
 - `useSolanaWallet()`, `useSolanaWallets()`, `useSolanaSignMessage()`, `useSolanaSignIn()`
-- `useSolanaAirdrop()`, `useSolanaAction()`, `useSolanaClientCapability()`, `useSolanaComputeBudget()`, `useSolanaRequest()`, `useSolanaSubscription()`, `useSolanaTrackedData()`
+- `useSolanaAirdrop()`, `useSolanaAction()`, `useSolanaClientCapability()`, `useSolanaComputeBudget()`, `useSolanaTransactionDiagnostics()`, `useSolanaRequest()`, `useSolanaSubscription()`, `useSolanaTrackedData()`
 - `tryUseSolana()`, `clearSwrCache()`, `deleteSwrKey()`
 - `useSolanaTransaction()`, `useSolanaRequestSwr()`, `useSolanaSubscriptionSwr()`, `useSolanaTrackedDataSwr()`
 - `useSolanaSelectedWalletAccount()`
@@ -200,7 +202,7 @@ Known remaining weight, deliberately not fixed: the iOS wallet path is ~38.9 KB 
 - `knowledge-bundle/guides/getting-started.md`: install snippets, Vue setup, Nuxt setup, and detailed manual devnet testing guide.
 - `plans/`: implementation tracker for the multistep tasks and implementations.
 - `examples/vue-vite/README.md` and `examples/nuxt/README.md`: runnable example app walkthroughs.
-- `apps/docs/content/guides/`: the docs site guides, each mirrored in `apps/docs/content/locales/{de,es,fr,ja,ko,zh}/guides/`. Solana Pay lives in `solana-pay.md` (transfer request + QR, scan/validate, settlement by reference); the example apps' `SolanaPayPanel` / `SolanaPayScannerPanel` panels and the matching e2e specs are the runnable counterpart.
+- `apps/docs/content/guides/`: the docs site guides, each mirrored in `apps/docs/content/locales/{de,es,fr,ja,ko,zh}/guides/`. Solana Pay lives in `solana-pay.md` (transfer request + QR, scan/validate, settlement by reference); the example apps' `SolanaPayPanel` / `SolanaPayScannerPanel` panels and the matching e2e specs are the runnable counterpart. Transaction diagnostics are documented in `errors.md` and linked from `transactions.md`; the example apps' `TransactionDiagnosticsPanel` and its e2e spec are the runnable counterpart.
 - `apps/docs/content/showcase.md`: the "apps built with Vue Solana" page (`/showcase`, one file per locale like every other doc). App cards are MDC blocks: `::ShowcaseApp{name="..." url="..." logo="/..." tag="..."} … ::` resolves to `apps/docs/app/components/content/ShowcaseApp.vue` — `@nuxt/content` v3 registers everything in `app/components/content/` with `pathPrefix: false`, so the file name is the MDC tag name. The block's slot text is the per-locale description; the component's own labels come from the `showcase.*` i18n branch. Adding an app = one more MDC block in each of the seven `showcase.md` files, with the logo dropped into `apps/docs/public/`. Submissions arrive through the `.github/ISSUE_TEMPLATE/showcase-app.yml` issue form (labels `showcase`, a repo label created via `gh label create` — form submission fails on labels that do not exist); the page's "Get Your App Listed" CTA links to `https://github.com/vue-solana/vue-solana/issues/new?template=showcase-app.yml`, an absolute external URL so `ULink`'s locale rewriting skips it (unlike the `/openapi.json` case).
 - `apps/docs/scripts/generate-llms.mjs`: writes the llmstxt.org v2 agent surface into `apps/docs/public/` — a small English `llms.txt` grouped by section, `{guides,packages,concepts,examples}/llms.txt` for narrower reads, `{de,es,fr,ja,ko,zh}/llms.txt` per locale, and an English-only `llms-full.txt` (optional one-shot corpus; the pre-v2 all-locale file was 1.86 MB / ~465k tokens). `server/middleware/markdown-negotiation.ts` adds `Link: rel="describedby"` / `rel="alternate"; type="text/markdown"` to markdown responses via `agentLinkHeader()`. `apps/docs/llms-output.test.ts` guards completeness and size budgets, so never make `llms-full.txt` multilingual again.
 
@@ -242,6 +244,8 @@ The `examples/vue-vite` and `examples/nuxt` directories contain runnable example
 Both apps also mount Live Data Panels exercising the Kit-reactive composables (`useRequest`, `useSubscription`, `useTrackedData`, `useSignIn`, and the `swr` cache adapters) against devnet.
 
 Both apps also mount `ComputeBudgetPanel`, which simulates a demo memo transaction, applies a capped budget through `useComputeBudget()` / `useSolanaComputeBudget()`, and displays the updated Kit message. It never signs or sends.
+
+Both apps also mount `TransactionDiagnosticsPanel`, which starts from a failed history item, runs the existing memo simulation mock, and renders the joined report beside the normalized error card. It is read-only and never signs or sends.
 
 They also mount `SolanaPayPanel` (merchant-side `useSolanaPay` + `useSolanaQrCode`: request URL, reference, QR, `useSolanaPayConfirmation` polling, and `confirmTransfer` verification) and `SolanaPayScannerPanel` (`useSolanaQrScanner`: camera scan, pasted-URL validation, parsed preview, and a `solana:` wallet link with no send path). The Nuxt scanner is wrapped in `<ClientOnly>`.
 
@@ -347,7 +351,7 @@ Plans live in the top-level `plans/` directory, separate from the knowledge bund
 - `apps/docs` is pinned to the latest published release. Read the current value from `apps/docs/package.json`; never trust a version number written in this file. Keep it current per the Post-Publish Release Checklist.
 - The 4.0.0 bundle-size trim has shipped: the core root barrel no longer re-exports `Buffer`/`installSolanaBufferPolyfill` (use the `@vue-solana/core/buffer-polyfill` subpath) and the tarballs exclude `.d.mts`. The invariants in "Bundle and Tarball Size Invariants" still govern any barrel, `exports` map, or `files` change.
 - The error-code and docs-agent-surface review follow-ups are closed; the record lives in `plans/archived/error-codes-agent-surface-followups.md`. The follow-up review of that branch's docs agent surface is closed too: `plans/archived/agent-surface-review-followups.md`. Do not re-open either for a new review — start a new plan file.
-- Follow `apps/docs/content/roadmap.md` for upcoming features (core composables, wallet features, Ecosystem integrations, etc.). The active implementation queue is `plans/feature-queue-phases.md`; Phases 0–1 are complete and Phases 2–6 are proposed. The Phase 1 implementation record is `plans/archived/fee-policy-compute-budget.md`.
+- Follow `apps/docs/content/roadmap.md` for upcoming features (core composables, wallet features, Ecosystem integrations, etc.). The active implementation queue is `plans/feature-queue-phases.md`; Phases 0–2 are complete and Phases 3–6 are proposed. The Phase 2 implementation record is `plans/archived/transaction-diagnostics.md`.
 - `plans/deferred/native-wallet-plan.md` is complete except for one open item, "Future iOS Wallet Support" (line 19). Mobile native wallets, Android MWA, iOS browser wallets, and desktop native wallets all shipped through the unified `useWallets()` flow.
 - Re-check the `@solana/kit` and `@solana/kit-plugin-rpc` peer versions on every new release.
 

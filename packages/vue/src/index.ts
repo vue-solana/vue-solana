@@ -32,6 +32,7 @@ export * from "./composables/useTokenBalance";
 export * from "./composables/useTrackedData";
 export * from "./composables/useTransaction";
 export * from "./composables/useTransactionConfirmation";
+export * from "./composables/useTransactionDiagnostics";
 export * from "./composables/useWallet";
 export * from "./composables/useWalletAccountMessageSigner";
 export * from "./composables/useWalletAccountTransactionSendingSigner";

@@ -98,6 +98,7 @@ Le module auto-importe ces composables depuis les sous-chemins directs `@vue-sol
 - `useSolanaSimulateTransaction()`: simule des octets de transaction brute au format wire sans les soumettre et expose des erreurs, journaux, changements de solde et adresses chargés normalisés.
 - `useSolanaComputeBudget(messageSource, policySource?, options?)`: résout et plafonne localement un budget de calcul à partir d'une simulation ou d'une estimation RPC, sans signer ni envoyer.
 - `useSolanaTransactionHistory(addressSource, options?)` : liste les métadonnées de signature paginées d'une adresse sans récupérer les corps des transactions.
+- `useSolanaTransactionDiagnostics(source, options?)` : regroupe les entrées réactives d'historique, de simulation, d'erreur et de budget de frais en un rapport de diagnostic pur, sans appel RPC.
 - `useSolanaSignMessage()`: signe des messages d'authentification hors chaîne ou de preuve de propriété.
 - `useSolanaWalletAccountMessageSigner()` : renvoie un `MessageModifyingSigner` Kit pour un compte de wallet.
 - `useSolanaWalletAccountTransactionSigner()` : renvoie un `TransactionModifyingSigner` Kit pour un compte de wallet.

@@ -159,3 +159,41 @@ function getSolanaErrorMessage(code: string) {
 - 不要自动重试 `USER_REJECTED`。
 - 不要重试 `INVALID_ADDRESS`；请让用户更正输入。
 - 隐藏或禁用会产生 `WALLET_FEATURE_UNSUPPORTED` 的操作。
+
+## 诊断失败的交易
+
+如果你已经有失败的交易历史项、模拟结果或标准化错误，`@vue-solana/core/diagnostics` 中的 `buildDiagnosticReport()` 会将它们合并为一个可解释的对象。该构建函数是纯函数，不会调用 RPC：它不会获取交易、解码指令、解释 memo、分类代币转账或自动重试。
+
+```ts
+import { buildDiagnosticReport } from "@vue-solana/core/diagnostics";
+
+const report = buildDiagnosticReport({
+  historyItem: failedItem,
+  simulationResult: preview,
+  error,
+  feeBudget,
+  labels: { [programAddress]: "My program" },
+});
+
+console.log(report.summary, report.code, report.suggestions);
+```
+
+`report` 始终包含 `summary`、`code`、`outcome`、`signature`、`slot`、`logs`、`balanceChanges`、`unitsConsumed`、`feeBudget`、`programs`、`sources` 和 `suggestions`。已知的 `SolanaError` 代码和原始 RPC 错误键会生成稳定建议，未知代码会原样保留。`programs` 来自模拟日志中的 `Program <address>` 行，只使用你的应用提供的标签；库本身不包含程序注册表。
+
+在 Vue 中，`useTransactionDiagnostics()` 接受响应式的签名或历史项，并暴露 `report`、`status`、`error` 和 `refresh()`：
+
+```vue
+<script setup lang="ts">
+import { useTransactionDiagnostics } from "@vue-solana/vue/useTransactionDiagnostics";
+
+const { report, status, error, refresh } = useTransactionDiagnostics(failedItemRef, {
+  simulationResult: simulationResultRef,
+  error: errorRef,
+  feeBudget: budgetRef,
+  labels: { [programAddress]: "My program" },
+});
+await refresh();
+</script>
+```
+
+在 Nuxt 中无需导入即可调用 `useSolanaTransactionDiagnostics()`。格式错误的输入会报告为 `INVALID_INPUT`，构建函数本身不会访问网络。交易历史和模拟输入请参阅[交易](/zh/guides/transactions)。

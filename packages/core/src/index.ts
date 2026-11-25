@@ -1,6 +1,7 @@
 export * from "./action";
 export * from "./clusters";
 export * from "./address";
+export * from "./diagnostics";
 export * from "./errors";
 export * from "./fee-policy";
 export * from "./kit";

@@ -97,6 +97,7 @@ export default defineNuxtConfig({
 - `useSolanaSimulateTransaction()`：模拟原始 wire 交易字节而不提交，并暴露规范化的错误、日志、余额变化和 loaded addresses。
 - `useSolanaComputeBudget(messageSource, policySource?, options?)`：根据模拟结果或 RPC 估算解析并本地限制计算预算，不签名或发送。
 - `useSolanaTransactionHistory(addressSource, options?)`：在不获取交易正文的情况下列出地址的分页签名元数据。
+- `useSolanaTransactionDiagnostics(source, options?)`：将响应式的历史、模拟、错误和费用预算输入合并为一个纯诊断报告，不发起 RPC 调用。
 - `useSolanaSignMessage()`：签署链下认证或所有权 challenge 消息。
 - `useSolanaWalletAccountMessageSigner()`：返回钱包账户的 Kit `MessageModifyingSigner`。
 - `useSolanaWalletAccountTransactionSigner()`：返回钱包账户的 Kit `TransactionModifyingSigner`。

@@ -98,6 +98,7 @@ Das Modul importiert diese Composables aus direkten `@vue-solana/vue/*`-Subpfade
 - `useSolanaSimulateTransaction()`: simuliert rohe Wire-Transaktionsbytes, ohne sie zu übermitteln, und stellt normalisierte Fehler, Logs, Guthabenänderungen und geladene Adressen bereit.
 - `useSolanaComputeBudget(messageSource, policySource?, options?)`: löst ein lokal begrenztes Compute-Budget aus Simulationsergebnissen oder RPC-Schätzungen auf, ohne zu signieren oder zu senden.
 - `useSolanaTransactionHistory(addressSource, options?)`: listet paginierte Signaturmetadaten für eine Adresse, ohne Transaktionsinhalte abzurufen.
+- `useSolanaTransactionDiagnostics(source, options?)`: fasst reaktive Verlaufs-, Simulations-, Fehler- und Gebührenbudget-Eingaben in einem reinen Diagnosebericht ohne RPC-Aufrufe zusammen.
 - `useSolanaSignMessage()`: signiert Off-Chain-Authentifizierungs- oder Besitz-Challenge-Nachrichten.
 - `useSolanaWalletAccountMessageSigner()`: liefert einen Kit-`MessageModifyingSigner` für ein Wallet-Konto.
 - `useSolanaWalletAccountTransactionSigner()`: liefert einen Kit-`TransactionModifyingSigner` für ein Wallet-Konto.

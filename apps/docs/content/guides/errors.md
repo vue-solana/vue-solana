@@ -159,3 +159,41 @@ function getSolanaErrorMessage(code: string) {
 - Do not retry `USER_REJECTED` automatically.
 - Do not retry `INVALID_ADDRESS`; ask the user to correct input.
 - Hide or disable actions that produce `WALLET_FEATURE_UNSUPPORTED`.
+
+## Diagnosing A Failed Transaction
+
+When you already have a failed history item, a simulation result, or a normalized error, `buildDiagnosticReport()` from `@vue-solana/core/diagnostics` joins them into one explainable object. The builder is pure and RPC-free: it does not fetch a transaction, decode instructions, interpret a memo, categorize token transfers, or retry anything.
+
+```ts
+import { buildDiagnosticReport } from "@vue-solana/core/diagnostics";
+
+const report = buildDiagnosticReport({
+  historyItem: failedItem,
+  simulationResult: preview,
+  error,
+  feeBudget,
+  labels: { [programAddress]: "My program" },
+});
+
+console.log(report.summary, report.code, report.suggestions);
+```
+
+`report` always has `summary`, `code`, `outcome`, `signature`, `slot`, `logs`, `balanceChanges`, `unitsConsumed`, `feeBudget`, `programs`, `sources`, and `suggestions`. Known `SolanaError` codes and raw RPC error keys produce stable suggestions; unknown codes pass through unchanged. `programs` comes from `Program <address>` lines in simulation logs and uses only labels your app supplies — the library ships no program registry.
+
+In Vue, `useTransactionDiagnostics()` takes a reactive signature or history item and exposes `report`, `status`, `error`, and `refresh()`:
+
+```vue
+<script setup lang="ts">
+import { useTransactionDiagnostics } from "@vue-solana/vue/useTransactionDiagnostics";
+
+const { report, status, error, refresh } = useTransactionDiagnostics(failedItemRef, {
+  simulationResult: simulationResultRef,
+  error: errorRef,
+  feeBudget: budgetRef,
+  labels: { [programAddress]: "My program" },
+});
+await refresh();
+</script>
+```
+
+In Nuxt, call `useSolanaTransactionDiagnostics()` without an import. Malformed input reports `INVALID_INPUT`; the builder itself never reaches the network. See [Transactions](/guides/transactions) for the history and simulation inputs.
