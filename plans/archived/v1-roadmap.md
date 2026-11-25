@@ -188,7 +188,7 @@ Tasks:
 - [x] Research supported desktop native Solana wallet options and protocol-link behavior. Deferred from v1 because a minimal cross-wallet desktop native adapter is not required for the first stable release.
 - [x] Decide whether minimal desktop native wallet support is a v1 requirement. Decision: not required for v1.
 - [x] If included in v1, implement the smallest supported adapter through the existing `useWallets()` and `useWallet()` flow. Not applicable because desktop native support is deferred.
-- [x] If deferred, update README, package docs, docs app, and `plans/native-wallet-plan.md` to mark it as post-v1.
+- [x] If deferred, update README, package docs, docs app, and `plans/deferred/native-wallet-plan.md` to mark it as post-v1.
 - [x] Avoid adding separate public composables for desktop wallets unless the architecture is deliberately revised.
 - [x] Add tests or manual testing notes for whichever decision is made. No v1 adapter tests are required because no desktop native adapter ships in v1; manual v1 testing should verify that desktop native wallets are documented as unsupported/post-v1.
 

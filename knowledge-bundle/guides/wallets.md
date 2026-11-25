@@ -220,7 +220,7 @@ setWallet(wallet);
 - iOS browser wallet support is available for Phantom, Solflare, and Backpack through universal links. Capability support differs by wallet.
 - Desktop native app wallet support is not implemented yet. It requires wallet-specific protocol links or future native Wallet Standard registration.
 
-Planned wallet work is tracked in [`plans/native-wallet-plan.md`](../../plans/native-wallet-plan.md).
+Planned wallet work is tracked in [`plans/deferred/native-wallet-plan.md`](../../plans/deferred/native-wallet-plan.md).
 
 ## Related
 
