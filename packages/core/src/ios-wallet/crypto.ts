@@ -6,7 +6,7 @@ let cachedNacl: typeof naclModule | undefined;
 
 // ponytail: `tweetnacl` is 32.9 KB of the 67.4 KB eager chunk for
 // `import { createSolanaPlugin } from "@vue-solana/vue"` (measured 2026-10-21;
-// grep `plans/bundle-performance-followups.md` for the method) — and the iOS
+// grep `plans/deferred/bundle-performance-followups.md` for the method) — and the iOS
 // wallet flow is its only caller. `getNacl()` below does NOT get it out of that
 // chunk: the static import on line 2 is the edge bundlers follow, and
 // `dist/ios-wallet.mjs` is one flat file, so any import from that entry pulls
@@ -17,7 +17,7 @@ let cachedNacl: typeof naclModule | undefined;
 // swap that for `crypto.getRandomValues` and the discovery path stops importing
 // crypto at all. `launchConnect` is internal and only called from `async
 // connect()`, so it can simply await. Non-breaking plan (thin crypto-free
-// entry + gated deep-link import) is in `plans/bundle-performance-followups.md`;
+// entry + gated deep-link import) is in `plans/deferred/bundle-performance-followups.md`;
 // `scripts/check-lean-imports.mjs` fails CI if a new static edge lands.
 export function getNacl() {
   return (cachedNacl ??= resolveTweetNaCl());

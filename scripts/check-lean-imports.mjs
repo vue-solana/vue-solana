@@ -79,7 +79,7 @@ const FORBIDDEN_STATIC = [
 // Known debt, deliberately deferred: `src/plugin/wallet-registry.ts` imports
 // `@vue-solana/core/ios-wallet` statically, which drags `tweetnacl` into the
 // eager plugin chunk. Only the root entry may reach it (no composable may), and
-// the refactor is tracked in plans/bundle-performance-followups.md "iOS wallet
+// the refactor is tracked in plans/deferred/bundle-performance-followups.md "iOS wallet
 // adapter lazy-loading". Remove these exemptions when
 // the thin entry lands; the check then guards the win.
 const IOS_DEBT_ENTRIES = new Set(["index.mjs"]);
@@ -250,7 +250,7 @@ for (const entryName of vueEntries) {
 
 if (iosDebtBytes > 0) {
   console.log(
-    `note: the Vue eager graph still carries the iOS wallet entry (${iosDebtBytes} bytes of built ESM, plus tweetnacl); tracked as deferred debt in plans/bundle-performance-followups.md`,
+    `note: the Vue eager graph still carries the iOS wallet entry (${iosDebtBytes} bytes of built ESM, plus tweetnacl); tracked as deferred debt in plans/deferred/bundle-performance-followups.md`,
   );
 }
 
