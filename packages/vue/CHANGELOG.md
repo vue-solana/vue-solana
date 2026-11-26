@@ -1,5 +1,16 @@
 # @vue-solana/vue
 
+## 4.6.0
+
+### Minor Changes
+
+- 7fea9ed: Add local fee and compute-budget policy: `resolveFeePolicy()` in core, `useComputeBudget()` / `useFeePolicy()` in Vue, and the `useSolanaComputeBudget()` Nuxt auto-import. The API applies fixed presets, local caps, and optional simulation-derived limits to a Kit message without signing or sending it, and reports the estimates behind the chosen budget.
+
+### Patch Changes
+
+- Updated dependencies [7fea9ed]
+  - @vue-solana/core@4.6.0
+
 ## 4.5.1
 
 ### Patch Changes
