@@ -178,7 +178,7 @@ const report = buildDiagnosticReport({
 console.log(report.summary, report.code, report.suggestions);
 ```
 
-`report`에는 항상 `summary`, `code`, `outcome`, `signature`, `slot`, `logs`, `balanceChanges`, `unitsConsumed`, `feeBudget`, `programs`, `sources`, `suggestions`가 있습니다. 알려진 `SolanaError` code와 raw RPC error key는 안정적인 suggestion을 만들고, 알 수 없는 code는 그대로 통과합니다. `programs`는 simulation log의 `Program <address>` 줄에서 가져오며 앱이 공급한 label만 사용합니다. 라이브러리에는 built-in program registry가 없습니다.
+`report`에는 항상 `summary`, `code`, `outcome`, `signature`, `slot`, `logs`, `balanceChanges`, `unitsConsumed`, `feeBudget`, `programs`, `sources`, `suggestions`가 있습니다. 일반적인 `SolanaError` code와 raw RPC error key는 안정적인 suggestion을 만들고, 그 외의 code는 그대로 통과합니다. `programs`는 simulation log의 `Program <address>` 줄에서 가져오며 앱이 공급한 label만 사용합니다. 라이브러리에는 built-in program registry가 없습니다.
 
 Vue에서는 `useTransactionDiagnostics()`가 반응형 signature 또는 history item을 받아 `report`, `status`, `error`, `refresh()`를 노출합니다.
 

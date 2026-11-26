@@ -183,6 +183,7 @@ Buffer polyfill이 필요한 브라우저 트랜잭션 코드에는 `@vue-solana
 - `useTokenBalance(mint, owner)`: associated token account를 통해 mint/owner 쌍의 SPL token balance와 decimals를 로드합니다.
 - `useTransaction(handler, options?)`: optional timeout 설정을 지원하는 generic async transaction state helper입니다.
 - `useTransactionConfirmation(options?)`: 제출된 signature를 reactive status 및 timeout/error state와 함께 confirm합니다.
+- `useTransactionDiagnostics(source, options?)`: reactive 히스토리, simulation, error, fee-budget 입력을 RPC 호출 없이 pure diagnostic report로 join합니다.
 - `useSignatureStatus(signature, options?)`: signature status update를 읽거나 polling하거나 subscribe합니다.
 - `useSignMessage()`: 지원되는 경우 설정된 wallet을 통해 임의의 인증 메시지에 서명합니다.
 - `useSignAndSendTransaction()`: optional confirmation waiting과 함께 설정된 wallet을 통해 transaction에 서명하고 전송합니다.

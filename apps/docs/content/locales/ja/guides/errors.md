@@ -178,7 +178,7 @@ const report = buildDiagnosticReport({
 console.log(report.summary, report.code, report.suggestions);
 ```
 
-`report` は常に `summary`、`code`、`outcome`、`signature`、`slot`、`logs`、`balanceChanges`、`unitsConsumed`、`feeBudget`、`programs`、`sources`、`suggestions` を持ちます。既知の `SolanaError` コードと生の RPC エラーキーには安定した提案が作られ、未知のコードはそのまま渡されます。`programs` はシミュレーションログの `Program <address>` 行から作られ、アプリが渡したラベルだけを使用します。ライブラリには組み込みのプログラムレジストリはありません。
+`report` は常に `summary`、`code`、`outcome`、`signature`、`slot`、`logs`、`balanceChanges`、`unitsConsumed`、`feeBudget`、`programs`、`sources`、`suggestions` を持ちます。一般的な `SolanaError` コードと生の RPC エラーキーには安定した提案が作られ、それ以外のコードはそのまま渡されます。`programs` はシミュレーションログの `Program <address>` 行から作られ、アプリが渡したラベルだけを使用します。ライブラリには組み込みのプログラムレジストリはありません。
 
 Vue では、`useTransactionDiagnostics()` はリアクティブな署名または履歴項目を受け取り、`report`、`status`、`error`、`refresh()` を公開します。
 

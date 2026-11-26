@@ -178,7 +178,7 @@ const report = buildDiagnosticReport({
 console.log(report.summary, report.code, report.suggestions);
 ```
 
-`report` contient toujours `summary`, `code`, `outcome`, `signature`, `slot`, `logs`, `balanceChanges`, `unitsConsumed`, `feeBudget`, `programs`, `sources` et `suggestions`. Les codes `SolanaError` connus et les clés d'erreur RPC brutes produisent des suggestions stables ; les codes inconnus sont conservés tels quels. `programs` provient des lignes `Program <address>` des journaux de simulation et n'utilise que les étiquettes fournies par votre application : la bibliothèque ne contient aucun registre de programmes.
+`report` contient toujours `summary`, `code`, `outcome`, `signature`, `slot`, `logs`, `balanceChanges`, `unitsConsumed`, `feeBudget`, `programs`, `sources` et `suggestions`. Les codes `SolanaError` courants et les clés d'erreur RPC brutes produisent des suggestions stables ; les autres codes sont conservés tels quels. `programs` provient des lignes `Program <address>` des journaux de simulation et n'utilise que les étiquettes fournies par votre application : la bibliothèque ne contient aucun registre de programmes.
 
 Dans Vue, `useTransactionDiagnostics()` accepte une signature ou un élément d'historique réactif et expose `report`, `status`, `error` et `refresh()` :
 

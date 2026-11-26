@@ -1,4 +1,4 @@
-import { createSolanaError, isSolanaError, type SolanaErrorCode } from "./errors";
+import { createSolanaError, isSolanaError } from "./errors";
 import type { Address } from "./kit";
 import type {
   DiagnosticOutcome,
@@ -20,31 +20,27 @@ interface ErrorDetails {
   raw: unknown;
 }
 
-/** Suggestions for this package's normalized error codes only. */
-const CODE_SUGGESTIONS: Partial<Record<SolanaErrorCode, string>> = {
+/** Stable suggestions for this package's codes and raw RPC error keys. */
+const ERROR_SUGGESTIONS: Readonly<Record<string, string>> = {
   TRANSACTION_FAILED: "Inspect the logs.",
   TRANSACTION_NOT_FOUND: "Verify signature.",
-  TRANSACTION_TIMEOUT: "Check the signature status again before resubmitting anything.",
+  TRANSACTION_TIMEOUT: "Check status again before resubmitting.",
   RPC_FAILURE: "Retry RPC read.",
   INVALID_INPUT: "Check inputs.",
   USER_REJECTED: "Wallet rejected.",
   MISSING_CLIENT_CAPABILITY: "Use a Kit client",
-};
-
-/** Suggestions for the raw `TransactionError` shapes Solana RPC returns. */
-const RAW_ERROR_SUGGESTIONS: Readonly<Record<string, string>> = {
   AccountNotFound: "Check account.",
   AlreadyProcessed: "Already processed.",
-  BlockhashNotFound: "The blockhash expired before the transaction landed; use a fresh blockhash.",
-  ComputeBudgetExceeded: "Raise unit limit.",
-  InsufficientFundsForFee: "Fund fee payer.",
-  InstructionError: "Inspect the simulation logs to find the failing instruction.",
-  InvalidAccountData: "Check the account data.",
+  BlockhashNotFound: "Use a fresh blockhash; the old one expired.",
+  ComputeBudgetExceeded: "Raise limit.",
+  InsufficientFundsForFee: "Fund payer.",
+  InstructionError: "Inspect simulation logs.",
+  InvalidAccountData: "Check account data.",
   TooManyAccountLocks: "Retry later.",
 };
 
 const LOG_PROGRAM_PATTERN = /\bProgram\s+([1-9A-HJ-NP-Za-km-z]{32,44})\b/g;
-const COMPUTE_BUDGET_LOG_PATTERN = /compute budget/i;
+const COMPUTE_BUDGET_LOG_PATTERN = /compute budget.*(?:exceed|exhaust|out of)/i;
 
 /** Pure, RPC-free join of already-available transaction data. */
 export function buildDiagnosticReport(
@@ -64,7 +60,7 @@ export function buildDiagnosticReport(
   if (simulationResult) {
     sources.push("simulation");
   }
-  if (input.error !== undefined && input.error !== null) {
+  if (input.error) {
     sources.push("error");
   }
   if (feeBudget) {
@@ -77,7 +73,7 @@ export function buildDiagnosticReport(
   const signature = historyItem?.signature ?? input.signature ?? null;
   const logs = [...(simulationResult?.logs ?? [])];
   const programs = collectPrograms(logs, labels);
-  const primaryError = selectError(input, historyItem, simulationResult);
+  const primaryError = selectError(input.error, historyItem, simulationResult);
   const outcome: DiagnosticOutcome = primaryError
     ? "failed"
     : historyItem || simulationResult
@@ -126,6 +122,14 @@ function validateInput(input: TransactionDiagnosticInput): void {
     assertOptionalObject(input[name], name);
   }
 
+  if (input.feeBudget) {
+    const { capped, cappedBy } = input.feeBudget;
+
+    if (typeof capped !== "boolean" || !Array.isArray(cappedBy)) {
+      throw createSolanaError("INVALID_INPUT", "invalid feeBudget");
+    }
+  }
+
   if (input.labels !== undefined && input.labels !== null) {
     assertOptionalObject(input.labels, "labels");
 
@@ -138,34 +142,26 @@ function validateInput(input: TransactionDiagnosticInput): void {
 }
 
 function assertOptionalObject(value: unknown, name: string): void {
-  if (value === undefined || value === null) {
-    return;
-  }
+  if (value === undefined || value === null) return;
 
   if (typeof value !== "object" || Array.isArray(value)) {
     throw createSolanaError("INVALID_INPUT", `${name} must be an object`);
   }
 }
 
-/**
- * A normalized `SolanaError` wins, because it is the app's own description of
- * the failure. The history item's `err` comes next: it describes the landed
- * transaction. A simulation `err` is last, since it may precede a later retry.
- */
+/** Prefer the app's error, then the landed transaction, then simulation. */
 function selectError(
-  input: TransactionDiagnosticInput,
+  errorSource: unknown,
   historyItem: TransactionHistoryItem | null,
   simulationResult: SimulatedTransactionResult | null,
 ): ErrorDetails | null {
-  if (isSolanaError(input.error)) {
-    return { code: input.error.code, message: input.error.message, raw: input.error };
+  if (isSolanaError(errorSource)) {
+    return { code: errorSource.code, message: errorSource.message, raw: errorSource };
   }
 
-  const raw = input.error ?? historyItem?.err ?? simulationResult?.err ?? null;
+  const raw = errorSource || historyItem?.err || simulationResult?.err || null;
 
-  if (raw === null || raw === undefined) {
-    return null;
-  }
+  if (raw === null || raw === undefined) return null;
 
   return describeRawError(raw);
 }
@@ -199,13 +195,8 @@ function makeSummary(
 ): string {
   const subject = signature ? `Transaction ${signature}` : "Transaction";
 
-  if (outcome === "failed" && error) {
-    return `${subject} failed: ${error.message}`;
-  }
-
-  if (outcome === "succeeded") {
-    return `${subject} has no error in available data`;
-  }
+  if (outcome === "failed" && error) return `${subject} failed: ${error.message}`;
+  if (outcome === "succeeded") return `${subject} has no error`;
 
   return "No transaction failure data is available";
 }
@@ -262,31 +253,30 @@ function collectSuggestions(context: SuggestionContext): string[] {
   const { primaryError, simulationResult, feeBudget, logs, programs, labels } = context;
 
   if (primaryError) {
-    if (Object.hasOwn(CODE_SUGGESTIONS, primaryError.code)) {
-      addSuggestion(suggestions, CODE_SUGGESTIONS[primaryError.code as SolanaErrorCode]);
+    if (Object.hasOwn(ERROR_SUGGESTIONS, primaryError.code)) {
+      addSuggestion(suggestions, ERROR_SUGGESTIONS[primaryError.code]);
     }
 
-    addSuggestion(suggestions, RAW_ERROR_SUGGESTIONS[primaryError.code]);
     addSuggestion(suggestions, customErrorSuggestion(primaryError.raw, programs));
   }
 
-  if (logs.some((line) => COMPUTE_BUDGET_LOG_PATTERN.test(line))) {
-    addSuggestion(suggestions, "Transaction ran out of compute budget; check the unit limit.");
+  if (primaryError && logs.some((line) => COMPUTE_BUDGET_LOG_PATTERN.test(line))) {
+    addSuggestion(suggestions, "Compute budget exhausted; check limit.");
   }
 
   if (feeBudget?.capped) {
     addSuggestion(
       suggestions,
-      `Fee cap applied (${feeBudget.cappedBy.join(", ") || "cap"}); confirm budget.`,
+      `Fee cap applied (${feeBudget.cappedBy.join(", ") || "cap"}); confirm.`,
     );
   }
 
   if (simulationResult && !primaryError && logs.length > 0) {
-    addSuggestion(suggestions, "The simulation logs are available for program-specific diagnosis.");
+    addSuggestion(suggestions, "Simulation logs available.");
   }
 
   if (labels && Object.keys(labels).length > 0 && programs.length > 0) {
-    addSuggestion(suggestions, "Use app-supplied labels in `programs`.");
+    addSuggestion(suggestions, "Use app-supplied labels.");
   }
 
   return suggestions;
@@ -314,18 +304,16 @@ function customErrorSuggestion(
       ? (detail as Record<string, unknown>).Custom
       : undefined;
 
-  if (typeof custom !== "number") {
+  if (typeof custom !== "number" && typeof custom !== "bigint") {
     return null;
   }
 
-  const program = programs[0];
+  const program = programs.length === 1 ? programs[0] : undefined;
   const subject = program?.label ?? "the failing program";
 
   return `custom code ${custom} from ${subject} (instruction ${String(instructionError[0])})`;
 }
 
 function addSuggestion(suggestions: string[], suggestion: string | null | undefined): void {
-  if (suggestion && !suggestions.includes(suggestion)) {
-    suggestions.push(suggestion);
-  }
+  if (suggestion && !suggestions.includes(suggestion)) suggestions.push(suggestion);
 }

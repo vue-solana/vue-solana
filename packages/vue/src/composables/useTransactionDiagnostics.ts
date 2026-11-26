@@ -82,16 +82,22 @@ export function useTransactionDiagnostics(
     const primary = toValue(source);
     const historyItem = toValue(options.historyItem) ?? (isHistoryItem(primary) ? primary : null);
     const signature = typeof primary === "string" ? (primary as Signature) : null;
+    const simulationResult =
+      options.simulationResult === undefined ? null : toValue(options.simulationResult);
+    const error = options.error === undefined ? null : toValue(options.error);
+    const feeBudget = options.feeBudget === undefined ? null : toValue(options.feeBudget);
+    const labels = options.labels === undefined ? null : toValue(options.labels);
 
+    // A source that is present but currently empty is still no source. Checking
+    // key presence here would build an "unknown" report for the common pattern
+    // where simulation/error refs start as `null`.
     return {
       ...(historyItem ? { historyItem } : {}),
       ...(signature ? { signature } : {}),
-      ...(options.simulationResult !== undefined
-        ? { simulationResult: toValue(options.simulationResult) ?? null }
-        : {}),
-      ...(options.error !== undefined ? { error: toValue(options.error) } : {}),
-      ...(options.feeBudget !== undefined ? { feeBudget: toValue(options.feeBudget) ?? null } : {}),
-      ...(options.labels !== undefined ? { labels: toValue(options.labels) ?? null } : {}),
+      ...(simulationResult ? { simulationResult } : {}),
+      ...(error ? { error } : {}),
+      ...(feeBudget ? { feeBudget } : {}),
+      ...(labels ? { labels } : {}),
     };
   }
 

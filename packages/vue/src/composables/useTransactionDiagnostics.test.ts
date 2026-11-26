@@ -4,7 +4,9 @@ import type {
   SimulatedTransactionResult,
   TransactionHistoryItem,
 } from "@vue-solana/core/types";
-import { effectScope, nextTick, ref } from "vue";
+import { mount } from "@vue/test-utils";
+import { createSSRApp, defineComponent, effectScope, h, nextTick, ref } from "vue";
+import { renderToString } from "vue/server-renderer";
 import { describe, expect, it, vi } from "vitest";
 import { useTransactionDiagnostics } from "./useTransactionDiagnostics";
 
@@ -128,6 +130,24 @@ describe("useTransactionDiagnostics", () => {
     expect(diagnostics.report.value?.code).toBe("BlockhashNotFound");
   });
 
+  it("keeps only the newest result when refreshes overlap", async () => {
+    const source = ref<TransactionHistoryItem | null>(
+      history({ err: { BlockhashNotFound: {} } as never }),
+    );
+    const diagnostics = setupInScope(() => useTransactionDiagnostics(source));
+
+    const first = diagnostics.refresh();
+    source.value = history({ err: { AlreadyProcessed: {} } as never });
+    const second = diagnostics.refresh();
+
+    const [firstReport, secondReport] = await Promise.all([first, second]);
+
+    expect(firstReport?.code).toBe("BlockhashNotFound");
+    expect(secondReport?.code).toBe("AlreadyProcessed");
+    expect(diagnostics.report.value?.code).toBe("AlreadyProcessed");
+    expect(diagnostics.status.value).toBe("built");
+  });
+
   it("resets to idle when every source is empty", async () => {
     const source = ref<Signature | null>(SIGNATURE);
     const diagnostics = setupInScope(() => useTransactionDiagnostics(source));
@@ -144,6 +164,68 @@ describe("useTransactionDiagnostics", () => {
     expect(diagnostics.report.value).toBeNull();
     expect(await diagnostics.refresh()).toBeNull();
     expect(diagnostics.status.value).toBe("idle");
+  });
+
+  it("stays idle while defined options hold empty values", async () => {
+    const source = ref<Signature | null>(null);
+    const simulationResult = ref<SimulatedTransactionResult | null>(null);
+    const error = ref<unknown>(null);
+    const feeBudget = ref<FeeBudget | null>(null);
+    const labels = ref<Record<string, string> | null>(null);
+
+    const diagnostics = setupInScope(() =>
+      useTransactionDiagnostics(source, {
+        simulationResult,
+        error,
+        feeBudget,
+        labels,
+      }),
+    );
+
+    expect(diagnostics.status.value).toBe("idle");
+    expect(await diagnostics.refresh()).toBeNull();
+    expect(diagnostics.report.value).toBeNull();
+
+    simulationResult.value = simulation();
+    await nextTick();
+    await vi.waitFor(() => {
+      expect(diagnostics.status.value).toBe("built");
+    });
+    expect(diagnostics.report.value?.sources).toEqual(["simulation"]);
+  });
+
+  it("builds after mount when immediate is set", async () => {
+    let diagnostics: ReturnType<typeof useTransactionDiagnostics> | undefined;
+    const wrapper = mount(
+      defineComponent({
+        setup() {
+          diagnostics = useTransactionDiagnostics(SIGNATURE, { immediate: true });
+          return () => h("div");
+        },
+      }),
+    );
+
+    expect(diagnostics?.report.value).toBeNull();
+    await vi.waitFor(() => {
+      expect(diagnostics?.status.value).toBe("built");
+    });
+    expect(diagnostics?.report.value?.signature).toBe(SIGNATURE);
+
+    wrapper.unmount();
+  });
+
+  it("stays inert during SSR even with immediate set", async () => {
+    let diagnostics: ReturnType<typeof useTransactionDiagnostics> | undefined;
+    const Component = defineComponent({
+      setup() {
+        diagnostics = useTransactionDiagnostics(SIGNATURE, { immediate: true });
+        return () => h("div", "rendered");
+      },
+    });
+
+    expect(await renderToString(createSSRApp(Component))).toContain("rendered");
+    expect(diagnostics?.status.value).toBe("idle");
+    expect(diagnostics?.report.value).toBeNull();
   });
 
   it("surfaces INVALID_INPUT for malformed label maps", async () => {

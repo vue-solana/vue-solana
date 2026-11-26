@@ -185,6 +185,7 @@ Buffer ポリフィルを必要とするブラウザ向けトランザクショ�
 - `useTokenBalance(mint, owner)`: 関連付けられたトークンアカウント経由で、mint/owner ペアの SPL トークン残高と decimals を読み込みます。
 - `useTransaction(handler, options?)`: 任意のタイムアウト設定を備えた、汎用的な非同期トランザクション状態ヘルパーです。
 - `useTransactionConfirmation(options?)`: 送信済みの署名を、リアクティブな状態とタイムアウト／エラー状態で確認します。
+- `useTransactionDiagnostics(source, options?)`: リアクティブな履歴、シミュレーション、エラー、手数料予算の入力を RPC 呼び出しなしで純粋な診断レポートにまとめます。
 - `useSignatureStatus(signature, options?)`: 署名ステータスの更新を読み取り、ポーリングし、または購読します。
 - `useSignMessage()`: 設定済みのウォレットが対応している場合に、任意の認証メッセージへ署名します。
 - `useSignAndSendTransaction()`: 設定済みのウォレットを介してトランザクションに署名して送信します。確認待機は任意です。

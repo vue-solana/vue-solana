@@ -509,9 +509,14 @@ test("joins a failed simulation and history error into an explainable report", a
   await expect(page.getByTestId("diagnostics-summary")).toContainText("failed");
   await expect(page.getByTestId("diagnostics-details")).toContainText("programs: Memo app");
   await expect(page.getByTestId("diagnostics-details")).toContainText(
-    "sources: history, simulation",
+    "sources: history, simulation, labels",
   );
   await expect(page.getByTestId("diagnostics-suggestions")).toContainText("app-supplied labels");
+  await expect(page.getByTestId("diagnostics-suggestions")).toContainText(
+    "custom code 7 from Memo app (instruction 0)",
+  );
+  await expect(page.getByTestId("diagnostics-error")).toBeVisible();
+  await expect(page.getByTestId("diagnostics-error")).toContainText("InstructionError");
 
   const diagnosticsCalls = rpc.rpcMethodCalls();
   expect(diagnosticsCalls).toContain("simulateTransaction");

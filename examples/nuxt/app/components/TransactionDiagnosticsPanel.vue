@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from "vue";
+import { computed, ref } from "vue";
 import {
   address,
   appendTransactionMessageInstruction,
@@ -20,6 +20,7 @@ const history = useSolanaTransactionHistory(
   { limit: 1 },
 );
 const simulation = useSolanaSimulateTransaction();
+const blockhashError = ref<unknown>(null);
 
 const MEMO_PROGRAM_ADDRESS = address("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr");
 const DEMO_FEE_PAYER: Address = address("dv3qDFk1DTF36Z62bNvrCXe9sKATA6xvVy6A798xxAS");
@@ -53,15 +54,27 @@ const details = computed(() => {
   ].join(" · ");
 });
 const errorText = computed(() => {
-  const error = formatError(diagnostics.error.value);
-
-  if (error) {
-    return error;
-  }
-
+  const messages = [
+    history.error.value,
+    simulation.error.value,
+    blockhashError.value,
+    diagnostics.error.value,
+  ].flatMap((error) => formatError(error) ?? []);
   const value = report.value;
 
-  return value?.outcome === "failed" ? `${value.code}: ${value.summary}` : null;
+  if (value?.outcome === "failed") {
+    const fallback = value.summary.includes(value.code)
+      ? value.summary
+      : `${value.code}: ${value.summary}`;
+
+    if (!messages.includes(fallback)) {
+      messages.push(fallback);
+    }
+  }
+
+  const unique = [...new Set(messages)];
+
+  return unique.length > 0 ? unique.join(" · ") : null;
 });
 
 function buildMemoInstruction(note: string): Instruction {
@@ -73,28 +86,35 @@ function buildMemoInstruction(note: string): Instruction {
 }
 
 async function runDiagnostics() {
+  blockhashError.value = null;
+
   try {
     await history.refresh();
   } catch {
     // The composable exposes the normalized error in `history.error`.
   }
 
-  const { value: latestBlockhash } = await client.rpc.getLatestBlockhash().send();
-  const message = appendTransactionMessageInstruction(
-    buildMemoInstruction("Hello from @vue-solana diagnostics"),
-    setTransactionMessageLifetimeUsingBlockhash(
-      latestBlockhash,
-      setTransactionMessageFeePayer(DEMO_FEE_PAYER, createTransactionMessage({ version: 0 })),
-    ),
-  );
-
   try {
-    await simulation.execute(
-      new Uint8Array(getTransactionEncoder().encode(compileTransaction(message))),
-      { sigVerify: false },
+    const { value: latestBlockhash } = await client.rpc.getLatestBlockhash().send();
+    const message = appendTransactionMessageInstruction(
+      buildMemoInstruction("Hello from @vue-solana diagnostics"),
+      setTransactionMessageLifetimeUsingBlockhash(
+        latestBlockhash,
+        setTransactionMessageFeePayer(DEMO_FEE_PAYER, createTransactionMessage({ version: 0 })),
+      ),
     );
-  } catch {
-    // The composable exposes the normalized error in `simulation.error`.
+
+    try {
+      await simulation.execute(
+        new Uint8Array(getTransactionEncoder().encode(compileTransaction(message))),
+        { sigVerify: false },
+      );
+    } catch {
+      // The composable exposes the normalized error in `simulation.error`.
+    }
+  } catch (cause) {
+    // A blockhash RPC failure never reaches the simulation composable.
+    blockhashError.value = cause;
   }
 
   await diagnostics.refresh();
@@ -108,7 +128,12 @@ async function runDiagnostics() {
         <p class="eyebrow">useSolanaTransactionDiagnostics</p>
         <h2>Transaction Diagnostics</h2>
       </div>
-      <span class="status-pill" :class="`status-pill--${diagnostics.status.value}`">
+      <span
+        class="status-pill"
+        :class="`status-pill--${diagnostics.status.value}`"
+        role="status"
+        aria-live="polite"
+      >
         {{ diagnostics.status.value }}
       </span>
     </div>
@@ -141,8 +166,8 @@ async function runDiagnostics() {
       </button>
     </div>
 
-    <p class="result" data-testid="diagnostics-summary">{{ summary }}</p>
-    <p class="result" data-testid="diagnostics-details">{{ details }}</p>
+    <p class="result" aria-live="polite" data-testid="diagnostics-summary">{{ summary }}</p>
+    <p class="result" aria-live="polite" data-testid="diagnostics-details">{{ details }}</p>
     <ul
       v-if="report?.suggestions.length"
       class="signature-list"
@@ -156,6 +181,14 @@ async function runDiagnostics() {
         {{ suggestion }}
       </li>
     </ul>
-    <p v-if="errorText" class="error" data-testid="diagnostics-error">{{ errorText }}</p>
+    <p
+      v-if="errorText"
+      class="error"
+      role="alert"
+      aria-live="assertive"
+      data-testid="diagnostics-error"
+    >
+      {{ errorText }}
+    </p>
   </section>
 </template>

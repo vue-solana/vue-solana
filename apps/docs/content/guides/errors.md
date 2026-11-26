@@ -178,7 +178,7 @@ const report = buildDiagnosticReport({
 console.log(report.summary, report.code, report.suggestions);
 ```
 
-`report` always has `summary`, `code`, `outcome`, `signature`, `slot`, `logs`, `balanceChanges`, `unitsConsumed`, `feeBudget`, `programs`, `sources`, and `suggestions`. Known `SolanaError` codes and raw RPC error keys produce stable suggestions; unknown codes pass through unchanged. `programs` comes from `Program <address>` lines in simulation logs and uses only labels your app supplies — the library ships no program registry.
+`report` always has `summary`, `code`, `outcome`, `signature`, `slot`, `logs`, `balanceChanges`, `unitsConsumed`, `feeBudget`, `programs`, `sources`, and `suggestions`. Common `SolanaError` codes and raw RPC error keys produce stable suggestions; other codes pass through unchanged. `programs` comes from `Program <address>` lines in simulation logs and uses only labels your app supplies — the library ships no program registry.
 
 In Vue, `useTransactionDiagnostics()` takes a reactive signature or history item and exposes `report`, `status`, `error`, and `refresh()`:
 

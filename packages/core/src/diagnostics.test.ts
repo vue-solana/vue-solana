@@ -94,9 +94,7 @@ describe("buildDiagnosticReport", () => {
     expect(report.outcome).toBe("failed");
     expect(report.code).toBe("BlockhashNotFound");
     expect(report.summary).toContain("failed: BlockhashNotFound");
-    expect(report.suggestions).toContain(
-      "The blockhash expired before the transaction landed; use a fresh blockhash.",
-    );
+    expect(report.suggestions).toContain("Use a fresh blockhash; the old one expired.");
   });
 
   it("joins simulation logs, balance changes, units, and a fee budget", () => {
@@ -119,7 +117,7 @@ describe("buildDiagnosticReport", () => {
     expect(report.feeBudget?.cappedBy).toEqual(["maxLamports"]);
     expect(report.sources).toEqual(["history", "simulation", "feeBudget"]);
     expect(report.suggestions).toContainEqual(expect.stringContaining("custom code 7"));
-    expect(report.suggestions).toContainEqual(expect.stringContaining("ran out of compute budget"));
+    expect(report.suggestions).toContainEqual(expect.stringContaining("Compute budget exhausted"));
     expect(report.suggestions).toContainEqual(expect.stringContaining("maxLamports"));
   });
 
@@ -133,9 +131,7 @@ describe("buildDiagnosticReport", () => {
 
     expect(report.code).toBe("TRANSACTION_TIMEOUT");
     expect(report.summary).toContain("Timed out waiting for signature");
-    expect(report.suggestions).toContain(
-      "Check the signature status again before resubmitting anything.",
-    );
+    expect(report.suggestions).toContain("Check status again before resubmitting.");
     expect(report.suggestions).not.toContain("Already processed.");
   });
 
@@ -194,9 +190,7 @@ describe("buildDiagnosticReport", () => {
     });
 
     expect(report.programs).toEqual([{ address: PROGRAM }]);
-    expect(report.suggestions).toEqual([
-      "The simulation logs are available for program-specific diagnosis.",
-    ]);
+    expect(report.suggestions).toEqual(["Simulation logs available."]);
   });
 
   it("maps instruction errors from a failed simulation alone", () => {
@@ -206,9 +200,7 @@ describe("buildDiagnosticReport", () => {
 
     expect(report.outcome).toBe("failed");
     expect(report.code).toBe("InstructionError");
-    expect(report.suggestions).toContain(
-      "Inspect the simulation logs to find the failing instruction.",
-    );
+    expect(report.suggestions).toContain("Inspect simulation logs.");
   });
 
   it("rejects malformed input with INVALID_INPUT", () => {
@@ -227,6 +219,78 @@ describe("buildDiagnosticReport", () => {
     expect(() => buildDiagnosticReport({ labels: { [PROGRAM]: 12 as never } })).toThrowError(
       expect.objectContaining({ code: "INVALID_INPUT" }),
     );
+  });
+
+  it("rejects malformed fee budgets with INVALID_INPUT", () => {
+    expect(() => buildDiagnosticReport({ feeBudget: { capped: true } as FeeBudget })).toThrowError(
+      expect.objectContaining({ code: "INVALID_INPUT" }),
+    );
+    expect(() =>
+      buildDiagnosticReport({ feeBudget: budget({ cappedBy: undefined as never }) }),
+    ).toThrowError(expect.objectContaining({ code: "INVALID_INPUT" }));
+  });
+
+  it("does not suggest compute-budget exhaustion for a successful transaction", () => {
+    const report = buildDiagnosticReport({
+      simulationResult: simulation({
+        logs: ["Program failed: compute budget exceeded"],
+        err: null,
+      }),
+    });
+
+    expect(report.outcome).toBe("succeeded");
+    expect(report.suggestions).not.toContainEqual(
+      expect.stringContaining("Compute budget exhausted"),
+    );
+  });
+
+  it("does not blame the first program when several programs appear in logs", () => {
+    const computeBudget = address("ComputeBudget111111111111111111111111111111");
+    const report = buildDiagnosticReport({
+      error: { InstructionError: [1, { Custom: 7 }] },
+      simulationResult: simulation({
+        logs: [
+          `Program ${computeBudget} invoke [1]`,
+          `Program ${computeBudget} success`,
+          `Program ${PROGRAM} invoke [1]`,
+          "Program failed: custom error",
+        ],
+      }),
+      labels: {
+        [computeBudget]: "Compute budget helper",
+        [PROGRAM]: "Memo app",
+      },
+    });
+
+    expect(report.suggestions).toContain("custom code 7 from the failing program (instruction 1)");
+    expect(report.suggestions).not.toContainEqual(expect.stringContaining("Compute budget helper"));
+  });
+
+  it("reads bigint custom codes returned by Kit's RPC decoder", () => {
+    const report = buildDiagnosticReport({
+      error: { InstructionError: [0n, { Custom: 7n }] } as never,
+      simulationResult: simulation({ logs: [`Program ${PROGRAM} invoke [1]`] }),
+      labels: { [PROGRAM]: "Memo app" },
+    });
+
+    expect(report.suggestions).toContain("custom code 7 from Memo app (instruction 0)");
+  });
+
+  it("never lets prototype keys inject non-string suggestions", () => {
+    const report = buildDiagnosticReport({
+      error: JSON.parse('{"__proto__":{"x":1}}'),
+    });
+
+    expect(report.suggestions.every((suggestion) => typeof suggestion === "string")).toBe(true);
+  });
+
+  it("ignores falsy error sentinels", () => {
+    for (const error of [false, 0, ""]) {
+      const report = buildDiagnosticReport({ error });
+
+      expect(report.outcome).toBe("unknown");
+      expect(report.sources).toEqual([]);
+    }
   });
 
   it("exposes createTransactionDiagnostics as the same builder", () => {

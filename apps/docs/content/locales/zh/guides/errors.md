@@ -178,7 +178,7 @@ const report = buildDiagnosticReport({
 console.log(report.summary, report.code, report.suggestions);
 ```
 
-`report` 始终包含 `summary`、`code`、`outcome`、`signature`、`slot`、`logs`、`balanceChanges`、`unitsConsumed`、`feeBudget`、`programs`、`sources` 和 `suggestions`。已知的 `SolanaError` 代码和原始 RPC 错误键会生成稳定建议，未知代码会原样保留。`programs` 来自模拟日志中的 `Program <address>` 行，只使用你的应用提供的标签；库本身不包含程序注册表。
+`report` 始终包含 `summary`、`code`、`outcome`、`signature`、`slot`、`logs`、`balanceChanges`、`unitsConsumed`、`feeBudget`、`programs`、`sources` 和 `suggestions`。常见的 `SolanaError` 代码和原始 RPC 错误键会生成稳定建议，其他代码会原样保留。`programs` 来自模拟日志中的 `Program <address>` 行，只使用你的应用提供的标签；库本身不包含程序注册表。
 
 在 Vue 中，`useTransactionDiagnostics()` 接受响应式的签名或历史项，并暴露 `report`、`status`、`error` 和 `refresh()`：
 

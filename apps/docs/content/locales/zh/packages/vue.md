@@ -183,6 +183,7 @@ import { useWallet } from "@vue-solana/vue/useWallet";
 - `useTokenBalance(mint, owner)`：通过关联 token 账户加载 mint/owner 对的 SPL token 余额和小数位数。
 - `useTransaction(handler, options?)`：通用异步交易状态 helper，带可选超时设置。
 - `useTransactionConfirmation(options?)`：用响应式状态和超时/错误状态确认已提交签名。
+- `useTransactionDiagnostics(source, options?)`：将响应式历史、模拟、错误和手续费预算输入合并为一个不调用 RPC 的纯诊断报告。
 - `useSignatureStatus(signature, options?)`：读取、轮询或订阅签名状态更新。
 - `useSignMessage()`：在配置的钱包支持时签署任意认证消息。
 - `useSignAndSendTransaction()`：通过配置的钱包签名并发送交易，可选等待确认。
