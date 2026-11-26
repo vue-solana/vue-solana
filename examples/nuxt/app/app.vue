@@ -22,6 +22,7 @@ installSolanaBufferPolyfill();
     <SimulateTransactionPanel />
     <ComputeBudgetPanel />
     <TransactionHistoryPanel />
+    <TransactionDiagnosticsPanel />
     <BalancePanel />
     <WalletPanel />
     <MessageSigningPanel />

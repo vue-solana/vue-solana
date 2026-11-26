@@ -346,7 +346,7 @@ Use `useSolanaTransactionConfirmation({ commitment: "confirmed" })` and call `co
 
 ## Error Handling
 
-Transaction helpers normalize failures into `SolanaError`.
+Transaction helpers normalize failures into `SolanaError`. When you already have a failed transaction's data, join it into one explainable object with [Diagnosing a failed transaction](/guides/errors).
 
 ```ts
 import { isSolanaError } from "@vue-solana/core/errors";

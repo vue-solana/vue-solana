@@ -156,6 +156,7 @@ Direkte Paket-Subpfade:
 - `@vue-solana/vue/useWallets`
 - `@vue-solana/vue/useTransaction`
 - `@vue-solana/vue/useTransactionConfirmation`
+- `@vue-solana/vue/useTransactionDiagnostics`
 - `@vue-solana/vue/useTransactionHistory`
 - `@vue-solana/vue/useSignatureStatus`
 - `@vue-solana/vue/useSimulateTransaction`
@@ -184,6 +185,7 @@ Verwende `@vue-solana/vue/buffer-polyfill` für Browser-Transaktionscode, der de
 - `useTokenBalance(mint, owner)`: lädt SPL-Token-Guthaben und Dezimalstellen für ein Mint/Eigentümer-Paar über das zugehörige Token-Konto.
 - `useTransaction(handler, options?)`: generischer Helfer für den Zustand asynchroner Transaktionen mit optionalen Timeout-Einstellungen.
 - `useTransactionConfirmation(options?)`: bestätigt eine übermittelte Signatur mit reaktivem Status sowie Timeout- und Fehlerzustand.
+- `useTransactionDiagnostics(source, options?)`: fasst reaktive Verlaufs-, Simulations-, Fehler- und Gebührenbudget-Eingaben zu einem reinen Diagnosebericht ohne RPC-Aufrufe zusammen.
 - `useSignatureStatus(signature, options?)`: liest, pollt oder abonniert Updates des Signaturstatus.
 - `useSignMessage()`: signiert beliebige Authentifizierungsnachrichten über die konfigurierte Wallet, sofern unterstützt.
 - `useSignAndSendTransaction()`: signiert und sendet eine Transaktion über die konfigurierte Wallet, mit optionalem Warten auf Bestätigung.

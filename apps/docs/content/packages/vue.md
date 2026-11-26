@@ -159,6 +159,7 @@ Direct package subpaths:
 - `@vue-solana/vue/useWallets`
 - `@vue-solana/vue/useTransaction`
 - `@vue-solana/vue/useTransactionConfirmation`
+- `@vue-solana/vue/useTransactionDiagnostics`
 - `@vue-solana/vue/useTransactionHistory`
 - `@vue-solana/vue/useSignatureStatus`
 - `@vue-solana/vue/useSimulateTransaction`
@@ -187,6 +188,7 @@ Use `@vue-solana/vue/buffer-polyfill` for browser transaction code that needs th
 - `useTokenBalance(mint, owner)`: loads the SPL token balance and decimals for a mint/owner pair via the associated token account.
 - `useTransaction(handler, options?)`: generic async transaction state helper with optional timeout settings.
 - `useTransactionConfirmation(options?)`: confirms a submitted signature with reactive status and timeout/error state.
+- `useTransactionDiagnostics(source, options?)`: joins reactive history, simulation, error, and fee-budget inputs into one pure diagnostic report without RPC calls.
 - `useSignatureStatus(signature, options?)`: reads, polls, or subscribes to signature status updates.
 - `useSignMessage()`: signs arbitrary authentication messages through the configured wallet when supported.
 - `useSignAndSendTransaction()`: signs and sends a transaction through the configured wallet, with optional confirmation waiting.

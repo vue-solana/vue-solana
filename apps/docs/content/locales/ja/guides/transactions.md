@@ -346,7 +346,7 @@ async function submit(transaction: Uint8Array) {
 
 ## エラー処理
 
-トランザクションヘルパーは、失敗を `SolanaError` に正規化します。
+トランザクションヘルパーは、失敗を `SolanaError` に正規化します。失敗したトランザクションのデータがすでにある場合は、[失敗したトランザクションの診断](/ja/guides/errors)で説明可能なオブジェクトにまとめられます。
 
 ```ts
 import { isSolanaError } from "@vue-solana/core/errors";

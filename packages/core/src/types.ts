@@ -372,3 +372,36 @@ export interface ResolveFeePolicyResult<TMessage> {
   message: TMessage;
   budget: FeeBudget;
 }
+
+export type DiagnosticProgramLabels = Readonly<Record<string, string>>;
+
+export type DiagnosticOutcome = "failed" | "succeeded" | "unknown";
+
+export interface DiagnosticProgram {
+  address: Address;
+  label?: string;
+}
+
+export interface TransactionDiagnosticInput {
+  historyItem?: TransactionHistoryItem | null;
+  signature?: Signature | null;
+  simulationResult?: SimulatedTransactionResult | null;
+  error?: unknown;
+  feeBudget?: FeeBudget | null;
+  labels?: DiagnosticProgramLabels | null;
+}
+
+export interface TransactionDiagnosticReport {
+  summary: string;
+  code: string;
+  outcome: DiagnosticOutcome;
+  signature: Signature | null;
+  slot: Slot | null;
+  logs: readonly string[];
+  balanceChanges: readonly SimulatedBalanceChange[];
+  unitsConsumed: number | null;
+  feeBudget: FeeBudget | null;
+  programs: readonly DiagnosticProgram[];
+  sources: readonly ("error" | "history" | "simulation" | "feeBudget" | "labels")[];
+  suggestions: readonly string[];
+}

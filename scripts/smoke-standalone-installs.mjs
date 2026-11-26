@@ -140,7 +140,12 @@ try {
     devDependencies: {
       typescript: "^5.8.3",
     },
-    source: `import { createSolanaContext, type SolanaContext } from "@vue-solana/core";
+    source: `import {
+  buildDiagnosticReport as buildRootDiagnosticReport,
+  createSolanaContext,
+  type SolanaContext,
+  type TransactionDiagnosticReport,
+} from "@vue-solana/core";
 import { installSolanaBufferPolyfill, Buffer } from "@vue-solana/core/buffer-polyfill";
 import { parseAddress } from "@vue-solana/core/address";
 import { address, lamports, type Address, type Commitment, type Rpc, type SolanaClient, type SolanaRpcApi } from "@vue-solana/core/kit";
@@ -148,6 +153,8 @@ import { extendClient, generateKeyPairSigner, summarizeTransactionPlanResult, ty
 import { getTokenAccount, getTokenAccountsByOwner, getTokenBalance, type TokenAccountInfo } from "@vue-solana/core/token-accounts";
 import { getTransactionHistory, type TransactionHistoryResult } from "@vue-solana/core/transaction-history";
 import { resolveFeePolicy, type FeeBudget, type FeePolicy } from "@vue-solana/core/fee-policy";
+import { buildDiagnosticReport, createTransactionDiagnostics } from "@vue-solana/core/diagnostics";
+import type { TransactionDiagnosticInput } from "@vue-solana/core/types";
 
 installSolanaBufferPolyfill();
 
@@ -163,6 +170,10 @@ const historyResult: Promise<TransactionHistoryResult> | undefined = undefined;
 const feeResolver: typeof resolveFeePolicy = resolveFeePolicy;
 const feePolicy: FeePolicy = { mode: "standard", maxLamports: 6_000n };
 const feeBudget: FeeBudget | undefined = undefined;
+const diagnosticInput: TransactionDiagnosticInput = { historyItem: undefined, feeBudget };
+const diagnosticReport: TransactionDiagnosticReport = buildDiagnosticReport(diagnosticInput);
+const rootDiagnosticReport: TransactionDiagnosticReport = buildRootDiagnosticReport(diagnosticInput);
+const diagnosticsAlias: typeof buildDiagnosticReport = createTransactionDiagnostics;
 
 `,
   });
@@ -180,21 +191,62 @@ const feeBudget: FeeBudget | undefined = undefined;
       "@vue-solana/core": fileDependency(packages.core.tarball, join(tempRoot, "vue-consumer")),
     },
     source: `import { defineComponent } from "vue";
-import { createSolanaPlugin } from "@vue-solana/vue";
-import type { SolanaWalletInfo } from "@vue-solana/vue";
+import {
+  createSolanaPlugin,
+  useTransactionDiagnostics as useRootTransactionDiagnostics,
+  type FeeBudget,
+  type SimulatedTransactionResult,
+  type SolanaWalletInfo,
+  type TransactionDiagnosticReport,
+  type TransactionHistoryItem,
+} from "@vue-solana/vue";
 import { installSolanaBufferPolyfill, Buffer } from "@vue-solana/vue/buffer-polyfill";
 import { useSolanaClient } from "@vue-solana/vue/useSolanaClient";
 import { useConnection } from "@vue-solana/vue/useConnection";
 import { useWallet } from "@vue-solana/vue/useWallet";
 import { useTransactionHistory } from "@vue-solana/vue/useTransactionHistory";
+import { useTransactionDiagnostics } from "@vue-solana/vue/useTransactionDiagnostics";
 import { useComputeBudget, useFeePolicy } from "@vue-solana/vue/useComputeBudget";
-import { createSolanaClient, address, extendClient, generateKeyPairSigner, summarizeTransactionPlanResult, type AccountRole, type Address, type Instruction, type SolanaClient, type TransactionPlanResult } from "@vue-solana/vue/kit";
+import { createSolanaClient, address, extendClient, generateKeyPairSigner, summarizeTransactionPlanResult, type AccountRole, type Address, type Instruction, type Signature, type Slot, type SolanaClient, type TransactionPlanResult } from "@vue-solana/vue/kit";
 
 installSolanaBufferPolyfill();
 
 const plugin = createSolanaPlugin({ cluster: "devnet" });
 const client: SolanaClient = createSolanaClient({ cluster: "devnet" });
 const publicKey: Address = address("11111111111111111111111111111111");
+const sampleHistoryItem: TransactionHistoryItem = {
+  signature: "11111111111111111111111111111111" as Signature,
+  slot: 1n as Slot,
+  err: null,
+};
+const sampleSimulationResult: SimulatedTransactionResult = {
+  err: null,
+  logs: [],
+  fee: null,
+  balanceChanges: null,
+  preBalances: null,
+  postBalances: null,
+  tokenBalanceChanges: null,
+  preTokenBalances: null,
+  postTokenBalances: null,
+  loadedAddresses: { readonly: [], writable: [] },
+  loadedAccountsDataSize: null,
+  returnData: null,
+  replacementBlockhash: null,
+  unitsConsumed: null,
+};
+const sampleFeeBudget: FeeBudget = {
+  mode: "standard",
+  computeUnitLimit: 200_000,
+  computeUnitPriceMicroLamports: 0n,
+  priorityFeeLamports: 0n,
+  baseFeeLamports: 5_000n,
+  estimatedFeeLamports: 5_000n,
+  capped: false,
+  cappedBy: [],
+  unitsConsumed: null,
+  source: "default",
+};
 
 export default defineComponent({
   setup() {
@@ -202,9 +254,18 @@ export default defineComponent({
     const connection = useConnection();
     const wallet = useWallet();
     const history = useTransactionHistory(publicKey);
+    const diagnostics = useTransactionDiagnostics(publicKey);
+    const rootDiagnostics = useRootTransactionDiagnostics(publicKey, {
+      historyItem: sampleHistoryItem,
+      simulationResult: sampleSimulationResult,
+      error: null,
+      feeBudget: sampleFeeBudget,
+      labels: { [publicKey]: "Demo program" },
+    });
+    const rootDiagnosticReport: TransactionDiagnosticReport | null = rootDiagnostics.report.value;
     const budget = useComputeBudget({} as never);
     const feePolicy = useFeePolicy;
-    return { injectedClient, rpc, connection, wallet, history, budget, feePolicy };
+    return { injectedClient, rpc, connection, wallet, history, diagnostics, rootDiagnostics, rootDiagnosticReport, budget, feePolicy };
   },
 });
 

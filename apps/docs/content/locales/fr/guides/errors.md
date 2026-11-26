@@ -159,3 +159,41 @@ function getSolanaErrorMessage(code: string) {
 - Ne relancez pas `USER_REJECTED` automatiquement.
 - Ne relancez pas `INVALID_ADDRESS` ; demandez à l'utilisateur de corriger sa saisie.
 - Masquez ou désactivez les actions qui produisent `WALLET_FEATURE_UNSUPPORTED`.
+
+## Diagnostiquer une transaction échouée
+
+Lorsque vous disposez déjà d'un élément d'historique en échec, d'un résultat de simulation ou d'une erreur normalisée, `buildDiagnosticReport()` de `@vue-solana/core/diagnostics` les regroupe en un objet explicable. Le constructeur est pur et n'effectue aucun appel RPC : il ne récupère pas la transaction, ne décode pas les instructions, n'interprète pas les mémos, ne catégorise pas les transferts de jetons et ne relance rien.
+
+```ts
+import { buildDiagnosticReport } from "@vue-solana/core/diagnostics";
+
+const report = buildDiagnosticReport({
+  historyItem: failedItem,
+  simulationResult: preview,
+  error,
+  feeBudget,
+  labels: { [programAddress]: "My program" },
+});
+
+console.log(report.summary, report.code, report.suggestions);
+```
+
+`report` contient toujours `summary`, `code`, `outcome`, `signature`, `slot`, `logs`, `balanceChanges`, `unitsConsumed`, `feeBudget`, `programs`, `sources` et `suggestions`. Les codes `SolanaError` courants et les clés d'erreur RPC brutes produisent des suggestions stables ; les autres codes sont conservés tels quels. `programs` provient des lignes `Program <address>` des journaux de simulation et n'utilise que les étiquettes fournies par votre application : la bibliothèque ne contient aucun registre de programmes.
+
+Dans Vue, `useTransactionDiagnostics()` accepte une signature ou un élément d'historique réactif et expose `report`, `status`, `error` et `refresh()` :
+
+```vue
+<script setup lang="ts">
+import { useTransactionDiagnostics } from "@vue-solana/vue/useTransactionDiagnostics";
+
+const { report, status, error, refresh } = useTransactionDiagnostics(failedItemRef, {
+  simulationResult: simulationResultRef,
+  error: errorRef,
+  feeBudget: budgetRef,
+  labels: { [programAddress]: "My program" },
+});
+await refresh();
+</script>
+```
+
+Dans Nuxt, appelez `useSolanaTransactionDiagnostics()` sans import. Les entrées mal formées sont signalées par `INVALID_INPUT` ; le constructeur lui-même n'accède jamais au réseau. Consultez [Transactions](/fr/guides/transactions) pour les entrées d'historique et de simulation.

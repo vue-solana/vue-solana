@@ -159,3 +159,41 @@ function getSolanaErrorMessage(code: string) {
 - `USER_REJECTED` を自動でリトライしないでください。
 - `INVALID_ADDRESS` をリトライしないでください。入力を修正するようユーザーに求めてください。
 - `WALLET_FEATURE_UNSUPPORTED` を引き起こすアクションは、非表示にするか無効にしてください。
+
+## 失敗したトランザクションの診断
+
+失敗した履歴項目、シミュレーション結果、正規化されたエラーがすでに手元にある場合、`@vue-solana/core/diagnostics` の `buildDiagnosticReport()` がそれらを 1 つの説明可能なオブジェクトにまとめます。このビルダーは純粋で RPC 呼び出しを行いません。トランザクションの取得、命令のデコード、メモの解釈、トークン転送の分類、再試行は行いません。
+
+```ts
+import { buildDiagnosticReport } from "@vue-solana/core/diagnostics";
+
+const report = buildDiagnosticReport({
+  historyItem: failedItem,
+  simulationResult: preview,
+  error,
+  feeBudget,
+  labels: { [programAddress]: "My program" },
+});
+
+console.log(report.summary, report.code, report.suggestions);
+```
+
+`report` は常に `summary`、`code`、`outcome`、`signature`、`slot`、`logs`、`balanceChanges`、`unitsConsumed`、`feeBudget`、`programs`、`sources`、`suggestions` を持ちます。一般的な `SolanaError` コードと生の RPC エラーキーには安定した提案が作られ、それ以外のコードはそのまま渡されます。`programs` はシミュレーションログの `Program <address>` 行から作られ、アプリが渡したラベルだけを使用します。ライブラリには組み込みのプログラムレジストリはありません。
+
+Vue では、`useTransactionDiagnostics()` はリアクティブな署名または履歴項目を受け取り、`report`、`status`、`error`、`refresh()` を公開します。
+
+```vue
+<script setup lang="ts">
+import { useTransactionDiagnostics } from "@vue-solana/vue/useTransactionDiagnostics";
+
+const { report, status, error, refresh } = useTransactionDiagnostics(failedItemRef, {
+  simulationResult: simulationResultRef,
+  error: errorRef,
+  feeBudget: budgetRef,
+  labels: { [programAddress]: "My program" },
+});
+await refresh();
+</script>
+```
+
+Nuxt では、`useSolanaTransactionDiagnostics()` を import せずに呼び出します。不正な入力は `INVALID_INPUT` として報告され、ビルダー自体はネットワークにアクセスしません。履歴とシミュレーションの入力については [トランザクション](/ja/guides/transactions) を参照してください。

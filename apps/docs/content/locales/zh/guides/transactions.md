@@ -346,7 +346,7 @@ async function submit(transaction: Uint8Array) {
 
 ## 错误处理
 
-交易辅助函数会将失败标准化为 `SolanaError`。
+交易辅助函数会将失败标准化为 `SolanaError`。如果你已经有失败交易的数据，可以通过[诊断失败的交易](/zh/guides/errors)将其合并为一个可解释的对象。
 
 ```ts
 import { isSolanaError } from "@vue-solana/core/errors";

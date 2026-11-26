@@ -346,7 +346,7 @@ Verwende `useSolanaTransactionConfirmation({ commitment: "confirmed" })` und ruf
 
 ## Fehlerbehandlung
 
-Transaktions-Helfer normalisieren Fehler zu `SolanaError`.
+Transaktions-Helfer normalisieren Fehler zu `SolanaError`. Wenn du die Daten einer fehlgeschlagenen Transaktion bereits hast, fasse sie mit [Diagnose einer fehlgeschlagenen Transaktion](/de/guides/errors) in einem erklärbaren Objekt zusammen.
 
 ```ts
 import { isSolanaError } from "@vue-solana/core/errors";

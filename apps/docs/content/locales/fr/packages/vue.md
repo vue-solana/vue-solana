@@ -156,6 +156,7 @@ Sous-chemins directs du package :
 - `@vue-solana/vue/useWallets`
 - `@vue-solana/vue/useTransaction`
 - `@vue-solana/vue/useTransactionConfirmation`
+- `@vue-solana/vue/useTransactionDiagnostics`
 - `@vue-solana/vue/useTransactionHistory`
 - `@vue-solana/vue/useSignatureStatus`
 - `@vue-solana/vue/useSimulateTransaction`
@@ -184,6 +185,7 @@ Utilisez `@vue-solana/vue/buffer-polyfill` pour le code de transaction navigateu
 - `useTokenBalance(mint, owner)` : charge le solde de token SPL et les décimales pour une paire mint/owner via le compte de token associé.
 - `useTransaction(handler, options?)` : helper générique d'état de transaction asynchrone avec réglages de timeout optionnels.
 - `useTransactionConfirmation(options?)` : confirme une signature soumise avec un état réactif et un état de timeout/erreur.
+- `useTransactionDiagnostics(source, options?)` : joint des entrées réactives d'historique, de simulation, d'erreur et de budget de frais dans un rapport de diagnostic pur, sans appels RPC.
 - `useSignatureStatus(signature, options?)` : lit, interroge ou s'abonne aux mises à jour du statut d'une signature.
 - `useSignMessage()` : signe des messages d'authentification arbitraires via le wallet configuré lorsqu'il le prend en charge.
 - `useSignAndSendTransaction()` : signe et envoie une transaction via le wallet configuré, avec attente de confirmation optionnelle.

@@ -65,6 +65,16 @@ describe("Nuxt module auto-import mapping", () => {
     });
   });
 
+  it("registers the transaction-diagnostics alias with its own Vue subpath", () => {
+    const dist = "/pkg/vue/dist";
+
+    expect(solanaAutoImports(dist)).toContainEqual({
+      name: "useTransactionDiagnostics",
+      as: "useSolanaTransactionDiagnostics",
+      from: `${dist}/useTransactionDiagnostics.mjs`,
+    });
+  });
+
   it("registers the compute-budget alias with its own Vue subpath", () => {
     const dist = "/pkg/vue/dist";
 

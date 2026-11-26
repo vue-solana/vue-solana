@@ -3,6 +3,7 @@ import type { Page } from "@playwright/test";
 import {
   expectNoPageErrors,
   isRealRpcRun,
+  mockFailedTransactionRpc,
   mockSolanaSubscriptions,
   waitForRpcConnected,
 } from "./helpers";
@@ -481,6 +482,46 @@ test("lists transaction history and appends older pages", async ({ page }) => {
 
   await expect(page.getByTestId("history-item")).toHaveCount(2);
   await expect(page.getByTestId("history-load-more")).toBeDisabled();
+});
+
+test("joins a failed simulation and history error into an explainable report", async ({ page }) => {
+  if (isRealRpcRun()) {
+    test.skip(true, "Diagnostics assertions require the deterministic RPC mock");
+  }
+
+  const rpc = await mockFailedTransactionRpc(page);
+  await registerMockWallets(page);
+  await page.goto("/");
+  await waitForRpcConnected(page);
+
+  await expect(page.getByTestId("diagnostics-panel")).toBeVisible();
+  await expect(page.getByTestId("diagnostics-status")).toHaveText("idle");
+  await expect(page.getByTestId("diagnostics-summary")).toHaveText("No report yet");
+
+  await page.getByTestId("load-wallets").click();
+  await page.getByRole("button", { name: /Mock Signer Wallet/ }).click();
+  await page.getByTestId("connect-wallet").click();
+
+  await page.getByTestId("diagnostics-button").click();
+
+  await expect(page.getByTestId("diagnostics-status")).toHaveText("built");
+  await expect(page.getByTestId("diagnostics-code")).toContainText("InstructionError");
+  await expect(page.getByTestId("diagnostics-summary")).toContainText("failed");
+  await expect(page.getByTestId("diagnostics-details")).toContainText("programs: Memo app");
+  await expect(page.getByTestId("diagnostics-details")).toContainText(
+    "sources: history, simulation, labels",
+  );
+  await expect(page.getByTestId("diagnostics-suggestions")).toContainText("app-supplied labels");
+  await expect(page.getByTestId("diagnostics-suggestions")).toContainText(
+    "custom code 7 from Memo app (instruction 0)",
+  );
+  await expect(page.getByTestId("diagnostics-error")).toBeVisible();
+  await expect(page.getByTestId("diagnostics-error")).toContainText("InstructionError");
+
+  const diagnosticsCalls = rpc.rpcMethodCalls();
+  expect(diagnosticsCalls).toContain("simulateTransaction");
+  expect(diagnosticsCalls).not.toContain("getTransaction");
+  expect(diagnosticsCalls).not.toContain("sendTransaction");
 });
 
 test("creates a Solana Pay request, renders a QR code, and verifies settlement", async ({

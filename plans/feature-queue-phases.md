@@ -1,6 +1,6 @@
 # Feature Queue Phases
 
-Status: Phases 0–1 complete on `plan/feature-queue-phase-0` and `plan/feature-queue-phase-1`; Phases 2–6 proposed. Owner: TBD.
+Status: Phases 0–2 complete on `plan/feature-queue-phase-0`, `plan/feature-queue-phase-1`, and `plan/feature-queue-phase-2`; Phases 3–6 proposed. Owner: TBD.
 
 This plan turns the stronger feature queue from [`reports/Vue Solana UI library.md`](../reports/Vue%20Solana%20UI%20library.md) into shippable slices. It supersedes the priority order currently written in `apps/docs/content/roadmap.md`; Phase 0 updates that roadmap and every locale mirror.
 
@@ -87,17 +87,26 @@ Measured on `plan/feature-queue-phase-1`; no commit was made.
 
 Goal: give apps one explainable object for "why did this transaction fail?" using data that already exists, without turning the library into an instruction decoder.
 
-- [ ] Core: add `@vue-solana/core/diagnostics` with `buildDiagnosticReport()`/`createTransactionDiagnostics()`. It joins a `getTransactionHistory()` item, a `simulateTransaction()` result, a normalized `SolanaError`, and an optional Phase 1 fee budget into stable fields: `summary`, `code`, `logs`, `balanceChanges`, `unitsConsumed`, `feeBudget`, and `suggestions`.
-- [ ] Keep the builder pure and RPC-free. Map only known `SolanaError` codes and raw RPC error shapes. Allow an app-supplied label map for program addresses, but ship no built-in program registry.
-- [ ] Vue: add `useTransactionDiagnostics()` with reactive inputs for signature/history item, simulation result, and error; expose `report`, `status`, and `refresh()`. Nuxt alias: `useSolanaTransactionDiagnostics()`.
-- [ ] Docs: add a "Diagnosing a failed transaction" section to the errors guide, link it from the transactions guide, and mirror both changes into all six locales.
-- [ ] Examples: add a panel that starts from a failed history item, runs the existing simulation mock, and renders the joined report beside the normalized error card.
-- [ ] Tests: unit tests for each input combination, unknown-code passthrough, app-supplied labels, and empty/partial data; e2e fixture with a failed simulation and a history `err`.
-- [ ] Add a changeset and update `AGENTS.md`.
+- [x] Core: add `@vue-solana/core/diagnostics` with `buildDiagnosticReport()`/`createTransactionDiagnostics()`. It joins a `getTransactionHistory()` item, a `simulateTransaction()` result, a normalized `SolanaError`, and an optional Phase 1 fee budget into stable fields: `summary`, `code`, `logs`, `balanceChanges`, `unitsConsumed`, `feeBudget`, and `suggestions`.
+- [x] Keep the builder pure and RPC-free. Map only known `SolanaError` codes and raw RPC error shapes. Allow an app-supplied label map for program addresses, but ship no built-in program registry.
+- [x] Vue: add `useTransactionDiagnostics()` with reactive inputs for signature/history item, simulation result, and error; expose `report`, `status`, and `refresh()`. Nuxt alias: `useSolanaTransactionDiagnostics()`.
+- [x] Docs: add a "Diagnosing a failed transaction" section to the errors guide, link it from the transactions guide, and mirror both changes into all six locales.
+- [x] Examples: add a panel that starts from a failed history item, runs the existing simulation mock, and renders the joined report beside the normalized error card.
+- [x] Tests: unit tests for each input combination, unknown-code passthrough, app-supplied labels, and empty/partial data; e2e fixture with a failed simulation and a history `err`.
+- [x] Add a changeset and update `AGENTS.md`.
 
 Explicit non-goals: no instruction decoding, no token-transfer categorization, no memo interpretation, no explorer URL presets, no auto-retry, no server-side persistence.
 
 Exit criteria: all CI gates green, diagnostics remain dependency-free and lean, locale structure test passes, changeset present.
+
+Verified on `plan/feature-queue-phase-2`; no commit was made.
+
+- `pnpm format`, `pnpm lint`, `pnpm test` (105 files / 1223 tests), and `pnpm typecheck`: green.
+- `pnpm build:examples`, `pnpm --filter docs build`, and `pnpm smoke:standalone-installs`: green, including the new standalone imports for both public subpaths.
+- `pnpm check:entries`, `pnpm check:esm-map`, `pnpm check:externals`, `pnpm check:buffer-polyfill-declarations`, and `pnpm size:packages`: green.
+- `pnpm pack:size`: core 54 files / 49,989 bytes, Vue 145 files / 77,374 bytes, Nuxt 16 files / 13,404 bytes, with no `.d.mts` in any tarball. The core budget has 11 bytes of headroom, so any larger diagnostics change needs a corresponding trim or a deliberate budget decision.
+- `pnpm test:e2e`: 42 passed, including the diagnostics fixture on both example apps.
+- The implementation record is archived at [`plans/archived/transaction-diagnostics.md`](archived/transaction-diagnostics.md).
 
 ## Phase 3 — Token/portfolio reads
 

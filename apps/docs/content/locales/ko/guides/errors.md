@@ -159,3 +159,41 @@ function getSolanaErrorMessage(code: string) {
 - `USER_REJECTED`는 자동으로 재시도하지 마세요.
 - `INVALID_ADDRESS`는 재시도하지 말고 사용자에게 입력을 수정하게 하세요.
 - `WALLET_FEATURE_UNSUPPORTED`를 만드는 action은 숨기거나 비활성화하세요.
+
+## 실패한 트랜잭션 진단
+
+실패한 history item, simulation 결과, normalized error가 이미 있다면 `@vue-solana/core/diagnostics`의 `buildDiagnosticReport()`가 이를 하나의 설명 가능한 객체로 합칩니다. builder는 순수하며 RPC 호출을 하지 않습니다. 트랜잭션을 가져오거나 instruction을 디코딩하지 않고, memo를 해석하거나 token transfer를 분류하지 않으며, 재시도도 하지 않습니다.
+
+```ts
+import { buildDiagnosticReport } from "@vue-solana/core/diagnostics";
+
+const report = buildDiagnosticReport({
+  historyItem: failedItem,
+  simulationResult: preview,
+  error,
+  feeBudget,
+  labels: { [programAddress]: "My program" },
+});
+
+console.log(report.summary, report.code, report.suggestions);
+```
+
+`report`에는 항상 `summary`, `code`, `outcome`, `signature`, `slot`, `logs`, `balanceChanges`, `unitsConsumed`, `feeBudget`, `programs`, `sources`, `suggestions`가 있습니다. 일반적인 `SolanaError` code와 raw RPC error key는 안정적인 suggestion을 만들고, 그 외의 code는 그대로 통과합니다. `programs`는 simulation log의 `Program <address>` 줄에서 가져오며 앱이 공급한 label만 사용합니다. 라이브러리에는 built-in program registry가 없습니다.
+
+Vue에서는 `useTransactionDiagnostics()`가 반응형 signature 또는 history item을 받아 `report`, `status`, `error`, `refresh()`를 노출합니다.
+
+```vue
+<script setup lang="ts">
+import { useTransactionDiagnostics } from "@vue-solana/vue/useTransactionDiagnostics";
+
+const { report, status, error, refresh } = useTransactionDiagnostics(failedItemRef, {
+  simulationResult: simulationResultRef,
+  error: errorRef,
+  feeBudget: budgetRef,
+  labels: { [programAddress]: "My program" },
+});
+await refresh();
+</script>
+```
+
+Nuxt에서는 import 없이 `useSolanaTransactionDiagnostics()`를 호출하세요. 잘못된 입력은 `INVALID_INPUT`로 보고되고, builder 자체는 네트워크에 접근하지 않습니다. history 및 simulation 입력은 [트랜잭션](/ko/guides/transactions)을 참고하세요.

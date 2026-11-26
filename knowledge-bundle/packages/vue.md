@@ -59,6 +59,7 @@ Available package subpaths:
 - `@vue-solana/vue/useWallets`
 - `@vue-solana/vue/useTransaction`
 - `@vue-solana/vue/useTransactionConfirmation`
+- `@vue-solana/vue/useTransactionDiagnostics`
 - `@vue-solana/vue/useSignatureStatus`
 - `@vue-solana/vue/useSimulateTransaction`
 - `@vue-solana/vue/useTransactionHistory`
@@ -403,6 +404,23 @@ Returns:
 - `refresh()`, `loadMore()`, `reset()`
 
 `refresh()` replaces page 1 and supersedes and aborts in-flight work. `loadMore()` appends the next older page using `nextBefore` and is a no-op without a cursor. Address, `limit`, `commitment`, and `until` changes reload page 1; scope disposal aborts pending requests. Missing `rpc.getSignaturesForAddress` throws `MISSING_CLIENT_CAPABILITY` at setup. In Nuxt, use `useSolanaTransactionHistory()`.
+
+## `useTransactionDiagnostics()`
+
+Joins a reactive signature/history item, simulation result, error, fee budget, and app-supplied program labels into a pure diagnostic report. It never calls RPC, decodes instructions, interprets memos, categorizes token transfers, or retries.
+
+```ts
+const { report, status, error, loading, refresh, reset } = useTransactionDiagnostics(failedItem, {
+  simulationResult,
+  error,
+  feeBudget,
+  labels: { [programAddress]: "My program" },
+});
+
+await refresh();
+```
+
+`status` is `idle`, `building`, `built`, or `error`. Source changes supersede in-flight builds; scope disposal resets the composable. It is SSR-inert unless `immediate: true`. In Nuxt, use `useSolanaTransactionDiagnostics()`.
 
 ## `useSignMessage()`
 

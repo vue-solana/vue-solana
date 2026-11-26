@@ -78,6 +78,7 @@ The Nuxt module installs the runtime plugin on the client only and auto-imports 
 - `useSolanaTrackedDataSwr()`
 - `useSolanaTransaction()`
 - `useSolanaTransactionConfirmation()`
+- `useSolanaTransactionDiagnostics()`
 - `useSolanaTransactionHistory()`
 - `useSolanaWallet()`
 - `useSolanaWallets()`

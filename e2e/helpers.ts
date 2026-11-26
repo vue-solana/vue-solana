@@ -82,6 +82,107 @@ export async function mockSolanaRpc(page: Page): Promise<RpcMockHarness> {
   return { methodCalls: () => methodCalls };
 }
 
+export const FAILED_DIAGNOSTICS_ERROR = { InstructionError: [0, { Custom: 7 }] };
+
+/**
+ * Fixture for the diagnostics panel: the wallet's newest history item and the
+ * simulated transaction both fail with the same raw RPC instruction error.
+ * Everything else uses the standard mock so the rest of the dashboard stays
+ * deterministic.
+ */
+export async function mockFailedTransactionRpc(
+  page: Page,
+): Promise<Pick<SubscriptionHarness, "rpcMethodCalls">> {
+  const methodCalls: string[] = [];
+
+  await page.route("https://api.devnet.solana.com/**", async (route) => {
+    const request = route.request();
+
+    if (request.method() === "OPTIONS") {
+      await route.fulfill({ status: 204, headers: corsHeaders() });
+      return;
+    }
+
+    const body = request.postDataJSON() as
+      | { id?: string | number; method?: string; params?: unknown }
+      | undefined;
+    const id = body?.id ?? 1;
+
+    if (body?.method) {
+      methodCalls.push(body.method);
+    }
+
+    let response: unknown = createRpcResponse(id, body?.method, body?.params);
+
+    if (body?.method === "simulateTransaction") {
+      response = {
+        jsonrpc: "2.0",
+        id,
+        result: {
+          context: { slot: 123457 },
+          value: {
+            err: FAILED_DIAGNOSTICS_ERROR,
+            fee: 5000,
+            loadedAccountsDataSize: 0,
+            loadedAddresses: { readonly: [], writable: [] },
+            logs: [
+              "Program MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr invoke [1]",
+              "Program failed: compute budget exceeded",
+            ],
+            postBalances: [1000000000],
+            postTokenBalances: null,
+            preBalances: [1000000000],
+            preTokenBalances: null,
+            replacementBlockhash: {
+              blockhash: MOCK_BLOCKHASH,
+              lastValidBlockHeight: 654321,
+            },
+            returnData: null,
+            unitsConsumed: 150,
+          },
+        },
+      };
+    }
+
+    if (body?.method === "getSignaturesForAddress") {
+      const params = body?.params;
+      const [addressArgument, config] = Array.isArray(params)
+        ? [params[0], params[1]]
+        : [
+            (params as { address?: unknown } | undefined)?.address,
+            (params as { config?: Record<string, unknown> } | undefined)?.config,
+          ];
+      const before = (config as { before?: unknown } | undefined)?.before;
+
+      if (addressArgument === MOCK_WALLET_ADDRESS && !before) {
+        response = {
+          jsonrpc: "2.0",
+          id,
+          result: [
+            {
+              signature: MOCK_SIGNATURE,
+              slot: 123456,
+              blockTime: 1_700_000_000,
+              err: FAILED_DIAGNOSTICS_ERROR,
+              memo: "failed transfer",
+              confirmationStatus: "finalized",
+            },
+          ],
+        };
+      }
+    }
+
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      headers: corsHeaders(),
+      body: JSON.stringify(response),
+    });
+  });
+
+  return { rpcMethodCalls: () => methodCalls };
+}
+
 /**
  * Drives notifications into open mocked subscription sockets.
  */

@@ -98,6 +98,7 @@ export default defineNuxtConfig({
 - `useSolanaSimulateTransaction()`: 生のワイヤートランザクションバイトを送信せずにシミュレーションし、正規化されたエラー、ログ、残高変更、loaded addresses を公開します。
 - `useSolanaComputeBudget(messageSource, policySource?, options?)`: シミュレーション結果または RPC 推定からローカル上限付きのコンピュートバジェットを解決します。署名や送信は行いません。
 - `useSolanaTransactionHistory(addressSource, options?)`：トランザクション本文を取得せずに、アドレスのページ分割済み署名メタデータを一覧します。
+- `useSolanaTransactionDiagnostics(source, options?)`：リアクティブな履歴、シミュレーション、エラー、手数料バジェットの入力を RPC 呼び出しなしの純粋な診断レポートにまとめます。
 - `useSolanaSignMessage()`: オフチェーンの認証や所有権チャレンジのメッセージに署名します。
 - `useSolanaWalletAccountMessageSigner()`: ウォレットアカウント用の Kit `MessageModifyingSigner` を返します。
 - `useSolanaWalletAccountTransactionSigner()`: ウォレットアカウント用の Kit `TransactionModifyingSigner` を返します。

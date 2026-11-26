@@ -177,6 +177,10 @@
       "types": "./dist/useTransactionConfirmation.d.ts",
       "import": "./dist/useTransactionConfirmation.mjs"
     },
+    "./useTransactionDiagnostics": {
+      "types": "./dist/useTransactionDiagnostics.d.ts",
+      "import": "./dist/useTransactionDiagnostics.mjs"
+    },
     "./useTransactionHistory": {
       "types": "./dist/useTransactionHistory.d.ts",
       "import": "./dist/useTransactionHistory.mjs"
