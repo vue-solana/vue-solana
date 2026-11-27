@@ -1,5 +1,17 @@
 # @vue-solana/nuxt
 
+## 4.7.0
+
+### Minor Changes
+
+- b4b6950: Add transaction diagnostics: `buildDiagnosticReport()` / `createTransactionDiagnostics()` in core, `useTransactionDiagnostics()` in Vue, and the `useSolanaTransactionDiagnostics()` Nuxt auto-import. They join history, simulation, error, fee-budget, and app-supplied program-label data into one pure, RPC-free report with stable codes and suggestions, without decoding instructions, interpreting memos, categorizing token transfers, or retrying.
+
+### Patch Changes
+
+- Updated dependencies [b4b6950]
+  - @vue-solana/core@4.7.0
+  - @vue-solana/vue@4.7.0
+
 ## 4.6.0
 
 ### Minor Changes
