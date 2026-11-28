@@ -98,6 +98,26 @@ const { accounts, loading, error, refresh } = useProgramAccounts(programId, {
 
 > Warning: Program account scans can be expensive. Use narrow filters, `dataSlice`, caching, pagination, indexing, or dedicated RPC infrastructure for production reads.
 
+## Token Portfolio
+
+`useTokenPortfolio()` aggregates an owner's classic SPL token accounts, resolves mint decimals when the mint account is available, and exposes `items`, `byMint`, `totals`, `loading`, `error`, and `refresh()`. It re-reads when the owner changes and invalidates from slot notifications when the client supports them.
+
+```vue
+<script setup lang="ts">
+import { ref } from "vue";
+import { useTokenPortfolio } from "@vue-solana/vue/useTokenPortfolio";
+
+const owner = ref("PASTE_A_SOLANA_ADDRESS");
+const { items, totals, loading, error, refresh } = useTokenPortfolio(owner);
+</script>
+```
+
+The account list comes from RPC `getTokenAccountsByOwner` calls, not from an index. Prices and token metadata are the app's job. Pass `{ includeToken2022: true }` to opt into the separate Token-2022 read instead.
+
+`portfolio` exposes the full result, including `unresolvedMints`. `items`, `byMint`, and `totals` are derived only from the latest successful read: a failed refresh or a changed owner clears them instead of showing stale balances next to a fresh `error`. `commitment`, `invalidateOnSlot`, and `includeToken2022` accept refs or getters, and changing them re-runs the read. Because `refresh()` comes from `useRequest`, it resolves with `undefined` on failure rather than rejecting; render `error` instead of relying on a thrown value.
+
+When slot invalidation is active, `slotStatus` and `slotError` report the subscription state. Slot notifications that arrive during an in-flight read are coalesced into one follow-up read. A `null` owner disables both the read and the slot subscription.
+
 ## Read Signature Status
 
 Use `useSignatureStatus()` to track a known transaction signature.
@@ -123,6 +143,7 @@ Nuxt exposes the same read helpers as auto-imported composables:
 - `useSolanaBalance()`
 - `useSolanaAccountInfo()`
 - `useSolanaProgramAccounts()`
+- `useSolanaTokenPortfolio()`
 - `useSolanaSignatureStatus()`
 
 ```vue

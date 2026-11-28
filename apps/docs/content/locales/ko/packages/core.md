@@ -76,6 +76,8 @@ Direct subpath:
 - `@vue-solana/core/wallet`
 - `@vue-solana/core/wallet-standard`
 - `@vue-solana/core/token-accounts`
+- `@vue-solana/core/token-portfolio`
+- `@vue-solana/core/token-portfolio-2022`
 
 ## 관련 가이드
 
@@ -218,24 +220,26 @@ type SolanaChain = "solana:mainnet" | "solana:testnet" | "solana:devnet" | "sola
 
 Root `@vue-solana/core` export는 아래 public helper를 다시 export합니다. 전체 barrel 대신 한 helper의 모듈만 import하려면 direct subpath를 사용하세요:
 
-| Import path                            | 포함 내용                                                                                       | 사용할 때                                                                                                      |
-| -------------------------------------- | ----------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `@vue-solana/core/address`             | `parseAddress()`와 address input type.                                                          | Solana 주소를 string, ref-like object, getter로 받고 검증되고 정규화된 `Address`가 필요할 때.                  |
-| `@vue-solana/core/clusters`            | 기본 cluster 및 endpoint helper.                                                                | `mainnet`, `mainnet-beta`, `testnet`, `devnet`, `localnet`의 built-in RPC 또는 WebSocket endpoint가 필요할 때. |
-| `@vue-solana/core/diagnostics`         | `buildDiagnosticReport()`와 별칭 `createTransactionDiagnostics()`.                              | 히스토리, simulation, error, fee-budget 데이터로 RPC 없이 실패한 트랜잭션을 순수하게 요약할 때.                |
-| `@vue-solana/core/errors`              | `SolanaError`, error factory, error guard.                                                      | 지갑, RPC, 주소, 트랜잭션, timeout, storage 실패에 대한 안정적인 error code가 필요할 때.                       |
-| `@vue-solana/core/fee-policy`          | `resolveFeePolicy()`와 설명 가능한 컴퓨트 예산 타입.                                            | 트랜잭션에 서명하거나 전송하지 않고 로컬로 제한된 컴퓨트 유닛 및 우선 수수료 추정이 필요할 때.                 |
-| `@vue-solana/core/ios-wallet`          | iOS browser wallet discovery, deep-link adapter, callback handling.                             | Vue plugin의 unified wallet flow 없이 iOS wallet link를 직접 wiring할 때.                                      |
-| `@vue-solana/core/kit`                 | `createSolanaClient()`와 `@solana/kit` 전체 표면.                                               | 직접 `package.json`에 `@solana/kit`을 설치하지 않고 현대 Kit API를 원할 때.                                    |
-| `@vue-solana/core/mobile-wallet`       | Android Mobile Wallet Adapter registration helper.                                              | Wallet Standard wallet을 읽기 전에 Android MWA를 등록해야 할 때.                                               |
-| `@vue-solana/core/rpc`                 | `createSolanaContext()`.                                                                        | Vue plugin 없이 configured Kit client와 resolved cluster endpoint가 필요할 때.                                 |
-| `@vue-solana/core/timeout`             | Solana timeout error를 만드는 Promise timeout helper.                                           | transaction confirmation helper와 일관된 timeout behavior가 필요할 때.                                         |
-| `@vue-solana/core/transaction`         | Transaction simulation, send, confirmation helper.                                              | 트랜잭션을 미리 보거나, wallet-aware send path를 사용하거나, 기존 signature를 confirm해야 할 때.               |
-| `@vue-solana/core/transaction-history` | 트랜잭션 본문 없이 signature 메타데이터를 나열하는 헬퍼(`getTransactionHistory()`).             | 페이지 단위 활동 목록이나 이전 페이지용 `before` 커서가 필요할 때.                                             |
-| `@vue-solana/core/token-accounts`      | 무상태 SPL Token account 읽기(`getTokenAccountsByOwner`, `getTokenAccount`, `getTokenBalance`). | Kit RPC `jsonParsed` API를 통해 token account 또는 balance 읽기가 필요할 때.                                   |
-| `@vue-solana/core/types`               | 공유 TypeScript type.                                                                           | `SolanaConfig`, `SolanaContext`, `SolanaWallet`, wallet metadata, transaction option type이 필요할 때.         |
-| `@vue-solana/core/wallet`              | Wallet state assertion 및 wallet capability error.                                              | 선택된 wallet이 연결되어 있거나 signing을 지원하는지 wallet method 호출 전에 검증해야 할 때.                   |
-| `@vue-solana/core/wallet-standard`     | Wallet Standard chain mapping, discovery, subscription, adapter helper.                         | Solana Wallet Standard 위에 자체 wallet discovery layer를 만들 때.                                             |
+| Import path                             | 포함 내용                                                                                       | 사용할 때                                                                                                      |
+| --------------------------------------- | ----------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `@vue-solana/core/address`              | `parseAddress()`와 address input type.                                                          | Solana 주소를 string, ref-like object, getter로 받고 검증되고 정규화된 `Address`가 필요할 때.                  |
+| `@vue-solana/core/clusters`             | 기본 cluster 및 endpoint helper.                                                                | `mainnet`, `mainnet-beta`, `testnet`, `devnet`, `localnet`의 built-in RPC 또는 WebSocket endpoint가 필요할 때. |
+| `@vue-solana/core/diagnostics`          | `buildDiagnosticReport()`와 별칭 `createTransactionDiagnostics()`.                              | 히스토리, simulation, error, fee-budget 데이터로 RPC 없이 실패한 트랜잭션을 순수하게 요약할 때.                |
+| `@vue-solana/core/errors`               | `SolanaError`, error factory, error guard.                                                      | 지갑, RPC, 주소, 트랜잭션, timeout, storage 실패에 대한 안정적인 error code가 필요할 때.                       |
+| `@vue-solana/core/fee-policy`           | `resolveFeePolicy()`와 설명 가능한 컴퓨트 예산 타입.                                            | 트랜잭션에 서명하거나 전송하지 않고 로컬로 제한된 컴퓨트 유닛 및 우선 수수료 추정이 필요할 때.                 |
+| `@vue-solana/core/ios-wallet`           | iOS browser wallet discovery, deep-link adapter, callback handling.                             | Vue plugin의 unified wallet flow 없이 iOS wallet link를 직접 wiring할 때.                                      |
+| `@vue-solana/core/kit`                  | `createSolanaClient()`와 `@solana/kit` 전체 표면.                                               | 직접 `package.json`에 `@solana/kit`을 설치하지 않고 현대 Kit API를 원할 때.                                    |
+| `@vue-solana/core/mobile-wallet`        | Android Mobile Wallet Adapter registration helper.                                              | Wallet Standard wallet을 읽기 전에 Android MWA를 등록해야 할 때.                                               |
+| `@vue-solana/core/rpc`                  | `createSolanaContext()`.                                                                        | Vue plugin 없이 configured Kit client와 resolved cluster endpoint가 필요할 때.                                 |
+| `@vue-solana/core/timeout`              | Solana timeout error를 만드는 Promise timeout helper.                                           | transaction confirmation helper와 일관된 timeout behavior가 필요할 때.                                         |
+| `@vue-solana/core/transaction`          | Transaction simulation, send, confirmation helper.                                              | 트랜잭션을 미리 보거나, wallet-aware send path를 사용하거나, 기존 signature를 confirm해야 할 때.               |
+| `@vue-solana/core/transaction-history`  | 트랜잭션 본문 없이 signature 메타데이터를 나열하는 헬퍼(`getTransactionHistory()`).             | 페이지 단위 활동 목록이나 이전 페이지용 `before` 커서가 필요할 때.                                             |
+| `@vue-solana/core/token-accounts`       | 무상태 SPL Token account 읽기(`getTokenAccountsByOwner`, `getTokenAccount`, `getTokenBalance`). | Kit RPC `jsonParsed` API를 통해 token account 또는 balance 읽기가 필요할 때.                                   |
+| `@vue-solana/core/token-portfolio`      | 클래식 SPL account용 `getTokenPortfolio()` 및 정규화된 portfolio type.                          | mint별로 그룹화된 읽기 전용 account 목록과 decimals, UI amount, totals가 필요할 때.                            |
+| `@vue-solana/core/token-portfolio-2022` | opt-in Token-2022 portfolio 읽기용 `getTokenPortfolio2022()`.                                   | 앱에 Token-2022 account가 있고 별도 entry point로 읽고 싶을 때.                                                |
+| `@vue-solana/core/types`                | 공유 TypeScript type.                                                                           | `SolanaConfig`, `SolanaContext`, `SolanaWallet`, wallet metadata, transaction option type이 필요할 때.         |
+| `@vue-solana/core/wallet`               | Wallet state assertion 및 wallet capability error.                                              | 선택된 wallet이 연결되어 있거나 signing을 지원하는지 wallet method 호출 전에 검증해야 할 때.                   |
+| `@vue-solana/core/wallet-standard`      | Wallet Standard chain mapping, discovery, subscription, adapter helper.                         | Solana Wallet Standard 위에 자체 wallet discovery layer를 만들 때.                                             |
 
 ### 클러스터와 RPC
 
@@ -348,6 +352,7 @@ Token 읽기는 Kit RPC `jsonParsed` API를 사용합니다 - `@solana/spl-token
 - `getTokenAccountsByOwner(client, owner, options?)`: owner의 모든 SPL Token 및 Token-2022 account를 `TokenAccountInfo[]`(`{ address, mint, owner, amount: bigint, decimals, state, isNative }`)로 반환합니다. `programId`를 전달하면 단일 program으로 제한합니다.
 - `getTokenAccount(client, address, commitment?)`: 단일 parsed token account(`TokenAccountInfo | null`)를 반환합니다. account가 없거나 token account가 아니면 `null`을 반환합니다.
 - `getTokenBalance(client, mint, owner, commitment?)`: 주어진 mint에 대한 owner의 token account를 읽고 `{ amount, decimals }`를 반환합니다. token account가 없으면 `null`을 반환합니다.
+- `@vue-solana/core/token-portfolio`의 `getTokenPortfolio(client, owner, options?)`: 클래식 SPL account를 `{ accounts, byMint, totals, unresolvedMints }`로 집계합니다. mint decimals가 있으면 사용하고, 없으면 parsed account decimals로 대체합니다. `commitment`, `abortSignal`, `programId`(기본값은 클래식 SPL Token 프로그램)를 받습니다. Token-2022 account는 `@vue-solana/core/token-portfolio-2022`의 `getTokenPortfolio2022()`로 별도 읽습니다.
 
 ```ts
 import { getTokenBalance } from "@vue-solana/core/token-accounts";

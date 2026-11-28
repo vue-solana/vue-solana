@@ -92,6 +92,7 @@ Le module auto-importe ces composables depuis les sous-chemins directs `@vue-sol
 - `useSolanaBalance(address, commitment?)`: lit le solde en lamports d'une clé publique ou d'une adresse.
 - `useSolanaTokenAccounts(owner, options?)`: lit tous les comptes de token SPL d'un propriétaire, en interrogeant par défaut à la fois les programmes Token et Token-2022.
 - `useSolanaTokenBalance(mint, owner)`: lit le solde et les décimales du token SPL pour une paire mint/propriétaire via le compte de token associé.
+- `useSolanaTokenPortfolio(owner, options?)`: lit un portefeuille de tokens réactif en lecture seule, regroupé par mint, avec invalidation facultative par slot et prise en charge facultative de Token-2022.
 - `useSolanaProgramAccounts(programId, options?)`: lit les comptes détenus par un programme avec filtres et découpage des données.
 - `useSolanaTransactionConfirmation(options?)`: confirme la signature d'une transaction existante.
 - `useSolanaSignatureStatus(signature, options?)`: lit, interroge périodiquement ou suit par abonnement le statut d'une signature.

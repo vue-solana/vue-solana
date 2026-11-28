@@ -233,7 +233,7 @@ Install only the package needed by your app. Nuxt apps normally install @vue-sol
 Use Vue Solana when you are building, reviewing, or testing a Vue 3 or Nuxt application that talks to Solana:
 
 - Setting up a Solana RPC connection with reactive state (useSolanaClient, useConnection, useRpc).
-- Reading balances, account info, or SPL token accounts in components (useBalance, useAccountInfo, useTokenAccounts, useTokenBalance).
+- Reading balances, account info, SPL token accounts, or token portfolios in components (useBalance, useAccountInfo, useTokenAccounts, useTokenBalance, useTokenPortfolio).
 - Discovering and connecting wallets: browser extensions, Android Mobile Wallet Adapter, and iOS wallet links (useWallets, useWallet).
 - Signing messages, sending transfers, and tracking confirmation with normalized errors (useSignMessage, useSignAndSendTransaction, useSignatureStatus, useTransactionConfirmation).
 - Migrating a Vue or Nuxt codebase from @solana/web3.js to Solana Kit (see the Kit Migration guide).

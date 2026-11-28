@@ -9,6 +9,7 @@ This example demonstrates:
 - Reading RPC status with auto-imported `useSolanaRpc()`.
 - Using the deprecated `useSolanaConnection()` alias, which returns the Kit client.
 - Reading lamport balances with `useSolanaBalance()`.
+- Aggregating mocked SPL token accounts by mint with auto-imported `useSolanaTokenPortfolio()` in `TokenPortfolioPanel`, including zero balances and a normalized malformed-account error.
 - Discovering browser extension wallets and Android Mobile Wallet Adapter wallets with `useSolanaWallets()`.
 - Managing active wallet state with `useSolanaWallet()`.
 - Sending a real transfer with `useSolanaSignAndSendTransaction()`. The example uses devnet by default for safe testing.

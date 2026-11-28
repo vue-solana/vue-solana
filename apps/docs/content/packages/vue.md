@@ -167,6 +167,7 @@ Direct package subpaths:
 - `@vue-solana/vue/useSignAndSendTransaction`
 - `@vue-solana/vue/useTokenBalance`
 - `@vue-solana/vue/useTokenAccounts`
+- `@vue-solana/vue/useTokenPortfolio`
 - `@vue-solana/vue/kit`
 
 Use `@vue-solana/vue/buffer-polyfill` for browser transaction code that needs the Buffer polyfill. Import `installSolanaBufferPolyfill()` as a named import and call it; a bare side-effect import such as `import "@vue-solana/vue/buffer-polyfill"` installs nothing, because every `@vue-solana/*` package is marked `"sideEffects": false` and the subpath only exports the function. Use `@vue-solana/vue/kit` for the Kit API — it re-exports all of `@solana/kit`, so you never install that package yourself. Direct `@vue-solana/core/*` imports remain supported for lower-level core usage.
@@ -186,6 +187,7 @@ Use `@vue-solana/vue/buffer-polyfill` for browser transaction code that needs th
 - `useAirdrop()`: airdrops SOL into an account on test networks and local validators.
 - `useTokenAccounts(owner, options?)`: loads all SPL token accounts for an owner, querying both Token and Token-2022 programs by default.
 - `useTokenBalance(mint, owner)`: loads the SPL token balance and decimals for a mint/owner pair via the associated token account.
+- `useTokenPortfolio(owner, options?)`: loads a reactive, read-only portfolio of an owner's classic SPL accounts with per-mint totals and optional slot-driven invalidation. `includeToken2022` switches to the opt-in Token-2022 helper via a dynamic import. Options accept refs/getters; `items`, `byMint`, and `totals` clear on failed refresh or owner change, and `slotStatus` / `slotError` expose the optional subscription state.
 - `useTransaction(handler, options?)`: generic async transaction state helper with optional timeout settings.
 - `useTransactionConfirmation(options?)`: confirms a submitted signature with reactive status and timeout/error state.
 - `useTransactionDiagnostics(source, options?)`: joins reactive history, simulation, error, and fee-budget inputs into one pure diagnostic report without RPC calls.

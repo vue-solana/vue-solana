@@ -5,6 +5,7 @@ import {
   isRealRpcRun,
   mockFailedTransactionRpc,
   mockSolanaSubscriptions,
+  mockTokenPortfolioRpc,
   waitForRpcConnected,
 } from "./helpers";
 
@@ -522,6 +523,52 @@ test("joins a failed simulation and history error into an explainable report", a
   expect(diagnosticsCalls).toContain("simulateTransaction");
   expect(diagnosticsCalls).not.toContain("getTransaction");
   expect(diagnosticsCalls).not.toContain("sendTransaction");
+});
+
+test("aggregates a token portfolio and surfaces malformed account data", async ({ page }) => {
+  if (isRealRpcRun()) {
+    test.skip(true, "Portfolio assertions require the deterministic RPC mock");
+  }
+
+  const rpc = await mockTokenPortfolioRpc(page);
+
+  await page.goto("/");
+  await waitForRpcConnected(page);
+
+  await expect(page.getByTestId("token-portfolio-panel")).toBeVisible();
+  await expect(page.getByTestId("token-portfolio-status")).toHaveText("success");
+  await expect(page.getByTestId("token-portfolio-item")).toHaveCount(3);
+  await expect(page.getByTestId("token-portfolio-item").nth(0)).toContainText(
+    "1.5 EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+  );
+  await expect(page.getByTestId("token-portfolio-item").nth(1)).toContainText(
+    "0.25 EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+  );
+  await expect(page.getByTestId("token-portfolio-item").nth(2)).toContainText(
+    "0 So11111111111111111111111111111111111111112",
+  );
+  await expect(page.getByTestId("token-portfolio-totals")).toContainText("accounts: 3");
+  await expect(page.getByTestId("token-portfolio-totals")).toContainText("mints: 2");
+
+  await expect(page.getByTestId("token-portfolio-broken-status")).toHaveText("error");
+  await expect(page.getByTestId("token-portfolio-broken-error")).toContainText("RPC_FAILURE");
+
+  const callsBeforeRefresh = rpc.rpcMethodCalls();
+  expect(callsBeforeRefresh.filter((method) => method === "getTokenAccountsByOwner")).toHaveLength(
+    2,
+  );
+  expect(callsBeforeRefresh).toContain("getMultipleAccounts");
+  expect(callsBeforeRefresh).not.toContain("sendTransaction");
+
+  await page.getByTestId("token-portfolio-refresh").click();
+
+  await expect(page.getByTestId("token-portfolio-status")).toHaveText("success");
+  const callsAfterRefresh = rpc.rpcMethodCalls();
+  expect(callsAfterRefresh.filter((method) => method === "getTokenAccountsByOwner")).toHaveLength(
+    3,
+  );
+  expect(callsAfterRefresh.filter((method) => method === "getMultipleAccounts")).toHaveLength(2);
+  expect(callsAfterRefresh).not.toContain("sendTransaction");
 });
 
 test("creates a Solana Pay request, renders a QR code, and verifies settlement", async ({

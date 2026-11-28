@@ -76,6 +76,8 @@ import type { SolanaConfig } from "@vue-solana/core/types";
 - `@vue-solana/core/wallet`
 - `@vue-solana/core/wallet-standard`
 - `@vue-solana/core/token-accounts`
+- `@vue-solana/core/token-portfolio`
+- `@vue-solana/core/token-portfolio-2022`
 
 ## 相关指南
 
@@ -218,24 +220,26 @@ type SolanaChain = "solana:mainnet" | "solana:testnet" | "solana:devnet" | "sola
 
 根 `@vue-solana/core` 导出会重新导出下面的公共 helper。如果想只导入某个 helper 的模块而不是整个 barrel，请使用直接 subpath。
 
-| Import path                            | 包含内容                                                                                       | 何时使用                                                                                             |
-| -------------------------------------- | ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `@vue-solana/core/address`             | `parseAddress()` 和地址输入类型。                                                              | 你以字符串、类似 ref 的对象或 getter 形式接受 Solana 地址，并需要一个经过验证和规范化的 `Address`。  |
-| `@vue-solana/core/clusters`            | 默认 cluster 和 endpoint helper。                                                              | 你需要包内置的 `mainnet`、`mainnet-beta`、`testnet`、`devnet` 或 `localnet` RPC/WebSocket endpoint。 |
-| `@vue-solana/core/diagnostics`         | `buildDiagnosticReport()` 及其别名 `createTransactionDiagnostics()`。                          | 你需要从历史、模拟、错误和手续费预算数据中获得不调用 RPC 的纯函数摘要。                              |
-| `@vue-solana/core/errors`              | `SolanaError`、错误工厂和错误 guard。                                                          | 你需要稳定错误 code 来处理面向用户的钱包、RPC、地址、交易、超时或存储失败。                          |
-| `@vue-solana/core/fee-policy`          | `resolveFeePolicy()` 和可解释的计算预算类型。                                                  | 你需要本地限额的计算单元和优先费估算，但不对交易签名或发送。                                         |
-| `@vue-solana/core/ios-wallet`          | iOS 浏览器钱包发现、deep-link adapter 和回调处理。                                             | 你在不使用 Vue 插件统一钱包流程的情况下接入 iOS 钱包链接。                                           |
-| `@vue-solana/core/kit`                 | `createSolanaClient()` 和完整的 `@solana/kit` 表面。                                           | 你想要现代 Kit API，但不想在自己的 `package.json` 中安装 `@solana/kit`。                             |
-| `@vue-solana/core/mobile-wallet`       | Android Mobile Wallet Adapter 注册 helper。                                                    | 你需要在读取 Wallet Standard 钱包前注册 Android MWA。                                                |
-| `@vue-solana/core/rpc`                 | `createSolanaContext()`。                                                                      | 你想在不安装 Vue 插件的情况下获得已配置的 Kit 客户端和解析后的 cluster endpoint。                    |
-| `@vue-solana/core/timeout`             | 生成 Solana 超时错误的 Promise timeout helper。                                                | 你需要与交易确认 helper 一致的超时行为。                                                             |
-| `@vue-solana/core/transaction`         | 交易模拟、发送和确认 helper。                                                                  | 你需要预览交易、使用感知钱包的发送路径，或为现有签名获取确认结果。                                   |
-| `@vue-solana/core/transaction-history` | 在不获取交易正文的情况下列出签名元数据的 helper（`getTransactionHistory()`）。                 | 你需要分页的活动列表或用于更早页面的 `before` 游标时。                                               |
-| `@vue-solana/core/token-accounts`      | 无状态 SPL Token 账户读取（`getTokenAccountsByOwner`、`getTokenAccount`、`getTokenBalance`）。 | 你需要通过 Kit RPC `jsonParsed` API 读取 token 账户或余额。                                          |
-| `@vue-solana/core/types`               | 共享 TypeScript 类型。                                                                         | 你需要 `SolanaConfig`、`SolanaContext`、`SolanaWallet`、钱包元数据或交易选项类型。                   |
-| `@vue-solana/core/wallet`              | 钱包状态断言和钱包能力错误。                                                                   | 你需要在调用钱包方法前验证所选钱包已连接或支持签名。                                                 |
-| `@vue-solana/core/wallet-standard`     | Wallet Standard chain 映射、发现、订阅和 adapter helper。                                      | 你正在 Solana Wallet Standard 之上构建自己的钱包发现层。                                             |
+| Import path                             | 包含内容                                                                                       | 何时使用                                                                                             |
+| --------------------------------------- | ---------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| `@vue-solana/core/address`              | `parseAddress()` 和地址输入类型。                                                              | 你以字符串、类似 ref 的对象或 getter 形式接受 Solana 地址，并需要一个经过验证和规范化的 `Address`。  |
+| `@vue-solana/core/clusters`             | 默认 cluster 和 endpoint helper。                                                              | 你需要包内置的 `mainnet`、`mainnet-beta`、`testnet`、`devnet` 或 `localnet` RPC/WebSocket endpoint。 |
+| `@vue-solana/core/diagnostics`          | `buildDiagnosticReport()` 及其别名 `createTransactionDiagnostics()`。                          | 你需要从历史、模拟、错误和手续费预算数据中获得不调用 RPC 的纯函数摘要。                              |
+| `@vue-solana/core/errors`               | `SolanaError`、错误工厂和错误 guard。                                                          | 你需要稳定错误 code 来处理面向用户的钱包、RPC、地址、交易、超时或存储失败。                          |
+| `@vue-solana/core/fee-policy`           | `resolveFeePolicy()` 和可解释的计算预算类型。                                                  | 你需要本地限额的计算单元和优先费估算，但不对交易签名或发送。                                         |
+| `@vue-solana/core/ios-wallet`           | iOS 浏览器钱包发现、deep-link adapter 和回调处理。                                             | 你在不使用 Vue 插件统一钱包流程的情况下接入 iOS 钱包链接。                                           |
+| `@vue-solana/core/kit`                  | `createSolanaClient()` 和完整的 `@solana/kit` 表面。                                           | 你想要现代 Kit API，但不想在自己的 `package.json` 中安装 `@solana/kit`。                             |
+| `@vue-solana/core/mobile-wallet`        | Android Mobile Wallet Adapter 注册 helper。                                                    | 你需要在读取 Wallet Standard 钱包前注册 Android MWA。                                                |
+| `@vue-solana/core/rpc`                  | `createSolanaContext()`。                                                                      | 你想在不安装 Vue 插件的情况下获得已配置的 Kit 客户端和解析后的 cluster endpoint。                    |
+| `@vue-solana/core/timeout`              | 生成 Solana 超时错误的 Promise timeout helper。                                                | 你需要与交易确认 helper 一致的超时行为。                                                             |
+| `@vue-solana/core/transaction`          | 交易模拟、发送和确认 helper。                                                                  | 你需要预览交易、使用感知钱包的发送路径，或为现有签名获取确认结果。                                   |
+| `@vue-solana/core/transaction-history`  | 在不获取交易正文的情况下列出签名元数据的 helper（`getTransactionHistory()`）。                 | 你需要分页的活动列表或用于更早页面的 `before` 游标时。                                               |
+| `@vue-solana/core/token-accounts`       | 无状态 SPL Token 账户读取（`getTokenAccountsByOwner`、`getTokenAccount`、`getTokenBalance`）。 | 你需要通过 Kit RPC `jsonParsed` API 读取 token 账户或余额。                                          |
+| `@vue-solana/core/token-portfolio`      | `getTokenPortfolio()` 和经典 SPL 账户的规范化 portfolio 类型。                                 | 你需要按 mint 分组的只读账户列表，包含 decimals、UI 金额和总计。                                     |
+| `@vue-solana/core/token-portfolio-2022` | 用于选择性读取 Token-2022 portfolio 的 `getTokenPortfolio2022()`。                             | 你的应用持有 Token-2022 账户，并希望通过单独的入口读取。                                             |
+| `@vue-solana/core/types`                | 共享 TypeScript 类型。                                                                         | 你需要 `SolanaConfig`、`SolanaContext`、`SolanaWallet`、钱包元数据或交易选项类型。                   |
+| `@vue-solana/core/wallet`               | 钱包状态断言和钱包能力错误。                                                                   | 你需要在调用钱包方法前验证所选钱包已连接或支持签名。                                                 |
+| `@vue-solana/core/wallet-standard`      | Wallet Standard chain 映射、发现、订阅和 adapter helper。                                      | 你正在 Solana Wallet Standard 之上构建自己的钱包发现层。                                             |
 
 ### Clusters 和 RPC
 
@@ -348,6 +352,7 @@ Token 读取使用 Kit RPC `jsonParsed` API——无需 `@solana/spl-token` 依�
 - `getTokenAccountsByOwner(client, owner, options?)`：以 `TokenAccountInfo[]` 返回某个所有者的所有 SPL Token 和 Token-2022 账户（`{ address, mint, owner, amount: bigint, decimals, state, isNative }`）。传入 `programId` 可限制为单个 program。
 - `getTokenAccount(client, address, commitment?)`：返回单个解析后的 token 账户（`TokenAccountInfo | null`）。账户不存在或不是 token 账户时返回 `null`。
 - `getTokenBalance(client, mint, owner, commitment?)`：读取给定 mint 的所有者 token 账户，返回 `{ amount, decimals }`。不存在 token 账户时返回 `null`。
+- `@vue-solana/core/token-portfolio` 的 `getTokenPortfolio(client, owner, options?)`：将经典 SPL 账户聚合为 `{ accounts, byMint, totals, unresolvedMints }`，可用时解析 mint decimals，否则回退到解析后的账户 decimals。接受 `commitment`、`abortSignal` 和 `programId`（默认为经典 SPL Token 程序）。Token-2022 账户通过 `@vue-solana/core/token-portfolio-2022` 的 `getTokenPortfolio2022()` 单独读取。
 
 ```ts
 import { getTokenBalance } from "@vue-solana/core/token-accounts";

@@ -29,6 +29,7 @@ export * from "./composables/useSolanaClient";
 export * from "./composables/useSubscription";
 export * from "./composables/useTokenAccounts";
 export * from "./composables/useTokenBalance";
+export * from "./composables/useTokenPortfolio";
 export * from "./composables/useTrackedData";
 export * from "./composables/useTransaction";
 export * from "./composables/useTransactionConfirmation";

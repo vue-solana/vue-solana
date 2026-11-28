@@ -162,6 +162,7 @@ Direct package subpath:
 - `@vue-solana/vue/useSignAndSendTransaction`
 - `@vue-solana/vue/useTokenBalance`
 - `@vue-solana/vue/useTokenAccounts`
+- `@vue-solana/vue/useTokenPortfolio`
 - `@vue-solana/vue/kit`
 
 Buffer polyfill이 필요한 브라우저 트랜잭션 코드에는 `@vue-solana/vue/buffer-polyfill`을 사용하세요. `installSolanaBufferPolyfill()`을 named import로 가져와 호출하세요. `import "@vue-solana/vue/buffer-polyfill"` 같은 side-effect import는 아무것도 설치하지 않습니다. 모든 `@vue-solana/*` package가 `"sideEffects": false`로 표시되어 있고 해당 subpath는 함수만 export하기 때문입니다. Kit API에는 `@vue-solana/vue/kit`을 사용하세요. `@solana/kit` 전체를 다시 export하므로 해당 package를 직접 설치할 필요가 없습니다. 더 낮은 수준의 core 사용에는 direct `@vue-solana/core/*` import도 계속 지원됩니다.
@@ -181,6 +182,7 @@ Buffer polyfill이 필요한 브라우저 트랜잭션 코드에는 `@vue-solana
 - `useAirdrop()`: 테스트 네트워크와 로컬 validator에서 계정에 SOL을 에어드랍합니다.
 - `useTokenAccounts(owner, options?)`: 기본적으로 Token과 Token-2022 program 모두를 쿼리하여 owner의 모든 SPL token account를 로드합니다.
 - `useTokenBalance(mint, owner)`: associated token account를 통해 mint/owner 쌍의 SPL token balance와 decimals를 로드합니다.
+- `useTokenPortfolio(owner, options?)`: owner의 클래식 SPL account를 mint별 totals가 있는 읽기 전용 반응형 portfolio로 로드하며, slot 기반 invalidation을 선택적으로 지원합니다. `includeToken2022`는 dynamic import로 opt-in Token-2022 helper로 전환합니다. 옵션은 ref/getter를 받고, 새로고침 실패나 owner 변경 시 `items`, `byMint`, `totals`를 비웁니다. `slotStatus` / `slotError`는 선택적 구독 상태를 제공합니다.
 - `useTransaction(handler, options?)`: optional timeout 설정을 지원하는 generic async transaction state helper입니다.
 - `useTransactionConfirmation(options?)`: 제출된 signature를 reactive status 및 timeout/error state와 함께 confirm합니다.
 - `useTransactionDiagnostics(source, options?)`: reactive 히스토리, simulation, error, fee-budget 입력을 RPC 호출 없이 pure diagnostic report로 join합니다.

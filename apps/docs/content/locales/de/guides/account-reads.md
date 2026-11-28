@@ -98,6 +98,26 @@ const { accounts, loading, error, refresh } = useProgramAccounts(programId, {
 
 > Warnung: Scans über Programm-Konten können teuer sein. Verwende enge Filter, `dataSlice`, Caching, Paginierung, Indexing oder dedizierte RPC-Infrastruktur für Lesevorgänge in der Produktion.
 
+## Token-Portfolio
+
+`useTokenPortfolio()` aggregiert die klassischen SPL-Token-Konten eines Owners, löst Mint-Dezimalstellen auf, sofern das Mint-Konto verfügbar ist, und stellt `items`, `byMint`, `totals`, `loading`, `error` und `refresh()` bereit. Es liest erneut, wenn sich der Owner ändert, und invalidiert bei Slot-Benachrichtigungen, sofern der Client sie unterstützt.
+
+```vue
+<script setup lang="ts">
+import { ref } from "vue";
+import { useTokenPortfolio } from "@vue-solana/vue/useTokenPortfolio";
+
+const owner = ref("PASTE_A_SOLANA_ADDRESS");
+const { items, totals, loading, error, refresh } = useTokenPortfolio(owner);
+</script>
+```
+
+Die Kontoliste stammt aus RPC-Aufrufen von `getTokenAccountsByOwner`, nicht aus einem Index. Preise und Token-Metadaten sind Aufgabe der App. Übergib `{ includeToken2022: true }`, um stattdessen den separaten Token-2022-Lesevorgang zu aktivieren.
+
+`portfolio` enthält das vollständige Ergebnis einschließlich `unresolvedMints`. `items`, `byMint` und `totals` stammen nur aus dem letzten erfolgreichen Lesevorgang: Ein fehlgeschlagener Refresh oder ein geänderter Owner löscht sie, statt veraltete Beträge neben einem neuen `error` anzuzeigen. `commitment`, `invalidateOnSlot` und `includeToken2022` akzeptieren Refs oder Getter; eine Änderung startet einen neuen Lesevorgang. Da `refresh()` von `useRequest` stammt, wird es bei Fehlern mit `undefined` aufgelöst statt abgelehnt; rendere `error` entsprechend.
+
+Bei aktiver Slot-Invalidierung melden `slotStatus` und `slotError` den Status des Abonnements. Slot-Benachrichtigungen während eines laufenden Lesevorgangs werden zu einer einzelnen Folgeabfrage zusammengefasst. Ein `null`-Owner deaktiviert sowohl den Lesevorgang als auch das Slot-Abonnement.
+
 ## Signaturstatus lesen
 
 Verwende `useSignatureStatus()`, um eine bekannte Transaktionssignatur zu verfolgen.
@@ -123,6 +143,7 @@ Nuxt stellt dieselben Lese-Helfer als automatisch importierte Composables bereit
 - `useSolanaBalance()`
 - `useSolanaAccountInfo()`
 - `useSolanaProgramAccounts()`
+- `useSolanaTokenPortfolio()`
 - `useSolanaSignatureStatus()`
 
 ```vue

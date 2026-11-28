@@ -98,6 +98,26 @@ const { accounts, loading, error, refresh } = useProgramAccounts(programId, {
 
 > Advertencia: los escaneos de cuentas de programa pueden ser costosos. Usa filtros estrechos, `dataSlice`, caché, paginación, indexación o infraestructura RPC dedicada para lecturas de producción.
 
+## Portafolio de tokens
+
+`useTokenPortfolio()` agrega las cuentas de tokens SPL clásicas de un propietario, resuelve los decimales del mint cuando la cuenta del mint está disponible y expone `items`, `byMint`, `totals`, `loading`, `error` y `refresh()`. Vuelve a leer cuando cambia el propietario y se invalida con notificaciones de slot cuando el cliente las admite.
+
+```vue
+<script setup lang="ts">
+import { ref } from "vue";
+import { useTokenPortfolio } from "@vue-solana/vue/useTokenPortfolio";
+
+const owner = ref("PASTE_A_SOLANA_ADDRESS");
+const { items, totals, loading, error, refresh } = useTokenPortfolio(owner);
+</script>
+```
+
+La lista de cuentas proviene de llamadas RPC a `getTokenAccountsByOwner`, no de un índice. Los precios y los metadatos de tokens son responsabilidad de la aplicación. Pasa `{ includeToken2022: true }` para usar en su lugar la lectura independiente de Token-2022.
+
+`portfolio` expone el resultado completo, incluido `unresolvedMints`. `items`, `byMint` y `totals` se derivan solo de la última lectura correcta: una actualización fallida o un propietario modificado los vacía en lugar de mostrar importes obsoletos junto a un `error` reciente. `commitment`, `invalidateOnSlot` y `includeToken2022` aceptan refs o getters, y cambiarlos vuelve a ejecutar la lectura. Como `refresh()` proviene de `useRequest`, se resuelve con `undefined` cuando falla en lugar de rechazar; representa `error` en la interfaz.
+
+Cuando la invalidación por slot está activa, `slotStatus` y `slotError` informan del estado de la suscripción. Las notificaciones de slot que llegan durante una lectura en curso se agrupan en una única lectura posterior. Un propietario `null` desactiva tanto la lectura como la suscripción de slots.
+
 ## Leer estado de firma
 
 Usa `useSignatureStatus()` para rastrear una firma de transacción conocida.
@@ -123,6 +143,7 @@ Nuxt expone los mismos helpers de lectura como composables autoimportados:
 - `useSolanaBalance()`
 - `useSolanaAccountInfo()`
 - `useSolanaProgramAccounts()`
+- `useSolanaTokenPortfolio()`
 - `useSolanaSignatureStatus()`
 
 ```vue

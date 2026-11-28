@@ -37,6 +37,7 @@ export default defineBuildConfig({
     "src/useSubscription",
     "src/useTokenAccounts",
     "src/useTokenBalance",
+    "src/useTokenPortfolio",
     "src/useTrackedData",
     "src/useTransaction",
     "src/useTransactionConfirmation",

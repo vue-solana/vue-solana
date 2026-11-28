@@ -91,6 +91,7 @@ export default defineNuxtConfig({
 - `useSolanaBalance(address, commitment?)`: public key 또는 address의 lamport balance를 읽습니다.
 - `useSolanaTokenAccounts(owner, options?)`: 기본적으로 Token과 Token-2022 program 모두를 쿼리하여 owner의 모든 SPL token account를 로드합니다.
 - `useSolanaTokenBalance(mint, owner)`: associated token account를 통해 mint/owner 쌍의 SPL token balance와 decimals를 로드합니다.
+- `useSolanaTokenPortfolio(owner, options?)`: mint별로 그룹화된 읽기 전용 반응형 token portfolio를 읽으며, slot 기반 invalidation과 opt-in Token-2022 지원을 제공합니다.
 - `useSolanaProgramAccounts(programId, options?)`: filters와 data slicing으로 program-owned accounts를 읽습니다.
 - `useSolanaTransactionConfirmation(options?)`: 기존 transaction signature를 confirm합니다.
 - `useSolanaSignatureStatus(signature, options?)`: signature status를 읽거나 polling하거나 subscribe합니다.

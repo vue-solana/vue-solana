@@ -1,6 +1,6 @@
 # Feature Queue Phases
 
-Status: Phases 0–2 complete on `plan/feature-queue-phase-0`, `plan/feature-queue-phase-1`, and `plan/feature-queue-phase-2`; Phases 3–6 proposed. Owner: TBD.
+Status: Phases 0–3 complete on `plan/feature-queue-phase-0`, `plan/feature-queue-phase-1`, `plan/feature-queue-phase-2`, and `plan/feature-queue-phase-3`; Phases 4–6 proposed. Owner: TBD.
 
 This plan turns the stronger feature queue from [`reports/Vue Solana UI library.md`](../reports/Vue%20Solana%20UI%20library.md) into shippable slices. It supersedes the priority order currently written in `apps/docs/content/roadmap.md`; Phase 0 updates that roadmap and every locale mirror.
 
@@ -112,17 +112,25 @@ Verified on `plan/feature-queue-phase-2`; no commit was made.
 
 Goal: replace repeated `getTokenAccountsByOwner` + mint/decimals wiring with a reactive, read-only portfolio view. Mutations are a separate later decision.
 
-- [ ] Core 3a: add `@vue-solana/core/token-portfolio` with `getTokenPortfolio()`. Aggregate classic SPL accounts for an owner, resolve mint decimals where available, and return normalized `accounts`, `byMint`, and `totals`, plus `abortSignal` and `commitment` options. Reuse `packages/core/src/token-accounts.ts`; do not duplicate parsing.
-- [ ] Core 3b: add a separate opt-in `@vue-solana/core/token-portfolio-2022` subpath for Token-2022 accounts. Keep extension/zk-heavy code lazy behind that subpath so the classic entry stays lean.
-- [ ] Vue: add `useTokenPortfolio(ownerSource, options?)` with reactive owner watching, `items`, `loading`, `error`, `refresh()`, and subscription-driven invalidation where the client supports it. Keep `useTokenBalance()` unchanged. Nuxt alias: `useSolanaTokenPortfolio()`.
-- [ ] Docs: add a "Token portfolio" section to the tokens guide and mirror it into all six locales. Document that account lists are RPC-derived, not indexed, and that prices/metadata are the app's job.
-- [ ] Examples: add a portfolio panel to both example apps with mocked multiple accounts, zero balances, and parse failures.
-- [ ] Tests: unit coverage for aggregation, decimal normalization, missing mint data, classic/Token-2022 separation, abort/supersede, and RPC error normalization; e2e mocks for `getTokenAccountsByOwner` and `getAccountInfo`.
-- [ ] Add a changeset and update `AGENTS.md`.
+- [x] Core 3a: add `@vue-solana/core/token-portfolio` with `getTokenPortfolio()`. Aggregate classic SPL accounts for an owner, resolve mint decimals where available, and return normalized `accounts`, `byMint`, and `totals`, plus `abortSignal` and `commitment` options. Reuse `packages/core/src/token-accounts.ts`; do not duplicate parsing.
+- [x] Core 3b: add a separate opt-in `@vue-solana/core/token-portfolio-2022` subpath for Token-2022 accounts. Keep extension/zk-heavy code lazy behind that subpath so the classic entry stays lean.
+- [x] Vue: add `useTokenPortfolio(ownerSource, options?)` with reactive owner watching, `items`, `loading`, `error`, `refresh()`, and subscription-driven invalidation where the client supports it. Keep `useTokenBalance()` unchanged. Nuxt alias: `useSolanaTokenPortfolio()`.
+- [x] Docs: add a "Token Portfolio" section to `apps/docs/content/guides/account-reads.md` (the repo has no tokens guide) and mirror it into all six locales. Document that account lists are RPC-derived, not indexed, and that prices/metadata are the app's job.
+- [x] Examples: add a portfolio panel to both example apps with mocked multiple accounts, zero balances, and parse failures.
+- [x] Tests: unit coverage for aggregation, decimal normalization, missing mint data, classic/Token-2022 separation, abort/supersede, and RPC error normalization; e2e mocks for `getTokenAccountsByOwner` and `getAccountInfo`.
+- [x] Add a changeset and update `AGENTS.md`.
 
 Explicit non-goals: no transfer/mint/burn/ATA creation, no fiat pricing, no metadata indexing, no wallet custody changes, no Token-2022 zk code in the default graph.
 
 Exit criteria: all CI gates green, lean-import gate still forbids static heavy edges, docs/locales consistent, changeset present.
+
+Verified on `plan/feature-queue-phase-3`; the implementation record is archived at [`plans/archived/token-portfolio-reads.md`](archived/token-portfolio-reads.md).
+
+- `pnpm format`, `pnpm lint`, `pnpm test` (108 files / 1249 tests), and `pnpm typecheck`: green.
+- `pnpm build:packages`, `pnpm build:examples`, `pnpm --filter docs typecheck`, `pnpm --filter docs build`, and `pnpm smoke:standalone-installs`: green (the first smoke attempt hit a transient registry TLS fetch error; a retry passed unchanged).
+- `pnpm check:entries`, `pnpm check:esm-map`, `pnpm check:externals`, `pnpm check:buffer-polyfill-declarations`, and `pnpm size:packages`: green.
+- `pnpm pack:size`: core 58 files / 52,214 bytes under the deliberately raised 55,000-byte budget; Vue 148 files / 79,145 bytes; Nuxt 16 files / 13,420 bytes; no `.d.mts` in any tarball.
+- `pnpm test:e2e`: 44 passed, including the new portfolio fixture on both example apps.
 
 ## Phase 4 — Program-client reactivity
 

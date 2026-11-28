@@ -98,6 +98,26 @@ const { accounts, loading, error, refresh } = useProgramAccounts(programId, {
 
 > 경고: 프로그램 계정 스캔은 비용이 클 수 있습니다. 프로덕션 읽기에는 좁은 필터, `dataSlice`, 캐싱, 페이지네이션, 인덱싱 또는 전용 RPC 인프라를 사용하세요.
 
+## 토큰 포트폴리오
+
+`useTokenPortfolio()`는 소유자의 기존 SPL 토큰 계정을 집계하고, mint 계정이 있으면 decimals를 확인한 뒤 `items`, `byMint`, `totals`, `loading`, `error`, `refresh()`를 제공합니다. 소유자가 바뀌면 다시 읽고, 클라이언트가 지원하면 slot 알림으로 무효화합니다.
+
+```vue
+<script setup lang="ts">
+import { ref } from "vue";
+import { useTokenPortfolio } from "@vue-solana/vue/useTokenPortfolio";
+
+const owner = ref("PASTE_A_SOLANA_ADDRESS");
+const { items, totals, loading, error, refresh } = useTokenPortfolio(owner);
+</script>
+```
+
+계정 목록은 인덱스가 아니라 RPC `getTokenAccountsByOwner` 호출에서 가져옵니다. 가격과 토큰 메타데이터는 앱의 책임입니다. 대신 별도의 Token-2022 읽기를 사용하려면 `{ includeToken2022: true }`를 전달하세요.
+
+`portfolio`는 `unresolvedMints`를 포함한 전체 결과를 제공합니다. `items`, `byMint`, `totals`는 가장 최근에 성공한 읽기에서만 파생됩니다. 새로고침이 실패하거나 owner가 바뀌면 새 `error` 옆에 오래된 금액을 표시하지 않고 해당 값을 비웁니다. `commitment`, `invalidateOnSlot`, `includeToken2022`는 ref/getter를 받으며, 변경하면 읽기를 다시 실행합니다. `refresh()`는 `useRequest`에서 오므로 실패 시 reject하지 않고 `undefined`로 이행됩니다. UI에서는 `error`를 표시하세요.
+
+슬롯 무효화가 활성화되어 있으면 `slotStatus`와 `slotError`가 구독 상태를 보고합니다. 읽기 진행 중에 도착한 슬롯 알림은 한 번의 후속 읽기로 합쳐집니다. owner가 `null`이면 읽기와 슬롯 구독이 모두 비활성화됩니다.
+
 ## 서명 상태 읽기
 
 알려진 트랜잭션 서명을 추적하려면 `useSignatureStatus()`를 사용합니다.
@@ -123,6 +143,7 @@ Nuxt는 같은 읽기 helper를 자동 import 컴포저블로 노출합니다.
 - `useSolanaBalance()`
 - `useSolanaAccountInfo()`
 - `useSolanaProgramAccounts()`
+- `useSolanaTokenPortfolio()`
 - `useSolanaSignatureStatus()`
 
 ```vue

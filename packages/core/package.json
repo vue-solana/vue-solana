@@ -105,6 +105,14 @@
       "types": "./dist/token-accounts.d.ts",
       "import": "./dist/token-accounts.mjs"
     },
+    "./token-portfolio": {
+      "types": "./dist/token-portfolio.d.ts",
+      "import": "./dist/token-portfolio.mjs"
+    },
+    "./token-portfolio-2022": {
+      "types": "./dist/token-portfolio-2022.d.ts",
+      "import": "./dist/token-portfolio-2022.mjs"
+    },
     "./solana-pay": {
       "types": "./dist/solana-pay.d.ts",
       "import": "./dist/solana-pay.mjs"

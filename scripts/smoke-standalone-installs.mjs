@@ -143,7 +143,9 @@ try {
     source: `import {
   buildDiagnosticReport as buildRootDiagnosticReport,
   createSolanaContext,
+  getTokenPortfolio as getRootTokenPortfolio,
   type SolanaContext,
+  type TokenPortfolioResult,
   type TransactionDiagnosticReport,
 } from "@vue-solana/core";
 import { installSolanaBufferPolyfill, Buffer } from "@vue-solana/core/buffer-polyfill";
@@ -151,6 +153,8 @@ import { parseAddress } from "@vue-solana/core/address";
 import { address, lamports, type Address, type Commitment, type Rpc, type SolanaClient, type SolanaRpcApi } from "@vue-solana/core/kit";
 import { extendClient, generateKeyPairSigner, summarizeTransactionPlanResult, type AccountRole, type Instruction, type TransactionPlanResult } from "@vue-solana/core/kit";
 import { getTokenAccount, getTokenAccountsByOwner, getTokenBalance, type TokenAccountInfo } from "@vue-solana/core/token-accounts";
+import { getTokenPortfolio, type TokenPortfolioOptions } from "@vue-solana/core/token-portfolio";
+import { getTokenPortfolio2022 } from "@vue-solana/core/token-portfolio-2022";
 import { getTransactionHistory, type TransactionHistoryResult } from "@vue-solana/core/transaction-history";
 import { resolveFeePolicy, type FeeBudget, type FeePolicy } from "@vue-solana/core/fee-policy";
 import { buildDiagnosticReport, createTransactionDiagnostics } from "@vue-solana/core/diagnostics";
@@ -174,6 +178,10 @@ const diagnosticInput: TransactionDiagnosticInput = { historyItem: undefined, fe
 const diagnosticReport: TransactionDiagnosticReport = buildDiagnosticReport(diagnosticInput);
 const rootDiagnosticReport: TransactionDiagnosticReport = buildRootDiagnosticReport(diagnosticInput);
 const diagnosticsAlias: typeof buildDiagnosticReport = createTransactionDiagnostics;
+const portfolioReader: typeof getRootTokenPortfolio = getTokenPortfolio;
+const tokenPortfolio2022Reader: typeof getTokenPortfolio2022 = getTokenPortfolio2022;
+const portfolioOptions: TokenPortfolioOptions = { commitment, abortSignal: new AbortController().signal };
+const tokenPortfolio: Promise<TokenPortfolioResult> | undefined = undefined;
 
 `,
   });
@@ -193,6 +201,7 @@ const diagnosticsAlias: typeof buildDiagnosticReport = createTransactionDiagnost
     source: `import { defineComponent } from "vue";
 import {
   createSolanaPlugin,
+  useTokenPortfolio as useRootTokenPortfolio,
   useTransactionDiagnostics as useRootTransactionDiagnostics,
   type FeeBudget,
   type SimulatedTransactionResult,
@@ -207,6 +216,7 @@ import { useWallet } from "@vue-solana/vue/useWallet";
 import { useTransactionHistory } from "@vue-solana/vue/useTransactionHistory";
 import { useTransactionDiagnostics } from "@vue-solana/vue/useTransactionDiagnostics";
 import { useComputeBudget, useFeePolicy } from "@vue-solana/vue/useComputeBudget";
+import { useTokenPortfolio } from "@vue-solana/vue/useTokenPortfolio";
 import { createSolanaClient, address, extendClient, generateKeyPairSigner, summarizeTransactionPlanResult, type AccountRole, type Address, type Instruction, type Signature, type Slot, type SolanaClient, type TransactionPlanResult } from "@vue-solana/vue/kit";
 
 installSolanaBufferPolyfill();
@@ -255,6 +265,8 @@ export default defineComponent({
     const wallet = useWallet();
     const history = useTransactionHistory(publicKey);
     const diagnostics = useTransactionDiagnostics(publicKey);
+    const portfolio = useTokenPortfolio(publicKey);
+    const rootPortfolio = useRootTokenPortfolio(publicKey, { includeToken2022: true });
     const rootDiagnostics = useRootTransactionDiagnostics(publicKey, {
       historyItem: sampleHistoryItem,
       simulationResult: sampleSimulationResult,
@@ -265,7 +277,7 @@ export default defineComponent({
     const rootDiagnosticReport: TransactionDiagnosticReport | null = rootDiagnostics.report.value;
     const budget = useComputeBudget({} as never);
     const feePolicy = useFeePolicy;
-    return { injectedClient, rpc, connection, wallet, history, diagnostics, rootDiagnostics, rootDiagnosticReport, budget, feePolicy };
+    return { injectedClient, rpc, connection, wallet, history, diagnostics, portfolio, rootPortfolio, rootDiagnostics, rootDiagnosticReport, budget, feePolicy };
   },
 });
 

@@ -92,6 +92,7 @@ export default defineNuxtConfig({
 - `useSolanaBalance(address, commitment?)`: 公開鍵またはアドレスの lamport 残高を読み取ります。
 - `useSolanaTokenAccounts(owner, options?)`: オーナーのすべての SPL トークンアカウントを読み取り、デフォルトで Token と Token-2022 の両方のプログラムに問い合わせます。
 - `useSolanaTokenBalance(mint, owner)`: 関連付けられたトークンアカウントを通じて、mint とオーナーのペアの SPL トークン残高と decimals を読み取ります。
+- `useSolanaTokenPortfolio(owner, options?)`: mint ごとにグループ化された読み取り専用のリアクティブなトークンポートフォリオを読み取ります。スロットによる無効化と Token-2022 サポートをオプションで有効にできます。
 - `useSolanaProgramAccounts(programId, options?)`: フィルタとデータスライスを使って、プログラムが所有するアカウントを読み取ります。
 - `useSolanaTransactionConfirmation(options?)`: 既存のトランザクション署名を確認します。
 - `useSolanaSignatureStatus(signature, options?)`: 署名ステータスを読み取り、ポーリング、または購読します。

@@ -18,6 +18,7 @@ Nuxt サンプルは、`@vue-solana/nuxt` のための実行可能な Nuxt ア�
 - 自動 import される `useSolanaRpc()` で RPC のステータスを読み取ります。
 - 注入された Kit クライアントを、自動 import される `useSolanaClient()` で使用します。
 - `useSolanaBalance()` で lamport 残高を読み取ります。
+- `TokenPortfolioPanel` で auto-import の `useSolanaTokenPortfolio()` によりモックの SPL トークンアカウントを mint ごとに集約し、ゼロ残高と不正なアカウントによる正規化済みエラーを表示します。
 - `useSolanaWallets()` で、ブラウザ拡張ウォレット、Android Mobile Wallet Adapter のウォレット、対応する iOS ブラウザウォレットのエントリを検出します。
 - `useSolanaWallet()` でアクティブなウォレットの状態を管理します。
 - ウォレット選択のメタデータを永続化し、リロード時に以前選択していたウォレットの識別情報を復元します。
