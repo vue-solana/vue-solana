@@ -1,5 +1,11 @@
 # @vue-solana/core
 
+## 4.8.0
+
+### Minor Changes
+
+- 428df6b: Add read-only token portfolio helpers. `@vue-solana/core/token-portfolio` aggregates classic SPL token accounts by mint with resolved decimals, UI amounts, totals, and unresolved-mint reporting; `@vue-solana/core/token-portfolio-2022` provides an opt-in Token-2022 entry point. `useTokenPortfolio()` and the Nuxt alias `useSolanaTokenPortfolio()` expose the reactive view with owner watching, refresh, abort-on-supersede, and optional slot invalidation.
+
 ## 4.7.0
 
 ### Minor Changes
