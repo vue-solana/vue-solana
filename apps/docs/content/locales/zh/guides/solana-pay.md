@@ -202,10 +202,12 @@ Nuxt 模块以相同名称自动导入 `useSolanaPay()`、`useSolanaPayConfirmat
 ## Devnet 手动测试
 
 1. 把钱包切换到 devnet，并在 `https://faucet.solana.com` 领取免费 SOL。
-2. 创建一个几千 lamport 的转账请求并渲染二维码。
+2. 创建一个至少 0.001 SOL 的转账请求并渲染二维码。向没有 SOL 的地址转账低于免租最低额（890,880 lamport）会导致钱包模拟失败。
 3. 用支持 Solana Pay 的钱包扫描，或把 URL 粘贴到你自己的扫描界面。
 4. 确认钱包显示的收款方、金额和备注与页面显示一致。
 5. 批准转账，然后用相同的引用调用 `verifySolanaPayPayment()`，确认 `verified` 变为 `true`。
 6. 用错误的金额或收款方再次执行结算，确认无法通过校验。
+
+即使交易有效，Android 上的 Phantom 也可能对 devnet 转账请求提示“Failed to simulate the results of this request”并将其标记为不安全：无论是否带有 `label`、`message` 和 `memo`，同一笔转账都能通过 devnet 的 `simulateTransaction`，批准后也会完成结算。该警告来自 Phantom 自身的模拟，因此请求 URL 无法避免它。请提前告知测试者，并让他们在确认前核对收款方和金额。
 
 测试时使用小额。当付款方发送普通转账而未附加引用账户时，引用始终不会结算，这是预期结果。

@@ -371,6 +371,8 @@ export default {
         title: "Solana-Pay-Anfrage und QR-Code",
         description:
           "Händlerseite: Erstelle eine solana:-Überweisungsanfrage, generiere eine Zahlungsreferenz und stelle sie als QR-Code dar. Über die Referenz findest du die Zahlung später on chain, deshalb müssen QR-Code und Settle-Prüfung dieselbe Anfrage verwenden.",
+        networkNotice:
+          "Diese Demo läuft auf Devnet, und eine solana:-URL legt kein Netzwerk fest. Stelle die zahlende Wallet deshalb vor dem Scannen auf Devnet um. Phantom auf Android kann dann „Failed to simulate the results of this request“ anzeigen und die Anfrage als unsicher einstufen. Diese Warnung stammt aus Phantoms eigener Simulation, nicht aus dieser Anfrage: Dieselbe Überweisung lässt sich auf Devnet fehlerfrei simulieren und wird nach der Bestätigung abgewickelt. Prüfe vor dem Bestätigen, ob Empfänger und Betrag in Phantom mit dieser Seite übereinstimmen.",
         recipient: "Empfängeradresse",
         recipientPlaceholder: "Öffentlichen Schlüssel des Händlers eingeben",
         useConnectedWallet: "Verbundene Wallet verwenden",

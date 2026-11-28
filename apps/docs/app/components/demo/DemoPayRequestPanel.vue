@@ -134,6 +134,15 @@ const verificationItems = computed(() => {
       {{ $t("demo.solanaPay.request.description") }}
     </p>
 
+    <UAlert
+      class="mb-4"
+      color="info"
+      variant="subtle"
+      icon="i-lucide-info"
+      :description="$t('demo.solanaPay.request.networkNotice')"
+      data-testid="pay-network-notice"
+    />
+
     <div class="grid gap-3 sm:grid-cols-2">
       <UFormField :label="$t('demo.solanaPay.request.recipient')" class="sm:col-span-2">
         <UInput

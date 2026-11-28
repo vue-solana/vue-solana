@@ -371,6 +371,8 @@ export default {
         title: "Solana Pay リクエストと QR",
         description:
           "マーチャント側: solana: 送金リクエストを作成し、支払いリファレンスを生成して、QR コードとして表示します。リファレンスを使うと後からオンチェーンで支払いを見つけられるため、QR と決済確認は同じリクエストを使う必要があります。",
+        networkNotice:
+          "このデモは devnet で動作し、solana: URL には使用するネットワークが含まれないため、スキャンする前に支払い側のウォレットを devnet に切り替えてください。その場合でも Android の Phantom は「Failed to simulate the results of this request」と表示し、リクエストを安全でないと警告することがあります。この警告は Phantom 独自のシミュレーションによるもので、このリクエストが原因ではありません。同じ送金は devnet で問題なくシミュレーションでき、承認すれば決済されます。確定する前に、Phantom に表示された受取人と金額がこのページと一致していることを確認してください。",
         recipient: "受取人のアドレス",
         recipientPlaceholder: "マーチャントの公開鍵を入力",
         useConnectedWallet: "接続中のウォレットを使用",

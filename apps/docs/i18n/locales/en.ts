@@ -368,6 +368,8 @@ export default {
         title: "Solana Pay Request And QR",
         description:
           "Merchant side: build a solana: transfer request, generate a payment reference, and render it as a QR code. The reference is what lets you find the payment on chain later, so the QR and the settlement check must use the same request.",
+        networkNotice:
+          'This demo runs on devnet, and a solana: URL does not say which network to use, so switch the paying wallet to devnet before scanning. Phantom on Android may then warn "Failed to simulate the results of this request" and call the request unsafe. That warning comes from Phantom\'s own simulation, not from this request: the same transfer simulates cleanly on devnet and settles when approved. Check that the recipient and amount Phantom shows match this page before you confirm.',
         recipient: "Recipient address",
         recipientPlaceholder: "Enter the merchant public key",
         useConnectedWallet: "Use connected wallet",

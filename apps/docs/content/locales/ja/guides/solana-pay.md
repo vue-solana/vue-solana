@@ -202,10 +202,12 @@ Nuxt モジュールは `useSolanaPay()`、`useSolanaPayConfirmation()`、`useSo
 ## 手動の Devnet テスト
 
 1. ウォレットを devnet に切り替え、`https://faucet.solana.com` から無料の SOL をリクエストします。
-2. 数千 lamports の転送リクエストを作成し、QR コードを描画します。
+2. 0.001 SOL 以上の転送リクエストを作成し、QR コードを描画します。SOL を持たないアドレスへの rent-exempt 最小額（890,880 lamports）未満の送金は、ウォレットのシミュレーションで失敗します。
 3. Solana Pay 対応ウォレットでスキャンするか、URL を自作のスキャナー UI に貼り付けます。
 4. ウォレットに、ページと同じ受取人、金額、メモが表示されることを確認します。
 5. 転送を承認し、同じ reference で `verifySolanaPayPayment()` を呼び出して、`verified` が `true` になることを確認します。
 6. 誤った金額または受取人で決済確認を再実行し、検証されないことを確認します。
+
+Android の Phantom は、トランザクションが有効であっても devnet の転送リクエストに対して「Failed to simulate the results of this request」と表示し、安全でないと警告することがあります。同じ転送は `label`、`message`、`memo` の有無にかかわらず devnet の `simulateTransaction` を通過し、承認すれば決済されます。この警告は Phantom 独自のシミュレーションによるものなので、リクエスト URL 側では回避できません。テスターには警告が出ることを伝え、確定前に受取人と金額を確認してもらってください。
 
 テスト中はごく少額を使用してください。支払者が reference アカウントを添付せずに通常の転送を送った場合、reference が決済されないのは想定どおりの結果です。
