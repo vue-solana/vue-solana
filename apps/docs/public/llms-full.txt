@@ -2271,11 +2271,13 @@ Both example apps wire these composables into runnable merchant (`SolanaPayPanel
 ## Manual Devnet Test
 
 1. Switch your wallet to devnet and request free SOL from `https://faucet.solana.com`.
-2. Create a transfer request for a few thousand lamports and render the QR code.
+2. Create a transfer request for at least 0.001 SOL and render the QR code. A transfer below the rent-exempt minimum (890,880 lamports) to an address that holds no SOL fails the wallet's simulation.
 3. Scan it with a Solana Pay capable wallet, or paste the URL into your own scanner UI.
 4. Confirm the wallet shows the same recipient, amount, and memo that your page shows.
 5. Approve the transfer, then call `verifySolanaPayPayment()` with the same reference and check that `verified` becomes `true`.
 6. Re-run settlement with a wrong amount or recipient and confirm it does not verify.
+
+Phantom on Android can warn "Failed to simulate the results of this request" and call a devnet transfer request unsafe even when the transaction is valid: the same transfer passes devnet's `simulateTransaction` and settles when approved, with or without `label`, `message`, and `memo`. The warning comes from Phantom's own simulation, so a request URL cannot avoid it. Tell testers to expect it and to check the recipient and amount before confirming.
 
 Use tiny amounts while testing. A reference that never settles is the expected result when the payer sends a plain transfer without the reference account attached.
 

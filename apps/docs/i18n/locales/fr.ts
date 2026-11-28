@@ -373,6 +373,8 @@ export default {
         title: "Demande Solana Pay et QR",
         description:
           "Côté marchand : construisez une demande de transfert solana:, générez une référence de paiement et affichez-la sous forme de QR code. La référence permet de retrouver le paiement on-chain plus tard, donc le QR et la vérification du règlement doivent utiliser la même demande.",
+        networkNotice:
+          "Cette démo tourne sur devnet, et une URL solana: n'indique pas le réseau à utiliser : passez donc le wallet payeur sur devnet avant de scanner. Phantom sur Android peut alors afficher « Failed to simulate the results of this request » et qualifier la demande de non sûre. Cet avertissement vient de la simulation propre à Phantom, pas de cette demande : le même transfert se simule sans erreur sur devnet et est réglé une fois approuvé. Avant de confirmer, vérifiez que le destinataire et le montant affichés par Phantom correspondent à cette page.",
         recipient: "Adresse du destinataire",
         recipientPlaceholder: "Saisissez la clé publique du marchand",
         useConnectedWallet: "Utiliser le wallet connecté",

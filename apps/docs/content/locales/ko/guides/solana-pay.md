@@ -202,10 +202,12 @@ Core helper는 auto-import되지 않습니다. Kit 타입은 `@vue-solana/nuxt/k
 ## Devnet 수동 테스트
 
 1. 지갑을 devnet으로 전환하고 `https://faucet.solana.com`에서 무료 SOL을 받으세요.
-2. 몇 천 lamport의 전송 요청을 만들고 QR 코드를 렌더링하세요.
+2. 0.001 SOL 이상의 전송 요청을 만들고 QR 코드를 렌더링하세요. SOL이 없는 주소로 rent-exempt 최소 금액(890,880 lamports)보다 적게 보내면 지갑의 시뮬레이션이 실패합니다.
 3. Solana Pay를 지원하는 지갑으로 스캔하거나, 직접 만든 스캔 UI에 URL을 붙여넣으세요.
 4. 지갑에 표시되는 recipient, amount, memo가 페이지에 표시된 값과 같은지 확인하세요.
 5. 전송을 승인한 뒤 같은 reference로 `verifySolanaPayPayment()`를 호출하고 `verified`가 `true`가 되는지 확인하세요.
 6. 잘못된 amount나 recipient로 정산을 다시 실행해 검증되지 않는지 확인하세요.
+
+Android의 Phantom은 트랜잭션이 유효해도 devnet 전송 요청에 "Failed to simulate the results of this request"를 표시하며 안전하지 않다고 경고할 수 있습니다. 같은 전송은 `label`, `message`, `memo` 유무와 관계없이 devnet의 `simulateTransaction`을 통과하고 승인하면 정산됩니다. 이 경고는 Phantom 자체 시뮬레이션에서 발생하므로 요청 URL로는 피할 수 없습니다. 테스터에게 경고가 나타날 수 있음을 알리고 확인 전에 recipient와 amount를 확인하게 하세요.
 
 테스트 중에는 작은 금액을 사용하세요. payer가 reference account를 첨부하지 않고 일반 전송을 보내면 reference가 정산되지 않는 것이 정상입니다.

@@ -361,6 +361,8 @@ export default {
         title: "Solana Pay 请求与 QR 码",
         description:
           "商户侧：创建 solana: 转账请求，生成支付 reference，并渲染为 QR 码。reference 是之后在链上查找该笔支付的依据，因此 QR 码与结算校验必须使用同一个请求。",
+        networkNotice:
+          "此演示运行在 devnet 上，而 solana: URL 不包含网络信息，因此扫码前请将付款钱包切换到 devnet。即便如此，Android 上的 Phantom 仍可能提示“Failed to simulate the results of this request”并将该请求标记为不安全。该警告来自 Phantom 自身的模拟，而非此请求：同一笔转账在 devnet 上可以正常模拟，批准后也会完成结算。确认前，请核对 Phantom 显示的收款地址和金额与本页面一致。",
         recipient: "收款地址",
         recipientPlaceholder: "输入商户公钥",
         useConnectedWallet: "使用已连接的钱包",

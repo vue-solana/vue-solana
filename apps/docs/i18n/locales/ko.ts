@@ -368,6 +368,8 @@ export default {
         title: "Solana Pay 요청 및 QR",
         description:
           "판매자 측: solana: 전송 요청을 만들고 결제 참조(reference)를 생성한 뒤 QR 코드로 렌더링합니다. 참조는 나중에 온체인에서 결제를 찾는 기준이므로 QR과 정산 확인은 같은 요청을 사용해야 합니다.",
+        networkNotice:
+          '이 데모는 devnet에서 동작하며 solana: URL에는 사용할 네트워크 정보가 없으므로, 스캔하기 전에 결제하는 지갑을 devnet으로 전환하세요. 그래도 Android의 Phantom은 "Failed to simulate the results of this request"를 표시하며 요청이 안전하지 않다고 경고할 수 있습니다. 이 경고는 이 요청이 아니라 Phantom 자체 시뮬레이션에서 발생합니다. 같은 전송은 devnet에서 문제없이 시뮬레이션되고 승인하면 정산됩니다. 확인하기 전에 Phantom에 표시된 수신자와 금액이 이 페이지와 일치하는지 확인하세요.',
         recipient: "수신자 주소",
         recipientPlaceholder: "판매자의 공개 키 입력",
         useConnectedWallet: "연결된 지갑 사용",

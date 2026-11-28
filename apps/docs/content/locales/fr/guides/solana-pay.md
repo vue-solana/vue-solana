@@ -202,10 +202,12 @@ Les deux applications d'exemple intègrent ces composables dans des panneaux ex�
 ## Test manuel sur devnet
 
 1. Basculez votre wallet sur devnet et demandez des SOL gratuits depuis `https://faucet.solana.com`.
-2. Créez une demande de transfert de quelques milliers de lamports et affichez le QR code.
+2. Créez une demande de transfert d'au moins 0,001 SOL et affichez le QR code. Un transfert inférieur au minimum exempté de loyer (890 880 lamports) vers une adresse sans SOL fait échouer la simulation du wallet.
 3. Scannez-le avec un wallet compatible Solana Pay, ou collez l'URL dans votre propre interface de scanner.
 4. Vérifiez que le wallet affiche le même destinataire, le même montant et le même memo que votre page.
 5. Approuvez le transfert, puis appelez `verifySolanaPayPayment()` avec la même référence et vérifiez que `verified` passe à `true`.
 6. Relancez la vérification du règlement avec un montant ou un destinataire erroné et confirmez qu'elle ne valide pas.
+
+Phantom sur Android peut afficher « Failed to simulate the results of this request » et qualifier de non sûre une demande de transfert sur devnet alors que la transaction est valide : le même transfert passe `simulateTransaction` sur devnet et est réglé une fois approuvé, avec ou sans `label`, `message` et `memo`. L'avertissement vient de la simulation propre à Phantom, donc une URL de demande ne peut pas l'éviter. Prévenez les testeurs et demandez-leur de vérifier le destinataire et le montant avant de confirmer.
 
 Utilisez de très petits montants pendant vos tests. Une référence qui ne se règle jamais est le résultat attendu lorsque le payeur envoie un simple transfert sans attacher le compte de référence.

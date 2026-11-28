@@ -202,10 +202,12 @@ Beide Beispiel-Apps verdrahten diese Composables zu lauffähigen Händler- (`Sol
 ## Manueller Devnet-Test
 
 1. Stelle deine Wallet auf Devnet um und fordere kostenloses SOL von `https://faucet.solana.com` an.
-2. Erstelle einen Transfer-Request über ein paar Tausend Lamports und rendere den QR-Code.
+2. Erstelle einen Transfer-Request über mindestens 0,001 SOL und rendere den QR-Code. Eine Überweisung unter dem Rent-Exempt-Minimum (890.880 Lamports) an eine Adresse ohne SOL lässt die Simulation der Wallet scheitern.
 3. Scanne ihn mit einer Solana-Pay-fähigen Wallet oder füge die URL in deine eigene Scanner-UI ein.
 4. Prüfe, dass die Wallet denselben Empfänger, Betrag und dasselbe Memo anzeigt wie deine Seite.
 5. Bestätige die Überweisung und rufe dann `verifySolanaPayPayment()` mit derselben Reference auf; prüfe, dass `verified` `true` wird.
 6. Wiederhole die Abwicklung mit einem falschen Betrag oder Empfänger und prüfe, dass sie nicht verifiziert.
+
+Phantom auf Android kann „Failed to simulate the results of this request“ anzeigen und einen Devnet-Transfer-Request als unsicher einstufen, obwohl die Transaktion gültig ist: Dieselbe Überweisung besteht Devnets `simulateTransaction` und wird nach der Bestätigung abgewickelt, mit oder ohne `label`, `message` und `memo`. Die Warnung stammt aus Phantoms eigener Simulation, eine Request-URL kann sie also nicht verhindern. Weise Testende darauf hin und lass sie Empfänger und Betrag vor dem Bestätigen prüfen.
 
 Verwende beim Testen winzige Beträge. Eine Reference, die nie abgewickelt wird, ist das erwartete Ergebnis, wenn der Zahler eine einfache Überweisung ohne angehängtes Reference-Konto sendet.
