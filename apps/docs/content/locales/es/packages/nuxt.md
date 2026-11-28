@@ -91,6 +91,7 @@ El módulo autoimporta estos composables desde subpaths directos `@vue-solana/vu
 - `useSolanaBalance(address, commitment?)`: lee el balance en lamports para una clave pública o dirección.
 - `useSolanaTokenAccounts(owner, options?)`: carga todas las cuentas de token SPL para un propietario, consultando ambos programas Token y Token-2022 por defecto.
 - `useSolanaTokenBalance(mint, owner)`: carga el balance y decimales del token SPL para un par mint/propietario vía la cuenta de token asociada.
+- `useSolanaTokenPortfolio(owner, options?)`: carga un portafolio de tokens reactivo y de solo lectura agrupado por mint, con invalidación opcional por slot y soporte opcional para Token-2022.
 - `useSolanaProgramAccounts(programId, options?)`: lee cuentas propiedad de programa con filtros y recorte de datos.
 - `useSolanaTransactionConfirmation(options?)`: confirma una firma de transacción existente.
 - `useSolanaSignatureStatus(signature, options?)`: lee, sondea o se suscribe a estado de firma.

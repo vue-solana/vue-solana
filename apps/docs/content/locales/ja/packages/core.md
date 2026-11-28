@@ -77,6 +77,8 @@ import type { SolanaConfig } from "@vue-solana/core/types";
 - `@vue-solana/core/wallet`
 - `@vue-solana/core/wallet-standard`
 - `@vue-solana/core/token-accounts`
+- `@vue-solana/core/token-portfolio`
+- `@vue-solana/core/token-portfolio-2022`
 - `@vue-solana/core/solana-pay`
 - `@vue-solana/core/solana-pay-confirmation`
 - `@vue-solana/core/solana-pay-status`
@@ -222,25 +224,27 @@ type SolanaChain = "solana:mainnet" | "solana:testnet" | "solana:devnet" | "sola
 
 ルートの `@vue-solana/core` エクスポートは、以下の公開ヘルパーを再エクスポートします。バレル全体ではなく 1 つのヘルパーのモジュールだけをインポートしたい場合は、直接のサブパスを使用してください。
 
-| インポートパス                         | 含まれるもの                                                                                                       | 使用する場面                                                                                                                            |
-| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `@vue-solana/core/action`              | `createSolanaActionStore()`、`SolanaActionState`、`isSolanaActionAborted()`。                                      | Solana の処理に対して、再ディスパッチ時に中断するフレームワーク非依存の非同期アクション状態マシンが必要なとき。                         |
-| `@vue-solana/core/address`             | `parseAddress()` とアドレス入力の型。                                                                              | Solana アドレスを文字列、ref ライクなオブジェクト、または getter として受け取り、検証済みで正規化された `Address` が必要なとき。        |
-| `@vue-solana/core/clusters`            | デフォルトのクラスタとエンドポイントのヘルパー。                                                                   | `mainnet`、`mainnet-beta`、`testnet`、`devnet`、`localnet` 向けのパッケージ組み込みの RPC または WebSocket エンドポイントが必要なとき。 |
-| `@vue-solana/core/diagnostics`         | `buildDiagnosticReport()` とそのエイリアス `createTransactionDiagnostics()`.                                       | RPC を使わずに履歴、シミュレーション、エラー、手数料予算から失敗トランザクションを純粋に要約する必要があるとき。                        |
-| `@vue-solana/core/errors`              | `SolanaError`、エラーファクトリ、エラーガード。                                                                    | ウォレット、RPC、アドレス、トランザクション、タイムアウト、ストレージの失敗に対して、ユーザー向けの安定したエラーコードが必要なとき。   |
-| `@vue-solana/core/fee-policy`          | `resolveFeePolicy()` と説明可能なコンピュートバジェットの型。                                                      | トランザクションに署名・送信せず、ローカルで上限を設けたコンピュートユニットと優先手数料の推定が必要なとき。                            |
-| `@vue-solana/core/ios-wallet`          | iOS ブラウザウォレットの検出、ディープリンクアダプタ、コールバック処理。                                           | Vue プラグインの統合ウォレットフローを使わずに iOS ウォレットリンクを組み込むとき。                                                     |
-| `@vue-solana/core/kit`                 | `createSolanaClient()` と `@solana/kit` のサーフェス全体。                                                         | 自分の `package.json` に `@solana/kit` をインストールせずにモダンな Kit API を使いたいとき。                                            |
-| `@vue-solana/core/mobile-wallet`       | Android Mobile Wallet Adapter の登録ヘルパー。                                                                     | Wallet Standard のウォレットを読み取る前に Android MWA を登録する必要があるとき。                                                       |
-| `@vue-solana/core/rpc`                 | `createSolanaContext()`。                                                                                          | Vue プラグインをインストールせずに、設定済みの Kit クライアントと解決済みのクラスタエンドポイントが必要なとき。                         |
-| `@vue-solana/core/timeout`             | Solana のタイムアウトエラーを生成する Promise タイムアウトヘルパー。                                               | トランザクション確認ヘルパーと一貫したタイムアウト動作が必要なとき。                                                                    |
-| `@vue-solana/core/transaction`         | トランザクションのシミュレーション、送信、確認のヘルパー。                                                         | トランザクションをプレビューする、ウォレットを考慮した送信経路を使う、または既存の署名を確認するとき。                                  |
-| `@vue-solana/core/transaction-history` | トランザクション本文を取得せずに署名メタデータを一覧するヘルパー（`getTransactionHistory()`）。                    | ページ分割されたアクティビティ一覧や、古いページ用の `before` カーソルが必要なとき。                                                    |
-| `@vue-solana/core/token-accounts`      | ステートレスな SPL Token アカウントの読み取り（`getTokenAccountsByOwner`、`getTokenAccount`、`getTokenBalance`）。 | Kit RPC の `jsonParsed` API を通じてトークンアカウントや残高を読み取る必要があるとき。                                                  |
-| `@vue-solana/core/types`               | 共有の TypeScript 型。                                                                                             | `SolanaConfig`、`SolanaContext`、`SolanaWallet`、ウォレットメタデータ、トランザクションオプションの型が必要なとき。                     |
-| `@vue-solana/core/wallet`              | ウォレット状態のアサーションとウォレット機能のエラー。                                                             | ウォレットのメソッドを呼ぶ前に、選択したウォレットが接続済みか、署名をサポートしているかを検証する必要があるとき。                      |
-| `@vue-solana/core/wallet-standard`     | Wallet Standard のチェーンマッピング、検出、サブスクリプション、アダプタヘルパー。                                 | Solana Wallet Standard の上に独自のウォレット検出レイヤーを構築するとき。                                                               |
+| インポートパス                          | 含まれるもの                                                                                                       | 使用する場面                                                                                                                            |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `@vue-solana/core/action`               | `createSolanaActionStore()`、`SolanaActionState`、`isSolanaActionAborted()`。                                      | Solana の処理に対して、再ディスパッチ時に中断するフレームワーク非依存の非同期アクション状態マシンが必要なとき。                         |
+| `@vue-solana/core/address`              | `parseAddress()` とアドレス入力の型。                                                                              | Solana アドレスを文字列、ref ライクなオブジェクト、または getter として受け取り、検証済みで正規化された `Address` が必要なとき。        |
+| `@vue-solana/core/clusters`             | デフォルトのクラスタとエンドポイントのヘルパー。                                                                   | `mainnet`、`mainnet-beta`、`testnet`、`devnet`、`localnet` 向けのパッケージ組み込みの RPC または WebSocket エンドポイントが必要なとき。 |
+| `@vue-solana/core/diagnostics`          | `buildDiagnosticReport()` とそのエイリアス `createTransactionDiagnostics()`.                                       | RPC を使わずに履歴、シミュレーション、エラー、手数料予算から失敗トランザクションを純粋に要約する必要があるとき。                        |
+| `@vue-solana/core/errors`               | `SolanaError`、エラーファクトリ、エラーガード。                                                                    | ウォレット、RPC、アドレス、トランザクション、タイムアウト、ストレージの失敗に対して、ユーザー向けの安定したエラーコードが必要なとき。   |
+| `@vue-solana/core/fee-policy`           | `resolveFeePolicy()` と説明可能なコンピュートバジェットの型。                                                      | トランザクションに署名・送信せず、ローカルで上限を設けたコンピュートユニットと優先手数料の推定が必要なとき。                            |
+| `@vue-solana/core/ios-wallet`           | iOS ブラウザウォレットの検出、ディープリンクアダプタ、コールバック処理。                                           | Vue プラグインの統合ウォレットフローを使わずに iOS ウォレットリンクを組み込むとき。                                                     |
+| `@vue-solana/core/kit`                  | `createSolanaClient()` と `@solana/kit` のサーフェス全体。                                                         | 自分の `package.json` に `@solana/kit` をインストールせずにモダンな Kit API を使いたいとき。                                            |
+| `@vue-solana/core/mobile-wallet`        | Android Mobile Wallet Adapter の登録ヘルパー。                                                                     | Wallet Standard のウォレットを読み取る前に Android MWA を登録する必要があるとき。                                                       |
+| `@vue-solana/core/rpc`                  | `createSolanaContext()`。                                                                                          | Vue プラグインをインストールせずに、設定済みの Kit クライアントと解決済みのクラスタエンドポイントが必要なとき。                         |
+| `@vue-solana/core/timeout`              | Solana のタイムアウトエラーを生成する Promise タイムアウトヘルパー。                                               | トランザクション確認ヘルパーと一貫したタイムアウト動作が必要なとき。                                                                    |
+| `@vue-solana/core/transaction`          | トランザクションのシミュレーション、送信、確認のヘルパー。                                                         | トランザクションをプレビューする、ウォレットを考慮した送信経路を使う、または既存の署名を確認するとき。                                  |
+| `@vue-solana/core/transaction-history`  | トランザクション本文を取得せずに署名メタデータを一覧するヘルパー（`getTransactionHistory()`）。                    | ページ分割されたアクティビティ一覧や、古いページ用の `before` カーソルが必要なとき。                                                    |
+| `@vue-solana/core/token-accounts`       | ステートレスな SPL Token アカウントの読み取り（`getTokenAccountsByOwner`、`getTokenAccount`、`getTokenBalance`）。 | Kit RPC の `jsonParsed` API を通じてトークンアカウントや残高を読み取る必要があるとき。                                                  |
+| `@vue-solana/core/token-portfolio`      | クラシック SPL アカウント用の `getTokenPortfolio()` と正規化されたポートフォリオ型。                               | mint ごとにグループ化された読み取り専用のアカウント一覧で、小数桁、UI 金額、合計が必要なとき。                                          |
+| `@vue-solana/core/token-portfolio-2022` | オプトインの Token-2022 ポートフォリオ読み取り用の `getTokenPortfolio2022()`。                                     | アプリが Token-2022 アカウントを持ち、別のエントリーポイントで読み取りたいとき。                                                        |
+| `@vue-solana/core/types`                | 共有の TypeScript 型。                                                                                             | `SolanaConfig`、`SolanaContext`、`SolanaWallet`、ウォレットメタデータ、トランザクションオプションの型が必要なとき。                     |
+| `@vue-solana/core/wallet`               | ウォレット状態のアサーションとウォレット機能のエラー。                                                             | ウォレットのメソッドを呼ぶ前に、選択したウォレットが接続済みか、署名をサポートしているかを検証する必要があるとき。                      |
+| `@vue-solana/core/wallet-standard`      | Wallet Standard のチェーンマッピング、検出、サブスクリプション、アダプタヘルパー。                                 | Solana Wallet Standard の上に独自のウォレット検出レイヤーを構築するとき。                                                               |
 
 ### クラスタと RPC
 
@@ -354,6 +358,7 @@ await confirmTransactionSignature(client, signature, { commitment: "confirmed" }
 - `getTokenAccountsByOwner(client, owner, options?)`: 所有者のすべての SPL Token および Token-2022 アカウントを `TokenAccountInfo[]`（`{ address, mint, owner, amount: bigint, decimals, state, isNative }`）として返します。単一のプログラムに限定する場合は `programId` を渡します。
 - `getTokenAccount(client, address, commitment?)`: 解析済みの単一のトークンアカウント（`TokenAccountInfo | null`）を返します。アカウントが存在しない場合、またはトークンアカウントでない場合は `null` を返します。
 - `getTokenBalance(client, mint, owner, commitment?)`: 指定された mint について所有者のトークンアカウントを読み取り、`{ amount, decimals }` を返します。トークンアカウントが存在しない場合は `null` を返します。
+- `@vue-solana/core/token-portfolio` の `getTokenPortfolio(client, owner, options?)`: クラシック SPL アカウントを `{ accounts, byMint, totals, unresolvedMints }` に集約します。利用できる場合は mint の小数桁を解決し、それ以外では解析済みアカウントの小数桁を使用します。`commitment` と `abortSignal` を受け取ります。Token-2022 アカウントは `@vue-solana/core/token-portfolio-2022` の `getTokenPortfolio2022()` で個別に読み取ります。
 
 ```ts
 import { getTokenBalance } from "@vue-solana/core/token-accounts";

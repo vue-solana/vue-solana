@@ -92,6 +92,7 @@ The module auto-imports these composables from direct `@vue-solana/vue/*` subpat
 - `useSolanaBalance(address, commitment?)`: reads lamport balance for a public key or address.
 - `useSolanaTokenAccounts(owner, options?)`: reads all SPL token accounts for an owner, querying both Token and Token-2022 programs by default.
 - `useSolanaTokenBalance(mint, owner)`: reads the SPL token balance and decimals for a mint/owner pair via the associated token account.
+- `useSolanaTokenPortfolio(owner, options?)`: reads a reactive, read-only token portfolio grouped by mint, with optional slot invalidation and opt-in Token-2022 support.
 - `useSolanaProgramAccounts(programId, options?)`: reads program-owned accounts with filters and data slicing.
 - `useSolanaTransactionConfirmation(options?)`: confirms an existing transaction signature.
 - `useSolanaSignatureStatus(signature, options?)`: reads, polls, or subscribes to signature status.

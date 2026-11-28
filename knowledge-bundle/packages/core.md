@@ -32,6 +32,8 @@ The root export remains supported. Direct subpath exports are also available whe
 - `@vue-solana/core/transaction-history`
 - `@vue-solana/core/wallet`
 - `@vue-solana/core/token-accounts`
+- `@vue-solana/core/token-portfolio`
+- `@vue-solana/core/token-portfolio-2022`
 - `@vue-solana/core/solana-pay`
 - `@vue-solana/core/solana-pay-confirmation`
 - `@vue-solana/core/solana-pay-status`
@@ -318,6 +320,12 @@ interface TokenAccountInfo {
 - `getTokenAccountsByOwner(client, owner, options?)`: fetches all token accounts for an owner address. Queries both `TOKEN_PROGRAM_ID` and `TOKEN_2022_PROGRAM_ID` by default, or a single `programId` via options. Returns `TokenAccountInfo[]`.
 - `getTokenAccount(client, address, commitment?)`: fetches and parses a single token account by address. Returns `TokenAccountInfo | null`.
 - `getTokenBalance(client, mint, owner, commitment?)`: reads the balance of an owner's associated token account for a mint. Returns `{ amount: bigint, decimals: number } | null`.
+
+## Token Portfolios (`@vue-solana/core/token-portfolio`)
+
+- `getTokenPortfolio(client, owner, options?)`: aggregates classic SPL token accounts into `accounts`, `byMint`, `totals`, and `unresolvedMints`. Mint decimals come from a batched `getMultipleAccounts` read and fall back to the parsed account decimals. Options are `commitment`, `abortSignal`, and `programId`.
+- `getTokenPortfolio2022(client, owner, options?)`: the opt-in Token-2022 entry point from `@vue-solana/core/token-portfolio-2022`. It uses the same aggregation with the Token-2022 program filter and stays out of the root barrel.
+- All reads are RPC-derived and read-only: no prices, metadata indexing, signing, or sending.
 
 ## Solana Pay (`@vue-solana/core/solana-pay`)
 

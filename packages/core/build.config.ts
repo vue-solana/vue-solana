@@ -20,6 +20,8 @@ export default defineBuildConfig({
     "src/solana-pay-status",
     "src/timeout",
     "src/token-accounts",
+    "src/token-portfolio",
+    "src/token-portfolio-2022",
     "src/transaction",
     "src/transaction-history",
     "src/types",

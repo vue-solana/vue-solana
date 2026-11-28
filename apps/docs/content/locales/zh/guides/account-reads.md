@@ -98,6 +98,22 @@ const { accounts, loading, error, refresh } = useProgramAccounts(programId, {
 
 > 警告：程序账户扫描可能成本很高。生产环境读取时，请使用精确过滤器、`dataSlice`、缓存、分页、索引或专用 RPC 基础设施。
 
+## 代币投资组合
+
+`useTokenPortfolio()` 会汇总所有者的传统 SPL 代币账户，在 mint 账户可用时解析 decimals，并提供 `items`、`byMint`、`totals`、`loading`、`error` 和 `refresh()`。所有者变化时会重新读取；客户端支持时，slot 通知也会使其失效。
+
+```vue
+<script setup lang="ts">
+import { ref } from "vue";
+import { useTokenPortfolio } from "@vue-solana/vue/useTokenPortfolio";
+
+const owner = ref("PASTE_A_SOLANA_ADDRESS");
+const { items, totals, loading, error, refresh } = useTokenPortfolio(owner);
+</script>
+```
+
+账户列表来自 RPC `getTokenAccountsByOwner` 调用，而不是索引。价格和代币元数据由应用负责。改用单独的 Token-2022 读取时传入 `{ includeToken2022: true }`。
+
 ## 读取签名状态
 
 使用 `useSignatureStatus()` 跟踪已知交易签名。
@@ -123,6 +139,7 @@ Nuxt 以自动导入的组合式函数暴露相同的读取辅助工具：
 - `useSolanaBalance()`
 - `useSolanaAccountInfo()`
 - `useSolanaProgramAccounts()`
+- `useSolanaTokenPortfolio()`
 - `useSolanaSignatureStatus()`
 
 ```vue

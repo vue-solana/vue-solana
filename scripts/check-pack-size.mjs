@@ -31,7 +31,10 @@ for (const pkg of packages) {
   }
 
   const forbidden = packed.files.filter((file) => file.path.endsWith(".d.mts"));
-  const budgets = { "packages/core": 50000, "packages/vue": 80000, "packages/nuxt": 20000 };
+  // Phase 3 added two token-portfolio entries (classic and opt-in 2022) plus
+  // their declarations, moving the measured core tarball from 49,989 to 52,214
+  // bytes. Keep the deliberate headroom rather than trimming public API.
+  const budgets = { "packages/core": 55000, "packages/vue": 80000, "packages/nuxt": 20000 };
   const budget = budgets[pkg] ?? 100000;
 
   if (forbidden.length > 0) {

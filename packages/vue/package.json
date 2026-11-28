@@ -209,6 +209,10 @@
       "types": "./dist/useTokenAccounts.d.ts",
       "import": "./dist/useTokenAccounts.mjs"
     },
+    "./useTokenPortfolio": {
+      "types": "./dist/useTokenPortfolio.d.ts",
+      "import": "./dist/useTokenPortfolio.mjs"
+    },
     "./kit": {
       "types": "./dist/kit.d.ts",
       "import": "./dist/kit.mjs"

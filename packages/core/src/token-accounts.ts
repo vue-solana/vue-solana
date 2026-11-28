@@ -3,8 +3,15 @@ import { address, isAddress } from "@solana/kit";
 import type { SolanaClient } from "./kit";
 import { createSolanaError, normalizeSolanaError } from "./errors";
 
-const TOKEN_PROGRAM_ADDRESS = address("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
-const TOKEN_2022_PROGRAM_ADDRESS = address("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb");
+/** Classic SPL Token program. Exported so portfolio readers can target it explicitly. */
+export const TOKEN_PROGRAM_ADDRESS = address("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
+
+/**
+ * Token-2022 program. The classic portfolio helper never passes this address:
+ * apps that want these accounts use `@vue-solana/core/token-portfolio-2022`,
+ * which keeps the extension-aware path out of the default read graph.
+ */
+export const TOKEN_2022_PROGRAM_ADDRESS = address("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb");
 
 export interface TokenAccountInfo {
   address: Address;
@@ -19,6 +26,7 @@ export interface TokenAccountInfo {
 export interface TokenAccountsByOwnerOptions {
   commitment?: Commitment;
   programId?: Address;
+  abortSignal?: AbortSignal;
 }
 
 /**
@@ -32,16 +40,30 @@ export async function getTokenAccountsByOwner(
   const programIds = options.programId
     ? [options.programId]
     : [TOKEN_PROGRAM_ADDRESS, TOKEN_2022_PROGRAM_ADDRESS];
+  const abortSignal = options.abortSignal;
+  abortSignal?.throwIfAborted();
 
   try {
     const results = await Promise.all(
       programIds.map((programId) =>
-        fetchParsedTokenAccounts(client, owner, { programId }, options.commitment),
+        fetchParsedTokenAccounts(client, owner, { programId }, options.commitment, abortSignal),
       ),
     );
 
     return results.flat();
   } catch (cause) {
+    if (abortSignal?.aborted) {
+      throw abortSignal.reason ?? cause;
+    }
+
+    if (
+      typeof cause === "object" &&
+      cause !== null &&
+      (cause as { name?: unknown }).name === "AbortError"
+    ) {
+      throw cause;
+    }
+
     throw normalizeSolanaError(cause, "RPC_FAILURE");
   }
 }
@@ -106,10 +128,11 @@ async function fetchParsedTokenAccounts(
   owner: Address,
   filter: { mint: Address } | { programId: Address },
   commitment?: Commitment,
+  abortSignal?: AbortSignal,
 ): Promise<TokenAccountInfo[]> {
   const response = await client.rpc
     .getTokenAccountsByOwner(owner, filter, { encoding: "jsonParsed", commitment })
-    .send();
+    .send({ abortSignal });
 
   return response.value
     .filter(({ account }) => isParsedTokenAccount(account.data))

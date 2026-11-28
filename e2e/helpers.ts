@@ -7,6 +7,14 @@ const MOCK_HISTORY_SIGNATURE_2 =
   "2Ana1pUpv2ZbMVkwF5FXapYeBEjdxDatLn7nvJkhgTSXbs59SyZSx866bXirPgj8QQVB57uxHJBG1YFvkRbFj4U";
 const MOCK_WALLET_ADDRESS = "11111111111111111111111111111111";
 
+const PORTFOLIO_OWNER = "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin";
+const MALFORMED_PORTFOLIO_OWNER = "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb";
+const PORTFOLIO_MINT_A = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
+const PORTFOLIO_MINT_B = "So11111111111111111111111111111111111111112";
+const PORTFOLIO_ACCOUNT_A1 = "BHUdKjNQLK7XxxYggCSbcrUBvc9LCBveAqDN2cM3b5b2";
+const PORTFOLIO_ACCOUNT_A2 = "Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9SEiFPUQpX";
+const PORTFOLIO_ACCOUNT_B = "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin";
+
 export function isRealRpcRun() {
   return process.env.E2E_REAL_RPC === "true";
 }
@@ -181,6 +189,164 @@ export async function mockFailedTransactionRpc(
   });
 
   return { rpcMethodCalls: () => methodCalls };
+}
+
+/**
+ * Fixture for the token portfolio panel: one owner has three classic SPL token
+ * accounts across two mints (including a zero balance), and a second owner has
+ * a malformed parsed account so the normalized `RPC_FAILURE` is visible. Mint
+ * decimals are supplied through both `getMultipleAccounts` and `getAccountInfo`
+ * so the mock covers the RPC reads the portfolio helper and its lower-level
+ * token-account sibling make.
+ */
+export async function mockTokenPortfolioRpc(
+  page: Page,
+): Promise<Pick<SubscriptionHarness, "rpcMethodCalls">> {
+  const methodCalls: string[] = [];
+
+  await page.route("https://api.devnet.solana.com/**", async (route) => {
+    const request = route.request();
+
+    if (request.method() === "OPTIONS") {
+      await route.fulfill({ status: 204, headers: corsHeaders() });
+      return;
+    }
+
+    const body = request.postDataJSON() as
+      | { id?: string | number; method?: string; params?: unknown }
+      | undefined;
+    const id = body?.id ?? 1;
+
+    if (body?.method) {
+      methodCalls.push(body.method);
+    }
+
+    const params = Array.isArray(body?.params) ? body.params : [];
+    let response: unknown = createRpcResponse(id, body?.method, body?.params);
+
+    if (body?.method === "getTokenAccountsByOwner") {
+      const owner = params[0];
+
+      if (owner === PORTFOLIO_OWNER) {
+        response = {
+          jsonrpc: "2.0",
+          id,
+          result: {
+            context: { slot: 123456 },
+            value: [
+              parsedTokenAccount(PORTFOLIO_ACCOUNT_A1, PORTFOLIO_MINT_A, "1500000", 6),
+              parsedTokenAccount(PORTFOLIO_ACCOUNT_A2, PORTFOLIO_MINT_A, "250000", 6),
+              parsedTokenAccount(PORTFOLIO_ACCOUNT_B, PORTFOLIO_MINT_B, "0", 9),
+            ],
+          },
+        };
+      } else if (owner === MALFORMED_PORTFOLIO_OWNER) {
+        response = {
+          jsonrpc: "2.0",
+          id,
+          result: {
+            context: { slot: 123456 },
+            value: [parsedTokenAccount(PORTFOLIO_ACCOUNT_A1, PORTFOLIO_MINT_A, "not-a-number", 6)],
+          },
+        };
+      } else {
+        response = { jsonrpc: "2.0", id, result: { context: { slot: 123456 }, value: [] } };
+      }
+    }
+
+    if (body?.method === "getMultipleAccounts") {
+      const addresses = Array.isArray(params[0]) ? (params[0] as unknown[]) : [];
+
+      response = {
+        jsonrpc: "2.0",
+        id,
+        result: {
+          context: { slot: 123456 },
+          value: addresses.map((address) =>
+            parsedMintAccount(String(address), address === PORTFOLIO_MINT_B ? 9 : 6),
+          ),
+        },
+      };
+    }
+
+    if (body?.method === "getAccountInfo") {
+      const address = params[0];
+      const config = (params[1] ?? {}) as { encoding?: unknown };
+
+      if (
+        config.encoding === "jsonParsed" &&
+        (address === PORTFOLIO_MINT_A || address === PORTFOLIO_MINT_B)
+      ) {
+        response = {
+          jsonrpc: "2.0",
+          id,
+          result: {
+            context: { slot: 123456 },
+            value: parsedMintAccount(String(address), address === PORTFOLIO_MINT_B ? 9 : 6),
+          },
+        };
+      }
+    }
+
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      headers: corsHeaders(),
+      body: JSON.stringify(response),
+    });
+  });
+
+  return { rpcMethodCalls: () => methodCalls };
+}
+
+function parsedTokenAccount(
+  pubkey: string,
+  mint: string,
+  amount: string,
+  decimals: number,
+): Record<string, unknown> {
+  return {
+    pubkey,
+    account: {
+      data: {
+        parsed: {
+          info: {
+            isNative: false,
+            mint,
+            owner: PORTFOLIO_OWNER,
+            state: "initialized",
+            tokenAmount: { amount, decimals, uiAmount: Number(amount) / 10 ** decimals },
+          },
+          type: "account",
+        },
+        program: "spl-token",
+        space: 165,
+      },
+      executable: false,
+      lamports: 2_039_280,
+      owner: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+      rentEpoch: "18446744073709551615",
+      space: 165,
+    },
+  };
+}
+
+function parsedMintAccount(address: string, decimals: number): Record<string, unknown> {
+  return {
+    data: {
+      parsed: {
+        info: { decimals, mintAuthority: PORTFOLIO_OWNER, supply: "1000000000" },
+        type: "mint",
+      },
+      program: "spl-token",
+      space: 82,
+    },
+    executable: false,
+    lamports: 1_000_000,
+    owner: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
+    rentEpoch: "18446744073709551615",
+    space: 82,
+  };
 }
 
 /**

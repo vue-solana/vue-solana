@@ -98,6 +98,22 @@ const { accounts, loading, error, refresh } = useProgramAccounts(programId, {
 
 > 경고: 프로그램 계정 스캔은 비용이 클 수 있습니다. 프로덕션 읽기에는 좁은 필터, `dataSlice`, 캐싱, 페이지네이션, 인덱싱 또는 전용 RPC 인프라를 사용하세요.
 
+## 토큰 포트폴리오
+
+`useTokenPortfolio()`는 소유자의 기존 SPL 토큰 계정을 집계하고, mint 계정이 있으면 decimals를 확인한 뒤 `items`, `byMint`, `totals`, `loading`, `error`, `refresh()`를 제공합니다. 소유자가 바뀌면 다시 읽고, 클라이언트가 지원하면 slot 알림으로 무효화합니다.
+
+```vue
+<script setup lang="ts">
+import { ref } from "vue";
+import { useTokenPortfolio } from "@vue-solana/vue/useTokenPortfolio";
+
+const owner = ref("PASTE_A_SOLANA_ADDRESS");
+const { items, totals, loading, error, refresh } = useTokenPortfolio(owner);
+</script>
+```
+
+계정 목록은 인덱스가 아니라 RPC `getTokenAccountsByOwner` 호출에서 가져옵니다. 가격과 토큰 메타데이터는 앱의 책임입니다. 대신 별도의 Token-2022 읽기를 사용하려면 `{ includeToken2022: true }`를 전달하세요.
+
 ## 서명 상태 읽기
 
 알려진 트랜잭션 서명을 추적하려면 `useSignatureStatus()`를 사용합니다.
@@ -123,6 +139,7 @@ Nuxt는 같은 읽기 helper를 자동 import 컴포저블로 노출합니다.
 - `useSolanaBalance()`
 - `useSolanaAccountInfo()`
 - `useSolanaProgramAccounts()`
+- `useSolanaTokenPortfolio()`
 - `useSolanaSignatureStatus()`
 
 ```vue

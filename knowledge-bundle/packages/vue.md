@@ -67,6 +67,7 @@ Available package subpaths:
 - `@vue-solana/vue/useSignAndSendTransaction`
 - `@vue-solana/vue/useTokenAccounts`
 - `@vue-solana/vue/useTokenBalance`
+- `@vue-solana/vue/useTokenPortfolio`
 - `@vue-solana/vue/kit`
 
 Use `@vue-solana/vue/kit` for the Kit API — it re-exports all of `@solana/kit`, so `createSolanaClient`, `address`, `lamports`, the types `Address`, `Commitment`, `Rpc`, `Signature`, `SolanaRpcApi`, `SolanaClient`, and everything else need no extra dependency — and `@vue-solana/vue/useSolanaClient` for the Kit client composable. Use `@vue-solana/vue/buffer-polyfill` when browser transaction code needs the Buffer polyfill. Import `installSolanaBufferPolyfill()` as a named import and call it; a bare side-effect import installs nothing, because every `@vue-solana/*` package is marked `"sideEffects": false`. Direct `@vue-solana/core/*` imports remain supported for lower-level core usage.
@@ -227,6 +228,18 @@ Returns:
 - `refresh()`
 
 Null `mint` or `owner` clears state without calling RPC. Missing ATA returns `null` balance and decimals (not an error).
+
+## `useTokenPortfolio(owner, options?)`
+
+Loads a reactive, read-only classic SPL token portfolio grouped by mint. Options are `commitment`, `invalidateOnSlot` (default `true`, disabled automatically when the client has no slot notifications), and `includeToken2022` (loaded through a dynamic import of the opt-in core subpath).
+
+Returns:
+
+- `items`, `byMint`, and `totals`: derived computed refs that are empty until a successful read
+- `portfolio`: the full core result ref, including `unresolvedMints`
+- `status`, `loading`, `error`, and `refresh()`
+
+A null owner clears the view without RPC. Newer reads supersede older ones via `useRequest`; slot notifications invalidate the current view when available.
 
 ## Error Handling
 

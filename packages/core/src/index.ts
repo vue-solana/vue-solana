@@ -7,6 +7,7 @@ export * from "./fee-policy";
 export * from "./kit";
 export * from "./rpc";
 export * from "./token-accounts";
+export * from "./token-portfolio";
 export * from "./transaction";
 export * from "./transaction-history";
 export * from "./timeout";
@@ -35,6 +36,10 @@ export * from "./solana-pay-status";
 // The dependency-free `isSolanaMobileWalletSupported()` gate stays available
 // through `@vue-solana/core/mobile-wallet-support`, which core's own exports
 // map documents.
+
+// `./token-portfolio-2022` is deliberately NOT re-exported here. The classic
+// portfolio is the default; apps that hold Token-2022 accounts opt in through
+// the `@vue-solana/core/token-portfolio-2022` subpath.
 
 // `./kit` mirrors all of `@solana/kit`, and Kit exports these four names too.
 // Two `export *` providing the same name is ambiguous, and the name would be

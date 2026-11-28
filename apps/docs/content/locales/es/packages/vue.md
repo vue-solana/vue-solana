@@ -162,6 +162,7 @@ Subpaths directos del paquete:
 - `@vue-solana/vue/useSignAndSendTransaction`
 - `@vue-solana/vue/useTokenBalance`
 - `@vue-solana/vue/useTokenAccounts`
+- `@vue-solana/vue/useTokenPortfolio`
 - `@vue-solana/vue/kit`
 
 Usa `@vue-solana/vue/buffer-polyfill` para código de transacciones en navegador que necesita el polyfill de Buffer. Importa `installSolanaBufferPolyfill()` como named import y llámalo; un import de efecto secundario como `import "@vue-solana/vue/buffer-polyfill"` no instala nada, porque todos los paquetes `@vue-solana/*` están marcados con `"sideEffects": false` y ese subpath solo exporta la función. Usa `@vue-solana/vue/kit` para la API Kit: reexporta todo `@solana/kit`, así que nunca instalas ese paquete por tu cuenta. Los imports directos `@vue-solana/core/*` siguen soportados para uso core de menor nivel.
@@ -181,6 +182,7 @@ Usa `@vue-solana/vue/buffer-polyfill` para código de transacciones en navegador
 - `useAirdrop()`: airdrops SOL en una cuenta en redes de prueba y validadores locales.
 - `useTokenAccounts(owner, options?)`: carga todas las cuentas de token SPL para un propietario, consultando ambos programas Token y Token-2022 por defecto.
 - `useTokenBalance(mint, owner)`: carga el balance y decimales del token SPL para un par mint/propietario vía la cuenta de token asociada.
+- `useTokenPortfolio(owner, options?)`: carga un portafolio reactivo y de solo lectura de las cuentas SPL clásicas del propietario, con totales por mint e invalidación opcional por slot. `includeToken2022` cambia al helper opcional de Token-2022 mediante un import dinámico.
 - `useTransaction(handler, options?)`: helper genérico de estado de transacción async con configuración opcional de timeout.
 - `useTransactionConfirmation(options?)`: confirma una firma enviada con estado reactivo y estado de timeout/error.
 - `useTransactionDiagnostics(source, options?)`: une entradas reactivas de historial, simulación, error y presupuesto de comisiones en un informe de diagnóstico puro sin llamadas RPC.

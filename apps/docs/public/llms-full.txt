@@ -1571,6 +1571,22 @@ const { accounts, loading, error, refresh } = useProgramAccounts(programId, {
 
 > Warning: Program account scans can be expensive. Use narrow filters, `dataSlice`, caching, pagination, indexing, or dedicated RPC infrastructure for production reads.
 
+## Token Portfolio
+
+`useTokenPortfolio()` aggregates an owner's classic SPL token accounts, resolves mint decimals when the mint account is available, and exposes `items`, `byMint`, `totals`, `loading`, `error`, and `refresh()`. It re-reads when the owner changes and invalidates from slot notifications when the client supports them.
+
+```vue
+<script setup lang="ts">
+import { ref } from "vue";
+import { useTokenPortfolio } from "@vue-solana/vue/useTokenPortfolio";
+
+const owner = ref("PASTE_A_SOLANA_ADDRESS");
+const { items, totals, loading, error, refresh } = useTokenPortfolio(owner);
+</script>
+```
+
+The account list comes from RPC `getTokenAccountsByOwner` calls, not from an index. Prices and token metadata are the app's job. Pass `{ includeToken2022: true }` to opt into the separate Token-2022 read instead.
+
 ## Read Signature Status
 
 Use `useSignatureStatus()` to track a known transaction signature.
@@ -1596,6 +1612,7 @@ Nuxt exposes the same read helpers as auto-imported composables:
 - `useSolanaBalance()`
 - `useSolanaAccountInfo()`
 - `useSolanaProgramAccounts()`
+- `useSolanaTokenPortfolio()`
 - `useSolanaSignatureStatus()`
 
 ```vue
@@ -3024,6 +3041,8 @@ Direct subpaths:
 - `@vue-solana/core/wallet`
 - `@vue-solana/core/wallet-standard`
 - `@vue-solana/core/token-accounts`
+- `@vue-solana/core/token-portfolio`
+- `@vue-solana/core/token-portfolio-2022`
 - `@vue-solana/core/solana-pay`
 - `@vue-solana/core/solana-pay-confirmation`
 - `@vue-solana/core/solana-pay-status`
@@ -3169,25 +3188,27 @@ These helpers are SSR-safe. Android registration returns without registering whe
 
 The root `@vue-solana/core` export re-exports the public helpers below. Use direct subpaths when you want to import just one helper's module instead of the whole barrel:
 
-| Import path                            | What it contains                                                                                                                       | Use it when                                                                                                                  |
-| -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| `@vue-solana/core/action`              | `createSolanaActionStore()`, `SolanaActionState`, and `isSolanaActionAborted()`.                                                       | You need a framework-agnostic async action state machine with abort-on-redispatch for Solana work.                           |
-| `@vue-solana/core/address`             | `parseAddress()` and address input types.                                                                                              | You accept a Solana address as a string, ref-like object, or getter and need a validated, normalized `Address`.              |
-| `@vue-solana/core/clusters`            | Default cluster and endpoint helpers.                                                                                                  | You need the package's built-in RPC or WebSocket endpoint for `mainnet`, `mainnet-beta`, `testnet`, `devnet`, or `localnet`. |
-| `@vue-solana/core/diagnostics`         | `buildDiagnosticReport()` and its `createTransactionDiagnostics()` alias.                                                              | You need one pure, RPC-free summary of a failed transaction from history, simulation, error, and fee-budget data.            |
-| `@vue-solana/core/errors`              | `SolanaError`, error factories, and error guards.                                                                                      | You need stable error codes for user-facing wallet, RPC, address, transaction, timeout, or storage failures.                 |
-| `@vue-solana/core/fee-policy`          | `resolveFeePolicy()` and explainable compute-budget types.                                                                             | You need locally capped compute-unit and priority-fee estimates without signing or sending a transaction.                    |
-| `@vue-solana/core/ios-wallet`          | iOS browser wallet discovery, deep-link adapters, and callback handling.                                                               | You are wiring iOS wallet links without the Vue plugin's unified wallet flow.                                                |
-| `@vue-solana/core/kit`                 | `createSolanaClient()` and the entire `@solana/kit` surface.                                                                           | You want the modern Kit API without installing `@solana/kit` in your own `package.json`.                                     |
-| `@vue-solana/core/mobile-wallet`       | Android Mobile Wallet Adapter registration helpers.                                                                                    | You need to register Android MWA before reading Wallet Standard wallets.                                                     |
-| `@vue-solana/core/rpc`                 | `createSolanaContext()`.                                                                                                               | You want a configured Kit client and resolved cluster endpoints without installing the Vue plugin.                           |
-| `@vue-solana/core/timeout`             | Promise timeout helpers that produce Solana timeout errors.                                                                            | You need timeout behavior consistent with transaction confirmation helpers.                                                  |
-| `@vue-solana/core/transaction`         | Transaction simulation, send, and confirmation helpers.                                                                                | You need to preview a transaction, use a wallet-aware send path, or confirm an existing signature.                           |
-| `@vue-solana/core/transaction-history` | Signature metadata reads without transaction bodies (`getTransactionHistory()`, `TransactionHistoryItem`, `TransactionHistoryResult`). | You need paginated activity or a `before` cursor for older pages.                                                            |
-| `@vue-solana/core/token-accounts`      | Stateless SPL Token account reads (`getTokenAccountsByOwner`, `getTokenAccount`, `getTokenBalance`).                                   | You need token account or balance reads through the Kit RPC `jsonParsed` API.                                                |
-| `@vue-solana/core/types`               | Shared TypeScript types.                                                                                                               | You need `SolanaConfig`, `SolanaContext`, `SolanaWallet`, wallet metadata, or transaction option types.                      |
-| `@vue-solana/core/wallet`              | Wallet state assertions and wallet capability errors.                                                                                  | You need to validate that a selected wallet is connected or supports signing before calling wallet methods.                  |
-| `@vue-solana/core/wallet-standard`     | Wallet Standard chain mapping, discovery, subscriptions, and adapter helpers.                                                          | You are building your own wallet discovery layer on top of Solana Wallet Standard.                                           |
+| Import path                             | What it contains                                                                                                                       | Use it when                                                                                                                  |
+| --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `@vue-solana/core/action`               | `createSolanaActionStore()`, `SolanaActionState`, and `isSolanaActionAborted()`.                                                       | You need a framework-agnostic async action state machine with abort-on-redispatch for Solana work.                           |
+| `@vue-solana/core/address`              | `parseAddress()` and address input types.                                                                                              | You accept a Solana address as a string, ref-like object, or getter and need a validated, normalized `Address`.              |
+| `@vue-solana/core/clusters`             | Default cluster and endpoint helpers.                                                                                                  | You need the package's built-in RPC or WebSocket endpoint for `mainnet`, `mainnet-beta`, `testnet`, `devnet`, or `localnet`. |
+| `@vue-solana/core/diagnostics`          | `buildDiagnosticReport()` and its `createTransactionDiagnostics()` alias.                                                              | You need one pure, RPC-free summary of a failed transaction from history, simulation, error, and fee-budget data.            |
+| `@vue-solana/core/errors`               | `SolanaError`, error factories, and error guards.                                                                                      | You need stable error codes for user-facing wallet, RPC, address, transaction, timeout, or storage failures.                 |
+| `@vue-solana/core/fee-policy`           | `resolveFeePolicy()` and explainable compute-budget types.                                                                             | You need locally capped compute-unit and priority-fee estimates without signing or sending a transaction.                    |
+| `@vue-solana/core/ios-wallet`           | iOS browser wallet discovery, deep-link adapters, and callback handling.                                                               | You are wiring iOS wallet links without the Vue plugin's unified wallet flow.                                                |
+| `@vue-solana/core/kit`                  | `createSolanaClient()` and the entire `@solana/kit` surface.                                                                           | You want the modern Kit API without installing `@solana/kit` in your own `package.json`.                                     |
+| `@vue-solana/core/mobile-wallet`        | Android Mobile Wallet Adapter registration helpers.                                                                                    | You need to register Android MWA before reading Wallet Standard wallets.                                                     |
+| `@vue-solana/core/rpc`                  | `createSolanaContext()`.                                                                                                               | You want a configured Kit client and resolved cluster endpoints without installing the Vue plugin.                           |
+| `@vue-solana/core/timeout`              | Promise timeout helpers that produce Solana timeout errors.                                                                            | You need timeout behavior consistent with transaction confirmation helpers.                                                  |
+| `@vue-solana/core/transaction`          | Transaction simulation, send, and confirmation helpers.                                                                                | You need to preview a transaction, use a wallet-aware send path, or confirm an existing signature.                           |
+| `@vue-solana/core/transaction-history`  | Signature metadata reads without transaction bodies (`getTransactionHistory()`, `TransactionHistoryItem`, `TransactionHistoryResult`). | You need paginated activity or a `before` cursor for older pages.                                                            |
+| `@vue-solana/core/token-accounts`       | Stateless SPL Token account reads (`getTokenAccountsByOwner`, `getTokenAccount`, `getTokenBalance`).                                   | You need token account or balance reads through the Kit RPC `jsonParsed` API.                                                |
+| `@vue-solana/core/token-portfolio`      | `getTokenPortfolio()` and normalized portfolio types for classic SPL accounts.                                                         | You need a read-only account list grouped by mint with decimals, UI amounts, and totals.                                     |
+| `@vue-solana/core/token-portfolio-2022` | `getTokenPortfolio2022()` for opt-in Token-2022 portfolio reads.                                                                       | Your app holds Token-2022 accounts and wants them in a separate entry point.                                                 |
+| `@vue-solana/core/types`                | Shared TypeScript types.                                                                                                               | You need `SolanaConfig`, `SolanaContext`, `SolanaWallet`, wallet metadata, or transaction option types.                      |
+| `@vue-solana/core/wallet`               | Wallet state assertions and wallet capability errors.                                                                                  | You need to validate that a selected wallet is connected or supports signing before calling wallet methods.                  |
+| `@vue-solana/core/wallet-standard`      | Wallet Standard chain mapping, discovery, subscriptions, and adapter helpers.                                                          | You are building your own wallet discovery layer on top of Solana Wallet Standard.                                           |
 
 ### Clusters and RPC
 
@@ -3301,6 +3322,7 @@ Token reads use the Kit RPC `jsonParsed` API — no `@solana/spl-token` dependen
 - `getTokenAccountsByOwner(client, owner, options?)`: returns all SPL Token and Token-2022 accounts for an owner as `TokenAccountInfo[]` (`{ address, mint, owner, amount: bigint, decimals, state, isNative }`). Pass `programId` to limit to a single program.
 - `getTokenAccount(client, address, commitment?)`: returns a single parsed token account (`TokenAccountInfo | null`). Returns `null` when the account does not exist or is not a token account.
 - `getTokenBalance(client, mint, owner, commitment?)`: reads the owner's token account for the given mint and returns `{ amount, decimals }`. Returns `null` when no token account exists.
+- `getTokenPortfolio(client, owner, options?)` from `@vue-solana/core/token-portfolio`: aggregates classic SPL accounts into `{ accounts, byMint, totals, unresolvedMints }`, resolving mint decimals where available and falling back to parsed account decimals otherwise. It accepts `commitment` and `abortSignal`. Token-2022 accounts are a separate opt-in read through `getTokenPortfolio2022()` from `@vue-solana/core/token-portfolio-2022`.
 
 ```ts
 import { getTokenBalance } from "@vue-solana/core/token-accounts";
@@ -3575,6 +3597,7 @@ Direct package subpaths:
 - `@vue-solana/vue/useSignAndSendTransaction`
 - `@vue-solana/vue/useTokenBalance`
 - `@vue-solana/vue/useTokenAccounts`
+- `@vue-solana/vue/useTokenPortfolio`
 - `@vue-solana/vue/kit`
 
 Use `@vue-solana/vue/buffer-polyfill` for browser transaction code that needs the Buffer polyfill. Import `installSolanaBufferPolyfill()` as a named import and call it; a bare side-effect import such as `import "@vue-solana/vue/buffer-polyfill"` installs nothing, because every `@vue-solana/*` package is marked `"sideEffects": false` and the subpath only exports the function. Use `@vue-solana/vue/kit` for the Kit API — it re-exports all of `@solana/kit`, so you never install that package yourself. Direct `@vue-solana/core/*` imports remain supported for lower-level core usage.
@@ -3594,6 +3617,7 @@ Use `@vue-solana/vue/buffer-polyfill` for browser transaction code that needs th
 - `useAirdrop()`: airdrops SOL into an account on test networks and local validators.
 - `useTokenAccounts(owner, options?)`: loads all SPL token accounts for an owner, querying both Token and Token-2022 programs by default.
 - `useTokenBalance(mint, owner)`: loads the SPL token balance and decimals for a mint/owner pair via the associated token account.
+- `useTokenPortfolio(owner, options?)`: loads a reactive, read-only portfolio of an owner's classic SPL accounts with per-mint totals and optional slot-driven invalidation. `includeToken2022` switches to the opt-in Token-2022 helper via a dynamic import.
 - `useTransaction(handler, options?)`: generic async transaction state helper with optional timeout settings.
 - `useTransactionConfirmation(options?)`: confirms a submitted signature with reactive status and timeout/error state.
 - `useTransactionDiagnostics(source, options?)`: joins reactive history, simulation, error, and fee-budget inputs into one pure diagnostic report without RPC calls.
@@ -4448,6 +4472,7 @@ The module auto-imports these composables from direct `@vue-solana/vue/*` subpat
 - `useSolanaBalance(address, commitment?)`: reads lamport balance for a public key or address.
 - `useSolanaTokenAccounts(owner, options?)`: reads all SPL token accounts for an owner, querying both Token and Token-2022 programs by default.
 - `useSolanaTokenBalance(mint, owner)`: reads the SPL token balance and decimals for a mint/owner pair via the associated token account.
+- `useSolanaTokenPortfolio(owner, options?)`: reads a reactive, read-only token portfolio grouped by mint, with optional slot invalidation and opt-in Token-2022 support.
 - `useSolanaProgramAccounts(programId, options?)`: reads program-owned accounts with filters and data slicing.
 - `useSolanaTransactionConfirmation(options?)`: confirms an existing transaction signature.
 - `useSolanaSignatureStatus(signature, options?)`: reads, polls, or subscribes to signature status.

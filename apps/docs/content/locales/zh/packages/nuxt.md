@@ -91,6 +91,7 @@ export default defineNuxtConfig({
 - `useSolanaBalance(address, commitment?)`：读取 public key 或地址的 lamport 余额。
 - `useSolanaTokenAccounts(owner, options?)`：加载某个所有者的所有 SPL token 账户，默认同时查询 Token 和 Token-2022 program。
 - `useSolanaTokenBalance(mint, owner)`：通过关联 token 账户加载 mint/owner 对的 SPL token 余额和小数位数。
+- `useSolanaTokenPortfolio(owner, options?)`：读取按 mint 分组的只读响应式 token portfolio，支持可选的 slot 失效和 Token-2022。
 - `useSolanaProgramAccounts(programId, options?)`：使用过滤器和数据切片读取 program-owned accounts。
 - `useSolanaTransactionConfirmation(options?)`：确认现有交易签名。
 - `useSolanaSignatureStatus(signature, options?)`：读取、轮询或订阅签名状态。

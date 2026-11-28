@@ -46,7 +46,9 @@ Implemented files:
 - `src/fee-policy.ts`: `resolveFeePolicy()` — fixed compute-budget presets, local caps, buffer math, and an explainable fee budget over a Kit message.
 - `src/diagnostics.ts`: `buildDiagnosticReport()` / `createTransactionDiagnostics()` — pure, RPC-free join of history, simulation, error, fee-budget, and app-supplied program-label data into an explainable report; no instruction decoding, memo interpretation, token-transfer categorization, or retry.
 - `src/timeout.ts`: `withTimeout()` helper.
-- `src/token-accounts.ts`: token account info types.
+- `src/token-accounts.ts`: token account info types, program-address constants, and shared parsed-account reads.
+- `src/token-portfolio.ts`: `getTokenPortfolio()` — read-only classic SPL token aggregation by mint, with decimals resolution, UI amounts, totals, and unresolved-mint reporting.
+- `src/token-portfolio-2022.ts`: `getTokenPortfolio2022()` — opt-in Token-2022 portfolio read kept out of the root barrel and eager import graph.
 - `src/solana-pay.ts` + `src/solana-pay/*`: Solana Pay URL encode/parse, reference helpers, and QR rendering, implemented directly on Kit with a lazily imported `qrcode`.
 - `src/solana-pay-confirmation.ts`: `createSolanaPayReference()` and `verifySolanaPayPayment()` polling over `getSignaturesForAddress(reference)`.
 - `src/solana-pay-status.ts`: `getSolanaPayPaymentStatus()` non-verifying status read.
@@ -73,6 +75,7 @@ Implemented files:
 - `src/composables/useAccountInfo.ts`: read account data through the context RPC.
 - `src/composables/useProgramAccounts.ts`: read program-owned accounts.
 - `src/composables/useTokenAccounts.ts` / `useTokenBalance.ts`: SPL token account reads.
+- `src/composables/useTokenPortfolio.ts`: reactive, read-only token portfolio with classic default, opt-in Token-2022 dynamic import, and slot-driven invalidation.
 - `src/composables/useSignatureStatus.ts`: poll a signature's confirmation status.
 - `src/composables/useTransactionConfirmation.ts`: map a Kit confirmation to a display status.
 - `src/composables/useAirdrop.ts`: devnet airdrop action.
@@ -127,7 +130,7 @@ Auto-imported Nuxt composables (source of truth: `packages/nuxt/src/imports.ts`)
 
 - `useSolana()`, `useSolanaClient()`, `useSolanaRpc()`, `useSolanaConnection()`
 - `useSolanaBalance()`, `useSolanaAccountInfo()`, `useSolanaProgramAccounts()`
-- `useSolanaTokenAccounts()`, `useSolanaTokenBalance()`, `useSolanaSignatureStatus()`, `useSolanaTransactionConfirmation()`
+- `useSolanaTokenAccounts()`, `useSolanaTokenBalance()`, `useSolanaTokenPortfolio()`, `useSolanaSignatureStatus()`, `useSolanaTransactionConfirmation()`
 - `useSolanaWallet()`, `useSolanaWallets()`, `useSolanaSignMessage()`, `useSolanaSignIn()`
 - `useSolanaAirdrop()`, `useSolanaAction()`, `useSolanaClientCapability()`, `useSolanaComputeBudget()`, `useSolanaTransactionDiagnostics()`, `useSolanaRequest()`, `useSolanaSubscription()`, `useSolanaTrackedData()`
 - `tryUseSolana()`, `clearSwrCache()`, `deleteSwrKey()`
@@ -192,6 +195,8 @@ These rules exist because they were measured regressions that were silently rein
 **2. The `@vue-solana/core` root barrel must NOT re-export `./ios-wallet` or `./mobile-wallet`.** Same class as rule 1: `ios-wallet/deep-links.ts` pulls `crypto.ts` (static `tweetnacl`, ~32 KB) and `mobile-wallet.ts` statically imports `@solana-mobile/wallet-standard-mobile` (~98 KB with its protocol graph). Only apps that use those wallets pay for them, through `@vue-solana/core/ios-wallet` and `@vue-solana/core/mobile-wallet`; the dependency-free `isSolanaMobileWalletSupported()` gate stays available through `@vue-solana/core/mobile-wallet-support`. Never add those `export *` back.
 
 **3. All three packages exclude `.d.mts` from their tarballs** via `"files": ["dist", "!dist/**/*.d.mts", ...]`. unbuild with `declaration: true` writes a byte-identical `.d.mts` next to every `.d.ts` (in `dist/shared/unbuild.*.mjs`, `.d.mts` is unconditional and `.d.ts` is the extra). That was 97 KB of dead weight across core and vue, plus 4 files in nuxt. `@vue-solana/nuxt` **used to** be exempt: its `exports` pointed `"types"` at `./dist/module.d.mts`. It was not — the byte-identical `module.d.ts` sits right next to it and resolves identically (the package is `"type": "module"`, so a `.d.ts` is already ESM). Both `types` fields now point at `.d.ts` and nuxt excludes them like the others. Before adding or removing an `exports` subpath, re-verify which `.d.mts` are actually referenced rather than assuming; a `files` negation is only safe because of that check.
+
+**4. The core tarball budget is deliberately 55,000 bytes.** Phase 3 raised it from 50,000 after the two token-portfolio entries and their declarations moved the measured tarball from 49,989 to 52,214 bytes. The classic helper stays a root export; Token-2022 stays a separate subpath. Keep the headroom rather than trimming public API; re-measure before changing it again.
 
 Known remaining weight, deliberately not fixed: the iOS wallet path is ~38.9 KB of the 67.4 KB eager chunk for `import { createSolanaPlugin } from "@vue-solana/vue"` (`tweetnacl/nacl-fast.js` 32.9 KB + `ios-wallet/*` glue 12.2 KB, measured 2026-10-21 with esbuild against the built `exports` map, excluding `vue` and the 117 KB Kit mirror). `getNacl()` does **not** defer it, because `ios-wallet/crypto.ts` holds a static `import * as naclModule from "tweetnacl"` and `dist/ios-wallet.mjs` is one flat file, so importing any symbol from that entry — even just `getSolanaIosWallets` — drags nacl in. The original "four synchronous blockers" note was wrong: `getSolanaIosWallets` and `createPendingRequest` only need `createRequestId`'s `nacl.randomBytes(16)` (replaceable with `crypto.getRandomValues`) and `launchConnect` is internal with a single caller inside `async connect()`. The only real constraint is the public synchronous `handleSolanaIosWalletCallback`. The non-breaking fix (WebCrypto request ids, `await import()` inside the adapter's async methods, a crypto-free `ios-wallet-discovery` entry, gated deep-link intake) is recorded in `plans/deferred/bundle-performance-followups.md`; the `ponytail:` comment at the top of `crypto.ts` records the constraint. mobile-wallet + qrcode (~98 KB) is correctly lazy behind `import("@vue-solana/core/mobile-wallet")` in `packages/vue/src/plugin.ts`, and `pnpm size:packages` now walks every `packages/vue/dist/*.mjs` static import graph so a new static heavy edge fails CI. It then runs `scripts/report-bundle-sizes.mjs`, which prints minified + gzip sizes per public entry (esbuild, `vue` and `#app` external, `export *` so no tree-shaking, dynamic imports excluded), including the Nuxt runtime plugin, measured by file because it is not an `exports` subpath; that half is report-only, with no budgets. It passes `tsconfigRaw: "{}"` on purpose: without it esbuild applies the workspace `paths` aliases and measures `src/` instead of `dist/`.
 
