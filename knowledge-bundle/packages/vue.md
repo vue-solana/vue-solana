@@ -231,15 +231,15 @@ Null `mint` or `owner` clears state without calling RPC. Missing ATA returns `nu
 
 ## `useTokenPortfolio(owner, options?)`
 
-Loads a reactive, read-only classic SPL token portfolio grouped by mint. Options are `commitment`, `invalidateOnSlot` (default `true`, disabled automatically when the client has no slot notifications), and `includeToken2022` (loaded through a dynamic import of the opt-in core subpath).
+Loads a reactive, read-only classic SPL token portfolio grouped by mint. `commitment`, `invalidateOnSlot` (default `true`, disabled automatically when the client has no slot notifications), and `includeToken2022` (loaded through a dynamic import of the opt-in core subpath) accept refs or getters.
 
 Returns:
 
-- `items`, `byMint`, and `totals`: derived computed refs that are empty until a successful read
+- `items`, `byMint`, and `totals`: per-instance derived computed refs that are empty until a successful read and clear immediately when a read fails or the owner changes
 - `portfolio`: the full core result ref, including `unresolvedMints`
-- `status`, `loading`, `error`, and `refresh()`
+- `status`, `loading`, `error`, `slotStatus`, `slotError`, and `refresh()`
 
-A null owner clears the view without RPC. Newer reads supersede older ones via `useRequest`; slot notifications invalidate the current view when available.
+A null owner disables both the read and the slot subscription. Newer reads supersede older ones via `useRequest`; slot notifications that arrive during an in-flight read are coalesced into one follow-up read. `refresh()` resolves with `undefined` on failure, so render `error` rather than relying on a thrown value.
 
 ## Error Handling
 

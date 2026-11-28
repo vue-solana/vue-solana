@@ -114,6 +114,10 @@ const { items, totals, loading, error, refresh } = useTokenPortfolio(owner);
 
 계정 목록은 인덱스가 아니라 RPC `getTokenAccountsByOwner` 호출에서 가져옵니다. 가격과 토큰 메타데이터는 앱의 책임입니다. 대신 별도의 Token-2022 읽기를 사용하려면 `{ includeToken2022: true }`를 전달하세요.
 
+`portfolio`는 `unresolvedMints`를 포함한 전체 결과를 제공합니다. `items`, `byMint`, `totals`는 가장 최근에 성공한 읽기에서만 파생됩니다. 새로고침이 실패하거나 owner가 바뀌면 새 `error` 옆에 오래된 금액을 표시하지 않고 해당 값을 비웁니다. `commitment`, `invalidateOnSlot`, `includeToken2022`는 ref/getter를 받으며, 변경하면 읽기를 다시 실행합니다. `refresh()`는 `useRequest`에서 오므로 실패 시 reject하지 않고 `undefined`로 이행됩니다. UI에서는 `error`를 표시하세요.
+
+슬롯 무효화가 활성화되어 있으면 `slotStatus`와 `slotError`가 구독 상태를 보고합니다. 읽기 진행 중에 도착한 슬롯 알림은 한 번의 후속 읽기로 합쳐집니다. owner가 `null`이면 읽기와 슬롯 구독이 모두 비활성화됩니다.
+
 ## 서명 상태 읽기
 
 알려진 트랜잭션 서명을 추적하려면 `useSignatureStatus()`를 사용합니다.

@@ -114,6 +114,10 @@ const { items, totals, loading, error, refresh } = useTokenPortfolio(owner);
 
 账户列表来自 RPC `getTokenAccountsByOwner` 调用，而不是索引。价格和代币元数据由应用负责。改用单独的 Token-2022 读取时传入 `{ includeToken2022: true }`。
 
+`portfolio` 提供完整结果，包括 `unresolvedMints`。`items`、`byMint` 和 `totals` 仅来自最近一次成功读取：刷新失败或所有者变更时，这些值会被清空，而不会在新的 `error` 旁继续显示旧余额。`commitment`、`invalidateOnSlot` 和 `includeToken2022` 接受 ref 或 getter，更改后会重新读取。由于 `refresh()` 来自 `useRequest`，失败时它会以 `undefined` 解决而不是抛出；请渲染 `error`。
+
+启用 slot 失效时，`slotStatus` 和 `slotError` 会报告订阅状态。读取进行中到达的 slot 通知会合并为一次后续读取。所有者为 `null` 时，读取和 slot 订阅都会禁用。
+
 ## 读取签名状态
 
 使用 `useSignatureStatus()` 跟踪已知交易签名。

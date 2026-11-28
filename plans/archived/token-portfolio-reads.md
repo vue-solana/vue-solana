@@ -30,8 +30,8 @@ Check a step when it is implemented; keep checked sections as the implementation
 
 - English plus de/es/fr/ja/ko/zh guides now document that portfolio lists are RPC-derived and read-only, not indexed, and that prices/metadata belong to the app.
 - Package API lists, the knowledge bundle, and the generated LLM surface cover both core subpaths and both composable aliases.
-- Both example apps mount `TokenPortfolioPanel` with mocked multiple accounts, two mints, a zero balance, malformed account data, and an optional Token-2022 read.
-- Playwright fixtures mock `getTokenAccountsByOwner` and `getAccountInfo`; the new spec runs on both apps.
+- Both example apps mount `TokenPortfolioPanel` with mocked multiple accounts, two mints, a zero balance, and malformed account data. Token-2022 is covered by core unit tests, not the example panel.
+- Playwright fixtures mock `getTokenAccountsByOwner` and `getMultipleAccounts`; the new spec runs on both apps, checks program/mint filters, and exercises `refresh()`.
 
 ## [x] Tests and Release Metadata
 

@@ -353,7 +353,7 @@ Las lecturas de token usan la API `jsonParsed` del RPC Kit — sin dependencia d
 - `getTokenAccountsByOwner(client, owner, options?)`: devuelve todas las cuentas SPL Token y Token-2022 de un propietario como `TokenAccountInfo[]` (`{ address, mint, owner, amount: bigint, decimals, state, isNative }`). Pasa `programId` para limitar a un solo programa.
 - `getTokenAccount(client, address, commitment?)`: devuelve una sola cuenta de token analizada (`TokenAccountInfo | null`). Devuelve `null` cuando la cuenta no existe o no es una cuenta de token.
 - `getTokenBalance(client, mint, owner, commitment?)`: lee la cuenta de token del propietario para el mint dado y devuelve `{ amount, decimals }`. Devuelve `null` cuando no existe una cuenta de token.
-- `getTokenPortfolio(client, owner, options?)` de `@vue-solana/core/token-portfolio`: agrega las cuentas SPL clásicas en `{ accounts, byMint, totals, unresolvedMints }`, resuelve los decimales del mint cuando están disponibles y usa los decimales de la cuenta analizada en caso contrario. Acepta `commitment` y `abortSignal`. Las cuentas Token-2022 se leen por separado con `getTokenPortfolio2022()` de `@vue-solana/core/token-portfolio-2022`.
+- `getTokenPortfolio(client, owner, options?)` de `@vue-solana/core/token-portfolio`: agrega las cuentas SPL clásicas en `{ accounts, byMint, totals, unresolvedMints }`, resuelve los decimales del mint cuando están disponibles y usa los decimales de la cuenta analizada en caso contrario. Acepta `commitment`, `abortSignal` y `programId` (por defecto, el programa SPL Token clásico). Las cuentas Token-2022 se leen por separado con `getTokenPortfolio2022()` de `@vue-solana/core/token-portfolio-2022`.
 
 ```ts
 import { getTokenBalance } from "@vue-solana/core/token-accounts";

@@ -46,14 +46,23 @@ function parsedTokenAccountResponse(
 function mockClient() {
   const getTokenAccountsByOwner = vi.fn();
   const getAccountInfo = vi.fn();
+  const sentWith: unknown[] = [];
 
   const client = {
     rpc: {
       getTokenAccountsByOwner: vi.fn((...args: unknown[]) => ({
-        send: () => getTokenAccountsByOwner(...args),
+        send: (config?: unknown) => {
+          sentWith.push(config);
+
+          return getTokenAccountsByOwner(...args);
+        },
       })),
       getAccountInfo: vi.fn((...args: unknown[]) => ({
-        send: () => getAccountInfo(...args),
+        send: (config?: unknown) => {
+          sentWith.push(config);
+
+          return getAccountInfo(...args);
+        },
       })),
     },
   } as unknown as SolanaClient & {
@@ -63,7 +72,7 @@ function mockClient() {
     };
   };
 
-  return { accountInfo: getAccountInfo, client, tokenAccounts: getTokenAccountsByOwner };
+  return { accountInfo: getAccountInfo, client, sentWith, tokenAccounts: getTokenAccountsByOwner };
 }
 
 describe("getTokenAccountsByOwner", () => {
@@ -109,11 +118,38 @@ describe("getTokenAccountsByOwner", () => {
     );
   });
 
+  it("forwards the abort signal to every RPC send", async () => {
+    const { client, sentWith, tokenAccounts } = mockClient();
+    const abortSignal = new AbortController().signal;
+    tokenAccounts.mockResolvedValue({ value: [] });
+
+    await getTokenAccountsByOwner(client, OWNER, { abortSignal });
+
+    expect(sentWith).toEqual([{ abortSignal }, { abortSignal }]);
+  });
+
   it("wraps RPC errors", async () => {
     const { client, tokenAccounts } = mockClient();
     tokenAccounts.mockRejectedValue(new Error("RPC down"));
 
     await expect(getTokenAccountsByOwner(client, OWNER)).rejects.toThrow("RPC down");
+  });
+
+  it("normalizes a stray AbortError when no abort signal was supplied", async () => {
+    const { client, tokenAccounts } = mockClient();
+    const failure = Object.assign(new Error("aborted"), { name: "AbortError" });
+    tokenAccounts.mockRejectedValue(failure);
+
+    const error = await getTokenAccountsByOwner(client, OWNER).then(
+      () => {
+        throw new Error("Expected AbortError to be normalized.");
+      },
+      (cause: unknown) => cause,
+    );
+
+    expect(error).toBeInstanceOf(SolanaError);
+    expect((error as SolanaError).code).toBe("RPC_FAILURE");
+    expect((error as SolanaError).cause).toBe(failure);
   });
 
   it("throws RPC_FAILURE for malformed token amounts instead of a raw BigInt throw", async () => {
@@ -154,6 +190,39 @@ describe("getTokenAccountsByOwner", () => {
     expect(error).toBeInstanceOf(SolanaError);
     expect((error as SolanaError).code).toBe("RPC_FAILURE");
     expect((error as SolanaError).message).toContain("tokenAmount.amount");
+  });
+
+  it("throws RPC_FAILURE for token account decimals above 255", async () => {
+    const { client, tokenAccounts } = mockClient();
+    const base = parsedTokenAccountResponse().account as Record<string, unknown>;
+    const data = base.data as Record<string, unknown>;
+    const parsed = data.parsed as Record<string, unknown>;
+    const info = parsed.info as Record<string, unknown>;
+    tokenAccounts.mockResolvedValue({
+      value: [
+        {
+          ...parsedTokenAccountResponse(),
+          account: {
+            ...base,
+            data: {
+              ...data,
+              parsed: {
+                ...parsed,
+                info: {
+                  ...info,
+                  tokenAmount: { amount: "1000", decimals: 256 },
+                },
+              },
+            },
+          },
+        },
+      ],
+    });
+
+    await expect(getTokenAccountsByOwner(client, OWNER)).rejects.toMatchObject({
+      code: "RPC_FAILURE",
+      message: expect.stringContaining("tokenAmount.decimals"),
+    });
   });
 
   it("throws RPC_FAILURE for unknown token account states", async () => {

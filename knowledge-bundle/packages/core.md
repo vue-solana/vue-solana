@@ -323,8 +323,8 @@ interface TokenAccountInfo {
 
 ## Token Portfolios (`@vue-solana/core/token-portfolio`)
 
-- `getTokenPortfolio(client, owner, options?)`: aggregates classic SPL token accounts into `accounts`, `byMint`, `totals`, and `unresolvedMints`. Mint decimals come from a batched `getMultipleAccounts` read and fall back to the parsed account decimals. Options are `commitment`, `abortSignal`, and `programId`.
-- `getTokenPortfolio2022(client, owner, options?)`: the opt-in Token-2022 entry point from `@vue-solana/core/token-portfolio-2022`. It uses the same aggregation with the Token-2022 program filter and stays out of the root barrel.
+- `getTokenPortfolio(client, owner, options?)`: aggregates token accounts into `accounts`, `byMint`, `totals`, and `unresolvedMints`. Mint decimals come from batched `getMultipleAccounts` reads (at most 100 addresses each) and fall back to parsed account decimals. Options are `commitment`, `abortSignal`, and `programId` (default: classic SPL Token); untrusted parsed mint payloads are rejected before their decimals can scale a balance.
+- `getTokenPortfolio2022(client, owner, options?)`: the opt-in Token-2022 entry point from `@vue-solana/core/token-portfolio-2022`. It uses the same aggregation with the Token-2022 program filter fixed internally, ignores a caller-supplied `programId`, and stays out of the root barrel.
 - All reads are RPC-derived and read-only: no prices, metadata indexing, signing, or sending.
 
 ## Solana Pay (`@vue-solana/core/solana-pay`)

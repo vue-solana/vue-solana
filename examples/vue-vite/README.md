@@ -8,6 +8,7 @@ This example demonstrates:
 - Reading RPC status with `useRpc()`.
 - Using the deprecated `useConnection()` alias, which returns the Kit client.
 - Reading lamport balances with `useBalance()`.
+- Aggregating mocked SPL token accounts by mint with `useTokenPortfolio()` in `TokenPortfolioPanel`, including zero balances and a normalized malformed-account error.
 - Discovering browser extension wallets and Android Mobile Wallet Adapter wallets with `useWallets()`.
 - Managing active wallet state with `useWallet()`.
 - Tracking async transaction state with `useTransaction()`.

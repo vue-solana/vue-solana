@@ -184,7 +184,7 @@ Buffer ポリフィルを必要とするブラウザ向けトランザクショ�
 - `useAirdrop()`: テストネットワークとローカルバリデータのアカウントに SOL をエアドロップします。
 - `useTokenAccounts(owner, options?)`: owner のすべての SPL トークンアカウントを読み込みます。デフォルトでは Token プログラムと Token-2022 プログラムの両方を問い合わせます。
 - `useTokenBalance(mint, owner)`: 関連付けられたトークンアカウント経由で、mint/owner ペアの SPL トークン残高と decimals を読み込みます。
-- `useTokenPortfolio(owner, options?)`: オーナーのクラシック SPL アカウントを読み取り専用のリアクティブなポートフォリオとして読み込み、mint ごとの合計とオプションのスロットによる無効化を提供します。`includeToken2022` は動的インポートでオプトインの Token-2022 ヘルパーに切り替えます。
+- `useTokenPortfolio(owner, options?)`: オーナーのクラシック SPL アカウントを読み取り専用のリアクティブなポートフォリオとして読み込み、mint ごとの合計とオプションのスロットによる無効化を提供します。`includeToken2022` は動的インポートでオプトインの Token-2022 ヘルパーに切り替えます。オプションは ref と getter を受け取り、更新の失敗やオーナー変更時は `items`、`byMint`、`totals` をクリアします。`slotStatus` / `slotError` は任意のサブスクリプションの状態を示します。
 - `useTransaction(handler, options?)`: 任意のタイムアウト設定を備えた、汎用的な非同期トランザクション状態ヘルパーです。
 - `useTransactionConfirmation(options?)`: 送信済みの署名を、リアクティブな状態とタイムアウト／エラー状態で確認します。
 - `useTransactionDiagnostics(source, options?)`: リアクティブな履歴、シミュレーション、エラー、手数料予算の入力を RPC 呼び出しなしで純粋な診断レポートにまとめます。

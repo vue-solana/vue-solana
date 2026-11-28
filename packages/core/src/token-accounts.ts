@@ -56,14 +56,6 @@ export async function getTokenAccountsByOwner(
       throw abortSignal.reason ?? cause;
     }
 
-    if (
-      typeof cause === "object" &&
-      cause !== null &&
-      (cause as { name?: unknown }).name === "AbortError"
-    ) {
-      throw cause;
-    }
-
     throw normalizeSolanaError(cause, "RPC_FAILURE");
   }
 }
@@ -209,7 +201,8 @@ function validateParsedTokenAccount(parsed: JsonParsedTokenAccount): string[] {
   if (
     typeof parsed.tokenAmount?.decimals !== "number" ||
     !Number.isInteger(parsed.tokenAmount.decimals) ||
-    parsed.tokenAmount.decimals < 0
+    parsed.tokenAmount.decimals < 0 ||
+    parsed.tokenAmount.decimals > 255
   ) {
     mismatches.push("tokenAmount.decimals");
   }

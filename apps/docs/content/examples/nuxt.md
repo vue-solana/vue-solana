@@ -18,6 +18,7 @@ Live demo: [vue-solana-docs.vercel.app/demo](/demo)
 - Reading RPC status with auto-imported `useSolanaRpc()`.
 - Using the injected Kit client with auto-imported `useSolanaClient()`.
 - Reading lamport balances with `useSolanaBalance()`.
+- Aggregating mocked SPL token accounts by mint with auto-imported `useSolanaTokenPortfolio()` in `TokenPortfolioPanel`, including zero balances and a normalized malformed-account error.
 - Discovering browser extension wallets, Android Mobile Wallet Adapter wallets, and supported iOS browser wallet entries with `useSolanaWallets()`.
 - Managing active wallet state with `useSolanaWallet()`.
 - Persisting wallet selection metadata and restoring the previously selected wallet identity on reload.

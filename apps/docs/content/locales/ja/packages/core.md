@@ -358,7 +358,7 @@ await confirmTransactionSignature(client, signature, { commitment: "confirmed" }
 - `getTokenAccountsByOwner(client, owner, options?)`: 所有者のすべての SPL Token および Token-2022 アカウントを `TokenAccountInfo[]`（`{ address, mint, owner, amount: bigint, decimals, state, isNative }`）として返します。単一のプログラムに限定する場合は `programId` を渡します。
 - `getTokenAccount(client, address, commitment?)`: 解析済みの単一のトークンアカウント（`TokenAccountInfo | null`）を返します。アカウントが存在しない場合、またはトークンアカウントでない場合は `null` を返します。
 - `getTokenBalance(client, mint, owner, commitment?)`: 指定された mint について所有者のトークンアカウントを読み取り、`{ amount, decimals }` を返します。トークンアカウントが存在しない場合は `null` を返します。
-- `@vue-solana/core/token-portfolio` の `getTokenPortfolio(client, owner, options?)`: クラシック SPL アカウントを `{ accounts, byMint, totals, unresolvedMints }` に集約します。利用できる場合は mint の小数桁を解決し、それ以外では解析済みアカウントの小数桁を使用します。`commitment` と `abortSignal` を受け取ります。Token-2022 アカウントは `@vue-solana/core/token-portfolio-2022` の `getTokenPortfolio2022()` で個別に読み取ります。
+- `@vue-solana/core/token-portfolio` の `getTokenPortfolio(client, owner, options?)`: クラシック SPL アカウントを `{ accounts, byMint, totals, unresolvedMints }` に集約します。利用できる場合は mint の小数桁を解決し、それ以外では解析済みアカウントの小数桁を使用します。`commitment`、`abortSignal`、`programId`（既定値はクラシック SPL Token プログラム）を受け取ります。Token-2022 アカウントは `@vue-solana/core/token-portfolio-2022` の `getTokenPortfolio2022()` で個別に読み取ります。
 
 ```ts
 import { getTokenBalance } from "@vue-solana/core/token-accounts";

@@ -114,6 +114,10 @@ const { items, totals, loading, error, refresh } = useTokenPortfolio(owner);
 
 Die Kontoliste stammt aus RPC-Aufrufen von `getTokenAccountsByOwner`, nicht aus einem Index. Preise und Token-Metadaten sind Aufgabe der App. Übergib `{ includeToken2022: true }`, um stattdessen den separaten Token-2022-Lesevorgang zu aktivieren.
 
+`portfolio` enthält das vollständige Ergebnis einschließlich `unresolvedMints`. `items`, `byMint` und `totals` stammen nur aus dem letzten erfolgreichen Lesevorgang: Ein fehlgeschlagener Refresh oder ein geänderter Owner löscht sie, statt veraltete Beträge neben einem neuen `error` anzuzeigen. `commitment`, `invalidateOnSlot` und `includeToken2022` akzeptieren Refs oder Getter; eine Änderung startet einen neuen Lesevorgang. Da `refresh()` von `useRequest` stammt, wird es bei Fehlern mit `undefined` aufgelöst statt abgelehnt; rendere `error` entsprechend.
+
+Bei aktiver Slot-Invalidierung melden `slotStatus` und `slotError` den Status des Abonnements. Slot-Benachrichtigungen während eines laufenden Lesevorgangs werden zu einer einzelnen Folgeabfrage zusammengefasst. Ein `null`-Owner deaktiviert sowohl den Lesevorgang als auch das Slot-Abonnement.
+
 ## Signaturstatus lesen
 
 Verwende `useSignatureStatus()`, um eine bekannte Transaktionssignatur zu verfolgen.

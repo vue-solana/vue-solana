@@ -182,7 +182,7 @@ import { useWallet } from "@vue-solana/vue/useWallet";
 - `useAirdrop()`：在测试网络和本地验证器上将 SOL 空投到账户。
 - `useTokenAccounts(owner, options?)`：加载某个所有者的所有 SPL token 账户，默认同时查询 Token 和 Token-2022 program。
 - `useTokenBalance(mint, owner)`：通过关联 token 账户加载 mint/owner 对的 SPL token 余额和小数位数。
-- `useTokenPortfolio(owner, options?)`：将 owner 的经典 SPL 账户加载为只读的响应式 portfolio，包含按 mint 汇总的 totals 和可选的 slot 失效。`includeToken2022` 通过动态 import 切换到选择启用的 Token-2022 helper。
+- `useTokenPortfolio(owner, options?)`：将 owner 的经典 SPL 账户加载为只读的响应式 portfolio，包含按 mint 汇总的 totals 和可选的 slot 失效。`includeToken2022` 通过动态 import 切换到选择启用的 Token-2022 helper。选项接受 ref/getter；刷新失败或 owner 变更时会清空 `items`、`byMint` 和 `totals`，`slotStatus` / `slotError` 提供可选订阅的状态。
 - `useTransaction(handler, options?)`：通用异步交易状态 helper，带可选超时设置。
 - `useTransactionConfirmation(options?)`：用响应式状态和超时/错误状态确认已提交签名。
 - `useTransactionDiagnostics(source, options?)`：将响应式历史、模拟、错误和手续费预算输入合并为一个不调用 RPC 的纯诊断报告。

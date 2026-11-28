@@ -352,7 +352,7 @@ Token 读取使用 Kit RPC `jsonParsed` API——无需 `@solana/spl-token` 依�
 - `getTokenAccountsByOwner(client, owner, options?)`：以 `TokenAccountInfo[]` 返回某个所有者的所有 SPL Token 和 Token-2022 账户（`{ address, mint, owner, amount: bigint, decimals, state, isNative }`）。传入 `programId` 可限制为单个 program。
 - `getTokenAccount(client, address, commitment?)`：返回单个解析后的 token 账户（`TokenAccountInfo | null`）。账户不存在或不是 token 账户时返回 `null`。
 - `getTokenBalance(client, mint, owner, commitment?)`：读取给定 mint 的所有者 token 账户，返回 `{ amount, decimals }`。不存在 token 账户时返回 `null`。
-- `@vue-solana/core/token-portfolio` 的 `getTokenPortfolio(client, owner, options?)`：将经典 SPL 账户聚合为 `{ accounts, byMint, totals, unresolvedMints }`，可用时解析 mint decimals，否则回退到解析后的账户 decimals。接受 `commitment` 和 `abortSignal`。Token-2022 账户通过 `@vue-solana/core/token-portfolio-2022` 的 `getTokenPortfolio2022()` 单独读取。
+- `@vue-solana/core/token-portfolio` 的 `getTokenPortfolio(client, owner, options?)`：将经典 SPL 账户聚合为 `{ accounts, byMint, totals, unresolvedMints }`，可用时解析 mint decimals，否则回退到解析后的账户 decimals。接受 `commitment`、`abortSignal` 和 `programId`（默认为经典 SPL Token 程序）。Token-2022 账户通过 `@vue-solana/core/token-portfolio-2022` 的 `getTokenPortfolio2022()` 单独读取。
 
 ```ts
 import { getTokenBalance } from "@vue-solana/core/token-accounts";

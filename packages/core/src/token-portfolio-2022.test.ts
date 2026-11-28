@@ -21,6 +21,35 @@ describe("getTokenPortfolio2022", () => {
     mockedGetTokenAccountsByOwner.mockResolvedValue([]);
   });
 
+  it("rejects non-object options before reading the RPC", async () => {
+    const client = { rpc: {} } as unknown as SolanaClient;
+
+    await expect(getTokenPortfolio2022(client, OWNER, null as never)).rejects.toMatchObject({
+      code: "INVALID_INPUT",
+    });
+    await expect(getTokenPortfolio2022(client, OWNER, "processed" as never)).rejects.toMatchObject({
+      code: "INVALID_INPUT",
+    });
+    expect(mockedGetTokenAccountsByOwner).not.toHaveBeenCalled();
+  });
+
+  it("ignores a programId supplied by untyped callers", async () => {
+    const getMultipleAccounts = vi.fn(() => ({
+      send: vi.fn().mockResolvedValue({ context: { slot: 1n }, value: [] }),
+    }));
+    const client = { rpc: { getMultipleAccounts } } as unknown as SolanaClient;
+
+    await getTokenPortfolio2022(client, OWNER, {
+      programId: TOKEN_PROGRAM_ADDRESS,
+    } as never);
+
+    expect(mockedGetTokenAccountsByOwner).toHaveBeenCalledWith(client, OWNER, {
+      commitment: undefined,
+      programId: TOKEN_2022_PROGRAM_ADDRESS,
+      abortSignal: undefined,
+    });
+  });
+
   it("reads only Token-2022 accounts by default", async () => {
     const getMultipleAccounts = vi.fn(() => ({
       send: vi.fn().mockResolvedValue({ context: { slot: 1n }, value: [] }),

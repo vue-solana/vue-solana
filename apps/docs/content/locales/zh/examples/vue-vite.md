@@ -17,6 +17,7 @@ Live demo: [vue-solana-docs.vercel.app/demo](/zh/demo)
 - 使用 `useRpc()` 读取 RPC 状态。
 - 使用 `useSolanaClient()` 使用注入的 Kit client。
 - 使用 `useBalance()` 读取 lamport 余额。
+- 在 `TokenPortfolioPanel` 中使用 `useTokenPortfolio()` 按 mint 汇总模拟的 SPL 代币账户，包括零余额和格式错误账户的标准化错误。
 - 使用 `useWallets()` 发现浏览器扩展钱包、Android Mobile Wallet Adapter 钱包，以及受支持的 iOS 浏览器钱包条目。
 - 使用 `useWallet()` 管理当前活跃钱包状态。
 - 持久化钱包选择元数据，并在重新加载时恢复之前选择的钱包身份。

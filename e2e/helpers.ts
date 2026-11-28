@@ -6,6 +6,7 @@ const MOCK_SIGNATURE =
 const MOCK_HISTORY_SIGNATURE_2 =
   "2Ana1pUpv2ZbMVkwF5FXapYeBEjdxDatLn7nvJkhgTSXbs59SyZSx866bXirPgj8QQVB57uxHJBG1YFvkRbFj4U";
 const MOCK_WALLET_ADDRESS = "11111111111111111111111111111111";
+const TOKEN_PROGRAM_ADDRESS = "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
 
 const PORTFOLIO_OWNER = "9xQeWvG816bUx9EPjHmaT23yvVM2ZWbrrpZb9PusVFin";
 const MALFORMED_PORTFOLIO_OWNER = "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb";
@@ -226,45 +227,47 @@ export async function mockTokenPortfolioRpc(
 
     if (body?.method === "getTokenAccountsByOwner") {
       const owner = params[0];
-
-      if (owner === PORTFOLIO_OWNER) {
-        response = {
-          jsonrpc: "2.0",
-          id,
-          result: {
-            context: { slot: 123456 },
-            value: [
+      const filter = (params[1] ?? {}) as { programId?: unknown };
+      // Only answer for the classic SPL program the portfolio asks for. A
+      // wrong programId (including Token-2022) must read as an empty result so
+      // the e2e spec cannot pass with an incorrect filter.
+      const classicProgram = filter.programId === TOKEN_PROGRAM_ADDRESS;
+      const value =
+        owner === PORTFOLIO_OWNER && classicProgram
+          ? [
               parsedTokenAccount(PORTFOLIO_ACCOUNT_A1, PORTFOLIO_MINT_A, "1500000", 6),
               parsedTokenAccount(PORTFOLIO_ACCOUNT_A2, PORTFOLIO_MINT_A, "250000", 6),
               parsedTokenAccount(PORTFOLIO_ACCOUNT_B, PORTFOLIO_MINT_B, "0", 9),
-            ],
-          },
-        };
-      } else if (owner === MALFORMED_PORTFOLIO_OWNER) {
-        response = {
-          jsonrpc: "2.0",
-          id,
-          result: {
-            context: { slot: 123456 },
-            value: [parsedTokenAccount(PORTFOLIO_ACCOUNT_A1, PORTFOLIO_MINT_A, "not-a-number", 6)],
-          },
-        };
-      } else {
-        response = { jsonrpc: "2.0", id, result: { context: { slot: 123456 }, value: [] } };
-      }
+            ]
+          : owner === MALFORMED_PORTFOLIO_OWNER && classicProgram
+            ? [parsedTokenAccount(PORTFOLIO_ACCOUNT_A1, PORTFOLIO_MINT_A, "not-a-number", 6)]
+            : [];
+
+      response = {
+        jsonrpc: "2.0",
+        id,
+        result: { context: { slot: 123456 }, value },
+      };
     }
 
     if (body?.method === "getMultipleAccounts") {
       const addresses = Array.isArray(params[0]) ? (params[0] as unknown[]) : [];
+      const decimalsByMint = new Map([
+        [PORTFOLIO_MINT_A, 6],
+        [PORTFOLIO_MINT_B, 9],
+      ]);
 
       response = {
         jsonrpc: "2.0",
         id,
         result: {
           context: { slot: 123456 },
-          value: addresses.map((address) =>
-            parsedMintAccount(String(address), address === PORTFOLIO_MINT_B ? 9 : 6),
-          ),
+          // Unknown addresses are missing accounts, not usable mints.
+          value: addresses.map((address) => {
+            const decimals = decimalsByMint.get(String(address));
+
+            return decimals === undefined ? null : parsedMintAccount(String(address), decimals);
+          }),
         },
       };
     }
@@ -333,6 +336,7 @@ function parsedTokenAccount(
 
 function parsedMintAccount(address: string, decimals: number): Record<string, unknown> {
   return {
+    pubkey: address,
     data: {
       parsed: {
         info: { decimals, mintAuthority: PORTFOLIO_OWNER, supply: "1000000000" },

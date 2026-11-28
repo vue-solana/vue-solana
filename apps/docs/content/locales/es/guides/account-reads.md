@@ -114,6 +114,10 @@ const { items, totals, loading, error, refresh } = useTokenPortfolio(owner);
 
 La lista de cuentas proviene de llamadas RPC a `getTokenAccountsByOwner`, no de un índice. Los precios y los metadatos de tokens son responsabilidad de la aplicación. Pasa `{ includeToken2022: true }` para usar en su lugar la lectura independiente de Token-2022.
 
+`portfolio` expone el resultado completo, incluido `unresolvedMints`. `items`, `byMint` y `totals` se derivan solo de la última lectura correcta: una actualización fallida o un propietario modificado los vacía en lugar de mostrar importes obsoletos junto a un `error` reciente. `commitment`, `invalidateOnSlot` y `includeToken2022` aceptan refs o getters, y cambiarlos vuelve a ejecutar la lectura. Como `refresh()` proviene de `useRequest`, se resuelve con `undefined` cuando falla en lugar de rechazar; representa `error` en la interfaz.
+
+Cuando la invalidación por slot está activa, `slotStatus` y `slotError` informan del estado de la suscripción. Las notificaciones de slot que llegan durante una lectura en curso se agrupan en una única lectura posterior. Un propietario `null` desactiva tanto la lectura como la suscripción de slots.
+
 ## Leer estado de firma
 
 Usa `useSignatureStatus()` para rastrear una firma de transacción conocida.

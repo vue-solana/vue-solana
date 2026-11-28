@@ -4,6 +4,7 @@ import { createSolanaError, normalizeSolanaError } from "./errors";
 import type { SolanaClient } from "./kit";
 import {
   getTokenAccountsByOwner,
+  TOKEN_2022_PROGRAM_ADDRESS,
   TOKEN_PROGRAM_ADDRESS,
   type TokenAccountInfo,
 } from "./token-accounts";
@@ -146,14 +147,6 @@ export async function getTokenPortfolio(
       throw abortSignal.reason ?? cause;
     }
 
-    if (
-      typeof cause === "object" &&
-      cause !== null &&
-      (cause as { name?: unknown }).name === "AbortError"
-    ) {
-      throw cause;
-    }
-
     throw normalizeSolanaError(cause, "RPC_FAILURE");
   }
 }
@@ -215,9 +208,21 @@ function parseMintDecimals(account: unknown): number | null {
     return null;
   }
 
+  // A `jsonParsed` account is still an untrusted payload. Require a token
+  // program owner before letting its decimals scale every balance for a mint.
+  if (!("owner" in account) || !isTokenProgramAddress((account as { owner?: unknown }).owner)) {
+    return null;
+  }
+
   const data = (account as { data?: unknown }).data;
 
   if (typeof data !== "object" || data === null || !("parsed" in data)) {
+    return null;
+  }
+
+  const program = (data as { program?: unknown }).program;
+
+  if (program !== "spl-token" && program !== "spl-token-2022") {
     return null;
   }
 
@@ -249,14 +254,21 @@ function parseMintDecimals(account: unknown): number | null {
     : null;
 }
 
-function toUiAmount(amount: bigint, decimals: number): number | null {
-  const scale = 10 ** decimals;
+function isTokenProgramAddress(owner: unknown): boolean {
+  return owner === TOKEN_PROGRAM_ADDRESS || owner === TOKEN_2022_PROGRAM_ADDRESS;
+}
 
-  if (!Number.isFinite(scale)) {
+function toUiAmount(amount: bigint, decimals: number): number | null {
+  if (!Number.isInteger(decimals) || decimals < 0 || decimals > 255) {
     return null;
   }
 
-  const value = Number(amount) / scale;
+  // Divide in bigint space first: converting a large raw balance to `number`
+  // before scaling silently rounds off digits that still fit in the UI amount.
+  const scale = 10n ** BigInt(decimals);
+  const whole = Number(amount / scale);
+  const fraction = Number(amount % scale) / Number(scale);
+  const value = whole + fraction;
 
   return Number.isFinite(value) ? value : null;
 }

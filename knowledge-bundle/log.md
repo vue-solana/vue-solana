@@ -2,6 +2,13 @@
 
 All notable changes to the knowledge bundle are documented here.
 
+## 2026-11-28
+
+### Updated
+
+- Documented token portfolio reliability fixes in `packages/core.md` and `packages/vue.md`: bounded mint batching and decimal validation, fixed Token-2022 program filtering, reactive options, success-only derived data, slot subscription status/errors, and coalesced slot invalidation.
+- Added `useTokenPortfolio()` to the agent-facing "When To Use" index so regenerated `llms.txt` files surface portfolio reads.
+
 ## 2026-11-25
 
 ### Added

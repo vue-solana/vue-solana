@@ -17,6 +17,7 @@ Vue Vite 예제는 `@vue-solana/vue`를 위한 실행 가능한 Vue 3 앱입니�
 - `useRpc()`로 RPC 상태를 읽습니다.
 - `useSolanaClient()`로 주입된 Kit client를 사용합니다.
 - `useBalance()`로 lamport 잔액을 읽습니다.
+- `TokenPortfolioPanel`에서 `useTokenPortfolio()`로 모의 SPL token account를 mint별로 집계하며, 0 잔액과 잘못된 account에 대한 정규화된 오류를 표시합니다.
 - `useWallets()`로 브라우저 확장 지갑, Android Mobile Wallet Adapter 지갑, 지원되는 iOS 브라우저 지갑 항목을 검색합니다.
 - `useWallet()`으로 활성 지갑 상태를 관리합니다.
 - 지갑 선택 메타데이터를 저장하고 reload 후 이전에 선택한 지갑 identity를 복원합니다.

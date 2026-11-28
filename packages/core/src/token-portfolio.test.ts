@@ -1,7 +1,8 @@
-import { address, type Address } from "@solana/kit";
+import { address, getAddressDecoder, type Address } from "@solana/kit";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { getTokenPortfolio } from "./token-portfolio";
 import { getTokenAccountsByOwner, TOKEN_PROGRAM_ADDRESS } from "./token-accounts";
+import { SolanaError } from "./errors";
 import type { TokenAccountInfo } from "./token-accounts";
 import type { SolanaClient } from "./kit";
 
@@ -16,6 +17,14 @@ const MINT_B = address("So11111111111111111111111111111111111111112");
 const ACCOUNT_1 = address("11111111111111111111111111111111");
 const ACCOUNT_2 = address("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA");
 const ACCOUNT_3 = address("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb");
+
+function syntheticAddress(seed: number): Address {
+  const bytes = new Uint8Array(32);
+
+  bytes[31] = seed;
+
+  return getAddressDecoder().decode(bytes);
+}
 
 function tokenAccount(
   accountAddress: Address,
@@ -34,17 +43,22 @@ function tokenAccount(
   };
 }
 
-function mintAccount(decimals: number | null): unknown {
+function mintAccount(
+  decimals: number | null,
+  overrides: Record<string, unknown> = {},
+): Record<string, unknown> | null {
   if (decimals === null) {
     return null;
   }
 
   return {
+    owner: TOKEN_PROGRAM_ADDRESS,
     data: {
       parsed: { type: "mint", info: { decimals } },
       program: "spl-token",
       space: 82n,
     },
+    ...overrides,
   };
 }
 
@@ -176,5 +190,124 @@ describe("getTokenPortfolio", () => {
       code: "RPC_FAILURE",
       cause: failure,
     });
+  });
+
+  it("batches mint metadata reads in groups of 100", async () => {
+    const mints = Array.from({ length: 101 }, (_, index) => syntheticAddress(index + 1));
+    mockedGetTokenAccountsByOwner.mockResolvedValue(
+      mints.map((mint, index) =>
+        tokenAccount(syntheticAddress(index + 200), mint, BigInt(index + 1), 9),
+      ),
+    );
+    const getMultipleAccounts = vi.fn((addresses: readonly Address[]) => ({
+      send: vi.fn().mockResolvedValue({
+        context: { slot: 1n },
+        value: addresses.map(() => mintAccount(6)),
+      }),
+    }));
+    const client = { rpc: { getMultipleAccounts } } as unknown as SolanaClient;
+
+    const result = await getTokenPortfolio(client, OWNER);
+
+    expect(getMultipleAccounts).toHaveBeenCalledTimes(2);
+    expect(getMultipleAccounts.mock.calls[0]?.[0]).toHaveLength(100);
+    expect(getMultipleAccounts.mock.calls[1]?.[0]).toEqual([mints[100]]);
+    expect(result.totals).toEqual({ accounts: 101, mints: 101 });
+    expect(result.unresolvedMints).toEqual([]);
+  });
+
+  it("treats malformed or unowned mint payloads as unresolved", async () => {
+    const mints = Array.from({ length: 7 }, (_, index) => syntheticAddress(index + 300));
+    mockedGetTokenAccountsByOwner.mockResolvedValue(
+      mints.map((mint, index) => tokenAccount(syntheticAddress(index + 400), mint, 1_000_000n, 6)),
+    );
+    const validMint = mintAccount(6)!;
+    const validData = validMint.data as Record<string, unknown>;
+    const responses = [
+      mintAccount(6, { owner: OWNER }),
+      mintAccount(6, {
+        data: { ...validData, parsed: { type: "account", info: { decimals: 6 } } },
+      }),
+      mintAccount(6, {
+        data: {
+          ...validData,
+          parsed: { type: "mint", info: { decimals: "6" } },
+        },
+      }),
+      mintAccount(6, {
+        data: {
+          ...validData,
+          parsed: { type: "mint", info: { decimals: -1 } },
+        },
+      }),
+      mintAccount(6, {
+        data: {
+          ...validData,
+          parsed: { type: "mint", info: { decimals: Number.NaN } },
+        },
+      }),
+      mintAccount(6, {
+        data: {
+          ...validData,
+          parsed: { type: "mint", info: { decimals: 256 } },
+        },
+      }),
+    ];
+    const { client } = createClient(responses);
+
+    const result = await getTokenPortfolio(client, OWNER);
+
+    expect(result.unresolvedMints).toEqual(mints);
+    expect(result.accounts.every((account) => account.decimalsSource === "account")).toBe(true);
+    expect(result.accounts[0]?.decimals).toBe(6);
+    expect(result.accounts[0]?.uiAmount).toBe(1);
+  });
+
+  it("preserves UI precision for balances above Number.MAX_SAFE_INTEGER", async () => {
+    mockedGetTokenAccountsByOwner.mockResolvedValue([
+      tokenAccount(ACCOUNT_1, MINT_A, 9_007_199_254_740_993n, 6),
+    ]);
+    const { client } = createClient([mintAccount(6)]);
+
+    const result = await getTokenPortfolio(client, OWNER);
+
+    expect(result.accounts[0]?.uiAmount).toBe(9_007_199_254.740993);
+  });
+
+  it("rethrows the caller's abort reason when mint resolution is cancelled", async () => {
+    mockedGetTokenAccountsByOwner.mockResolvedValue([tokenAccount(ACCOUNT_1, MINT_A, 1n, 6)]);
+    const controller = new AbortController();
+    const reason = new Error("cancel mint read");
+    const getMultipleAccounts = vi.fn(() => ({
+      send: vi.fn().mockImplementation(async () => {
+        controller.abort(reason);
+        throw new Error("aborted");
+      }),
+    }));
+    const client = { rpc: { getMultipleAccounts } } as unknown as SolanaClient;
+
+    await expect(getTokenPortfolio(client, OWNER, { abortSignal: controller.signal })).rejects.toBe(
+      reason,
+    );
+  });
+
+  it("normalizes a stray AbortError during mint reads when no signal was supplied", async () => {
+    mockedGetTokenAccountsByOwner.mockResolvedValue([tokenAccount(ACCOUNT_1, MINT_A, 1n, 6)]);
+    const failure = Object.assign(new Error("aborted"), { name: "AbortError" });
+    const getMultipleAccounts = vi.fn(() => ({
+      send: vi.fn().mockRejectedValue(failure),
+    }));
+    const client = { rpc: { getMultipleAccounts } } as unknown as SolanaClient;
+
+    const error = await getTokenPortfolio(client, OWNER).then(
+      () => {
+        throw new Error("Expected AbortError to be normalized.");
+      },
+      (cause: unknown) => cause,
+    );
+
+    expect(error).toBeInstanceOf(SolanaError);
+    expect((error as SolanaError).code).toBe("RPC_FAILURE");
+    expect((error as SolanaError).cause).toBe(failure);
   });
 });

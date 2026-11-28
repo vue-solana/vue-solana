@@ -114,6 +114,10 @@ const { items, totals, loading, error, refresh } = useTokenPortfolio(owner);
 
 The account list comes from RPC `getTokenAccountsByOwner` calls, not from an index. Prices and token metadata are the app's job. Pass `{ includeToken2022: true }` to opt into the separate Token-2022 read instead.
 
+`portfolio` exposes the full result, including `unresolvedMints`. `items`, `byMint`, and `totals` are derived only from the latest successful read: a failed refresh or a changed owner clears them instead of showing stale balances next to a fresh `error`. `commitment`, `invalidateOnSlot`, and `includeToken2022` accept refs or getters, and changing them re-runs the read. Because `refresh()` comes from `useRequest`, it resolves with `undefined` on failure rather than rejecting; render `error` instead of relying on a thrown value.
+
+When slot invalidation is active, `slotStatus` and `slotError` report the subscription state. Slot notifications that arrive during an in-flight read are coalesced into one follow-up read. A `null` owner disables both the read and the slot subscription.
+
 ## Read Signature Status
 
 Use `useSignatureStatus()` to track a known transaction signature.

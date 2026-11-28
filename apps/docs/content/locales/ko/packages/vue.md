@@ -182,7 +182,7 @@ Buffer polyfill이 필요한 브라우저 트랜잭션 코드에는 `@vue-solana
 - `useAirdrop()`: 테스트 네트워크와 로컬 validator에서 계정에 SOL을 에어드랍합니다.
 - `useTokenAccounts(owner, options?)`: 기본적으로 Token과 Token-2022 program 모두를 쿼리하여 owner의 모든 SPL token account를 로드합니다.
 - `useTokenBalance(mint, owner)`: associated token account를 통해 mint/owner 쌍의 SPL token balance와 decimals를 로드합니다.
-- `useTokenPortfolio(owner, options?)`: owner의 클래식 SPL account를 mint별 totals가 있는 읽기 전용 반응형 portfolio로 로드하며, slot 기반 invalidation을 선택적으로 지원합니다. `includeToken2022`는 dynamic import로 opt-in Token-2022 helper로 전환합니다.
+- `useTokenPortfolio(owner, options?)`: owner의 클래식 SPL account를 mint별 totals가 있는 읽기 전용 반응형 portfolio로 로드하며, slot 기반 invalidation을 선택적으로 지원합니다. `includeToken2022`는 dynamic import로 opt-in Token-2022 helper로 전환합니다. 옵션은 ref/getter를 받고, 새로고침 실패나 owner 변경 시 `items`, `byMint`, `totals`를 비웁니다. `slotStatus` / `slotError`는 선택적 구독 상태를 제공합니다.
 - `useTransaction(handler, options?)`: optional timeout 설정을 지원하는 generic async transaction state helper입니다.
 - `useTransactionConfirmation(options?)`: 제출된 signature를 reactive status 및 timeout/error state와 함께 confirm합니다.
 - `useTransactionDiagnostics(source, options?)`: reactive 히스토리, simulation, error, fee-budget 입력을 RPC 호출 없이 pure diagnostic report로 join합니다.

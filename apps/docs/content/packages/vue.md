@@ -187,7 +187,7 @@ Use `@vue-solana/vue/buffer-polyfill` for browser transaction code that needs th
 - `useAirdrop()`: airdrops SOL into an account on test networks and local validators.
 - `useTokenAccounts(owner, options?)`: loads all SPL token accounts for an owner, querying both Token and Token-2022 programs by default.
 - `useTokenBalance(mint, owner)`: loads the SPL token balance and decimals for a mint/owner pair via the associated token account.
-- `useTokenPortfolio(owner, options?)`: loads a reactive, read-only portfolio of an owner's classic SPL accounts with per-mint totals and optional slot-driven invalidation. `includeToken2022` switches to the opt-in Token-2022 helper via a dynamic import.
+- `useTokenPortfolio(owner, options?)`: loads a reactive, read-only portfolio of an owner's classic SPL accounts with per-mint totals and optional slot-driven invalidation. `includeToken2022` switches to the opt-in Token-2022 helper via a dynamic import. Options accept refs/getters; `items`, `byMint`, and `totals` clear on failed refresh or owner change, and `slotStatus` / `slotError` expose the optional subscription state.
 - `useTransaction(handler, options?)`: generic async transaction state helper with optional timeout settings.
 - `useTransactionConfirmation(options?)`: confirms a submitted signature with reactive status and timeout/error state.
 - `useTransactionDiagnostics(source, options?)`: joins reactive history, simulation, error, and fee-budget inputs into one pure diagnostic report without RPC calls.

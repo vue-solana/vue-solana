@@ -352,7 +352,7 @@ Token 읽기는 Kit RPC `jsonParsed` API를 사용합니다 - `@solana/spl-token
 - `getTokenAccountsByOwner(client, owner, options?)`: owner의 모든 SPL Token 및 Token-2022 account를 `TokenAccountInfo[]`(`{ address, mint, owner, amount: bigint, decimals, state, isNative }`)로 반환합니다. `programId`를 전달하면 단일 program으로 제한합니다.
 - `getTokenAccount(client, address, commitment?)`: 단일 parsed token account(`TokenAccountInfo | null`)를 반환합니다. account가 없거나 token account가 아니면 `null`을 반환합니다.
 - `getTokenBalance(client, mint, owner, commitment?)`: 주어진 mint에 대한 owner의 token account를 읽고 `{ amount, decimals }`를 반환합니다. token account가 없으면 `null`을 반환합니다.
-- `@vue-solana/core/token-portfolio`의 `getTokenPortfolio(client, owner, options?)`: 클래식 SPL account를 `{ accounts, byMint, totals, unresolvedMints }`로 집계합니다. mint decimals가 있으면 사용하고, 없으면 parsed account decimals로 대체합니다. `commitment`와 `abortSignal`을 받습니다. Token-2022 account는 `@vue-solana/core/token-portfolio-2022`의 `getTokenPortfolio2022()`로 별도 읽습니다.
+- `@vue-solana/core/token-portfolio`의 `getTokenPortfolio(client, owner, options?)`: 클래식 SPL account를 `{ accounts, byMint, totals, unresolvedMints }`로 집계합니다. mint decimals가 있으면 사용하고, 없으면 parsed account decimals로 대체합니다. `commitment`, `abortSignal`, `programId`(기본값은 클래식 SPL Token 프로그램)를 받습니다. Token-2022 account는 `@vue-solana/core/token-portfolio-2022`의 `getTokenPortfolio2022()`로 별도 읽습니다.
 
 ```ts
 import { getTokenBalance } from "@vue-solana/core/token-accounts";
